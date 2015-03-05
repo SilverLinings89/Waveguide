@@ -38,6 +38,37 @@
 
 using namespace dealii;
 
+template<int dim> void mesh_info(const Triangulation<dim> &tria, const std::string &filename)
+{
+	std::cout << "Mesh info:" << std::endl << " dimension: " << dim << std::endl << " no. of cells: " << tria.n_active_cells() << std::endl;
+	{
+		std::map<unsigned int, unsigned int> boundary_count;
+		typename Triangulation<dim>::active_cell_iterator
+		cell = tria.begin_active(),
+		endc = tria.end();
+		for (; cell!=endc; ++cell)
+		{
+			for (unsigned int face=0; face<GeometryInfo<dim>::faces_per_cell; ++face)
+			{
+				if (cell->face(face)->at_boundary())
+					boundary_count[cell->face(face)->boundary_indicator()]++;
+			}
+		}
+		std::cout << " boundary indicators: ";
+		for (std::map<unsigned int, unsigned int>::iterator it=boundary_count.begin();
+				it!=boundary_count.end();
+				++it)
+		{
+			std::cout << it->first << "(" << it->second << " times) ";
+		}
+		std::cout << std::endl;
+	}
+	std::ofstream out (filename.c_str());
+	GridOut grid_out;
+	grid_out.write_vtk (tria, out);
+	std::cout << " written to " << filename << std::endl << std::endl;
+}
+
 class ParameterReader : public Subscriptor
 {
 public: 
@@ -48,6 +79,10 @@ private:
 	void declare_parameters();
 	ParameterHandler &prm;
 };
+
+static double DDist (Point<3> position) {
+		return sqrt(position(0)*position(0) + position(1)*position(1));
+}
 
 ParameterReader::ParameterReader	( ParameterHandler &prmhandler) : 	prm(prmhandler) {}
 
@@ -130,9 +165,9 @@ class Step3
 		void solve ();
 		void output_results () const;
 
-		Triangulation<2>     triangulation;
-		FE_Q<2>              fe;
-		DoFHandler<2>        dof_handler;
+		Triangulation<3>     triangulation;
+		FE_Nedelec<3>              fe;
+		DoFHandler<3>        dof_handler;
 
 		SparsityPattern      sparsity_pattern;
 		SparseMatrix<double> system_matrix;
@@ -220,18 +255,20 @@ void Step3::read_values() {
 void Step3::make_grid ()
 {
 
-	const Point<2> center (0,0.0001);
 	const double outer_radius = 1.0;
+	//Triangulation<2> temp;
 	GridGenerator::subdivided_hyper_cube (triangulation, 5, -outer_radius, outer_radius);
-	static const SphericalManifold<2> round_description(center);
+	//GridGenerator::extrude_triangulation(temp, 3, 3.0, triangulation);
+
+	static const CylindricalManifold<3> round_description(2, 0.0001);
 	triangulation.set_manifold (1, round_description);
-	Triangulation<2>::active_cell_iterator
+	Triangulation<3>::active_cell_iterator
 	cell = triangulation.begin_active(),
 	endc = triangulation.end();
 
 	for (; cell!=endc; ++cell){
 		double distance_from_center = 0;
-		for( int j = 0; j<4; j++) distance_from_center += center.distance (cell->vertex(j));
+		for( int j = 0; j<4; j++) distance_from_center += DDist(cell->vertex(j));
 			//std::cout << "Distance appeared: " << distance_from_center << std::endl;
 		if (distance_from_center < 3 ) {
 			cell->set_all_manifold_ids(1);
@@ -241,15 +278,17 @@ void Step3::make_grid ()
 	cell = triangulation.begin_active();
 	for (; cell!=endc; ++cell){
 		double distance_from_center = 0;
-		for( int j = 0; j<4; j++) distance_from_center += center.distance (cell->vertex(j));
+		for( int j = 0; j<4; j++) distance_from_center += DDist(cell->vertex(j));
 		//std::cout << "Distance appeared: " << distance_from_center << std::endl;
 		if (distance_from_center < 1.2) {
 			cell->set_manifold_id(0);
 		}
 	}
 
+	//temp.refine_global (3);
 	triangulation.refine_global (3);
 
+	mesh_info(triangulation, "grid-3D.vtk");
 }
 
 void Step3::setup_system ()
@@ -272,9 +311,9 @@ void Step3::setup_system ()
 void Step3::assemble_system ()
 {
 
-	QGauss<2>  quadrature_formula(2);
+	QGauss<3>  quadrature_formula(2);
 
-	FEValues<2> fe_values (fe, quadrature_formula,
+	FEValues<3> fe_values (fe, quadrature_formula,
                          update_values | update_gradients | update_JxW_values);
 	const unsigned int   dofs_per_cell = fe.dofs_per_cell;
 	const unsigned int   n_q_points    = quadrature_formula.size();
@@ -284,7 +323,7 @@ void Step3::assemble_system ()
 
 	std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
-	DoFHandler<2>::active_cell_iterator
+	DoFHandler<3>::active_cell_iterator
 	cell = dof_handler.begin_active(),
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
@@ -323,11 +362,9 @@ void Step3::assemble_system ()
     }
 
 	std::map<types::global_dof_index,double> boundary_values;
-	VectorTools::interpolate_boundary_values (dof_handler, 	0, 	ZeroFunction<2>(), 	boundary_values);
-	MatrixTools::apply_boundary_values (boundary_values,
-	system_matrix,
-	solution,
-	system_rhs);
+	VectorTools::interpolate_boundary_values (dof_handler, 	0, 	ZeroFunction<3>(), 	boundary_values);
+	MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
+
 }
 
 
@@ -335,8 +372,7 @@ void Step3::solve ()
 {
 	SolverControl           solver_control (1000, 1e-12);
 	SolverCG<>              solver (solver_control);
-	solver.solve (system_matrix, solution, system_rhs,
-                PreconditionIdentity());
+	solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
 
 }
 
@@ -344,7 +380,7 @@ void Step3::solve ()
 void Step3::output_results () const
 {
 
-	DataOut<2> data_out;
+	DataOut<3> data_out;
 
 	data_out.attach_dof_handler (dof_handler);
 	data_out.add_data_vector (solution, "solution");
@@ -374,4 +410,5 @@ int main ()
 	laplace_problem.run ();
 	return 0;
 }
+
 
