@@ -2,6 +2,7 @@ subsection Output
 		set Output Grid = true
 		set Output Dofs = true
 		set Output Active Cells = true
+		set Verbose Output = true
 end
 
 subsection Measures
@@ -32,8 +33,8 @@ end
 
 subsection Discretization
 	set refinement = global
-	set XY = 4
-	set Z = 100
+	set XY = 3
+	set Z = 3
 end
 
 	

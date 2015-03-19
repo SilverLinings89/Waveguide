@@ -80,6 +80,8 @@ private:
 	ParameterHandler &prm;
 };
 
+
+
 static double DDist (Point<3> position) {
 		return sqrt(position(0)*position(0) + position(1)*position(1));
 }
@@ -93,6 +95,7 @@ void ParameterReader::declare_parameters	()
 		prm.declare_entry("Output Grid", "false", Patterns::Bool() , "Determines if Grid should be written to .eps file for visualization.");
 		prm.declare_entry("Output Dofs", "false", Patterns::Bool() , "Determines if details about Degrees of freedom should be written to the console.");
 		prm.declare_entry("Output Active Cells", "false", Patterns::Bool() , "Determines if the number of active cells should be written to the console.");
+		prm.declare_entry("Verbose Output", "false", Patterns::Bool() , "Determines if a lot of helpful data should be written to the console.");
 	}
 	prm.leave_subsection();
 
@@ -150,6 +153,35 @@ void ParameterReader::read_parameters(const std::string inputfile) {
 	prm.read_input(inputfile);
 }
 
+template <int dim>
+class RightHandSide : public Function<dim>
+{
+	public:
+		RightHandSide () : Function<dim>(6) {}
+		virtual double value (const Point<dim> &p, const unsigned int component ) const;
+		virtual void vector_value (const Point<dim> &p,	Vector<double> &value) const;
+};
+
+template <int dim>
+double RightHandSide<dim>::value (const Point<dim> &p , const unsigned int component) const
+{
+	if(component < 3) {
+		if(p[2] < 0.00001){
+			if(p(0)*p(0) + p(1)*p(1) < 0.2828) return 1.0;
+			else return 0.0;
+		} else {
+			return 0.0;
+		}
+	}
+	return 0.0;
+}
+
+template <int dim>
+void RightHandSide<dim>::vector_value (const Point<dim> &p,	Vector<double> &values) const
+{
+	for (unsigned int c=0; c<6; ++c) values(c) = RightHandSide<dim>::value (p, c);
+}
+
 
 class Step3
 {
@@ -158,40 +190,56 @@ class Step3
 		void run ();
 
 	private:
-		void read_values ();
-		void make_grid ();
-		void setup_system ();
-		void assemble_system ();
-		void solve ();
-		void output_results () const;
+		void 	read_values ();
+		void 	make_grid ();
+		void 	setup_system ();
+		void 	assemble_system ();
+		void 	solve ();
+		void 	output_results () const;
+		Tensor<2,3> get_Tensor(Point<3>);
 
-		Triangulation<3>     triangulation;
-		FE_Nedelec<3>              fe;
-		DoFHandler<3>        dof_handler;
+		Triangulation<3>	triangulation;
+		FESystem<3>		fe;
+		DoFHandler<3>		dof_handler;
 
-		SparsityPattern      sparsity_pattern;
-		SparseMatrix<double> system_matrix;
-		ParameterHandler &prm;
+		SparsityPattern			sparsity_pattern;
+		SparseMatrix<double>	system_matrix;
+		ParameterHandler 		&prm;
 
-		bool PRM_O_Grid, PRM_O_Dofs, PRM_O_ActiveCells;
-		std::string PRM_M_C_TypeIn, PRM_M_C_TypeOut;
-		double PRM_M_C_RadiusIn, PRM_M_C_RadiusOut;
-		int PRM_M_R_XLength, PRM_M_R_YLength, PRM_M_R_ZLength;
-		double PRM_M_W_Delta, PRM_M_W_EpsilonIn, PRM_M_W_EpsilonOut, PRM_M_W_Lambda;
-		std::string PRM_M_BC_Type;
-		double PRM_M_BC_XYin, PRM_M_BC_XYout, PRM_M_BC_Mantle;
-		std::string PRM_D_Refinement;
-		int PRM_D_XY, PRM_D_Z;
-		Vector<double>       solution;
-		Vector<double>       system_rhs;
+		bool			PRM_O_Grid, PRM_O_Dofs, PRM_O_ActiveCells, PRM_O_VerboseOutput;
+		std::string		PRM_M_C_TypeIn, PRM_M_C_TypeOut;
+		double			PRM_M_C_RadiusIn, PRM_M_C_RadiusOut;
+		int				PRM_M_R_XLength, PRM_M_R_YLength, PRM_M_R_ZLength;
+		double			PRM_M_W_Delta, PRM_M_W_EpsilonIn, PRM_M_W_EpsilonOut, PRM_M_W_Lambda;
+		std::string		PRM_M_BC_Type;
+		double			PRM_M_BC_XYin, PRM_M_BC_XYout, PRM_M_BC_Mantle;
+		std::string 	PRM_D_Refinement;
+		int 			PRM_D_XY, PRM_D_Z;
+		Vector<double>	solution;
+		Vector<double>	system_rhs;
 };
 
 Step3::Step3 (ParameterHandler &param)
   :
-  fe (1),
+  fe (FE_Nedelec<3> (0), 2),
   dof_handler (triangulation),
   prm(param)
 { }
+
+Tensor<2,3> Step3::get_Tensor(Point<3> position ) {
+	Tensor<2,3> ret;
+	ret[0][0] = 1.0;
+	ret[1][1] = 1.0;
+	ret[2][2] = 1.0;
+	if(position(0)*position(0) + position(1)*position(1) < 0.2828 ) {
+		ret *= PRM_M_W_EpsilonIn;
+	} else {
+		ret *= PRM_M_W_EpsilonOut;
+	}
+
+	return ret;
+
+}
 
 void Step3::read_values() {
 	prm.enter_subsection("Output");
@@ -199,6 +247,7 @@ void Step3::read_values() {
 		PRM_O_Grid	=	prm.get_bool("Output Grid");
 		PRM_O_Dofs	=	prm.get_bool("Output Dofs");
 		PRM_O_ActiveCells	=	prm.get_bool("Output Active Cells");
+		PRM_O_VerboseOutput = prm.get_bool("Verbose Output");
 	}
 	prm.leave_subsection();
 
@@ -254,11 +303,8 @@ void Step3::read_values() {
 
 void Step3::make_grid ()
 {
-
 	const double outer_radius = 1.0;
-	//Triangulation<2> temp;
 	GridGenerator::subdivided_hyper_cube (triangulation, 5, -outer_radius, outer_radius);
-	//GridGenerator::extrude_triangulation(temp, 3, 3.0, triangulation);
 
 	static const CylindricalManifold<3> round_description(2, 0.0001);
 	triangulation.set_manifold (1, round_description);
@@ -269,7 +315,6 @@ void Step3::make_grid ()
 	for (; cell!=endc; ++cell){
 		double distance_from_center = 0;
 		for( int j = 0; j<4; j++) distance_from_center += DDist(cell->vertex(j));
-			//std::cout << "Distance appeared: " << distance_from_center << std::endl;
 		if (distance_from_center < 3 ) {
 			cell->set_all_manifold_ids(1);
 		}
@@ -279,24 +324,33 @@ void Step3::make_grid ()
 	for (; cell!=endc; ++cell){
 		double distance_from_center = 0;
 		for( int j = 0; j<4; j++) distance_from_center += DDist(cell->vertex(j));
-		//std::cout << "Distance appeared: " << distance_from_center << std::endl;
 		if (distance_from_center < 1.2) {
 			cell->set_manifold_id(0);
 		}
 	}
 
-	//temp.refine_global (3);
-	triangulation.refine_global (3);
+	if(PRM_D_Refinement == "global") triangulation.refine_global (PRM_D_XY-1);
 
-	mesh_info(triangulation, "grid-3D.vtk");
+	if(PRM_O_Grid) {
+		if(PRM_O_VerboseOutput) std::cout<< "Writing Mesh data to file \"grid-3D.vtk\"" << std::endl;
+		mesh_info(triangulation, "grid-3D.vtk");
+		if(PRM_O_VerboseOutput) std::cout<< "Done" << std::endl;
+	}
 }
 
 void Step3::setup_system ()
 {
+	if(PRM_O_VerboseOutput && PRM_O_Dofs) {
+		std::cout << "Distributing Degrees of freedom." << std::endl;
+	}
 	dof_handler.distribute_dofs (fe);
-	std::cout << "Number of degrees of freedom: "
-            << dof_handler.n_dofs()
-            << std::endl;
+	if(PRM_O_Dofs) {
+		std::cout << "Number of degrees of freedom: " << dof_handler.n_dofs() << std::endl;
+	}
+
+	if(PRM_O_VerboseOutput) {
+		std::cout << "Calculating compressed Sparsity Pattern..." << std::endl;
+	}
 
 	CompressedSparsityPattern c_sparsity(dof_handler.n_dofs());
 	DoFTools::make_sparsity_pattern (dof_handler, c_sparsity);
@@ -306,21 +360,29 @@ void Step3::setup_system ()
 
 	solution.reinit (dof_handler.n_dofs());
 	system_rhs.reinit (dof_handler.n_dofs());
+	if(PRM_O_VerboseOutput) {
+			std::cout << "Done." << std::endl;
+	}
 }
 
 void Step3::assemble_system ()
 {
-
 	QGauss<3>  quadrature_formula(2);
+	const FEValuesExtractors::Vector real (0);
+	const FEValuesExtractors::Vector imag (3);
+	FEValues<3> fe_values (fe, quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points );
+	std::vector<Point<3> > quadrature_points;
 
-	FEValues<3> fe_values (fe, quadrature_formula,
-                         update_values | update_gradients | update_JxW_values);
 	const unsigned int   dofs_per_cell = fe.dofs_per_cell;
 	const unsigned int   n_q_points    = quadrature_formula.size();
 
-	FullMatrix<double>   cell_matrix (dofs_per_cell, dofs_per_cell);
-	Vector<double>       cell_rhs (dofs_per_cell);
+	if(PRM_O_VerboseOutput) {
+		std::cout << "Dofs per cell: " << dofs_per_cell << std::endl << "Quadrature Formula Size: " << n_q_points << std::endl;
+	}
 
+	FullMatrix<double>	cell_matrix (dofs_per_cell, dofs_per_cell);
+	Vector<double>		cell_rhs (dofs_per_cell);
+	Tensor<2,3> 		epsilon;
 	std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
 	DoFHandler<3>::active_cell_iterator
@@ -328,25 +390,21 @@ void Step3::assemble_system ()
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
     {
-
 		fe_values.reinit (cell);
-
+		quadrature_points = fe_values.get_quadrature_points();
 		cell_matrix = 0;
 		cell_rhs = 0;
 
 		for (unsigned int q_index=0; q_index<n_q_points; ++q_index)
         {
+			epsilon = get_Tensor(quadrature_points[q_index]);
 			for (unsigned int i=0; i<dofs_per_cell; ++i)
 				for (unsigned int j=0; j<dofs_per_cell; ++j)
-					cell_matrix(i,j) += (fe_values.shape_grad (i, q_index) *
-                                   fe_values.shape_grad (j, q_index) *
-                                   fe_values.JxW (q_index));
+					cell_matrix(i,j) += (epsilon * fe_values[real].curl(i,q_index)) * fe_values[real].curl(j,q_index) + fe_values[imag].value(i,q_index) * fe_values[imag].value(j,q_index) ;
 
 
 			for (unsigned int i=0; i<dofs_per_cell; ++i)
-				cell_rhs(i) += (fe_values.shape_value (i, q_index) *
-                            1 *
-                            fe_values.JxW (q_index));
+				cell_rhs(i) += 0;
         }
 
 		cell->get_dof_indices (local_dof_indices);
@@ -362,7 +420,13 @@ void Step3::assemble_system ()
     }
 
 	std::map<types::global_dof_index,double> boundary_values;
-	VectorTools::interpolate_boundary_values (dof_handler, 	0, 	ZeroFunction<3>(), 	boundary_values);
+	VectorTools::interpolate_boundary_values (dof_handler, 	0, 	RightHandSide<3>(),	boundary_values);
+	VectorTools::interpolate_boundary_values (dof_handler, 	1, 	RightHandSide<3>(),	boundary_values);
+	VectorTools::interpolate_boundary_values (dof_handler, 	2, 	RightHandSide<3>(),	boundary_values);
+	VectorTools::interpolate_boundary_values (dof_handler, 	3, 	RightHandSide<3>(),	boundary_values);
+	VectorTools::interpolate_boundary_values (dof_handler, 	4, 	RightHandSide<3>(),	boundary_values);
+	VectorTools::interpolate_boundary_values (dof_handler, 	5, 	RightHandSide<3>(),	boundary_values);
+
 	MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
 
 }
