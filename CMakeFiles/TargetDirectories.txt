@@ -1,8 +1,0 @@
-/home/pascal/Deal/examples/step-3/CMakeFiles/debug.dir
-/home/pascal/Deal/examples/step-3/CMakeFiles/distclean.dir
-/home/pascal/Deal/examples/step-3/CMakeFiles/info.dir
-/home/pascal/Deal/examples/step-3/CMakeFiles/release.dir
-/home/pascal/Deal/examples/step-3/CMakeFiles/run.dir
-/home/pascal/Deal/examples/step-3/CMakeFiles/runclean.dir
-/home/pascal/Deal/examples/step-3/CMakeFiles/step-3.dir
-/home/pascal/Deal/examples/step-3/CMakeFiles/strip_comments.dir
