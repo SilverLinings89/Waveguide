@@ -1,0 +1,51 @@
+subsection Output
+		set Output Grid = true
+		set Output Dofs = true
+		set Output Active Cells = true
+		set Verbose Output = true
+end
+
+subsection Measures
+	subsection Connectors
+		set Type in = Circle
+		set Type out = Circle
+		set Radius in = 1.5
+		set Radius out = 1.5
+	end
+	subsection Region
+		set XLength = 20
+		set YLength = 20
+		set ZLength = 450
+	end
+	subsection Waveguide
+		set Delta = 0
+		set epsilon in = 2.2
+		set epsilon out = 1.0
+		set Lambda = 0.6328
+	end
+	subsection Boundary Conditions
+		set Type = PML
+		set XY in = 10
+		set XY out = 10
+		set Mantle = 10
+		set KappaXMax = 10.0
+		set KappaYMax = 10.0
+		set KappaZMax = 10.0
+		set SigmaXMax = 10.0
+		set SigmaYMax = 10.0
+		set SigmaZMax = 10.0
+		set DampeningExponentM = 3
+	end
+end
+
+subsection Discretization
+	set refinement = global
+	set XY = 3
+	set Z = 3
+end
+
+	
+
+
+		
+		 
