@@ -49,8 +49,14 @@
 using namespace dealii;
 
 const double PI =  3.141592653589793238462643383279502884197169399;
-const double Eps0 = 8.854e-18;
-const double Mu0 = 1.257e-12;
+const double Eps0 = 1;
+const double Mu0 = 1;
+
+// const double Eps0 = 8.854e-18;
+// const double Mu0 = 1.257e-12;
+const double c = 2.998e14;
+const double f0 = c/0.63;
+const double omega = 2 * PI * f0;
 
 template<int dim> void mesh_info(const Triangulation<dim> &tria, const std::string &filename)
 {
@@ -216,7 +222,7 @@ template <int dim>
 double RightHandSide<dim>::value (const Point<dim> &p , const unsigned int component) const
 {
 	if(p[2] < 0){
-			if(p(0)*p(0) + p(1)*p(1) < 0.2828 && component == 2) return (0.2828- (p(0)*p(0) + p(1)*p(1))) ;
+			if(p(0)*p(0) + p(1)*p(1) < 0.2828 && component <= 2) return (0.2828- (p(0)*p(0) + p(1)*p(1))) ;
 			else return 0.0;
 	}
 	return 1.0;
@@ -573,15 +579,15 @@ void Waveguide::assemble_system ()
 			for (unsigned int i=0; i<dofs_per_cell; ++i)
 				for (unsigned int j=0; j<dofs_per_cell; ++j){
 
-					cell_matrix(i,j) += (epsilon_re * fe_values[real].curl(i,q_index)) * fe_values[real].curl(j,q_index);
-					cell_matrix(i,j) += (epsilon_re * fe_values[imag].curl(i,q_index)) * fe_values[imag].curl(j,q_index);
-					cell_matrix(i,j) += (epsilon_im * fe_values[imag].curl(i,q_index)) * fe_values[real].curl(j,q_index);
-					cell_matrix(i,j) += (epsilon_im * fe_values[real].curl(i,q_index)) * fe_values[imag].curl(j,q_index);
-					cell_matrix(i,j) += fe_values[real].value(i,q_index) * (mu_re *fe_values[real].value(j,q_index) ) ;
-					cell_matrix(i,j) += fe_values[imag].value(i,q_index) * ( mu_im *fe_values[real].value(j,q_index) );
-					cell_matrix(i,j) += fe_values[real].value(i,q_index) * (mu_im *fe_values[imag].value(j,q_index)) ;
-					cell_matrix(i,j) +=  fe_values[imag].value(i,q_index) * (mu_re * fe_values[imag].value(j,q_index) );
-
+					cell_matrix(i,j) += (mu_re * fe_values[real].curl(i,q_index)) * fe_values[real].curl(j,q_index);
+					cell_matrix(i,j) += (mu_re * fe_values[imag].curl(i,q_index)) * fe_values[imag].curl(j,q_index);
+					cell_matrix(i,j) -= (mu_im * fe_values[imag].curl(i,q_index)) * fe_values[real].curl(j,q_index);
+					cell_matrix(i,j) += (mu_im * fe_values[real].curl(i,q_index)) * fe_values[imag].curl(j,q_index);
+					cell_matrix(i,j) -= omega * omega * fe_values[real].value(i,q_index) * (epsilon_re *fe_values[real].value(j,q_index) ) ;
+					cell_matrix(i,j) += omega * omega * fe_values[imag].value(i,q_index) * ( epsilon_im *fe_values[real].value(j,q_index) );
+					cell_matrix(i,j) -= omega * omega * fe_values[real].value(i,q_index) * (epsilon_im *fe_values[imag].value(j,q_index)) ;
+					cell_matrix(i,j) -= omega * omega * fe_values[imag].value(i,q_index) * (epsilon_re * fe_values[imag].value(j,q_index) );
+/**
 					cell_matrix(i,j) += (epsilon_im * fe_values[real].curl(i,q_index)) * fe_values[real].curl(j,q_index);
 					cell_matrix(i,j) += (epsilon_im * fe_values[imag].curl(i,q_index)) * fe_values[imag].curl(j,q_index);
 					cell_matrix(i,j) += (epsilon_re * fe_values[imag].curl(i,q_index)) * fe_values[real].curl(j,q_index);
@@ -590,7 +596,7 @@ void Waveguide::assemble_system ()
 					cell_matrix(i,j) += fe_values[imag].value(i,q_index) * ( mu_re *fe_values[real].value(j,q_index) );
 					cell_matrix(i,j) += fe_values[real].value(i,q_index) * (mu_re *fe_values[imag].value(j,q_index)) ;
 					cell_matrix(i,j) +=  fe_values[imag].value(i,q_index) * (mu_im * fe_values[imag].value(j,q_index) );
-
+**/
 				}
 /**
 			for (unsigned int i=0; i<dofs_per_cell; ++i)
@@ -654,9 +660,12 @@ void Waveguide::assemble_system ()
 
 	MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
 	**/
+
+	/**
 	for(int i = 0; i< system_rhs.size(); i++) {
 		std::cout << " " << system_rhs(i) << std::endl;
 	}
+	**/
 }
 
 
