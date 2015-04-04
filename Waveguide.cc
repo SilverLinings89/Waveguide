@@ -52,8 +52,8 @@ const double PI =  3.141592653589793238462643383279502884197169399;
 const double Eps0 = 1;
 const double Mu0 = 1;
 
-// const double Eps0 = 8.854e-18;
-// const double Mu0 = 1.257e-12;
+//const double Eps0 = 8.854e-18;
+//const double Mu0 = 1.257e-12;
 const double c = 2.998e14;
 const double f0 = c/0.63;
 const double omega = 2 * PI * f0;
@@ -222,10 +222,14 @@ template <int dim>
 double RightHandSide<dim>::value (const Point<dim> &p , const unsigned int component) const
 {
 	if(p[2] < 0){
-			if(p(0)*p(0) + p(1)*p(1) < 0.2828 && component <= 2) return (0.2828- (p(0)*p(0) + p(1)*p(1))) ;
+		if(p(0)*p(0) + p(1)*p(1) < 0.2828){
+			if(component == 0 || component == 4) return (p(0)*p(0) + p(1)*p(1))*(0.2828- (p(0)*p(0) + p(1)*p(1)))/(p(0)*p(0)) * 1e5 ;
+			if(component == 1 || component == 3) return (p(0)*p(0) + p(1)*p(1))*(0.2828- (p(0)*p(0) + p(1)*p(1)))/(p(1)*p(1)) * 1e5;
+
+		}
 			else return 0.0;
 	}
-	return 1.0;
+	return 0.0;
 }
 
 template <int dim>
@@ -254,7 +258,9 @@ class Waveguide
 		double 	PML_X_Distance(Point<3> &);
 		double 	PML_Y_Distance(Point<3> &);
 		double 	PML_Z_Distance(Point<3> &);
-		Tensor<2,3> get_Tensor(Point<3> &, bool, bool, bool);
+		Tensor<2,3, std::complex<double>> get_Tensor(Point<3> &, bool, bool);
+		Tensor<2,3, std::complex<double>> Transpose_Tensor(Tensor<2,3, std::complex<double>> );
+		Tensor<1,3, std::complex<double>> Transpose_Vector(Tensor<1,3, std::complex<double>> );
 
 		Triangulation<3>	triangulation;
 		FESystem<3>		fe;
@@ -287,8 +293,8 @@ Waveguide::Waveguide (ParameterHandler &param)
   prm(param)
 { }
 
-Tensor<2,3> Waveguide::get_Tensor(Point<3> & position, bool imaginary, bool inverse , bool epsilon) {
-	Tensor<2,3> ret;
+Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, bool inverse , bool epsilon) {
+	Tensor<2,3, std::complex<double>> ret;
 	std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
 
 	double omegaepsilon0 = (2* PI / PRM_M_W_Lambda) * 2.998 * 8.85418781762e-4;
@@ -334,15 +340,10 @@ Tensor<2,3> Waveguide::get_Tensor(Point<3> & position, bool imaginary, bool inve
 		S3 = temp / S3;
 	}
 
-	if(imaginary){
-		ret[0][0] = S1.imag();
-		ret[1][1] = S2.imag();
-		ret[2][2] = S3.imag();
-	} else {
-		ret[0][0] = S1.real();
-		ret[1][1] = S2.real();
-		ret[2][2] = S3.real();
-	}
+	ret[0][0] = S1;
+	ret[1][1] = S2;
+	ret[2][2] = S3;
+
 	if(inverse) {
 		if(epsilon) {
 			if(position(0)*position(0) + position(1)*position(1) < 0.2828 ) {
@@ -368,6 +369,27 @@ Tensor<2,3> Waveguide::get_Tensor(Point<3> & position, bool imaginary, bool inve
 	}
 
 
+	return ret;
+}
+
+Tensor<2,3, std::complex<double>> Waveguide::Transpose_Tensor(Tensor<2,3, std::complex<double>> input) {
+	Tensor<2,3, std::complex<double>> ret ;
+	for(int i= 0; i< 3; i++){
+		for(int j = 0; j<3; j++){
+			ret[i][j].real(input[i][j].real());
+			ret[i][j].imag( - input[i][j].imag());
+		}
+	}
+	return ret;
+}
+
+Tensor<1,3, std::complex<double>> Waveguide::Transpose_Vector(Tensor<1,3, std::complex<double>> input) {
+	Tensor<1,3, std::complex<double>> ret ;
+	for(int i= 0; i< 3; i++){
+		ret[i].real(input[i].real());
+		ret[i].imag( - input[i].imag());
+
+	}
 	return ret;
 }
 
@@ -477,7 +499,7 @@ void Waveguide::read_values() {
 void Waveguide::make_grid ()
 {
 	const double outer_radius = 1.0;
-	GridGenerator::subdivided_hyper_cube (triangulation, 3, -outer_radius, outer_radius);
+	GridGenerator::subdivided_hyper_cube (triangulation, 5, -outer_radius, outer_radius);
 
 	static const CylindricalManifold<3, 3> round_description(2, 0.0001);
 	unsigned int temp = 1;
@@ -557,7 +579,7 @@ void Waveguide::assemble_system ()
 
 	FullMatrix<double>	cell_matrix (dofs_per_cell, dofs_per_cell);
 	Vector<double>		cell_rhs (dofs_per_cell);
-	Tensor<2,3> 		epsilon_re, epsilon_im, mu_re, mu_im;
+	Tensor<2,3, std::complex<double>> 		epsilon, mu;
 	std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
 	DoFHandler<3>::active_cell_iterator
@@ -569,41 +591,48 @@ void Waveguide::assemble_system ()
 		quadrature_points = fe_values.get_quadrature_points();
 		cell_matrix = 0;
 		cell_rhs = 0;
-
+		fe_values.
 		for (unsigned int q_index=0; q_index<n_q_points; ++q_index)
         {
-			epsilon_re = get_Tensor(quadrature_points[q_index], false, false, true);
-			epsilon_im = get_Tensor(quadrature_points[q_index], true, false, true);
-			mu_re = get_Tensor(quadrature_points[q_index], false, true, false);
-			mu_im = get_Tensor(quadrature_points[q_index], true, true, false);
-			for (unsigned int i=0; i<dofs_per_cell; ++i)
-				for (unsigned int j=0; j<dofs_per_cell; ++j){
-
-					cell_matrix(i,j) += (mu_re * fe_values[real].curl(i,q_index)) * fe_values[real].curl(j,q_index);
-					cell_matrix(i,j) += (mu_re * fe_values[imag].curl(i,q_index)) * fe_values[imag].curl(j,q_index);
-					cell_matrix(i,j) -= (mu_im * fe_values[imag].curl(i,q_index)) * fe_values[real].curl(j,q_index);
-					cell_matrix(i,j) += (mu_im * fe_values[real].curl(i,q_index)) * fe_values[imag].curl(j,q_index);
-					cell_matrix(i,j) -= omega * omega * fe_values[real].value(i,q_index) * (epsilon_re *fe_values[real].value(j,q_index) ) ;
-					cell_matrix(i,j) += omega * omega * fe_values[imag].value(i,q_index) * ( epsilon_im *fe_values[real].value(j,q_index) );
-					cell_matrix(i,j) -= omega * omega * fe_values[real].value(i,q_index) * (epsilon_im *fe_values[imag].value(j,q_index)) ;
-					cell_matrix(i,j) -= omega * omega * fe_values[imag].value(i,q_index) * (epsilon_re * fe_values[imag].value(j,q_index) );
-/**
-					cell_matrix(i,j) += (epsilon_im * fe_values[real].curl(i,q_index)) * fe_values[real].curl(j,q_index);
-					cell_matrix(i,j) += (epsilon_im * fe_values[imag].curl(i,q_index)) * fe_values[imag].curl(j,q_index);
-					cell_matrix(i,j) += (epsilon_re * fe_values[imag].curl(i,q_index)) * fe_values[real].curl(j,q_index);
-					cell_matrix(i,j) += (epsilon_re * fe_values[real].curl(i,q_index)) * fe_values[imag].curl(j,q_index);
-					cell_matrix(i,j) += fe_values[real].value(i,q_index) * (mu_im *fe_values[real].value(j,q_index) ) ;
-					cell_matrix(i,j) += fe_values[imag].value(i,q_index) * ( mu_re *fe_values[real].value(j,q_index) );
-					cell_matrix(i,j) += fe_values[real].value(i,q_index) * (mu_re *fe_values[imag].value(j,q_index)) ;
-					cell_matrix(i,j) +=  fe_values[imag].value(i,q_index) * (mu_im * fe_values[imag].value(j,q_index) );
-**/
+			epsilon = get_Tensor(quadrature_points[q_index],  false, true);
+			mu = get_Tensor(quadrature_points[q_index], true, false);
+			const double JxW = fe_values.JxW(q_index);
+			for (unsigned int i=0; i<dofs_per_cell; ++i){
+				Tensor<1,3, std::complex<double>> I_Curl;
+				Tensor<1,3, std::complex<double>> I_Val;
+				for(int k = 0; k<3; k++){
+					I_Curl[k].imag(fe_values[imag].curl(i, q_index)[k]);
+					I_Curl[k].real(fe_values[real].curl(i, q_index)[k]);
+					I_Val[k].imag(fe_values[imag].value(i, q_index)[k]);
+					I_Val[k].real(fe_values[real].value(i, q_index)[k]);
 				}
-/**
-			for (unsigned int i=0; i<dofs_per_cell; ++i)
-				cell_rhs(i) += 0;
 
-**/
+
+
+				for (unsigned int j=0; j<dofs_per_cell; ++j){
+					Tensor<1,3, std::complex<double>> J_Curl;
+					Tensor<1,3, std::complex<double>> J_Val;
+					for(int k = 0; k<3; k++){
+						J_Curl[k].imag(fe_values[imag].curl(j, q_index)[k]);
+						J_Curl[k].real(fe_values[real].curl(j, q_index)[k]);
+						J_Val[k].imag(fe_values[imag].value(j, q_index)[k]);
+						J_Val[k].real(fe_values[real].value(j, q_index)[k]);
+					}
+
+					cell_matrix(i,j) += ((mu * I_Curl) * Transpose_Vector(J_Curl) ).real() *JxW;
+					cell_matrix(i,j) += (I_Val  *(epsilon * Transpose_Vector(J_Val))).real() * omega * omega;
+
+				}
+			}
         }
+		if(cell->at_boundary()){
+			for(int i = 0; i<5; i++){
+				if(cell->face(i)->at_boundary()){
+					cell->face(i)->
+				}
+			}
+		}
+
 
 		cell->get_dof_indices (local_dof_indices);
 
@@ -635,9 +664,47 @@ void Waveguide::assemble_system ()
 **/
 
 	std::map<types::global_dof_index,double> boundary_values;
-	VectorTools::project_boundary_values_curl_conforming(	dof_handler,	0,	RightHandSide<3>(),	0,	boundary_value_constraints_real		);
+	VectorTools::project_boundary_values_curl_conforming(	dof_handler,	0,	RightHandSide<3>(),	0,	boundary_value_constraints_real	);
 	boundary_value_constraints_real.close();
 	boundary_value_constraints_real.condense(system_matrix, system_rhs);
+/**
+	std::cout << "Beginning T1: Eps, imag." << std::endl;
+	Point<3> testpoint(0,0.9,0);
+	Tensor <2,3> test1 = get_Tensor(testpoint, true, false, true );
+	for	(int i = 0; i< 3; i++) {
+		for(int j = 0; j<3; j++){
+			std::cout << test1[i][j]<< " ";
+		}
+		std::cout << std::endl;
+	}
+
+	std::cout << "Beginning T2: Eps, imag, inv." << std::endl;
+	test1 = get_Tensor(testpoint, true, true, true );
+	for	(int i = 0; i< 3; i++) {
+		for(int j = 0; j<3; j++){
+			std::cout << test1[i][j]<< " ";
+		}
+		std::cout << std::endl;
+	}
+
+	std::cout << "Beginning T3: Mu, imag." << std::endl;
+	test1 = get_Tensor(testpoint, true, false, false );
+	for	(int i = 0; i< 3; i++) {
+		for(int j = 0; j<3; j++){
+			std::cout << test1[i][j]<< " ";
+		}
+		std::cout << std::endl;
+	}
+
+	std::cout << "Beginning T4: Mu, imag, inv." << std::endl;
+	test1 = get_Tensor(testpoint, true, true, false );
+	for	(int i = 0; i< 3; i++) {
+		for(int j = 0; j<3; j++){
+			std::cout << test1[i][j]<< " ";
+		}
+		std::cout << std::endl;
+	}
+**/
 	//MatrixTools::apply_boundary_values( boundary_values, 	system_matrix, 	solution, 	system_rhs);
 	/**
 	for (unsigned int i=0; i< boundary_dofs.size(); ++i)
@@ -671,7 +738,7 @@ void Waveguide::assemble_system ()
 
 void Waveguide::solve ()
 {
-	SolverControl           solver_control (10000, 1e0);
+	SolverControl           solver_control (1000, 1e51);
 	SolverGMRES<Vector<double> > solver (solver_control);
 	solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
 

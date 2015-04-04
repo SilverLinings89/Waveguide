@@ -28,12 +28,12 @@ subsection Measures
 		set XY in = 10
 		set XY out = 10
 		set Mantle = 10
-		set KappaXMax = 10.0
-		set KappaYMax = 10.0
-		set KappaZMax = 10.0
-		set SigmaXMax = 10.0
-		set SigmaYMax = 10.0
-		set SigmaZMax = 10.0
+		set KappaXMax = 16.0
+		set KappaYMax = 16.0
+		set KappaZMax = 16.0
+		set SigmaXMax = 0.0
+		set SigmaYMax = 0.0
+		set SigmaZMax = 0.0
 		set DampeningExponentM = 3
 	end
 end
