@@ -49,11 +49,11 @@
 using namespace dealii;
 
 const double PI =  3.141592653589793238462643383279502884197169399;
-const double Eps0 = 1;
-const double Mu0 = 1;
+//const double Eps0 = 1;
+//const double Mu0 = 1;
 
-//const double Eps0 = 8.854e-18;
-//const double Mu0 = 1.257e-12;
+const double Eps0 = 8.854e-18;
+const double Mu0 = 1.257e-12;
 const double c = 2.998e14;
 const double f0 = c/0.63;
 const double omega = 2 * PI * f0;
@@ -239,6 +239,7 @@ void RightHandSide<dim>::vector_value (const Point<dim> &p,	Vector<double> &valu
 }
 
 
+
 class Waveguide
 {
 	public:
@@ -258,6 +259,7 @@ class Waveguide
 		double 	PML_X_Distance(Point<3> &);
 		double 	PML_Y_Distance(Point<3> &);
 		double 	PML_Z_Distance(Point<3> &);
+		double  RHS_value(const Point<3> &, const unsigned int component);
 		Tensor<2,3, std::complex<double>> get_Tensor(Point<3> &, bool, bool);
 		Tensor<2,3, std::complex<double>> Transpose_Tensor(Tensor<2,3, std::complex<double>> );
 		Tensor<1,3, std::complex<double>> Transpose_Vector(Tensor<1,3, std::complex<double>> );
@@ -429,6 +431,20 @@ double Waveguide::PML_Z_Distance(Point<3> &p){
 		}
 }
 
+double Waveguide::RHS_value (const Point<3> &p , const unsigned int component)
+{
+	if(p[2] < 0){
+		if(p(0)*p(0) + p(1)*p(1) < 0.2828){
+			if(component == 0 || component == 4) return (p(0)*p(0) + p(1)*p(1))*(0.2828- (p(0)*p(0) + p(1)*p(1)))/(p(0)*p(0)) * 1e5 ;
+			if(component == 1 || component == 3) return (p(0)*p(0) + p(1)*p(1))*(0.2828- (p(0)*p(0) + p(1)*p(1)))/(p(1)*p(1)) * 1e5;
+
+		}
+			else return 0.0;
+	}
+	return 0.0;
+}
+
+
 void Waveguide::read_values() {
 	prm.enter_subsection("Output");
 	{
@@ -525,6 +541,21 @@ void Waveguide::make_grid ()
 		}
 	}
 
+	cell = triangulation.begin_active();
+	for (; cell!=endc; ++cell){
+		if(cell->at_boundary()){
+			for(int j = 0; j<6; j++){
+				if(cell->face(j)->at_boundary()){
+					Point<3> ctr =cell->face(j)->center(true, false);
+					if(Distance2D(ctr) < 0.2828){
+						if(ctr(2) < 0) cell->face(j)->set_all_boundary_indicators(1);
+						else cell->face(j)->set_all_boundary_indicators(2);
+					}
+				}
+			}
+		}
+	}
+
 	if(PRM_D_Refinement == "global") triangulation.refine_global (PRM_D_XY-1);
 
 	if(PRM_O_Grid) {
@@ -591,7 +622,7 @@ void Waveguide::assemble_system ()
 		quadrature_points = fe_values.get_quadrature_points();
 		cell_matrix = 0;
 		cell_rhs = 0;
-		fe_values.
+
 		for (unsigned int q_index=0; q_index<n_q_points; ++q_index)
         {
 			epsilon = get_Tensor(quadrature_points[q_index],  false, true);
@@ -625,13 +656,7 @@ void Waveguide::assemble_system ()
 				}
 			}
         }
-		if(cell->at_boundary()){
-			for(int i = 0; i<5; i++){
-				if(cell->face(i)->at_boundary()){
-					cell->face(i)->
-				}
-			}
-		}
+
 
 
 		cell->get_dof_indices (local_dof_indices);
@@ -645,100 +670,77 @@ void Waveguide::assemble_system ()
 		for (unsigned int i=0; i<dofs_per_cell; ++i)
 			system_rhs(local_dof_indices[i]) += cell_rhs(i);
 
-
-
-
     }
 
-/**
-	for (unsigned int i = 0; i < dof_handler.n_dofs(); i++) {
-
-		for (unsigned int j = 0; j < dof_handler.n_dofs(); j++) {
-			if (system_matrix.el(i,j) != 0) std::cout<< j << " " ;
-
-		}
-		std::cout << std::endl;
-
-
-	}
-**/
-
-	std::map<types::global_dof_index,double> boundary_values;
-	VectorTools::project_boundary_values_curl_conforming(	dof_handler,	0,	RightHandSide<3>(),	0,	boundary_value_constraints_real	);
-	boundary_value_constraints_real.close();
-	boundary_value_constraints_real.condense(system_matrix, system_rhs);
-/**
-	std::cout << "Beginning T1: Eps, imag." << std::endl;
-	Point<3> testpoint(0,0.9,0);
-	Tensor <2,3> test1 = get_Tensor(testpoint, true, false, true );
-	for	(int i = 0; i< 3; i++) {
-		for(int j = 0; j<3; j++){
-			std::cout << test1[i][j]<< " ";
-		}
-		std::cout << std::endl;
-	}
-
-	std::cout << "Beginning T2: Eps, imag, inv." << std::endl;
-	test1 = get_Tensor(testpoint, true, true, true );
-	for	(int i = 0; i< 3; i++) {
-		for(int j = 0; j<3; j++){
-			std::cout << test1[i][j]<< " ";
-		}
-		std::cout << std::endl;
-	}
-
-	std::cout << "Beginning T3: Mu, imag." << std::endl;
-	test1 = get_Tensor(testpoint, true, false, false );
-	for	(int i = 0; i< 3; i++) {
-		for(int j = 0; j<3; j++){
-			std::cout << test1[i][j]<< " ";
-		}
-		std::cout << std::endl;
-	}
-
-	std::cout << "Beginning T4: Mu, imag, inv." << std::endl;
-	test1 = get_Tensor(testpoint, true, true, false );
-	for	(int i = 0; i< 3; i++) {
-		for(int j = 0; j<3; j++){
-			std::cout << test1[i][j]<< " ";
-		}
-		std::cout << std::endl;
-	}
-**/
-	//MatrixTools::apply_boundary_values( boundary_values, 	system_matrix, 	solution, 	system_rhs);
-	/**
-	for (unsigned int i=0; i< boundary_dofs.size(); ++i)
-	{
-		if(boundary_dofs[i])
-		{
-			boundary_value_constraints.add_line(i);
-			boundary_value_constraints.set_inhomogeneity(i,1.0 );
-		}
-	}
-
-	boundary_value_constraints.close();
-	std::map<types::global_dof_index,double> boundary_values;
-	VectorTools::interpolate_boundary_values (dof_handler, 	0, 	RightHandSide<3>(),	boundary_values);
-	VectorTools::interpolate_boundary_values (dof_handler, 	1, 	RightHandSide<3>(),	boundary_values);
-	VectorTools::interpolate_boundary_values (dof_handler, 	2, 	RightHandSide<3>(),	boundary_values);
-	VectorTools::interpolate_boundary_values (dof_handler, 	3, 	RightHandSide<3>(),	boundary_values);
-	VectorTools::interpolate_boundary_values (dof_handler, 	4, 	RightHandSide<3>(),	boundary_values);
-	VectorTools::interpolate_boundary_values (dof_handler, 	5, 	RightHandSide<3>(),	boundary_values);
-
+	std::vector<bool> boundary_dofs (dof_handler.n_dofs());
+	std::set<unsigned char> boundary_indicators;
+	boundary_indicators.insert (0);
+	boundary_indicators.insert (2);
+	DoFTools::extract_boundary_dofs (dof_handler, fe.component_mask(real), boundary_dofs, boundary_indicators);
+	std::map<unsigned int, double> boundary_values;
+	for (unsigned int i=0; i<dof_handler.n_dofs(); ++i) if (boundary_dofs[i] == true) boundary_values[i] = 0.;
+	DoFTools::extract_boundary_dofs (dof_handler, fe.component_mask(imag), boundary_dofs, boundary_indicators);
+	for (unsigned int i=0; i<dof_handler.n_dofs(); ++i) if (boundary_dofs[i] == true) boundary_values[i] = 0.;
 	MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
-	**/
 
-	/**
-	for(int i = 0; i< system_rhs.size(); i++) {
-		std::cout << " " << system_rhs(i) << std::endl;
+
+	boundary_dofs.clear();
+	boundary_indicators.clear();
+	boundary_indicators.insert (1);
+	DoFTools::extract_boundary_dofs (dof_handler, fe.component_mask(real), boundary_dofs, boundary_indicators);
+	boundary_values.clear();
+	for (unsigned int i=0; i<dof_handler.n_dofs(); ++i) if (boundary_dofs[i] == true) boundary_values[i] = 1.;
+	DoFTools::extract_boundary_dofs (dof_handler, fe.component_mask(imag), boundary_dofs, boundary_indicators);
+	for (unsigned int i=0; i<dof_handler.n_dofs(); ++i) if (boundary_dofs[i] == true) boundary_values[i] = 1.;
+	MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
+
+
+	cell = dof_handler.begin_active(),
+	endc = dof_handler.end();
+	for (; cell!=endc; ++cell)
+	{
+		if(cell->at_boundary(1)){
+			std::vector<unsigned int> current_dofs(24);
+			cell->get_dof_indices(current_dofs);
+
+			for(int i = 0; i< 6; i++){
+				if(cell->face(i)->center()(2) < -0.98){
+					for(int j = 0; j<4; j++){
+						Point<3> p1 = cell->face(i)->line(j)->vertex(0);
+						Point<3> p2 = cell->face(i)->line(j)->vertex(1);
+						Point<3> con = p2-p1;
+						Point<3> center = cell->face(i)->line(j)->center();
+						double r_val = 0;
+						r_val += con(0)* RHS_value(center,0);
+						r_val += con(1)* RHS_value(center,1);
+						r_val = r_val / con.norm_square();
+						std::pair<unsigned int , double> real_the_boundary;
+						real_the_boundary.first = current_dofs[2*GeometryInfo<3>::face_to_cell_lines(i, j)];
+						real_the_boundary.second = r_val;
+						boundary_values.insert(real_the_boundary);
+
+						double i_val = 0;
+						i_val += con(0)* RHS_value(center,3);
+						i_val += con(1)* RHS_value(center,4);
+						i_val = i_val / con.norm_square();
+						std::pair<unsigned int , double> imag_the_boundary;
+						imag_the_boundary.first = current_dofs[2*GeometryInfo<3>::face_to_cell_lines(i, j)];
+						imag_the_boundary.second = i_val;
+						boundary_values.insert(imag_the_boundary);
+
+					}
+				}
+
+			}
+		}
 	}
-	**/
+
 }
 
 
 void Waveguide::solve ()
 {
-	SolverControl           solver_control (1000, 1e51);
+	SolverControl           solver_control (100, 8e48);
 	SolverGMRES<Vector<double> > solver (solver_control);
 	solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
 
