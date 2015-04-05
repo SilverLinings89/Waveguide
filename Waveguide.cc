@@ -10,6 +10,7 @@
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
+#include <deal.II/lac/matrix_out.h>
 
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
@@ -238,8 +239,6 @@ void RightHandSide<dim>::vector_value (const Point<dim> &p,	Vector<double> &valu
 	for (unsigned int c=0; c<6; ++c) values(c) = RightHandSide<dim>::value (p, c);
 }
 
-
-
 class Waveguide
 {
 	public:
@@ -263,6 +262,9 @@ class Waveguide
 		Tensor<2,3, std::complex<double>> get_Tensor(Point<3> &, bool, bool);
 		Tensor<2,3, std::complex<double>> Transpose_Tensor(Tensor<2,3, std::complex<double>> );
 		Tensor<1,3, std::complex<double>> Transpose_Vector(Tensor<1,3, std::complex<double>> );
+		Point<3> Triangulation_Stretch_X (const Point<3> &);
+		Point<3> Triangulation_Stretch_Y (const Point<3> &);
+		Point<3> Triangulation_Stretch_Z (const Point<3> &);
 
 		Triangulation<3>	triangulation;
 		FESystem<3>		fe;
@@ -396,38 +398,38 @@ Tensor<1,3, std::complex<double>> Waveguide::Transpose_Vector(Tensor<1,3, std::c
 }
 
 bool Waveguide::PML_in_X(Point<3> &p) {
-	return  p(0) > (1.0 - (2.0 * PRM_M_BC_Mantle/100.0)) ||  p(0) < (-1.0 + (2.0 * PRM_M_BC_Mantle/100.0));
+	return  p(0) > ((PRM_M_R_XLength / 2.0) - (PRM_M_R_XLength * PRM_M_BC_Mantle/100.0)) ||  p(0) < (-(PRM_M_R_XLength / 2.0) + (PRM_M_R_XLength * PRM_M_BC_Mantle/100.0));
 }
 
 bool Waveguide::PML_in_Y(Point<3> &p) {
-	return  p(1) > (1.0 - (2.0 * PRM_M_BC_Mantle/100.0)) ||  p(1) < (-1.0 + (2.0 * PRM_M_BC_Mantle/100.0));
+	return  p(1) > ((PRM_M_R_YLength / 2.0) - (PRM_M_R_YLength * PRM_M_BC_Mantle/100.0)) ||  p(1) < (-(PRM_M_R_YLength / 2.0) + (PRM_M_R_YLength * PRM_M_BC_Mantle/100.0));
 }
 
 bool Waveguide::PML_in_Z(Point<3> &p) {
-	return  p(2) > (1.0 - (2.0 * PRM_M_BC_XYout/100.0)) ||  p(1) < (-1.0 + (2.0 * PRM_M_BC_XYin/100.0));
+	return  p(2) > ((PRM_M_R_ZLength / 2.0) - (PRM_M_R_ZLength * PRM_M_BC_XYout/100.0)) ||  (p(2) < (-(PRM_M_R_ZLength / 2.0) + (PRM_M_R_ZLength * PRM_M_BC_XYin/100.0)  && Distance2D(p)<0.2828));
 }
 
 double Waveguide::PML_X_Distance(Point<3> &p){
 	if(p(0) >0){
-		return p(0) - (1.0 - (2* PRM_M_BC_Mantle/100.0));
+		return p(0) - ((PRM_M_R_XLength / 2.0) - (PRM_M_R_XLength* PRM_M_BC_Mantle/100.0));
 	} else {
-		return -(p(0) + (1.0 - (2* PRM_M_BC_Mantle/100.0)));
+		return -(p(0) + ((PRM_M_R_XLength / 2.0) - (PRM_M_R_XLength* PRM_M_BC_Mantle/100.0)));
 	}
 }
 
 double Waveguide::PML_Y_Distance(Point<3> &p){
 	if(p(1) >0){
-			return p(1) - (1.0 - (2* PRM_M_BC_Mantle/100.0));
+			return p(1) - ((PRM_M_R_YLength / 2.0) - (PRM_M_R_YLength* PRM_M_BC_Mantle/100.0));
 		} else {
-			return -(p(1) + (1.0 - (2* PRM_M_BC_Mantle/100.0)));
+			return -(p(1) + ((PRM_M_R_YLength / 2.0) - (PRM_M_R_YLength* PRM_M_BC_Mantle/100.0)));
 		}
 }
 
 double Waveguide::PML_Z_Distance(Point<3> &p){
 	if(p(2) >0){
-			return p(2) - (1.0 - (2* PRM_M_BC_XYout/100));
+			return p(2) - ((PRM_M_R_ZLength / 2.0) - (PRM_M_R_ZLength * PRM_M_BC_XYout/100));
 		} else {
-			return -(p(2) + (1.0 - (2* PRM_M_BC_XYin/100)));
+			return -(p(2) + ((PRM_M_R_ZLength / 2.0) - (PRM_M_R_ZLength * PRM_M_BC_XYin/100)));
 		}
 }
 
@@ -444,6 +446,26 @@ double Waveguide::RHS_value (const Point<3> &p , const unsigned int component)
 	return 0.0;
 }
 
+Point<3> Waveguide::Triangulation_Stretch_X (const Point<3> &p)
+{
+  Point<3> q = p;
+  q[0] *= PRM_M_R_XLength /2.0;
+  return q;
+}
+
+Point<3> Waveguide::Triangulation_Stretch_Y (const Point<3> &p)
+{
+  Point<3> q = p;
+  q[1] *= PRM_M_R_YLength /2.0;
+  return q;
+}
+
+Point<3> Waveguide::Triangulation_Stretch_Z (const Point<3> &p)
+{
+  Point<3> q = p;
+  q[2] *= PRM_M_R_ZLength /2.0;
+  return q;
+}
 
 void Waveguide::read_values() {
 	prm.enter_subsection("Output");
@@ -547,7 +569,7 @@ void Waveguide::make_grid ()
 			for(int j = 0; j<6; j++){
 				if(cell->face(j)->at_boundary()){
 					Point<3> ctr =cell->face(j)->center(true, false);
-					if(Distance2D(ctr) < 0.2828){
+					if(Distance2D(ctr) < 0.28){
 						if(ctr(2) < 0) cell->face(j)->set_all_boundary_indicators(1);
 						else cell->face(j)->set_all_boundary_indicators(2);
 					}
@@ -563,6 +585,8 @@ void Waveguide::make_grid ()
 		mesh_info(triangulation, "grid-3D.vtk");
 		if(PRM_O_VerboseOutput) std::cout<< "Done" << std::endl;
 	}
+
+
 }
 
 void Waveguide::setup_system ()
@@ -628,7 +652,7 @@ void Waveguide::assemble_system ()
 			epsilon = get_Tensor(quadrature_points[q_index],  false, true);
 			mu = get_Tensor(quadrature_points[q_index], true, false);
 			const double JxW = fe_values.JxW(q_index);
-			for (unsigned int i=0; i<dofs_per_cell; ++i){
+			for (unsigned int i=0; i<dofs_per_cell; i++){
 				Tensor<1,3, std::complex<double>> I_Curl;
 				Tensor<1,3, std::complex<double>> I_Val;
 				for(int k = 0; k<3; k++){
@@ -640,7 +664,7 @@ void Waveguide::assemble_system ()
 
 
 
-				for (unsigned int j=0; j<dofs_per_cell; ++j){
+				for (unsigned int j=0; j<dofs_per_cell; j++){
 					Tensor<1,3, std::complex<double>> J_Curl;
 					Tensor<1,3, std::complex<double>> J_Val;
 					for(int k = 0; k<3; k++){
@@ -649,9 +673,10 @@ void Waveguide::assemble_system ()
 						J_Val[k].imag(fe_values[imag].value(j, q_index)[k]);
 						J_Val[k].real(fe_values[real].value(j, q_index)[k]);
 					}
-
-					cell_matrix(i,j) += ((mu * I_Curl) * Transpose_Vector(J_Curl) ).real() *JxW;
-					cell_matrix(i,j) += (I_Val  *(epsilon * Transpose_Vector(J_Val))).real() * omega * omega;
+					//for(int kl = 0; kl<3; kl++) std::cout << I_Curl[kl];
+					//std::cout << std::endl;
+					cell_matrix(i,j) += ((mu * I_Curl) * Transpose_Vector(J_Curl) ).real() *JxW ;
+					cell_matrix(i,j) -= (I_Val  *(epsilon * Transpose_Vector(J_Val))).real() /(omega * omega);
 
 				}
 			}
@@ -683,7 +708,7 @@ void Waveguide::assemble_system ()
 	for (unsigned int i=0; i<dof_handler.n_dofs(); ++i) if (boundary_dofs[i] == true) boundary_values[i] = 0.;
 	MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
 
-
+/**
 	boundary_dofs.clear();
 	boundary_indicators.clear();
 	boundary_indicators.insert (1);
@@ -693,41 +718,94 @@ void Waveguide::assemble_system ()
 	DoFTools::extract_boundary_dofs (dof_handler, fe.component_mask(imag), boundary_dofs, boundary_indicators);
 	for (unsigned int i=0; i<dof_handler.n_dofs(); ++i) if (boundary_dofs[i] == true) boundary_values[i] = 1.;
 	MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
+**/
 
-
+	int counter = 0;
+	boundary_values.clear();
 	cell = dof_handler.begin_active(),
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
 	{
-		if(cell->at_boundary(1)){
-			std::vector<unsigned int> current_dofs(24);
+		if(cell->at_boundary()){
+			std::vector<unsigned int> current_dofs(dofs_per_cell);
+			cell->get_dof_indices(current_dofs);
+			for(int i = 0; i < 24; i++) {
+				std::pair<unsigned int , double> real_the_boundary;
+				real_the_boundary.first = current_dofs[i];
+				real_the_boundary.second = 0;
+				boundary_values.insert(real_the_boundary);
+			}
+		}
+		if(cell->at_boundary() && Distance2D(cell->center(true, false)) < 0.2828 && cell->center(true, false)(2) < 0 ){
+
+			std::vector<unsigned int> current_dofs(dofs_per_cell);
 			cell->get_dof_indices(current_dofs);
 
+			if(counter  == 0){
+				std::cout<< "DofIndices: ";
+				for(int i = 0; i< dofs_per_cell; i++) {
+					std::cout<< current_dofs[i] << " ";
+				}
+				std::cout << std::endl;
+
+			}
 			for(int i = 0; i< 6; i++){
-				if(cell->face(i)->center()(2) < -0.98){
+				if(cell->face(i)->center()(2) < 0){
 					for(int j = 0; j<4; j++){
 						Point<3> p1 = cell->face(i)->line(j)->vertex(0);
 						Point<3> p2 = cell->face(i)->line(j)->vertex(1);
 						Point<3> con = p2-p1;
 						Point<3> center = cell->face(i)->line(j)->center();
+						if(counter  == 0){
+							std::cout<< "P1: ";
+							for(int i = 0; i< 3; i++) {
+								std::cout<< p1[i] << " ";
+							}
+							std::cout << std::endl;
+							std::cout<< "P2: ";
+							for(int i = 0; i< 3; i++) {
+								std::cout<< p2[i] << " ";
+							}
+							std::cout << std::endl;
+							std::cout<< "Con: ";
+							for(int i = 0; i< 3; i++) {
+								std::cout<< con[i] << " ";
+							}
+
+							std::cout << std::endl;
+						}
 						double r_val = 0;
 						r_val += con(0)* RHS_value(center,0);
 						r_val += con(1)* RHS_value(center,1);
+						if(counter  == 0){
+							std::cout<< "Value: " << r_val;
+							std::cout << std::endl;
+						}
 						r_val = r_val / con.norm_square();
+						if(counter  == 0){
+							std::cout<< "Value (normiert): " << r_val;
+							std::cout << std::endl;
+						}
 						std::pair<unsigned int , double> real_the_boundary;
 						real_the_boundary.first = current_dofs[2*GeometryInfo<3>::face_to_cell_lines(i, j)];
 						real_the_boundary.second = r_val;
-						boundary_values.insert(real_the_boundary);
+						std::map<unsigned int, double>::iterator it = boundary_values.find(real_the_boundary.first);
+						if(it != boundary_values.end()) it->second = r_val;
+
+
 
 						double i_val = 0;
 						i_val += con(0)* RHS_value(center,3);
 						i_val += con(1)* RHS_value(center,4);
 						i_val = i_val / con.norm_square();
+						i_val=1000;
 						std::pair<unsigned int , double> imag_the_boundary;
 						imag_the_boundary.first = current_dofs[2*GeometryInfo<3>::face_to_cell_lines(i, j)];
 						imag_the_boundary.second = i_val;
-						boundary_values.insert(imag_the_boundary);
+						it = boundary_values.find(imag_the_boundary.first);
+						if(it != boundary_values.end()) it->second = i_val;
 
+					    counter ++ ;
 					}
 				}
 
@@ -735,17 +813,25 @@ void Waveguide::assemble_system ()
 		}
 	}
 
-}
+	std::cout << "Anzahl gesetzter Randwerte: "<< boundary_values.size() << std::endl;
+	MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
+	//std::ofstream matrixfile;
+	//matrixfile.open("SystemMatrix.dat");
+	//system_matrix.print( matrixfile, true, false);
+	//MatrixOut matrix_out;
+	//std::ofstream out ("M.gnuplot");
+	//matrix_out.build_patches (system_matrix, "M");
+	//matrix_out.write_gnuplot (out);
 
+}
 
 void Waveguide::solve ()
 {
-	SolverControl           solver_control (100, 8e48);
+	SolverControl           solver_control (1000, 1e1);
 	SolverGMRES<Vector<double> > solver (solver_control);
 	solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
 
 }
-
 
 void Waveguide::output_results () const
 {
@@ -762,7 +848,6 @@ void Waveguide::output_results () const
 	data_out.write_vtk(outputvtk);
 	data_out.write_gnuplot (output);
 }
-
 
 void Waveguide::run ()
 {
