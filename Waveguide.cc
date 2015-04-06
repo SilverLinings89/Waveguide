@@ -59,9 +59,9 @@ const double Mu0 = 1.257e-12;
 const double c = 2.998e14;
 const double f0 = c/0.63;
 const double omega = 2 * PI * f0;
-int PRM_M_R_XLength = 2.0;
-int PRM_M_R_YLength = 2.0;
-int PRM_M_R_ZLength = 2.0;
+int PRM_M_R_XLength = 2.0; // Overwritten by Param-Reader
+int PRM_M_R_YLength = 2.0;// Overwritten by Param-Reader
+int PRM_M_R_ZLength = 2.0;// Overwritten by Param-Reader
 
 template<int dim> void mesh_info(const Triangulation<dim> &tria, const std::string &filename)
 {
@@ -311,7 +311,7 @@ Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, boo
 	Tensor<2,3, std::complex<double>> ret;
 	std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
 
-	double omegaepsilon0 = (2* PI / PRM_M_W_Lambda) * 2.998 * 8.85418781762e-4;
+	double omegaepsilon0 = (2* PI / PRM_M_W_Lambda) * c * Eps0;
 	std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
 	if(PML_in_X(position)){
 		double r,d, sigmax;
@@ -382,7 +382,6 @@ Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, boo
 		}
 	}
 
-
 	return ret;
 }
 
@@ -416,7 +415,7 @@ bool Waveguide::PML_in_Y(Point<3> &p) {
 }
 
 bool Waveguide::PML_in_Z(Point<3> &p) {
-	return  p(2) > ((PRM_M_R_ZLength / 2.0) - (PRM_M_R_ZLength * PRM_M_BC_XYout/100.0)) ||  (p(2) < (-(PRM_M_R_ZLength / 2.0) + (PRM_M_R_ZLength * PRM_M_BC_XYin/100.0)  && System_Coordinate_in_Waveguide(p)));
+	return  p(2) > ((PRM_M_R_ZLength / 2.0) - (PRM_M_R_ZLength * PRM_M_BC_XYout/100.0)) ||  (p(2) < (-(PRM_M_R_ZLength / 2.0) + (PRM_M_R_ZLength * PRM_M_BC_XYin/100.0)  )  && !System_Coordinate_in_Waveguide(p));
 }
 
 double Waveguide::PML_X_Distance(Point<3> &p){
@@ -573,6 +572,11 @@ void Waveguide::make_grid ()
 		}
 	}
 
+	GridTools::transform(& Triangulation_Stretch_X, triangulation);
+	GridTools::transform(& Triangulation_Stretch_Y, triangulation);
+	GridTools::transform(& Triangulation_Stretch_Z, triangulation);
+
+
 	cell = triangulation.begin_active();
 	for (; cell!=endc; ++cell){
 		if(cell->at_boundary()){
@@ -598,9 +602,20 @@ void Waveguide::make_grid ()
 
 	}
 
-	GridTools::transform(& Triangulation_Stretch_X, triangulation);
-	GridTools::transform(& Triangulation_Stretch_Y, triangulation);
-	GridTools::transform(& Triangulation_Stretch_Z, triangulation);
+
+	Point<3, double> pt (0,0 , - PRM_M_R_ZLength/2.1);
+
+	Tensor<2,3, std::complex<double> > Test = get_Tensor(pt, true, true);
+
+	std::cout << "Tensorial Testing: " << std::endl;
+
+	for(int i = 0; i < 3; i++){
+		for(int j = 0; j<3; j++){
+			std::cout<< Test[i][j];
+		}
+		std::cout << std::endl;
+	}
+
 }
 
 void Waveguide::setup_system ()
@@ -691,6 +706,8 @@ void Waveguide::assemble_system ()
 					//std::cout << std::endl;
 					cell_matrix(i,j) += ((mu * I_Curl) * Transpose_Vector(J_Curl) ).real() *JxW ;
 					cell_matrix(i,j) -= (I_Val  *(epsilon * Transpose_Vector(J_Val))).real() /(omega * omega);
+					cell_matrix(i,j) += ((mu * I_Curl) * Transpose_Vector(J_Curl) ).imag() *JxW ;
+					cell_matrix(i,j) -= (I_Val  *(epsilon * Transpose_Vector(J_Val))).imag() /(omega * omega);
 
 				}
 			}
@@ -795,7 +812,7 @@ void Waveguide::assemble_system ()
 							std::cout<< "Value: " << r_val;
 							std::cout << std::endl;
 						}
-						r_val = r_val / con.norm_square();
+						r_val = r_val * con.norm_square();
 						if(counter  == 0){
 							std::cout<< "Value (normiert): " << r_val;
 							std::cout << std::endl;
@@ -806,13 +823,11 @@ void Waveguide::assemble_system ()
 						std::map<unsigned int, double>::iterator it = boundary_values.find(real_the_boundary.first);
 						if(it != boundary_values.end()) it->second = r_val;
 
-
-
 						double i_val = 0;
 						i_val += con(0)* RHS_value(center,3);
 						i_val += con(1)* RHS_value(center,4);
-						i_val = i_val / con.norm_square();
-						i_val=1000;
+						i_val = i_val * con.norm_square();
+						//i_val=1000;
 						std::pair<unsigned int , double> imag_the_boundary;
 						imag_the_boundary.first = current_dofs[2*GeometryInfo<3>::face_to_cell_lines(i, j)];
 						imag_the_boundary.second = i_val;
@@ -841,10 +856,9 @@ void Waveguide::assemble_system ()
 
 void Waveguide::solve ()
 {
-	SolverControl           solver_control (1000, 50);
+	SolverControl           solver_control (1000, 0.004);
 	SolverGMRES<Vector<double> > solver (solver_control);
 	solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
-
 }
 
 void Waveguide::output_results () const
