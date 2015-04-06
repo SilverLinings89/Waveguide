@@ -17,6 +17,7 @@
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria_boundary_lib.h>
 #include <deal.II/grid/grid_out.h>
+#include <deal.II/grid/grid_tools.h>
 
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_nedelec.h>
@@ -58,6 +59,9 @@ const double Mu0 = 1.257e-12;
 const double c = 2.998e14;
 const double f0 = c/0.63;
 const double omega = 2 * PI * f0;
+int PRM_M_R_XLength = 2.0;
+int PRM_M_R_YLength = 2.0;
+int PRM_M_R_ZLength = 2.0;
 
 template<int dim> void mesh_info(const Triangulation<dim> &tria, const std::string &filename)
 {
@@ -129,6 +133,12 @@ static double Distance2D (Point<3> position, Point<3> to = Point<3>()) {
 		return sqrt((position(0)-to(0))*(position(0)-to(0)) + (position(1)-to(1))*(position(1)-to(1)));
 }
 
+static bool System_Coordinate_in_Waveguide(Point<3> p){
+	double value = Distance2D(p);
+	double reference = PRM_M_R_XLength/10.0;
+	reference = sqrt(reference*reference *2 );
+	return ( value < reference);
+}
 
 /**
  * This function calculates the inverse of an imaginary number. It gives back the real OR imaginary component, depending on the arguments.
@@ -223,7 +233,7 @@ template <int dim>
 double RightHandSide<dim>::value (const Point<dim> &p , const unsigned int component) const
 {
 	if(p[2] < 0){
-		if(p(0)*p(0) + p(1)*p(1) < 0.2828){
+		if(Sytem_Coordinate_in_Waveguide(p)){
 			if(component == 0 || component == 4) return (p(0)*p(0) + p(1)*p(1))*(0.2828- (p(0)*p(0) + p(1)*p(1)))/(p(0)*p(0)) * 1e5 ;
 			if(component == 1 || component == 3) return (p(0)*p(0) + p(1)*p(1))*(0.2828- (p(0)*p(0) + p(1)*p(1)))/(p(1)*p(1)) * 1e5;
 
@@ -262,9 +272,9 @@ class Waveguide
 		Tensor<2,3, std::complex<double>> get_Tensor(Point<3> &, bool, bool);
 		Tensor<2,3, std::complex<double>> Transpose_Tensor(Tensor<2,3, std::complex<double>> );
 		Tensor<1,3, std::complex<double>> Transpose_Vector(Tensor<1,3, std::complex<double>> );
-		Point<3> Triangulation_Stretch_X (const Point<3> &);
-		Point<3> Triangulation_Stretch_Y (const Point<3> &);
-		Point<3> Triangulation_Stretch_Z (const Point<3> &);
+		// Point<3> Triangulation_Stretch_X (const Point<3> &);
+		// Point<3> Triangulation_Stretch_Y (const Point<3> &);
+		// Point<3> Triangulation_Stretch_Z (const Point<3> &);
 
 		Triangulation<3>	triangulation;
 		FESystem<3>		fe;
@@ -279,7 +289,7 @@ class Waveguide
 		bool			PRM_O_Grid, PRM_O_Dofs, PRM_O_ActiveCells, PRM_O_VerboseOutput;
 		std::string		PRM_M_C_TypeIn, PRM_M_C_TypeOut;
 		double			PRM_M_C_RadiusIn, PRM_M_C_RadiusOut;
-		int				PRM_M_R_XLength, PRM_M_R_YLength, PRM_M_R_ZLength;
+		//int				PRM_M_R_XLength, PRM_M_R_YLength, PRM_M_R_ZLength;
 		double			PRM_M_W_Delta, PRM_M_W_EpsilonIn, PRM_M_W_EpsilonOut, PRM_M_W_Lambda;
 		std::string		PRM_M_BC_Type;
 		double			PRM_M_BC_XYin, PRM_M_BC_XYout, PRM_M_BC_Mantle, PRM_M_BC_KappaXMax, PRM_M_BC_KappaYMax, PRM_M_BC_KappaZMax, PRM_M_BC_SigmaXMax, PRM_M_BC_SigmaYMax, PRM_M_BC_SigmaZMax;
@@ -331,7 +341,7 @@ Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, boo
 		d = PRM_M_R_ZLength * 2.0;
 		sigmaz = pow(d/r , PRM_M_BC_M) * PRM_M_BC_SigmaZMax;
 		sz.real( 1 + pow(d/r , PRM_M_BC_M) * PRM_M_BC_KappaZMax);
-		sz.imag( sigmaz / (((Distance2D(position)< 0.2828)?PRM_M_W_EpsilonIn : PRM_M_W_EpsilonOut) * omegaepsilon0 ));
+		sz.imag( sigmaz / ((System_Coordinate_in_Waveguide(position))?PRM_M_W_EpsilonIn : PRM_M_W_EpsilonOut) * omegaepsilon0 );
 		S1 *= sz;
 		S2 *= sz;
 		S3 /= sz;
@@ -350,7 +360,7 @@ Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, boo
 
 	if(inverse) {
 		if(epsilon) {
-			if(position(0)*position(0) + position(1)*position(1) < 0.2828 ) {
+			if(System_Coordinate_in_Waveguide(position)) {
 				ret *= PRM_M_W_EpsilonIn;
 			} else {
 				ret *= PRM_M_W_EpsilonOut;
@@ -361,7 +371,7 @@ Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, boo
 		}
 	} else {
 		if(epsilon) {
-			if(position(0)*position(0) + position(1)*position(1) < 0.2828 ) {
+			if(System_Coordinate_in_Waveguide(position) ) {
 				ret /= PRM_M_W_EpsilonIn;
 			} else {
 				ret /= PRM_M_W_EpsilonOut;
@@ -406,7 +416,7 @@ bool Waveguide::PML_in_Y(Point<3> &p) {
 }
 
 bool Waveguide::PML_in_Z(Point<3> &p) {
-	return  p(2) > ((PRM_M_R_ZLength / 2.0) - (PRM_M_R_ZLength * PRM_M_BC_XYout/100.0)) ||  (p(2) < (-(PRM_M_R_ZLength / 2.0) + (PRM_M_R_ZLength * PRM_M_BC_XYin/100.0)  && Distance2D(p)<0.2828));
+	return  p(2) > ((PRM_M_R_ZLength / 2.0) - (PRM_M_R_ZLength * PRM_M_BC_XYout/100.0)) ||  (p(2) < (-(PRM_M_R_ZLength / 2.0) + (PRM_M_R_ZLength * PRM_M_BC_XYin/100.0)  && System_Coordinate_in_Waveguide(p)));
 }
 
 double Waveguide::PML_X_Distance(Point<3> &p){
@@ -436,7 +446,7 @@ double Waveguide::PML_Z_Distance(Point<3> &p){
 double Waveguide::RHS_value (const Point<3> &p , const unsigned int component)
 {
 	if(p[2] < 0){
-		if(p(0)*p(0) + p(1)*p(1) < 0.2828){
+		if( System_Coordinate_in_Waveguide(p) ){
 			if(component == 0 || component == 4) return (p(0)*p(0) + p(1)*p(1))*(0.2828- (p(0)*p(0) + p(1)*p(1)))/(p(0)*p(0)) * 1e5 ;
 			if(component == 1 || component == 3) return (p(0)*p(0) + p(1)*p(1))*(0.2828- (p(0)*p(0) + p(1)*p(1)))/(p(1)*p(1)) * 1e5;
 
@@ -446,21 +456,21 @@ double Waveguide::RHS_value (const Point<3> &p , const unsigned int component)
 	return 0.0;
 }
 
-Point<3> Waveguide::Triangulation_Stretch_X (const Point<3> &p)
+Point<3> Triangulation_Stretch_X (const Point<3> &p)
 {
   Point<3> q = p;
   q[0] *= PRM_M_R_XLength /2.0;
   return q;
 }
 
-Point<3> Waveguide::Triangulation_Stretch_Y (const Point<3> &p)
+Point<3> Triangulation_Stretch_Y (const Point<3> &p)
 {
   Point<3> q = p;
   q[1] *= PRM_M_R_YLength /2.0;
   return q;
 }
 
-Point<3> Waveguide::Triangulation_Stretch_Z (const Point<3> &p)
+Point<3> Triangulation_Stretch_Z (const Point<3> &p)
 {
   Point<3> q = p;
   q[2] *= PRM_M_R_ZLength /2.0;
@@ -569,7 +579,7 @@ void Waveguide::make_grid ()
 			for(int j = 0; j<6; j++){
 				if(cell->face(j)->at_boundary()){
 					Point<3> ctr =cell->face(j)->center(true, false);
-					if(Distance2D(ctr) < 0.28){
+					if(System_Coordinate_in_Waveguide(ctr)){
 						if(ctr(2) < 0) cell->face(j)->set_all_boundary_indicators(1);
 						else cell->face(j)->set_all_boundary_indicators(2);
 					}
@@ -578,15 +588,19 @@ void Waveguide::make_grid ()
 		}
 	}
 
+
 	if(PRM_D_Refinement == "global") triangulation.refine_global (PRM_D_XY-1);
 
 	if(PRM_O_Grid) {
 		if(PRM_O_VerboseOutput) std::cout<< "Writing Mesh data to file \"grid-3D.vtk\"" << std::endl;
 		mesh_info(triangulation, "grid-3D.vtk");
 		if(PRM_O_VerboseOutput) std::cout<< "Done" << std::endl;
+
 	}
 
-
+	GridTools::transform(& Triangulation_Stretch_X, triangulation);
+	GridTools::transform(& Triangulation_Stretch_Y, triangulation);
+	GridTools::transform(& Triangulation_Stretch_Z, triangulation);
 }
 
 void Waveguide::setup_system ()
@@ -736,7 +750,7 @@ void Waveguide::assemble_system ()
 				boundary_values.insert(real_the_boundary);
 			}
 		}
-		if(cell->at_boundary() && Distance2D(cell->center(true, false)) < 0.2828 && cell->center(true, false)(2) < 0 ){
+		if(cell->at_boundary() && ( System_Coordinate_in_Waveguide(cell->center(true, false)) ) && cell->center(true, false)(2) < 0 ){
 
 			std::vector<unsigned int> current_dofs(dofs_per_cell);
 			cell->get_dof_indices(current_dofs);
@@ -827,7 +841,7 @@ void Waveguide::assemble_system ()
 
 void Waveguide::solve ()
 {
-	SolverControl           solver_control (1000, 1e1);
+	SolverControl           solver_control (1000, 50);
 	SolverGMRES<Vector<double> > solver (solver_control);
 	solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
 
