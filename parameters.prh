@@ -15,7 +15,7 @@ subsection Measures
 	subsection Region
 		set XLength = 20
 		set YLength = 20
-		set ZLength = 450
+		set ZLength = 50
 	end
 	subsection Waveguide
 		set Delta = 0
@@ -31,10 +31,10 @@ subsection Measures
 		set KappaXMax = 16.0
 		set KappaYMax = 16.0
 		set KappaZMax = 16.0
-		set SigmaXMax = 0.0
-		set SigmaYMax = 0.0
-		set SigmaZMax = 0.0
-		set DampeningExponentM = 3
+		set SigmaXMax = 5.0
+		set SigmaYMax = 5.0
+		set SigmaZMax = 5.0
+		set DampeningExponentM = 4
 	end
 end
 
@@ -44,8 +44,11 @@ subsection Discretization
 	set Z = 3
 end
 
-	
-
+subsection Solver
+	set Solver = GMRES
+	set Steps = 100
+	set Precision = 9e11
+end
 
 		
 		 
