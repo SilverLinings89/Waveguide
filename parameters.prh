@@ -1,5 +1,5 @@
 subsection Output
-		set Output Grid = true
+		set Output Grid = false
 		set Output Dofs = true
 		set Output Active Cells = true
 		set Verbose Output = true
@@ -21,7 +21,7 @@ subsection Measures
 		set Delta = 0
 		set epsilon in = 2.2
 		set epsilon out = 1.0
-		set Lambda = 0.6328
+		set Lambda = 5.6328
 	end
 	subsection Boundary Conditions
 		set Type = PML
@@ -31,24 +31,30 @@ subsection Measures
 		set KappaXMax = 16.0
 		set KappaYMax = 16.0
 		set KappaZMax = 16.0
-		set SigmaXMax = 5.0
-		set SigmaYMax = 5.0
-		set SigmaZMax = 5.0
+		set SigmaXMax = 16.0
+		set SigmaYMax = 16.0
+		set SigmaZMax = 16.0
 		set DampeningExponentM = 4
 	end
 end
 
 subsection Discretization
 	set refinement = global
-	set XY = 2
+	set XY = 3
 	set Z = 3
 end
 
 subsection Solver
 	set Solver = GMRES
 	set Steps = 1000
-	set Precision = 1.411e34
+	set Precision = 1.463e14
 end
 
+subsection Constants
+	set AllOne = true
+	set EpsilonZero = 8.854e-18
+	set MuZero = 1.257e-12
+	set Pi = 3.141592653589793238462643383279502884197169399
+end
 		
 		 

@@ -50,15 +50,12 @@
 
 using namespace dealii;
 
-const double PI =  3.141592653589793238462643383279502884197169399;
-//const double Eps0 = 1;
-//const double Mu0 = 1;
-
-const double Eps0 = 8.854e-18;
-const double Mu0 = 1.257e-12;
-const double c = 2.998e14;
-const double f0 = c/0.63;
-const double omega = 2 * PI * f0;
+double PI =  1.0;
+double Eps0 = 1.0;
+double Mu0 = 1.0;
+double c = 1/sqrt(Eps0 * Mu0);
+double f0 = c/0.63;
+double omega = 2 * PI * f0;
 int PRM_M_R_XLength = 2.0; // Overwritten by Param-Reader
 int PRM_M_R_YLength = 2.0;// Overwritten by Param-Reader
 int PRM_M_R_ZLength = 2.0;// Overwritten by Param-Reader
@@ -123,6 +120,26 @@ private:
 
 };
 
+/**
+ * Setting the boundary values in 3D is not very simple. The calculation requires knowledge of both cells adjacent to an edge. This is handled by creating one object of this type and identifying it with the degree of freedom (system, not cell).
+ * The first time a term should be added to this dofs value the object gets generated and value is initialized with the given value.
+ * The second time it is accessed, the value gets added.
+ * In the end, the values can be written as dof-values.
+ * If an Edge is at the boundary, it only gets created, which is similar to adding 0 for the outside.
+ */
+class BoundaryPointValue {
+public:
+		unsigned int 	dof;
+		double 			value;
+		BoundaryPointValue(unsigned int , double );
+		void AddSecondValue(double );
+};
+
+BoundaryPointValue::BoundaryPointValue( unsigned int d, double val): value(val/2.0), dof(d) { }
+
+void BoundaryPointValue::AddSecondValue(double val) {
+	value += val/2.0;
+}
 
 /*
  * Distance in 2D. Since I have a cylindrical system, the distance to the middle-axis is an important criterium.
@@ -239,6 +256,16 @@ void ParameterReader::declare_parameters	()
 		prm.declare_entry("Precision", "1e0", Patterns::Double(0), "Minimal error value, the solver is supposed to accept as correct solution.");
 	}
 	prm.leave_subsection();
+
+	prm.enter_subsection("Constants");
+	{
+		prm.declare_entry("AllOne", "false", Patterns::Bool(), "If this is set to true, EpsilonZero and MuZero are set to 1.");
+		prm.declare_entry("EpsilonZero", "8.854e-18", Patterns::Double(0), "Physical constant Epsilon zero. The standard value is measured in micrometers.");
+		prm.declare_entry("MuZero", "1.257e-12", Patterns::Double(0), "Physical constant Mu zero. The standard value is measured in micrometers.");
+		prm.declare_entry("Pi", "3.14159265", Patterns::Double(0), "Mathematical constant Pi.");
+	}
+	prm.leave_subsection();
+
 
 }
 
@@ -603,6 +630,18 @@ void Waveguide::read_values() {
 	}
 	prm.leave_subsection();
 
+	prm.enter_subsection("Constants");
+	{
+		PI = prm.get_double("Pi");
+		if(prm.get_bool("AllOne")){
+			Eps0 = prm.get_double("EpsilonZero");
+			Mu0 = prm.get_double("MuZero");
+			c = 1/sqrt(Eps0 * Mu0);
+			f0 = c/0.63;
+			omega = 2 * PI * f0;
+		}
+	}
+	prm.leave_subsection();
 }
 
 
@@ -753,20 +792,14 @@ void Waveguide::assemble_system ()
 						J_Val[k].imag(fe_values[imag].value(j, q_index)[k]);
 						J_Val[k].real(fe_values[real].value(j, q_index)[k]);
 					}
-					//for(int kl = 0; kl<3; kl++) std::cout << I_Curl[kl];
-					//std::cout << std::endl;
-					//if(fe.system_to_base_index(i).first.second == fe.system_to_base_index(j).first.second){
 
-					cell_matrix[i][j] += ((mu * I_Curl) * Transpose_Vector(J_Curl) ).real() *JxW ;
-					cell_matrix[i][j] -= (I_Val  * epsilon * Transpose_Vector(J_Val)).real() *(omega * omega)*JxW ;
-
-					/*} else {
-						cell_matrix(i,j) += ((mu * I_Curl) * Transpose_Vector(J_Curl) ).imag() *JxW ;
-						cell_matrix(i,j) -= (I_Val  *(epsilon * Transpose_Vector(J_Val))).imag() /(omega * omega);
-
-					}*/
-					cell_matrix[i][j] += ((mu * I_Curl) * Transpose_Vector(J_Curl) ).imag() *JxW ;
-					cell_matrix[i][j] -= (I_Val  * epsilon * Transpose_Vector(J_Val)).imag() * (omega * omega) * JxW;
+					if(fe.system_to_base_index(i).first.second == fe.system_to_base_index(j).first.second){
+						cell_matrix[i][j] += ((mu * I_Curl) * Transpose_Vector(J_Curl) ).real() *JxW ;
+						cell_matrix[i][j] -= (I_Val  * epsilon * Transpose_Vector(J_Val)).real() *(omega * omega)*JxW ;
+					} else {
+						cell_matrix[i][j] += ((mu * I_Curl) * Transpose_Vector(J_Curl) ).imag() *JxW ;
+						cell_matrix[i][j] -= (I_Val  * epsilon * Transpose_Vector(J_Val)).imag() * (omega * omega) * JxW;
+					}
 
 				}
 
@@ -791,14 +824,14 @@ void Waveguide::assemble_system ()
     }
 
 	std::map<unsigned int, double> boundary_values;
-	//std::vector<bool> boundary_dofs (dof_handler.n_dofs());
-	//std::set<unsigned char> boundary_indicators;
-	//boundary_indicators.insert (0);
+	std::vector<bool> boundary_dofs (dof_handler.n_dofs());
+	std::set<unsigned char> boundary_indicators;
+	boundary_indicators.insert (0);
 	//boundary_indicators.insert (1);
-	//boundary_indicators.insert (2);
+	boundary_indicators.insert (2);
 
 	//cm.close();
-/**
+
 	DoFTools::extract_boundary_dofs (dof_handler, fe.component_mask(real), boundary_dofs, boundary_indicators);
 
 	for (unsigned int i=0; i<dof_handler.n_dofs(); ++i) if (boundary_dofs[i] == true) boundary_values[i] = 0.;
@@ -806,9 +839,9 @@ void Waveguide::assemble_system ()
 	boundary_indicators.insert (1);
 	for (unsigned int i=0; i<dof_handler.n_dofs(); ++i) if (boundary_dofs[i] == true) boundary_values[i] = 0.;
 	MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
-**/
-	boundary_values.clear();
 
+	boundary_values.clear();
+/**
 	cell = dof_handler.begin_active(),
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
@@ -857,6 +890,49 @@ void Waveguide::assemble_system ()
 			}
 		}
 	}
+**/
+	std::vector<BoundaryPointValue> Boundary ;
+	cell = dof_handler.begin_active(),
+	endc = dof_handler.end();
+	for (; cell!=endc; ++cell)
+	{
+		if(cell->at_boundary() && ( System_Coordinate_in_Waveguide(cell->center(true, false)) ) && cell->center(true, false)[2] < 0 ){
+			std::vector<unsigned int> current_dofs(dofs_per_cell);
+			cell->get_dof_indices(current_dofs);
+			for(unsigned int current_face = 0; current_face < GeometryInfo<3>::faces_per_cell; current_face++){
+				if(cell->face(current_face)->at_boundary()){
+					for(unsigned int current_edge = 0; current_edge < GeometryInfo<3>::lines_per_face; current_edge++){
+						bool exists = false;
+						int found = 0;
+						for(unsigned int search = 0; search < Boundary.size(); search++){
+							if(Boundary[search].dof == current_dofs[2*GeometryInfo<3>::face_to_cell_lines(current_face, current_edge)]) {
+								exists = true;
+								found = search;
+							}
+						}
+						Point<3> p1 = cell->face(current_face)->line(current_edge)->vertex(0);
+						Point<3> p2 = cell->face(current_face)->line(current_edge)->vertex(1);
+						Point<3> con = p2-p1;
+						if(exists){
+							Boundary[found].AddSecondValue(RHS_value(cell->face(current_face)->center(), 0) * con[0]);
+						} else {
+							BoundaryPointValue temp(current_dofs[2*GeometryInfo<3>::face_to_cell_lines(current_face, current_edge)] , RHS_value(cell->face(current_face)->center(), 0) * con[0]  );
+							Boundary.push_back( temp );
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for (unsigned int i = 0; i< Boundary.size(); i++){
+		std::pair<unsigned int , double> write_boundary;
+		write_boundary.first = Boundary[i].dof;
+		write_boundary.second = Boundary[i].value;
+		std::map<unsigned int, double>::iterator it = boundary_values.find(write_boundary.first);
+		if(it != boundary_values.end()) it->second = Boundary[i].value;
+		else boundary_values.insert(write_boundary);
+	}
 
 	cell = dof_handler.begin_active(),
 	endc = dof_handler.end();
@@ -887,6 +963,7 @@ void Waveguide::assemble_system ()
 	cm3.close();
 	cm3.condense(system_matrix, system_rhs);
 **/
+
 
 	std::cout << "Anzahl gesetzter Randwerte: "<< boundary_values.size() << std::endl;
 	MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
@@ -955,24 +1032,3 @@ int main ()
 	return 0;
 }
 
-/**
- * Setting the boundary values in 3D is not very simple. The calculation requires knowledge of both cells adjacent to an edge. This is handled by creating one object of this type and identifying it with the degree of freedom (system, not cell).
- * The first time a term should be added to this dofs value the object gets generated and value is initialized with the given value.
- * The second time it is accessed, the value gets added.
- * In the end, the values can be written as dof-values.
- * If an Edge is at the boundary, it only gets created, which is similar to adding 0 for the outside.
- */
-class BoundaryPointValue {
-public:
-		Point<3> 		PositionOnEdge;
-		unsigned int 	dof;
-		double 			value;
-		BoundaryPointValue(Point<3> ,unsigned int , double );
-		void AddSecondValue(double );
-};
-
-BoundaryPointValue::BoundaryPointValue(Point<3> p, unsigned int d, double val): value(val/2), dof(d), PositionOnEdge(p) { }
-
-void BoundaryPointValue::AddSecondValue(double val) {
-	value += val/2;
-}
