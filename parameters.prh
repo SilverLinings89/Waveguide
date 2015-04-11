@@ -40,14 +40,14 @@ end
 
 subsection Discretization
 	set refinement = global
-	set XY = 3
+	set XY = 2
 	set Z = 3
 end
 
 subsection Solver
 	set Solver = GMRES
-	set Steps = 100
-	set Precision = 9e11
+	set Steps = 1000
+	set Precision = 1.411e34
 end
 
 		
