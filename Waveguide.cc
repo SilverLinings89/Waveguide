@@ -793,18 +793,17 @@ void Waveguide::assemble_system ()
 						J_Val[k].real(fe_values[real].value(j, q_index)[k]);
 					}
 
+					std::complex<double> x = (mu * I_Curl) * Transpose_Vector(J_Curl) * JxW - (I_Val  * epsilon * Transpose_Vector(J_Val)) *(omega * omega)*JxW ;
 					if(fe.system_to_base_index(i).first.second == fe.system_to_base_index(j).first.second){
-						cell_matrix[i][j] += ((mu * I_Curl) * Transpose_Vector(J_Curl) ).real() *JxW ;
-						cell_matrix[i][j] -= (I_Val  * epsilon * Transpose_Vector(J_Val)).real() *(omega * omega)*JxW ;
+						cell_matrix[i][j] += x.real();
 					} else {
-						cell_matrix[i][j] += ((mu * I_Curl) * Transpose_Vector(J_Curl) ).imag() *JxW ;
-						cell_matrix[i][j] -= (I_Val  * epsilon * Transpose_Vector(J_Val)).imag() * (omega * omega) * JxW;
+						if(fe.system_to_base_index(i).first.second < fe.system_to_base_index(j).first.second) {
+							cell_matrix[i][j] += x.imag();
+						} else {
+							cell_matrix[i][j] -= x.imag();
+						}
 					}
 
-				}
-
-				if(std::abs(cell_matrix[i][i]) < 1e-10 ){
-					cell_matrix[i][i] = 1e-10;
 				}
 
 			}
@@ -976,7 +975,10 @@ void Waveguide::solve ()
 	SolverControl           solver_control (PRM_S_Steps, PRM_S_Precision);
 	if(PRM_S_Solver == "CG") {
 		SolverCG<Vector<double> > solver (solver_control);
-		solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
+		PreconditionLU<SparseMatrix<double> > p;
+
+		p.initialize(system_matrix);
+		solver.solve (system_matrix, solution, system_rhs, p);
 	}
 	if(PRM_S_Solver == "GMRES") {
 		SolverGMRES<Vector<double> > solver (solver_control);
