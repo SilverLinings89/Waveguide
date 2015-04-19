@@ -39,6 +39,7 @@
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 #include <deal.II/lac/precondition.h>
+#include <deal.II/lac/sparse_direct.h>
 
 #include <deal.II/base/timer.h>
 #include <deal.II/base/parameter_handler.h>
@@ -251,7 +252,7 @@ void ParameterReader::declare_parameters	()
 
 	prm.enter_subsection("Solver");
 	{
-		prm.declare_entry("Solver", "GMRES", Patterns::Selection("CG|GMRES"), "Which Solver to use for the solution of the system matrix");
+		prm.declare_entry("Solver", "GMRES", Patterns::Selection("CG|GMRES|UMFPACK"), "Which Solver to use for the solution of the system matrix");
 		prm.declare_entry("Steps", "100", Patterns::Integer(1), "Number of Steps the Solver is supposed to do.");
 		prm.declare_entry("Precision", "1e0", Patterns::Double(0), "Minimal error value, the solver is supposed to accept as correct solution.");
 	}
@@ -965,9 +966,17 @@ void Waveguide::assemble_system ()
 
 
 	std::cout << "Anzahl gesetzter Randwerte: "<< boundary_values.size() << std::endl;
+	std::cout<<solution.l2_norm()<<std::endl;
+	double max = 0;
+	std::map<unsigned int, double>::iterator it = boundary_values.begin();
+	for(; it != boundary_values.end(); it++){
+		if(it->second>max) max = it->second;
+	}
+
 	MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
-
-
+	solution=0;
+	std::cout<<max<<std::endl;
+	std::cout<<system_rhs.l2_norm()<<std::endl;
 }
 
 void Waveguide::solve ()
@@ -975,14 +984,16 @@ void Waveguide::solve ()
 	SolverControl           solver_control (PRM_S_Steps, PRM_S_Precision);
 	if(PRM_S_Solver == "CG") {
 		SolverCG<Vector<double> > solver (solver_control);
-		PreconditionLU<SparseMatrix<double> > p;
-
-		p.initialize(system_matrix);
-		solver.solve (system_matrix, solution, system_rhs, p);
+		solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
 	}
 	if(PRM_S_Solver == "GMRES") {
 		SolverGMRES<Vector<double> > solver (solver_control);
 		solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
+	}
+	if(PRM_S_Solver == "UMFPACK") {
+		SparseDirectUMFPACK  A_direct;
+		A_direct.initialize(system_matrix);
+		A_direct.vmult(solution, system_rhs);
 	}
 }
 

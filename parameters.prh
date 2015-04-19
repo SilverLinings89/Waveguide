@@ -15,7 +15,7 @@ subsection Measures
 	subsection Region
 		set XLength = 20
 		set YLength = 20
-		set ZLength = 50
+		set ZLength = 1
 	end
 	subsection Waveguide
 		set Delta = 0
@@ -45,7 +45,7 @@ subsection Discretization
 end
 
 subsection Solver
-	set Solver = GMRES
+	set Solver = UMFPACK
 	set Steps = 10000
 	set Precision = 2.522e-8
 end
