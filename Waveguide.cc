@@ -136,7 +136,10 @@ public:
 		void AddSecondValue(double );
 };
 
-BoundaryPointValue::BoundaryPointValue( unsigned int d, double val): value(val/2.0), dof(d) { }
+BoundaryPointValue::BoundaryPointValue( unsigned int d, double val) {
+	value = val/2.0;
+	dof = d;
+}
 
 void BoundaryPointValue::AddSecondValue(double val) {
 	value += val/2.0;
