@@ -1,0 +1,8 @@
+/home/pascal/workspace/waveguideproblem/CMakeFiles/Waveguide.dir
+/home/pascal/workspace/waveguideproblem/CMakeFiles/debug.dir
+/home/pascal/workspace/waveguideproblem/CMakeFiles/distclean.dir
+/home/pascal/workspace/waveguideproblem/CMakeFiles/info.dir
+/home/pascal/workspace/waveguideproblem/CMakeFiles/release.dir
+/home/pascal/workspace/waveguideproblem/CMakeFiles/run.dir
+/home/pascal/workspace/waveguideproblem/CMakeFiles/runclean.dir
+/home/pascal/workspace/waveguideproblem/CMakeFiles/strip_comments.dir

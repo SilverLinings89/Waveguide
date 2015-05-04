@@ -28,26 +28,26 @@ subsection Measures
 		set XY in = 10
 		set XY out = 10
 		set Mantle = 10
-		set KappaXMax = 0.0
-		set KappaYMax = 0.0
-		set KappaZMax = 0.0
-		set SigmaXMax = 0.0
-		set SigmaYMax = 0.0
-		set SigmaZMax = 0.0
+		set KappaXMax = 10.0
+		set KappaYMax = 10.0
+		set KappaZMax = 10.0
+		set SigmaXMax = 10.0
+		set SigmaYMax = 10.0
+		set SigmaZMax = 10.0
 		set DampeningExponentM = 4
 	end
 end
 
 subsection Discretization
 	set refinement = global
-	set XY = 2
+	set XY = 3
 	set Z = 3
 end
 
 subsection Solver
 	set Solver = UMFPACK
-	set Steps = 10000
-	set Precision = 2.522e-8
+	set Steps = 4000
+	set Precision = 1e-5
 end
 
 subsection Constants

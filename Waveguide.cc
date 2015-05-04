@@ -40,6 +40,7 @@
 #include <deal.II/lac/solver_gmres.h>
 #include <deal.II/lac/precondition.h>
 #include <deal.II/lac/sparse_direct.h>
+#include <deal.II/lac/sparse_ilu.h>
 
 #include <deal.II/base/timer.h>
 #include <deal.II/base/parameter_handler.h>
@@ -51,15 +52,15 @@
 
 using namespace dealii;
 
-double PI =  1.0;
-double Eps0 = 1.0;
-double Mu0 = 1.0;
-double c = 1/sqrt(Eps0 * Mu0);
-double f0 = c/0.63;
-double omega = 2 * PI * f0;
-int PRM_M_R_XLength = 2.0; // Overwritten by Param-Reader
-int PRM_M_R_YLength = 2.0;// Overwritten by Param-Reader
-int PRM_M_R_ZLength = 2.0;// Overwritten by Param-Reader
+double PI =  1.0;				// Overwritten by Param-Reader
+double Eps0 = 1.0;				// Overwritten by Param-Reader
+double Mu0 = 1.0; 				// Overwritten by Param-Reader
+double c = 1/sqrt(Eps0 * Mu0); 	// Overwritten by Param-Reader
+double f0 = c/0.63; 			// Overwritten by Param-Reader
+double omega = 2 * PI * f0; 	// Overwritten by Param-Reader
+int PRM_M_R_XLength = 2.0;		// Overwritten by Param-Reader
+int PRM_M_R_YLength = 2.0;		// Overwritten by Param-Reader
+int PRM_M_R_ZLength = 2.0;		// Overwritten by Param-Reader
 
 template<int dim> void mesh_info(const Triangulation<dim> &tria, const std::string &filename)
 {
@@ -340,8 +341,9 @@ class Waveguide
 		// Point<3> Triangulation_Stretch_Z (const Point<3> &);
 
 		Triangulation<3>	triangulation;
-		FESystem<3>		fe;
+		FESystem<3>			fe;
 		DoFHandler<3>		dof_handler;
+		ConstraintMatrix 	cm;
 
 		SparsityPattern			sparsity_pattern;
 		SparseMatrix<double>	system_matrix;
@@ -384,7 +386,7 @@ Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, boo
 	if(PML_in_X(position)){
 		double r,d, sigmax;
 		r = PML_X_Distance(position);
-		d = PRM_M_R_XLength * 2.0;
+		d = PRM_M_R_XLength * 2.0 * PRM_M_BC_Mantle/100.0;
 		sigmax = pow(d/r , PRM_M_BC_M) * PRM_M_BC_SigmaXMax;
 		sx.real( 1 + pow(d/r , PRM_M_BC_M) * PRM_M_BC_KappaXMax);
 		sx.imag( sigmax / (PRM_M_W_EpsilonOut * omegaepsilon0));
@@ -395,7 +397,7 @@ Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, boo
 	if(PML_in_Y(position)){
 		double r,d, sigmay;
 		r = PML_Y_Distance(position);
-		d = PRM_M_R_YLength * 2.0;
+		d = PRM_M_R_YLength * 2.0 * PRM_M_BC_Mantle/100.0;
 		sigmay = pow(d/r , PRM_M_BC_M) * PRM_M_BC_SigmaYMax;
 		sy.real( 1 + pow(d/r , PRM_M_BC_M) * PRM_M_BC_KappaYMax);
 		sy.imag( sigmay / (PRM_M_W_EpsilonOut * omegaepsilon0));
@@ -406,7 +408,7 @@ Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, boo
 	if(PML_in_Z(position)){
 		double r,d, sigmaz;
 		r = PML_Z_Distance(position);
-		d = PRM_M_R_ZLength * 2.0;
+		d = PRM_M_R_ZLength * 2.0 * ((position(2)<0)? PRM_M_BC_XYin : PRM_M_BC_XYout)/100.0;
 		sigmaz = pow(d/r , PRM_M_BC_M) * PRM_M_BC_SigmaZMax;
 		sz.real( 1 + pow(d/r , PRM_M_BC_M) * PRM_M_BC_KappaZMax);
 		sz.imag( sigmaz / ((System_Coordinate_in_Waveguide(position))?PRM_M_W_EpsilonIn : PRM_M_W_EpsilonOut) * omegaepsilon0 );
@@ -637,13 +639,16 @@ void Waveguide::read_values() {
 	prm.enter_subsection("Constants");
 	{
 		PI = prm.get_double("Pi");
-		if(prm.get_bool("AllOne")){
+		if(! prm.get_bool("AllOne")){
 			Eps0 = prm.get_double("EpsilonZero");
 			Mu0 = prm.get_double("MuZero");
-			c = 1/sqrt(Eps0 * Mu0);
-			f0 = c/0.63;
-			omega = 2 * PI * f0;
+		} else {
+			Eps0 = 1.0;
+			Mu0 = 1.0;
 		}
+		c = 1/sqrt(Eps0 * Mu0);
+		f0 = c/0.63;
+		omega = 2 * PI * f0;
 	}
 	prm.leave_subsection();
 }
@@ -725,10 +730,11 @@ void Waveguide::setup_system ()
 		std::cout << "Calculating compressed Sparsity Pattern..." << std::endl;
 	}
 
-	CompressedSparsityPattern c_sparsity(dof_handler.n_dofs());
+	CompressedSparsityPattern c_sparsity(dof_handler.n_dofs(), dof_handler.n_dofs());
 	DoFTools::make_sparsity_pattern (dof_handler, c_sparsity);
 	sparsity_pattern.copy_from(c_sparsity);
-
+	std::ofstream out ("sparsity_pattern.1");
+	sparsity_pattern.print_gnuplot(out);
 	system_matrix.reinit (sparsity_pattern);
 
 	solution.reinit (dof_handler.n_dofs());
@@ -755,146 +761,25 @@ void Waveguide::assemble_system ()
 		std::cout << "Dofs per face: " << fe.dofs_per_face << std::endl << "Dofs per line: " << fe.dofs_per_line << std::endl;
 	}
 
-	FullMatrix<double>	cell_matrix (dofs_per_cell, dofs_per_cell);
-	Vector<double>		cell_rhs (dofs_per_cell);
-	Tensor<2,3, std::complex<double>> 		epsilon, mu;
-	std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
-
-	DoFHandler<3>::active_cell_iterator
-	cell = dof_handler.begin_active(),
-	endc = dof_handler.end();
-	for (; cell!=endc; ++cell)
-    {
-		fe_values.reinit (cell);
-		quadrature_points = fe_values.get_quadrature_points();
-		cell_matrix = 0;
-		cell_rhs = 0;
-
-		for (unsigned int q_index=0; q_index<n_q_points; ++q_index)
-        {
-			epsilon = get_Tensor(quadrature_points[q_index],  false, true);
-			mu = get_Tensor(quadrature_points[q_index], true, false);
-			const double JxW = fe_values.JxW(q_index);
-			for (unsigned int i=0; i<dofs_per_cell; i++){
-				Tensor<1,3, std::complex<double>> I_Curl;
-				Tensor<1,3, std::complex<double>> I_Val;
-				for(int k = 0; k<3; k++){
-					I_Curl[k].imag(fe_values[imag].curl(i, q_index)[k]);
-					I_Curl[k].real(fe_values[real].curl(i, q_index)[k]);
-					I_Val[k].imag(fe_values[imag].value(i, q_index)[k]);
-					I_Val[k].real(fe_values[real].value(i, q_index)[k]);
-				}
-
-
-
-				for (unsigned int j=0; j<dofs_per_cell; j++){
-					Tensor<1,3, std::complex<double>> J_Curl;
-					Tensor<1,3, std::complex<double>> J_Val;
-					for(int k = 0; k<3; k++){
-						J_Curl[k].imag(fe_values[imag].curl(j, q_index)[k]);
-						J_Curl[k].real(fe_values[real].curl(j, q_index)[k]);
-						J_Val[k].imag(fe_values[imag].value(j, q_index)[k]);
-						J_Val[k].real(fe_values[real].value(j, q_index)[k]);
-					}
-
-					std::complex<double> x = (mu * I_Curl) * Transpose_Vector(J_Curl) * JxW - (I_Val  * epsilon * Transpose_Vector(J_Val)) *(omega * omega)*JxW ;
-					if(fe.system_to_base_index(i).first.second == fe.system_to_base_index(j).first.second){
-						cell_matrix[i][j] += x.real();
-					} else {
-						if(fe.system_to_base_index(i).first.second < fe.system_to_base_index(j).first.second) {
-							cell_matrix[i][j] += x.imag();
-						} else {
-							cell_matrix[i][j] -= x.imag();
-						}
-					}
-
-				}
-
-			}
-        }
-
-		cell->get_dof_indices (local_dof_indices);
-
-		for (unsigned int i=0; i<dofs_per_cell; i++)
-			for (unsigned int j=0; j<dofs_per_cell; j++)
-				system_matrix.add (local_dof_indices[i],
-                             local_dof_indices[j],
-                             cell_matrix[i][j]);
-
-		for (unsigned int i=0; i<dofs_per_cell; ++i)
-			system_rhs(local_dof_indices[i]) += cell_rhs[i];
-
-    }
-
+	//starting to calculate Constraint Matrix for boundary values;
 	std::map<unsigned int, double> boundary_values;
 	std::vector<bool> boundary_dofs (dof_handler.n_dofs());
 	std::set<unsigned char> boundary_indicators;
 	boundary_indicators.insert (0);
-	//boundary_indicators.insert (1);
+	boundary_indicators.insert (1);
 	boundary_indicators.insert (2);
 
-	//cm.close();
 
 	DoFTools::extract_boundary_dofs (dof_handler, fe.component_mask(real), boundary_dofs, boundary_indicators);
 
 	for (unsigned int i=0; i<dof_handler.n_dofs(); ++i) if (boundary_dofs[i] == true) boundary_values[i] = 0.;
+
 	DoFTools::extract_boundary_dofs (dof_handler, fe.component_mask(imag), boundary_dofs, boundary_indicators);
-	boundary_indicators.insert (1);
+
 	for (unsigned int i=0; i<dof_handler.n_dofs(); ++i) if (boundary_dofs[i] == true) boundary_values[i] = 0.;
-	MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
 
-	boundary_values.clear();
-/**
-	cell = dof_handler.begin_active(),
-	endc = dof_handler.end();
-	for (; cell!=endc; ++cell)
-	{
-
-		if(cell->at_boundary() && ( System_Coordinate_in_Waveguide(cell->center(true, false)) ) && cell->center(true, false)[2] < 0 ){
-
-			std::vector<unsigned int> current_dofs(dofs_per_cell);
-			cell->get_dof_indices(current_dofs);
-			for(unsigned int i = 0; i< dofs_per_cell; i++) {
-				boundary_values.erase(current_dofs[i]);
-			}
-
-			for(int i = 0; i< 6; i++){
-				if(cell->face(i)->at_boundary() && ( cell->face(i)->center(true, false)[2] < (-PRM_M_R_ZLength/2.0 + ( PRM_M_R_ZLength / (5 * pow(2,PRM_D_XY)))))){
-					for(int j = 0; j<4; j++){
-						double length = cell->face(i)->diameter();
-						Point<3> p1 = cell->face(i)->line(j)->vertex(0);
-						Point<3> p2 = cell->face(i)->line(j)->vertex(1);
-						Point<3> con = p2-p1;
-						Point<3> center = cell->face(i)->line(j)->center();
-
-						double r_val = RHS_value(center,0) ;
-						r_val = con[0] * r_val;
-						std::pair<unsigned int , double> real_the_boundary;
-						real_the_boundary.first = current_dofs[2*GeometryInfo<3>::face_to_cell_lines(i, j)];
-						real_the_boundary.second = r_val;
-						std::map<unsigned int, double>::iterator it = boundary_values.find(real_the_boundary.first);
-						if(it != boundary_values.end()) it->second = r_val;
-						else boundary_values.insert(real_the_boundary);
-
-						double i_val = 0;
-						i_val += con(0)* RHS_value(center,3);
-						i_val += con(1)* RHS_value(center,4);
-						i_val = 0;
-						std::pair<unsigned int , double> imag_the_boundary;
-						imag_the_boundary.first = current_dofs[2*GeometryInfo<3>::face_to_cell_lines(i, j) + 1];
-						imag_the_boundary.second = i_val;
-						it = boundary_values.find(imag_the_boundary.first);
-						if(it != boundary_values.end()) it->second = i_val;
-						else boundary_values.insert(imag_the_boundary);
-
-					}
-				}
-
-			}
-		}
-	}
-**/
 	std::vector<BoundaryPointValue> Boundary ;
+	DoFHandler<3>::active_cell_iterator
 	cell = dof_handler.begin_active(),
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
@@ -937,6 +822,8 @@ void Waveguide::assemble_system ()
 		else boundary_values.insert(write_boundary);
 	}
 
+	std::cout << "Anzahl gesetzter Randwerte vor löschen: "<< boundary_values.size() << std::endl;
+
 	cell = dof_handler.begin_active(),
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
@@ -945,39 +832,106 @@ void Waveguide::assemble_system ()
 			std::vector<unsigned int> current_dofs(dofs_per_cell);
 			cell->get_dof_indices(current_dofs);
 			for (unsigned int i = 0; i < dofs_per_cell; i++) {
-				boundary_values.erase(current_dofs[i]);
+				std::map<unsigned int, double>::iterator it = boundary_values.find(current_dofs[i]);
+				if(it != boundary_values.end()){
+					boundary_values.erase(it);
+				}
 			}
 		}
 
 	}
 
-/**
-	ConstraintMatrix cm1, cm2, cm3;
-	cm1.clear();
-	VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>(),0, cm1);
-	cm1.close();
-	cm1.condense(system_matrix, system_rhs);
-	cm1.clear();
-	VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>(),1, cm2);
-	cm2.close();
-	cm2.condense(system_matrix, system_rhs);
-	cm3.clear();
-	VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>(),2, cm3);
-	cm3.close();
-	cm3.condense(system_matrix, system_rhs);
-**/
+	std::map<unsigned int, double>::iterator it = boundary_values.begin();
+
+	it = boundary_values.begin();
+	for(; it != boundary_values.end(); it++){
+			cm.add_line(it->first);
+			cm.set_inhomogeneity(it->first, it->second);
+	}
+	cm.close();
+
+	// End of BC calculation.
+
+	FullMatrix<double>	cell_matrix (dofs_per_cell, dofs_per_cell);
+	Vector<double>		cell_rhs (dofs_per_cell);
+	Tensor<2,3, std::complex<double>> 		epsilon, mu;
+	std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
 
+	cell = dof_handler.begin_active(),
+	endc = dof_handler.end();
+	for (; cell!=endc; ++cell)
+    {
+		fe_values.reinit (cell);
+		quadrature_points = fe_values.get_quadrature_points();
+		cell_matrix = 0;
+		cell_rhs = 0;
+
+		for (unsigned int q_index=0; q_index<n_q_points; ++q_index)
+        {
+			epsilon = get_Tensor(quadrature_points[q_index],  false, true);
+			mu = get_Tensor(quadrature_points[q_index], true, false);
+			const double JxW = fe_values.JxW(q_index);
+			for (unsigned int i=0; i<dofs_per_cell; i++){
+				Tensor<1,3, std::complex<double>> I_Curl;
+				Tensor<1,3, std::complex<double>> I_Val;
+				for(int k = 0; k<3; k++){
+					I_Curl[k].imag(fe_values[imag].curl(i, q_index)[k]);
+					I_Curl[k].real(fe_values[real].curl(i, q_index)[k]);
+					I_Val[k].imag(fe_values[imag].value(i, q_index)[k]);
+					I_Val[k].real(fe_values[real].value(i, q_index)[k]);
+				}
+
+				for (unsigned int j=0; j<dofs_per_cell; j++){
+					Tensor<1,3, std::complex<double>> J_Curl;
+					Tensor<1,3, std::complex<double>> J_Val;
+					for(int k = 0; k<3; k++){
+						J_Curl[k].imag(fe_values[imag].curl(j, q_index)[k]);
+						J_Curl[k].real(fe_values[real].curl(j, q_index)[k]);
+						J_Val[k].imag(fe_values[imag].value(j, q_index)[k]);
+						J_Val[k].real(fe_values[real].value(j, q_index)[k]);
+					}
+
+					std::complex<double> x = (mu * I_Curl) * Transpose_Vector(J_Curl) * JxW - (I_Val  * epsilon * Transpose_Vector(J_Val)) *(omega * omega)*JxW ;
+					if(fe.system_to_base_index(i).first.second == fe.system_to_base_index(j).first.second){
+						cell_matrix[i][j] += x.real() + x.imag();
+					} else {
+						if(fe.system_to_base_index(i).first.second < fe.system_to_base_index(j).first.second) {
+							cell_matrix[i][j] += x.imag()+  x.real();
+						} else {
+							cell_matrix[i][j] += x.imag()+  x.real();
+						}
+					}
+
+				}
+
+			}
+        }
+
+		cell->get_dof_indices (local_dof_indices);
+		cm.distribute_local_to_global(cell_matrix, cell_rhs, local_dof_indices,system_matrix, system_rhs, true );
+		//for (unsigned int i=0; i<dofs_per_cell; i++)
+		//	for (unsigned int j=0; j<dofs_per_cell; j++)
+		//		system_matrix.add (local_dof_indices[i],
+        //                    local_dof_indices[j],
+        //                   cell_matrix[i][j]);
+
+		//for (unsigned int i=0; i<dofs_per_cell; ++i)
+		//	system_rhs(local_dof_indices[i]) += cell_rhs[i];
+
+    }
+
+	cm.distribute(system_rhs);
+	std::cout << sparsity_pattern.n_nonzero_elements()<<std::endl;
+	std::cout << (sparsity_pattern.n_nonzero_elements()*1.0)/(dof_handler.n_dofs()*1.0)<<std::endl;
+	//MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
 	std::cout << "Anzahl gesetzter Randwerte: "<< boundary_values.size() << std::endl;
 	std::cout<<solution.l2_norm()<<std::endl;
 	double max = 0;
-	std::map<unsigned int, double>::iterator it = boundary_values.begin();
 	for(; it != boundary_values.end(); it++){
 		if(it->second>max) max = it->second;
 	}
 
-	MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
-	solution=0;
 	std::cout<<max<<std::endl;
 	std::cout<<system_rhs.l2_norm()<<std::endl;
 }
@@ -985,11 +939,16 @@ void Waveguide::assemble_system ()
 void Waveguide::solve ()
 {
 	SolverControl           solver_control (PRM_S_Steps, PRM_S_Precision);
+
 	if(PRM_S_Solver == "CG") {
 		SolverCG<Vector<double> > solver (solver_control);
 		solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
 	}
 	if(PRM_S_Solver == "GMRES") {
+		//PreconditionSOR<SparseMatrix<double> > plu;
+		//plu.initialize(system_matrix, .6);
+		//SparseILU<double> ilu;
+		//ilu.initialize(system_matrix, SparseILU<double>::AdditionalData());
 		SolverGMRES<Vector<double> > solver (solver_control);
 		solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
 	}
@@ -998,6 +957,8 @@ void Waveguide::solve ()
 		A_direct.initialize(system_matrix);
 		A_direct.vmult(solution, system_rhs);
 	}
+
+	cm.distribute(solution);
 }
 
 void Waveguide::output_results () const
