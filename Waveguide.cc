@@ -39,6 +39,7 @@
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 #include <deal.II/lac/precondition.h>
+#include <deal.II/lac/precondition_block.h>
 #include <deal.II/lac/sparse_direct.h>
 #include <deal.II/lac/sparse_ilu.h>
 
@@ -50,7 +51,16 @@
 #include <cmath>
 #include <math.h>
 
+#include "Loggers.cc"
+
 using namespace dealii;
+
+
+std::string constraints_filename = "constraints.log";
+std::string assemble_filename = "assemble.log";
+std::string precondition_filename = "precondition.log";
+std::string solver_filename = "solver.log";
+std::string total_filename = "total.log";
 
 double PI =  1.0;				// Overwritten by Param-Reader
 double Eps0 = 1.0;				// Overwritten by Param-Reader
@@ -257,6 +267,7 @@ void ParameterReader::declare_parameters	()
 	prm.enter_subsection("Solver");
 	{
 		prm.declare_entry("Solver", "GMRES", Patterns::Selection("CG|GMRES|UMFPACK"), "Which Solver to use for the solution of the system matrix");
+		prm.declare_entry("Preconditioner", "Identity", Patterns::Selection("SOR|SSOR|Identity|Jacobi|ILU|Block_Jacobi"), "Which preconditioner to use");
 		prm.declare_entry("Steps", "100", Patterns::Integer(1), "Number of Steps the Solver is supposed to do.");
 		prm.declare_entry("Precision", "1e0", Patterns::Double(0), "Minimal error value, the solver is supposed to accept as correct solution.");
 	}
@@ -336,6 +347,8 @@ class Waveguide
 		Tensor<2,3, std::complex<double>> get_Tensor(Point<3> &, bool, bool);
 		Tensor<2,3, std::complex<double>> Transpose_Tensor(Tensor<2,3, std::complex<double>> );
 		Tensor<1,3, std::complex<double>> Transpose_Vector(Tensor<1,3, std::complex<double>> );
+		void	init_loggers();
+		void 	timerupdate();
 		// Point<3> Triangulation_Stretch_X (const Point<3> &);
 		// Point<3> Triangulation_Stretch_Y (const Point<3> &);
 		// Point<3> Triangulation_Stretch_Z (const Point<3> &);
@@ -363,9 +376,12 @@ class Waveguide
 		int 			PRM_D_XY, PRM_D_Z;
 		int 			PRM_S_Steps;
 		double			PRM_S_Precision;
-		std::string 	PRM_S_Solver;
+		std::string 	PRM_S_Solver, PRM_S_Preconditioner;
 		Vector<double>	solution;
 		Vector<double>	system_rhs;
+
+		FileLogger log_constraints, log_assemble, log_precondition, log_solver, log_total;
+		FileLoggerData log_data;
 };
 
 Waveguide::Waveguide (ParameterHandler &param)
@@ -631,6 +647,7 @@ void Waveguide::read_values() {
 	prm.enter_subsection("Solver");
 	{
 		PRM_S_Solver = prm.get("Solver");
+		PRM_S_Preconditioner = prm.get("Preconditioner");
 		PRM_S_Steps = prm.get_integer("Steps");
 		PRM_S_Precision = prm.get_double("Precision");
 	}
@@ -656,6 +673,7 @@ void Waveguide::read_values() {
 
 void Waveguide::make_grid ()
 {
+	log_total.start();
 	const double outer_radius = 1.0;
 	GridGenerator::subdivided_hyper_cube (triangulation, 5, -outer_radius, outer_radius);
 
@@ -761,6 +779,8 @@ void Waveguide::assemble_system ()
 		std::cout << "Dofs per face: " << fe.dofs_per_face << std::endl << "Dofs per line: " << fe.dofs_per_line << std::endl;
 	}
 
+	log_data.Dofs = dof_handler.n_dofs();
+	log_constraints.start();
 	//starting to calculate Constraint Matrix for boundary values;
 	std::map<unsigned int, double> boundary_values;
 	std::vector<bool> boundary_dofs (dof_handler.n_dofs());
@@ -850,8 +870,10 @@ void Waveguide::assemble_system ()
 	}
 	cm.close();
 
+	log_constraints.stop();
 	// End of BC calculation.
 
+	log_assemble.start();
 	FullMatrix<double>	cell_matrix (dofs_per_cell, dofs_per_cell);
 	Vector<double>		cell_rhs (dofs_per_cell);
 	Tensor<2,3, std::complex<double>> 		epsilon, mu;
@@ -934,31 +956,125 @@ void Waveguide::assemble_system ()
 
 	std::cout<<max<<std::endl;
 	std::cout<<system_rhs.l2_norm()<<std::endl;
+	log_assemble.stop();
+}
+
+void Waveguide::timerupdate() {
+	log_precondition.stop();
+	log_solver.start();
 }
 
 void Waveguide::solve ()
 {
-	SolverControl           solver_control (PRM_S_Steps, PRM_S_Precision);
+	SolverControl           solver_control (PRM_S_Steps, PRM_S_Precision, true);
+	log_precondition.start();
 
 	if(PRM_S_Solver == "CG") {
+		PreconditionBlockJacobi<SparseMatrix<double>, double> block_jacobi;
+		block_jacobi.initialize(system_matrix, PreconditionBlock<SparseMatrix<double>, double>::AdditionalData(984));
+
 		SolverCG<Vector<double> > solver (solver_control);
-		solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
+		timerupdate();
+		solver.solve (system_matrix, solution, system_rhs, block_jacobi);
 	}
 	if(PRM_S_Solver == "GMRES") {
-		//PreconditionSOR<SparseMatrix<double> > plu;
-		//plu.initialize(system_matrix, .6);
-		//SparseILU<double> ilu;
-		//ilu.initialize(system_matrix, SparseILU<double>::AdditionalData());
-		SolverGMRES<Vector<double> > solver (solver_control);
-		solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
+		if(PRM_S_Preconditioner == "Block_Jacobi"){
+			PreconditionBlockJacobi<SparseMatrix<double>, double> block_jacobi;
+			block_jacobi.initialize(system_matrix, PreconditionBlock<SparseMatrix<double>, double>::AdditionalData(984));
+			SolverGMRES<Vector<double> > solver (solver_control);
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, block_jacobi);
+		}
+		if(PRM_S_Preconditioner == "Identity") {
+			SolverGMRES<Vector<double> > solver (solver_control);
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
+		}
+		if(PRM_S_Preconditioner == "Jacobi"){
+			PreconditionJacobi<SparseMatrix<double>> pre_jacobi;
+			pre_jacobi.initialize(system_matrix, PreconditionJacobi<SparseMatrix<double>>::AdditionalData());
+			SolverGMRES<Vector<double> > solver (solver_control);
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, pre_jacobi);
+		}
+		if(PRM_S_Preconditioner == "SOR"){
+			PreconditionSOR<SparseMatrix<double> > plu;
+			plu.initialize(system_matrix, .6);
+			SolverGMRES<Vector<double> > solver (solver_control);
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, plu);
+		}
+		if(PRM_S_Preconditioner == "SSOR"){
+			PreconditionSSOR<SparseMatrix<double> > plu;
+			plu.initialize(system_matrix, .6);
+			SolverGMRES<Vector<double> > solver (solver_control);
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, plu);
+		}
+		if(PRM_S_Preconditioner == "ILU"){
+			SparseILU<double> ilu;
+			ilu.initialize(system_matrix, SparseILU<double>::AdditionalData());
+			SolverGMRES<Vector<double> > solver (solver_control);
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, ilu);
+		}
 	}
 	if(PRM_S_Solver == "UMFPACK") {
 		SparseDirectUMFPACK  A_direct;
 		A_direct.initialize(system_matrix);
+		timerupdate();
 		A_direct.vmult(solution, system_rhs);
 	}
-
+	log_solver.stop();
 	cm.distribute(solution);
+}
+
+void Waveguide::init_loggers () {
+	log_data.PML_in = 	PRM_M_BC_XYin;
+	log_data.PML_out =	PRM_M_BC_XYout;
+	log_data.PML_mantle =	PRM_M_BC_Mantle;
+	log_data.ParamSteps =	PRM_S_Steps;
+	log_data.Precondition_BlockSize = 	0;
+	log_data.Precondition_weight = 		0;
+	log_data.Solver_Precision =			PRM_S_Precision;
+	log_data.XLength = 					PRM_M_R_XLength;
+	log_data.YLength = 					PRM_M_R_YLength;
+	log_data.ZLength = 					PRM_M_R_ZLength;
+	log_data.preconditioner =			PRM_S_Preconditioner;
+	log_data.solver = 					PRM_S_Solver;
+
+
+	log_constraints("constraints.log", log_data);
+	log_constraints.Dofs = true;
+	log_constraints.PML_in = log_constraints.PML_mantle = log_constraints.PML_mantle = true;
+
+	if( ! file_exists("assemble.log")) {
+
+	}
+	log_assemble("assemble.log", log_data);
+	log_assemble.Dofs = true;
+
+	if( ! file_exists("precondition.log")) {
+
+	}
+	log_precondition("precondition.log", log_data);
+	log_precondition.Dofs = true;
+	log_precondition.preconditioner = log_precondition.cputime = true;
+
+	if( ! file_exists("solver.log")) {
+
+	}
+	log_solver("solver.log", log_data);
+	log_solver.Dofs = true;
+	log_solver.solver = log_solver.preconditioner = log_solver.Solver_Precision = log_solver.cputime = true;
+
+	if( ! file_exists("total.log")) {
+
+	}
+	log_total("total.log", log_data);
+	log_total.Dofs = log_total.solver = log_total.Solver_Precision = log_total.cputime = true;
+
+
 }
 
 void Waveguide::output_results () const
@@ -975,10 +1091,12 @@ void Waveguide::output_results () const
 	std::ofstream outputvtk ("solution.vtk");
 	data_out.write_vtk(outputvtk);
 	data_out.write_gnuplot (output);
+	log_total.stop();
 }
 
 void Waveguide::run ()
 {
+	init_loggers ();
 	read_values ();
 	make_grid ();
 	setup_system ();
@@ -989,18 +1107,6 @@ void Waveguide::run ()
 
 int main ()
 {
-	Tensor<2,3,std::complex<double>> mat;
-	mat[0][0].imag( 2.0  );
-	mat[1][2].real( -1.0 );
-	mat[2][1].imag( 0.5  );
-	Tensor<1,3,std::complex<double>> vec;
-	vec[0].real(1);
-	vec[0].imag(1);
-	vec[1].real(2);
-	vec[2].imag(3);
-	std::cout<< vec*vec << std::endl;
-	std::cout<< (vec * mat) * vec<< std::endl;
-
 	ParameterHandler prm;
 	ParameterReader param(prm);
 	param.read_parameters("parameters.prh");

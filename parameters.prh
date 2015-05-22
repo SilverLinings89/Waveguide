@@ -45,7 +45,8 @@ subsection Discretization
 end
 
 subsection Solver
-	set Solver = UMFPACK
+	set Solver = GMRES
+	set Preconditioner = SSOR
 	set Steps = 4000
 	set Precision = 1e-5
 end
