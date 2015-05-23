@@ -1,18 +1,30 @@
 
 #include <iostream>
 #include <fstream>
-
+#include <sys/types.h>
+ #include <sys/stat.h>
 #include <deal.II/base/timer.h>
 
 using namespace dealii;
 
 class FileLoggerData {
 public:
+	FileLoggerData();
 	std::string solver, preconditioner;
 	int 		XLength, YLength, ZLength, ParamSteps, Dofs, Precondition_BlockSize;
 	double		PML_in, PML_out, PML_mantle, Solver_Precision, Precondition_weight;
 };
 
+FileLoggerData::FileLoggerData() {
+	solver = preconditioner = "";
+	XLength = YLength = ZLength = ParamSteps = Dofs = Precondition_BlockSize = 0;
+	PML_in = PML_out = PML_mantle = Solver_Precision = Precondition_weight = 0;
+}
+
+inline bool file_exists (const std::string& name) {
+  struct stat buffer;
+  return (stat (name.c_str(), &buffer) == 0);
+}
 
 /** The FileLogger
  * File Logger is supposed to write specific logfiles. It has a constructor taking 2 Arguments: Filename and 2 Parameterlists. The Parameterlists are a list of specific values appropriate for the Logger.
@@ -32,19 +44,25 @@ class FileLogger {
 
 	public:
 
+		FileLogger(std::string,const FileLoggerData& );
+		FileLogger();
 		bool solver, preconditioner, XLength, YLength, ZLength, ParamSteps, Dofs, Precondition_BlockSize, PML_in, PML_out, PML_mantle, Solver_Precision, Precondition_weight, walltime, cputime;
 		void start();
-		void stop();
-		FileLogger(std::string, FileLoggerData& );
+		void stop() ;
+
 
 };
 
-void FileLogger::start() {
+FileLogger::FileLogger() {
+
+}
+
+void FileLogger::start(){
 	t.start();
-};
+}
 
 void FileLogger::stop() {
-	double time = t.stop();
+	t.stop();
 	if (solver) {
 		file << fld.solver  << "\t";
 	}
@@ -94,12 +112,12 @@ void FileLogger::stop() {
 	file.close();
 }
 
-FileLogger::FileLogger( std::string in_filename, FileLoggerData& logger){
+FileLogger::FileLogger( std::string in_filename,const FileLoggerData& logger){
 	fld = logger;
 	char tab2[1024];
 	strncpy(tab2, in_filename.c_str(), sizeof(tab2));
 	tab2[sizeof(tab2) - 1] = 0;
-	bool exists = file_exists(constraints_filename);
+	bool exists = file_exists(in_filename);
 	file.open(tab2, std::ios::app);
 	if( ! exists ){
 
@@ -153,10 +171,4 @@ FileLogger::FileLogger( std::string in_filename, FileLoggerData& logger){
 	}
 	solver = preconditioner = XLength = YLength = ZLength = ParamSteps = Dofs = Precondition_BlockSize = PML_in = PML_out = PML_mantle = Solver_Precision = Precondition_weight = walltime = cputime = false;
 	walltime = true;
-}
-
-
-inline bool file_exists (const std::string& name) {
-  struct stat buffer;
-  return (stat (name.c_str(), &buffer) == 0);
 }

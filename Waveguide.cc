@@ -38,10 +38,13 @@
 #include <deal.II/lac/compressed_sparsity_pattern.h>
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
+#include <deal.II/lac/solver_richardson.h>
+#include <deal.II/lac/solver_relaxation.h>
 #include <deal.II/lac/precondition.h>
 #include <deal.II/lac/precondition_block.h>
 #include <deal.II/lac/sparse_direct.h>
 #include <deal.II/lac/sparse_ilu.h>
+
 
 #include <deal.II/base/timer.h>
 #include <deal.II/base/parameter_handler.h>
@@ -266,8 +269,10 @@ void ParameterReader::declare_parameters	()
 
 	prm.enter_subsection("Solver");
 	{
-		prm.declare_entry("Solver", "GMRES", Patterns::Selection("CG|GMRES|UMFPACK"), "Which Solver to use for the solution of the system matrix");
+		prm.declare_entry("Solver", "GMRES", Patterns::Selection("CG|GMRES|UMFPACK|Richardson|Relaxation"), "Which Solver to use for the solution of the system matrix");
+		prm.declare_entry("GMRESSteps", "30", Patterns::Integer(1), "Steps until restart of Krylow subspace generation");
 		prm.declare_entry("Preconditioner", "Identity", Patterns::Selection("SOR|SSOR|Identity|Jacobi|ILU|Block_Jacobi"), "Which preconditioner to use");
+		prm.declare_entry("PreconditionerBlockCount", "100", Patterns::Integer(1), "Number of Blocks for Block-Preconditioners.");
 		prm.declare_entry("Steps", "100", Patterns::Integer(1), "Number of Steps the Solver is supposed to do.");
 		prm.declare_entry("Precision", "1e0", Patterns::Double(0), "Minimal error value, the solver is supposed to accept as correct solution.");
 	}
@@ -375,21 +380,30 @@ class Waveguide
 		std::string 	PRM_D_Refinement;
 		int 			PRM_D_XY, PRM_D_Z;
 		int 			PRM_S_Steps;
+		int				PRM_S_GMRESSteps, PRM_S_PreconditionerBlockCount;
 		double			PRM_S_Precision;
 		std::string 	PRM_S_Solver, PRM_S_Preconditioner;
 		Vector<double>	solution;
 		Vector<double>	system_rhs;
-
-		FileLogger log_constraints, log_assemble, log_precondition, log_solver, log_total;
 		FileLoggerData log_data;
+		FileLogger log_constraints, log_assemble, log_precondition, log_solver, log_total;
+
 };
 
 Waveguide::Waveguide (ParameterHandler &param)
   :
   fe (FE_Nedelec<3> (0), 2),
   dof_handler (triangulation),
-  prm(param)
-{ }
+  prm(param),
+  log_data(),
+  log_constraints(std::string("constraints.log"), log_data),
+  log_assemble(std::string("assemble.log"), log_data),
+  log_precondition(std::string("precondition.log"), log_data),
+  log_solver(std::string("solver.log"), log_data),
+  log_total(std::string("total.log"), log_data)
+{
+
+}
 
 
 Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, bool inverse , bool epsilon) {
@@ -647,7 +661,9 @@ void Waveguide::read_values() {
 	prm.enter_subsection("Solver");
 	{
 		PRM_S_Solver = prm.get("Solver");
+		PRM_S_GMRESSteps = prm.get_integer("GMRESSteps");
 		PRM_S_Preconditioner = prm.get("Preconditioner");
+		PRM_S_PreconditionerBlockCount = prm.get_integer("PreconditionerBlockCount");
 		PRM_S_Steps = prm.get_integer("Steps");
 		PRM_S_Precision = prm.get_double("Precision");
 	}
@@ -781,22 +797,11 @@ void Waveguide::assemble_system ()
 
 	log_data.Dofs = dof_handler.n_dofs();
 	log_constraints.start();
+
 	//starting to calculate Constraint Matrix for boundary values;
+
 	std::map<unsigned int, double> boundary_values;
 	std::vector<bool> boundary_dofs (dof_handler.n_dofs());
-	std::set<unsigned char> boundary_indicators;
-	boundary_indicators.insert (0);
-	boundary_indicators.insert (1);
-	boundary_indicators.insert (2);
-
-
-	DoFTools::extract_boundary_dofs (dof_handler, fe.component_mask(real), boundary_dofs, boundary_indicators);
-
-	for (unsigned int i=0; i<dof_handler.n_dofs(); ++i) if (boundary_dofs[i] == true) boundary_values[i] = 0.;
-
-	DoFTools::extract_boundary_dofs (dof_handler, fe.component_mask(imag), boundary_dofs, boundary_indicators);
-
-	for (unsigned int i=0; i<dof_handler.n_dofs(); ++i) if (boundary_dofs[i] == true) boundary_values[i] = 0.;
 
 	std::vector<BoundaryPointValue> Boundary ;
 	DoFHandler<3>::active_cell_iterator
@@ -804,28 +809,41 @@ void Waveguide::assemble_system ()
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
 	{
-		if(cell->at_boundary() && ( System_Coordinate_in_Waveguide(cell->center(true, false)) ) && cell->center(true, false)[2] < 0 ){
+		if(cell->at_boundary() ) {
+			// && ( System_Coordinate_in_Waveguide(cell->center(true, false)) ) && cell->center(true, false)[2] < 0 ){
+
 			std::vector<unsigned int> current_dofs(dofs_per_cell);
 			cell->get_dof_indices(current_dofs);
 			for(unsigned int current_face = 0; current_face < GeometryInfo<3>::faces_per_cell; current_face++){
 				if(cell->face(current_face)->at_boundary()){
+
 					for(unsigned int current_edge = 0; current_edge < GeometryInfo<3>::lines_per_face; current_edge++){
 						bool exists = false;
-						int found = 0;
+						int found = -1;
 						for(unsigned int search = 0; search < Boundary.size(); search++){
 							if(Boundary[search].dof == current_dofs[2*GeometryInfo<3>::face_to_cell_lines(current_face, current_edge)]) {
 								exists = true;
 								found = search;
 							}
 						}
+
 						Point<3> p1 = cell->face(current_face)->line(current_edge)->vertex(0);
 						Point<3> p2 = cell->face(current_face)->line(current_edge)->vertex(1);
 						Point<3> con = p2-p1;
-						if(exists){
-							Boundary[found].AddSecondValue(RHS_value(cell->face(current_face)->center(), 0) * con[0]);
+						if((System_Coordinate_in_Waveguide(cell->center(true, false)) ) && cell->center(true, false)[2] < 0 ) {
+							if(exists){
+								Boundary[found].AddSecondValue(RHS_value(cell->face(current_face)->center(), 0) * con[0]);
+							} else {
+								BoundaryPointValue temp(current_dofs[2*GeometryInfo<3>::face_to_cell_lines(current_face, current_edge)] , RHS_value(cell->face(current_face)->center(), 0) * con[0]  );
+								Boundary.push_back( temp );
+							}
 						} else {
-							BoundaryPointValue temp(current_dofs[2*GeometryInfo<3>::face_to_cell_lines(current_face, current_edge)] , RHS_value(cell->face(current_face)->center(), 0) * con[0]  );
-							Boundary.push_back( temp );
+							if(exists){
+								Boundary[found].AddSecondValue(0.0);
+							} else {
+								BoundaryPointValue temp(current_dofs[2*GeometryInfo<3>::face_to_cell_lines(current_face, current_edge)] , 0.0  );
+								Boundary.push_back( temp );
+							}
 						}
 					}
 				}
@@ -842,24 +860,7 @@ void Waveguide::assemble_system ()
 		else boundary_values.insert(write_boundary);
 	}
 
-	std::cout << "Anzahl gesetzter Randwerte vor löschen: "<< boundary_values.size() << std::endl;
-
-	cell = dof_handler.begin_active(),
-	endc = dof_handler.end();
-	for (; cell!=endc; ++cell)
-	{
-		if(! cell->at_boundary()){
-			std::vector<unsigned int> current_dofs(dofs_per_cell);
-			cell->get_dof_indices(current_dofs);
-			for (unsigned int i = 0; i < dofs_per_cell; i++) {
-				std::map<unsigned int, double>::iterator it = boundary_values.find(current_dofs[i]);
-				if(it != boundary_values.end()){
-					boundary_values.erase(it);
-				}
-			}
-		}
-
-	}
+	std::cout << "Anzahl gesetzter Randwerte: "<< boundary_values.size() << std::endl;
 
 	std::map<unsigned int, double>::iterator it = boundary_values.begin();
 
@@ -932,14 +933,6 @@ void Waveguide::assemble_system ()
 
 		cell->get_dof_indices (local_dof_indices);
 		cm.distribute_local_to_global(cell_matrix, cell_rhs, local_dof_indices,system_matrix, system_rhs, true );
-		//for (unsigned int i=0; i<dofs_per_cell; i++)
-		//	for (unsigned int j=0; j<dofs_per_cell; j++)
-		//		system_matrix.add (local_dof_indices[i],
-        //                    local_dof_indices[j],
-        //                   cell_matrix[i][j]);
-
-		//for (unsigned int i=0; i<dofs_per_cell; ++i)
-		//	system_rhs(local_dof_indices[i]) += cell_rhs[i];
 
     }
 
@@ -950,6 +943,7 @@ void Waveguide::assemble_system ()
 	std::cout << "Anzahl gesetzter Randwerte: "<< boundary_values.size() << std::endl;
 	std::cout<<solution.l2_norm()<<std::endl;
 	double max = 0;
+	it = boundary_values.begin();
 	for(; it != boundary_values.end(); it++){
 		if(it->second>max) max = it->second;
 	}
@@ -971,50 +965,56 @@ void Waveguide::solve ()
 
 	if(PRM_S_Solver == "CG") {
 		PreconditionBlockJacobi<SparseMatrix<double>, double> block_jacobi;
-		block_jacobi.initialize(system_matrix, PreconditionBlock<SparseMatrix<double>, double>::AdditionalData(984));
+		block_jacobi.initialize(system_matrix, PreconditionBlock<SparseMatrix<double>, double>::AdditionalData(log_data.Dofs / PRM_S_PreconditionerBlockCount));
 
 		SolverCG<Vector<double> > solver (solver_control);
 		timerupdate();
 		solver.solve (system_matrix, solution, system_rhs, block_jacobi);
 	}
+	if(PRM_S_Solver == "Richardson") {
+		SolverRichardson<Vector<double> > solver (solver_control);
+		timerupdate();
+		solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
+	}
+	if(PRM_S_Solver == "Relaxation") {
+		SolverRelaxation<Vector<double> > solver (solver_control);
+		timerupdate();
+		solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
+	}
 	if(PRM_S_Solver == "GMRES") {
+		SolverGMRES<Vector<double> > solver (solver_control, SolverGMRES<Vector<double> >::AdditionalData(PRM_S_GMRESSteps));
+
 		if(PRM_S_Preconditioner == "Block_Jacobi"){
 			PreconditionBlockJacobi<SparseMatrix<double>, double> block_jacobi;
-			block_jacobi.initialize(system_matrix, PreconditionBlock<SparseMatrix<double>, double>::AdditionalData(984));
-			SolverGMRES<Vector<double> > solver (solver_control);
+			block_jacobi.initialize(system_matrix, PreconditionBlock<SparseMatrix<double>, double>::AdditionalData(log_data.Dofs / PRM_S_PreconditionerBlockCount));
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, block_jacobi);
 		}
 		if(PRM_S_Preconditioner == "Identity") {
-			SolverGMRES<Vector<double> > solver (solver_control);
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
 		}
 		if(PRM_S_Preconditioner == "Jacobi"){
 			PreconditionJacobi<SparseMatrix<double>> pre_jacobi;
 			pre_jacobi.initialize(system_matrix, PreconditionJacobi<SparseMatrix<double>>::AdditionalData());
-			SolverGMRES<Vector<double> > solver (solver_control);
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, pre_jacobi);
 		}
 		if(PRM_S_Preconditioner == "SOR"){
 			PreconditionSOR<SparseMatrix<double> > plu;
 			plu.initialize(system_matrix, .6);
-			SolverGMRES<Vector<double> > solver (solver_control);
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, plu);
 		}
 		if(PRM_S_Preconditioner == "SSOR"){
 			PreconditionSSOR<SparseMatrix<double> > plu;
 			plu.initialize(system_matrix, .6);
-			SolverGMRES<Vector<double> > solver (solver_control);
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, plu);
 		}
 		if(PRM_S_Preconditioner == "ILU"){
 			SparseILU<double> ilu;
 			ilu.initialize(system_matrix, SparseILU<double>::AdditionalData());
-			SolverGMRES<Vector<double> > solver (solver_control);
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, ilu);
 		}
@@ -1042,36 +1042,20 @@ void Waveguide::init_loggers () {
 	log_data.ZLength = 					PRM_M_R_ZLength;
 	log_data.preconditioner =			PRM_S_Preconditioner;
 	log_data.solver = 					PRM_S_Solver;
+	log_data.Dofs = 0;
 
 
-	log_constraints("constraints.log", log_data);
 	log_constraints.Dofs = true;
-	log_constraints.PML_in = log_constraints.PML_mantle = log_constraints.PML_mantle = true;
+	log_constraints.PML_in = log_constraints.PML_mantle = log_constraints.PML_out = true;
 
-	if( ! file_exists("assemble.log")) {
-
-	}
-	log_assemble("assemble.log", log_data);
 	log_assemble.Dofs = true;
 
-	if( ! file_exists("precondition.log")) {
-
-	}
-	log_precondition("precondition.log", log_data);
 	log_precondition.Dofs = true;
 	log_precondition.preconditioner = log_precondition.cputime = true;
 
-	if( ! file_exists("solver.log")) {
-
-	}
-	log_solver("solver.log", log_data);
 	log_solver.Dofs = true;
 	log_solver.solver = log_solver.preconditioner = log_solver.Solver_Precision = log_solver.cputime = true;
 
-	if( ! file_exists("total.log")) {
-
-	}
-	log_total("total.log", log_data);
 	log_total.Dofs = log_total.solver = log_total.Solver_Precision = log_total.cputime = true;
 
 
@@ -1091,7 +1075,6 @@ void Waveguide::output_results () const
 	std::ofstream outputvtk ("solution.vtk");
 	data_out.write_vtk(outputvtk);
 	data_out.write_gnuplot (output);
-	log_total.stop();
 }
 
 void Waveguide::run ()
@@ -1103,6 +1086,7 @@ void Waveguide::run ()
 	assemble_system ();
 	solve ();
 	output_results ();
+	log_total.stop();
 }
 
 int main ()

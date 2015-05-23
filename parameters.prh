@@ -40,14 +40,16 @@ end
 
 subsection Discretization
 	set refinement = global
-	set XY = 3
+	set XY = 2
 	set Z = 3
 end
 
 subsection Solver
 	set Solver = GMRES
-	set Preconditioner = SSOR
-	set Steps = 4000
+	set GMRESSteps = 1500
+	set Preconditioner = Block_Jacobi
+	set PreconditionerBlockCount = 20
+	set Steps = 10000
 	set Precision = 1e-5
 end
 
