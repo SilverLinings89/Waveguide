@@ -41,6 +41,10 @@ Thumbs.db
 *.vtk
 *.eps
 *.gpl
+*.1
+*.cmake
 Makefile
+CMakeFiles/
+CMakeCache.txt
 
 
