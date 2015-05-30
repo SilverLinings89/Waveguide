@@ -976,11 +976,7 @@ void Waveguide::solve ()
 		timerupdate();
 		solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
 	}
-	if(PRM_S_Solver == "Relaxation") {
-		SolverRelaxation<Vector<double> > solver (solver_control);
-		timerupdate();
-		solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
-	}
+	
 	if(PRM_S_Solver == "GMRES") {
 		SolverGMRES<Vector<double> > solver (solver_control, SolverGMRES<Vector<double> >::AdditionalData(PRM_S_GMRESSteps));
 
