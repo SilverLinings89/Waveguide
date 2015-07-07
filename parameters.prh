@@ -25,9 +25,9 @@ subsection Measures
 	end
 	subsection Boundary Conditions
 		set Type = PML
-		set XY in = 5
-		set XY out = 5
-		set Mantle = 5
+		set XY in = 20
+		set XY out = 20
+		set Mantle = 20
 		set KappaXMax = 10.0
 		set KappaYMax = 10.0
 		set KappaZMax = 10.0
