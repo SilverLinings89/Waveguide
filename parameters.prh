@@ -13,9 +13,9 @@ subsection Measures
 		set Radius out = 1.5
 	end
 	subsection Region
-		set XLength = 20
-		set YLength = 20
-		set ZLength = 1
+		set XLength = 10
+		set YLength = 10
+		set ZLength = 10
 	end
 	subsection Waveguide
 		set Delta = 0
@@ -25,16 +25,16 @@ subsection Measures
 	end
 	subsection Boundary Conditions
 		set Type = PML
-		set XY in = 10
-		set XY out = 10
-		set Mantle = 10
+		set XY in = 5
+		set XY out = 5
+		set Mantle = 5
 		set KappaXMax = 10.0
 		set KappaYMax = 10.0
 		set KappaZMax = 10.0
 		set SigmaXMax = 10.0
 		set SigmaYMax = 10.0
 		set SigmaZMax = 10.0
-		set DampeningExponentM = 4
+		set DampeningExponentM = 3
 	end
 end
 
@@ -44,13 +44,17 @@ subsection Discretization
 	set Z = 3
 end
 
+subsection Assembly
+	set Threads = 4
+end
+
 subsection Solver
 	set Solver = GMRES
-	set GMRESSteps = 1500
-	set Preconditioner = Block_Jacobi
+	set GMRESSteps = 200
+	set Preconditioner = LU
 	set PreconditionerBlockCount = 20
-	set Steps = 10000
-	set Precision = 1e-5
+	set Steps = 90000
+	set Precision = 1e-6
 end
 
 subsection Constants

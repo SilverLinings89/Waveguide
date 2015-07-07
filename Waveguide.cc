@@ -12,8 +12,11 @@
 #include <deal.II/grid/manifold_lib.h>
 #include <deal.II/lac/matrix_out.h>
 
+#include <deal.II/base/thread_management.h>
+#include <deal.II/base/multithread_info.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
+#include <deal.II/grid/filtered_iterator.h>
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria_boundary_lib.h>
 #include <deal.II/grid/grid_out.h>
@@ -44,6 +47,28 @@
 #include <deal.II/lac/precondition_block.h>
 #include <deal.II/lac/sparse_direct.h>
 #include <deal.II/lac/sparse_ilu.h>
+#include <deal.II/lac/block_sparse_matrix.h>
+#include <deal.II/lac/block_matrix.h>
+#include <deal.II/lac/block_vector.h>
+#include <deal.II/lac/block_sparsity_pattern.h>
+#include <deal.II/lac/block_matrix_base.h>
+#include <deal.II/lac/block_vector_base.h>
+
+#include <deal.II/lac/petsc_full_matrix.h>
+#include <deal.II/lac/petsc_matrix_base.h>
+#include <deal.II/lac/petsc_matrix_free.h>
+#include <deal.II/lac/petsc_precondition.h>
+#include <deal.II/lac/petsc_solver.h>
+#include <deal.II/lac/petsc_sparse_matrix.h>
+#include <deal.II/lac/petsc_vector.h>
+#include <deal.II/lac/petsc_vector_base.h>
+
+#include <deal.II/lac/trilinos_precondition.h>
+#include <deal.II/lac/trilinos_solver.h>
+#include <deal.II/lac/trilinos_sparse_matrix.h>
+#include <deal.II/lac/trilinos_vector.h>
+#include <deal.II/lac/trilinos_vector_base.h>
+#include <deal.II/lac/trilinos_sparsity_pattern.h>
 
 
 #include <deal.II/base/timer.h>
@@ -53,10 +78,11 @@
 #include <iostream>
 #include <cmath>
 #include <math.h>
-
+#include <mpi/mpi.h>
 #include "Loggers.cc"
 
 using namespace dealii;
+
 
 
 std::string constraints_filename = "constraints.log";
@@ -171,8 +197,8 @@ static double Distance2D (Point<3> position, Point<3> to = Point<3>()) {
 
 static bool System_Coordinate_in_Waveguide(Point<3> p){
 	double value = Distance2D(p);
-	double reference = PRM_M_R_XLength/10.0;
-	reference = sqrt(reference*reference *2 );
+	double reference = PRM_M_R_XLength/5.0;
+	reference = reference * sqrt( 2 );
 	return ( value < reference);
 }
 
@@ -267,11 +293,17 @@ void ParameterReader::declare_parameters	()
 	}
 	prm.leave_subsection();
 
+	prm.enter_subsection("Assembly");
+	{
+		prm.declare_entry("Threads", "4", Patterns::Integer(1), "Number of threads used in the assembly process.");
+	}
+	prm.leave_subsection();
+
 	prm.enter_subsection("Solver");
 	{
 		prm.declare_entry("Solver", "GMRES", Patterns::Selection("CG|GMRES|UMFPACK|Richardson|Relaxation"), "Which Solver to use for the solution of the system matrix");
 		prm.declare_entry("GMRESSteps", "30", Patterns::Integer(1), "Steps until restart of Krylow subspace generation");
-		prm.declare_entry("Preconditioner", "Identity", Patterns::Selection("SOR|SSOR|Identity|Jacobi|ILU|Block_Jacobi"), "Which preconditioner to use");
+		prm.declare_entry("Preconditioner", "Identity", Patterns::Selection("SOR|SSOR|Identity|Jacobi|ILU|Block_Jacobi|ParaSails|LU|ICC|BoomerAMG|Eisenstat"), "Which preconditioner to use");
 		prm.declare_entry("PreconditionerBlockCount", "100", Patterns::Integer(1), "Number of Blocks for Block-Preconditioners.");
 		prm.declare_entry("Steps", "100", Patterns::Integer(1), "Number of Steps the Solver is supposed to do.");
 		prm.declare_entry("Precision", "1e0", Patterns::Double(0), "Minimal error value, the solver is supposed to accept as correct solution.");
@@ -312,8 +344,9 @@ double RightHandSide<dim>::value (const Point<dim> &p , const unsigned int compo
 {
 	if(System_Coordinate_in_Waveguide(p)){
 		if(p[2] < 0) {
-			if(component < 2) {
+			if(component == 0) {
 				double d2 = Distance2D(p);
+				//return 1.0;
 				return exp(-d2*d2/2);
 			}
 		}
@@ -328,12 +361,14 @@ void RightHandSide<dim>::vector_value (const Point<dim> &p,	Vector<double> &valu
 	for (unsigned int c=0; c<6; ++c) values(c) = RightHandSide<dim>::value (p, c);
 }
 
-
+template <typename MatrixType, typename VectorType>
 class Waveguide
 {
 	public:
 		Waveguide (ParameterHandler &);
 		void run ();
+		void 	assemble_part (unsigned int in_part);
+
 
 	private:
 		void 	read_values ();
@@ -363,8 +398,10 @@ class Waveguide
 		DoFHandler<3>		dof_handler;
 		ConstraintMatrix 	cm;
 
-		SparsityPattern			sparsity_pattern;
-		SparseMatrix<double>	system_matrix;
+		SparsityPattern		sparsity_pattern;
+		MatrixType			system_matrix;
+		//SparseMatrix<double> system_matrix_real;
+		//SparseMatrix<double> system_matrix_imag;
 		ParameterHandler 		&prm;
 		ConstraintMatrix boundary_value_constraints_imaginary;
 		ConstraintMatrix boundary_value_constraints_real;
@@ -381,16 +418,23 @@ class Waveguide
 		int 			PRM_D_XY, PRM_D_Z;
 		int 			PRM_S_Steps;
 		int				PRM_S_GMRESSteps, PRM_S_PreconditionerBlockCount;
+		int				PRM_A_Threads;
 		double			PRM_S_Precision;
 		std::string 	PRM_S_Solver, PRM_S_Preconditioner;
-		Vector<double>	solution;
-		Vector<double>	system_rhs;
+		int 			assembly_progress;
+
+
+		VectorType	solution;
+		VectorType	system_rhs;
+		//Vector<double>	system_rhs_real;
+		//Vector<double>	system_rhs_imag;
 		FileLoggerData log_data;
 		FileLogger log_constraints, log_assemble, log_precondition, log_solver, log_total;
 
 };
 
-Waveguide::Waveguide (ParameterHandler &param)
+template<typename MatrixType, typename VectorType >
+Waveguide<MatrixType, VectorType>::Waveguide (ParameterHandler &param)
   :
   fe (FE_Nedelec<3> (0), 2),
   dof_handler (triangulation),
@@ -402,13 +446,18 @@ Waveguide::Waveguide (ParameterHandler &param)
   log_solver(std::string("solver.log"), log_data),
   log_total(std::string("total.log"), log_data)
 {
-
+	assembly_progress = 0;
 }
 
-
-Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, bool inverse , bool epsilon) {
+template<typename MatrixType, typename VectorType >
+Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(Point<3> & position, bool inverse , bool epsilon) {
 
 	Tensor<2,3, std::complex<double>> ret;
+	for(int i = 0; i<3; i++ ){
+		for(int j = 0; j<3; j++) {
+			ret[i][j] = 0.0;
+		}
+	}
 	std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
 
 	double omegaepsilon0 = (2* PI / PRM_M_W_Lambda) * c ;
@@ -416,7 +465,7 @@ Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, boo
 	if(PML_in_X(position)){
 		double r,d, sigmax;
 		r = PML_X_Distance(position);
-		d = PRM_M_R_XLength * 2.0 * PRM_M_BC_Mantle/100.0;
+		d = PRM_M_R_XLength * 1.0 * PRM_M_BC_Mantle/100.0;
 		sigmax = pow(d/r , PRM_M_BC_M) * PRM_M_BC_SigmaXMax;
 		sx.real( 1 + pow(d/r , PRM_M_BC_M) * PRM_M_BC_KappaXMax);
 		sx.imag( sigmax / (PRM_M_W_EpsilonOut * omegaepsilon0));
@@ -427,7 +476,7 @@ Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, boo
 	if(PML_in_Y(position)){
 		double r,d, sigmay;
 		r = PML_Y_Distance(position);
-		d = PRM_M_R_YLength * 2.0 * PRM_M_BC_Mantle/100.0;
+		d = PRM_M_R_YLength * 1.0 * PRM_M_BC_Mantle/100.0;
 		sigmay = pow(d/r , PRM_M_BC_M) * PRM_M_BC_SigmaYMax;
 		sy.real( 1 + pow(d/r , PRM_M_BC_M) * PRM_M_BC_KappaYMax);
 		sy.imag( sigmay / (PRM_M_W_EpsilonOut * omegaepsilon0));
@@ -438,7 +487,7 @@ Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, boo
 	if(PML_in_Z(position)){
 		double r,d, sigmaz;
 		r = PML_Z_Distance(position);
-		d = PRM_M_R_ZLength * 2.0 * ((position(2)<0)? PRM_M_BC_XYin : PRM_M_BC_XYout)/100.0;
+		d = PRM_M_R_ZLength * 1.0 * ((position(2)<0)? PRM_M_BC_XYin : PRM_M_BC_XYout)/100.0;
 		sigmaz = pow(d/r , PRM_M_BC_M) * PRM_M_BC_SigmaZMax;
 		sz.real( 1 + pow(d/r , PRM_M_BC_M) * PRM_M_BC_KappaZMax);
 		sz.imag( sigmaz / ((System_Coordinate_in_Waveguide(position))?PRM_M_W_EpsilonIn : PRM_M_W_EpsilonOut) * omegaepsilon0 );
@@ -485,8 +534,8 @@ Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, boo
 	return ret;
 }
 
-
-Tensor<2,3, std::complex<double>> Waveguide::Transpose_Tensor(Tensor<2,3, std::complex<double>> input) {
+template<typename MatrixType, typename VectorType >
+Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Transpose_Tensor(Tensor<2,3, std::complex<double>> input) {
 	Tensor<2,3, std::complex<double>> ret ;
 	for(int i= 0; i< 3; i++){
 		for(int j = 0; j<3; j++){
@@ -497,8 +546,8 @@ Tensor<2,3, std::complex<double>> Waveguide::Transpose_Tensor(Tensor<2,3, std::c
 	return ret;
 }
 
-
-Tensor<1,3, std::complex<double>> Waveguide::Transpose_Vector(Tensor<1,3, std::complex<double>> input) {
+template<typename MatrixType, typename VectorType >
+Tensor<1,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Transpose_Vector(Tensor<1,3, std::complex<double>> input) {
 	Tensor<1,3, std::complex<double>> ret ;
 	for(int i= 0; i< 3; i++){
 		ret[i].real(input[i].real());
@@ -508,23 +557,23 @@ Tensor<1,3, std::complex<double>> Waveguide::Transpose_Vector(Tensor<1,3, std::c
 	return ret;
 }
 
-
-bool Waveguide::PML_in_X(Point<3> &p) {
+template<typename MatrixType, typename VectorType >
+bool Waveguide<MatrixType, VectorType>::PML_in_X(Point<3> &p) {
 	return  p(0) > ((PRM_M_R_XLength / 2.0) - (PRM_M_R_XLength * PRM_M_BC_Mantle/100.0)) ||  p(0) < (-(PRM_M_R_XLength / 2.0) + (PRM_M_R_XLength * PRM_M_BC_Mantle/100.0));
 }
 
-
-bool Waveguide::PML_in_Y(Point<3> &p) {
+template<typename MatrixType, typename VectorType >
+bool Waveguide<MatrixType, VectorType>::PML_in_Y(Point<3> &p) {
 	return  p(1) > ((PRM_M_R_YLength / 2.0) - (PRM_M_R_YLength * PRM_M_BC_Mantle/100.0)) ||  p(1) < (-(PRM_M_R_YLength / 2.0) + (PRM_M_R_YLength * PRM_M_BC_Mantle/100.0));
 }
 
-
-bool Waveguide::PML_in_Z(Point<3> &p) {
+template<typename MatrixType, typename VectorType >
+bool Waveguide<MatrixType, VectorType>::PML_in_Z(Point<3> &p) {
 	return  (p(2) > ((PRM_M_R_ZLength / 2.0) - (PRM_M_R_ZLength * PRM_M_BC_XYout/100.0)) ) ||  (p(2) < (-(PRM_M_R_ZLength / 2.0) + (PRM_M_R_ZLength * PRM_M_BC_XYin/100.0)  )  && !System_Coordinate_in_Waveguide(p));
 }
 
-
-double Waveguide::PML_X_Distance(Point<3> &p){
+template<typename MatrixType, typename VectorType >
+double Waveguide<MatrixType, VectorType>::PML_X_Distance(Point<3> &p){
 	if(p(0) >0){
 		return p(0) - ((PRM_M_R_XLength / 2.0) - (PRM_M_R_XLength* PRM_M_BC_Mantle/100.0));
 	} else {
@@ -532,8 +581,8 @@ double Waveguide::PML_X_Distance(Point<3> &p){
 	}
 }
 
-
-double Waveguide::PML_Y_Distance(Point<3> &p){
+template<typename MatrixType, typename VectorType >
+double Waveguide<MatrixType, VectorType>::PML_Y_Distance(Point<3> &p){
 	if(p(1) >0){
 		return p(1) - ((PRM_M_R_YLength / 2.0) - (PRM_M_R_YLength* PRM_M_BC_Mantle/100.0));
 	} else {
@@ -541,8 +590,8 @@ double Waveguide::PML_Y_Distance(Point<3> &p){
 	}
 }
 
-
-double Waveguide::PML_Z_Distance(Point<3> &p){
+template<typename MatrixType, typename VectorType >
+double Waveguide<MatrixType, VectorType>::PML_Z_Distance(Point<3> &p){
 	if(p(2) >0){
 		return p(2) - ((PRM_M_R_ZLength / 2.0) - (PRM_M_R_ZLength * PRM_M_BC_XYout/100));
 	} else {
@@ -550,15 +599,16 @@ double Waveguide::PML_Z_Distance(Point<3> &p){
 	}
 }
 
-
-double Waveguide::RHS_value (const Point<3> &p , const unsigned int component)
+template<typename MatrixType, typename VectorType >
+double Waveguide<MatrixType, VectorType>::RHS_value (const Point<3> &p , const unsigned int component)
 {
 	if(p[2] < 0){
 		if( System_Coordinate_in_Waveguide(p) ){
-			Point<3> ref(0,0,0);
+			//Point<3> ref(0,0,0);
 			double d2 = Distance2D(p);
 			if(component <= 2 ) {
-				return exp(-d2*d2/2);
+				return 1.0;
+				// return exp(-d2*d2/2);
 			}
 		}
 
@@ -592,8 +642,8 @@ Point<3> Triangulation_Stretch_Z (const Point<3> &p)
   return q;
 }
 
-
-void Waveguide::read_values() {
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::read_values() {
 	prm.enter_subsection("Output");
 	{
 		PRM_O_Grid	=	prm.get_bool("Output Grid");
@@ -658,6 +708,12 @@ void Waveguide::read_values() {
 	}
 	prm.leave_subsection();
 
+	prm.enter_subsection("Assembly");
+	{
+		PRM_A_Threads = prm.get_integer("Threads");
+	}
+	prm.leave_subsection();
+
 	prm.enter_subsection("Solver");
 	{
 		PRM_S_Solver = prm.get("Solver");
@@ -675,19 +731,22 @@ void Waveguide::read_values() {
 		if(! prm.get_bool("AllOne")){
 			Eps0 = prm.get_double("EpsilonZero");
 			Mu0 = prm.get_double("MuZero");
+			c = 1/sqrt(Eps0 * Mu0);
+			f0 = c/0.63;
+			omega = 2 * PI * f0;
 		} else {
 			Eps0 = 1.0;
 			Mu0 = 1.0;
+			c = 1.0;
+			f0 = 1.0;
+			omega = 1.0;
 		}
-		c = 1/sqrt(Eps0 * Mu0);
-		f0 = c/0.63;
-		omega = 2 * PI * f0;
 	}
 	prm.leave_subsection();
 }
 
-
-void Waveguide::make_grid ()
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::make_grid ()
 {
 	log_total.start();
 	const double outer_radius = 1.0;
@@ -740,6 +799,16 @@ void Waveguide::make_grid ()
 
 	if(PRM_D_Refinement == "global") triangulation.refine_global (PRM_D_XY);
 
+	cell = triangulation.begin_active();
+	double l = (double)PRM_M_R_ZLength / (PRM_A_Threads*2.0);
+	for (; cell!=endc; ++cell){
+
+		int temp  = (int) (((cell->center(true, false))[2] + (PRM_M_R_ZLength/2)) / l);
+		if( temp >= 2* PRM_A_Threads) std::cout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
+		cell->set_subdomain_id(temp);
+	}
+
+
 	if(PRM_O_Grid) {
 		if(PRM_O_VerboseOutput) std::cout<< "Writing Mesh data to file \"grid-3D.vtk\"" << std::endl;
 		mesh_info(triangulation, "grid-3D.vtk");
@@ -749,8 +818,8 @@ void Waveguide::make_grid ()
 
 }
 
-
-void Waveguide::setup_system ()
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::setup_system ()
 {
 	if(PRM_O_VerboseOutput && PRM_O_Dofs) {
 		std::cout << "Distributing Degrees of freedom." << std::endl;
@@ -765,30 +834,126 @@ void Waveguide::setup_system ()
 	}
 
 	CompressedSparsityPattern c_sparsity(dof_handler.n_dofs(), dof_handler.n_dofs());
-	DoFTools::make_sparsity_pattern (dof_handler, c_sparsity);
-	sparsity_pattern.copy_from(c_sparsity);
-	std::ofstream out ("sparsity_pattern.1");
-	sparsity_pattern.print_gnuplot(out);
-	system_matrix.reinit (sparsity_pattern);
+	//CompressedSparsityPattern c_largesparsity(2 * dof_handler.n_dofs(), dof_handler.n_dofs());
 
-	solution.reinit (dof_handler.n_dofs());
-	system_rhs.reinit (dof_handler.n_dofs());
+	/**
+	BlockCompressedSparsityPattern b_sparsity(1, 2);
+	b_sparsity.block(0,0).reinit(dof_handler.n_dofs(), dof_handler.n_dofs());
+	b_sparsity.block(0,1).reinit(dof_handler.n_dofs(), dof_handler.n_dofs());
+	b_sparsity.collect_sizes();
+
+	DoFTools::make_sparsity_pattern(dof_handler, b_sparsity);
+	**/
+	DoFTools::make_sparsity_pattern (dof_handler, c_sparsity);
+
+
+	sparsity_pattern.copy_from(c_sparsity);
+
+	// std::ofstream out ("sparsity_pattern.1");
+	// sparsity_pattern.print_gnuplot(out);
+
+	system_matrix.reinit( sparsity_pattern );
+	// system_matrix_real.reinit (sparsity_pattern);
+	// system_matrix_imag.reinit (sparsity_pattern);
+
+	solution.reinit ( dof_handler.n_dofs());
+
+	system_rhs.reinit(dof_handler.n_dofs());
+
+	// system_rhs_real.reinit (dof_handler.n_dofs());
+	// system_rhs_imag.reinit (dof_handler.n_dofs());
 	if(PRM_O_VerboseOutput) {
 			std::cout << "Done." << std::endl;
 	}
+
 }
 
-
-void Waveguide::assemble_system ()
-{
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
 	QGauss<3>  quadrature_formula(2);
-	const FEValuesExtractors::Vector real (0);
-	const FEValuesExtractors::Vector imag (3);
+	const FEValuesExtractors::Vector real(0);
+	const FEValuesExtractors::Vector imag(3);
 	FEValues<3> fe_values (fe, quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points );
 	std::vector<Point<3> > quadrature_points;
+	const unsigned int   dofs_per_cell	= fe.dofs_per_cell;
+	const unsigned int   n_q_points		= quadrature_formula.size();
 
-	const unsigned int   dofs_per_cell = fe.dofs_per_cell;
-	const unsigned int   n_q_points    = quadrature_formula.size();
+	FullMatrix<double>	cell_matrix_real (dofs_per_cell, dofs_per_cell);
+	Vector<double>		cell_rhs (dofs_per_cell);
+	cell_rhs = 0;
+	Tensor<2,3, std::complex<double>> 		epsilon, mu;
+	std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
+
+	DoFHandler<3>::active_cell_iterator cell, endc;
+
+	cell = dof_handler.begin_active(),
+	endc = dof_handler.end();
+
+	for (; cell!=endc; ++cell)
+	{
+		if(cell->subdomain_id() == in_part) {
+			fe_values.reinit (cell);
+			quadrature_points = fe_values.get_quadrature_points();
+			cell_matrix_real = 0;
+
+			for (unsigned int q_index=0; q_index<n_q_points; ++q_index)
+			{
+				epsilon = get_Tensor(quadrature_points[q_index],  false, true);
+				mu = get_Tensor(quadrature_points[q_index], true, false);
+				const double JxW = fe_values.JxW(q_index);
+				for (unsigned int i=0; i<dofs_per_cell; i++){
+					Tensor<1,3, std::complex<double>> I_Curl;
+					Tensor<1,3, std::complex<double>> I_Val;
+					for(int k = 0; k<3; k++){
+						I_Curl[k].imag(fe_values[imag].curl(i, q_index)[k]);
+						I_Curl[k].real(fe_values[real].curl(i, q_index)[k]);
+						I_Val[k].imag(fe_values[imag].value(i, q_index)[k]);
+						I_Val[k].real(fe_values[real].value(i, q_index)[k]);
+					}
+					for (unsigned int j=0; j<dofs_per_cell; j++){
+						Tensor<1,3, std::complex<double>> J_Curl;
+						Tensor<1,3, std::complex<double>> J_Val;
+						for(int k = 0; k<3; k++){
+							J_Curl[k].imag(fe_values[imag].curl(j, q_index)[k]);
+							J_Curl[k].real(fe_values[real].curl(j, q_index)[k]);
+							J_Val[k].imag(fe_values[imag].value(j, q_index)[k]);
+							J_Val[k].real(fe_values[real].value(j, q_index)[k]);
+						}
+
+						std::complex<double> x = (mu * I_Curl) * Transpose_Vector(J_Curl) * JxW - ( ( epsilon * I_Val ) * Transpose_Vector(J_Val)) *(omega * omega)*JxW ;
+						if(x.real() != 0) {
+							cell_matrix_real[i][j] += x.real();
+						}
+					/**
+					if(x.imag() != 0) {
+						cell_matrix_imag[i][j] += x.imag();
+					}
+					**/
+					}
+				}
+			}
+
+			cell->get_dof_indices (local_dof_indices);
+
+			cm.distribute_local_to_global(cell_matrix_real, cell_rhs, local_dof_indices,system_matrix, system_rhs, false );
+			//cm.distribute_local_to_global(cell_matrix_imag, cell_rhs, local_dof_indices,system_matrix.block(0,1), system_rhs.block(1), true );
+
+	    }
+	}
+	assembly_progress ++;
+	std::cout << "Progress: " << 100 * assembly_progress/(PRM_A_Threads*2) << " %" << std::endl;
+}
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::assemble_system ()
+{
+	QGauss<3>  quadrature_formula(2);
+	const FEValuesExtractors::Vector real(0);
+	const FEValuesExtractors::Vector imag(3);
+	FEValues<3> fe_values (fe, quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points );
+	std::vector<Point<3> > quadrature_points;
+	const unsigned int   dofs_per_cell	= fe.dofs_per_cell;
+	const unsigned int   n_q_points		= quadrature_formula.size();
 
 	if(PRM_O_VerboseOutput) {
 		std::cout << "Dofs per cell: " << dofs_per_cell << std::endl << "Quadrature Formula Size: " << n_q_points << std::endl;
@@ -799,186 +964,187 @@ void Waveguide::assemble_system ()
 	log_constraints.start();
 
 	//starting to calculate Constraint Matrix for boundary values;
+	VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>() , 0 , cm , StaticMappingQ1<3>::mapping);
+	VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>() , 1 , cm , StaticMappingQ1<3>::mapping);
+	VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>() , 2 , cm , StaticMappingQ1<3>::mapping);
 
-	std::map<unsigned int, double> boundary_values;
-	std::vector<bool> boundary_dofs (dof_handler.n_dofs());
-
-	std::vector<BoundaryPointValue> Boundary ;
-	DoFHandler<3>::active_cell_iterator
-	cell = dof_handler.begin_active(),
-	endc = dof_handler.end();
-	for (; cell!=endc; ++cell)
-	{
-		if(cell->at_boundary() ) {
-			// && ( System_Coordinate_in_Waveguide(cell->center(true, false)) ) && cell->center(true, false)[2] < 0 ){
-
-			std::vector<unsigned int> current_dofs(dofs_per_cell);
-			cell->get_dof_indices(current_dofs);
-			for(unsigned int current_face = 0; current_face < GeometryInfo<3>::faces_per_cell; current_face++){
-				if(cell->face(current_face)->at_boundary()){
-
-					for(unsigned int current_edge = 0; current_edge < GeometryInfo<3>::lines_per_face; current_edge++){
-						bool exists = false;
-						int found = -1;
-						for(unsigned int search = 0; search < Boundary.size(); search++){
-							if(Boundary[search].dof == current_dofs[2*GeometryInfo<3>::face_to_cell_lines(current_face, current_edge)]) {
-								exists = true;
-								found = search;
-							}
-						}
-
-						Point<3> p1 = cell->face(current_face)->line(current_edge)->vertex(0);
-						Point<3> p2 = cell->face(current_face)->line(current_edge)->vertex(1);
-						Point<3> con = p2-p1;
-						if((System_Coordinate_in_Waveguide(cell->center(true, false)) ) && cell->center(true, false)[2] < 0 ) {
-							if(exists){
-								Boundary[found].AddSecondValue(RHS_value(cell->face(current_face)->center(), 0) * con[0]);
-							} else {
-								BoundaryPointValue temp(current_dofs[2*GeometryInfo<3>::face_to_cell_lines(current_face, current_edge)] , RHS_value(cell->face(current_face)->center(), 0) * con[0]  );
-								Boundary.push_back( temp );
-							}
-						} else {
-							if(exists){
-								Boundary[found].AddSecondValue(0.0);
-							} else {
-								BoundaryPointValue temp(current_dofs[2*GeometryInfo<3>::face_to_cell_lines(current_face, current_edge)] , 0.0  );
-								Boundary.push_back( temp );
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	for (unsigned int i = 0; i< Boundary.size(); i++){
-		std::pair<unsigned int , double> write_boundary;
-		write_boundary.first = Boundary[i].dof;
-		write_boundary.second = Boundary[i].value;
-		std::map<unsigned int, double>::iterator it = boundary_values.find(write_boundary.first);
-		if(it != boundary_values.end()) it->second = Boundary[i].value;
-		else boundary_values.insert(write_boundary);
-	}
-
-	std::cout << "Anzahl gesetzter Randwerte: "<< boundary_values.size() << std::endl;
-
-	std::map<unsigned int, double>::iterator it = boundary_values.begin();
-
-	it = boundary_values.begin();
-	for(; it != boundary_values.end(); it++){
-			cm.add_line(it->first);
-			cm.set_inhomogeneity(it->first, it->second);
-	}
 	cm.close();
-
+	//cm.distribute(solution);
 	log_constraints.stop();
-	// End of BC calculation.
 
 	log_assemble.start();
-	FullMatrix<double>	cell_matrix (dofs_per_cell, dofs_per_cell);
-	Vector<double>		cell_rhs (dofs_per_cell);
-	Tensor<2,3, std::complex<double>> 		epsilon, mu;
-	std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
-
-
-	cell = dof_handler.begin_active(),
-	endc = dof_handler.end();
-	for (; cell!=endc; ++cell)
-    {
-		fe_values.reinit (cell);
-		quadrature_points = fe_values.get_quadrature_points();
-		cell_matrix = 0;
-		cell_rhs = 0;
-
-		for (unsigned int q_index=0; q_index<n_q_points; ++q_index)
-        {
-			epsilon = get_Tensor(quadrature_points[q_index],  false, true);
-			mu = get_Tensor(quadrature_points[q_index], true, false);
-			const double JxW = fe_values.JxW(q_index);
-			for (unsigned int i=0; i<dofs_per_cell; i++){
-				Tensor<1,3, std::complex<double>> I_Curl;
-				Tensor<1,3, std::complex<double>> I_Val;
-				for(int k = 0; k<3; k++){
-					I_Curl[k].imag(fe_values[imag].curl(i, q_index)[k]);
-					I_Curl[k].real(fe_values[real].curl(i, q_index)[k]);
-					I_Val[k].imag(fe_values[imag].value(i, q_index)[k]);
-					I_Val[k].real(fe_values[real].value(i, q_index)[k]);
-				}
-
-				for (unsigned int j=0; j<dofs_per_cell; j++){
-					Tensor<1,3, std::complex<double>> J_Curl;
-					Tensor<1,3, std::complex<double>> J_Val;
-					for(int k = 0; k<3; k++){
-						J_Curl[k].imag(fe_values[imag].curl(j, q_index)[k]);
-						J_Curl[k].real(fe_values[real].curl(j, q_index)[k]);
-						J_Val[k].imag(fe_values[imag].value(j, q_index)[k]);
-						J_Val[k].real(fe_values[real].value(j, q_index)[k]);
-					}
-
-					std::complex<double> x = (mu * I_Curl) * Transpose_Vector(J_Curl) * JxW - (I_Val  * epsilon * Transpose_Vector(J_Val)) *(omega * omega)*JxW ;
-					if(fe.system_to_base_index(i).first.second == fe.system_to_base_index(j).first.second){
-						cell_matrix[i][j] += x.real() + x.imag();
-					} else {
-						if(fe.system_to_base_index(i).first.second < fe.system_to_base_index(j).first.second) {
-							cell_matrix[i][j] += x.imag()+  x.real();
-						} else {
-							cell_matrix[i][j] += x.imag()+  x.real();
-						}
-					}
-
-				}
-
-			}
-        }
-
-		cell->get_dof_indices (local_dof_indices);
-		cm.distribute_local_to_global(cell_matrix, cell_rhs, local_dof_indices,system_matrix, system_rhs, true );
-
-    }
-
-	cm.distribute(system_rhs);
-	std::cout << sparsity_pattern.n_nonzero_elements()<<std::endl;
-	std::cout << (sparsity_pattern.n_nonzero_elements()*1.0)/(dof_handler.n_dofs()*1.0)<<std::endl;
-	//MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
-	std::cout << "Anzahl gesetzter Randwerte: "<< boundary_values.size() << std::endl;
-	std::cout<<solution.l2_norm()<<std::endl;
-	double max = 0;
-	it = boundary_values.begin();
-	for(; it != boundary_values.end(); it++){
-		if(it->second>max) max = it->second;
+	std::cout << "Starting Assemblation process" << std::endl;
+	Threads::TaskGroup<void> task_group1;
+	for (int i = 0; i < PRM_A_Threads; ++i) {
+		task_group1 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i);
 	}
+	task_group1.join_all ();
 
-	std::cout<<max<<std::endl;
+	Threads::TaskGroup<void> task_group2;
+	for (int i = 0; i < PRM_A_Threads; ++i) {
+		task_group2 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i+1);
+	}
+	task_group2.join_all ();
+	// std::cout << sparsity_pattern.n_nonzero_elements()<<std::endl;
+	// std::cout << (sparsity_pattern.n_nonzero_elements()*1.0)/(dof_handler.n_dofs()*1.0)<<std::endl;
+	// MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
+	// std::cout << "Anzahl gesetzter Randwerte: "<< boundary_values.size() << std::endl;
+
 	std::cout<<system_rhs.l2_norm()<<std::endl;
 	log_assemble.stop();
+	//std::ofstream outfile;
+	//outfile.open("reals.dat");
+
+
 }
 
-void Waveguide::timerupdate() {
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::timerupdate() {
 	log_precondition.stop();
 	log_solver.start();
 }
 
-void Waveguide::solve ()
-{
-	SolverControl           solver_control (PRM_S_Steps, PRM_S_Precision, true);
+template<>
+void Waveguide<PETScWrappers::SparseMatrix, PETScWrappers::Vector>::solve () {
+	SolverControl          solver_control (PRM_S_Steps, system_rhs.l2_norm() * PRM_S_Precision, true );
 	log_precondition.start();
+	std::cout << "Framework: PETSc" << std::endl;
+	std::cout << "Solver: " << PRM_S_Solver << std::endl;
+	std::cout << "Preconditioner: " << PRM_S_Preconditioner << std::endl;
+	system_matrix.compress(VectorOperation::add);
+	std::cout << "Matrix-compression done" << std::endl;
+	system_rhs.compress(VectorOperation::add);
+	std::cout << "Vector-compression done" << std::endl;
+	if(PRM_S_Solver == "GMRES") {
+		PETScWrappers::SolverGMRES::AdditionalData add(PRM_S_GMRESSteps);
+		PETScWrappers::SolverGMRES solver ( solver_control, system_matrix.get_mpi_communicator() , add);
 
-	if(PRM_S_Solver == "CG") {
-		PreconditionBlockJacobi<SparseMatrix<double>, double> block_jacobi;
-		block_jacobi.initialize(system_matrix, PreconditionBlock<SparseMatrix<double>, double>::AdditionalData(log_data.Dofs / PRM_S_PreconditionerBlockCount));
+		if(PRM_S_Preconditioner == "Jacobi"){
+			PETScWrappers::PreconditionJacobi pre_jacobi ;
 
-		SolverCG<Vector<double> > solver (solver_control);
-		timerupdate();
-		solver.solve (system_matrix, solution, system_rhs, block_jacobi);
+			pre_jacobi.initialize(system_matrix, PETScWrappers::PreconditionJacobi::AdditionalData());
+			std::cout << "Preconditioner initialized! Start solving ..." << std::endl;
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, pre_jacobi);
+		}
+
+		if(PRM_S_Preconditioner == "SOR"){
+			PETScWrappers::PreconditionSOR plu;
+			plu.initialize(system_matrix, PETScWrappers::PreconditionSOR::AdditionalData());
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, plu);
+		}
+
+		if(PRM_S_Preconditioner == "SSOR"){
+			PETScWrappers::PreconditionSSOR plu;
+			plu.initialize(system_matrix, PETScWrappers::PreconditionSSOR::AdditionalData());
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, plu);
+		}
+
+		if(PRM_S_Preconditioner == "ILU"){
+			PETScWrappers::PreconditionILU ilu;
+			ilu.initialize(system_matrix, PETScWrappers::PreconditionILU::AdditionalData());
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, ilu);
+		}
+
+		if(PRM_S_Preconditioner == "ICC") {
+			PETScWrappers::PreconditionICC icc;
+			icc.initialize(system_matrix, PETScWrappers::PreconditionICC::AdditionalData());
+			timerupdate();
+			solver.solve(system_matrix, solution, system_rhs, icc);
+		}
+
+		if(PRM_S_Preconditioner == "LU") {
+			PETScWrappers::PreconditionLU lu;
+			lu.initialize(system_matrix, PETScWrappers::PreconditionLU::AdditionalData());
+			timerupdate();
+			solver.solve(system_matrix, solution, system_rhs, lu);
+		}
+
+		if(PRM_S_Preconditioner == "BoomerAMG") {
+			PETScWrappers::PreconditionBoomerAMG bamg;
+			bamg.initialize(system_matrix, PETScWrappers::PreconditionBoomerAMG::AdditionalData());
+			timerupdate();
+			solver.solve(system_matrix, solution, system_rhs, bamg);
+		}
+
+		if(PRM_S_Preconditioner == "ParaSails") {
+			PETScWrappers::PreconditionParaSails psails;
+			psails.initialize(system_matrix, PETScWrappers::PreconditionParaSails::AdditionalData(0));
+			timerupdate();
+			solver.solve(system_matrix, solution, system_rhs, psails);
+		}
+
+		if(PRM_S_Preconditioner == "Eisenstat") {
+			PETScWrappers::PreconditionEisenstat estat;
+			estat.initialize(system_matrix, PETScWrappers::PreconditionEisenstat::AdditionalData());
+			timerupdate();
+			solver.solve(system_matrix, solution, system_rhs, estat);
+		}
 	}
+}
+
+template<>
+void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector>::solve () {
+	SolverControl          solver_control (PRM_S_Steps, system_rhs.l2_norm() * PRM_S_Precision, true);
+	log_precondition.start();
+	system_matrix.compress(VectorOperation::add);
+	std::cout << "Framework: Trilinos" << std::endl;
+	std::cout << "Solver: " << PRM_S_Solver << std::endl;
+	std::cout << "Preconditioner: " << PRM_S_Preconditioner << std::endl;
+
+	if(PRM_S_Solver == "GMRES") {
+		TrilinosWrappers::SolverGMRES::AdditionalData additional (true, PRM_S_Steps);
+		TrilinosWrappers::SolverGMRES solver( solver_control, additional);
+		if(PRM_S_Preconditioner == "Jacobi"){
+			TrilinosWrappers::PreconditionJacobi pre_jacobi;
+			pre_jacobi.initialize(system_matrix, TrilinosWrappers::PreconditionJacobi::AdditionalData());
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, pre_jacobi);
+		}
+		if(PRM_S_Preconditioner == "SOR"){
+			TrilinosWrappers::PreconditionSOR plu;
+			plu.initialize(system_matrix);
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, plu);
+		}
+		if(PRM_S_Preconditioner == "SSOR"){
+			TrilinosWrappers::PreconditionSSOR plu;
+			plu.initialize(system_matrix);
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, plu);
+		}
+		if(PRM_S_Preconditioner == "ILU"){
+			TrilinosWrappers::PreconditionILU ilu;
+			ilu.initialize(system_matrix, TrilinosWrappers::PreconditionILU::AdditionalData());
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, ilu);
+		}
+		if(PRM_S_Preconditioner == "Identity"){
+			TrilinosWrappers::PreconditionIdentity ide;
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, ide);
+		}
+	}
+}
+
+template<>
+void Waveguide<SparseMatrix<double>, Vector<double> >::solve () {
+	SolverControl          solver_control (PRM_S_Steps, PRM_S_Steps, system_rhs.l2_norm() * PRM_S_Precision, true);
+	log_precondition.start();
+	std::cout << "Framework: Dealii" << std::endl;
+	std::cout << "Solver: " << PRM_S_Solver << std::endl;
+	std::cout << "Preconditioner: " << PRM_S_Preconditioner << std::endl;
 	if(PRM_S_Solver == "Richardson") {
 		SolverRichardson<Vector<double> > solver (solver_control);
 		timerupdate();
 		solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
 	}
-	
+
 	if(PRM_S_Solver == "GMRES") {
-		SolverGMRES<Vector<double> > solver (solver_control, SolverGMRES<Vector<double> >::AdditionalData(PRM_S_GMRESSteps));
+		SolverGMRES<Vector<double> > solver (solver_control, SolverGMRES<Vector<double> >::AdditionalData(PRM_S_GMRESSteps, true));
 
 		if(PRM_S_Preconditioner == "Block_Jacobi"){
 			PreconditionBlockJacobi<SparseMatrix<double>, double> block_jacobi;
@@ -986,28 +1152,33 @@ void Waveguide::solve ()
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, block_jacobi);
 		}
+
 		if(PRM_S_Preconditioner == "Identity") {
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
 		}
+
 		if(PRM_S_Preconditioner == "Jacobi"){
 			PreconditionJacobi<SparseMatrix<double>> pre_jacobi;
 			pre_jacobi.initialize(system_matrix, PreconditionJacobi<SparseMatrix<double>>::AdditionalData());
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, pre_jacobi);
 		}
+
 		if(PRM_S_Preconditioner == "SOR"){
 			PreconditionSOR<SparseMatrix<double> > plu;
 			plu.initialize(system_matrix, .6);
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, plu);
 		}
+
 		if(PRM_S_Preconditioner == "SSOR"){
 			PreconditionSSOR<SparseMatrix<double> > plu;
 			plu.initialize(system_matrix, .6);
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, plu);
 		}
+
 		if(PRM_S_Preconditioner == "ILU"){
 			SparseILU<double> ilu;
 			ilu.initialize(system_matrix, SparseILU<double>::AdditionalData());
@@ -1015,50 +1186,61 @@ void Waveguide::solve ()
 			solver.solve (system_matrix, solution, system_rhs, ilu);
 		}
 	}
+
 	if(PRM_S_Solver == "UMFPACK") {
 		SparseDirectUMFPACK  A_direct;
 		A_direct.initialize(system_matrix);
 		timerupdate();
 		A_direct.vmult(solution, system_rhs);
 	}
+
 	log_solver.stop();
 	cm.distribute(solution);
 }
 
-void Waveguide::init_loggers () {
-	log_data.PML_in = 	PRM_M_BC_XYin;
-	log_data.PML_out =	PRM_M_BC_XYout;
-	log_data.PML_mantle =	PRM_M_BC_Mantle;
-	log_data.ParamSteps =	PRM_S_Steps;
-	log_data.Precondition_BlockSize = 	0;
-	log_data.Precondition_weight = 		0;
-	log_data.Solver_Precision =			PRM_S_Precision;
-	log_data.XLength = 					PRM_M_R_XLength;
-	log_data.YLength = 					PRM_M_R_YLength;
-	log_data.ZLength = 					PRM_M_R_ZLength;
-	log_data.preconditioner =			PRM_S_Preconditioner;
-	log_data.solver = 					PRM_S_Solver;
-	log_data.Dofs = 0;
+template <typename MatrixType, typename VectorType>
+void Waveguide<MatrixType, VectorType>::solve ()
+{
 
+	if(typeid(VectorType) == typeid(Vector<double>)) {
 
-	log_constraints.Dofs = true;
-	log_constraints.PML_in = log_constraints.PML_mantle = log_constraints.PML_out = true;
+	}
 
-	log_assemble.Dofs = true;
+	if(typeid(MatrixType) == typeid(TrilinosWrappers::SparseMatrix)) {
 
-	log_precondition.Dofs = true;
-	log_precondition.preconditioner = log_precondition.cputime = true;
-
-	log_solver.Dofs = true;
-	log_solver.solver = log_solver.preconditioner = log_solver.Solver_Precision = log_solver.cputime = true;
-
-	log_total.Dofs = log_total.solver = log_total.Solver_Precision = log_total.cputime = true;
-
+	}
 
 }
 
-void Waveguide::output_results () const
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::init_loggers () {
+	log_data.PML_in 				= 	PRM_M_BC_XYin;
+	log_data.PML_out 				=	PRM_M_BC_XYout;
+	log_data.PML_mantle 			=	PRM_M_BC_Mantle;
+	log_data.ParamSteps 			=	PRM_S_Steps;
+	log_data.Precondition_BlockSize = 	0;
+	log_data.Precondition_weight 	=	0;
+	log_data.Solver_Precision 		=	PRM_S_Precision;
+	log_data.XLength				=	PRM_M_R_XLength;
+	log_data.YLength 				= 	PRM_M_R_YLength;
+	log_data.ZLength 				= 	PRM_M_R_ZLength;
+	log_data.preconditioner 		=	PRM_S_Preconditioner;
+	log_data.solver 				= 	PRM_S_Solver;
+	log_data.Dofs 					=	0;
+	log_constraints.Dofs			=	true;
+	log_constraints.PML_in			=	log_constraints.PML_mantle	= log_constraints.PML_out		= true;
+	log_assemble.Dofs				=	true;
+	log_precondition.Dofs			=	true;
+	log_precondition.preconditioner = 	log_precondition.cputime	= true;
+	log_solver.Dofs					=	true;
+	log_solver.solver				=	log_solver.preconditioner	= log_solver.Solver_Precision	= log_solver.cputime	= true;
+	log_total.Dofs					=	log_total.solver			= log_total.Solver_Precision	= log_total.cputime		= true;
+}
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::output_results () const
 {
+
 
 	DataOut<3> data_out;
 
@@ -1071,9 +1253,11 @@ void Waveguide::output_results () const
 	std::ofstream outputvtk ("solution.vtk");
 	data_out.write_vtk(outputvtk);
 	data_out.write_gnuplot (output);
+
 }
 
-void Waveguide::run ()
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::run ()
 {
 	init_loggers ();
 	read_values ();
@@ -1085,13 +1269,16 @@ void Waveguide::run ()
 	log_total.stop();
 }
 
-int main ()
+int main (int argc, char *argv[])
 {
+	Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 	ParameterHandler prm;
 	ParameterReader param(prm);
 	param.read_parameters("parameters.prh");
-	Waveguide laplace_problem(prm);
-	laplace_problem.run ();
+	Waveguide<PETScWrappers::SparseMatrix, PETScWrappers::Vector > waveguide_problem(prm);
+	// Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector > waveguide_problem(prm);
+	// Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> > waveguide_problem(prm);
+	waveguide_problem.run ();
 	return 0;
 }
 
