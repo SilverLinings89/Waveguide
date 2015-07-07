@@ -576,6 +576,7 @@ double Waveguide<MatrixType, VectorType>::PML_Z_Distance(Point<3> &p){
 	}
 }
 
+/**
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::RHS_value (const Point<3> &p , const unsigned int component)
 {
@@ -594,7 +595,7 @@ double Waveguide<MatrixType, VectorType>::RHS_value (const Point<3> &p , const u
 
 	return 0.0;
 }
-
+**/
 
 Point<3> Triangulation_Stretch_X (const Point<3> &p)
 {
@@ -885,11 +886,6 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
 						if(x.real() != 0) {
 							cell_matrix_real[i][j] += x.real();
 						}
-					/**
-					if(x.imag() != 0) {
-						cell_matrix_imag[i][j] += x.imag();
-					}
-					**/
 					}
 				}
 			}
@@ -1235,9 +1231,9 @@ int main (int argc, char *argv[])
 	ParameterHandler prm;
 	ParameterReader param(prm);
 	param.read_parameters("parameters.prh");
-	Waveguide<PETScWrappers::SparseMatrix, PETScWrappers::Vector > waveguide_problem(prm);
+	//Waveguide<PETScWrappers::SparseMatrix, PETScWrappers::Vector > waveguide_problem(prm);
 	// Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector > waveguide_problem(prm);
-	// Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> > waveguide_problem(prm);
+	Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> > waveguide_problem(prm);
 	waveguide_problem.run ();
 	return 0;
 }

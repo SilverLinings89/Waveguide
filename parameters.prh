@@ -49,9 +49,9 @@ subsection Assembly
 end
 
 subsection Solver
-	set Solver = GMRES
-	set GMRESSteps = 200
-	set Preconditioner = ILU
+	set Solver = UMFPACK
+	set GMRESSteps = 500
+	set Preconditioner = Jacobi
 	set PreconditionerBlockCount = 20
 	set Steps = 90000
 	set Precision = 1e-6
