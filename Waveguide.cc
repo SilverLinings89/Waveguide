@@ -932,7 +932,15 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 
 	for (; cell!=endc; ++cell)
 	{
-		if(cell->at_boundary() && cell->boundary_indicator() != 1) {
+		bool At_Boundary = false;
+		bool Is_At_One = false;
+		for(int i = 0; i < 6; i++) {
+			if(cell->face(i)->at_boundary()){
+				At_Boundary = true;
+				if(cell->face(i)->boundary_indicator() == 1) Is_At_One = true;
+			}
+		}
+		if(At_Boundary && !Is_At_One) {
 			std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 			cell->get_dof_indices(local_dof_indices);
 			unsigned int i;
