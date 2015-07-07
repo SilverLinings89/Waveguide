@@ -51,10 +51,10 @@ end
 subsection Solver
 	set Solver = GMRES
 	set GMRESSteps = 200
-	set Preconditioner = LU
+	set Preconditioner = ILU
 	set PreconditionerBlockCount = 20
 	set Steps = 90000
-	set Precision = 1e6
+	set Precision = 1e-6
 end
 
 subsection Constants

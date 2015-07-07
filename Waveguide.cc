@@ -930,7 +930,7 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 	VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>() , 2 , cm , StaticMappingQ1<3>::mapping);
 
 	cm.close();
-	cm.distribute(solution);
+	//cm.distribute(solution);
 	log_constraints.stop();
 
 	log_assemble.start();
@@ -1038,6 +1038,9 @@ void Waveguide<PETScWrappers::SparseMatrix, PETScWrappers::Vector>::solve () {
 			solver.solve(system_matrix, solution, system_rhs, estat);
 		}
 	}
+
+	log_solver.stop();
+	cm.distribute(solution);
 }
 
 template<>
@@ -1082,6 +1085,9 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector>::solve 
 			solver.solve (system_matrix, solution, system_rhs, ide);
 		}
 	}
+
+	log_solver.stop();
+	cm.distribute(solution);
 }
 
 template<>
