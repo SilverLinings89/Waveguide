@@ -921,9 +921,27 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 	log_constraints.start();
 
 	//starting to calculate Constraint Matrix for boundary values;
-	VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>() , 0 , cm , StaticMappingQ1<3>::mapping);
+	//VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>() , 0 , cm , StaticMappingQ1<3>::mapping);
 	VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>() , 1 , cm , StaticMappingQ1<3>::mapping);
-	VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>() , 2 , cm , StaticMappingQ1<3>::mapping);
+	//VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>() , 2 , cm , StaticMappingQ1<3>::mapping);
+
+	DoFHandler<3>::active_cell_iterator cell, endc;
+
+	cell = dof_handler.begin_active(),
+	endc = dof_handler.end();
+
+	for (; cell!=endc; ++cell)
+	{
+		if(cell->at_boundary() && cell->boundary_indicator() != 1) {
+			std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
+			cell->get_dof_indices(local_dof_indices);
+			unsigned int i;
+			for (i = 0; i < dofs_per_cell; ++i) {
+				cm.add_line(local_dof_indices[i]);
+				cm.set_inhomogeneity(local_dof_indices[i], 0);
+			}
+		}
+	}
 
 	cm.close();
 	//cm.distribute(solution);
