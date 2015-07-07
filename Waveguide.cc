@@ -21,6 +21,7 @@
 #include <deal.II/grid/tria_boundary_lib.h>
 #include <deal.II/grid/grid_out.h>
 #include <deal.II/grid/grid_tools.h>
+#include <deal.II/dofs/dof_renumbering.h>
 
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_nedelec.h>
@@ -160,30 +161,6 @@ private:
 	ParameterHandler &prm;
 
 };
-
-/**
- * Setting the boundary values in 3D is not very simple. The calculation requires knowledge of both cells adjacent to an edge. This is handled by creating one object of this type and identifying it with the degree of freedom (system, not cell).
- * The first time a term should be added to this dofs value the object gets generated and value is initialized with the given value.
- * The second time it is accessed, the value gets added.
- * In the end, the values can be written as dof-values.
- * If an Edge is at the boundary, it only gets created, which is similar to adding 0 for the outside.
- */
-class BoundaryPointValue {
-public:
-		unsigned int 	dof;
-		double 			value;
-		BoundaryPointValue(unsigned int , double );
-		void AddSecondValue(double );
-};
-
-BoundaryPointValue::BoundaryPointValue( unsigned int d, double val) {
-	value = val/2.0;
-	dof = d;
-}
-
-void BoundaryPointValue::AddSecondValue(double val) {
-	value += val/2.0;
-}
 
 /*
  * Distance in 2D. Since I have a cylindrical system, the distance to the middle-axis is an important criterium.
@@ -825,6 +802,11 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 		std::cout << "Distributing Degrees of freedom." << std::endl;
 	}
 	dof_handler.distribute_dofs (fe);
+	if(PRM_O_VerboseOutput) {
+		std::cout << "Renumbering DOFs (Cuthill_McKee...)" << std::endl;
+	}
+
+	DoFRenumbering::Cuthill_McKee (dof_handler);
 	if(PRM_O_Dofs) {
 		std::cout << "Number of degrees of freedom: " << dof_handler.n_dofs() << std::endl;
 	}
@@ -834,34 +816,13 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	}
 
 	CompressedSparsityPattern c_sparsity(dof_handler.n_dofs(), dof_handler.n_dofs());
-	//CompressedSparsityPattern c_largesparsity(2 * dof_handler.n_dofs(), dof_handler.n_dofs());
-
-	/**
-	BlockCompressedSparsityPattern b_sparsity(1, 2);
-	b_sparsity.block(0,0).reinit(dof_handler.n_dofs(), dof_handler.n_dofs());
-	b_sparsity.block(0,1).reinit(dof_handler.n_dofs(), dof_handler.n_dofs());
-	b_sparsity.collect_sizes();
-
-	DoFTools::make_sparsity_pattern(dof_handler, b_sparsity);
-	**/
 	DoFTools::make_sparsity_pattern (dof_handler, c_sparsity);
-
-
 	sparsity_pattern.copy_from(c_sparsity);
 
-	// std::ofstream out ("sparsity_pattern.1");
-	// sparsity_pattern.print_gnuplot(out);
-
 	system_matrix.reinit( sparsity_pattern );
-	// system_matrix_real.reinit (sparsity_pattern);
-	// system_matrix_imag.reinit (sparsity_pattern);
-
 	solution.reinit ( dof_handler.n_dofs());
-
 	system_rhs.reinit(dof_handler.n_dofs());
 
-	// system_rhs_real.reinit (dof_handler.n_dofs());
-	// system_rhs_imag.reinit (dof_handler.n_dofs());
 	if(PRM_O_VerboseOutput) {
 			std::cout << "Done." << std::endl;
 	}
@@ -969,7 +930,7 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 	VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>() , 2 , cm , StaticMappingQ1<3>::mapping);
 
 	cm.close();
-	//cm.distribute(solution);
+	cm.distribute(solution);
 	log_constraints.stop();
 
 	log_assemble.start();
@@ -985,16 +946,9 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 		task_group2 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i+1);
 	}
 	task_group2.join_all ();
-	// std::cout << sparsity_pattern.n_nonzero_elements()<<std::endl;
-	// std::cout << (sparsity_pattern.n_nonzero_elements()*1.0)/(dof_handler.n_dofs()*1.0)<<std::endl;
-	// MatrixTools::apply_boundary_values (boundary_values, system_matrix, solution, system_rhs);
-	// std::cout << "Anzahl gesetzter Randwerte: "<< boundary_values.size() << std::endl;
 
 	std::cout<<system_rhs.l2_norm()<<std::endl;
 	log_assemble.stop();
-	//std::ofstream outfile;
-	//outfile.open("reals.dat");
-
 
 }
 

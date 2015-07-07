@@ -54,7 +54,7 @@ subsection Solver
 	set Preconditioner = LU
 	set PreconditionerBlockCount = 20
 	set Steps = 90000
-	set Precision = 1e-6
+	set Precision = 1e6
 end
 
 subsection Constants
