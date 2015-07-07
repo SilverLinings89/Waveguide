@@ -346,7 +346,6 @@ class Waveguide
 		void run ();
 		void 	assemble_part (unsigned int in_part);
 
-
 	private:
 		void 	read_values ();
 		void 	make_grid ();
@@ -366,6 +365,7 @@ class Waveguide
 		Tensor<1,3, std::complex<double>> Transpose_Vector(Tensor<1,3, std::complex<double>> );
 		void	init_loggers();
 		void 	timerupdate();
+		std::string		solutionpath;
 		// Point<3> Triangulation_Stretch_X (const Point<3> &);
 		// Point<3> Triangulation_Stretch_Y (const Point<3> &);
 		// Point<3> Triangulation_Stretch_Z (const Point<3> &);
@@ -424,6 +424,20 @@ Waveguide<MatrixType, VectorType>::Waveguide (ParameterHandler &param)
   log_total(std::string("total.log"), log_data)
 {
 	assembly_progress = 0;
+	int i = 0;
+	bool dir_exists = true;
+	while(dir_exists) {
+		solutionpath = "solutions/run" + i;
+		struct stat myStat;
+		char *myDir = solutionpath;
+		if ((stat(myDir, &myStat) == 0) && (((myStat.st_mode) & S_IFMT) == S_IFDIR)) {
+			i++;
+		} else {
+			dir_exists = false;
+		}
+	}
+
+	mkdir(solutionpath.c_str(), 777);
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1231,10 +1245,10 @@ void Waveguide<MatrixType, VectorType>::output_results () const
 
 	data_out.build_patches ();
 
-	std::ofstream output ("solution.gpl");
-	std::ofstream outputvtk ("solution.vtk");
+	//std::ofstream output ("solution.gpl");
+	std::ofstream outputvtk (solutionpath + "solution.vtk");
 	data_out.write_vtk(outputvtk);
-	data_out.write_gnuplot (output);
+	//data_out.write_gnuplot (output);
 
 }
 
