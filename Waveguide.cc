@@ -81,6 +81,7 @@
 #include <math.h>
 #include <mpi/mpi.h>
 #include "Loggers.cc"
+#include <sstream>
 
 using namespace dealii;
 
@@ -427,7 +428,10 @@ Waveguide<MatrixType, VectorType>::Waveguide (ParameterHandler &param)
 	int i = 0;
 	bool dir_exists = true;
 	while(dir_exists) {
-		solutionpath = "solutions/run" + i;
+		std::stringstream out;
+		out << "solutions/run";
+		out << i;
+		solutionpath = out.str();
 		struct stat myStat;
 		const char *myDir = solutionpath.c_str();
 		if ((stat(myDir, &myStat) == 0) && (((myStat.st_mode) & S_IFMT) == S_IFDIR)) {
@@ -438,6 +442,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (ParameterHandler &param)
 	}
 
 	mkdir(solutionpath.c_str(), 777);
+	std::cout << "Will write solutions to " << solutionpath << std::endl;
 }
 
 template<typename MatrixType, typename VectorType >
