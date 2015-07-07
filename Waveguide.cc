@@ -429,7 +429,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (ParameterHandler &param)
 	while(dir_exists) {
 		solutionpath = "solutions/run" + i;
 		struct stat myStat;
-		char *myDir = solutionpath;
+		char *myDir = solutionpath.c_str();
 		if ((stat(myDir, &myStat) == 0) && (((myStat.st_mode) & S_IFMT) == S_IFDIR)) {
 			i++;
 		} else {
