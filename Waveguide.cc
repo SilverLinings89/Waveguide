@@ -1271,9 +1271,9 @@ int main (int argc, char *argv[])
 	ParameterHandler prm;
 	ParameterReader param(prm);
 	param.read_parameters("parameters.prh");
-	//Waveguide<PETScWrappers::SparseMatrix, PETScWrappers::Vector > waveguide_problem(prm);
+	Waveguide<PETScWrappers::SparseMatrix, PETScWrappers::Vector > waveguide_problem(prm);
 	// Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector > waveguide_problem(prm);
-	Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> > waveguide_problem(prm);
+	// Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> > waveguide_problem(prm);
 	waveguide_problem.run ();
 	return 0;
 }

@@ -49,9 +49,9 @@ subsection Assembly
 end
 
 subsection Solver
-	set Solver = UMFPACK
-	set GMRESSteps = 500
-	set Preconditioner = Jacobi
+	set Solver = GMRES
+	set GMRESSteps = 2000
+	set Preconditioner = ParaSails
 	set PreconditionerBlockCount = 20
 	set Steps = 90000
 	set Precision = 1e-6
