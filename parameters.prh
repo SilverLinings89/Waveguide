@@ -50,11 +50,11 @@ end
 
 subsection Solver
 	set Solver = GMRES
-	set GMRESSteps = 2000
-	set Preconditioner = ParaSails
+	set GMRESSteps = 1200
+	set Preconditioner = Identity
 	set PreconditionerBlockCount = 20
 	set Steps = 90000
-	set Precision = 1e-6
+	set Precision = 1e7
 end
 
 subsection Constants

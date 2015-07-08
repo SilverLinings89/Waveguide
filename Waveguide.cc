@@ -352,6 +352,7 @@ class Waveguide
 		void 	make_grid ();
 		void 	setup_system ();
 		void 	assemble_system ();
+		void	estimate_solution();
 		void 	solve ();
 		void 	output_results () const;
 		bool	PML_in_X(Point<3> &);
@@ -441,7 +442,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (ParameterHandler &param)
 		}
 	}
 
-	mkdir(solutionpath.c_str(), 777);
+	mkdir(solutionpath.c_str(), ACCESSPERMS);
 	std::cout << "Will write solutions to " << solutionpath << std::endl;
 }
 
@@ -994,6 +995,32 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 }
 
 template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::estimate_solution() {
+	DoFHandler<3>::active_cell_iterator cell, endc;
+
+	cell = dof_handler.begin_active(),
+	endc = dof_handler.end();
+	for (; cell!=endc; ++cell)
+	{
+		if(! (cell->at_boundary())) {
+			std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
+			for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+					Point<3, double> p = ((cell->face(i))->line(j))->center(false, false);
+					Point<3, double> direction = ((cell->face(i))->line(j))->vertex(0) - ((cell->face(i))->line(j))->vertex(1);
+					const std::complex<double> z(0.0, omega * (p(2)- PRM_M_R_ZLength/2.0));
+					double d2 = Distance2D(p);
+					const std::complex<double> result = - exp(z) * exp(-d2*d2/2);
+					solution[local_dof_indices[0]] = result.real();
+					solution[local_dof_indices[1]] = result.imag();
+				}
+			}
+		}
+	}
+}
+
+template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::timerupdate() {
 	log_precondition.stop();
 	log_solver.start();
@@ -1001,7 +1028,7 @@ void Waveguide<MatrixType, VectorType>::timerupdate() {
 
 template<>
 void Waveguide<PETScWrappers::SparseMatrix, PETScWrappers::Vector>::solve () {
-	SolverControl          solver_control (PRM_S_Steps, system_rhs.l2_norm() * PRM_S_Precision, true );
+	SolverControl          solver_control (PRM_S_Steps, PRM_S_Precision, true );
 	log_precondition.start();
 	std::cout << "Framework: PETSc" << std::endl;
 	std::cout << "Solver: " << PRM_S_Solver << std::endl;
@@ -1086,7 +1113,7 @@ void Waveguide<PETScWrappers::SparseMatrix, PETScWrappers::Vector>::solve () {
 
 template<>
 void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector>::solve () {
-	SolverControl          solver_control (PRM_S_Steps, system_rhs.l2_norm() * PRM_S_Precision, true);
+	SolverControl          solver_control (PRM_S_Steps,  PRM_S_Precision, true);
 	log_precondition.start();
 	system_matrix.compress(VectorOperation::add);
 	std::cout << "Framework: Trilinos" << std::endl;
@@ -1133,7 +1160,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector>::solve 
 
 template<>
 void Waveguide<SparseMatrix<double>, Vector<double> >::solve () {
-	SolverControl          solver_control (PRM_S_Steps, PRM_S_Steps, system_rhs.l2_norm() * PRM_S_Precision, true);
+	SolverControl          solver_control (PRM_S_Steps, PRM_S_Precision, true, true);
 	log_precondition.start();
 	std::cout << "Framework: Dealii" << std::endl;
 	std::cout << "Solver: " << PRM_S_Solver << std::endl;
@@ -1251,7 +1278,7 @@ void Waveguide<MatrixType, VectorType>::output_results () const
 	data_out.build_patches ();
 
 	//std::ofstream output ("solution.gpl");
-	std::ofstream outputvtk (solutionpath + "solution.vtk");
+	std::ofstream outputvtk (solutionpath + "/solution.vtk");
 	data_out.write_vtk(outputvtk);
 	//data_out.write_gnuplot (output);
 
@@ -1265,6 +1292,7 @@ void Waveguide<MatrixType, VectorType>::run ()
 	make_grid ();
 	setup_system ();
 	assemble_system ();
+	estimate_solution();
 	solve ();
 	output_results ();
 	log_total.stop();
@@ -1276,9 +1304,9 @@ int main (int argc, char *argv[])
 	ParameterHandler prm;
 	ParameterReader param(prm);
 	param.read_parameters("parameters.prh");
-	Waveguide<PETScWrappers::SparseMatrix, PETScWrappers::Vector > waveguide_problem(prm);
+	// Waveguide<PETScWrappers::SparseMatrix, PETScWrappers::Vector > waveguide_problem(prm);
 	// Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector > waveguide_problem(prm);
-	// Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> > waveguide_problem(prm);
+	Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> > waveguide_problem(prm);
 	waveguide_problem.run ();
 	return 0;
 }
