@@ -415,7 +415,7 @@ class Waveguide
 template<typename MatrixType, typename VectorType >
 Waveguide<MatrixType, VectorType>::Waveguide (ParameterHandler &param)
   :
-  fe (FE_Nedelec<3> (0), 2),
+  fe (FE_Nedelec<3> (2), 2),
   dof_handler (triangulation),
   prm(param),
   log_data(),
