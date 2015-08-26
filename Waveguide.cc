@@ -82,6 +82,10 @@
 #include <mpi/mpi.h>
 #include "Loggers.cc"
 #include <sstream>
+#include "ParameterStruct.cc"
+#include "Optimization.cc"
+#include "ParameterReader.cc"
+#include "WaveguideStructure.cc"
 
 using namespace dealii;
 
@@ -235,6 +239,7 @@ class Waveguide
 		Tensor<1,3, std::complex<double>> Transpose_Vector(Tensor<1,3, std::complex<double>> );
 		void	init_loggers();
 		void 	timerupdate();
+		void 	store();
 		std::string		solutionpath;
 		// Point<3> Triangulation_Stretch_X (const Point<3> &);
 		// Point<3> Triangulation_Stretch_Y (const Point<3> &);
@@ -272,6 +277,8 @@ class Waveguide
 
 
 		VectorType	solution;
+		VectorType	storage;
+		bool		is_stored;
 		VectorType	system_rhs;
 		//Vector<double>	system_rhs_real;
 		//Vector<double>	system_rhs_imag;
@@ -312,6 +319,16 @@ Waveguide<MatrixType, VectorType>::Waveguide (ParameterHandler &param)
 
 	mkdir(solutionpath.c_str(), ACCESSPERMS);
 	std::cout << "Will write solutions to " << solutionpath << std::endl;
+	is_stored = false;
+}
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::store() {
+	storage.reinit(dof_handler.n_dofs());
+	for(int i = 0; i < dof_handler.n_dofs(); i++){
+		storage[i] = solution[i];
+	}
+	if(!is_stored) is_stored = true;
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1162,7 +1179,7 @@ void Waveguide<MatrixType, VectorType>::run ()
 	assemble_system ();
 	estimate_solution();
 	solve ();
-	output_results ();
+	// output_results ();
 	log_total.stop();
 }
 
@@ -1173,10 +1190,10 @@ int main (int argc, char *argv[])
 	// Waveguide<PETScWrappers::SparseMatrix, PETScWrappers::Vector > waveguide(prm);
 	// Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector > waveguide(prm);
 	double r_0, r_1, deltaY, epsilon_M, epsilon_K, sectors;
-	WaveguideStructure structure(System_Parameters, r_0, r_1, deltaY, epsilon_M, epsilon_K, sectors);
+	WaveguideStructure structure(System_Parameters);
 	Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> > waveguide(System_Parameters, system);
-	Optimization(System_Parameters, waveguide, structure);
-	Optimization.run ();
+	Optimization opt(System_Parameters, waveguide, structure);
+	opt.run();
 	return 0;
 }
 

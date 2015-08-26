@@ -50,6 +50,8 @@ void ParameterReader::declare_parameters	()
 			prm.declare_entry("Type out", "Circle", Patterns::Selection("Circle|Ellipse|Square"), "Describes the shape of the input connector.");
 			prm.declare_entry("Radius in", "1.5", Patterns::Double(0), "Radius / Diameter for Circle / Square input connector. Ellipse not implemented.");
 			prm.declare_entry("Radius out", "1.5", Patterns::Double(0), "Radius / Diameter for Circle / Square output connector. Ellipse not implemented.");
+			prm.declare_entry("Tilt in", "0.0", Patterns::Double(0), "Tilt of the input connector. In the documentation this values is named v_0.");
+			prm.declare_entry("Tilt out", "0.0", Patterns::Double(0), "Tilt of the output connector. In the documentation this values is named v_1.");
 		}
 		prm.leave_subsection();
 

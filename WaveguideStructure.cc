@@ -4,14 +4,48 @@
 
 class Sector {
 	public:
-		bool left;
-		bool right;
-		bool boundary;
+		const bool left;
+		const bool right;
+		const bool boundary;
 		double r_0, r_1, v_0, v_1, m_0, m_1;
-		double z_0, z_1;
+		const double z_0, z_1;
 		Tensor<2,3, double> TransformationTensorInternal (double in_x, double in_y, double in_z);
-
+		Sector(bool, bool, double, double);
+		void set_properties(double , double , double , double, double, double);
+		void set_properties_force(double , double , double , double, double, double);
 };
+
+Sector::Sector(bool in_left, bool in_right, double in_z_0, double in_z_1):left(in_left), right(in_right), boundary(in_left && in_right), z_0(in_z_0), z_1(in_z_1) {
+	r_0 = 0;
+	r_1 = 0;
+	v_0 = 0;
+	v_1 = 0;
+	m_0 = 0;
+	m_1 = 0;
+}
+
+void Sector::set_properties(double in_m_0, double in_m_1, double in_r_0, double in_r_1, double in_v_0, double in_v_1){
+	if(!left) {
+		r_0 = in_r_0;
+		m_0 = in_m_0;
+		v_0 = in_v_0;
+	}
+	if(!right) {
+		r_1 = in_r_1;
+		m_1 = in_m_1;
+		v_1 = in_v_1;
+	}
+}
+
+void Sector::set_properties_force(double in_m_0, double in_m_1, double in_r_0, double in_r_1, double in_v_0, double in_v_1){
+	r_0 = in_r_0;
+	m_0 = in_m_0;
+	v_0 = in_v_0;
+	r_1 = in_r_1;
+	m_1 = in_m_1;
+	v_1 = in_v_1;
+
+}
 
 class WaveguideStructure {
 	public:
@@ -22,12 +56,48 @@ class WaveguideStructure {
 		const double z_min, z_max;
 		const double deltaY;
 		const double r_0, r_1;
+		const double v_0, v_1;
+		const double m_0, m_1;
+		const Parameters parameters;
 		
 		WaveguideStructure (Parameters &);
 		Tensor<2,3, double> TransformationTensor (double in_x, double in_y, double in_z);
 		void run() ;
+		void estimate_and_initialize();
+		double m(double);
+		double v(double);
 		
 };
+
+void WaveguideStructure::estimate_and_initialize() {
+	if(sectors == 1) {
+		case_sectors[0] = new Sector(true, true, -parameters.PRM_M_R_ZLength/2, parameters.PRM_M_R_ZLength/2 );
+		case_sectors[0].set_properties_force(m_0, m_1, r_0, r_1, v_0, v_1);
+	} else {
+		double length = parameters.PRM_M_R_ZLength / (1.0 * sectors);
+		case_sectors[0] = new Sector(true, false, -parameters.PRM_M_R_ZLength/2, -parameters.PRM_M_R_ZLength/2 + length );
+		for(int  i = 1; i < sectors -1; i++) {
+			case_sectors[i] = new Sector( false, false, -parameters.PRM_M_R_ZLength/2 + length*(1.0 *i), -parameters.PRM_M_R_ZLength/2 + length*(i + 1.0) );
+		}
+		case_sectors[sectors -1] = new Sector( false, true, parameters.PRM_M_R_ZLength/2 - length, parameters.PRM_M_R_ZLength/2 );
+
+		double length_rel = 1.0/sectors;
+		case_sectors[0].set_properties_force(m_0, m(length_rel), r_0, r_0 + (r_1 - r_0) /(sectors*1.0) , v_0, v(length_rel)) ;
+		for(int  i = 1; i < sectors -1; i++) {
+			case_sectors[i].set_properties_force(m(i*length_rel), m((i+1)*length_rel), r_0 + i*(r_1 - r_0) /(sectors*1.0), r_0 + (i+1)*(r_1 - r_0) /(sectors*1.0) , v(i*length_rel), v((i+1.0)*length_rel)) ;
+		}
+		case_sectors[sectors -1].set_properties_force(m(1.0 - length_rel), m_1, r_1 - (r_1 - r_0) /(sectors*1.0), r_1  , v(1.0- length_rel), v_1) ;
+	}
+
+}
+
+double WaveguideStructure::m(double z) {
+	return (v_0 + v_1 + 2*m_0 - 2*m_1)*z*z*z + (-2.0 * v_0 - v_1 - 3*m_0 + 3*m_1)*z*z + v_0*z + m_0;
+}
+
+double WaveguideStructure::v(double z) {
+	return 3*(v_0 + v_1 + 2*m_0 - 2*m_1)*z*z + 2*(-2.0 * v_0 - v_1 - 3*m_0 + 3*m_1)*z + v_0;
+}
 
 inline Tensor<1, 3 , double> crossproduct(Tensor<1, 3, double> a, Tensor<1, 3, double> b) {
 	Tensor<1,3,double> ret;
@@ -114,13 +184,13 @@ WaveguideStructure::WaveguideStructure(Parameters &in_params)
 		r_0(in_params.PRM_M_C_RadiusIn),
 		r_1(in_params.PRM_M_C_RadiusOut),
 		deltaY(in_params.PRM_M_W_Delta),
-		sectors(in_params.PRM_M_W_Sectors)
+		sectors(in_params.PRM_M_W_Sectors),
+		parameters(in_params),
+		v_0(in_params.PRM_M_C_TiltIn),
+		v_1(in_params.PRM_M_C_TiltOut),
+		m_0(in_params.PRM_M_W_Delta/2.0),
+		m_1(in_params.PRM_M_W_Delta/(-2.0))
 {
 	case_sectors = Sector[sectors];
-	if(sectors == 1) {
-
-	} else {
-
-	}
 
 }

@@ -23,6 +23,7 @@ struct Parameters {
 	double 			PRM_C_PI, PRM_C_Eps0, PRM_C_Mu0, PRM_C_c, PRM_C_f0, PRM_C_omega;
 	int				PRM_Op_MaxCases;
 	double			PRM_Op_InitialStepWidth;
+	double			PRM_M_C_TiltIn,PRM_M_C_TiltOut ;
 };
 
 
@@ -48,6 +49,8 @@ Parameters GetParameters() {
 			ret.PRM_M_C_TypeOut	= prm.get("Type out");
 			ret.PRM_M_C_RadiusIn	= prm.get_double("Radius in");
 			ret.PRM_M_C_RadiusOut	= prm.get_double("Radius out");
+			ret.PRM_M_C_TiltIn	= prm.get_double("Tilt in");
+			ret.PRM_M_C_TiltOut	= prm.get_double("Tilt out");
 		}
 		prm.leave_subsection();
 

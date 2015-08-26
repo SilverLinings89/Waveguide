@@ -24,17 +24,19 @@ Optimization::Optimization( Parameters in_System_Parameters ,Waveguide<dealii::S
 void Optimization::run() {
 	double gradient [dofs];
 	bool abort = false;
-	structure.estimate();
+	int steps_counter = 0;
+	structure.estimate_and_initialize();
 	waveguide.run();
+	steps_counter ++;
 	waveguide.store();
-	double quality = waveguide.evaluate();
-	while (steps_counter < Parameters.)
+	//double quality = waveguide.evaluate();
+	while (steps_counter < System_Parameters.PRM_Op_MaxCases)
 	for(int i = 0; i < dofs; i++) {
-		structure.set_gradient(i);
-		waveguide.load();
+		//structure.set_gradient(i);
+		//waveguide.load();
 		waveguide.run();
-		double temp_quality = waveguide.evaluate();
-		gradient[i] = quality - temp_quality;
+		//double temp_quality = waveguide.evaluate();
+		//gradient[i] = quality - temp_quality;
 	}
 	
 	

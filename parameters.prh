@@ -11,6 +11,8 @@ subsection Measures
 		set Type out = Circle
 		set Radius in = 1.5
 		set Radius out = 1.5
+		set Tilt in = 0.0
+		set Tilt out = 0.0
 	end
 	subsection Region
 		set XLength = 10
