@@ -5,10 +5,13 @@ class WaveguideStructure {
 		int sectors;
 		double sector_z_length;
 		double z_min, z_max;
-		Tensor<2,3, double> TransformationTensor (double in_x, double in_y, double in_z);
+		double deltaY;
+		double r_0, r_1;
 		
-	
-	
+		WaveguideStructure (std::string fname);
+		Tensor<2,3, double> TransformationTensor (double in_x, double in_y, double in_z);
+		void run() ;
+		
 }
 
 class Sector {

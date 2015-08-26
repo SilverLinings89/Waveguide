@@ -22,6 +22,7 @@ subsection Measures
 		set epsilon in = 2.2
 		set epsilon out = 1.0
 		set Lambda = 5.6328
+		set Sectors = 2
 	end
 	subsection Boundary Conditions
 		set Type = PML
@@ -64,4 +65,7 @@ subsection Constants
 	set Pi = 3.141592653589793238462643383279502884197169399
 end
 		
-		 
+subsection Optimization
+	set MaxCases = 100
+	set InitialStepWidth = 1.0
+end		 
