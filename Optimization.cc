@@ -1,22 +1,28 @@
+#include "WaveguideStructure.cc"
+
+
 class Optimization {
-	private: 
-		Waveguide waveguide;
+	public: 
+		Optimization( Parameters , Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> >  & , WaveguideStructure &);
+		void run();
+		Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> > waveguide;
 		WaveguideStructure structure;
 		const Parameters System_Parameters;
-		const int dofs; // (sectors +1) *3 -6 
-	public: 
-		Optimization( Parameters in_System_Parameters ,&Waveguide in_wg, &WaveguideStructure in_structure);
-		run();
-}
+		const int dofs; // (sectors +1) *3 -6
+};
 
-Optimization::Optimization( Parameters in_System_Parameters ,&Waveguide in_wg, &WaveguideStructure in_structure):System_Parameters(in_System_Paramters) , dofs((in_System_Parameters.PRM_M_W_Sectors +1 )*3 -6){
+Optimization::Optimization( Parameters in_System_Parameters ,Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> >  &in_wg, WaveguideStructure &in_structure)
+:
+		dofs((in_System_Parameters.PRM_M_W_Sectors +1)*3 -6),
+		System_Parameters(in_System_Parameters)
+	{
 	waveguide = in_wg;
 	structure = in_structure;
 	
 }
 
-Optimization::run() {
-	double[] gradient = new double[dofs];
+void Optimization::run() {
+	double gradient [dofs];
 	bool abort = false;
 	structure.estimate();
 	waveguide.run();

@@ -1,3 +1,8 @@
+#include <deal.II/base/parameter_handler.h>
+#include "ParameterReader.cc"
+
+using namespace dealii;
+
 struct Parameters {
 	bool			PRM_O_Grid, PRM_O_Dofs, PRM_O_ActiveCells, PRM_O_VerboseOutput;
 	std::string		PRM_M_C_TypeIn, PRM_M_C_TypeOut;
@@ -18,7 +23,7 @@ struct Parameters {
 	double 			PRM_C_PI, PRM_C_Eps0, PRM_C_Mu0, PRM_C_c, PRM_C_f0, PRM_C_omega;
 	int				PRM_Op_MaxCases;
 	double			PRM_Op_InitialStepWidth;
-}
+};
 
 
 Parameters GetParameters() {
@@ -115,7 +120,7 @@ Parameters GetParameters() {
 			ret.PRM_C_Eps0 = prm.get_double("EpsilonZero");
 			ret.PRM_C_Mu0 = prm.get_double("MuZero");
 			ret.PRM_C_c = 1/sqrt(ret.PRM_C_Eps0 * ret.PRM_C_Mu0);
-			ret.PRM_C_f0 = ret.c/0.63;
+			ret.PRM_C_f0 = ret.PRM_C_c/0.63;
 			ret.PRM_C_omega = 2 * ret.PRM_C_PI * ret.PRM_C_f0;
 		} else {
 			ret.PRM_C_Eps0 = 1.0;
