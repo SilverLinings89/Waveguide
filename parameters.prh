@@ -48,7 +48,7 @@ subsection Discretization
 end
 
 subsection Assembly
-	set Threads = 4
+	set Threads = 1
 end
 
 subsection Solver
@@ -68,6 +68,6 @@ subsection Constants
 end
 		
 subsection Optimization
-	set MaxCases = 100
 	set InitialStepWidth = 1.0
+	set MaxCases = 100
 end		 
