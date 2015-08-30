@@ -19,6 +19,21 @@ void Optimization::run() {
 	bool abort = false;
 	int steps_counter = 0;
 	structure.estimate_and_initialize();
+
+/**
+	for(int i = 0; i < 10; i++) {
+
+		Point<3, double> pos (-2.9487, 0, -System_Parameters.PRM_M_R_ZLength/2 + i*System_Parameters.PRM_M_R_ZLength/10.0);
+		Tensor<2,3,std::complex<double>> temp = waveguide.get_Tensor(pos, true, false);
+		std::cout << "Tensor Nummer " << i << ":"<<std::endl;
+		for(int j = 0; j<3; j++) {
+			for(int k = 0; k< 3; k++) {
+				std::cout << temp[j][k] << " ";
+			}
+			std::cout << std::endl;
+		}
+	}
+**/
 	waveguide.run();
 	steps_counter ++;
 	waveguide.store();
@@ -29,15 +44,15 @@ void Optimization::run() {
 	{
 		std::cout << "Current configuration: "<< std::endl;
 		std::cout << "Radius: "<< std::endl;
-		for(int i = 1;  i +=3; i<dofs) {
+		for(int i = 1;  i<dofs; i +=3) {
 			std::cout << "\t r_" << 1+ i/3 << ": " << structure.get_dof(i) << std::endl;
 		}
 		std::cout << "Waveguide Center: "<< std::endl;
-		for(int i = 0;  i +=3; i<dofs) {
+		for(int i = 0;  i<dofs; i +=3) {
 			std::cout << "\t m_" <<1+ i/3 << ": " << structure.get_dof(i) << std::endl;
 		}
 		std::cout << "Waveguide Angle: "<< std::endl;
-		for(int i = 2;  i +=3; i<dofs) {
+		for(int i = 2; i<dofs; i +=3) {
 			std::cout << "\t r_" <<1+ i/3 << ": " << structure.get_dof(i) << std::endl;
 		}
 		double norm = 0.0;
@@ -45,7 +60,7 @@ void Optimization::run() {
 			std::cout << "\t Gradient "<< i << ": ..."<< std::endl;
 			double val = structure.get_dof(i);
 			structure.set_dof(i, val + step_width/10.0);
-			waveguide.run();
+			waveguide.rerun();
 			std::cout << "Starting Waveguide-calculation..." << std::endl;
 			steps_counter ++;
 			double temp_quality = waveguide.evaluate_overall();
@@ -73,7 +88,7 @@ void Optimization::run() {
 		std::cout << ")" << std::endl;
 
 		std::cout << "Calculation solution after step ..." << std::endl;
-		waveguide.run();
+		waveguide.rerun();
 		steps_counter ++;
 		double step_quality = waveguide.evaluate_overall();
 		std::cout << "Quality after the step: " << step_quality ;

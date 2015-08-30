@@ -6,9 +6,9 @@ double RightHandSide<dim>::value (const Point<dim> &p , const unsigned int compo
 	if(System_Coordinate_in_Waveguide(p)){
 		if(p[2] < 0) {
 			if(component == 0) {
-				double d2 = Distance2D(p) * 2.0 /(PRM_M_R_XLength *4.35 / 15.5);
-				//return 1.0;
+				double d2 = (Distance2D(p))/(prm.PRM_M_C_RadiusIn + prm.PRM_M_C_RadiusOut);
 				return exp(-d2*d2);
+
 			}
 		}
 	}
@@ -18,5 +18,10 @@ double RightHandSide<dim>::value (const Point<dim> &p , const unsigned int compo
 template <int dim>
 void RightHandSide<dim>::vector_value (const Point<dim> &p,	Vector<double> &values) const
 {
-	for (unsigned int c=0; c<6; ++c) values(c) = RightHandSide<dim>::value (p, c);
+	for (unsigned int c=0; c<6; ++c) values[c] = RightHandSide<dim>::value (p, c);
+}
+
+template <int dim>
+RightHandSide<dim>::RightHandSide(): Function<dim>(6) {
+	prm = GetParameters();
 }

@@ -48,20 +48,32 @@ double WaveguideStructure::v(double z) {
 
 
 Tensor<2,3, double> WaveguideStructure::TransformationTensor (double in_x, double in_y, double in_z) {
-	int idx = (in_z - z_min)/sector_z_length;
-	if(sectors <= idx) {
-		return case_sectors[idx].TransformationTensorInternal(in_x, in_y, 1.0 );
+	if(in_z < GlobalParams.PRM_M_R_ZLength/(-2.0)) {
+		in_z = GlobalParams.PRM_M_R_ZLength/(-2.0);
+	}
+	if(in_z > GlobalParams.PRM_M_R_ZLength/(2.0)) {
+		in_z = GlobalParams.PRM_M_R_ZLength/2.0;
+	}
+	int idx = (in_z + GlobalParams.PRM_M_R_ZLength/2.0)/sector_z_length;
+	if(idx < 0) {
+		return case_sectors[0].TransformationTensorInternal(in_x, in_y, 0.0 );
 	} else {
-		return case_sectors[idx].TransformationTensorInternal(in_x, in_y, (in_z - z_min -idx*sector_z_length)/sector_z_length );
+		if(idx < sectors) {
+			return case_sectors[idx].TransformationTensorInternal(in_x, in_y, (in_z + GlobalParams.PRM_M_R_ZLength/2.0 -idx*sector_z_length)/sector_z_length );
+		} else {
+			return case_sectors[sectors-1].TransformationTensorInternal(in_x, in_y, 1.0 );
+		}
 	}
 }
 
 double WaveguideStructure::getQ1 (Point<3> &p) {
-	return 1/(r_0 + p[3]*p[3]*p[3]*(2*r_0 - 2*r_1) - p[3]*p[3]*(3*r_0 - 3*r_1));
+	const double z = p[2];
+	return 1/(r_0 + z*z*z*(2*r_0 - 2*r_1) - z*z*(3*r_0 - 3*r_1));
 }
 
 double WaveguideStructure::getQ2 (Point<3> &p) {
-	return 1/(r_0 + p[3]*p[3]*p[3]*(2*r_0 - 2*r_1) - p[3]*p[3]*(3*r_0 - 3*r_1));
+	const double z = p[2];
+	return 1/(r_0 + z*z*z*(2*r_0 - 2*r_1) - z*z*(3*r_0 - 3*r_1));
 }
 
 double WaveguideStructure::get_dof (int i) {
@@ -110,9 +122,9 @@ WaveguideStructure::WaveguideStructure(Parameters &in_params)
 		epsilon_K(in_params.PRM_M_W_EpsilonIn),
 		epsilon_M(in_params.PRM_M_W_EpsilonOut),
 		sectors(in_params.PRM_M_W_Sectors),
-		sector_z_length(in_params.PRM_M_R_ZLength / (sectors*1.0)),
-		z_min(in_params.PRM_M_R_ZLength / (-2.0)),
-		z_max(in_params.PRM_M_R_ZLength / (2.0)),
+		sector_z_length(in_params.PRM_M_R_ZLength/ (sectors*1.0)),
+		z_min(in_params.PRM_M_R_ZLength / (-2.0) - in_params.PRM_M_BC_XYin),
+		z_max(in_params.PRM_M_R_ZLength / (2.0) + 2 * in_params.PRM_M_BC_XYout),
 		deltaY(in_params.PRM_M_W_Delta),
 		r_0(in_params.PRM_M_C_RadiusIn),
 		r_1(in_params.PRM_M_C_RadiusOut),

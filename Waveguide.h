@@ -38,6 +38,7 @@
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/compressed_sparsity_pattern.h>
+#include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/solver_gmres.h>
 #include <deal.II/lac/solver_richardson.h>
@@ -86,17 +87,22 @@
 
 using namespace dealii;
 
+static Parameters GlobalParams;
+
 template <typename MatrixType, typename VectorType>
 class Waveguide
 {
 	public:
 		Waveguide (Parameters &, WaveguideStructure &);
 		void 		run ();
+		void 		rerun ();
 		void 		assemble_part (unsigned int in_part);
 		double 		evaluate_in();
 		double 		evaluate_out();
 		double 		evaluate_overall();
 		void 		store();
+		Tensor<2,3, std::complex<double>> get_Tensor(Point<3> &, bool, bool);
+
 
 	private:
 		void 	read_values ();
@@ -113,7 +119,6 @@ class Waveguide
 		double 	PML_Y_Distance(Point<3> &);
 		double 	PML_Z_Distance(Point<3> &);
 		double  RHS_value(const Point<3> &, const unsigned int component);
-		Tensor<2,3, std::complex<double>> get_Tensor(Point<3> &, bool, bool);
 		Tensor<2,3, std::complex<double>> Transpose_Tensor(Tensor<2,3, std::complex<double>> );
 		Tensor<1,3, std::complex<double>> Transpose_Vector(Tensor<1,3, std::complex<double>> );
 		void	init_loggers();
@@ -138,8 +143,8 @@ class Waveguide
 		bool		is_stored;
 		VectorType	system_rhs;
 		FileLoggerData log_data;
-		FileLogger log_constraints, log_assemble, log_precondition, log_solver, log_total;
-		WaveguideStructure structure;
+		FileLogger log_constraints, log_assemble, log_precondition, log_total, log_solver;
+		WaveguideStructure &structure;
 
 };
 
