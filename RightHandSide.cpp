@@ -5,8 +5,8 @@ double RightHandSide<dim>::value (const Point<dim> &p , const unsigned int compo
 {
 	if(System_Coordinate_in_Waveguide(p)){
 		if(p[2] < 0) {
-			if(component == 0) {
-				double d2 = (Distance2D(p))/(prm.PRM_M_C_RadiusIn + prm.PRM_M_C_RadiusOut);
+			if(component < 2) {
+				double d2 = (Distance2D(p)/2.0)/(prm.PRM_M_C_RadiusIn + prm.PRM_M_C_RadiusOut);
 				return exp(-d2*d2);
 
 			}

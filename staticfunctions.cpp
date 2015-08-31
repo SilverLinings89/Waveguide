@@ -13,15 +13,19 @@ std::string total_filename 			= "total.log";
 
 int 	StepsR 			= 10;
 int 	StepsPhi 		= 10;
-double 	PI 				= 1.0;				// Overwritten by Param-Reader
+/**
+double 	PI 				= 3.1412;				// Overwritten by Param-Reader
 double 	Eps0 			= 1.0;				// Overwritten by Param-Reader
 double 	Mu0 			= 1.0; 				// Overwritten by Param-Reader
-double 	c 				= 1/sqrt(Eps0 * Mu0); 	// Overwritten by Param-Reader
-double 	f0 				= c/0.63; 			// Overwritten by Param-Reader
-double 	omega 			= 2 * PI * f0; 	// Overwritten by Param-Reader
-int 	PRM_M_R_XLength = 2.0;		// Overwritten by Param-Reader
-int 	PRM_M_R_YLength = 2.0;		// Overwritten by Param-Reader
-int 	PRM_M_R_ZLength = 2.0;		// Overwritten by Param-Reader
+double 	c 				= 1.0/sqrt(Eps0 * Mu0); 	// Overwritten by Param-Reader
+double  lambda 			= 0.631;
+double 	f0 				= c/lambda; 			// Overwritten by Param-Reader
+double  k0				= 2.0 * PI * lambda;
+double 	omega 			= 2.0 * PI * f0; 	// Overwritten by Param-Reader
+**/
+// int 	PRM_M_R_XLength = 2.0;		// Overwritten by Param-Reader
+// int 	PRM_M_R_YLength = 2.0;		// Overwritten by Param-Reader
+// int 	PRM_M_R_ZLength = 2.0;		// Overwritten by Param-Reader
 
 static Parameters GetParameters() {
 	ParameterHandler prm;
@@ -53,8 +57,11 @@ static Parameters GetParameters() {
 		prm.enter_subsection("Region");
 		{
 			ret.PRM_M_R_XLength = prm.get_integer("XLength");
+			// PRM_M_R_XLength = ret.PRM_M_R_XLength;
 			ret.PRM_M_R_YLength = prm.get_integer("YLength");
+			// PRM_M_R_YLength = ret.PRM_M_R_YLength;
 			ret.PRM_M_R_ZLength = prm.get_integer("ZLength");
+			// PRM_M_R_ZLength = ret.PRM_M_R_ZLength;
 		}
 		prm.leave_subsection();
 
@@ -114,7 +121,7 @@ static Parameters GetParameters() {
 
 	prm.enter_subsection("Constants");
 	{
-		ret.PRM_C_PI = prm.get_double("Pi");
+		ret.PRM_C_PI = dealii::numbers::PI;
 		if(! prm.get_bool("AllOne")){
 			ret.PRM_C_Eps0 = prm.get_double("EpsilonZero");
 			ret.PRM_C_Mu0 = prm.get_double("MuZero");
@@ -124,9 +131,10 @@ static Parameters GetParameters() {
 		} else {
 			ret.PRM_C_Eps0 = 1.0;
 			ret.PRM_C_Mu0 = 1.0;
-			ret.PRM_C_c = 1.0;
-			ret.PRM_C_f0 = 1.0;
-			ret.PRM_C_omega = 1.0;
+			ret.PRM_C_c			= 1.0/sqrt(ret.PRM_C_Eps0 * ret.PRM_C_Mu0);
+			ret.PRM_C_f0		= ret.PRM_C_c/ret.PRM_M_W_Lambda; 			// Overwritten by Param-Reader
+			ret.PRM_C_k0		= 2.0 * ret.PRM_C_PI * ret.PRM_M_W_Lambda;
+			ret.PRM_C_omega 	= 2.0 * ret.PRM_C_PI * ret.PRM_C_f0;
 		}
 	}
 	prm.leave_subsection();

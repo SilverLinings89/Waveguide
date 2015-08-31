@@ -4,6 +4,7 @@
 #include "Waveguide.h"
 #include "staticfunctions.cpp"
 #include "WaveguideStructure.h"
+#include <sstream>
 
 using namespace dealii;
 
@@ -19,7 +20,8 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
   log_precondition(std::string("precondition.log"), log_data),
   log_total(std::string("total.log"), log_data),
   log_solver(std::string("solver.log"), log_data),
-  structure(in_structure)
+  structure(in_structure),
+  run_number(0)
 {
 	assembly_progress = 0;
 	int i = 0;
@@ -50,7 +52,7 @@ double Waveguide<MatrixType, VectorType>::evaluate_out () {
 	for (int  i = 0; i < StepsR; i++) {
 		double r = ((structure.r_0 + structure.r_1)/2.0) / (StepsR + 1) * (i+1);
 		for(int j = 0; j < StepsPhi; j++) {
-			double phi = 2 * PI * j / StepsPhi;
+			double phi = 2 * GlobalParams.PRM_C_PI * j / StepsPhi;
 			Point<3, double> position(r * cos(phi), r * sin(phi), z);
 			Vector<double> result(6);
 			VectorTools::point_value(dof_handler, solution, position, result);
@@ -72,7 +74,7 @@ double Waveguide<MatrixType, VectorType>::evaluate_in () {
 	for (int  i = 0; i < StepsR; i++) {
 		double r = ((structure.r_0 + structure.r_1)/2.0) / (StepsR + 1) * (i+1);
 		for(int j = 0; j < StepsPhi; j++) {
-			double phi = 2 * PI * j / StepsPhi;
+			double phi = 2 * GlobalParams.PRM_C_PI * j / StepsPhi;
 			Point<3, double> position(r * cos(phi), r * sin(phi), z);
 			Vector<double> result(6);
 			VectorTools::point_value(dof_handler, solution, position, result);
@@ -117,7 +119,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 	}
 	std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
 
-	double omegaepsilon0 = (2* PI / prm.PRM_M_W_Lambda) * c ;
+	double omegaepsilon0 = (2.0* GlobalParams.PRM_C_PI / prm.PRM_M_W_Lambda) * GlobalParams.PRM_C_c ;
 	std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
 	if(PML_in_X(position)){
 		double r,d, sigmax;
@@ -171,9 +173,9 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 			} else {
 				ret /= prm.PRM_M_W_EpsilonOut;
 			}
-			ret /= Eps0;
+			ret /= GlobalParams.PRM_C_Eps0;
 		} else {
-			ret /= Mu0;
+			ret /= GlobalParams.PRM_C_Mu0;
 		}
 	} else {
 		if(epsilon) {
@@ -182,9 +184,9 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 			} else {
 				ret *= prm.PRM_M_W_EpsilonOut;
 			}
-			ret *= Eps0;
+			ret *= GlobalParams.PRM_C_Eps0;
 		} else {
-			ret *= Mu0;
+			ret *= GlobalParams.PRM_C_Mu0;
 		}
 	}
 	Tensor<2,3, double> transformation = structure.TransformationTensor(position[0], position[1], position[2]);
@@ -240,7 +242,7 @@ bool Waveguide<MatrixType, VectorType>::PML_in_Y(Point<3> &p) {
 
 template<typename MatrixType, typename VectorType >
 bool Waveguide<MatrixType, VectorType>::PML_in_Z(Point<3> &p) {
-	return p(2) > prm.PRM_M_R_ZLength / 2.0  || (p(2) <  -prm.PRM_M_R_ZLength / 2.0 && !(System_Coordinate_in_Waveguide(p)));
+	return p(2) > prm.PRM_M_R_ZLength / 2.0 +prm.PRM_M_BC_XYout || (p(2) <  -prm.PRM_M_R_ZLength / 2.0 && !(System_Coordinate_in_Waveguide(p)));
 }
 
 template<typename MatrixType, typename VectorType >
@@ -266,7 +268,7 @@ double Waveguide<MatrixType, VectorType>::PML_Y_Distance(Point<3> &p){
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::PML_Z_Distance(Point<3> &p){
 	if(p(2) >0){
-		return p(2) - (prm.PRM_M_R_ZLength / 2.0);
+		return p(2) - (prm.PRM_M_R_ZLength / 2.0) - prm.PRM_M_BC_XYout;
 	} else {
 		return -p(2) - (prm.PRM_M_R_ZLength / 2.0);
 	}
@@ -313,7 +315,8 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	} else {
 		// triangulation.refine_global (1);
 		double MaxDistFromBoundary = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusIn)*1.4/2.0;
-		for(int i = 0; i < 2; i++) {
+		for(int i = 0; i < 1; i++) {
+			// semi-global refinement
 			cell = triangulation.begin_active();
 			for (; cell!=endc; ++cell){
 				if(std::abs(Distance2D(cell->center(true, false)) - (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusIn)/2.0 ) < MaxDistFromBoundary) {
@@ -323,6 +326,19 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 			triangulation.execute_coarsening_and_refinement();
 			MaxDistFromBoundary *= 0.7 ;
 		}
+		// Refinement exclusively in the waveguide
+		for(int i = 0; i < 2; i++) {
+			//
+			cell = triangulation.begin_active();
+			for (; cell!=endc; ++cell){
+				if( Distance2D(cell->center(true, false))< (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusIn)/2.0)  {
+					cell->set_refine_flag();
+				}
+			}
+			triangulation.execute_coarsening_and_refinement();
+			MaxDistFromBoundary *= 0.7 ;
+		}
+
 	}
 
 
@@ -336,7 +352,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 					if(System_Coordinate_in_Waveguide(ctr)){
 						if(ctr(2) < 0) {
 
-							cell->face(j)->set_all_boundary_ids(1);
+							cell->face(j)->set_all_boundary_ids(11);
 							counter ++;
 						}
 
@@ -358,7 +374,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	cell = triangulation.begin_active();
 	for (; cell!=endc; ++cell){
 
-		int temp  = (int) (((cell->center(true, false))[2] + (prm.PRM_M_R_ZLength/2) + prm.PRM_M_BC_XYin) / l);
+		int temp  = (int) (((cell->center(true, false))[2] + (prm.PRM_M_R_ZLength/(2.0)) + prm.PRM_M_BC_XYin) / l);
 		if( temp >= 2* prm.PRM_A_Threads || temp < 0) std::cout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
 		cell->set_subdomain_id(temp);
 	}
@@ -399,14 +415,14 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 	//starting to calculate Constraint Matrix for boundary values;
 	//VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>() , 0 , cm , StaticMappingQ1<3>::mapping);
-	VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, RightHandSide<3>() , 1 , cm , StaticMappingQ1<3>::mapping);
-	VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 3, ZeroFunction<3>(6) , 1 , cm , StaticMappingQ1<3>::mapping);
+	//VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>() , 1 , cm , StaticMappingQ1<3>::mapping);
+	//VectorTools::project_boundary_values_curl_conforming(dof_handler, 3, ZeroFunction<3>(6) , 1 , cm , StaticMappingQ1<3>::mapping);
 	//VectorTools::project_boundary_values_curl_conforming(dof_handler, 3, RightHandSide<3>() , 0 , cm , StaticMappingQ1<3>::mapping);
 
 	//VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>() , 2 , cm , StaticMappingQ1<3>::mapping);
 
 	DoFHandler<3>::active_cell_iterator cell, endc;
-
+/**
 	int counter2 = 0;
 	int cells = 0;
 	cell = dof_handler.begin_active(),
@@ -420,7 +436,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 		for(int i = 0; i < 6; i++) {
 			if(cell->face(i)->at_boundary()){
 				At_Boundary = true;
-				if(cell->face(i)->boundary_id() == 1) Is_At_One = true;
+				if(cell->face(i)->boundary_id() == 11) Is_At_One = true;
 			}
 		}
 		const unsigned int   dofs_per_cell	= fe.dofs_per_cell;
@@ -437,6 +453,8 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 		}
 	}
 	std::cout << counter2 << " of " << cells <<std::endl;
+	**/
+	MakeBoundaryConditions();
 	DoFTools::make_hanging_node_constraints(dof_handler, cm);
 
 	cm.close();
@@ -477,7 +495,7 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
 	std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
 	DoFHandler<3>::active_cell_iterator cell, endc;
-
+	int test = 0;
 	cell = dof_handler.begin_active(),
 	endc = dof_handler.end();
 
@@ -502,6 +520,7 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
 						I_Val[k].imag(fe_values[imag].value(i, q_index)[k]);
 						I_Val[k].real(fe_values[real].value(i, q_index)[k]);
 					}
+
 					for (unsigned int j=0; j<dofs_per_cell; j++){
 						Tensor<1,3, std::complex<double>> J_Curl;
 						Tensor<1,3, std::complex<double>> J_Val;
@@ -511,17 +530,38 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
 							J_Val[k].imag(fe_values[imag].value(j, q_index)[k]);
 							J_Val[k].real(fe_values[real].value(j, q_index)[k]);
 						}
+						test ++;
 
-						std::complex<double> x = (mu * I_Curl) * Transpose_Vector(J_Curl) * JxW - ( ( epsilon * I_Val ) * Transpose_Vector(J_Val)) *(omega * omega)*JxW ;
-						if(fe.system_to_base_index(i).first.second == fe.system_to_base_index(j).first.second){
-							cell_matrix_real[i][j] += x.real();
-						} else {
-							if(fe.system_to_base_index(i).first.second < fe.system_to_base_index(j).first.second) {
-								cell_matrix_real[i][j] += x.imag();
-							} else {
-								cell_matrix_real[i][j] -= x.imag();
+						std::complex<double> x = (mu * I_Curl) * Transpose_Vector(J_Curl) * JxW - ( ( epsilon * I_Val ) * Transpose_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
+
+						/**
+						if(test == 100000) {
+							std::cout << "Position: (" << quadrature_points[q_index][0] << ","<< quadrature_points[q_index][1] << "," << quadrature_points[q_index][2] << ")" << std::endl;
+							std::cout << "x: (" << x.real() << " , "<< x.imag() << ")" << std::endl;
+							std::cout << "ICurl: ("<< I_Curl[0] << ","<< I_Curl[1] << "," << I_Curl[2] << ")" << std::endl;
+							std::cout << "JCurl: ("<< J_Curl[0] << ","<< J_Curl[1] << "," << J_Curl[2] << ")" << std::endl;
+							std::cout << "JxW: " << JxW << std::endl;
+							std::cout << "IVal: ("<< I_Val[0] << ","<< I_Val[1] << "," << I_Val[2] << ")" << std::endl;
+							std::cout << "JVal: ("<< J_Val[0] << ","<< J_Val[1] << "," << J_Val[2] << ")" << std::endl;
+							std::cout << "Omega: " << omega << std::endl;
+							std::cout << "Epsilon: "<< std::endl;
+							for(int k = 0; k< 3; k++) {
+								for(int l = 0; l< 3; l++) {
+									std::cout << epsilon[k][l] << "  ";
+								}
+								std::cout << std::endl;
 							}
+							std::cout << "Mu: "<< std::endl;
+							for(int k = 0; k< 3; k++) {
+								for(int l = 0; l< 3; l++) {
+									std::cout << mu[k][l] << "  ";
+								}
+								std::cout << std::endl;
+							}
+							test = 1;
 						}
+						**/
+						cell_matrix_real[i][j] += x.real();
 
 						/**
 						if(x.real() != 0) {
@@ -535,18 +575,20 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
 			}
 			cell->get_dof_indices (local_dof_indices);
 
-			cm.distribute_local_to_global(cell_matrix_real, cell_rhs, local_dof_indices,system_matrix, system_rhs, false);
+			cm.distribute_local_to_global(cell_matrix_real, cell_rhs, local_dof_indices,system_matrix, system_rhs, true);
 			//cm.distribute_local_to_global(cell_matrix_imag, cell_rhs, local_dof_indices,system_matrix.block(0,1), system_rhs.block(1), true );
 
 	    }
 	}
 	assembly_progress ++;
-	std::cout << "Progress: " << 100 * assembly_progress/(prm.PRM_A_Threads*2) << " %" << std::endl;
+	// std::cout << "Progress: " << 100 * assembly_progress/(prm.PRM_A_Threads*2) << " %" << std::endl;
 }
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::assemble_system ()
 {
+	system_rhs.reinit(dof_handler.n_dofs());
+
 	QGauss<3>  quadrature_formula(2);
 	const FEValuesExtractors::Vector real(0);
 	const FEValuesExtractors::Vector imag(3);
@@ -575,7 +617,7 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 	}
 	task_group2.join_all ();
 
-	std::cout<<system_rhs.l2_norm()<<std::endl;
+	std::cout<<"Assembling done. L2-Norm of RHS: "<< system_rhs.l2_norm()<<std::endl;
 	log_assemble.stop();
 
 }
@@ -597,11 +639,83 @@ void Waveguide<MatrixType, VectorType>::estimate_solution() {
 					Point<3, double> p (ptemp[0], ptemp[1], ptemp[2]);
 					Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(0) - ((cell->face(i))->line(j))->vertex(1);
 					Point<3, double> direction (dtemp[0], dtemp[1], dtemp[2]);
-					const std::complex<double> z(0.0, omega * (p(2)- prm.PRM_M_R_ZLength/2.0));
+					const std::complex<double> z(0.0, GlobalParams.PRM_C_omega * (p(2)- prm.PRM_M_R_ZLength/2.0));
 					double d2 = Distance2D(p);
 					const std::complex<double> result = - exp(z) * exp(-d2*d2/2);
 					solution[local_dof_indices[0]] = result.real();
 					solution[local_dof_indices[1]] = result.imag();
+				}
+			}
+		}
+	}
+}
+
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
+	//dealii::Vector<double> first, second;
+	//first.reinit(dof_handler.n_dofs());
+	//second.reinit(dof_handler.n_dofs());
+
+	DoFHandler<3>::active_cell_iterator cell, endc;
+
+	cell = dof_handler.begin_active(),
+	endc = dof_handler.end();
+	for (; cell!=endc; ++cell)
+	{
+		for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+			Point<3, double> center =(cell->face(i))->center(true, false);
+			if( center[0] < 0) center[0] *= (-1.0);
+			if( center[1] < 0) center[1] *= (-1.0);
+			if ( std::abs( center[0] - (15.5 * (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) /8.7 ) ) < 0.01 ){
+				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
+				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+					cm.add_line(local_dof_indices[0]);
+					cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
+					cm.add_line(local_dof_indices[1]);
+					cm.set_inhomogeneity(local_dof_indices[1], 0.0);
+				}
+			}
+			if ( std::abs( center[1] - (15.5 * (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) /8.7 ) ) < 0.01 ){
+				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
+				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+					cm.add_line(local_dof_indices[0]);
+					cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
+					cm.add_line(local_dof_indices[1]);
+					cm.set_inhomogeneity(local_dof_indices[1], 0.0);
+				}
+			}
+			if( std::abs(center[2] + GlobalParams.PRM_M_R_ZLength/2.0  + GlobalParams.PRM_M_BC_XYin) < 0.01 ){
+				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
+				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+					if((cell->face(i))->line(j)->at_boundary()) {
+						((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+						Tensor<1,3,double> ptemp = ((cell->face(i))->line(j))->center(false, false);
+						Point<3, double> p (ptemp[0], ptemp[1], ptemp[2]);
+						Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(0) - ((cell->face(i))->line(j))->vertex(1);
+						Point<3, double> direction (dtemp[0], dtemp[1], dtemp[2]);
+						//const std::complex<double> z(0.0, GlobalParams.PRM_C_omega * (p(2)- prm.PRM_M_R_ZLength/2.0));
+
+						double d2 = Distance2D(p);
+						double result = exp(-d2*d2/2);
+						cm.add_line(local_dof_indices[0]);
+						cm.set_inhomogeneity(local_dof_indices[0], direction[0] * result);
+						cm.add_line(local_dof_indices[1]);
+						cm.set_inhomogeneity(local_dof_indices[1], 0.0);
+
+					}
+				}
+			}
+			if( std::abs(center[2] - GlobalParams.PRM_M_R_ZLength/2.0  - 2.0 * GlobalParams.PRM_M_BC_XYout) < 0.01 ){
+				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
+				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+					cm.add_line(local_dof_indices[0]);
+					cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
+					cm.add_line(local_dof_indices[1]);
+					cm.set_inhomogeneity(local_dof_indices[1], 0.0);
 				}
 			}
 		}
@@ -725,7 +839,7 @@ void Waveguide<MatrixType, VectorType>::output_results () const
 	data_out.build_patches ();
 
 	//std::ofstream output ("solution.gpl");
-	std::ofstream outputvtk (solutionpath + "/solution.vtk");
+	std::ofstream outputvtk (solutionpath + "/solution-run" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +".vtk");
 	data_out.write_vtk(outputvtk);
 	//data_out.write_gnuplot (output);
 
@@ -743,6 +857,7 @@ void Waveguide<MatrixType, VectorType>::run ()
 	solve ();
 	output_results ();
 	log_total.stop();
+	run_number++;
 }
 
 template<typename MatrixType, typename VectorType >
@@ -753,6 +868,8 @@ void Waveguide<MatrixType, VectorType>::rerun ()
 	solve ();
 	output_results ();
 	log_total.stop();
+
+	run_number++;
 }
 
 #endif

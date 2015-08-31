@@ -118,6 +118,7 @@ class Waveguide
 		double 	PML_X_Distance(Point<3> &);
 		double 	PML_Y_Distance(Point<3> &);
 		double 	PML_Z_Distance(Point<3> &);
+		void	MakeBoundaryConditions ();
 		double  RHS_value(const Point<3> &, const unsigned int component);
 		Tensor<2,3, std::complex<double>> Transpose_Tensor(Tensor<2,3, std::complex<double>> );
 		Tensor<1,3, std::complex<double>> Transpose_Vector(Tensor<1,3, std::complex<double>> );
@@ -137,7 +138,6 @@ class Waveguide
 		ConstraintMatrix boundary_value_constraints_real;
 
 		int 			assembly_progress;
-
 		VectorType	solution;
 		VectorType	storage;
 		bool		is_stored;
@@ -145,6 +145,7 @@ class Waveguide
 		FileLoggerData log_data;
 		FileLogger log_constraints, log_assemble, log_precondition, log_total, log_solver;
 		WaveguideStructure &structure;
+		int 			run_number;
 
 };
 

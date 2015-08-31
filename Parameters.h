@@ -22,6 +22,7 @@ struct Parameters {
 	int				PRM_Op_MaxCases;
 	double			PRM_Op_InitialStepWidth;
 	double			PRM_M_C_TiltIn,PRM_M_C_TiltOut ;
+	double			PRM_C_k0, PRM_C_lambda;
 };
 
 #endif
