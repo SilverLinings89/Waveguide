@@ -111,7 +111,10 @@ class Waveguide
 		void 	assemble_system ();
 		void	estimate_solution();
 		void 	solve ();
+		void 	reset_changes();
 		void 	output_results () const;
+		void 	print_eigenvalues(const std::vector<std::complex<double>> &);
+		void	print_condition (double);
 		bool	PML_in_X(Point<3> &);
 		bool	PML_in_Y(Point<3> &);
 		bool	PML_in_Z(Point<3> &);
@@ -124,7 +127,7 @@ class Waveguide
 		Tensor<1,3, std::complex<double>> Transpose_Vector(Tensor<1,3, std::complex<double>> );
 		void	init_loggers();
 		void 	timerupdate();
-		std::string		solutionpath;
+		std::string			solutionpath;
 
 		Triangulation<3>	triangulation;
 		FESystem<3>			fe;
@@ -133,19 +136,21 @@ class Waveguide
 
 		SparsityPattern		sparsity_pattern;
 		MatrixType			system_matrix;
-		Parameters		&prm;
-		ConstraintMatrix boundary_value_constraints_imaginary;
-		ConstraintMatrix boundary_value_constraints_real;
+		Parameters			&prm;
+		ConstraintMatrix 	boundary_value_constraints_imaginary;
+		ConstraintMatrix 	boundary_value_constraints_real;
 
-		int 			assembly_progress;
-		VectorType	solution;
-		VectorType	storage;
-		bool		is_stored;
-		VectorType	system_rhs;
-		FileLoggerData log_data;
-		FileLogger log_constraints, log_assemble, log_precondition, log_total, log_solver;
-		WaveguideStructure &structure;
-		int 			run_number;
+		int 				assembly_progress;
+		VectorType			solution;
+		VectorType			storage;
+		bool				is_stored;
+		VectorType			system_rhs;
+		FileLoggerData 		log_data;
+		FileLogger 			log_constraints, log_assemble, log_precondition, log_total, log_solver;
+		WaveguideStructure 	&structure;
+		int 				run_number;
+		int					eigenvalue_file_counter, condition_file_counter;
+		std::ofstream		eigenvalue_file, condition_file;
 
 };
 

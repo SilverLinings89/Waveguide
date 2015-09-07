@@ -107,10 +107,13 @@ Tensor<2,3, double> Sector::TransformationTensorInternal (double in_x, double in
 	}
 
 	//std::cout << "Calculating internal Tensor_4" << std::endl;
+	/**
 	for(int i = 0; i< 3; i++) {
 		for(int j = 0; j<3; j++) {
 			if(g[i][j]>1000.0 || g[i][j]<-1000.0) std::cout << "Case: ( " << in_x << ", " << in_y << "," << z << ")" << std::endl;
 		}
 	}
+
+	**/
 	return g;
 }

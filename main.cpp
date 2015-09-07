@@ -18,6 +18,7 @@
 #include "Sector.cpp"
 #include "Waveguide.cpp"
 #include "WaveguideStructure.cpp"
+#include "ExactSolution.cpp"
 
 using namespace dealii;
 

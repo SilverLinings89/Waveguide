@@ -4,7 +4,12 @@
 #include "Waveguide.h"
 #include "staticfunctions.cpp"
 #include "WaveguideStructure.h"
+#include "ExactSolution.h"
 #include <sstream>
+#include <deal.II/numerics/vector_tools.h>
+#include <deal.II/numerics/vector_tools.templates.h>
+
+#include <deal.II/base/std_cxx11/bind.h>
 
 using namespace dealii;
 
@@ -21,7 +26,9 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
   log_total(std::string("total.log"), log_data),
   log_solver(std::string("solver.log"), log_data),
   structure(in_structure),
-  run_number(0)
+  run_number(0),
+  condition_file_counter(0),
+  eigenvalue_file_counter(0)
 {
 	assembly_progress = 0;
 	int i = 0;
@@ -47,30 +54,36 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::evaluate_out () {
-	double ret = 0.0;
-	double z = prm.PRM_M_R_ZLength/2.0;
-	for (int  i = 0; i < StepsR; i++) {
-		double r = ((structure.r_0 + structure.r_1)/2.0) / (StepsR + 1) * (i+1);
-		for(int j = 0; j < StepsPhi; j++) {
-			double phi = 2 * GlobalParams.PRM_C_PI * j / StepsPhi;
-			Point<3, double> position(r * cos(phi), r * sin(phi), z);
-			Vector<double> result(6);
-			VectorTools::point_value(dof_handler, solution, position, result);
-			double Q1 = structure.getQ1(position);
-			double Q2 = structure.getQ2(position);
-			ret += (result[0] / Q1) * ( TEMode00( position , 0) / Q1);
-			ret += (result[1] / Q2) * ( TEMode00( position , 1) / Q2);
-			ret += (result[3] / Q1) * ( TEMode00( position , 0) / Q1);
-			ret += (result[4] / Q2) * ( TEMode00( position , 1) / Q2);
+	double best = 0.0;
+	for (int k = 0; k < 5; k++) {
+		double ret = 0.0;
+		double z = prm.PRM_M_R_ZLength/2.0 - 0.02*k;
+
+		for (int  i = 0; i < StepsR; i++) {
+			double r = ((structure.r_0 + structure.r_1)/2.0) / (StepsR + 1) * (i+1);
+			for(int j = 0; j < StepsPhi; j++) {
+				double phi = 2 * GlobalParams.PRM_C_PI * j / StepsPhi;
+				Point<3, double> position(r * cos(phi), r * sin(phi), z);
+				Vector<double> result(6);
+				VectorTools::point_value(dof_handler, solution, position, result);
+				double Q1 = structure.getQ1(position);
+				double Q2 = structure.getQ2(position);
+				ret += std::abs( (result[0] / Q1) * ( TEMode00( position , 0) / Q1));
+				ret += std::abs( (result[1] / Q2) * ( TEMode00( position , 1) / Q2));
+				ret += std::abs( (result[3] / Q1) * ( TEMode00( position , 0) / Q1));
+				ret += std::abs( (result[4] / Q2) * ( TEMode00( position , 1) / Q2));
+			}
 		}
+		// std::cout << k << ": " << ret<< std::endl;
+		if (ret > best) best = ret;
 	}
-	return ret;
+	return best;
 }
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::evaluate_in () {
 	double ret = 0.0;
-	double z = -prm.PRM_M_R_ZLength/2 - prm.PRM_M_BC_XYin;
+	double z = -prm.PRM_M_R_ZLength/2.0 ;
 	for (int  i = 0; i < StepsR; i++) {
 		double r = ((structure.r_0 + structure.r_1)/2.0) / (StepsR + 1) * (i+1);
 		for(int j = 0; j < StepsPhi; j++) {
@@ -80,10 +93,10 @@ double Waveguide<MatrixType, VectorType>::evaluate_in () {
 			VectorTools::point_value(dof_handler, solution, position, result);
 			double Q1 = structure.getQ1(position);
 			double Q2 = structure.getQ2(position);
-			ret += (result[0] / Q1)*(TEMode00(position,0) / Q1);
-			ret += (result[1] / Q2)*(TEMode00(position,1) / Q2);
-			ret += (result[3] / Q1)*(TEMode00(position,0) / Q1);
-			ret += (result[4] / Q2)*(TEMode00(position,1) / Q2);
+			ret += std::abs( (result[0] / Q1) * ( TEMode00( position , 0) / Q1));
+			ret += std::abs( (result[1] / Q2) * ( TEMode00( position , 1) / Q2));
+			//ret += std::abs( (result[3] / Q1) * ( TEMode00( position , 0) / Q1));
+			//ret += std::abs( (result[4] / Q2) * ( TEMode00( position , 1) / Q2));
 		}
 	}
 	return ret;
@@ -95,6 +108,15 @@ double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 	double quality_out	= evaluate_out();
 	std::cout << "Quality in: "<< quality_in << std::endl;
 	std::cout << "Quality out: "<< quality_out << std::endl;
+	dealii::Vector<double> differences;
+	differences.reinit(triangulation.n_active_cells());
+	QGauss<3>  quadrature_formula(2);
+	VectorTools::integrate_difference(dof_handler, solution,ExactSolution<3>(), differences, quadrature_formula, VectorTools::L2_norm);
+	double exactqual = 0.0;
+	for (unsigned int i = 0;i < triangulation.n_active_cells(); ++ i) {
+		exactqual += differences[i];
+	}
+	std::cout << "L2 Norm of the error:" << exactqual << std::endl;
 	return quality_out/quality_in;
 }
 
@@ -313,7 +335,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	if(prm.PRM_D_Refinement == "global"){
 		triangulation.refine_global (prm.PRM_D_XY);
 	} else {
-		// triangulation.refine_global (1);
+		triangulation.refine_global (1);
 		double MaxDistFromBoundary = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusIn)*1.4/2.0;
 		for(int i = 0; i < 1; i++) {
 			// semi-global refinement
@@ -327,7 +349,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 			MaxDistFromBoundary *= 0.7 ;
 		}
 		// Refinement exclusively in the waveguide
-		for(int i = 0; i < 2; i++) {
+		for(int i = 0; i < 1; i++) {
 			//
 			cell = triangulation.begin_active();
 			for (; cell!=endc; ++cell){
@@ -382,7 +404,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 
 	if(prm.PRM_O_Grid) {
 		if(prm.PRM_O_VerboseOutput) std::cout<< "Writing Mesh data to file \"grid-3D.vtk\"" << std::endl;
-		mesh_info(triangulation, "grid-3D.vtk");
+		mesh_info(triangulation, solutionpath + "/grid.vtk");
 		if(prm.PRM_O_VerboseOutput) std::cout<< "Done" << std::endl;
 
 	}
@@ -699,7 +721,8 @@ void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
 						//const std::complex<double> z(0.0, GlobalParams.PRM_C_omega * (p(2)- prm.PRM_M_R_ZLength/2.0));
 
 						double d2 = Distance2D(p);
-						double result = exp(-d2*d2/2);
+						//double result = exp(-d2*d2/2);
+						double result = TEMode00(p,0);
 						cm.add_line(local_dof_indices[0]);
 						cm.set_inhomogeneity(local_dof_indices[0], direction[0] * result);
 						cm.add_line(local_dof_indices[1]);
@@ -733,14 +756,19 @@ void Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> >::solve () 
 	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
 	log_precondition.start();
 
-	//if(is_stored) {
-	if(false){
+	if(is_stored) {
 		solution.reinit(dof_handler.n_dofs());
+
 		for(unsigned int i = 0; i < dof_handler.n_dofs(); i++){
 			solution[i] = storage[i];
 		}
+
 		if(prm.PRM_S_Solver == "GMRES") {
+			condition_file.open((solutionpath + "/condition_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << condition_file_counter) )->str() + ".dat").c_str());
+			eigenvalue_file.open((solutionpath + "/eigenvalues_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << eigenvalue_file_counter) )->str() + ".dat").c_str());
 			SolverGMRES<Vector<double> > solver (solver_control, SolverGMRES<Vector<double> >::AdditionalData(prm.PRM_S_GMRESSteps, true));
+			solver.connect_condition_number_slot(std_cxx11::bind(&Waveguide<dealii::SparseMatrix<double> , dealii::Vector<double> >::print_condition, this, std_cxx11::_1), true);
+			solver.connect_eigenvalues_slot(std_cxx11::bind(&Waveguide<dealii::SparseMatrix<double> , dealii::Vector<double> >::print_eigenvalues, this, std_cxx11::_1), true);
 
 			if(prm.PRM_S_Preconditioner == "Block_Jacobi"){
 				PreconditionBlockJacobi<SparseMatrix<double>, double> block_jacobi;
@@ -777,7 +805,7 @@ void Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> >::solve () 
 
 			if(prm.PRM_S_Preconditioner == "ILU"){
 				SparseILU<double> ilu;
-				ilu.initialize(system_matrix, SparseILU<double>::AdditionalData());
+				ilu.initialize(system_matrix, SparseILU<double>::AdditionalData(1.0, 5));
 				timerupdate();
 				solver.solve (system_matrix, solution, system_rhs, ilu);
 			}
@@ -861,10 +889,33 @@ void Waveguide<MatrixType, VectorType>::run ()
 }
 
 template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::print_eigenvalues(const std::vector<std::complex<double>> &input) {
+	for (unsigned int i = 0; i < input.size(); i++){
+		eigenvalue_file << input.at(i).real() << "\t" << input.at(i).imag() << std::endl;
+	}
+	eigenvalue_file << std::endl;
+}
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::print_condition(double condition) {
+	condition_file << condition << std::endl;
+}
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::reset_changes ()
+{
+	system_matrix.reinit( sparsity_pattern );
+	solution.reinit ( dof_handler.n_dofs());
+	system_rhs.reinit(dof_handler.n_dofs());
+	cm.distribute(solution);
+}
+
+template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::rerun ()
 {
+	reset_changes();
 	assemble_system ();
-	estimate_solution();
+	//estimate_solution();
 	solve ();
 	output_results ();
 	log_total.stop();

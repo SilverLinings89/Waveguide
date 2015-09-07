@@ -194,6 +194,7 @@ template<int dim> static void mesh_info(const Triangulation<dim> &tria, const st
 	std::ofstream out (filename.c_str());
 	GridOut grid_out;
 	grid_out.write_vtk (tria, out);
+	out.close();
 	std::cout << " written to " << filename << std::endl << std::endl;
 }
 
@@ -226,21 +227,26 @@ static bool System_Coordinate_in_Waveguide(Point<3> p){
 	return ( value < (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0);
 }
 
+static double System_Coordinate_in_Waveguide_double(Point<3> p){
+	double value = Distance2D(p);
+	if(value < (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0) return 1.0;
+	else return 0.0;
+}
+
 static double TEMode00 (Point<3, double> p ,const unsigned int component)
 {
 
-	if(System_Coordinate_in_Waveguide(p)){
-		if(p[2] < 0) {
+	//if(System_Coordinate_in_Waveguide(p)){
+		// if(p[2] < 0) {
 			if(component == 0) {
-				double d2 = Distance2D(p)/(GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut);
+				double d2 = (2 * Distance2D(p)) / (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) ;
 				//return 1.0;
-				return exp(-d2*d2);
+				return exp(-d2*d2 / 2.0);
 			}
-		}
-	}
+		//}
+	//}
 	return 0.0;
 }
-
 
 inline bool file_exists (const std::string& name) {
   struct stat buffer;
