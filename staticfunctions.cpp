@@ -145,7 +145,8 @@ static Parameters GetParameters() {
 		ret.PRM_Op_InitialStepWidth = prm.get_double("InitialStepWidth");
 	}
 	prm.leave_subsection();
-
+	ret.PRM_M_R_XLength = (15.5/4.3)* ((ret.PRM_M_C_RadiusIn+ ret.PRM_M_C_RadiusOut)/2.0);
+	ret.PRM_M_R_YLength = (15.5/4.3)* ((ret.PRM_M_C_RadiusIn+ ret.PRM_M_C_RadiusOut)/2.0);
 	return ret;
 }
 
@@ -217,8 +218,8 @@ static Point<3> Triangulation_Stretch_Y (const Point<3> &p)
 static Point<3> Triangulation_Stretch_Z (const Point<3> &p)
 {
   Point<3> q = p;
-  q[2] *= (2*GlobalParams.PRM_M_BC_XYout + GlobalParams.PRM_M_BC_XYin+ GlobalParams.PRM_M_R_ZLength) /2.0;
-  q[2] += GlobalParams.PRM_M_BC_XYout - GlobalParams.PRM_M_BC_XYin/2.0;
+  q[2] *= (GlobalParams.PRM_M_BC_XYout + GlobalParams.PRM_M_BC_XYin+ GlobalParams.PRM_M_R_ZLength) /2.0;
+  q[2] += (GlobalParams.PRM_M_BC_XYout - GlobalParams.PRM_M_BC_XYin)/2.0;
   return q;
 }
 
@@ -237,14 +238,32 @@ static double TEMode00 (Point<3, double> p ,const unsigned int component)
 {
 
 	//if(System_Coordinate_in_Waveguide(p)){
-		// if(p[2] < 0) {
+
+	//	if(p[2] < 0) {
 			if(component == 0) {
-				double d2 = (2 * Distance2D(p)) / (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) ;
+				double d2 = (Distance2D(p)) / (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) ;
 				//return 1.0;
-				return exp(-d2*d2 / 2.0);
+				return exp(-d2*d2);
 			}
 		//}
 	//}
+	return 0.0;
+}
+
+static double Solution (Point<3, double> p ,const unsigned int component)
+{
+	if(component == 0) {
+		std::complex<double> res(TEMode00(p,0), 0);
+		std::complex<double> i (0,1);
+		std::complex<double> ret = -1.0 * res * std::exp(-i*1.6*(p[2]+GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin));
+		return ret.real();
+	}
+	if(component == 3) {
+		std::complex<double> res(TEMode00(p,0), 0);
+		std::complex<double> i (0,1);
+		std::complex<double> ret = -1.0 * res * std::exp(-i*1.6*(p[2]+GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin));
+		return ret.imag();
+	}
 	return 0.0;
 }
 

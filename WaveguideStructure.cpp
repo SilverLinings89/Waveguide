@@ -21,7 +21,7 @@ void WaveguideStructure::estimate_and_initialize() {
 		Sector temp(true, false, -parameters.PRM_M_R_ZLength/2, -parameters.PRM_M_R_ZLength/2 + length );
 		case_sectors.push_back(temp);
 		for(int  i = 1; i < sectors -1; i++) {
-			Sector temp2( false, false, -parameters.PRM_M_R_ZLength/2 + length*(1.0 *i), -parameters.PRM_M_R_ZLength/2 + length*(i + 1.0) );
+			Sector temp2( false, false, -parameters.PRM_M_R_ZLength/(2.0) + length*(1.0 *i), -parameters.PRM_M_R_ZLength/(2.0) + length*(i + 1.0) );
 			case_sectors.push_back(temp2);
 		}
 		Sector temp3( false, true, parameters.PRM_M_R_ZLength/2 - length, parameters.PRM_M_R_ZLength/2 );
@@ -48,13 +48,14 @@ double WaveguideStructure::v(double z) {
 
 
 Tensor<2,3, double> WaveguideStructure::TransformationTensor (double in_x, double in_y, double in_z) {
-	if(in_z < GlobalParams.PRM_M_R_ZLength/(-2.0)) {
-		in_z = GlobalParams.PRM_M_R_ZLength/(-2.0);
+	double temp_z = in_z;
+	if(temp_z < GlobalParams.PRM_M_R_ZLength/(-2.0)) {
+		temp_z = GlobalParams.PRM_M_R_ZLength/(-2.0);
 	}
-	if(in_z > GlobalParams.PRM_M_R_ZLength/(2.0)) {
-		in_z = GlobalParams.PRM_M_R_ZLength/2.0;
+	if(temp_z > GlobalParams.PRM_M_R_ZLength/(2.0)) {
+		temp_z = GlobalParams.PRM_M_R_ZLength/2.0;
 	}
-	int idx = (in_z + GlobalParams.PRM_M_R_ZLength/2.0)/sector_z_length;
+	int idx = (temp_z + GlobalParams.PRM_M_R_ZLength/2.0)/sector_z_length;
 	if(idx < 0) {
 		return case_sectors[0].TransformationTensorInternal(in_x, in_y, 0.0 );
 	} else {
@@ -66,14 +67,44 @@ Tensor<2,3, double> WaveguideStructure::TransformationTensor (double in_x, doubl
 	}
 }
 
-double WaveguideStructure::getQ1 (Point<3> &p) {
-	const double z = p[2];
-	return 1/(r_0 + z*z*z*(2*r_0 - 2*r_1) - z*z*(3*r_0 - 3*r_1));
+double WaveguideStructure::getQ1 (double x, double y, double z) {
+	if(z < GlobalParams.PRM_M_R_ZLength/(-2.0)) {
+			z = GlobalParams.PRM_M_R_ZLength/(-2.0);
+		}
+		if(z > GlobalParams.PRM_M_R_ZLength/(2.0)) {
+			z = GlobalParams.PRM_M_R_ZLength/2.0;
+		}
+		int idx = (z + GlobalParams.PRM_M_R_ZLength/2.0)/sector_z_length;
+		if(idx < 0) {
+			return case_sectors[0].getQ2(x, y, 0.0 );
+		} else {
+			if(idx < sectors) {
+				return case_sectors[idx].getQ2(x, y, (z + GlobalParams.PRM_M_R_ZLength/2.0 -idx*sector_z_length)/sector_z_length );
+			} else {
+				return case_sectors[sectors-1].getQ2(x, y, 1.0 );
+			}
+	}
 }
 
-double WaveguideStructure::getQ2 (Point<3> &p) {
-	const double z = p[2];
-	return 1/(r_0 + z*z*z*(2*r_0 - 2*r_1) - z*z*(3*r_0 - 3*r_1));
+double WaveguideStructure::getQ2 (double x, double y, double z) {
+
+	if(z < GlobalParams.PRM_M_R_ZLength/(-2.0)) {
+		z = GlobalParams.PRM_M_R_ZLength/(-2.0);
+	}
+	if(z > GlobalParams.PRM_M_R_ZLength/(2.0)) {
+		z = GlobalParams.PRM_M_R_ZLength/2.0;
+	}
+	int idx = (z + GlobalParams.PRM_M_R_ZLength/2.0)/sector_z_length;
+	if(idx < 0) {
+		return case_sectors[0].getQ2(x, y, 0.0 );
+	} else {
+		if(idx < sectors) {
+			return case_sectors[idx].getQ2(x, y, (z + GlobalParams.PRM_M_R_ZLength/2.0 -idx*sector_z_length)/sector_z_length );
+		} else {
+			return case_sectors[sectors-1].getQ2(x, y, 1.0 );
+		}
+	}
+
 }
 
 double WaveguideStructure::get_dof (int i) {

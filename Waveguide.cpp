@@ -4,6 +4,7 @@
 #include "Waveguide.h"
 #include "staticfunctions.cpp"
 #include "WaveguideStructure.h"
+#include "SolutionWeight.h"
 #include "ExactSolution.h"
 #include <sstream>
 #include <deal.II/numerics/vector_tools.h>
@@ -54,30 +55,24 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::evaluate_out () {
-	double best = 0.0;
-	for (int k = 0; k < 5; k++) {
-		double ret = 0.0;
-		double z = prm.PRM_M_R_ZLength/2.0 - 0.02*k;
-
-		for (int  i = 0; i < StepsR; i++) {
-			double r = ((structure.r_0 + structure.r_1)/2.0) / (StepsR + 1) * (i+1);
-			for(int j = 0; j < StepsPhi; j++) {
-				double phi = 2 * GlobalParams.PRM_C_PI * j / StepsPhi;
-				Point<3, double> position(r * cos(phi), r * sin(phi), z);
-				Vector<double> result(6);
-				VectorTools::point_value(dof_handler, solution, position, result);
-				double Q1 = structure.getQ1(position);
-				double Q2 = structure.getQ2(position);
-				ret += std::abs( (result[0] / Q1) * ( TEMode00( position , 0) / Q1));
-				ret += std::abs( (result[1] / Q2) * ( TEMode00( position , 1) / Q2));
-				ret += std::abs( (result[3] / Q1) * ( TEMode00( position , 0) / Q1));
-				ret += std::abs( (result[4] / Q2) * ( TEMode00( position , 1) / Q2));
-			}
+	double ret = 0.0;
+	double z = prm.PRM_M_R_ZLength/2.0;
+	for (int  i = 0; i < StepsR; i++) {
+		double r = ((structure.r_0 + structure.r_1)/2.0) / (StepsR + 1) * (i+1);
+		for(int j = 0; j < StepsPhi; j++) {
+			double phi = 2 * GlobalParams.PRM_C_PI * j / StepsPhi;
+			Point<3, double> position(r * cos(phi), r * sin(phi), z);
+			Vector<double> result(6);
+			VectorTools::point_value(dof_handler, solution, position, result);
+			double Q1 = structure.getQ1(position[0],position[1],position[2] );
+			double Q2 = structure.getQ2(position[0],position[1],position[2] );
+			ret += std::abs( (result[0] / Q1) * ( TEMode00( position , 0) / Q1));
+			ret += std::abs( (result[1] / Q2) * ( TEMode00( position , 1) / Q2));
+			ret += std::abs( (result[3] / Q1) * ( TEMode00( position , 0) / Q1));
+			ret += std::abs( (result[4] / Q2) * ( TEMode00( position , 1) / Q2));
 		}
-		// std::cout << k << ": " << ret<< std::endl;
-		if (ret > best) best = ret;
 	}
-	return best;
+	return ret;
 }
 
 template<typename MatrixType, typename VectorType >
@@ -91,8 +86,8 @@ double Waveguide<MatrixType, VectorType>::evaluate_in () {
 			Point<3, double> position(r * cos(phi), r * sin(phi), z);
 			Vector<double> result(6);
 			VectorTools::point_value(dof_handler, solution, position, result);
-			double Q1 = structure.getQ1(position);
-			double Q2 = structure.getQ2(position);
+			double Q1 = structure.getQ1(position[0],position[1],position[2] );
+			double Q2 = structure.getQ2(position[0],position[1],position[2] );
 			ret += std::abs( (result[0] / Q1) * ( TEMode00( position , 0) / Q1));
 			ret += std::abs( (result[1] / Q2) * ( TEMode00( position , 1) / Q2));
 			//ret += std::abs( (result[3] / Q1) * ( TEMode00( position , 0) / Q1));
@@ -111,12 +106,17 @@ double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 	dealii::Vector<double> differences;
 	differences.reinit(triangulation.n_active_cells());
 	QGauss<3>  quadrature_formula(2);
-	VectorTools::integrate_difference(dof_handler, solution,ExactSolution<3>(), differences, quadrature_formula, VectorTools::L2_norm);
-	double exactqual = 0.0;
-	for (unsigned int i = 0;i < triangulation.n_active_cells(); ++ i) {
-		exactqual += differences[i];
+	VectorTools::integrate_difference(dof_handler, solution, ExactSolution<3>(), differences, quadrature_formula, VectorTools::L2_norm, new SolutionWeight<3>(), 2.0);
+	double L2error = std::sqrt(differences.l2_norm());
+	int steps = 50;
+	for(int i = 0; i < steps; i++) {
+		Point<3, double> position(0,0, -(GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin) + (GlobalParams.PRM_M_R_ZLength*i)/(1.0*steps));
+		Vector<double> result(6);
+		VectorTools::point_value(dof_handler, solution, position, result);
+		std::cout <<  result[0] << "\t" << result[3] <<std::endl;
+
 	}
-	std::cout << "L2 Norm of the error:" << exactqual << std::endl;
+	std::cout << "L2 Norm of the error:" << L2error << std::endl;
 	return quality_out/quality_in;
 }
 
@@ -141,15 +141,16 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 	}
 	std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
 
-	double omegaepsilon0 = (2.0* GlobalParams.PRM_C_PI / prm.PRM_M_W_Lambda) * GlobalParams.PRM_C_c ;
+	//double omegaepsilon0 = (2.0* GlobalParams.PRM_C_PI / prm.PRM_M_W_Lambda) * GlobalParams.PRM_C_c ;
+	double omegaepsilon0 = GlobalParams.PRM_C_omega * ((System_Coordinate_in_Waveguide(position))?GlobalParams.PRM_M_W_EpsilonIn : GlobalParams.PRM_M_W_EpsilonOut);
 	std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
 	if(PML_in_X(position)){
 		double r,d, sigmax;
 		r = PML_X_Distance(position);
-		d = prm.PRM_M_R_XLength * 1.0 * prm.PRM_M_BC_Mantle/100.0;
-		sigmax = pow(d/r , prm.PRM_M_BC_M) * prm.PRM_M_BC_SigmaXMax;
-		sx.real( 1 + pow(d/r , prm.PRM_M_BC_M) * prm.PRM_M_BC_KappaXMax);
-		sx.imag( sigmax / (prm.PRM_M_W_EpsilonOut * omegaepsilon0));
+		d = GlobalParams.PRM_M_R_XLength * 1.0 * GlobalParams.PRM_M_BC_Mantle/100.0;
+		sigmax = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaXMax;
+		sx.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaXMax);
+		sx.imag( sigmax / ( omegaepsilon0));
 		S1 /= sx;
 		S2 *= sx;
 		S3 *= sx;
@@ -157,10 +158,10 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 	if(PML_in_Y(position)){
 		double r,d, sigmay;
 		r = PML_Y_Distance(position);
-		d = prm.PRM_M_R_YLength * 1.0 * prm.PRM_M_BC_Mantle/100.0;
-		sigmay = pow(d/r , prm.PRM_M_BC_M) * prm.PRM_M_BC_SigmaYMax;
-		sy.real( 1 + pow(d/r , prm.PRM_M_BC_M) * prm.PRM_M_BC_KappaYMax);
-		sy.imag( sigmay / (prm.PRM_M_W_EpsilonOut * omegaepsilon0));
+		d = GlobalParams.PRM_M_R_YLength * 1.0 * GlobalParams.PRM_M_BC_Mantle/100.0;
+		sigmay = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaYMax;
+		sy.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaYMax);
+		sy.imag( sigmay / ( omegaepsilon0));
 		S1 *= sy;
 		S2 /= sy;
 		S3 *= sy;
@@ -168,10 +169,10 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 	if(PML_in_Z(position)){
 		double r,d, sigmaz;
 		r = PML_Z_Distance(position);
-		d = (position(2)<0)? prm.PRM_M_BC_XYin : prm.PRM_M_BC_XYout;
-		sigmaz = pow(d/r , prm.PRM_M_BC_M) * prm.PRM_M_BC_SigmaZMax;
-		sz.real( 1 + pow(d/r , prm.PRM_M_BC_M) * prm.PRM_M_BC_KappaZMax);
-		sz.imag( sigmaz / ((System_Coordinate_in_Waveguide(position))?prm.PRM_M_W_EpsilonIn : prm.PRM_M_W_EpsilonOut) * omegaepsilon0 );
+		d = (position(2)<0)? GlobalParams.PRM_M_BC_XYin : GlobalParams.PRM_M_BC_XYout;
+		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
+		sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
+		sz.imag( sigmaz / omegaepsilon0 );
 		S1 *= sz;
 		S2 *= sz;
 		S3 /= sz;
@@ -191,9 +192,9 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 	if(inverse) {
 		if(epsilon) {
 			if(System_Coordinate_in_Waveguide(position)) {
-				ret /= prm.PRM_M_W_EpsilonIn;
+				ret /= GlobalParams.PRM_M_W_EpsilonIn;
 			} else {
-				ret /= prm.PRM_M_W_EpsilonOut;
+				ret /= GlobalParams.PRM_M_W_EpsilonOut;
 			}
 			ret /= GlobalParams.PRM_C_Eps0;
 		} else {
@@ -202,9 +203,9 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 	} else {
 		if(epsilon) {
 			if(System_Coordinate_in_Waveguide(position) ) {
-				ret *= prm.PRM_M_W_EpsilonIn;
+				ret *= GlobalParams.PRM_M_W_EpsilonIn;
 			} else {
-				ret *= prm.PRM_M_W_EpsilonOut;
+				ret *= GlobalParams.PRM_M_W_EpsilonOut;
 			}
 			ret *= GlobalParams.PRM_C_Eps0;
 		} else {
@@ -252,24 +253,24 @@ Tensor<1,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Transpose_V
 
 template<typename MatrixType, typename VectorType >
 bool Waveguide<MatrixType, VectorType>::PML_in_X(Point<3> &p) {
-	double pmlboundary = (((prm.PRM_M_C_RadiusIn + prm.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - prm.PRM_M_BC_Mantle)/100.0);
+	double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
 	return p(0) < -(pmlboundary) ||p(0) > (pmlboundary);
 }
 
 template<typename MatrixType, typename VectorType >
 bool Waveguide<MatrixType, VectorType>::PML_in_Y(Point<3> &p) {
-	double pmlboundary = (((prm.PRM_M_C_RadiusIn + prm.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - prm.PRM_M_BC_Mantle)/100.0);
+	double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
 	return p(1) < -(pmlboundary) ||p(1) > (pmlboundary);
 }
 
 template<typename MatrixType, typename VectorType >
 bool Waveguide<MatrixType, VectorType>::PML_in_Z(Point<3> &p) {
-	return p(2) > prm.PRM_M_R_ZLength / 2.0 +prm.PRM_M_BC_XYout || (p(2) <  -prm.PRM_M_R_ZLength / 2.0 && !(System_Coordinate_in_Waveguide(p)));
+	return (p(2) > (GlobalParams.PRM_M_R_ZLength / 2.0 )) || ((p(2) <  -GlobalParams.PRM_M_R_ZLength / 2.0) && !(System_Coordinate_in_Waveguide(p)));
 }
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::PML_X_Distance(Point<3> &p){
-	double pmlboundary = (((prm.PRM_M_C_RadiusIn + prm.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - prm.PRM_M_BC_Mantle)/100.0);
+	double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
 	if(p(0) >0){
 		return p(0) - (pmlboundary) ;
 	} else {
@@ -279,7 +280,7 @@ double Waveguide<MatrixType, VectorType>::PML_X_Distance(Point<3> &p){
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::PML_Y_Distance(Point<3> &p){
-	double pmlboundary = (((prm.PRM_M_C_RadiusIn + prm.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - prm.PRM_M_BC_Mantle)/100.0);
+	double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
 	if(p(1) >0){
 		return p(1) - (pmlboundary);
 	} else {
@@ -290,9 +291,9 @@ double Waveguide<MatrixType, VectorType>::PML_Y_Distance(Point<3> &p){
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::PML_Z_Distance(Point<3> &p){
 	if(p(2) >0){
-		return p(2) - (prm.PRM_M_R_ZLength / 2.0) - prm.PRM_M_BC_XYout;
+		return p(2) - (GlobalParams.PRM_M_R_ZLength / 2.0) ;
 	} else {
-		return -p(2) - (prm.PRM_M_R_ZLength / 2.0);
+		return -p(2) - (GlobalParams.PRM_M_R_ZLength / 2.0);
 	}
 }
 
@@ -335,7 +336,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	if(prm.PRM_D_Refinement == "global"){
 		triangulation.refine_global (prm.PRM_D_XY);
 	} else {
-		triangulation.refine_global (1);
+		//triangulation.refine_global (1);
 		double MaxDistFromBoundary = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusIn)*1.4/2.0;
 		for(int i = 0; i < 1; i++) {
 			// semi-global refinement
@@ -390,19 +391,19 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 
 
 
-	double l = (double)(prm.PRM_M_R_ZLength + prm.PRM_M_BC_XYin + 2*prm.PRM_M_BC_XYout) / (prm.PRM_A_Threads*2.0);
+	double l = (double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (GlobalParams.PRM_A_Threads*2.0);
 	std::cout << "Länge eines Blocks:" << l << std::endl;
 
 	cell = triangulation.begin_active();
 	for (; cell!=endc; ++cell){
 
-		int temp  = (int) (((cell->center(true, false))[2] + (prm.PRM_M_R_ZLength/(2.0)) + prm.PRM_M_BC_XYin) / l);
-		if( temp >= 2* prm.PRM_A_Threads || temp < 0) std::cout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
+		int temp  = (int) (((cell->center(true, false))[2] + (GlobalParams.PRM_M_R_ZLength/(2.0)) + GlobalParams.PRM_M_BC_XYin) / l);
+		if( temp >= 2* GlobalParams.PRM_A_Threads || temp < 0) std::cout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
 		cell->set_subdomain_id(temp);
 	}
 
 
-	if(prm.PRM_O_Grid) {
+	if(GlobalParams.PRM_O_Grid) {
 		if(prm.PRM_O_VerboseOutput) std::cout<< "Writing Mesh data to file \"grid-3D.vtk\"" << std::endl;
 		mesh_info(triangulation, solutionpath + "/grid.vtk");
 		if(prm.PRM_O_VerboseOutput) std::cout<< "Done" << std::endl;
@@ -414,7 +415,6 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::setup_system ()
 {
-
 	if(prm.PRM_O_VerboseOutput && prm.PRM_O_Dofs) {
 		std::cout << "Distributing Degrees of freedom." << std::endl;
 	}
@@ -435,47 +435,8 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	log_data.Dofs = dof_handler.n_dofs();
 		log_constraints.start();
 
-	//starting to calculate Constraint Matrix for boundary values;
-	//VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>() , 0 , cm , StaticMappingQ1<3>::mapping);
-	//VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>() , 1 , cm , StaticMappingQ1<3>::mapping);
-	//VectorTools::project_boundary_values_curl_conforming(dof_handler, 3, ZeroFunction<3>(6) , 1 , cm , StaticMappingQ1<3>::mapping);
-	//VectorTools::project_boundary_values_curl_conforming(dof_handler, 3, RightHandSide<3>() , 0 , cm , StaticMappingQ1<3>::mapping);
-
-	//VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, RightHandSide<3>() , 2 , cm , StaticMappingQ1<3>::mapping);
-
 	DoFHandler<3>::active_cell_iterator cell, endc;
-/**
-	int counter2 = 0;
-	int cells = 0;
-	cell = dof_handler.begin_active(),
-	endc = dof_handler.end();
 
-	for (; cell!=endc; ++cell)
-	{
-		cells++;
-		bool At_Boundary = false;
-		bool Is_At_One = false;
-		for(int i = 0; i < 6; i++) {
-			if(cell->face(i)->at_boundary()){
-				At_Boundary = true;
-				if(cell->face(i)->boundary_id() == 11) Is_At_One = true;
-			}
-		}
-		const unsigned int   dofs_per_cell	= fe.dofs_per_cell;
-
-		if(At_Boundary && !Is_At_One) {
-			std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
-			cell->get_dof_indices(local_dof_indices);
-			unsigned int i;
-			for (i = 0; i < dofs_per_cell; ++i) {
-				cm.add_line(local_dof_indices[i]);
-				cm.set_inhomogeneity(local_dof_indices[i], 0);
-			}
-			counter2 ++;
-		}
-	}
-	std::cout << counter2 << " of " << cells <<std::endl;
-	**/
 	MakeBoundaryConditions();
 	DoFTools::make_hanging_node_constraints(dof_handler, cm);
 
@@ -501,7 +462,6 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
-	//std::cout << "Assembling Part" << std::endl;
 	QGauss<3>  quadrature_formula(2);
 	const FEValuesExtractors::Vector real(0);
 	const FEValuesExtractors::Vector imag(3);
@@ -556,54 +516,24 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
 
 						std::complex<double> x = (mu * I_Curl) * Transpose_Vector(J_Curl) * JxW - ( ( epsilon * I_Val ) * Transpose_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
 
-						/**
-						if(test == 100000) {
-							std::cout << "Position: (" << quadrature_points[q_index][0] << ","<< quadrature_points[q_index][1] << "," << quadrature_points[q_index][2] << ")" << std::endl;
-							std::cout << "x: (" << x.real() << " , "<< x.imag() << ")" << std::endl;
-							std::cout << "ICurl: ("<< I_Curl[0] << ","<< I_Curl[1] << "," << I_Curl[2] << ")" << std::endl;
-							std::cout << "JCurl: ("<< J_Curl[0] << ","<< J_Curl[1] << "," << J_Curl[2] << ")" << std::endl;
-							std::cout << "JxW: " << JxW << std::endl;
-							std::cout << "IVal: ("<< I_Val[0] << ","<< I_Val[1] << "," << I_Val[2] << ")" << std::endl;
-							std::cout << "JVal: ("<< J_Val[0] << ","<< J_Val[1] << "," << J_Val[2] << ")" << std::endl;
-							std::cout << "Omega: " << omega << std::endl;
-							std::cout << "Epsilon: "<< std::endl;
-							for(int k = 0; k< 3; k++) {
-								for(int l = 0; l< 3; l++) {
-									std::cout << epsilon[k][l] << "  ";
-								}
-								std::cout << std::endl;
-							}
-							std::cout << "Mu: "<< std::endl;
-							for(int k = 0; k< 3; k++) {
-								for(int l = 0; l< 3; l++) {
-									std::cout << mu[k][l] << "  ";
-								}
-								std::cout << std::endl;
-							}
-							test = 1;
-						}
-						**/
-						cell_matrix_real[i][j] += x.real();
-
-						/**
-						if(x.real() != 0) {
+						//if(! PML_in_Z(quadrature_points[q_index])){
 							cell_matrix_real[i][j] += x.real();
-						}
-						**/
-
+						//} else {
+						//	cell_matrix_real[i][j] += x.imag();
+						//}
 
 					}
 				}
 			}
 			cell->get_dof_indices (local_dof_indices);
 
-			cm.distribute_local_to_global(cell_matrix_real, cell_rhs, local_dof_indices,system_matrix, system_rhs, true);
+			cm.distribute_local_to_global(cell_matrix_real, cell_rhs, local_dof_indices,system_matrix, system_rhs, false);
 			//cm.distribute_local_to_global(cell_matrix_imag, cell_rhs, local_dof_indices,system_matrix.block(0,1), system_rhs.block(1), true );
 
 	    }
 	}
 	assembly_progress ++;
-	// std::cout << "Progress: " << 100 * assembly_progress/(prm.PRM_A_Threads*2) << " %" << std::endl;
+
 }
 
 template<typename MatrixType, typename VectorType >
@@ -628,13 +558,13 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 	log_assemble.start();
 	std::cout << "Starting Assemblation process" << std::endl;
 	Threads::TaskGroup<void> task_group1;
-	for (int i = 0; i < prm.PRM_A_Threads; ++i) {
+	for (int i = 0; i < GlobalParams.PRM_A_Threads; ++i) {
 		task_group1 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i);
 	}
 	task_group1.join_all ();
 	// std::cout << "Test" << std::endl;
 	Threads::TaskGroup<void> task_group2;
-	for (int i = 0; i < prm.PRM_A_Threads; ++i) {
+	for (int i = 0; i < GlobalParams.PRM_A_Threads; ++i) {
 		task_group2 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i+1);
 	}
 	task_group2.join_all ();
@@ -644,6 +574,7 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 
 }
 
+/**
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::estimate_solution() {
 	DoFHandler<3>::active_cell_iterator cell, endc;
@@ -661,7 +592,7 @@ void Waveguide<MatrixType, VectorType>::estimate_solution() {
 					Point<3, double> p (ptemp[0], ptemp[1], ptemp[2]);
 					Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(0) - ((cell->face(i))->line(j))->vertex(1);
 					Point<3, double> direction (dtemp[0], dtemp[1], dtemp[2]);
-					const std::complex<double> z(0.0, GlobalParams.PRM_C_omega * (p(2)- prm.PRM_M_R_ZLength/2.0));
+					const std::complex<double> z(0.0, GlobalParams.PRM_C_omega * (p(2)- GlobalParams.PRM_M_R_ZLength/2.0));
 					double d2 = Distance2D(p);
 					const std::complex<double> result = - exp(z) * exp(-d2*d2/2);
 					solution[local_dof_indices[0]] = result.real();
@@ -671,7 +602,7 @@ void Waveguide<MatrixType, VectorType>::estimate_solution() {
 		}
 	}
 }
-
+**/
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
@@ -689,6 +620,7 @@ void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
 			Point<3, double> center =(cell->face(i))->center(true, false);
 			if( center[0] < 0) center[0] *= (-1.0);
 			if( center[1] < 0) center[1] *= (-1.0);
+
 			if ( std::abs( center[0] - (15.5 * (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) /8.7 ) ) < 0.01 ){
 				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
 				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
@@ -722,7 +654,9 @@ void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
 
 						double d2 = Distance2D(p);
 						//double result = exp(-d2*d2/2);
+
 						double result = TEMode00(p,0);
+						if(PML_in_X(p) || PML_in_Y(p)) result = 0.0;
 						cm.add_line(local_dof_indices[0]);
 						cm.set_inhomogeneity(local_dof_indices[0], direction[0] * result);
 						cm.add_line(local_dof_indices[1]);
@@ -881,7 +815,7 @@ void Waveguide<MatrixType, VectorType>::run ()
 	make_grid ();
 	setup_system ();
 	assemble_system ();
-	estimate_solution();
+	//estimate_solution();
 	solve ();
 	output_results ();
 	log_total.stop();

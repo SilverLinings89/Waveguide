@@ -16,6 +16,9 @@ class Sector {
 		Sector(bool, bool, double, double);
 		void set_properties(double , double , double , double, double, double);
 		void set_properties_force(double , double , double , double, double, double);
+		double getQ1(double , double, double);
+		double getQ2(double, double, double);
+		double getQ3(double, double, double);
 };
 
 #endif

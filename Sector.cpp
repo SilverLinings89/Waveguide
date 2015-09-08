@@ -35,6 +35,14 @@ void Sector::set_properties_force(double in_m_0, double in_m_1, double in_r_0, d
 
 }
 
+double Sector::getQ1 (double x, double y, double z) {
+	return 1/(r_0 + z*z*z*(2*r_0 - 2*r_1) - z*z*(3*r_0 - 3*r_1));
+}
+
+double Sector::getQ2 (double x, double y, double z) {
+	return 1/(r_0 + z*z*z*(2*r_0 - 2*r_1) - z*z*(3*r_0 - 3*r_1));
+}
+
 Tensor<2,3, double> Sector::TransformationTensorInternal (double in_x, double in_y, double z) {
 	if(z<0 || z>1) std::cout << "Falty implementation of internal Tensor calculation." << std::endl;
 	double RadiusInMultiplyer = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/(2* r_0);
@@ -97,7 +105,7 @@ Tensor<2,3, double> Sector::TransformationTensorInternal (double in_x, double in
 
 	//std::cout << "Calculating internal Tensor_3" << std::endl;
 
-
+	g *= 1/det;
 	double sp = dotproduct(u[0], crossproduct(u[1], u[2]));
 	if(sp < 0) sp *= -1.0;
 	for(int i = 0; i< 3; i++) {

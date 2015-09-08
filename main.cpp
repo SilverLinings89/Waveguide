@@ -19,6 +19,7 @@
 #include "Waveguide.cpp"
 #include "WaveguideStructure.cpp"
 #include "ExactSolution.cpp"
+#include "SolutionWeight.cpp"
 
 using namespace dealii;
 

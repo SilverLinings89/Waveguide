@@ -31,8 +31,8 @@ class WaveguideStructure {
 		void 	estimate_and_initialize();
 		double 	m(double);
 		double 	v(double);
-		double 	getQ1 (Point<3> &);
-		double 	getQ2 (Point<3> &);
+		double 	getQ1 (double, double, double);
+		double 	getQ2 (double, double, double);
 		double 	get_dof (int );
 		void	set_dof (int , double );
 
