@@ -1,3 +1,11 @@
+/**
+ * Die Optimization-Klasse
+ * Diese Klasse verwaltet ein Wellenleiter-Objekt und ein WellenleiterStruktur-Objekt. Ihre run() Methode beschreibt den Ablauf des Optimierungs-Verfahrens. Dabei werden regelmäßig die beiden Objekte bearbeitet.
+ * In ihrem Konstruktor fordert sie ein Parameters-Objekt, das alle Informationen aus dem Input-File enthält, sowie eine Referenz auf den Wellenleiter für die Berechnung der Lösungen sowie eine Referenz auf eine Wellenleiter-Form, die die Materialtensoren liefert und die Form-Parameter verwaltet.
+ * @author: Pascal Kraft
+ * @date: 07.09.2015
+ */
+
 #ifndef OptimizationFlag
 #define OptimizationFlag
 

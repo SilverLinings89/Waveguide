@@ -2,7 +2,7 @@
 #include "SolutionWeight.h"
 
 template <int dim>
-double SolutionWeight<dim>::value (const Point<dim> &p , const unsigned int component) const
+double SolutionWeight<dim>::value (const Point<dim> &p, const unsigned int ) const
 {
 	double value = Distance2D(p);
 	if(value < (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0){

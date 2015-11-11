@@ -1,14 +1,27 @@
+/**
+ * Die Klasse Waveguide
+ * Diese Klasse umfasst das gros der Funktionalität. Sie besteht aus dem üblichen Deal.II-Ablauf: make_grid(), setup_system(), assemble_system(), solve() und output_results().
+ *
+ * Funktion: make grid():
+ * Diese Methode berechnet die Diskretisierung und baut das Mesh. Dies ist auch die einzige Stelle im Code, an dem noch Parameter zur neukompilierung vorliegen. In dieser Methode kann man an den kommentierten Stellen einstellen, wie genau verfeinert wird, also wie oft welche Strategie genutzt wird. Es spricht nichts gegen eine Auslagerung in das Parameter-file nur änderte sich dieser Teil häufig in Hinsicht auf seine Struktur und deshalb wurde davon bisher abgesehen.
+ *
+ * Funktion: setup_system():
+ * Diese Methode initialisiert die wichtigen Teile des Systems wie den dof_handler, das finite Element und die Matrizen. Außerdem werden hier die Randwerte berechnet.
+ *
+ * Funktion: assemble_system():
+ * In make_grid() wurde das Mesh in Blöcke eingeteilt. Es gibt einen Parameter, der angibt, wieviele Threads genutzt werden sollen. Das Mesh wird dann in doppelt so viele Blöcke zerlegt und diese durchnummeriert. Es werden dann in einem Durchlauf parallel alle geraden Blöcke assembliert und dann alle ungeraden. Da die Blöcke in einem Schritt durch einen kompletten Block voneinander getrennt sind, kann es beim parallelen Schreiben in die System-Matrix trotz massiver Parallelisierung, nicht zu Konflikten kommen.
+ *
+ * Funktion: solve():
+ * In dieser Methode werden die Löser mit Parametern versehen. Außerdem erfolgt hier die Vorkonditionierung. An diesem Punkt erfolgte wenig Anpassung mit Außnahme des slot-connectors für das Auslesen von Eigenwerten und Konfitions-Schätzungen.
+ *
+ * Funktion: output_results():
+ * Diese Methode nimmt die Lösungen und gibt sie in verschiedenen Formaten aus. Es wird ein Ergebnis-Objekt erstellt, an das dann Vektoren mit Namen angehängt werden können. Für diese Objekt existieren mehrere Überladungen für verschiedene Ausgabe-Ziele wie beispielsweise Paraview (vtk) und gnuplot.
+ *
+ * @author: Pascal Kraft
+ * @date: 07.09.2015
+ */
 #ifndef WaveguideFlag
 #define WaveguideFlag
-
-/**
- * This Code is the core file of the Waveguide-Problem Solver. It is the main part of my Masters Thesis implementation.
- * The Goal of this project is, to solve an optimization problem concerning the perfect shape for minimal signal-loss in an S-shaped waveguide.
- * The solver is implemented using the code-framework DealII (see <a href="http://dealii.org/">here</a> for more information). Mathematically the main idea is, to focus on the shape-representation problem. One  of the biggest problem in any solution of this problem, is to represent the used shapes optimally. In this case we will always use the same discretization because we use transformation optics to transform the real physical problem on a s-shaped waveguide with simple material-parameters, to a mathematical representation, consisting of a cylindrical quasi-waveguide made up of an inhomogenous material.
- *
- * @author Pascal Kraft
- * @date 2015
- */
 
 #include <deal.II/grid/tria.h>
 #include <deal.II/dofs/dof_handler.h>
@@ -53,22 +66,6 @@
 #include <deal.II/lac/block_sparsity_pattern.h>
 #include <deal.II/lac/block_matrix_base.h>
 #include <deal.II/lac/block_vector_base.h>
-/*
-#include <deal.II/lac/petsc_full_matrix.h>
-#include <deal.II/lac/petsc_matrix_base.h>
-#include <deal.II/lac/petsc_matrix_free.h>
-#include <deal.II/lac/petsc_precondition.h>
-#include <deal.II/lac/petsc_solver.h>
-#include <deal.II/lac/petsc_sparse_matrix.h>
-#include <deal.II/lac/petsc_vector.h>
-#include <deal.II/lac/petsc_vector_base.h>
-#include <deal.II/lac/trilinos_precondition.h>
-#include <deal.II/lac/trilinos_solver.h>
-#include <deal.II/lac/trilinos_sparse_matrix.h>
-#include <deal.II/lac/trilinos_vector.h>
-#include <deal.II/lac/trilinos_vector_base.h>
-#include <deal.II/lac/trilinos_sparsity_pattern.h>
-*/
 #include <deal.II/base/timer.h>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/numerics/data_out.h>
@@ -104,6 +101,7 @@ class Waveguide
 		Tensor<2,3, std::complex<double>> get_Tensor(Point<3> &, bool, bool);
 
 
+
 	private:
 		void 	read_values ();
 		void 	make_grid ();
@@ -112,7 +110,7 @@ class Waveguide
 		void	estimate_solution();
 		void 	solve ();
 		void 	reset_changes();
-		void 	output_results () const;
+		void 	output_results ();
 		void 	print_eigenvalues(const std::vector<std::complex<double>> &);
 		void	print_condition (double);
 		bool	PML_in_X(Point<3> &);
@@ -127,11 +125,14 @@ class Waveguide
 		Tensor<1,3, std::complex<double>> Transpose_Vector(Tensor<1,3, std::complex<double>> );
 		void	init_loggers();
 		void 	timerupdate();
+		dealii::Vector<double> differences;
+
 		std::string			solutionpath;
 
-		Triangulation<3>	triangulation;
+		Triangulation<3>	triangulation, triangulation_real;
 		FESystem<3>			fe;
-		DoFHandler<3>		dof_handler;
+		DoFHandler<3>	dof_handler, dof_handler_real;
+		VectorType		solution;
 		ConstraintMatrix 	cm;
 
 		SparsityPattern		sparsity_pattern;
@@ -141,7 +142,6 @@ class Waveguide
 		ConstraintMatrix 	boundary_value_constraints_real;
 
 		int 				assembly_progress;
-		VectorType			solution;
 		VectorType			storage;
 		bool				is_stored;
 		VectorType			system_rhs;
@@ -149,8 +149,8 @@ class Waveguide
 		FileLogger 			log_constraints, log_assemble, log_precondition, log_total, log_solver;
 		WaveguideStructure 	&structure;
 		int 				run_number;
-		int					eigenvalue_file_counter, condition_file_counter;
-		std::ofstream		eigenvalue_file, condition_file;
+		int					condition_file_counter, eigenvalue_file_counter;
+		std::ofstream		eigenvalue_file, condition_file, result_file;
 
 };
 

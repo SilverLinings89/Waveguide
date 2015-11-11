@@ -100,7 +100,7 @@
         </Region>
         <Waveguide>
             <Delta>
-                <value>0</value>
+                <value>2</value>
                 <default_value>1.0</default_value>
                 <documentation>Offset between the two connectors measured in micrometres.</documentation>
                 <pattern>13</pattern>
@@ -249,28 +249,28 @@
     </Assembly>
     <Solver>
         <Solver>
-            <value>GMRES</value>
+            <value>UMFPACK</value>
             <default_value>GMRES</default_value>
             <documentation>Which Solver to use for the solution of the system matrix</documentation>
             <pattern>33</pattern>
             <pattern_description>[Selection CG|GMRES|UMFPACK|Richardson|Relaxation ]</pattern_description>
         </Solver>
         <GMRESSteps>
-            <value>1200</value>
+            <value>10000</value>
             <default_value>1200</default_value>
             <documentation>Steps until restart of Krylow subspace generation</documentation>
             <pattern>34</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </GMRESSteps>
         <Preconditioner>
-            <value>Identity</value>
+            <value>Jacobi</value>
             <default_value>Identity</default_value>
             <documentation>Which preconditioner to use</documentation>
             <pattern>35</pattern>
             <pattern_description>[Selection SOR|SSOR|Identity|Jacobi|ILU|Block_Jacobi|ParaSails|LU|ICC|BoomerAMG|Eisenstat ]</pattern_description>
         </Preconditioner>
         <PreconditionerBlockCount>
-            <value>20</value>
+            <value>8</value>
             <default_value>20</default_value>
             <documentation>Number of Blocks for Block-Preconditioners.</documentation>
             <pattern>36</pattern>
@@ -323,7 +323,7 @@
     </Constants>
     <Optimization>
         <InitialStepWidth>
-            <value>1</value>
+            <value>0.01</value>
             <default_value>1.0</default_value>
             <documentation>Step width for the first step.</documentation>
             <pattern>43</pattern>

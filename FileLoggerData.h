@@ -1,3 +1,10 @@
+/**
+ * Die Klasse FileLoggerData
+ * Dies ist eine Hilfsklasse, die Daten für einen Logger speichert. Sie dient ausschließlich der Kapselung von Daten und hat außer ihrem Konstruktor keine Funktionen
+ * @author: Pascal Kraft
+ * @date: 07.09.2015
+ */
+
 #ifndef FileLoggerDataFlag
 #define FileLoggerDataFlag
 

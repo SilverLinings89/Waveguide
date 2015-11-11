@@ -4,6 +4,7 @@ template <int dim>
 double ExactSolution<dim>::value (const Point<dim> &p , const unsigned int component) const
 {
 	return Solution(p, component);
+	//return 0.0;
 }
 
 template <int dim>

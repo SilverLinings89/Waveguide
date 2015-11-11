@@ -223,47 +223,50 @@ static Point<3> Triangulation_Stretch_Z (const Point<3> &p)
   return q;
 }
 
+static Point<3> Triangulation_Stretch_Real (const Point<3> &p)
+{
+	double z = ((p[2] + GlobalParams.PRM_M_R_ZLength/2)/GlobalParams.PRM_M_R_ZLength);
+	if(z<0) z=0;
+	if(z>1) z = 1;
+	double r = (2* GlobalParams.PRM_M_C_RadiusIn - 2*GlobalParams.PRM_M_C_RadiusOut) * z * z * z  - (3* GlobalParams.PRM_M_C_RadiusIn - 3*GlobalParams.PRM_M_C_RadiusOut)*z*z + GlobalParams.PRM_M_C_RadiusIn;
+	r *= 2 / (GlobalParams.PRM_M_C_RadiusIn  +GlobalParams.PRM_M_C_RadiusOut);
+	double m = (2*GlobalParams.PRM_M_W_Delta)*z*z*z - (3 * GlobalParams.PRM_M_W_Delta)*z*z + GlobalParams.PRM_M_W_Delta/2;
+	Point<3> q = p;
+	q[0] *= r;
+	q[1] = (q[1]*r)-m ;
+	return q;
+}
+
 static bool System_Coordinate_in_Waveguide(Point<3> p){
 	double value = Distance2D(p);
 	return ( value < (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0);
 }
 
-static double System_Coordinate_in_Waveguide_double(Point<3> p){
-	double value = Distance2D(p);
-	if(value < (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0) return 1.0;
-	else return 0.0;
-}
-
 static double TEMode00 (Point<3, double> p ,const unsigned int component)
 {
 
-	//if(System_Coordinate_in_Waveguide(p)){
-
-	//	if(p[2] < 0) {
-			if(component == 0) {
-				double d2 = (Distance2D(p)) / (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) ;
-				//return 1.0;
-				return exp(-d2*d2);
-			}
-		//}
-	//}
+	if(component == 0) {
+		double d2 = (Distance2D(p)) / (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) ;
+		return exp(-d2*d2);
+	}
 	return 0.0;
 }
 
 static double Solution (Point<3, double> p ,const unsigned int component)
 {
 	if(component == 0) {
-		std::complex<double> res(TEMode00(p,0), 0);
+		double res =TEMode00(p,0);
 		std::complex<double> i (0,1);
-		std::complex<double> ret = -1.0 * res * std::exp(-i*1.6*(p[2]+GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin));
+		std::complex<double> ret = -1.0 * res * std::exp(-i*(GlobalParams.PRM_C_PI/2) *(p[2]+GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin));
 		return ret.real();
 	}
 	if(component == 3) {
-		std::complex<double> res(TEMode00(p,0), 0);
+		double res =TEMode00(p,0);
 		std::complex<double> i (0,1);
-		std::complex<double> ret = -1.0 * res * std::exp(-i*1.6*(p[2]+GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin));
+		std::complex<double> ret = -1.0 * res * std::exp(-i*(GlobalParams.PRM_C_PI/2) *(p[2]+GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin));
 		return ret.imag();
 	}
+
 	return 0.0;
 }
 

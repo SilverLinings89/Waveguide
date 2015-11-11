@@ -10,6 +10,8 @@
 using namespace dealii;
 
 void WaveguideStructure::estimate_and_initialize() {
+	highest = 1.0;
+	lowest = 1.0;
 	if(sectors == 1) {
 		Sector temp12(true, true, -parameters.PRM_M_R_ZLength/2, parameters.PRM_M_R_ZLength/2 );
 		case_sectors.reserve(1);
@@ -57,17 +59,29 @@ Tensor<2,3, double> WaveguideStructure::TransformationTensor (double in_x, doubl
 	}
 	int idx = (temp_z + GlobalParams.PRM_M_R_ZLength/2.0)/sector_z_length;
 	if(idx < 0) {
-		return case_sectors[0].TransformationTensorInternal(in_x, in_y, 0.0 );
+		Tensor<2,3, double> g = case_sectors[0].TransformationTensorInternal(in_x, in_y, 0.0 );
+		double stretch = case_sectors[0].getQ1(0.0);
+		if(stretch > highest)highest = stretch;
+		if(stretch > lowest)lowest = stretch;
+		return g;
 	} else {
 		if(idx < sectors) {
-			return case_sectors[idx].TransformationTensorInternal(in_x, in_y, (in_z + GlobalParams.PRM_M_R_ZLength/2.0 -idx*sector_z_length)/sector_z_length );
+			Tensor<2,3, double> g = case_sectors[idx].TransformationTensorInternal(in_x, in_y, (in_z + GlobalParams.PRM_M_R_ZLength/2.0 -idx*sector_z_length)/sector_z_length );
+			double stretch = case_sectors[idx].getQ1((in_z + GlobalParams.PRM_M_R_ZLength/2.0 -idx*sector_z_length)/sector_z_length);
+			if(stretch > highest)highest = stretch;
+			if(stretch > lowest)lowest = stretch;
+			return g;
 		} else {
-			return case_sectors[sectors-1].TransformationTensorInternal(in_x, in_y, 1.0 );
+			Tensor<2,3, double> g = case_sectors[sectors-1].TransformationTensorInternal(in_x, in_y, 1.0 );
+			double stretch = case_sectors[sectors -1].getQ1(1.0);
+			if(stretch > highest)highest = stretch;
+			if(stretch > lowest)lowest = stretch;
+			return g;
 		}
 	}
 }
 
-double WaveguideStructure::getQ1 (double x, double y, double z) {
+double WaveguideStructure::getQ1 (double z) {
 	if(z < GlobalParams.PRM_M_R_ZLength/(-2.0)) {
 			z = GlobalParams.PRM_M_R_ZLength/(-2.0);
 		}
@@ -76,17 +90,17 @@ double WaveguideStructure::getQ1 (double x, double y, double z) {
 		}
 		int idx = (z + GlobalParams.PRM_M_R_ZLength/2.0)/sector_z_length;
 		if(idx < 0) {
-			return case_sectors[0].getQ2(x, y, 0.0 );
+			return case_sectors[0].getQ2(0.0 );
 		} else {
 			if(idx < sectors) {
-				return case_sectors[idx].getQ2(x, y, (z + GlobalParams.PRM_M_R_ZLength/2.0 -idx*sector_z_length)/sector_z_length );
+				return case_sectors[idx].getQ2((z + GlobalParams.PRM_M_R_ZLength/2.0 -idx*sector_z_length)/sector_z_length );
 			} else {
-				return case_sectors[sectors-1].getQ2(x, y, 1.0 );
+				return case_sectors[sectors-1].getQ2( 1.0 );
 			}
 	}
 }
 
-double WaveguideStructure::getQ2 (double x, double y, double z) {
+double WaveguideStructure::getQ2 ( double z) {
 
 	if(z < GlobalParams.PRM_M_R_ZLength/(-2.0)) {
 		z = GlobalParams.PRM_M_R_ZLength/(-2.0);
@@ -96,12 +110,12 @@ double WaveguideStructure::getQ2 (double x, double y, double z) {
 	}
 	int idx = (z + GlobalParams.PRM_M_R_ZLength/2.0)/sector_z_length;
 	if(idx < 0) {
-		return case_sectors[0].getQ2(x, y, 0.0 );
+		return case_sectors[0].getQ2( 0.0 );
 	} else {
 		if(idx < sectors) {
-			return case_sectors[idx].getQ2(x, y, (z + GlobalParams.PRM_M_R_ZLength/2.0 -idx*sector_z_length)/sector_z_length );
+			return case_sectors[idx].getQ2((z + GlobalParams.PRM_M_R_ZLength/2.0 -idx*sector_z_length)/sector_z_length );
 		} else {
-			return case_sectors[sectors-1].getQ2(x, y, 1.0 );
+			return case_sectors[sectors-1].getQ2( 1.0 );
 		}
 	}
 
@@ -136,6 +150,10 @@ void WaveguideStructure::set_dof (int i, double val) {
 	}
 	if(temp == 1) {
 		// request r
+		double max = (GlobalParams.PRM_M_C_RadiusIn > GlobalParams.PRM_M_C_RadiusOut)? GlobalParams.PRM_M_C_RadiusIn : GlobalParams.PRM_M_C_RadiusOut;
+		if(val > max*3/2) {
+			val =max;
+		}
 		case_sectors[sec].r_1	= val;
 		case_sectors[sec+1].r_0	= val;
 	}

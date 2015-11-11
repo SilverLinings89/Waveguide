@@ -24,13 +24,9 @@
 using namespace dealii;
 
 
-int main (int argc, char *argv[])
+int main ()
 {
-	// Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 	GlobalParams = GetParameters();
-	// Waveguide<PETScWrappers::SparseMatrix, PETScWrappers::Vector > waveguide(prm.PRM);
-	// Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector > waveguide(prm.PRM);
-	double r_0, r_1, deltaY, epsilon_M, epsilon_K, sectors;
 	WaveguideStructure structure(GlobalParams);
 	Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> > waveguide(GlobalParams, structure);
 	Optimization opt(GlobalParams, waveguide, structure);
