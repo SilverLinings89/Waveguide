@@ -232,11 +232,36 @@ class Waveguide
 		 * This function fills the ConstraintMatrix-object of the Waveguide-object with all constraints needed for condensation into the szstem-matrix. It's properties are derived from the Waveguide itself and the Waveguide-Structure-object available to it, therefore there are no parameters but those members need to be prepared accordingly..
 		 */
 		void	MakeBoundaryConditions ();
+
+		/**
+		 * DEPRECATED. SCHEDULED FOR REMOVAL.
+		 */
 		double  RHS_value(const Point<3> &, const unsigned int component);
-		Tensor<2,3, std::complex<double>> Transpose_Tensor(Tensor<2,3, std::complex<double>> );
-		Tensor<1,3, std::complex<double>> Transpose_Vector(Tensor<1,3, std::complex<double>> );
+
+		/**
+		 * This function returns the transposed and complex conjugated Matrix for the given Matrix. The function operates on a copy, it doesn't change the arguments value.
+		 * \param input This is the order 2 Tensor (Matrix) to be transposed (\f$a_{ij} = a'{ji}\f$) and complex conjugated (\f$\operatorname{Im}(a_{ij}) = - \operatorname{Im}(a'_{ji})\f$)
+		 */
+		Tensor<2,3, std::complex<double>> Conjugate_Tensor(Tensor<2,3, std::complex<double>> input);
+
+		/**
+		 * This function calculates the complex conjugate of every vector entry and returns the result in a copy. Similar to Conjugate_Tensor(Tensor<2,3, std::complex<double>> input) this function does not operate in place - it operates on a copy and hence returns a new object.
+		 */
+		Tensor<1,3, std::complex<double>> Conjugate_Vector(Tensor<1,3, std::complex<double>> input);
+
+		/**
+		 * This project is designed to keep logs of several performance parameters. These use a custom implementation of the FileLogger class. This function initializes these loggers - meaning it generates file handles such that in functional code, data can immediately logged. This functionality should either be rewritten or included from a library since this is a standard functionality.
+		 */
 		void	init_loggers();
+
+		/**
+		 * test
+		 */
 		void 	timerupdate();
+
+		/**
+		 *
+		 */
 		dealii::Vector<double> differences;
 
 		std::string			solutionpath;
