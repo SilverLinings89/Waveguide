@@ -1,25 +1,3 @@
-/**
- * Die Klasse Waveguide
- * Diese Klasse umfasst das gros der Funktionalität. Sie besteht aus dem üblichen Deal.II-Ablauf: make_grid(), setup_system(), assemble_system(), solve() und output_results().
- *
- * Funktion: make grid():
- * Diese Methode berechnet die Diskretisierung und baut das Mesh. Dies ist auch die einzige Stelle im Code, an dem noch Parameter zur neukompilierung vorliegen. In dieser Methode kann man an den kommentierten Stellen einstellen, wie genau verfeinert wird, also wie oft welche Strategie genutzt wird. Es spricht nichts gegen eine Auslagerung in das Parameter-file nur änderte sich dieser Teil häufig in Hinsicht auf seine Struktur und deshalb wurde davon bisher abgesehen.
- *
- * Funktion: setup_system():
- * Diese Methode initialisiert die wichtigen Teile des Systems wie den dof_handler, das finite Element und die Matrizen. Außerdem werden hier die Randwerte berechnet.
- *
- * Funktion: assemble_system():
- * In make_grid() wurde das Mesh in Blöcke eingeteilt. Es gibt einen Parameter, der angibt, wieviele Threads genutzt werden sollen. Das Mesh wird dann in doppelt so viele Blöcke zerlegt und diese durchnummeriert. Es werden dann in einem Durchlauf parallel alle geraden Blöcke assembliert und dann alle ungeraden. Da die Blöcke in einem Schritt durch einen kompletten Block voneinander getrennt sind, kann es beim parallelen Schreiben in die System-Matrix trotz massiver Parallelisierung, nicht zu Konflikten kommen.
- *
- * Funktion: solve():
- * In dieser Methode werden die Löser mit Parametern versehen. Außerdem erfolgt hier die Vorkonditionierung. An diesem Punkt erfolgte wenig Anpassung mit Außnahme des slot-connectors für das Auslesen von Eigenwerten und Konfitions-Schätzungen.
- *
- * Funktion: output_results():
- * Diese Methode nimmt die Lösungen und gibt sie in verschiedenen Formaten aus. Es wird ein Ergebnis-Objekt erstellt, an das dann Vektoren mit Namen angehängt werden können. Für diese Objekt existieren mehrere Überladungen für verschiedene Ausgabe-Ziele wie beispielsweise Paraview (vtk) und gnuplot.
- *
- * @author: Pascal Kraft
- * @date: 07.09.2015
- */
 #ifndef WaveguideFlag
 #define WaveguideFlag
 
@@ -86,39 +64,173 @@ using namespace dealii;
 
 static Parameters GlobalParams;
 
+/**
+ * \class Waveguide
+ * This class encapsulates all important data about the abstracted shape of the Waveguide, meaning a cylinder.
+ * Upon initialization it requires structural information about the waveguide that will be simulated. The object then continues to initialize the FEM-framework. After allocating space for all objects, the assemblation-process of the system-matrix begins. Following this step, the user-selected preconditioner and solver are used to solve the system and generate outputs.
+ * This class is the core piece of the implementation.
+ *
+ * \author Pascal Kraft
+ * \date 16.11.2015
+ */
 template <typename MatrixType, typename VectorType>
 class Waveguide
 {
 	public:
 		Waveguide (Parameters &, WaveguideStructure &);
-		void 		run ();
-		void 		rerun ();
-		void 		assemble_part (unsigned int in_part);
-		double 		evaluate_in();
-		double 		evaluate_out();
-		double 		evaluate_overall();
-		void 		store();
-		Tensor<2,3, std::complex<double>> get_Tensor(Point<3> &, bool, bool);
 
+		/**
+		 * This method as well as the rerun() method, are used by the optimization-algorithm to use and reuse the Waveguide-object. Since the system-matrix consumes a lot of memory it makes sense to reuse it, rather then creating a new one for every optimization step.
+		 * All properties of the object have to be created properly for this function to work.
+		 */
+		void 		run ();
+
+		/**
+		 * This method as well as the run() method, are used by the optimization-algorithm to use and reuse the Waveguide-object. Since the system-matrix consumes a lot of memory it makes sense to reuse it, rather then creating a new one for every optimization step.
+		 * All properties of the object have to be created properly for this function to work.
+		 */
+
+		void 		rerun ();
+
+		/**
+		 * The assemble_part(unsigned int in_part) function is a part of the assemble_system() functionality. It builds a part of the system-matrix. assemble_system() creates the global system matrix. After splitting the degrees of freedom into several block, this method takes one block (identified by the integer passed as an argument) and calculates all matrix-entries that reference it.
+		 * @param in_part Numerical identifier of the part of the system.
+		 * @date 13.11.2015
+		 * @author Pascal Kraft
+		 */
+		void 		assemble_part (unsigned int in_part);
+
+		/**
+		 * In order to estimate the quality of the signal transmission, the signal-intensity at the input- and output-side are required. This function along with evaluate_out() are used for that purpose. An L2-type norm is calculated to estimate the intensity of the propagating modes.
+		 */
+		double 		evaluate_in();
+
+		/**
+		 * In order to estimate the quality of the signal transmission, the signal-intensity at the input- and output-side are required. This function along with evaluate_in() are used for that purpose. An L2-type norm is calculated to estimate the intensity of the propagating modes.
+		 */
+
+		double 		evaluate_out();
+
+		/**
+		 * This function calls both evaluate_in() and evalutat_out(). It uses the return-values to generate an estimate for the signal-quality of the simulated system. This function should only be called, once both assemblation and solving of the system matrix are complete.
+		 */
+		double 		evaluate_overall();
+
+		/**
+		 * The storage has the following purpose: Regarding the optimization-process there are two kinds of runs. The first one, taking place with no knowledge of appropriate starting values for the degrees of freedom, and the following steps, in which the prior results can be used to estimate appropriate starting values for iterative solvers as well as the preconditioner. This function switches the behaviour in the following way: Once it is called, it stores the current solution in a run-independent variable, making it available for later runs. Also it sets a flag, indicating, that prior solutions are now available for usage in the solution process.
+		 */
+		void 		store();
+
+		/**
+		 * Calcualtion of \f$\epsilon\f$ and \f$\mu\f$ are very similar, which is why they are done in the same function. These tensors model all properties of the system:
+		 * 	-# The PML-method near the boundaries,
+		 * 	-# the tensor-valued material-properties due to the space transformation and
+		 * 	-# the real material properties of the fibre
+		 *
+		 * in the specified location.
+		 * \param point This parameter is used to pass the location to calculate the tensor for.
+		 * \param inverse If this parameter is set to true, instead of the material tensor, its inverse will be returned. For Maxwell"s equations this makes sense, if the following parameter is set to the inverse value since \f$\epsilon\f$ and \f$\mu^{-1}\f$ are needed to assemble the system.
+		 * \param epsilon: Specifies to either
+		 * - calculate \f$\epsilon\f$ if true or
+		 * - calcualte \f$\mu\f$ if false.
+		 */
+		Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & point, bool inverse, bool epsilon);
 
 
 	private:
-		void 	read_values ();
+		/**
+		 * Grid-generation is a crucial part of any FEM-Code. This function holds all functionality concerning that topic. In the current implementation we start with a cubic Mesh. That mesh originally is subdivided in 5 cells per dimension yielding a total of 5*5*5 = 125 cells. The central cells in the x-z planes are given a cylindrical manifold-description forcing them to interpolate the new points during global refinement using a circular shape rather than linear interpolation. This leads to the description of a cylinder included within a cube. There are currently three techniques for mesh-refinement:
+		 * 	-# Global refinement: For such refinement-cases, any cell is subdivided in the middle of any dimension. In this case every cell is split into 8 new ones, increasing the number of cells massively. Pros: no hanging nodes. Cons: Very many new dofs that might be in areas, where the resolution of the mesh is already large enough.
+		 * 	-# Inner refinement: In this case, only degrees that were in the original core-cells, will be refined. These are cells, which in the real physical simulation are part of the waveguide-core rather then the mantle.
+		 * 	-# Boundary-refinement: In this case, cells are refined, that are close to the boundary of the waveguide (not close to the boundary of the computational domain!). To see the used definition of close, please see the code.
+		 *
+		 * 	Following the creation of the mesh, the dofs are distributed to it using the function setup_system(). This function only has to be used once even in optimization runs since the mesh can be reused for every run. This saves a lot of time especially for large cases and distributed calculations.
+		 */
 		void 	make_grid ();
+
+		/**
+		 * In this function, the first case-specific data is used. First off we number the degrees of freedom. After completion of this task we start makingboundary-conditions. The creation of appropriate boundary-conditions is twofold:
+		 * 	#- Mathematical boundary conditions as described in the literature on this matter. In this case we use Dirichlet boundary values that are either zero-values or alternatively are calculated from the mode-distribution of the incoming signal.
+		 * 	#- Numerical constraints from hanging nodes. The non-global refinement steps cause hanging-nodes that have to be constrained to their neighbors. This problem can be solved automatically by deal and uses the same mechanism (constraints) as mathematical boundary values do.
+		 *
+		 * 	Constraint Matrixes (as constructed in this function) can be used primarily in two ways. Documentation concerning this problem can be found at [Constraints On Degrees Of Freedom](https://www.dealii.org/developer/doxygen/deal.II/group__constraints.html).
+		 */
 		void 	setup_system ();
+
+		/**
+		 * Assemble system is the function to build a system-matrix. This can either happen incrementally or from scratch depending on if a solution has been stored before or not. Essentially it splits the system in blocks and then calls assemble_block(unsigned int index) for the individual blocks. This function will have to be improved for incremental building of the system matrix in order to proceed to upcoming versions.
+		 * \author Pascal Kraft
+		 * \date 16.11.2015
+		 */
 		void 	assemble_system ();
+
+		/**
+		 * This function is currently not in use. It is supposed to create a useful input-vector for the first step of the iteration. However currently this is not used, since current cases simply use a zero-vector for the first step and previous solutions in the subsequent steps.
+		 *
+		 */
 		void	estimate_solution();
+
+		/**
+		 * Upon successful assembly of the system-matrix, the solution has to be calculated. This is done in this function. There are multiple Templates of this function for enabling switching between libraries. The Dealii implementation uses deal's native solvers as well as data-types. The other templated editions use the PETSc and Trilinos equivalents. The type of solver to be used and its parameters are specified via the parameter GYU
+		 */
 		void 	solve ();
+
+		/**
+		 * In case no differential implementation is used (this means, that in every step of both the optimization and the calculation of the gradient, the system-matrix and all other elements are completely rebuilt) this function is used, to clear all values out of the data-objects.
+		 *
+		 */
 		void 	reset_changes();
+
+		/**
+		 * This function takes the Waveguides solution-vector member and exports it in a .vtk-file along with the mesh-structure to make the results visible.
+		 */
 		void 	output_results ();
+
+		/**
+		 * This function is used bz the GMRE-solvers in deal. This solver uses the iteration-results to estimate the eigenvalues and this function is used via handle to use them. In this function, the eigenvalues are simply pushed into a file.
+		 */
 		void 	print_eigenvalues(const std::vector<std::complex<double>> &);
+
+		/**
+		 * Similar to the functio print_eigenvalues(const std::vector<std::complex<double>> &) , this function uses step-results of the GMRES-solver to make properties of the szstem-matrix available. In this case it is the condition number, estimated on the basis of said eigenvalues, that gets pushed to a file also.
+		 */
 		void	print_condition (double);
-		bool	PML_in_X(Point<3> &);
-		bool	PML_in_Y(Point<3> &);
-		bool	PML_in_Z(Point<3> &);
-		double 	PML_X_Distance(Point<3> &);
-		double 	PML_Y_Distance(Point<3> &);
-		double 	PML_Z_Distance(Point<3> &);
+
+		/**
+		 * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
+		 * \param position Stores the position in which to test for presence of a PML-Material.
+		 */
+		bool	PML_in_X(Point<3> & position);
+		/**
+		 * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the y-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
+		 * \param position Stores the position in which to test for presence of a PML-Material.
+		 */
+		bool	PML_in_Y(Point<3> & position);
+		/**
+		 * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the z-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
+		 * \param position Stores the position in which to test for presence of a PML-Material.
+		 */
+		bool	PML_in_Z(Point<3> & position);
+
+		/**
+		 * This function calculates for a given point, its distance to a PML-boundary limiting the computational domain. This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction).
+		 * \param position Stores the position from which to calculate the distance to the PML-surface.
+		 */
+		double 	PML_X_Distance(Point<3> & position);
+		/**
+		 * This function calculates for a given point, its distance to a PML-boundary limiting the computational domain. This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction).
+		 * \param position Stores the position from which to calculate the distance to the PML-surface.
+		 */
+		double 	PML_Y_Distance(Point<3> & position);
+		/**
+		 * This function calculates for a given point, its distance to a PML-boundary limiting the computational domain. This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction).
+		 * \param position Stores the position from which to calculate the distance to the PML-surface.
+		 */
+		double 	PML_Z_Distance(Point<3> & position);
+
+		/**
+		 * This function fills the ConstraintMatrix-object of the Waveguide-object with all constraints needed for condensation into the szstem-matrix. It's properties are derived from the Waveguide itself and the Waveguide-Structure-object available to it, therefore there are no parameters but those members need to be prepared accordingly..
+		 */
 		void	MakeBoundaryConditions ();
 		double  RHS_value(const Point<3> &, const unsigned int component);
 		Tensor<2,3, std::complex<double>> Transpose_Tensor(Tensor<2,3, std::complex<double>> );
