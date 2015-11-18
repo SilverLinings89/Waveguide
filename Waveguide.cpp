@@ -240,7 +240,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 }
 
 template<typename MatrixType, typename VectorType >
-Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Transpose_Tensor(Tensor<2,3, std::complex<double>> input) {
+Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Conjugate_Tensor(Tensor<2,3, std::complex<double>> input) {
 	Tensor<2,3, std::complex<double>> ret ;
 	for(int i= 0; i< 3; i++){
 		for(int j = 0; j<3; j++){
@@ -252,7 +252,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Transpose_T
 }
 
 template<typename MatrixType, typename VectorType >
-Tensor<1,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Transpose_Vector(Tensor<1,3, std::complex<double>> input) {
+Tensor<1,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Conjugate_Vector(Tensor<1,3, std::complex<double>> input) {
 	Tensor<1,3, std::complex<double>> ret ;
 	for(int i= 0; i< 3; i++){
 		ret[i].real(input[i].real());
@@ -533,7 +533,7 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
 						}
 						test ++;
 
-						std::complex<double> x = (mu * I_Curl) * Transpose_Vector(J_Curl) * JxW - ( ( epsilon * I_Val ) * Transpose_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
+						std::complex<double> x = (mu * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
 
 						cell_matrix_real[i][j] += x.real();
 
