@@ -255,14 +255,9 @@ class Waveguide
 		void	init_loggers();
 
 		/**
-		 * test
+		 * This function stops the precondition-timer and starts the solver-timer. Weird implementation on the side of Deal makes am odd workaround necessary to keep code readable in this case. This function is not important for functional understanding of the code or FEM.
 		 */
 		void 	timerupdate();
-
-		/**
-		 *
-		 */
-		dealii::Vector<double> differences;
 
 		std::string			solutionpath;
 
