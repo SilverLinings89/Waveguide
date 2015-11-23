@@ -13,19 +13,6 @@ std::string total_filename 			= "total.log";
 
 int 	StepsR 			= 10;
 int 	StepsPhi 		= 10;
-/**
-double 	PI 				= 3.1412;				// Overwritten by Param-Reader
-double 	Eps0 			= 1.0;				// Overwritten by Param-Reader
-double 	Mu0 			= 1.0; 				// Overwritten by Param-Reader
-double 	c 				= 1.0/sqrt(Eps0 * Mu0); 	// Overwritten by Param-Reader
-double  lambda 			= 0.631;
-double 	f0 				= c/lambda; 			// Overwritten by Param-Reader
-double  k0				= 2.0 * PI * lambda;
-double 	omega 			= 2.0 * PI * f0; 	// Overwritten by Param-Reader
-**/
-// int 	PRM_M_R_XLength = 2.0;		// Overwritten by Param-Reader
-// int 	PRM_M_R_YLength = 2.0;		// Overwritten by Param-Reader
-// int 	PRM_M_R_ZLength = 2.0;		// Overwritten by Param-Reader
 
 static Parameters GetParameters() {
 	ParameterHandler prm;
@@ -149,7 +136,6 @@ static Parameters GetParameters() {
 	ret.PRM_M_R_YLength = (15.5/4.3)* ((ret.PRM_M_C_RadiusIn+ ret.PRM_M_C_RadiusOut)/2.0);
 	return ret;
 }
-
 
 static double Distance2D (Point<3> position, Point<3> to = Point<3>()) {
 		return sqrt((position(0)-to(0))*(position(0)-to(0)) + (position(1)-to(1))*(position(1)-to(1)));

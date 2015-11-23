@@ -33,30 +33,157 @@
 
 using namespace dealii;
 
+/**
+ * This class is one of the three main classes for this project. The other two are the Optimization-class and the Waveguide-class. This one saves all the information on the currently modelled Waveguide and is mainly used on the one hand to store structural information and on the other hand to calculate material-tensors.
+ * During the whole optimization-process only one object of this type is used and it continually gets update to reflect the most recent update information.
+ *
+ * \author Pascal Kraft
+ * \date 23.11.2015
+ */
 class WaveguideStructure {
 	public:
-		std::vector<Sector> case_sectors;
-		const double epsilon_K, epsilon_M;
-		const int sectors;
-		const double sector_z_length;
-		const double z_min, z_max;
-		const double deltaY;
-		const double r_0, r_1;
-		const double v_0, v_1;
-		const double m_0, m_1;
-		const Parameters parameters;
-		double highest, lowest;
 
+		/**
+		 * This member contains all the Sectors who, as a sum, form the complete Waveguide. These Sectors are a partition of the simulated domain.
+		 */
+		std::vector<Sector> case_sectors;
+		/**
+		 * The material-property \f$\epsilon_r\f$ has a different value inside and outside of the waveguides core. This variable stores its value inside the core.
+		 */
+		const double epsilon_K;
+		/**
+		 *  The material-property \f$\epsilon_r\f$ has a different value inside and outside of the waveguides core. This variable stores its value outside the core.
+		 */
+		const double epsilon_M;
+		/**
+		 * Since the computational domain is split into subdomains (called sectors), it is important to keep track of the amount of subdomains. This member stores the number of Sectors the computational domain has been split into.
+		 */
+		const int sectors;
+
+		/**
+		 * All sectors in this version of the program have equal length in the \f$ z\f$-direction (in both the real and transformed coordinate system). This member stores the length of either of them.
+		 */
+		const double sector_z_length;
+
+		/**
+		 * To achieve maximal flexibility concerning the choice of coordinate systems, these parameters were introduced to make an arbitrary starting-point for the lower end of the computational domain possible.
+		 */
+		const double z_min;
+
+		/**
+		 * Similar to z_min, this variable stores the \f$z\f$-coordinate of the endpoint in that direction.
+		 */
+		const double z_max;
+
+		/**
+		 * This value is initialized with the value Delta from the input-file.
+		 */
+		const double deltaY;
+
+		/**
+		 * The radius of the input waveguide connector. This variable gets initialized with the value from the input-file.
+		 */
+		const double r_0;
+
+		/**
+		 * The radius of the output waveguide connector. This variable gets initialized with the value from the input-file.
+		 */
+		const double r_1;
+
+		/**
+		 * The tilt of the input waveguide connector towards the \f$ z \f$-axis. This variable gets initialized with the value from the input-file.
+		 */
+		const double v_0;
+
+		/**
+		 * The tilt of the output waveguide connector towards the \f$ z \f$-axis. This variable gets initialized with the value from the input-file.
+		 */
+		const double v_1;
+
+		/**
+		 * The distance of the waveguide-center from the \f$z\f$-axis in the \f$xy\f$-plane at the input-end of the computational domain.
+		 */
+		const double m_0;
+		/**
+		 * The distance of the waveguide-center from the \f$z\f$-axis in the \f$xy\f$-plane at the output-end of the computational domain.
+		 */
+		const double m_1;
+
+		/**
+		 * A parameters-structure which upon construction contains all values from the input file and hides the persistence-layer associated with it.
+		 */
+		const Parameters parameters;
+
+		/**
+		 * This member stores the highest signal quality achieved with any shape in this optimization-run.
+		 */
+		double highest;
+
+		/**
+		 * This member stores the lowest signal quality achieved with any shape in this optimization-run.
+		 */
+		double lowest;
+
+		/**
+		 * Since accessing the Parameters-file is an IO-operation and therefore needlessly slow, this constructor takes an argument of the ParameterHandler Type, which has the data preloaded from another context. It then proceeds to initialize all the constants to their value, which is derived from the ParameterHandler.
+		 */
 		WaveguideStructure (Parameters &);
+
+		/**
+		 * This member encapsulates the main functionality of objects of this class: It calculates the most important structural information required in this code - the Material-Tensor. In fact, this function determines, in which sector the passed position lies and calls the appropriate function on that Sector-object.
+		 * \param in_x \f$x\f$-coordinate of the position for which to calculate the transformation tensor.
+		 * \param in_y \f$y\f$-coordinate of the position for which to calculate the transformation tensor.
+		 * \param in_z \f$z\f$-coordinate of the position for which to calculate the transformation tensor.
+		 */
 		Tensor<2,3, double> TransformationTensor (double in_x, double in_y, double in_z);
+
+		/**
+		 * asdfasdf
+		 */
 		void 	run() ;
+
+		/**
+		 * At the beginning (before the first solution of a system) only the boundary conditions for the shape of the waveguide are known. Therefore the values for the degrees of freedom need to be estimated. This function sets all variables to appropiate values and estimates an appropriate shape based on averages and a polynomial interpolation of the boundary conditions on the shape.
+		 */
 		void 	estimate_and_initialize();
-		double 	m(double);
-		double 	v(double);
-		double 	getQ1 ( double);
-		double 	getQ2 ( double);
-		double 	get_dof (int );
-		void	set_dof (int , double );
+
+		/**
+		 * In order to be able to estimate the shape-parameters in the interior of the domain, a function for the interpolation of waveguide-centers distance to the \f$z\f$-axis is required.
+		 * \param z The \f$z\f$-coordinate for which to estimate \f$m\f$.
+		 */
+		double 	m(double z);
+
+		/**
+		 * This function is used to interpolate the tilt of the Waveguide in the interior of the computational domain based on the boundary (connector) data provided in the input file. For the interpolation, a third order polynomial is used which satisfies the condition of having the derivative zero at both, the input and output connector and yielding a shape, that continuously connects the two interfaces.
+		 * \param z The \f$z\f$-coordinate for which to interpolate \f$v\f$.
+		 */
+		double 	v(double z);
+
+		/**
+		 * This member calculates the value of Q1 for a provided \f$z\f$-coordinate. This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field).
+		 * \param z The value of Q1 is independent of \f$x\f$ and \f$y\f$. Therefore only a \f$z\f$-coordinate is provided in a call to the function.
+		 */
+		double 	getQ1 ( double z);
+
+		/**
+		 * This member calculates the value of Q2 for a provided \f$z\f$-coordinate. This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field).
+		 * \param z The value of Q2 is independent of \f$x\f$ and \f$y\f$. Therefore only a \f$z\f$-coordinate is provided in a call to the function.
+		 */
+		double 	getQ2 ( double z);
+
+		/**
+		 * This is a getter for the values of degrees of freedom. A getter-setter interface was introduced since the values are estimated automatically during the optimization and non-physical systems should be excluded from the domain of possible cases.
+		 * \param dof The index of the degree of freedom to be retrieved from the structure of the modelled waveguide.
+		 * \return This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd.
+		 */
+		double 	get_dof (int dof);
+
+		/**
+		 * This function sets the value of the dof provided to the given value. It is important to consider, that some dofs are non-writable (i.e. the values of the degrees of freedom on the boundary, like the radius of the input-connector cannot be changed).
+		 * \param dof The index of the parameter to be changed.
+		 * \param value The value, the dof should be set to.
+		 */
+		void	set_dof (int dof , double value );
 
 };
 

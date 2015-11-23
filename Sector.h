@@ -1,22 +1,3 @@
-/**
- * Die Sector-Klasse
- * Diese Klasse implementiert einen einzigen Sektor. Er hat seine Freiheitsgrade auf dem linken und rechten Rand und bietet die Materialeigenschaften als Ergebnis.
- *
- * Funktion: TransformationTensorInternal
- * Sollte nur von WaveGuideStructure gerufen werden und liefert den TransformationsTensor am angegebenen Punkt.
- *
- * Funktion: set_properties
- * Setzt einen unbeschränkten Formfreiheitsgrad auf einen Wert.
- *
- * Funktion: set_properties_force
- * Setzt auch beschränkte Freiheitsgrade auf einen Wert. Die Methode wird verwendet um für Sektoren, die am Rand liegen, die entsprechenden Werte einmalig zu setzen. In der Methode ohne force können diese Freiheitsgrade nicht manipuliert werden.
- *
- * Funktion: getQi
- * Diese Methode berechnet den Wert für das entsprechende Q an der gegebenen z-Komponente. Q3 ist nicht implementiert und Q2 und Q1 hängen jeweils nur von z ab.
- *
- * @author: Pascal Kraft
- * @date: 07.09.2015
- */
 #ifndef SectorFlag
 #define SectorFlag
 
@@ -28,11 +9,13 @@ using namespace dealii;
  * \class Sector
  * \brief Sectors are used, to split the computational domain into chunks, whose degrees of freedom are likely coupled.
  * The interfaces between Sectors lie in the xy-plane and they are ordered by their z-value.
+ * \author Pascal Kraft
+ * \date 23.11.2015
  */
 class Sector {
 
 	public:
-		/*
+		/**
 		 * Constructor of the Sector class, that takes all important properties as an input property.
 		 * \param in_left stores if the sector is at the left end. It is used to initialize the according variable.
 		 * \param in_right stores if the sector is at the right end. It is used to initialize the according variable.
@@ -70,7 +53,7 @@ class Sector {
 		/**
 		 * v_1 is the tile towards the z-axis at the right side ( z large ).
 		 */
-		double v_1;
+		double v_1 ;
 		/**
 		 * m_0 is the distance to the z-axis at the lef side ( z small ).
 		 */
@@ -101,9 +84,21 @@ class Sector {
 		 * This function is used during the optimization-operation to update the properties of the space-transformation. However, to ensure, that the boundary-conditions remain intact, this function cannot edit the left defrees of freedom if left is true and it cannot edit the right degrees of freedom if right is true
 		 */
 		void set_properties(double , double , double , double, double, double);
+		/**
+		 * This function is the same as set_properties with the difference of being able to change the values of the input- and output boundary.
+		 */
 		void set_properties_force(double , double , double , double, double, double);
+		/**
+		 * The values of Q1, Q2 and Q3 are needed to compute the solution in real coordinates from the one in trnsformed coordinates. This function returnes Q1 for a given position and the current transformation.
+		 */
 		double getQ1( double);
+		/**
+		 * The values of Q1, Q2 and Q3 are needed to compute the solution in real coordinates from the one in transformed coordinates. This function returnes Q2 for a given position and the current transformation.
+		 */
 		double getQ2( double);
+		/**
+		 * The values of Q1, Q2 and Q3 are needed to compute the solution in real coordinates from the one in transformed coordinates. This function returnes Q3 for a given position and the current transformation.
+		 */
 		double getQ3( double);
 };
 
