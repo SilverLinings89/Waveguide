@@ -1,11 +1,3 @@
-/**
- * Die Optimization-Klasse
- * Diese Klasse verwaltet ein Wellenleiter-Objekt und ein WellenleiterStruktur-Objekt. Ihre run() Methode beschreibt den Ablauf des Optimierungs-Verfahrens. Dabei werden regelmäßig die beiden Objekte bearbeitet.
- * In ihrem Konstruktor fordert sie ein Parameters-Objekt, das alle Informationen aus dem Input-File enthält, sowie eine Referenz auf den Wellenleiter für die Berechnung der Lösungen sowie eine Referenz auf eine Wellenleiter-Form, die die Materialtensoren liefert und die Form-Parameter verwaltet.
- * @author: Pascal Kraft
- * @date: 07.09.2015
- */
-
 #ifndef OptimizationFlag
 #define OptimizationFlag
 
@@ -19,14 +11,51 @@
 
 using namespace dealii;
 
+/**
+ * The Optimization-class gives one of the three main parts to the project. The other two being the WaveguideStructure-class (holding all the structural information and functionality such as calculating material-tensors or changing the shape) and the Waveguide-class (offering the complete solution-process for a fixed shape). This class however determines the changes between optimization-steps and administrates the optimization-process. It stores signal-quality values for different configurations of the system and builds estimates of better shapes based upon them.
+ * To fulfill its purpose it offers two functions: One is its constructor, which requires a Waveguide-object, a WaveguideStructure-object and Parameters (parsed from the input file) to already exist. The second is a run method. This function does all the heavy lifting and contains all implementation about the shape-optimization.
+ * \author Pascal Kraft
+ * \date 23.11.2015
+ */
 class Optimization {
 	public:
-		const int dofs; // (sectors +1) *3 -6
+		/**
+		 * This member is not to be confused with the membler n_dofs in Waveguide which stores the number of degrees of freedom in the finite element implementation. This variable however stores the number of degrees of freedom for the shape of the waveguide and is calculated by
+		 * \f[ \operatorname{dofs} = (s + 1) \cdot 3 -6\f]
+		 * where \f$ s \f$ is the number of sectors used to model the system. If \f$ s=1 \f$ there is no optimization, since all properties of the waveguide are predetermined by the shapes boundary-conditions.
+		 */
+		const int dofs;
+		/**
+		 * Members like this one appear in many objects and are always used to store the parsed data from the input-file.
+		 */
 		const Parameters System_Parameters;
+
+		/**
+		 * This member is a handle to the Waveguide-object used in the computation. This object needs such a handle in order to be able to
+		 *  -# start calculations for a certain shape
+		 *  -# retrieve signal quality information after a run has been completed.
+		 *
+		 */
 		Waveguide<SparseMatrix<double>, Vector<double> > &waveguide;
+
+		/**
+		 * This member is a handle to the WaveguideStructure-object used in the computation. This object need such a handle in order to
+		 *  -# retrieve information about the current shape
+		 *  -# set the parameters based on the results of runs.
+		 *
+		 *
+		 */
 		WaveguideStructure &structure;
 
+		/**
+		 * This is a constructor for the Optimization-object. It requires the handles to the two objects it has to control and an additional structure containing the data from the input-file.
+		 */
 		Optimization( Parameters , Waveguide<SparseMatrix<double>, Vector<double> >  & , WaveguideStructure &);
+
+		/**
+		 * This function is the core implementation of an optimization algorithm. Currently it is very fundamental in its technical prowess which can be improved upon in later versions. Essentially, it calculates the signal quality for a configurations and for small steps in every one of the dofs. After that, the optimization-step is estimated based on difference-quotients. Following this step, a large step is computed based upon the approximation of the gradient of the signal-quality functional and the iteration starts anew. If a decrease in quality is detected, the optimization-step is undone and the step-width is reduced.
+		 * This function controls both the Waveguide- and the Waveguide-structure object.
+		 */
 		void run();
 
 };

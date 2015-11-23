@@ -149,7 +149,7 @@ class Waveguide
 		void 	make_grid ();
 
 		/**
-		 * In this function, the first case-specific data is used. First off we number the degrees of freedom. After completion of this task we start makingboundary-conditions. The creation of appropriate boundary-conditions is twofold:
+		 * In this function, the first case-specific data is used. First off we number the degrees of freedom. After completion of this task we start making boundary-conditions. The creation of appropriate boundary-conditions is twofold:
 		 * 	#- Mathematical boundary conditions as described in the literature on this matter. In this case we use Dirichlet boundary values that are either zero-values or alternatively are calculated from the mode-distribution of the incoming signal.
 		 * 	#- Numerical constraints from hanging nodes. The non-global refinement steps cause hanging-nodes that have to be constrained to their neighbors. This problem can be solved automatically by deal and uses the same mechanism (constraints) as mathematical boundary values do.
 		 *
@@ -192,7 +192,7 @@ class Waveguide
 		void 	print_eigenvalues(const std::vector<std::complex<double>> &);
 
 		/**
-		 * Similar to the functio print_eigenvalues(const std::vector<std::complex<double>> &) , this function uses step-results of the GMRES-solver to make properties of the szstem-matrix available. In this case it is the condition number, estimated on the basis of said eigenvalues, that gets pushed to a file also.
+		 * Similar to the functio print_eigenvalues(const std::vector<std::complex<double>> &) , this function uses step-results of the GMRES-solver to make properties of the system-matrix available. In this case it is the condition number, estimated on the basis of said eigenvalues, that gets pushed to a file also.
 		 */
 		void	print_condition (double);
 
