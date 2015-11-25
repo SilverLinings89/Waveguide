@@ -367,6 +367,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 		}
 
 		// Refinement im Wellenleiter hier setzen.
+
 		for(int i = 0; i < 1; i++) {
 			cell = triangulation.begin_active();
 			for (; cell!=endc; ++cell){
@@ -747,6 +748,19 @@ void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers:
 	dealii::TrilinosWrappers::SolverGMRES solver(solver_control,dealii::TrilinosWrappers::SolverGMRES::AdditionalData(true, prm.PRM_S_GMRESSteps) );
 	timerupdate();
 	solver.solve(system_matrix, solution, system_rhs, dealii::TrilinosWrappers::PreconditionIdentity());
+	log_solver.stop();
+	cm.distribute(solution);
+}
+
+template<>
+void Waveguide<dealii::PETScWrappers::SparseMatrix, dealii::PETScWrappers::Vector >::solve () {
+	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
+	log_precondition.start();
+	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
+
+	dealii::PETScWrappers::SolverGMRES solver(solver_control,MPI_Comm (MPI_COMM_WORLD), dealii::PETScWrappers::SolverGMRES::AdditionalData(true, prm.PRM_S_GMRESSteps) );
+	timerupdate();
+	solver.solve(system_matrix, solution, system_rhs, dealii::PETScWrappers::PreconditionNone());
 	log_solver.stop();
 	cm.distribute(solution);
 }
