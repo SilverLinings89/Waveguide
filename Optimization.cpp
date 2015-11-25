@@ -3,7 +3,8 @@
 
 using namespace dealii;
 
-Optimization::Optimization( Parameters in_System_Parameters ,Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> >  &in_wg, WaveguideStructure &in_structure)
+template<typename Matrix,typename Vector>
+Optimization<Matrix, Vector >::Optimization( Parameters in_System_Parameters ,Waveguide<Matrix, Vector >  &in_wg, WaveguideStructure &in_structure)
 	:
 		dofs((in_System_Parameters.PRM_M_W_Sectors +1)*3 -6),
 		System_Parameters(in_System_Parameters),
@@ -13,7 +14,8 @@ Optimization::Optimization( Parameters in_System_Parameters ,Waveguide<dealii::S
 	{
 }
 
-void Optimization::run() {
+template<typename Matrix,typename Vector>
+void Optimization<Matrix, Vector>::run() {
 	double gradient [dofs];
 	double step_width = GlobalParams.PRM_Op_InitialStepWidth;
 	int steps_counter = 0;

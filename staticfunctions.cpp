@@ -97,6 +97,7 @@ static Parameters GetParameters() {
 
 	prm.enter_subsection("Solver");
 	{
+		ret.PRM_S_Library = prm.get("Library");
 		ret.PRM_S_Solver = prm.get("Solver");
 		ret.PRM_S_GMRESSteps = prm.get_integer("GMRESSteps");
 		ret.PRM_S_Preconditioner = prm.get("Preconditioner");

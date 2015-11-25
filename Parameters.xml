@@ -248,46 +248,53 @@
         </Threads>
     </Assembly>
     <Solver>
+      <Library>
+            <value>Trilinos</value>
+            <default_value>DealII</default_value>
+            <documentation>Which library to use for the computation. (Deal is always available if you have any version installed. For PETSC and Trilinos it is not enough to have them installed - Deal has to be compiled for their usage.</documentation>
+            <pattern>33</pattern>
+            <pattern_description>[Selection DealII|PETSc|Trilinos ]</pattern_description>
+        </Library>
         <Solver>
             <value>UMFPACK</value>
             <default_value>GMRES</default_value>
             <documentation>Which Solver to use for the solution of the system matrix</documentation>
-            <pattern>33</pattern>
+            <pattern>34</pattern>
             <pattern_description>[Selection CG|GMRES|UMFPACK|Richardson|Relaxation ]</pattern_description>
         </Solver>
         <GMRESSteps>
             <value>10000</value>
             <default_value>1200</default_value>
             <documentation>Steps until restart of Krylow subspace generation</documentation>
-            <pattern>34</pattern>
+            <pattern>35</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </GMRESSteps>
         <Preconditioner>
             <value>Jacobi</value>
             <default_value>Identity</default_value>
             <documentation>Which preconditioner to use</documentation>
-            <pattern>35</pattern>
+            <pattern>36</pattern>
             <pattern_description>[Selection SOR|SSOR|Identity|Jacobi|ILU|Block_Jacobi|ParaSails|LU|ICC|BoomerAMG|Eisenstat ]</pattern_description>
         </Preconditioner>
         <PreconditionerBlockCount>
             <value>8</value>
             <default_value>20</default_value>
             <documentation>Number of Blocks for Block-Preconditioners.</documentation>
-            <pattern>36</pattern>
+            <pattern>37</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </PreconditionerBlockCount>
         <Steps>
             <value>90000</value>
             <default_value>90000</default_value>
             <documentation>Number of Steps the Solver is supposed to do.</documentation>
-            <pattern>37</pattern>
+            <pattern>38</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </Steps>
         <Precision>
             <value>1e-05</value>
             <default_value>1e-5</default_value>
             <documentation>Minimal error value, the solver is supposed to accept as correct solution.</documentation>
-            <pattern>38</pattern>
+            <pattern>39</pattern>
             <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
         </Precision>
     </Solver>
@@ -296,28 +303,28 @@
             <value>true</value>
             <default_value>true</default_value>
             <documentation>If this is set to true, EpsilonZero and MuZero are set to 1.</documentation>
-            <pattern>39</pattern>
+            <pattern>40</pattern>
             <pattern_description>[Bool]</pattern_description>
         </AllOne>
         <EpsilonZero>
             <value>8.854e-18</value>
             <default_value>8.854e-18</default_value>
             <documentation>Physical constant Epsilon zero. The standard value is measured in micrometers.</documentation>
-            <pattern>40</pattern>
+            <pattern>41</pattern>
             <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
         </EpsilonZero>
         <MuZero>
             <value>1.257e-12</value>
             <default_value>1.257e-12</default_value>
             <documentation>Physical constant Mu zero. The standard value is measured in micrometers.</documentation>
-            <pattern>41</pattern>
+            <pattern>42</pattern>
             <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
         </MuZero>
         <Pi>
             <value>3.14159265</value>
             <default_value>3.14159265</default_value>
             <documentation>Mathematical constant Pi.</documentation>
-            <pattern>42</pattern>
+            <pattern>43</pattern>
             <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
         </Pi>
     </Constants>
@@ -326,14 +333,14 @@
             <value>0.01</value>
             <default_value>1.0</default_value>
             <documentation>Step width for the first step.</documentation>
-            <pattern>43</pattern>
+            <pattern>44</pattern>
             <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
         </InitialStepWidth>
         <MaxCases>
             <value>100</value>
             <default_value>100</default_value>
             <documentation>Number of Cases the Optimization is supposed to use.</documentation>
-            <pattern>44</pattern>
+            <pattern>45</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </MaxCases>
     </Optimization>

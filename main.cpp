@@ -24,13 +24,24 @@
 using namespace dealii;
 
 
-int main ()
+
+
+int main (int argc, char *argv[])
 {
+
 	GlobalParams = GetParameters();
 	WaveguideStructure structure(GlobalParams);
-	Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> > waveguide(GlobalParams, structure);
-	Optimization opt(GlobalParams, waveguide, structure);
-	opt.run();
+	Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
+	if(GlobalParams.PRM_S_Library == "DealII" ) {
+		Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> > waveguide(GlobalParams, structure);
+		Optimization<dealii::SparseMatrix<double>, dealii::Vector<double> > opt(GlobalParams, waveguide, structure);
+		opt.run();
+	}
+	if(GlobalParams.PRM_S_Library == "Trilinos") {
+		Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::Vector > waveguide(GlobalParams, structure);
+		Optimization<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::Vector > opt(GlobalParams, waveguide, structure);
+		opt.run();
+	}
 	return 0;
 }
 

@@ -47,6 +47,13 @@
 #include <deal.II/base/timer.h>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/numerics/data_out.h>
+
+// Trilinos Headers
+#include <deal.II/lac/trilinos_precondition.h>
+#include <deal.II/lac/trilinos_solver.h>
+#include <deal.II/lac/trilinos_sparse_matrix.h>
+#include <deal.II/lac/trilinos_vector.h>
+
 #include <fstream>
 #include <iostream>
 #include <cmath>

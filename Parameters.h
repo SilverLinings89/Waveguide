@@ -207,6 +207,11 @@ struct Parameters {
 	 * Constant containing the value of the optical wavelength \f$\lambda\f$.
 	 */
 	double			PRM_C_lambda;
+
+	/**
+	 * Library to be used during calculation: One of either "DealII", "PETSc" or "Trilinos"
+	 */
+	std::string			PRM_S_Library;
 };
 
 #endif

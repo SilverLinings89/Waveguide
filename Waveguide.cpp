@@ -10,6 +10,8 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/vector_tools.templates.h>
 
+
+
 #include <deal.II/base/std_cxx11/bind.h>
 
 using namespace dealii;
@@ -732,6 +734,19 @@ void Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> >::solve () 
 		A_direct.vmult(solution, system_rhs);
 	}
 
+	log_solver.stop();
+	cm.distribute(solution);
+}
+
+template<>
+void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::Vector >::solve () {
+	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
+	log_precondition.start();
+	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
+
+	dealii::TrilinosWrappers::SolverGMRES solver(solver_control,dealii::TrilinosWrappers::SolverGMRES::AdditionalData(true, prm.PRM_S_GMRESSteps) );
+	timerupdate();
+	solver.solve(system_matrix, solution, system_rhs, dealii::TrilinosWrappers::PreconditionIdentity());
 	log_solver.stop();
 	cm.distribute(solution);
 }
