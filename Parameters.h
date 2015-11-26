@@ -212,6 +212,12 @@ struct Parameters {
 	 * Library to be used during calculation: One of either "DealII", "PETSc" or "Trilinos"
 	 */
 	std::string			PRM_S_Library;
+
+	/**
+	 * Number of MPI-processes to be used
+	 */
+	unsigned int 		PRM_S_MPITasks;
+
 };
 
 #endif

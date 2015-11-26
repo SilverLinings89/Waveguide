@@ -104,6 +104,7 @@ static Parameters GetParameters() {
 		ret.PRM_S_PreconditionerBlockCount = prm.get_integer("PreconditionerBlockCount");
 		ret.PRM_S_Steps = prm.get_integer("Steps");
 		ret.PRM_S_Precision = prm.get_double("Precision");
+		ret.PRM_S_MPITasks = prm.get_integer("MPITasks");
 	}
 	prm.leave_subsection();
 

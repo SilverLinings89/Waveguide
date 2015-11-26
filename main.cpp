@@ -31,7 +31,7 @@ int main (int argc, char *argv[])
 
 	GlobalParams = GetParameters();
 	WaveguideStructure structure(GlobalParams);
-	Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
+	Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, GlobalParams.PRM_S_MPITasks);
 	if(GlobalParams.PRM_S_Library == "DealII" ) {
 		Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> > waveguide(GlobalParams, structure);
 		Optimization<dealii::SparseMatrix<double>, dealii::Vector<double> > opt(GlobalParams, waveguide, structure);

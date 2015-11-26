@@ -445,8 +445,9 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 		std::cout << "Renumbering DOFs (Cuthill_McKee...)" << std::endl;
 	}
 
-	DoFRenumbering::Cuthill_McKee (dof_handler);
-	DoFRenumbering::Cuthill_McKee (dof_handler_real);
+	const Point<3> direction(0,0,1);
+	DoFRenumbering::downstream(dof_handler, direction, false);
+	DoFRenumbering::downstream(dof_handler_real, direction, false);
 	if(prm.PRM_O_Dofs) {
 		std::cout << "Number of degrees of freedom: " << dof_handler.n_dofs() << std::endl;
 	}

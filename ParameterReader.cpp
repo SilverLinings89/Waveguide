@@ -76,6 +76,7 @@ void ParameterReader::declare_parameters()
 		prm.declare_entry("PreconditionerBlockCount", "20", Patterns::Integer(1), "Number of Blocks for Block-Preconditioners.");
 		prm.declare_entry("Steps", "90000", Patterns::Integer(1), "Number of Steps the Solver is supposed to do.");
 		prm.declare_entry("Precision", "1e-5", Patterns::Double(0), "Minimal error value, the solver is supposed to accept as correct solution.");
+		prm.declare_entry("MPITasks", "1", Patterns::Integer(1), "Number of MPI-tasks to be used.");
 	prm.leave_subsection();
 
 	prm.enter_subsection("Constants");
