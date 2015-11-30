@@ -70,7 +70,7 @@ void ParameterReader::declare_parameters()
 
 	prm.enter_subsection("Solver");
 		prm.declare_entry("Library", "DealII", Patterns::Selection("DealII|PETSc|Trilinos"), "Which library to use for the computation. (Deal is always available if you have any version installed. For PETSC and Trilinos it is not enough to have them installed - Deal has to be compiled for their usage.");
-		prm.declare_entry("Solver", "GMRES", Patterns::Selection("CG|GMRES|UMFPACK|Richardson|Relaxation"), "Which Solver to use for the solution of the system matrix");
+		prm.declare_entry("Solver", "GMRES", Patterns::Selection("GMRES|UMFPACK|MINRES"), "Which Solver to use for the solution of the system matrix");
 		prm.declare_entry("GMRESSteps", "1200", Patterns::Integer(1), "Steps until restart of Krylow subspace generation");
 		prm.declare_entry("Preconditioner", "Identity", Patterns::Selection("SOR|SSOR|Identity|Jacobi|ILU|Block_Jacobi|ParaSails|LU|ICC|BoomerAMG|Eisenstat"), "Which preconditioner to use");
 		prm.declare_entry("PreconditionerBlockCount", "20", Patterns::Integer(1), "Number of Blocks for Block-Preconditioners.");

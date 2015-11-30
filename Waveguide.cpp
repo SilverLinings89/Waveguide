@@ -674,62 +674,76 @@ void Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> >::solve () 
 	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
-	//if(is_stored) {
-		//solution.reinit(dof_handler.n_dofs());
 
-		//for(unsigned int i = 0; i < dof_handler.n_dofs(); i++){
-		//	solution[i] = storage[i];
-		//}
+	if(prm.PRM_S_Solver == "MINRES") {
+		condition_file.open((solutionpath + "/condition_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << condition_file_counter) )->str() + ".dat").c_str());
+		eigenvalue_file.open((solutionpath + "/eigenvalues_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << eigenvalue_file_counter) )->str() + ".dat").c_str());
+		SolverMinRes<Vector<double> > solver (solver_control, SolverMinRes<Vector<double> >::AdditionalData());
 
-		if(prm.PRM_S_Solver == "GMRES") {
-			condition_file.open((solutionpath + "/condition_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << condition_file_counter) )->str() + ".dat").c_str());
-			eigenvalue_file.open((solutionpath + "/eigenvalues_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << eigenvalue_file_counter) )->str() + ".dat").c_str());
-			SolverGMRES<Vector<double> > solver (solver_control, SolverGMRES<Vector<double> >::AdditionalData(prm.PRM_S_GMRESSteps, true));
-			solver.connect_condition_number_slot(std_cxx11::bind(&Waveguide<dealii::SparseMatrix<double> , dealii::Vector<double> >::print_condition, this, std_cxx11::_1), true);
-			solver.connect_eigenvalues_slot(std_cxx11::bind(&Waveguide<dealii::SparseMatrix<double> , dealii::Vector<double> >::print_eigenvalues, this, std_cxx11::_1), true);
-
-			if(prm.PRM_S_Preconditioner == "Block_Jacobi"){
-				PreconditionBlockJacobi<SparseMatrix<double>, double> block_jacobi;
-				block_jacobi.initialize(system_matrix, PreconditionBlock<SparseMatrix<double>, double>::AdditionalData(log_data.Dofs / prm.PRM_S_PreconditionerBlockCount));
-				timerupdate();
-				solver.solve (system_matrix, solution, system_rhs, block_jacobi);
-			}
-
-			if(prm.PRM_S_Preconditioner == "Identity") {
-				timerupdate();
-				solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
-			}
-
-			if(prm.PRM_S_Preconditioner == "Jacobi"){
-				PreconditionJacobi<SparseMatrix<double>> pre_jacobi;
-				pre_jacobi.initialize(system_matrix, PreconditionJacobi<SparseMatrix<double>>::AdditionalData());
-				timerupdate();
-				solver.solve (system_matrix, solution, system_rhs, pre_jacobi);
-			}
-
-			if(prm.PRM_S_Preconditioner == "SOR"){
-				PreconditionSOR<SparseMatrix<double> > plu;
-				plu.initialize(system_matrix, .6);
-				timerupdate();
-				solver.solve (system_matrix, solution, system_rhs, plu);
-			}
-
-			if(prm.PRM_S_Preconditioner == "SSOR"){
-				PreconditionSSOR<SparseMatrix<double> > plu;
-				plu.initialize(system_matrix, .6);
-				timerupdate();
-				solver.solve (system_matrix, solution, system_rhs, plu);
-			}
-
-			if(prm.PRM_S_Preconditioner == "ILU"){
-				SparseILU<double> ilu;
-				ilu.initialize(system_matrix, SparseILU<double>::AdditionalData(1.0, 5));
-				timerupdate();
-				solver.solve (system_matrix, solution, system_rhs, ilu);
-			}
-
+		if(prm.PRM_S_Preconditioner == "Identity") {
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
 		}
-	 else {
+
+		if(prm.PRM_S_Preconditioner == "Jacobi"){
+			PreconditionJacobi<SparseMatrix<double>> pre_jacobi;
+			pre_jacobi.initialize(system_matrix, PreconditionJacobi<SparseMatrix<double>>::AdditionalData());
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, pre_jacobi);
+		}
+
+		if(prm.PRM_S_Preconditioner == "SSOR"){
+			PreconditionSSOR<SparseMatrix<double> > plu;
+			plu.initialize(system_matrix, .6);
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, plu);
+		}
+
+		if(prm.PRM_S_Preconditioner == "ILU"){
+			SparseILU<double> ilu;
+			ilu.initialize(system_matrix, SparseILU<double>::AdditionalData(1.0, 5));
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, ilu);
+		}
+
+	}
+
+	if(prm.PRM_S_Solver == "GMRES") {
+		condition_file.open((solutionpath + "/condition_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << condition_file_counter) )->str() + ".dat").c_str());
+		eigenvalue_file.open((solutionpath + "/eigenvalues_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << eigenvalue_file_counter) )->str() + ".dat").c_str());
+		SolverGMRES<Vector<double> > solver (solver_control, SolverGMRES<Vector<double> >::AdditionalData(prm.PRM_S_GMRESSteps, true));
+		solver.connect_condition_number_slot(std_cxx11::bind(&Waveguide<dealii::SparseMatrix<double> , dealii::Vector<double> >::print_condition, this, std_cxx11::_1), true);
+		solver.connect_eigenvalues_slot(std_cxx11::bind(&Waveguide<dealii::SparseMatrix<double> , dealii::Vector<double> >::print_eigenvalues, this, std_cxx11::_1), true);
+
+		if(prm.PRM_S_Preconditioner == "Identity") {
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
+		}
+
+		if(prm.PRM_S_Preconditioner == "Jacobi"){
+			PreconditionJacobi<SparseMatrix<double>> pre_jacobi;
+			pre_jacobi.initialize(system_matrix, PreconditionJacobi<SparseMatrix<double>>::AdditionalData());
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, pre_jacobi);
+		}
+
+		if(prm.PRM_S_Preconditioner == "SSOR"){
+			PreconditionSSOR<SparseMatrix<double> > plu;
+			plu.initialize(system_matrix, .6);
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, plu);
+		}
+
+		if(prm.PRM_S_Preconditioner == "ILU"){
+			SparseILU<double> ilu;
+			ilu.initialize(system_matrix, SparseILU<double>::AdditionalData(1.0, 5));
+			timerupdate();
+			solver.solve (system_matrix, solution, system_rhs, ilu);
+		}
+
+	}
+
+	if(prm.PRM_S_Solver == "UMFPACK") {
 		SparseDirectUMFPACK  A_direct;
 		A_direct.initialize(system_matrix);
 		timerupdate();
@@ -742,27 +756,53 @@ void Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> >::solve () 
 
 template<>
 void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::Vector >::solve () {
+	// TODO I should implement more solvers here along with the solver selector if possible.
+	// TODO I should implement more preconditioners here.
 	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
-	dealii::TrilinosWrappers::SolverGMRES solver(solver_control,dealii::TrilinosWrappers::SolverGMRES::AdditionalData(true, prm.PRM_S_GMRESSteps) );
-	timerupdate();
-	solver.solve(system_matrix, solution, system_rhs, dealii::TrilinosWrappers::PreconditionIdentity());
-	log_solver.stop();
+	if(prm.PRM_S_Solver == "GMRES") {
+		dealii::TrilinosWrappers::SolverGMRES solver(solver_control, dealii::TrilinosWrappers::SolverGMRES::AdditionalData(true, prm.PRM_S_GMRESSteps) );
+		timerupdate();
+		solver.solve(system_matrix, solution, system_rhs, dealii::TrilinosWrappers::PreconditionIdentity());
+		log_solver.stop();
+	}
+	if(prm.PRM_S_Solver == "MINRES") {
+		std::cout << "The Trilinos Library does currently not offer MinRes. GMRES used instead."<<std::endl;
+		dealii::TrilinosWrappers::SolverGMRES solver(solver_control,dealii::TrilinosWrappers::SolverGMRES::AdditionalData(true, prm.PRM_S_GMRESSteps) );
+		timerupdate();
+		solver.solve(system_matrix, solution, system_rhs, dealii::TrilinosWrappers::PreconditionIdentity());
+		log_solver.stop();
+	}
+	if(prm.PRM_S_Solver == "UMFPACK") {
+		dealii::TrilinosWrappers::SolverDirect solver(solver_control,dealii::TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack") );
+		timerupdate();
+		solver.solve(system_matrix, solution, system_rhs);
+		log_solver.stop();
+	}
 	cm.distribute(solution);
 }
 
 template<>
 void Waveguide<dealii::PETScWrappers::SparseMatrix, dealii::PETScWrappers::Vector >::solve () {
+	// TODO I should implement more solvers here along with the solver selector if possible.
+	// TODO I should implement more preconditioners here.
 	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
-	dealii::PETScWrappers::SolverGMRES solver(solver_control,MPI_Comm (MPI_COMM_WORLD), dealii::PETScWrappers::SolverGMRES::AdditionalData(true, prm.PRM_S_GMRESSteps) );
-	timerupdate();
-	solver.solve(system_matrix, solution, system_rhs, dealii::PETScWrappers::PreconditionNone());
-	log_solver.stop();
+	if(prm.PRM_S_Solver == "GMRES") {
+		dealii::PETScWrappers::SolverGMRES solver(solver_control,MPI_Comm(MPI_COMM_WORLD), dealii::PETScWrappers::SolverGMRES::AdditionalData(true, prm.PRM_S_GMRESSteps) );
+		timerupdate();
+		solver.solve(system_matrix, solution, system_rhs, dealii::PETScWrappers::PreconditionNone());
+		log_solver.stop();
+	} else {
+		dealii::PETScWrappers::SolverCR solver(solver_control, MPI_Comm(MPI_COMM_WORLD), dealii::PETScWrappers::SolverCR::AdditionalData());
+		timerupdate();
+		solver.solve(system_matrix, solution, system_rhs, dealii::PETScWrappers::PreconditionNone());
+		log_solver.stop();
+	}
 	cm.distribute(solution);
 }
 
@@ -825,6 +865,9 @@ void Waveguide<MatrixType, VectorType>::output_results ()
 
 	std::ofstream outputvtk2 (solutionpath + "/solution-real" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +".vtk");
 	data_out_real.write_vtk(outputvtk2);
+
+	std::ofstream pattern (solutionpath + "/pattern.gnu");
+	sparsity_pattern.print_gnuplot(pattern);
 
 }
 
