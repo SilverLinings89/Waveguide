@@ -45,6 +45,7 @@
 #include <deal.II/base/timer.h>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/numerics/data_out.h>
+#include <deal.II/base/logstream.h>
 
 // Trilinos Headers
 #include <deal.II/lac/trilinos_precondition.h>
@@ -288,6 +289,7 @@ class Waveguide
 		VectorType			storage;
 		bool				is_stored;
 		VectorType			system_rhs;
+		LogStream 			deallog;
 		FileLoggerData 		log_data;
 		FileLogger 			log_constraints, log_assemble, log_precondition, log_total, log_solver;
 		WaveguideStructure 	&structure;

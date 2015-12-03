@@ -23,6 +23,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
   dof_handler (triangulation),
   dof_handler_real(triangulation_real),
   prm(param),
+  deallog(),
   log_data(),
   log_constraints(std::string("constraints.log"), log_data),
   log_assemble(std::string("assemble.log"), log_data),
@@ -52,7 +53,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
 	}
 
 	mkdir(solutionpath.c_str(), ACCESSPERMS);
-	std::cout << "Will write solutions to " << solutionpath << std::endl;
+	deallog << "Will write solutions to " << solutionpath << std::endl;
 	is_stored = false;
 }
 
@@ -109,8 +110,8 @@ double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 	double quality_in	= evaluate_in();
 	double quality_out	= evaluate_out();
 	if(!is_stored) {
-		std::cout << "Quality in: "<< quality_in << std::endl;
-		std::cout << "Quality out: "<< quality_out << std::endl;
+		deallog << "Quality in: "<< quality_in << std::endl;
+		deallog << "Quality out: "<< quality_out << std::endl;
 	}
 	/**
 	differences.reinit(triangulation.n_active_cells());
@@ -118,7 +119,7 @@ double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 	VectorTools::integrate_difference(dof_handler, solution, ExactSolution<3>(), differences, quadrature_formula, VectorTools::L2_norm, new SolutionWeight<3>(), 2.0);
 	double L2error = differences.l2_norm();
 	**/
-	// if(!is_stored) std::cout << "L2 Norm of the error: " << L2error << std::endl;
+	// if(!is_stored) deallog << "L2 Norm of the error: " << L2error << std::endl;
 	result_file << "Number of Dofs: " << dof_handler.n_dofs() << std::endl;
 	//result_file << "L2 Norm of the error:" << L2error << std::endl;
 	result_file << "Z-Length: " << GlobalParams.PRM_M_R_ZLength << std::endl;
@@ -236,7 +237,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 			}
 		}
 	}
-	//std::cout << "get_Tensor_2" << std::endl;
+	//deallog << "get_Tensor_2" << std::endl;
 
 	return ret2;
 }
@@ -407,26 +408,26 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 			}
 		}
 	}
-	std::cout<<counter << " Zellen mit Dirichlet-Werten." << std::endl;
+	deallog<<counter << " Zellen mit Dirichlet-Werten." << std::endl;
 
 
 
 	double l = (double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (GlobalParams.PRM_A_Threads*2.0);
-	std::cout << "Länge eines Blocks:" << l << std::endl;
+	deallog << "Länge eines Blocks:" << l << std::endl;
 
 	cell = triangulation.begin_active();
 	for (; cell!=endc; ++cell){
 
 		int temp  = (int) (((cell->center(true, false))[2] + (GlobalParams.PRM_M_R_ZLength/(2.0)) + GlobalParams.PRM_M_BC_XYin) / l);
-		if( temp >= 2* GlobalParams.PRM_A_Threads || temp < 0) std::cout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
+		if( temp >= 2* GlobalParams.PRM_A_Threads || temp < 0) deallog << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
 		cell->set_subdomain_id(temp);
 	}
 
 
 	if(GlobalParams.PRM_O_Grid) {
-		if(prm.PRM_O_VerboseOutput) std::cout<< "Writing Mesh data to file \"grid-3D.vtk\"" << std::endl;
+		if(prm.PRM_O_VerboseOutput) deallog<< "Writing Mesh data to file \"grid-3D.vtk\"" << std::endl;
 		mesh_info(triangulation, solutionpath + "/grid.vtk");
-		if(prm.PRM_O_VerboseOutput) std::cout<< "Done" << std::endl;
+		if(prm.PRM_O_VerboseOutput) deallog<< "Done" << std::endl;
 
 	}
 
@@ -436,24 +437,92 @@ template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::setup_system ()
 {
 	if(prm.PRM_O_VerboseOutput && prm.PRM_O_Dofs) {
-		std::cout << "Distributing Degrees of freedom." << std::endl;
+		deallog << "Distributing Degrees of freedom." << std::endl;
 	}
 	dof_handler.distribute_dofs (fe);
 	dof_handler_real.distribute_dofs (fe);
 
 	if(prm.PRM_O_VerboseOutput) {
-		std::cout << "Renumbering DOFs (Cuthill_McKee...)" << std::endl;
+		deallog << "Renumbering DOFs (Downstream...)" << std::endl;
 	}
 
 	const Point<3> direction(0,0,1);
 	DoFRenumbering::downstream(dof_handler, direction, false);
 	DoFRenumbering::downstream(dof_handler_real, direction, false);
 	if(prm.PRM_O_Dofs) {
-		std::cout << "Number of degrees of freedom: " << dof_handler.n_dofs() << std::endl;
+		deallog << "Number of degrees of freedom: " << dof_handler.n_dofs() << std::endl;
 	}
 
 	if(prm.PRM_O_VerboseOutput) {
-		std::cout << "Calculating compressed Sparsity Pattern..." << std::endl;
+			deallog << "Renumbering DOFs (Custom...)" << std::endl;
+	}
+
+
+	DoFHandler<3>::active_cell_iterator cell, endc;
+	std::vector<types::global_dof_index> dof_indices (fe.dofs_per_face);
+	int dof_subdomain[dof_handler.n_dofs()];
+	bool dof_at_boundary[dof_handler.n_dofs()];
+
+	for(unsigned int i = 0; i < dof_handler.n_dofs(); i++) {
+		dof_subdomain[i] = -1;
+		dof_at_boundary[i] = false;
+	}
+
+	cell = dof_handler.begin_active(),
+	endc = dof_handler.end();
+	for (; cell!=endc; ++cell)
+	{
+		for(int i = 0; i < 6; i++) {
+			cell->face(i)->get_dof_indices(dof_indices);
+			int subdom = (cell->face(i)->center(false, false)[2] + 1 )/prm.PRM_M_W_Sectors;
+			for(int j = 0; j < fe.dofs_per_face; j++) {
+				if(dof_subdomain[dof_indices[j]] != subdom && dof_subdomain[dof_indices[j]] != -1 && subdom != -1 ) {
+					dof_at_boundary[dof_indices[j]] = true;
+				}
+				if(dof_subdomain[dof_indices[j]] < subdom) {
+					dof_subdomain[dof_indices[j]] = subdom;
+				}
+			}
+		}
+	}
+
+	int Dofs_Per_Subdomain[prm.PRM_M_W_Sectors];
+	for(int i = 0; i < prm.PRM_M_W_Sectors; i++ ) {
+		Dofs_Per_Subdomain[i] = 0;
+	}
+
+	for(int i = 0; i < dof_handler.n_dofs(); i++) {
+		if(dof_subdomain[i] >= 0 && dof_subdomain[i] <= prm.PRM_M_W_Sectors){
+			Dofs_Per_Subdomain[dof_subdomain[i]] ++;
+		} else {
+			deallog << "A critical error was detected while reordering dofs. Falty implementation." << std::endl;
+		}
+	}
+
+	int Dofs_Below_Subdomain[prm.PRM_M_W_Sectors];
+	Dofs_Below_Subdomain[0] = 0;
+	for(int i = 1; i  < prm.PRM_M_W_Sectors; i++) {
+		Dofs_Below_Subdomain[i] = Dofs_Below_Subdomain[i-1] + Dofs_Per_Subdomain[i-1];
+	}
+
+	unsigned int dofcountertest = 0;
+	for (int i =0; i < prm.PRM_M_W_Sectors; i++) {
+		dofcountertest += Dofs_Per_Subdomain[i];
+	}
+
+	if(dofcountertest != dof_handler.n_dofs()) {
+		deallog << "There are " << dof_handler.n_dofs() << " but " << dofcountertest << " were summed up!"<<std::endl;
+	}
+
+	for(int i = 0; i < dof_handler.n_dofs(); i++) {
+		if(i < Dofs_Below_Subdomain[dof_subdomain[i]]) {
+
+	}
+	}
+
+	// Do renumbering now. Numbers are known now.
+	if(prm.PRM_O_VerboseOutput) {
+		deallog << "Calculating compressed Sparsity Pattern..." << std::endl;
 	}
 
 	log_data.Dofs = dof_handler.n_dofs();
@@ -478,7 +547,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	cm.distribute(solution);
 
 	if(prm.PRM_O_VerboseOutput) {
-		if(!is_stored) 	std::cout << "Done." << std::endl;
+		if(!is_stored) 	deallog << "Done." << std::endl;
 	}
 
 }
@@ -570,27 +639,27 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 
 	if(prm.PRM_O_VerboseOutput) {
 		if(!is_stored) {
-		std::cout << "Dofs per cell: " << dofs_per_cell << std::endl << "Quadrature Formula Size: " << n_q_points << std::endl;
-		std::cout << "Dofs per face: " << fe.dofs_per_face << std::endl << "Dofs per line: " << fe.dofs_per_line << std::endl;
+		deallog << "Dofs per cell: " << dofs_per_cell << std::endl << "Quadrature Formula Size: " << n_q_points << std::endl;
+		deallog << "Dofs per face: " << fe.dofs_per_face << std::endl << "Dofs per line: " << fe.dofs_per_line << std::endl;
 		}
 	}
 
 
 	log_assemble.start();
-	if(!is_stored) std::cout << "Starting Assemblation process" << std::endl;
+	if(!is_stored) deallog << "Starting Assemblation process" << std::endl;
 	Threads::TaskGroup<void> task_group1;
 	for (int i = 0; i < GlobalParams.PRM_A_Threads; ++i) {
 		task_group1 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i);
 	}
 	task_group1.join_all ();
-	// std::cout << "Test" << std::endl;
+	// deallog << "Test" << std::endl;
 	Threads::TaskGroup<void> task_group2;
 	for (int i = 0; i < GlobalParams.PRM_A_Threads; ++i) {
 		task_group2 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i+1);
 	}
 	task_group2.join_all ();
 
-	if(!is_stored)  std::cout<<"Assembling done. L2-Norm of RHS: "<< system_rhs.l2_norm()<<std::endl;
+	if(!is_stored)  deallog<<"Assembling done. L2-Norm of RHS: "<< system_rhs.l2_norm()<<std::endl;
 	log_assemble.stop();
 
 }
@@ -756,8 +825,6 @@ void Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> >::solve () 
 
 template<>
 void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::Vector >::solve () {
-	// TODO I should implement more solvers here along with the solver selector if possible.
-	// TODO I should implement more preconditioners here.
 	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
@@ -769,7 +836,7 @@ void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers:
 		log_solver.stop();
 	}
 	if(prm.PRM_S_Solver == "MINRES") {
-		std::cout << "The Trilinos Library does currently not offer MinRes. GMRES used instead."<<std::endl;
+		deallog << "The Trilinos Library does currently not offer MinRes. GMRES used instead."<<std::endl;
 		dealii::TrilinosWrappers::SolverGMRES solver(solver_control,dealii::TrilinosWrappers::SolverGMRES::AdditionalData(true, prm.PRM_S_GMRESSteps) );
 		timerupdate();
 		solver.solve(system_matrix, solution, system_rhs, dealii::TrilinosWrappers::PreconditionIdentity());
@@ -786,8 +853,6 @@ void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers:
 
 template<>
 void Waveguide<dealii::PETScWrappers::SparseMatrix, dealii::PETScWrappers::Vector >::solve () {
-	// TODO I should implement more solvers here along with the solver selector if possible.
-	// TODO I should implement more preconditioners here.
 	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
