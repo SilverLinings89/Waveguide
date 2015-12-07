@@ -57,7 +57,8 @@
 #include <deal.II/lac/petsc_precondition.h>
 #include <deal.II/lac/petsc_solver.h>
 #include <deal.II/lac/petsc_sparse_matrix.h>
-#include <deal.II/lac/petsc_vector.h>
+#include <deal.II/lac/petsc_parallel_vector.h>
+#include <deal.II/lac/petsc_parallel_sparse_matrix.h>
 
 #include <fstream>
 #include <iostream>
@@ -271,6 +272,31 @@ class Waveguide
 		 */
 		void 	timerupdate();
 
+		/**
+		 * Reinit all datastorage objects.
+		 */
+		void 	reinit_all();
+
+		/**
+		 * Reinit only the right hand side vector.
+		 */
+		void 	reinit_rhs();
+
+		/**
+		 * Reinit only the system matrix.
+		 */
+		void 	reinit_systemmatrix();
+
+		/**
+		 * Reinit only the solution vector.
+		 */
+		void 	reinit_solution();
+
+		/**
+		 * This function only initializes the storage vector. Keep in mind, that a call to this function is *not* included in reinit_all().
+		 */
+		void 	reinit_storage();
+
 		std::string			solutionpath;
 
 		Triangulation<3>	triangulation, triangulation_real;
@@ -296,7 +322,7 @@ class Waveguide
 		int 				run_number;
 		int					condition_file_counter, eigenvalue_file_counter;
 		std::ofstream		eigenvalue_file, condition_file, result_file;
-
+		int					Dofs_Below_Subdomain[];
 };
 
 

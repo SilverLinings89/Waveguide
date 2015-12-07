@@ -8,7 +8,7 @@
 #include "ExactSolution.h"
 #include <sstream>
 #include <deal.II/numerics/vector_tools.h>
-#include <deal.II/numerics/vector_tools.templates.h>
+// #include <deal.II/numerics/vector_tools.templates.h>
 
 
 
@@ -51,7 +51,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
 			dir_exists = false;
 		}
 	}
-
+	Dofs_Below_Subdomain[prm.PRM_M_W_Sectors];
 	mkdir(solutionpath.c_str(), ACCESSPERMS);
 	deallog << "Will write solutions to " << solutionpath << std::endl;
 	is_stored = false;
@@ -139,7 +139,8 @@ double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::store() {
-	storage.reinit(dof_handler.n_dofs());
+	reinit_storage();
+	// storage.reinit(dof_handler.n_dofs());
 	for(unsigned int i = 0; i < dof_handler.n_dofs(); i++){
 		storage[i] = solution[i];
 	}
@@ -466,15 +467,17 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	for(unsigned int i = 0; i < dof_handler.n_dofs(); i++) {
 		dof_subdomain[i] = -1;
 		dof_at_boundary[i] = false;
-	}
 
+	}
+	deallog << "Stage 1" << std::endl;
 	cell = dof_handler.begin_active(),
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
 	{
 		for(int i = 0; i < 6; i++) {
 			cell->face(i)->get_dof_indices(dof_indices);
-			int subdom = (cell->face(i)->center(false, false)[2] + 1 )/prm.PRM_M_W_Sectors;
+			int subdom = (cell->face(i)->center(false, false)[2] - structure.z_min ) * prm.PRM_M_W_Sectors / (structure.z_max - structure.z_min);
+			if (subdom == prm.PRM_M_W_Sectors) subdom -= 1;
 			for(int j = 0; j < fe.dofs_per_face; j++) {
 				if(dof_subdomain[dof_indices[j]] != subdom && dof_subdomain[dof_indices[j]] != -1 && subdom != -1 ) {
 					dof_at_boundary[dof_indices[j]] = true;
@@ -485,12 +488,12 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 			}
 		}
 	}
-
+	deallog << "Stage 2" << std::endl;
 	int Dofs_Per_Subdomain[prm.PRM_M_W_Sectors];
 	for(int i = 0; i < prm.PRM_M_W_Sectors; i++ ) {
 		Dofs_Per_Subdomain[i] = 0;
 	}
-
+	deallog << "Stage 3" << std::endl;
 	for(int i = 0; i < dof_handler.n_dofs(); i++) {
 		if(dof_subdomain[i] >= 0 && dof_subdomain[i] <= prm.PRM_M_W_Sectors){
 			Dofs_Per_Subdomain[dof_subdomain[i]] ++;
@@ -498,37 +501,65 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 			deallog << "A critical error was detected while reordering dofs. Falty implementation." << std::endl;
 		}
 	}
+	deallog << "Stage 4" << std::endl;
 
-	int Dofs_Below_Subdomain[prm.PRM_M_W_Sectors];
 	Dofs_Below_Subdomain[0] = 0;
 	for(int i = 1; i  < prm.PRM_M_W_Sectors; i++) {
 		Dofs_Below_Subdomain[i] = Dofs_Below_Subdomain[i-1] + Dofs_Per_Subdomain[i-1];
 	}
-
+	deallog << "Stage 5" << std::endl;
 	unsigned int dofcountertest = 0;
 	for (int i =0; i < prm.PRM_M_W_Sectors; i++) {
 		dofcountertest += Dofs_Per_Subdomain[i];
 	}
-
+	deallog << "Stage 6" << std::endl;
 	if(dofcountertest != dof_handler.n_dofs()) {
 		deallog << "There are " << dof_handler.n_dofs() << " but " << dofcountertest << " were summed up!"<<std::endl;
 	}
-
+	deallog << "Stage 7" << std::endl;
+	std::vector<types::global_dof_index> New_Dofs;
+	for(int i =0; i < dof_handler.n_dofs(); i++) {
+		New_Dofs.push_back(i);
+	}
+	deallog << "Stage 8" << std::endl;
 	for(int i = 0; i < dof_handler.n_dofs(); i++) {
 		if(i < Dofs_Below_Subdomain[dof_subdomain[i]]) {
-
+			bool foundmatch = false;
+			for(int j = Dofs_Below_Subdomain[dof_subdomain[i]]; j < dof_handler.n_dofs() && !foundmatch; j++) {
+				if(dof_subdomain[j] < dof_subdomain[i] && New_Dofs[j] == j) {
+					New_Dofs[i] = j;
+					New_Dofs[j] = i;
+					foundmatch = true;
+				}
+			}
+			if(!foundmatch) deallog << "Found no match for dof " << i << " which should at least be at position " << Dofs_Below_Subdomain[dof_subdomain[i]] <<"." <<std::endl;
+		}
 	}
+	deallog << "Stage 9" << std::endl;
+	for(int i = 0; i < dof_handler.n_dofs(); i++) {
+		if(New_Dofs[i] < Dofs_Below_Subdomain[dof_subdomain[i]]) {
+			deallog << "The ordering is incomplete!" << std::endl;
+		}
 	}
 
-	// Do renumbering now. Numbers are known now.
+	deallog << "Executing dof-rednumbering now..." << std::endl;
+	dof_handler.renumber_dofs(New_Dofs);
+	dof_handler_real.renumber_dofs(New_Dofs);
+
+	deallog << "Block indices: " << std::endl;
+
+	for(int i = 0 ; i < prm.PRM_M_W_Sectors; i++) {
+		deallog << Dofs_Below_Subdomain[i] << std::endl;
+	}
+
+
 	if(prm.PRM_O_VerboseOutput) {
 		deallog << "Calculating compressed Sparsity Pattern..." << std::endl;
 	}
 
 	log_data.Dofs = dof_handler.n_dofs();
-		log_constraints.start();
+	log_constraints.start();
 
-	DoFHandler<3>::active_cell_iterator cell, endc;
 
 	MakeBoundaryConditions();
 	DoFTools::make_hanging_node_constraints(dof_handler, cm);
@@ -541,15 +572,61 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	DoFTools::make_sparsity_pattern (dof_handler, c_sparsity, cm, false);
 	sparsity_pattern.copy_from(c_sparsity);
 
-	system_matrix.reinit( sparsity_pattern );
-	solution.reinit ( dof_handler.n_dofs());
-	system_rhs.reinit(dof_handler.n_dofs());
+	reinit_all();
+
 	cm.distribute(solution);
 
 	if(prm.PRM_O_VerboseOutput) {
 		if(!is_stored) 	deallog << "Done." << std::endl;
 	}
 
+}
+
+template <typename MatrixType, typename VectorType>
+void Waveguide<MatrixType, VectorType>::reinit_all () {
+	reinit_rhs();
+	reinit_solution();
+	reinit_systemmatrix();
+}
+
+template <typename MatrixType, typename VectorType>
+void Waveguide<MatrixType, VectorType>::reinit_rhs () {
+	system_rhs.reinit(dof_handler.n_dofs());
+}
+
+template <typename MatrixType, typename VectorType>
+void Waveguide<MatrixType, VectorType>::reinit_systemmatrix() {
+	system_matrix.reinit(sparsity_pattern);
+}
+
+template <typename MatrixType, typename VectorType>
+void Waveguide<MatrixType, VectorType>::reinit_solution() {
+	solution.reinit(dof_handler.n_dofs());
+}
+
+template <typename MatrixType, typename VectorType>
+void Waveguide<MatrixType, VectorType>::reinit_storage() {
+	storage.reinit(dof_handler.n_dofs());
+}
+
+template <>
+void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_systemmatrix() {
+	system_matrix.reinit(MPI_COMM_WORLD, dof_handler.n_dofs(), dof_handler.n_dofs(), dof_handler.n_dofs(), dof_handler.n_dofs(), sparsity_pattern.max_entries_per_row());
+}
+
+template <>
+void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_rhs () {
+	system_rhs.reinit(MPI_COMM_WORLD, dof_handler.n_dofs(), dof_handler.n_dofs());
+}
+
+template <>
+void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_solution() {
+	solution.reinit(MPI_COMM_WORLD, dof_handler.n_dofs(), dof_handler.n_dofs());
+}
+
+template<>
+void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_storage() {
+	storage.reinit(MPI_COMM_WORLD, dof_handler.n_dofs(), dof_handler.n_dofs());
 }
 
 template<typename MatrixType, typename VectorType >
@@ -627,7 +704,8 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::assemble_system ()
 {
-	system_rhs.reinit(dof_handler.n_dofs());
+	reinit_rhs();
+	// system_rhs.reinit(dof_handler.n_dofs());
 
 	QGauss<3>  quadrature_formula(2);
 	const FEValuesExtractors::Vector real(0);
@@ -845,6 +923,7 @@ void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers:
 	if(prm.PRM_S_Solver == "UMFPACK") {
 		dealii::TrilinosWrappers::SolverDirect solver(solver_control,dealii::TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack") );
 		timerupdate();
+
 		solver.solve(system_matrix, solution, system_rhs);
 		log_solver.stop();
 	}
@@ -852,7 +931,7 @@ void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers:
 }
 
 template<>
-void Waveguide<dealii::PETScWrappers::SparseMatrix, dealii::PETScWrappers::Vector >::solve () {
+void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector >::solve () {
 	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
@@ -934,6 +1013,17 @@ void Waveguide<MatrixType, VectorType>::output_results ()
 	std::ofstream pattern (solutionpath + "/pattern.gnu");
 	sparsity_pattern.print_gnuplot(pattern);
 
+	std::ofstream patternscript (solutionpath + "/displaypattern.gnu");
+	patternscript << "set style line 1000 lw 1 lc \"black\"" <<std::endl;
+	for(int i = 0; i < prm.PRM_M_W_Sectors; i++) {
+		patternscript << "set arrow " << 1000 + 2*i << " from 0,-" << Dofs_Below_Subdomain[i] << " to "<<dof_handler.n_dofs()<<",-"<<Dofs_Below_Subdomain[i]<<" nohead ls 1000 front"<<std::endl;
+		patternscript << "set arrow " << 1001 + 2*i  << " from " << Dofs_Below_Subdomain[i] << ",0 to " << Dofs_Below_Subdomain[i] << ", -"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
+	}
+	patternscript << "set arrow " << 1000 + 2*prm.PRM_M_W_Sectors << " from 0,-" << dof_handler.n_dofs() << " to "<<dof_handler.n_dofs()<<",-"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
+	patternscript << "set arrow " << 1001 + 2*prm.PRM_M_W_Sectors << " from " << dof_handler.n_dofs() << ",0 to " << dof_handler.n_dofs() << ", -"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
+
+	patternscript << "plot \"pattern.gnu\" with dots" <<std::endl;
+	patternscript.flush();
 }
 
 template<typename MatrixType, typename VectorType >
@@ -965,9 +1055,8 @@ void Waveguide<MatrixType, VectorType>::print_condition(double condition) {
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reset_changes ()
 {
-	system_matrix.reinit( sparsity_pattern );
-	solution.reinit ( dof_handler.n_dofs());
-	system_rhs.reinit(dof_handler.n_dofs());
+	reinit_all();
+
 	cm.distribute(solution);
 }
 

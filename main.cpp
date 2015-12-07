@@ -43,8 +43,8 @@ int main (int argc, char *argv[])
 		opt.run();
 	}
 	if(GlobalParams.PRM_S_Library == "PETSc") {
-			Waveguide<dealii::PETScWrappers::SparseMatrix, dealii::PETScWrappers::Vector > waveguide(GlobalParams, structure);
-			Optimization<dealii::PETScWrappers::SparseMatrix, dealii::PETScWrappers::Vector > opt(GlobalParams, waveguide, structure);
+			Waveguide<PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::Vector > waveguide(GlobalParams, structure);
+			Optimization<PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::Vector > opt(GlobalParams, waveguide, structure);
 			opt.run();
 		}
 	return 0;

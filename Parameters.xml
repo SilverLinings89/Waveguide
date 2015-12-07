@@ -128,7 +128,7 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </Lambda>
             <Sectors>
-                <value>2</value>
+                <value>5</value>
                 <default_value>2</default_value>
                 <documentation>Number of Sectors used for Modelling of the Waveguide.</documentation>
                 <pattern>17</pattern>
@@ -249,14 +249,14 @@
     </Assembly>
     <Solver>
         <Library>
-            <value>Trilinos</value>
+            <value>DealII</value>
             <default_value>DealII</default_value>
             <documentation>Which library to use for the computation. (Deal is always available if you have any version installed. For PETSC and Trilinos it is not enough to have them installed - Deal has to be compiled for their usage.</documentation>
             <pattern>33</pattern>
             <pattern_description>[Selection DealII|PETSc|Trilinos ]</pattern_description>
         </Library>
         <Solver>
-            <value>GMRES</value>
+            <value>UMFPACK</value>
             <default_value>GMRES</default_value>
             <documentation>Which Solver to use for the solution of the system matrix</documentation>
             <pattern>34</pattern>
@@ -297,13 +297,13 @@
             <pattern>39</pattern>
             <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
         </Precision>
-	<MPITasks>
-	  <value>4</value>
-	  <default_value>1</default_value>
-	  <documentation>Number of MPI-tasks to be used.</documentation>
-	  <pattern>40</pattern>
-	  <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
-	</MPITasks>
+        <MPITasks>
+            <value>4</value>
+            <default_value>1</default_value>
+            <documentation>Number of MPI-tasks to be used.</documentation>
+            <pattern>40</pattern>
+            <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
+        </MPITasks>
     </Solver>
     <Constants>
         <AllOne>

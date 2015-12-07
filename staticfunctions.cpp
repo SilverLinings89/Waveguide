@@ -206,8 +206,8 @@ static Point<3> Triangulation_Stretch_Y (const Point<3> &p)
 static Point<3> Triangulation_Stretch_Z (const Point<3> &p)
 {
   Point<3> q = p;
-  q[2] *= (GlobalParams.PRM_M_BC_XYout + GlobalParams.PRM_M_BC_XYin+ GlobalParams.PRM_M_R_ZLength) /2.0;
-  q[2] += (GlobalParams.PRM_M_BC_XYout - GlobalParams.PRM_M_BC_XYin)/2.0;
+  q[2] *= ( GlobalParams.PRM_M_BC_XYout + GlobalParams.PRM_M_BC_XYin+ GlobalParams.PRM_M_R_ZLength) /2.0;
+  q[2] += ( GlobalParams.PRM_M_BC_XYout - GlobalParams.PRM_M_BC_XYin)/2.0;
   return q;
 }
 
