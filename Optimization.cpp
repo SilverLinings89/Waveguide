@@ -16,7 +16,7 @@ Optimization<Matrix, Vector >::Optimization( Parameters in_System_Parameters ,Wa
 
 template<typename Matrix,typename Vector>
 void Optimization<Matrix, Vector>::run() {
-	double gradient [dofs];
+	std::vector<double> gradient(dofs);
 	double step_width = GlobalParams.PRM_Op_InitialStepWidth;
 	int steps_counter = 0;
 	structure.estimate_and_initialize();

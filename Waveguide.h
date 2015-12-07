@@ -247,6 +247,12 @@ class Waveguide
 		void	MakeBoundaryConditions ();
 
 		/**
+		 * This function executes refined downstream ordering of degrees of freedom.
+		 */
+		void 	Do_Refined_Reordering();
+
+
+		/**
 		 * DEPRECATED. SCHEDULED FOR REMOVAL.
 		 */
 		double  RHS_value(const Point<3> &, const unsigned int component);
@@ -298,7 +304,8 @@ class Waveguide
 		void 	reinit_storage();
 
 		std::string			solutionpath;
-
+		DoFHandler<3>::active_cell_iterator
+							cell, endc;
 		Triangulation<3>	triangulation, triangulation_real;
 		FESystem<3>			fe;
 		DoFHandler<3>	dof_handler, dof_handler_real;
@@ -322,7 +329,7 @@ class Waveguide
 		int 				run_number;
 		int					condition_file_counter, eigenvalue_file_counter;
 		std::ofstream		eigenvalue_file, condition_file, result_file;
-		int					Dofs_Below_Subdomain[];
+		std::vector<int>	Dofs_Below_Subdomain;
 };
 
 

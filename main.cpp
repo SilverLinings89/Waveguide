@@ -38,13 +38,13 @@ int main (int argc, char *argv[])
 		opt.run();
 	}
 	if(GlobalParams.PRM_S_Library == "Trilinos") {
-		Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::Vector > waveguide(GlobalParams, structure);
-		Optimization<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::Vector > opt(GlobalParams, waveguide, structure);
+		Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::MPI::Vector  > waveguide(GlobalParams, structure);
+		Optimization<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::MPI::Vector  > opt(GlobalParams, waveguide, structure);
 		opt.run();
 	}
 	if(GlobalParams.PRM_S_Library == "PETSc") {
 			Waveguide<PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::Vector > waveguide(GlobalParams, structure);
-			Optimization<PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::Vector > opt(GlobalParams, waveguide, structure);
+			Optimization<PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::Vector> opt(GlobalParams, waveguide, structure);
 			opt.run();
 		}
 	return 0;
