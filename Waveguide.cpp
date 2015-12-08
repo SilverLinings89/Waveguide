@@ -34,7 +34,8 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
   run_number(0),
   condition_file_counter(0),
   eigenvalue_file_counter(0),
-  Sectors(prm.PRM_M_W_Sectors)
+  Sectors(prm.PRM_M_W_Sectors),
+  temporary_pattern_preped(false)
 {
 	assembly_progress = 0;
 	int i = 0;
@@ -104,8 +105,6 @@ double Waveguide<MatrixType, VectorType>::evaluate_in () {
 	return sqrt(ret);
 }
 
-
-
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 	double quality_in	= evaluate_in();
@@ -136,7 +135,6 @@ double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 
 	return quality_out/quality_in;
 }
-
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::store() {
@@ -244,7 +242,6 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 	return ret2;
 }
 
-
 template<typename MatrixType, typename VectorType >
 Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Conjugate_Tensor(Tensor<2,3, std::complex<double>> input) {
 	Tensor<2,3, std::complex<double>> ret ;
@@ -313,7 +310,6 @@ double Waveguide<MatrixType, VectorType>::PML_Z_Distance(Point<3> &p){
 		return -p(2) - (GlobalParams.PRM_M_R_ZLength / 2.0);
 	}
 }
-
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::make_grid ()
@@ -532,12 +528,18 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 	for(int i = 1 ; i < Sectors; i++) {
 		deallog <<"Dofs below Block "<< i+1<<":"<<  Dofs_Below_Subdomain[i] << std::endl;
 	}
+	deallog << "1" <<std::endl;
 
-	set.reserve(Sectors);
+	deallog << "2" <<std::endl;
 	for(int i = 0; i < Sectors; i++) {
-		set[i] = IndexSet(dof_handler.n_dofs());
-		set[i].add_range(Dofs_Below_Subdomain[i],Dofs_Below_Subdomain[i]+Block_Sizes[i] );
+		IndexSet temp (dof_handler.n_dofs());
+		temp.clear();
+		deallog << "Adding Block "<< i +1 << " from " << Dofs_Below_Subdomain[i] << " to " << Dofs_Below_Subdomain[i]+Block_Sizes[i] -1<<std::endl;
+		temp.add_range(Dofs_Below_Subdomain[i],Dofs_Below_Subdomain[i]+Block_Sizes[i] -1);
+		deallog << i+3 <<std::endl;
+		set.push_back(temp);
 	}
+	deallog << "END" <<std::endl;
 
 }
 
@@ -569,16 +571,15 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	Do_Refined_Reordering();
 
 
-	if(prm.PRM_O_VerboseOutput) {
-		deallog << "Calculating compressed Sparsity Pattern..." << std::endl;
-	}
+	deallog << "Reordering done." << std::endl;
 
 	log_data.Dofs = dof_handler.n_dofs();
 	log_constraints.start();
 
-
 	MakeBoundaryConditions();
 	DoFTools::make_hanging_node_constraints(dof_handler, cm);
+
+	deallog << "Constructing Sparsity Pattern." << std::endl;
 
 	cm.close();
 	log_constraints.stop();
@@ -593,7 +594,8 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 				if( std::abs(i - j) == 1 ) {
 					sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j]);
 				} else {
-					sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j], tempset);
+					sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j]);
+
 				}
 			}
 		}
@@ -606,6 +608,8 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	DoFTools::make_sparsity_pattern (dof_handler, sparsity_pattern, cm, false);
 
 	sparsity_pattern.compress();
+
+	deallog << "Sparsity Pattern Construction done." << std::endl;
 
 	reinit_all();
 
@@ -634,9 +638,11 @@ void Waveguide<MatrixType, VectorType>::reinit_rhs () {
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_systemmatrix() {
-	BlockSparsityPattern temp;
-	temp.copy_from(sparsity_pattern);
-	system_matrix.reinit( temp);
+	if(!temporary_pattern_preped) {
+		temporary_pattern.copy_from(sparsity_pattern);
+		temporary_pattern_preped = true;
+	}
+	system_matrix.reinit( temporary_pattern);
 }
 
 template<typename MatrixType, typename VectorType >
@@ -704,7 +710,6 @@ void Waveguide<TrilinosWrappers::BlockSparseMatrix, TrilinosWrappers::MPI::Block
 	solution.collect_sizes();
 	//solution.reinit( complete_index_set(dof_handler.n_dofs()) );
 }
-
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
@@ -818,7 +823,6 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 	log_assemble.stop();
 
 }
-
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){

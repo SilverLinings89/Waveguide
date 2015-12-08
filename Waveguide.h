@@ -326,6 +326,8 @@ class Waveguide
 		std::vector<int>						Dofs_Below_Subdomain, Block_Sizes;
 		const int 								Sectors;
 		std::vector<dealii::IndexSet> 			set;
+		BlockSparsityPattern 					temporary_pattern;
+		bool									temporary_pattern_preped;
 };
 
 
