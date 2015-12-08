@@ -25,40 +25,35 @@
 #include <deal.II/base/function.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
-#include <deal.II/lac/vector.h>
 #include <deal.II/lac/full_matrix.h>
-#include <deal.II/lac/sparse_matrix.h>
-#include <deal.II/lac/compressed_sparsity_pattern.h>
+#include <deal.II/lac/block_sparsity_pattern.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/solver_gmres.h>
 #include <deal.II/lac/solver_minres.h>
 #include <deal.II/lac/precondition.h>
-#include <deal.II/lac/precondition_block.h>
 #include <deal.II/lac/sparse_direct.h>
-#include <deal.II/lac/sparse_ilu.h>
 #include <deal.II/lac/block_sparse_matrix.h>
-#include <deal.II/lac/block_matrix.h>
 #include <deal.II/lac/block_vector.h>
-#include <deal.II/lac/block_sparsity_pattern.h>
-#include <deal.II/lac/block_matrix_base.h>
-#include <deal.II/lac/block_vector_base.h>
 #include <deal.II/base/timer.h>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/base/logstream.h>
+#include <deal.II/base/index_set.h>
 
 // Trilinos Headers
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_solver.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
+#include <deal.II/lac/trilinos_block_sparse_matrix.h>
+#include <deal.II/lac/trilinos_block_vector.h>
 #include <deal.II/lac/trilinos_vector.h>
 
 // PETSc Headers
 #include <deal.II/lac/petsc_precondition.h>
 #include <deal.II/lac/petsc_solver.h>
 #include <deal.II/lac/petsc_sparse_matrix.h>
-#include <deal.II/lac/petsc_parallel_vector.h>
-#include <deal.II/lac/petsc_parallel_sparse_matrix.h>
+#include <deal.II/lac/petsc_parallel_block_sparse_matrix.h>
+#include <deal.II/lac/petsc_parallel_block_vector.h>
 
 #include <fstream>
 #include <iostream>
@@ -303,33 +298,34 @@ class Waveguide
 		 */
 		void 	reinit_storage();
 
-		std::string			solutionpath;
-		DoFHandler<3>::active_cell_iterator
-							cell, endc;
-		Triangulation<3>	triangulation, triangulation_real;
-		FESystem<3>			fe;
-		DoFHandler<3>	dof_handler, dof_handler_real;
-		VectorType		solution;
-		ConstraintMatrix 	cm;
+		std::string								solutionpath;
+		DoFHandler<3>::active_cell_iterator		cell, endc;
+		Triangulation<3>						triangulation, triangulation_real;
+		FESystem<3>								fe;
+		DoFHandler<3>							dof_handler, dof_handler_real;
+		VectorType								solution;
+		ConstraintMatrix 						cm;
 
-		SparsityPattern		sparsity_pattern;
-		MatrixType			system_matrix;
-		Parameters			&prm;
-		ConstraintMatrix 	boundary_value_constraints_imaginary;
-		ConstraintMatrix 	boundary_value_constraints_real;
+		BlockDynamicSparsityPattern				sparsity_pattern;
+		MatrixType								system_matrix;
+		Parameters								&prm;
+		ConstraintMatrix 						boundary_value_constraints_imaginary;
+		ConstraintMatrix 						boundary_value_constraints_real;
 
-		int 				assembly_progress;
-		VectorType			storage;
-		bool				is_stored;
-		VectorType			system_rhs;
-		LogStream 			deallog;
-		FileLoggerData 		log_data;
-		FileLogger 			log_constraints, log_assemble, log_precondition, log_total, log_solver;
-		WaveguideStructure 	&structure;
-		int 				run_number;
-		int					condition_file_counter, eigenvalue_file_counter;
-		std::ofstream		eigenvalue_file, condition_file, result_file;
-		std::vector<int>	Dofs_Below_Subdomain;
+		int 									assembly_progress;
+		VectorType								storage;
+		bool									is_stored;
+		VectorType								system_rhs;
+		LogStream 								deallog;
+		FileLoggerData 							log_data;
+		FileLogger 								log_constraints, log_assemble, log_precondition, log_total, log_solver;
+		WaveguideStructure 						&structure;
+		int 									run_number;
+		int										condition_file_counter, eigenvalue_file_counter;
+		std::ofstream							eigenvalue_file, condition_file, result_file;
+		std::vector<int>						Dofs_Below_Subdomain, Block_Sizes;
+		const int 								Sectors;
+		std::vector<dealii::IndexSet> 			set;
 };
 
 

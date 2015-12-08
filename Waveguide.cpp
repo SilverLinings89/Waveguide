@@ -33,7 +33,8 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
   structure(in_structure),
   run_number(0),
   condition_file_counter(0),
-  eigenvalue_file_counter(0)
+  eigenvalue_file_counter(0),
+  Sectors(prm.PRM_M_W_Sectors)
 {
 	assembly_progress = 0;
 	int i = 0;
@@ -438,7 +439,6 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 	const int NumberOfDofs = dof_handler.n_dofs();
-	const int Sectors = prm.PRM_M_W_Sectors;
 	std::vector<types::global_dof_index> dof_indices (fe.dofs_per_face);
 	std::vector<int> dof_subdomain(NumberOfDofs);
 	std::vector<bool> dof_at_boundary(NumberOfDofs);
@@ -468,14 +468,14 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 		}
 	}
 	deallog << "Stage 2" << std::endl;
-	std::vector<int> Dofs_Per_Subdomain(Sectors);
+	Block_Sizes.reserve(Sectors);
 	for(int i = 0; i < Sectors; i++ ) {
-		Dofs_Per_Subdomain[i] = 0;
+		Block_Sizes[i] = 0;
 	}
 	deallog << "Stage 3" << std::endl;
 	for(int i = 0; i < NumberOfDofs; i++) {
 		if(dof_subdomain[i] >= 0 && dof_subdomain[i] <= Sectors){
-			Dofs_Per_Subdomain[dof_subdomain[i]] ++;
+			Block_Sizes[dof_subdomain[i]] ++;
 		} else {
 			deallog << "A critical error was detected while reordering dofs. Falty implementation." << std::endl;
 		}
@@ -485,12 +485,12 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 	Dofs_Below_Subdomain.reserve(Sectors);
 	Dofs_Below_Subdomain[0] = 0;
 	for(int i = 1; i  < Sectors; i++) {
-		Dofs_Below_Subdomain[i] = Dofs_Below_Subdomain[i-1] + Dofs_Per_Subdomain[i-1];
+		Dofs_Below_Subdomain[i] = Dofs_Below_Subdomain[i-1] + Block_Sizes[i-1];
 	}
 	deallog << "Stage 5" << std::endl;
 	unsigned int dofcountertest = 0;
 	for (int i =0; i < Sectors; i++) {
-		dofcountertest += Dofs_Per_Subdomain[i];
+		dofcountertest += Block_Sizes[i];
 	}
 	deallog << "Stage 6" << std::endl;
 	if(dofcountertest != NumberOfDofs) {
@@ -532,6 +532,13 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 	for(int i = 1 ; i < Sectors; i++) {
 		deallog <<"Dofs below Block "<< i+1<<":"<<  Dofs_Below_Subdomain[i] << std::endl;
 	}
+
+	set.reserve(Sectors);
+	for(int i = 0; i < Sectors; i++) {
+		set[i] = IndexSet(dof_handler.n_dofs());
+		set[i].add_range(Dofs_Below_Subdomain[i],Dofs_Below_Subdomain[i]+Block_Sizes[i] );
+	}
+
 }
 
 template<typename MatrixType, typename VectorType >
@@ -575,11 +582,30 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 	cm.close();
 	log_constraints.stop();
+	IndexSet tempset(dof_handler.n_dofs());
+	tempset.clear();
+	sparsity_pattern.reinit(Sectors, Sectors);
+	for ( int i = 0 ; i < Sectors; i++) {
+		for ( int j = 0 ; j < Sectors; j++) {
+			if(i == j)	{
+				sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j] );
+			} else {
+				if( std::abs(i - j) == 1 ) {
+					sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j]);
+				} else {
+					sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j], tempset);
+				}
+			}
+		}
+	}
+
+	sparsity_pattern.collect_sizes();
 
 
-	DynamicSparsityPattern c_sparsity(dof_handler.n_dofs());
-	DoFTools::make_sparsity_pattern (dof_handler, c_sparsity, cm, false);
-	sparsity_pattern.copy_from(c_sparsity);
+	//DynamicSparsityPattern c_sparsity(dof_handler.n_dofs());
+	DoFTools::make_sparsity_pattern (dof_handler, sparsity_pattern, cm, false);
+
+	sparsity_pattern.compress();
 
 	reinit_all();
 
@@ -600,57 +626,83 @@ void Waveguide<MatrixType, VectorType>::reinit_all () {
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_rhs () {
-	system_rhs.reinit(dof_handler.n_dofs());
+	system_rhs.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) system_rhs.block(i).reinit(Block_Sizes[i]);
+	system_rhs.collect_sizes();
+	// This is equivalent to system_rhs.reinit(dof_handler.n_dofs()) for a pure vector. It does the same operation on a block-system.
 }
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_systemmatrix() {
-	system_matrix.reinit(sparsity_pattern);
+	BlockSparsityPattern temp;
+	temp.copy_from(sparsity_pattern);
+	system_matrix.reinit( temp);
 }
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_solution() {
-	solution.reinit(dof_handler.n_dofs());
+	solution.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) solution.block(i).reinit(Block_Sizes[i]);
+	solution.collect_sizes();
 }
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_storage() {
-	storage.reinit(dof_handler.n_dofs());
+	storage.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) storage.block(i).reinit(Block_Sizes[i]);
+	storage.collect_sizes();
 }
 
 template <>
-void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_systemmatrix() {
-	system_matrix.reinit(MPI_COMM_WORLD, dof_handler.n_dofs(), dof_handler.n_dofs(), dof_handler.n_dofs(), dof_handler.n_dofs(), sparsity_pattern.max_entries_per_row());
+void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockVector>::reinit_systemmatrix() {
+	system_matrix.reinit(set, sparsity_pattern,  MPI_COMM_WORLD);
 }
 
 template <>
-void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_rhs () {
-	system_rhs.reinit(MPI_COMM_WORLD, dof_handler.n_dofs(), dof_handler.n_dofs());
+void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockVector>::reinit_rhs () {
+	system_rhs.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) system_rhs.block(i).reinit(MPI_COMM_WORLD, Block_Sizes[i], Block_Sizes[i]);
+	system_rhs.collect_sizes();
 }
 
 template <>
-void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_solution() {
-	solution.reinit(MPI_COMM_WORLD, dof_handler.n_dofs(), dof_handler.n_dofs());
+void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockVector>::reinit_solution() {
+	solution.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) solution.block(i).reinit(MPI_COMM_WORLD, Block_Sizes[i], Block_Sizes[i]);
+	solution.collect_sizes();
+	//solution.reinit(MPI_COMM_WORLD, dof_handler.n_dofs(), dof_handler.n_dofs());
 }
 
 template<>
-void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_storage() {
-	storage.reinit(MPI_COMM_WORLD, dof_handler.n_dofs(), dof_handler.n_dofs());
+void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockVector>::reinit_storage() {
+	storage.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) storage.block(i).reinit(MPI_COMM_WORLD, Block_Sizes[i], Block_Sizes[i]);
+	storage.collect_sizes();
+	//storage.reinit(MPI_COMM_WORLD, dof_handler.n_dofs(), dof_handler.n_dofs());
 }
 
 template<>
-void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_storage() {
-	storage.reinit( complete_index_set(dof_handler.n_dofs()) );
+void Waveguide<TrilinosWrappers::BlockSparseMatrix, TrilinosWrappers::MPI::BlockVector>::reinit_storage() {
+	storage.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) storage.block(i).reinit(set[i], MPI_COMM_WORLD);
+	storage.collect_sizes();
+	// storage.reinit( complete_index_set(dof_handler.n_dofs()) );
 }
 
 template<>
-void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_rhs() {
-	system_rhs.reinit( complete_index_set(dof_handler.n_dofs()) );
+void Waveguide<TrilinosWrappers::BlockSparseMatrix, TrilinosWrappers::MPI::BlockVector>::reinit_rhs() {
+	system_rhs.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) system_rhs.block(i).reinit(set[i], MPI_COMM_WORLD);
+	system_rhs.collect_sizes();
+	// system_rhs.reinit( complete_index_set(dof_handler.n_dofs()) );
 }
 
 template<>
-void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_solution() {
-	solution.reinit( complete_index_set(dof_handler.n_dofs()) );
+void Waveguide<TrilinosWrappers::BlockSparseMatrix, TrilinosWrappers::MPI::BlockVector>::reinit_solution() {
+	solution.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) solution.block(i).reinit(set[i], MPI_COMM_WORLD);
+	solution.collect_sizes();
+	//solution.reinit( complete_index_set(dof_handler.n_dofs()) );
 }
 
 
@@ -871,13 +923,6 @@ void Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> >::solve () 
 			solver.solve (system_matrix, solution, system_rhs, plu);
 		}
 
-		if(prm.PRM_S_Preconditioner == "ILU"){
-			SparseILU<double> ilu;
-			ilu.initialize(system_matrix, SparseILU<double>::AdditionalData(1.0, 5));
-			timerupdate();
-			solver.solve (system_matrix, solution, system_rhs, ilu);
-		}
-
 	}
 
 	if(prm.PRM_S_Solver == "GMRES") {
@@ -904,13 +949,6 @@ void Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> >::solve () 
 			plu.initialize(system_matrix, .6);
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, plu);
-		}
-
-		if(prm.PRM_S_Preconditioner == "ILU"){
-			SparseILU<double> ilu;
-			ilu.initialize(system_matrix, SparseILU<double>::AdditionalData(1.0, 5));
-			timerupdate();
-			solver.solve (system_matrix, solution, system_rhs, ilu);
 		}
 
 	}
