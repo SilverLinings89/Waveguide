@@ -8,7 +8,7 @@
 #include "ExactSolution.h"
 #include <sstream>
 #include <deal.II/numerics/vector_tools.h>
-#include <deal.II/numerics/vector_tools.templates.h>
+// #include <deal.II/numerics/vector_tools.templates.h>
 
 
 
@@ -23,6 +23,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
   dof_handler (triangulation),
   dof_handler_real(triangulation_real),
   prm(param),
+  deallog(),
   log_data(),
   log_constraints(std::string("constraints.log"), log_data),
   log_assemble(std::string("assemble.log"), log_data),
@@ -32,7 +33,9 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
   structure(in_structure),
   run_number(0),
   condition_file_counter(0),
-  eigenvalue_file_counter(0)
+  eigenvalue_file_counter(0),
+  Sectors(prm.PRM_M_W_Sectors),
+  temporary_pattern_preped(false)
 {
 	assembly_progress = 0;
 	int i = 0;
@@ -50,9 +53,9 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
 			dir_exists = false;
 		}
 	}
-
+	Dofs_Below_Subdomain[prm.PRM_M_W_Sectors];
 	mkdir(solutionpath.c_str(), ACCESSPERMS);
-	std::cout << "Will write solutions to " << solutionpath << std::endl;
+	deallog << "Will write solutions to " << solutionpath << std::endl;
 	is_stored = false;
 }
 
@@ -102,15 +105,13 @@ double Waveguide<MatrixType, VectorType>::evaluate_in () {
 	return sqrt(ret);
 }
 
-
-
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 	double quality_in	= evaluate_in();
 	double quality_out	= evaluate_out();
 	if(!is_stored) {
-		std::cout << "Quality in: "<< quality_in << std::endl;
-		std::cout << "Quality out: "<< quality_out << std::endl;
+		deallog << "Quality in: "<< quality_in << std::endl;
+		deallog << "Quality out: "<< quality_out << std::endl;
 	}
 	/**
 	differences.reinit(triangulation.n_active_cells());
@@ -118,7 +119,7 @@ double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 	VectorTools::integrate_difference(dof_handler, solution, ExactSolution<3>(), differences, quadrature_formula, VectorTools::L2_norm, new SolutionWeight<3>(), 2.0);
 	double L2error = differences.l2_norm();
 	**/
-	// if(!is_stored) std::cout << "L2 Norm of the error: " << L2error << std::endl;
+	// if(!is_stored) deallog << "L2 Norm of the error: " << L2error << std::endl;
 	result_file << "Number of Dofs: " << dof_handler.n_dofs() << std::endl;
 	//result_file << "L2 Norm of the error:" << L2error << std::endl;
 	result_file << "Z-Length: " << GlobalParams.PRM_M_R_ZLength << std::endl;
@@ -135,10 +136,10 @@ double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 	return quality_out/quality_in;
 }
 
-
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::store() {
-	storage.reinit(dof_handler.n_dofs());
+	reinit_storage();
+	// storage.reinit(dof_handler.n_dofs());
 	for(unsigned int i = 0; i < dof_handler.n_dofs(); i++){
 		storage[i] = solution[i];
 	}
@@ -236,7 +237,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 			}
 		}
 	}
-	//std::cout << "get_Tensor_2" << std::endl;
+	//deallog << "get_Tensor_2" << std::endl;
 
 	return ret2;
 }
@@ -264,19 +265,19 @@ Tensor<1,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Conjugate_V
 	return ret;
 }
 
-template<typename MatrixType, typename VectorType >
+template<typename MatrixType, typename VectorType  >
 bool Waveguide<MatrixType, VectorType>::PML_in_X(Point<3> &p) {
 	double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
 	return p(0) < -(pmlboundary) ||p(0) > (pmlboundary);
 }
 
-template<typename MatrixType, typename VectorType >
+template<typename MatrixType, typename VectorType>
 bool Waveguide<MatrixType, VectorType>::PML_in_Y(Point<3> &p) {
 	double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
 	return p(1) < -(pmlboundary) ||p(1) > (pmlboundary);
 }
 
-template<typename MatrixType, typename VectorType >
+template<typename MatrixType, typename VectorType>
 bool Waveguide<MatrixType, VectorType>::PML_in_Z(Point<3> &p) {
 	return (p(2) > (GlobalParams.PRM_M_R_ZLength / 2.0 )) || ((p(2) <  -GlobalParams.PRM_M_R_ZLength / 2.0) && !(System_Coordinate_in_Waveguide(p)));
 }
@@ -309,7 +310,6 @@ double Waveguide<MatrixType, VectorType>::PML_Z_Distance(Point<3> &p){
 		return -p(2) - (GlobalParams.PRM_M_R_ZLength / 2.0);
 	}
 }
-
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::make_grid ()
@@ -407,80 +407,308 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 			}
 		}
 	}
-	std::cout<<counter << " Zellen mit Dirichlet-Werten." << std::endl;
+	deallog<<counter << " Zellen mit Dirichlet-Werten." << std::endl;
 
 
 
 	double l = (double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (GlobalParams.PRM_A_Threads*2.0);
-	std::cout << "Länge eines Blocks:" << l << std::endl;
+	deallog << "Länge eines Blocks:" << l << std::endl;
 
 	cell = triangulation.begin_active();
 	for (; cell!=endc; ++cell){
 
 		int temp  = (int) (((cell->center(true, false))[2] + (GlobalParams.PRM_M_R_ZLength/(2.0)) + GlobalParams.PRM_M_BC_XYin) / l);
-		if( temp >= 2* GlobalParams.PRM_A_Threads || temp < 0) std::cout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
+		if( temp >= 2* GlobalParams.PRM_A_Threads || temp < 0) deallog << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
 		cell->set_subdomain_id(temp);
 	}
 
 
 	if(GlobalParams.PRM_O_Grid) {
-		if(prm.PRM_O_VerboseOutput) std::cout<< "Writing Mesh data to file \"grid-3D.vtk\"" << std::endl;
+		if(prm.PRM_O_VerboseOutput) deallog<< "Writing Mesh data to file \"grid-3D.vtk\"" << std::endl;
 		mesh_info(triangulation, solutionpath + "/grid.vtk");
-		if(prm.PRM_O_VerboseOutput) std::cout<< "Done" << std::endl;
+		if(prm.PRM_O_VerboseOutput) deallog<< "Done" << std::endl;
 
 	}
 
 }
 
 template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
+	const int NumberOfDofs = dof_handler.n_dofs();
+	std::vector<types::global_dof_index> dof_indices (fe.dofs_per_face);
+	std::vector<int> dof_subdomain(NumberOfDofs);
+	std::vector<bool> dof_at_boundary(NumberOfDofs);
+
+	for(unsigned int i = 0; i < NumberOfDofs; i++) {
+		dof_subdomain[i] = -1;
+		dof_at_boundary[i] = false;
+
+	}
+	deallog << "Stage 1" << std::endl;
+	cell = dof_handler.begin_active(),
+	endc = dof_handler.end();
+	for (; cell!=endc; ++cell)
+	{
+		for(int i = 0; i < 6; i++) {
+			cell->face(i)->get_dof_indices(dof_indices);
+			int subdom = (cell->face(i)->center(false, false)[2] - structure.z_min ) * Sectors / (structure.z_max - structure.z_min);
+			if (subdom == Sectors) subdom -= 1;
+			for(int j = 0; j < fe.dofs_per_face; j++) {
+				if(dof_subdomain[dof_indices[j]] != subdom && dof_subdomain[dof_indices[j]] != -1 && subdom != -1 ) {
+					dof_at_boundary[dof_indices[j]] = true;
+				}
+				if(dof_subdomain[dof_indices[j]] < subdom) {
+					dof_subdomain[dof_indices[j]] = subdom;
+				}
+			}
+		}
+	}
+	deallog << "Stage 2" << std::endl;
+	Block_Sizes.reserve(Sectors);
+	for(int i = 0; i < Sectors; i++ ) {
+		Block_Sizes[i] = 0;
+	}
+	deallog << "Stage 3" << std::endl;
+	for(int i = 0; i < NumberOfDofs; i++) {
+		if(dof_subdomain[i] >= 0 && dof_subdomain[i] <= Sectors){
+			Block_Sizes[dof_subdomain[i]] ++;
+		} else {
+			deallog << "A critical error was detected while reordering dofs. Falty implementation." << std::endl;
+		}
+	}
+	deallog << "Stage 4" << std::endl;
+
+	Dofs_Below_Subdomain.reserve(Sectors);
+	Dofs_Below_Subdomain[0] = 0;
+	for(int i = 1; i  < Sectors; i++) {
+		Dofs_Below_Subdomain[i] = Dofs_Below_Subdomain[i-1] + Block_Sizes[i-1];
+	}
+	deallog << "Stage 5" << std::endl;
+	unsigned int dofcountertest = 0;
+	for (int i =0; i < Sectors; i++) {
+		dofcountertest += Block_Sizes[i];
+	}
+	deallog << "Stage 6" << std::endl;
+	if(dofcountertest != NumberOfDofs) {
+		deallog << "There are " << dof_handler.n_dofs() << " but " << dofcountertest << " were summed up!"<<std::endl;
+	}
+	deallog << "Stage 7" << std::endl;
+
+	std::vector<types::global_dof_index> New_Dofs;
+	for(int i =0; i < NumberOfDofs; i++) {
+		New_Dofs.push_back(i);
+	}
+	deallog << "Stage 8" << std::endl;
+	for(int i = 0; i < NumberOfDofs; i++) {
+		if(i < Dofs_Below_Subdomain[dof_subdomain[i]]) {
+			bool foundmatch = false;
+			for(int j = Dofs_Below_Subdomain[dof_subdomain[i]]; j < NumberOfDofs && !foundmatch; j++) {
+				if(dof_subdomain[j] < dof_subdomain[i] && New_Dofs[j] == j) {
+					New_Dofs[i] = j;
+					New_Dofs[j] = i;
+					foundmatch = true;
+				}
+			}
+			if(!foundmatch) deallog << "Found no match for dof " << i << " which should at least be at position " << Dofs_Below_Subdomain[dof_subdomain[i]] <<"." <<std::endl;
+		}
+	}
+	deallog << "Stage 9" << std::endl;
+	for(int i = 0; i < NumberOfDofs; i++) {
+		if(New_Dofs[i] < Dofs_Below_Subdomain[dof_subdomain[i]]) {
+			deallog << "The ordering is incomplete!" << std::endl;
+		}
+	}
+
+	deallog << "Executing dof-rednumbering now..." << std::endl;
+	dof_handler.renumber_dofs(New_Dofs);
+	dof_handler_real.renumber_dofs(New_Dofs);
+
+	deallog << "Block indices: " << std::endl;
+
+	for(int i = 1 ; i < Sectors; i++) {
+		deallog <<"Dofs below Block "<< i+1<<":"<<  Dofs_Below_Subdomain[i] << std::endl;
+	}
+	deallog << "1" <<std::endl;
+
+	deallog << "2" <<std::endl;
+	for(int i = 0; i < Sectors; i++) {
+		IndexSet temp (dof_handler.n_dofs());
+		temp.clear();
+		deallog << "Adding Block "<< i +1 << " from " << Dofs_Below_Subdomain[i] << " to " << Dofs_Below_Subdomain[i]+Block_Sizes[i] -1<<std::endl;
+		temp.add_range(Dofs_Below_Subdomain[i],Dofs_Below_Subdomain[i]+Block_Sizes[i] -1);
+		deallog << i+3 <<std::endl;
+		set.push_back(temp);
+	}
+	deallog << "END" <<std::endl;
+
+}
+
+template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::setup_system ()
 {
+
 	if(prm.PRM_O_VerboseOutput && prm.PRM_O_Dofs) {
-		std::cout << "Distributing Degrees of freedom." << std::endl;
+		deallog << "Distributing Degrees of freedom." << std::endl;
 	}
 	dof_handler.distribute_dofs (fe);
 	dof_handler_real.distribute_dofs (fe);
 
 	if(prm.PRM_O_VerboseOutput) {
-		std::cout << "Renumbering DOFs (Cuthill_McKee...)" << std::endl;
+		deallog << "Renumbering DOFs (Downstream...)" << std::endl;
 	}
 
 	const Point<3> direction(0,0,1);
 	DoFRenumbering::downstream(dof_handler, direction, false);
 	DoFRenumbering::downstream(dof_handler_real, direction, false);
 	if(prm.PRM_O_Dofs) {
-		std::cout << "Number of degrees of freedom: " << dof_handler.n_dofs() << std::endl;
+		deallog << "Number of degrees of freedom: " << dof_handler.n_dofs() << std::endl;
 	}
 
 	if(prm.PRM_O_VerboseOutput) {
-		std::cout << "Calculating compressed Sparsity Pattern..." << std::endl;
+			deallog << "Renumbering DOFs (Custom...)" << std::endl;
 	}
 
-	log_data.Dofs = dof_handler.n_dofs();
-		log_constraints.start();
+	Do_Refined_Reordering();
 
-	DoFHandler<3>::active_cell_iterator cell, endc;
+
+	deallog << "Reordering done." << std::endl;
+
+	log_data.Dofs = dof_handler.n_dofs();
+	log_constraints.start();
 
 	MakeBoundaryConditions();
 	DoFTools::make_hanging_node_constraints(dof_handler, cm);
 
+	deallog << "Constructing Sparsity Pattern." << std::endl;
+
 	cm.close();
 	log_constraints.stop();
+	IndexSet tempset(dof_handler.n_dofs());
+	tempset.clear();
+	sparsity_pattern.reinit(Sectors, Sectors);
+	for ( int i = 0 ; i < Sectors; i++) {
+		for ( int j = 0 ; j < Sectors; j++) {
+			if(i == j)	{
+				sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j] );
+			} else {
+				if( std::abs(i - j) == 1 ) {
+					sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j]);
+				} else {
+					sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j]);
+
+				}
+			}
+		}
+	}
+
+	sparsity_pattern.collect_sizes();
 
 
-	DynamicSparsityPattern c_sparsity(dof_handler.n_dofs());
-	DoFTools::make_sparsity_pattern (dof_handler, c_sparsity, cm, false);
-	sparsity_pattern.copy_from(c_sparsity);
+	//DynamicSparsityPattern c_sparsity(dof_handler.n_dofs());
+	DoFTools::make_sparsity_pattern (dof_handler, sparsity_pattern, cm, false);
 
-	system_matrix.reinit( sparsity_pattern );
-	solution.reinit ( dof_handler.n_dofs());
-	system_rhs.reinit(dof_handler.n_dofs());
+	sparsity_pattern.compress();
+
+	deallog << "Sparsity Pattern Construction done." << std::endl;
+
+	reinit_all();
+
 	cm.distribute(solution);
 
 	if(prm.PRM_O_VerboseOutput) {
-		if(!is_stored) 	std::cout << "Done." << std::endl;
+		if(!is_stored) 	deallog << "Done." << std::endl;
 	}
 
+}
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::reinit_all () {
+	reinit_rhs();
+	reinit_solution();
+	reinit_systemmatrix();
+}
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::reinit_rhs () {
+	system_rhs.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) system_rhs.block(i).reinit(Block_Sizes[i]);
+	system_rhs.collect_sizes();
+	// This is equivalent to system_rhs.reinit(dof_handler.n_dofs()) for a pure vector. It does the same operation on a block-system.
+}
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::reinit_systemmatrix() {
+	if(!temporary_pattern_preped) {
+		temporary_pattern.copy_from(sparsity_pattern);
+		temporary_pattern_preped = true;
+	}
+	system_matrix.reinit( temporary_pattern);
+}
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::reinit_solution() {
+	solution.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) solution.block(i).reinit(Block_Sizes[i]);
+	solution.collect_sizes();
+}
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::reinit_storage() {
+	storage.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) storage.block(i).reinit(Block_Sizes[i]);
+	storage.collect_sizes();
+}
+
+template <>
+void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockVector>::reinit_systemmatrix() {
+	system_matrix.reinit(set, sparsity_pattern,  MPI_COMM_WORLD);
+}
+
+template <>
+void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockVector>::reinit_rhs () {
+	system_rhs.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) system_rhs.block(i).reinit(MPI_COMM_WORLD, Block_Sizes[i], Block_Sizes[i]);
+	system_rhs.collect_sizes();
+}
+
+template <>
+void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockVector>::reinit_solution() {
+	solution.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) solution.block(i).reinit(MPI_COMM_WORLD, Block_Sizes[i], Block_Sizes[i]);
+	solution.collect_sizes();
+	//solution.reinit(MPI_COMM_WORLD, dof_handler.n_dofs(), dof_handler.n_dofs());
+}
+
+template<>
+void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockVector>::reinit_storage() {
+	storage.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) storage.block(i).reinit(MPI_COMM_WORLD, Block_Sizes[i], Block_Sizes[i]);
+	storage.collect_sizes();
+	//storage.reinit(MPI_COMM_WORLD, dof_handler.n_dofs(), dof_handler.n_dofs());
+}
+
+template<>
+void Waveguide<TrilinosWrappers::BlockSparseMatrix, TrilinosWrappers::MPI::BlockVector>::reinit_storage() {
+	storage.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) storage.block(i).reinit(set[i], MPI_COMM_WORLD);
+	storage.collect_sizes();
+	// storage.reinit( complete_index_set(dof_handler.n_dofs()) );
+}
+
+template<>
+void Waveguide<TrilinosWrappers::BlockSparseMatrix, TrilinosWrappers::MPI::BlockVector>::reinit_rhs() {
+	system_rhs.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) system_rhs.block(i).reinit(set[i], MPI_COMM_WORLD);
+	system_rhs.collect_sizes();
+	// system_rhs.reinit( complete_index_set(dof_handler.n_dofs()) );
+}
+
+template<>
+void Waveguide<TrilinosWrappers::BlockSparseMatrix, TrilinosWrappers::MPI::BlockVector>::reinit_solution() {
+	solution.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) solution.block(i).reinit(set[i], MPI_COMM_WORLD);
+	solution.collect_sizes();
+	//solution.reinit( complete_index_set(dof_handler.n_dofs()) );
 }
 
 template<typename MatrixType, typename VectorType >
@@ -558,7 +786,8 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::assemble_system ()
 {
-	system_rhs.reinit(dof_handler.n_dofs());
+	reinit_rhs();
+	// system_rhs.reinit(dof_handler.n_dofs());
 
 	QGauss<3>  quadrature_formula(2);
 	const FEValuesExtractors::Vector real(0);
@@ -570,31 +799,30 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 
 	if(prm.PRM_O_VerboseOutput) {
 		if(!is_stored) {
-		std::cout << "Dofs per cell: " << dofs_per_cell << std::endl << "Quadrature Formula Size: " << n_q_points << std::endl;
-		std::cout << "Dofs per face: " << fe.dofs_per_face << std::endl << "Dofs per line: " << fe.dofs_per_line << std::endl;
+		deallog << "Dofs per cell: " << dofs_per_cell << std::endl << "Quadrature Formula Size: " << n_q_points << std::endl;
+		deallog << "Dofs per face: " << fe.dofs_per_face << std::endl << "Dofs per line: " << fe.dofs_per_line << std::endl;
 		}
 	}
 
 
 	log_assemble.start();
-	if(!is_stored) std::cout << "Starting Assemblation process" << std::endl;
+	if(!is_stored) deallog << "Starting Assemblation process" << std::endl;
 	Threads::TaskGroup<void> task_group1;
 	for (int i = 0; i < GlobalParams.PRM_A_Threads; ++i) {
 		task_group1 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i);
 	}
 	task_group1.join_all ();
-	// std::cout << "Test" << std::endl;
+	// deallog << "Test" << std::endl;
 	Threads::TaskGroup<void> task_group2;
 	for (int i = 0; i < GlobalParams.PRM_A_Threads; ++i) {
 		task_group2 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i+1);
 	}
 	task_group2.join_all ();
 
-	if(!is_stored)  std::cout<<"Assembling done. L2-Norm of RHS: "<< system_rhs.l2_norm()<<std::endl;
+	if(!is_stored)  deallog<<"Assembling done. L2-Norm of RHS: "<< system_rhs.l2_norm()<<std::endl;
 	log_assemble.stop();
 
 }
-
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
@@ -699,13 +927,6 @@ void Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> >::solve () 
 			solver.solve (system_matrix, solution, system_rhs, plu);
 		}
 
-		if(prm.PRM_S_Preconditioner == "ILU"){
-			SparseILU<double> ilu;
-			ilu.initialize(system_matrix, SparseILU<double>::AdditionalData(1.0, 5));
-			timerupdate();
-			solver.solve (system_matrix, solution, system_rhs, ilu);
-		}
-
 	}
 
 	if(prm.PRM_S_Solver == "GMRES") {
@@ -734,13 +955,6 @@ void Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> >::solve () 
 			solver.solve (system_matrix, solution, system_rhs, plu);
 		}
 
-		if(prm.PRM_S_Preconditioner == "ILU"){
-			SparseILU<double> ilu;
-			ilu.initialize(system_matrix, SparseILU<double>::AdditionalData(1.0, 5));
-			timerupdate();
-			solver.solve (system_matrix, solution, system_rhs, ilu);
-		}
-
 	}
 
 	if(prm.PRM_S_Solver == "UMFPACK") {
@@ -755,9 +969,7 @@ void Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> >::solve () 
 }
 
 template<>
-void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::Vector >::solve () {
-	// TODO I should implement more solvers here along with the solver selector if possible.
-	// TODO I should implement more preconditioners here.
+void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::MPI::Vector >::solve () {
 	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
@@ -769,7 +981,7 @@ void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers:
 		log_solver.stop();
 	}
 	if(prm.PRM_S_Solver == "MINRES") {
-		std::cout << "The Trilinos Library does currently not offer MinRes. GMRES used instead."<<std::endl;
+		deallog << "The Trilinos Library does currently not offer MinRes. GMRES used instead."<<std::endl;
 		dealii::TrilinosWrappers::SolverGMRES solver(solver_control,dealii::TrilinosWrappers::SolverGMRES::AdditionalData(true, prm.PRM_S_GMRESSteps) );
 		timerupdate();
 		solver.solve(system_matrix, solution, system_rhs, dealii::TrilinosWrappers::PreconditionIdentity());
@@ -778,16 +990,15 @@ void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers:
 	if(prm.PRM_S_Solver == "UMFPACK") {
 		dealii::TrilinosWrappers::SolverDirect solver(solver_control,dealii::TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack") );
 		timerupdate();
+
 		solver.solve(system_matrix, solution, system_rhs);
 		log_solver.stop();
 	}
 	cm.distribute(solution);
 }
 
-template<>
-void Waveguide<dealii::PETScWrappers::SparseMatrix, dealii::PETScWrappers::Vector >::solve () {
-	// TODO I should implement more solvers here along with the solver selector if possible.
-	// TODO I should implement more preconditioners here.
+template< >
+void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector >::solve () {
 	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
@@ -806,7 +1017,7 @@ void Waveguide<dealii::PETScWrappers::SparseMatrix, dealii::PETScWrappers::Vecto
 	cm.distribute(solution);
 }
 
-template <typename MatrixType, typename VectorType>
+template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::solve ()
 {
 
@@ -869,9 +1080,20 @@ void Waveguide<MatrixType, VectorType>::output_results ()
 	std::ofstream pattern (solutionpath + "/pattern.gnu");
 	sparsity_pattern.print_gnuplot(pattern);
 
+	std::ofstream patternscript (solutionpath + "/displaypattern.gnu");
+	patternscript << "set style line 1000 lw 1 lc \"black\"" <<std::endl;
+	for(int i = 0; i < prm.PRM_M_W_Sectors; i++) {
+		patternscript << "set arrow " << 1000 + 2*i << " from 0,-" << Dofs_Below_Subdomain[i] << " to "<<dof_handler.n_dofs()<<",-"<<Dofs_Below_Subdomain[i]<<" nohead ls 1000 front"<<std::endl;
+		patternscript << "set arrow " << 1001 + 2*i  << " from " << Dofs_Below_Subdomain[i] << ",0 to " << Dofs_Below_Subdomain[i] << ", -"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
+	}
+	patternscript << "set arrow " << 1000 + 2*prm.PRM_M_W_Sectors << " from 0,-" << dof_handler.n_dofs() << " to "<<dof_handler.n_dofs()<<",-"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
+	patternscript << "set arrow " << 1001 + 2*prm.PRM_M_W_Sectors << " from " << dof_handler.n_dofs() << ",0 to " << dof_handler.n_dofs() << ", -"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
+
+	patternscript << "plot \"pattern.gnu\" with dots" <<std::endl;
+	patternscript.flush();
 }
 
-template<typename MatrixType, typename VectorType >
+template<typename MatrixType, typename VectorType>
 void Waveguide<MatrixType, VectorType>::run ()
 {
 	init_loggers ();
@@ -900,9 +1122,8 @@ void Waveguide<MatrixType, VectorType>::print_condition(double condition) {
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reset_changes ()
 {
-	system_matrix.reinit( sparsity_pattern );
-	solution.reinit ( dof_handler.n_dofs());
-	system_rhs.reinit(dof_handler.n_dofs());
+	reinit_all();
+
 	cm.distribute(solution);
 }
 

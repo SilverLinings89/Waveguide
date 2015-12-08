@@ -173,7 +173,7 @@ WaveguideStructure::WaveguideStructure(Parameters &in_params)
 		sectors(in_params.PRM_M_W_Sectors),
 		sector_z_length(in_params.PRM_M_R_ZLength/ (sectors*1.0)),
 		z_min(in_params.PRM_M_R_ZLength / (-2.0) - in_params.PRM_M_BC_XYin),
-		z_max(in_params.PRM_M_R_ZLength / (2.0) + 2 * in_params.PRM_M_BC_XYout),
+		z_max(in_params.PRM_M_R_ZLength / (2.0) +  in_params.PRM_M_BC_XYout),
 		deltaY(in_params.PRM_M_W_Delta),
 		r_0(in_params.PRM_M_C_RadiusIn),
 		r_1(in_params.PRM_M_C_RadiusOut),

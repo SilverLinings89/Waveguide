@@ -128,7 +128,7 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </Lambda>
             <Sectors>
-                <value>2</value>
+                <value>5</value>
                 <default_value>2</default_value>
                 <documentation>Number of Sectors used for Modelling of the Waveguide.</documentation>
                 <pattern>17</pattern>
@@ -297,13 +297,13 @@
             <pattern>39</pattern>
             <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
         </Precision>
-	<MPITasks>
-	  <value>4</value>
-	  <default_value>1</default_value>
-	  <documentation>Number of MPI-tasks to be used.</documentation>
-	  <pattern>40</pattern>
-	  <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
-	</MPITasks>
+        <MPITasks>
+            <value>4</value>
+            <default_value>1</default_value>
+            <documentation>Number of MPI-tasks to be used.</documentation>
+            <pattern>40</pattern>
+            <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
+        </MPITasks>
     </Solver>
     <Constants>
         <AllOne>
