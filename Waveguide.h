@@ -67,6 +67,7 @@
 #include "WaveguideStructure.h"
 #include "FileLogger.h"
 #include "FileLoggerData.h"
+#include "PreconditionSweeping.h"
 
 using namespace dealii;
 
