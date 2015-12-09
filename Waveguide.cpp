@@ -411,14 +411,14 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 
 
 
-	double l = (double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (GlobalParams.PRM_A_Threads*2.0);
+	double l = (double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (Sectors*2.0);
 	deallog << "Länge eines Blocks:" << l << std::endl;
 
 	cell = triangulation.begin_active();
 	for (; cell!=endc; ++cell){
 
 		int temp  = (int) (((cell->center(true, false))[2] + (GlobalParams.PRM_M_R_ZLength/(2.0)) + GlobalParams.PRM_M_BC_XYin) / l);
-		if( temp >= 2* GlobalParams.PRM_A_Threads || temp < 0) deallog << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
+		if( temp >= 2* Sectors || temp < 0) deallog << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
 		cell->set_subdomain_id(temp);
 	}
 
@@ -808,13 +808,13 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 	log_assemble.start();
 	if(!is_stored) deallog << "Starting Assemblation process" << std::endl;
 	Threads::TaskGroup<void> task_group1;
-	for (int i = 0; i < GlobalParams.PRM_A_Threads; ++i) {
+	for (int i = 0; i < Sectors; ++i) {
 		task_group1 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i);
 	}
 	task_group1.join_all ();
 	// deallog << "Test" << std::endl;
 	Threads::TaskGroup<void> task_group2;
-	for (int i = 0; i < GlobalParams.PRM_A_Threads; ++i) {
+	for (int i = 0; i < Sectors; ++i) {
 		task_group2 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i+1);
 	}
 	task_group2.join_all ();
@@ -877,7 +877,7 @@ void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
 					}
 				}
 			}
-			if( std::abs(center[2] - GlobalParams.PRM_M_R_ZLength/2.0  - 2.0 * GlobalParams.PRM_M_BC_XYout) < 0.01 ){
+			if( std::abs(center[2] - GlobalParams.PRM_M_R_ZLength/2.0  - GlobalParams.PRM_M_BC_XYout) < 0.01 ){
 				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
 				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -898,11 +898,11 @@ void Waveguide<MatrixType, VectorType>::timerupdate() {
 }
 
 template<>
-void Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> >::solve () {
+void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >::solve () {
 	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
-
+	/**
 	if(prm.PRM_S_Solver == "MINRES") {
 		condition_file.open((solutionpath + "/condition_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << condition_file_counter) )->str() + ".dat").c_str());
 		eigenvalue_file.open((solutionpath + "/eigenvalues_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << eigenvalue_file_counter) )->str() + ".dat").c_str());
@@ -956,7 +956,7 @@ void Waveguide<dealii::SparseMatrix<double>, dealii::Vector<double> >::solve () 
 		}
 
 	}
-
+	 **/
 	if(prm.PRM_S_Solver == "UMFPACK") {
 		SparseDirectUMFPACK  A_direct;
 		A_direct.initialize(system_matrix);
