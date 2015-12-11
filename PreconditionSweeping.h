@@ -3,6 +3,9 @@
 
 #include <deal.II/base/subscriptor.h>
 
+#include <deal.II/lac/block_sparse_matrix.h>
+#include <deal.II/lac/block_vector.h>
+
 using namespace dealii;
 
 /**
@@ -11,6 +14,7 @@ using namespace dealii;
  * \author Pascal Kraft
  * \date 9.12.2015
  */
+template< typename MatrixType, typename VectorType>
 class PreconditionSweeping : public Subscriptor
    {
 
@@ -47,14 +51,13 @@ class PreconditionSweeping : public Subscriptor
 		 * \param matrix This parameter contains a reference to the Systemmatrix which gives all the information for the matrices. Maybe it will become necessary to also handle a separate matrix with the additional blocks i.e. the Information about the neighboring blocks being filled with the sweeping PML.
 		 * \param parameters This argument can be used to set the value of \f$\alpha\f$ to be used later in the computation.
 		 */
-		template <typename MatrixType>
-		void initialize (const MatrixType &matrix, const AdditionalData &parameters);
+
+		void initialize (const MatrixType & , const MatrixType &, const AdditionalData &);
 
 		/**
 		 * Need to figure out
 		 */
-		template<class VectorType>
-		void vmult (VectorType &, const VectorType &) const;
+		void vmult (VectorType &, const VectorType &);
 
 		/**
 		 * Need to figure out
@@ -95,9 +98,12 @@ class PreconditionSweeping : public Subscriptor
 		size_type n_rows;
 
 		size_type n_columns;
+
+		const unsigned int Sectors;
+
+		std::vector<dealii::SparseDirectUMFPACK> inverse_blocks;
+
+		MatrixType & System_Matrix;
 };
 
-
-
-
-
+#endif

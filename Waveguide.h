@@ -28,6 +28,7 @@
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/block_sparsity_pattern.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
+#include <deal.II/lac/block_matrix_array.h>
 #include <deal.II/lac/solver_gmres.h>
 #include <deal.II/lac/solver_minres.h>
 #include <deal.II/lac/precondition.h>
@@ -285,6 +286,11 @@ class Waveguide
 		void 	reinit_rhs();
 
 		/**
+		 * Reinit only the PML-Matrix which is used in the construction of the Preconditioner. This should only be used if the need for space is there. Otherwise this matrix while being a temporary object, is very large.
+		 */
+		void	reinit_pmlmatrix();
+
+		/**
 		 * Reinit only the system matrix.
 		 */
 		void 	reinit_systemmatrix();
@@ -309,6 +315,7 @@ class Waveguide
 
 		BlockDynamicSparsityPattern				sparsity_pattern;
 		MatrixType								system_matrix;
+		BlockMatrixArray<double, VectorType>						pml_matrix;
 		Parameters								&prm;
 		ConstraintMatrix 						boundary_value_constraints_imaginary;
 		ConstraintMatrix 						boundary_value_constraints_real;

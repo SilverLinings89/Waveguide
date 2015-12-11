@@ -626,6 +626,12 @@ void Waveguide<MatrixType, VectorType>::reinit_all () {
 	reinit_rhs();
 	reinit_solution();
 	reinit_systemmatrix();
+	reinit_pmlmatrix();
+}
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::reinit_pmlmatrix () {
+	pml_matrix.reinit(Sectors, Sectors);
 }
 
 template<typename MatrixType, typename VectorType >
