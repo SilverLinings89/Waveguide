@@ -274,7 +274,7 @@
             <default_value>Identity</default_value>
             <documentation>Which preconditioner to use</documentation>
             <pattern>36</pattern>
-            <pattern_description>[Selection SOR|SSOR|Identity|Jacobi|ILU|Block_Jacobi|ParaSails|LU|ICC|BoomerAMG|Eisenstat ]</pattern_description>
+            <pattern_description>[Selection Identity|Jacobi|ILU|Block_Jacobi|LU|Sweeping ]</pattern_description>
         </Preconditioner>
         <PreconditionerBlockCount>
             <value>8</value>

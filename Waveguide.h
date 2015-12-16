@@ -336,6 +336,7 @@ class Waveguide
 		std::vector<dealii::IndexSet> 			set;
 		BlockSparsityPattern 					temporary_pattern;
 		bool									temporary_pattern_preped;
+		FEValuesExtractors::Vector 				real, imag;
 };
 
 

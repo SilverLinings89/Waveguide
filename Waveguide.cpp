@@ -35,7 +35,9 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
   condition_file_counter(0),
   eigenvalue_file_counter(0),
   Sectors(prm.PRM_M_W_Sectors),
-  temporary_pattern_preped(false)
+  temporary_pattern_preped(false),
+  real(0),
+  imag(3)
 {
 	assembly_progress = 0;
 	int i = 0;
@@ -57,6 +59,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
 	mkdir(solutionpath.c_str(), ACCESSPERMS);
 	deallog << "Will write solutions to " << solutionpath << std::endl;
 	is_stored = false;
+
 }
 
 template<typename MatrixType, typename VectorType >
@@ -411,14 +414,14 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 
 
 
-	double l = (double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (Sectors*2.0);
+	double l = (double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (Sectors);
 	deallog << "Länge eines Blocks:" << l << std::endl;
 
 	cell = triangulation.begin_active();
 	for (; cell!=endc; ++cell){
 
 		int temp  = (int) (((cell->center(true, false))[2] + (GlobalParams.PRM_M_R_ZLength/(2.0)) + GlobalParams.PRM_M_BC_XYin) / l);
-		if( temp >= 2* Sectors || temp < 0) deallog << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
+		if( temp >=  Sectors || temp < 0) deallog << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
 		cell->set_subdomain_id(temp);
 	}
 
@@ -719,10 +722,8 @@ void Waveguide<TrilinosWrappers::BlockSparseMatrix, TrilinosWrappers::MPI::Block
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
-	QGauss<3>  quadrature_formula(2);
-	const FEValuesExtractors::Vector real(0);
-	const FEValuesExtractors::Vector imag(3);
-	FEValues<3> fe_values (fe, quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points );
+	QGauss<3>  			 quadrature_formula(2);
+	FEValues<3> 		fe_values (fe, quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points );
 	std::vector<Point<3> > quadrature_points;
 	const unsigned int   dofs_per_cell	= fe.dofs_per_cell;
 	const unsigned int   n_q_points		= quadrature_formula.size();
@@ -782,7 +783,6 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
 
 			cm.distribute_local_to_global(cell_matrix_real, cell_rhs, local_dof_indices,system_matrix, system_rhs, false);
 
-
 	    }
 	}
 	assembly_progress ++;
@@ -810,17 +810,20 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 		}
 	}
 
-
 	log_assemble.start();
 	if(!is_stored) deallog << "Starting Assemblation process" << std::endl;
+	deallog << "Sectors: " << Sectors << " Half: " << Sectors / 2 << "." << std::endl;
+
 	Threads::TaskGroup<void> task_group1;
-	for (int i = 0; i < Sectors; ++i) {
+	int upperbound = ((Sectors % 2) == 0)? Sectors/2 : Sectors/2 + 1;
+	deallog << "Upper bound" << upperbound << std::endl;
+	for (int i = 0; i < upperbound; ++i) {
 		task_group1 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i);
 	}
 	task_group1.join_all ();
-	// deallog << "Test" << std::endl;
+	deallog << "Test" << std::endl;
 	Threads::TaskGroup<void> task_group2;
-	for (int i = 0; i < Sectors; ++i) {
+	for (int i = 0; i < Sectors/2; ++i) {
 		task_group2 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i+1);
 	}
 	task_group2.join_all ();
@@ -1097,6 +1100,15 @@ void Waveguide<MatrixType, VectorType>::output_results ()
 
 	patternscript << "plot \"pattern.gnu\" with dots" <<std::endl;
 	patternscript.flush();
+
+	std::ifstream source("Paramters.xml", std::ios::binary);
+	std::ofstream dest(solutionpath +"/Parameters.xml", std::ios::binary);
+
+	dest << source.rdbuf();
+
+	source.close();
+	dest.close();
+
 }
 
 template<typename MatrixType, typename VectorType>
