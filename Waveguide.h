@@ -87,7 +87,13 @@ template <typename MatrixType, typename VectorType>
 class Waveguide
 {
 	public:
-		Waveguide (Parameters &, WaveguideStructure &);
+	/**
+	 * This is the constructor that should be used to initialize objects of this type.
+	 *
+	 * \param param This is a reference to a parsed form of the input-file.
+	 * \param structure This parameter gives a reference to the structure of the real waveguide. This is necessary since during matrix-assembly it is required to call a function which generates the transformation tensor which is purely structure-dependent.
+	 */
+		Waveguide (Parameters & param, WaveguideStructure & structure);
 
 		/**
 		 * This method as well as the rerun() method, are used by the optimization-algorithm to use and reuse the Waveguide-object. Since the system-matrix consumes a lot of memory it makes sense to reuse it, rather then creating a new one for every optimization step.

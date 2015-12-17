@@ -58,7 +58,7 @@ class PreconditionSweeping : public Subscriptor
 		 * \param parameters This argument can be used to set the value of \f$\alpha\f$ to be used later in the computation.
 		 */
 
-		void initialize ( const AdditionalData &);
+		void initialize ( MatrixType &,  const AdditionalData &);
 
 		/**
 		 * Need to figure out
@@ -158,8 +158,6 @@ class PreconditionSweeping : public Subscriptor
 		const unsigned int Sectors;
 
 		std::vector<dealii::SparseDirectUMFPACK> inverse_blocks;
-
-		MatrixType & System_Matrix;
 
 		PreconditionSweeping<MatrixType, VectorType>::AdditionalData data;
 };

@@ -13,6 +13,7 @@
 
 #include <deal.II/lac/block_sparse_matrix.h>
 #include <deal.II/lac/block_vector.h>
+#include <deal.II/base/tensor.h>
 #include "PreconditionSweeping.h"
 
 using namespace dealii;
@@ -71,7 +72,7 @@ double PreconditionSweeping<MatrixType, VectorType>::PML_Y_Distance(Point<3> &p)
 }
 
 template<typename MatrixType, typename VectorType >
-double PreconditionSweeping<MatrixType, VectorType>::PML_Z_Distance(Point<3> &p, unsigned int block, bool low_z){
+double PreconditionSweeping<MatrixType, VectorType>::PML_Z_Distance(Point<3> &p, unsigned int block ){
 	double l = (double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (GlobalParams.PRM_M_W_Sectors);
 	double width = l * 0.1;
 	if( ( p(2) +GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin  )-  block * l < 0){
@@ -84,13 +85,6 @@ double PreconditionSweeping<MatrixType, VectorType>::PML_Z_Distance(Point<3> &p,
 
 template<typename MatrixType, typename VectorType >
 Tensor<2,3, std::complex<double>> PreconditionSweeping<MatrixType, VectorType>::get_Tensor(Point<3> & position, bool inverse , bool epsilon, int block) {
-	Tensor<2,3, std::complex<double>> ret;
-	for(int i = 0; i<3; i++ ){
-		for(int j = 0; j<3; j++) {
-			ret[i][j] = 0.0;
-		}
-	}
-	std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
 
 	double omegaepsilon0 = GlobalParams.PRM_C_omega * ((System_Coordinate_in_Waveguide(position))?GlobalParams.PRM_M_W_EpsilonIn : GlobalParams.PRM_M_W_EpsilonOut);
 	std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
@@ -101,9 +95,6 @@ Tensor<2,3, std::complex<double>> PreconditionSweeping<MatrixType, VectorType>::
 		sigmax = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaXMax;
 		sx.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaXMax);
 		sx.imag( sigmax / ( omegaepsilon0));
-		S1 /= sx;
-		S2 *= sx;
-		S3 *= sx;
 	}
 	if(PML_in_Y(position)){
 		double r,d, sigmay;
@@ -112,9 +103,6 @@ Tensor<2,3, std::complex<double>> PreconditionSweeping<MatrixType, VectorType>::
 		sigmay = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaYMax;
 		sy.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaYMax);
 		sy.imag( sigmay / ( omegaepsilon0));
-		S1 *= sy;
-		S2 /= sy;
-		S3 *= sy;
 	}
 	if(PML_in_Z(position, block)){
 		double r,d, sigmaz;
@@ -123,58 +111,44 @@ Tensor<2,3, std::complex<double>> PreconditionSweeping<MatrixType, VectorType>::
 		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
 		sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
 		sz.imag( sigmaz / omegaepsilon0 );
-		S1 *= sz;
-		S2 *= sz;
-		S3 /= sz;
 	}
 
-	if(inverse) {
-		std::complex<double> temp(1.0, 0.0);
-		S1 = temp / S1;
-		S2 = temp / S2;
-		S3 = temp / S3;
-	}
-
-	ret[0][0] = S1;
-	ret[1][1] = S2;
-	ret[2][2] = S3;
-
-	if(inverse) {
-		if(epsilon) {
-			if(System_Coordinate_in_Waveguide(position)) {
-				ret /= GlobalParams.PRM_M_W_EpsilonIn;
-			} else {
-				ret /= GlobalParams.PRM_M_W_EpsilonOut;
-			}
-			ret /= GlobalParams.PRM_C_Eps0;
-		} else {
-			ret /= GlobalParams.PRM_C_Mu0;
-		}
-	} else {
-		if(epsilon) {
-			if(System_Coordinate_in_Waveguide(position) ) {
-				ret *= GlobalParams.PRM_M_W_EpsilonIn;
-			} else {
-				ret *= GlobalParams.PRM_M_W_EpsilonOut;
-			}
-			ret *= GlobalParams.PRM_C_Eps0;
-		} else {
-			ret *= GlobalParams.PRM_C_Mu0;
-		}
-	}
 	Tensor<2,3, double> transformation = data.structure.TransformationTensor(position[0], position[1], position[2]);
-	Tensor<2,3, std::complex<double>> ret2;
 
-	for(int i = 0; i < 3; i++) {
-		for(int j = 0; j < 3; j++) {
-			ret2[i][j] = std::complex<double>(0.0, 0.0);
-			for(int k = 0; k < 3; k++) {
-				ret2[i][j] += ret[i][k] * transformation[k][j];
-			}
+	Tensor<2,3, std::complex<double>> ret;
+	for(int l = 0; l<3; l++) {
+		for(int k = 0; k<3; k++) {
+			std::complex<double> temp(transformation[l][k],0.0);
+			ret[l][k] = temp;
 		}
 	}
 
-	return ret2;
+	if(epsilon) {
+		if(System_Coordinate_in_Waveguide(position) ) {
+			ret *= GlobalParams.PRM_M_W_EpsilonIn;
+		} else {
+			ret *= GlobalParams.PRM_M_W_EpsilonOut;
+		}
+		ret *= GlobalParams.PRM_C_Eps0;
+	} else {
+		ret *= GlobalParams.PRM_C_Mu0;
+	}
+
+	ret[0][0] *= sy * sz / sx ;
+	ret[0][1] *= sz ;
+	ret[0][2] *= sy ;
+
+	ret[1][0] *= sz ;
+	ret[1][1] *= sx * sz / sy ;
+	ret[1][2] *= sx ;
+
+	ret[2][0] *= sy ;
+	ret[2][1] *= sx ;
+	ret[2][2] *= sx * sy / sz ;
+
+	if(inverse) return invert(ret) ;
+
+	else return ret;
 }
 
 template<typename MatrixType, typename VectorType >
@@ -189,13 +163,12 @@ Tensor<1,3, std::complex<double>> PreconditionSweeping<MatrixType, VectorType>::
 }
 
 template <>
-void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::initialize( const PreconditionSweeping<dealii::BlockSparseMatrix<double>,dealii::BlockVector<double> >::AdditionalData &data):
-l((double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (GlobalParams.PRM_M_W_Sectors)),
-width(l * 0.1)
+void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::initialize( dealii::BlockSparseMatrix<double> &System_Matrix, const PreconditionSweeping<dealii::BlockSparseMatrix<double>,dealii::BlockVector<double> >::AdditionalData &data):
+	l((double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (GlobalParams.PRM_M_W_Sectors)),
+	width(l * 0.1)
 {
 
 	// First Block. Prepare Solver directly.
-	this->System_Matrix = *System_Matrix;
 	SparseDirectUMFPACK solver;
 	solver.initialize(System_Matrix.block(0,0));
 	inverse_blocks.push_back(solver);

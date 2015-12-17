@@ -542,7 +542,13 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 		deallog << i+3 <<std::endl;
 		set.push_back(temp);
 	}
-	deallog << "END" <<std::endl;
+	deallog << "Storing details in WaveguideStructure.case_sectors..." <<std::endl;
+	for(int i=0; i  < Sectors; i++) {
+		structure.case_sectors[i].setLowestDof(Dofs_Below_Subdomain[i]);
+		structure.case_sectors[i].setNActiveCells(0); <-- FINISH THIS
+		structure.case_sectors[i].setNDofs(Block_Sizes[i]);
+		structure.case_sectors[i].setNInternalBoundaryDofs(0); <-- FINISH THIS
+	}
 
 }
 
