@@ -441,6 +441,13 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 	std::vector<types::global_dof_index> dof_indices (fe.dofs_per_face);
 	std::vector<int> dof_subdomain(NumberOfDofs);
 	std::vector<bool> dof_at_boundary(NumberOfDofs);
+	std::vector<int> CellsPerSubdomain(Sectors);
+	std::vector<int> InternalBoundaryDofs(Sectors);
+
+	for(unsigned int i = 0; i < Sectors; i++) {
+		CellsPerSubdomain.push_back(0);
+		InternalBoundaryDofs(0);
+	}
 
 	for(unsigned int i = 0; i < NumberOfDofs; i++) {
 		dof_subdomain[i] = -1;
@@ -452,6 +459,7 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
 	{
+		CellsPerSubdomain[cell->subdomain_id()] += 1;
 		for(int i = 0; i < 6; i++) {
 			cell->face(i)->get_dof_indices(dof_indices);
 			int subdom = (cell->face(i)->center(false, false)[2] - structure.z_min ) * Sectors / (structure.z_max - structure.z_min);
@@ -459,6 +467,7 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 			for(int j = 0; j < fe.dofs_per_face; j++) {
 				if(dof_subdomain[dof_indices[j]] != subdom && dof_subdomain[dof_indices[j]] != -1 && subdom != -1 ) {
 					dof_at_boundary[dof_indices[j]] = true;
+					InternalBoundaryDofs[(dof_subdomain[dof_indices[j]] > subdom) ? dof_subdomain[dof_indices[j]] : subdom] += 1;
 				}
 				if(dof_subdomain[dof_indices[j]] < subdom) {
 					dof_subdomain[dof_indices[j]] = subdom;
@@ -544,10 +553,10 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 	}
 	deallog << "Storing details in WaveguideStructure.case_sectors..." <<std::endl;
 	for(int i=0; i  < Sectors; i++) {
-		structure.case_sectors[i].setLowestDof(Dofs_Below_Subdomain[i]);
-		structure.case_sectors[i].setNActiveCells(0); <-- FINISH THIS
-		structure.case_sectors[i].setNDofs(Block_Sizes[i]);
-		structure.case_sectors[i].setNInternalBoundaryDofs(0); <-- FINISH THIS
+		structure.case_sectors[i].setLowestDof( Dofs_Below_Subdomain[i] );
+		structure.case_sectors[i].setNActiveCells( CellsPerSubdomain[i] );
+		structure.case_sectors[i].setNDofs( Block_Sizes[i] );
+		structure.case_sectors[i].setNInternalBoundaryDofs(InternalBoundaryDofs[i]);
 	}
 
 }

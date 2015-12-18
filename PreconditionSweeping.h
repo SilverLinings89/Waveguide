@@ -37,15 +37,33 @@ class PreconditionSweeping : public Subscriptor
 				 */
 				AdditionalData (const double in_alpha , QGauss<3> & in_qf, FESystem<3> & in_fe, DoFHandler<3> & in_dofh, WaveguideStructure & in_structure);
 
+				/**
+				 * This constructor is the same as the other but it doesn't take a value for \f$\alpha\f$. Instead \f$\alpha\f$ is set to 1.0.
+				 */
 				AdditionalData ( QGauss<3> & in_qf, FESystem<3> & in_fe, DoFHandler<3> & in_dofh, WaveguideStructure & in_structure);
 				/**
 				 * This member stores the value of alpha as set in the constructor call. See page 3777 in the afore mentioned paper about this preconditioner for a more detailed description.
 				 */
 
 				double 				alpha;
+				/**
+				 * This is the same quadrature formula as used in the Waveguide class and it is required since similar matrices have to be assembled.
+				 */
 				QGauss<3> 			quadrature_formula;
+
+				/**
+				 * This member stores the same finite element as the identical member in the Waveguide class. The reasoning is the same as for the quadrature formula.
+				 */
 				FESystem<3>			fe;
+
+				/**
+				 * This member stores the same DOF-handler as the identical member in the Waveguide class. The reasoning is the same as for the quadrature formula.
+				 */
 				DoFHandler<3>		dof_handler;
+
+				/**
+				 * In order to calculate transformation tensors in the assembly method it is important to have a handle to the structure of the Waveguide.
+				 */
 				WaveguideStructure	structure;
 		};
 
@@ -58,7 +76,7 @@ class PreconditionSweeping : public Subscriptor
 		 * \param parameters This argument can be used to set the value of \f$\alpha\f$ to be used later in the computation.
 		 */
 
-		void initialize ( MatrixType &,  const AdditionalData &);
+		void initialize ( MatrixType & matrix,  const AdditionalData & parameters);
 
 		/**
 		 * Need to figure out
@@ -139,7 +157,8 @@ class PreconditionSweeping : public Subscriptor
 		 * In order to keep the code readable, this function is introduced to encapsulate all the calls to transformation-optics- and PML-related functions. In the assembly of the preconditioner matrices this function is called to get the complex 3x3 matrix \f$\boldsymbol{\mu}\f$ and \f$\boldsymbol{\epsilon}\f$.
 		 * \param point Since both the PML and the transformation-tensor are position-dependent, this has to be specified.
 		 * \param inverse In Maxwell's equations (written as a second order PDE) we need the inverse of one of the Tensors (either \f$\boldsymbol{\mu}\f$ or \f$\boldsymbol{\epsilon}\f$). This can be achieved by setting this flag.
-		 * \param The general computation of both \f$\boldsymbol{\mu}\f$ and \f$\boldsymbol{\epsilon}\f$ is the same so we use the same function. If this parameter is set to true, \f$\boldsymbol{\epsilon}\f$ will be returned.
+		 * \param epsilon The general computation of both \f$\boldsymbol{\mu}\f$ and \f$\boldsymbol{\epsilon}\f$ is the same so we use the same function. If this parameter is set to true, \f$\boldsymbol{\epsilon}\f$ will be returned.
+		 * \param block Considering the PML it makes a difference for which block a material tensor is supposed to be used. The same coordinate can be in a PML region for one calculation and outside of it for another resulting in different tensors. For this reason the block under investigation has to be passed as an argument to this function.
 		 */
 		Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & point, bool inverse, bool epsilon, int block);
 

@@ -13,15 +13,16 @@
 
 #include <deal.II/lac/block_sparse_matrix.h>
 #include <deal.II/lac/block_vector.h>
+#include <deal.II/fe/fe_values.h>
 #include <deal.II/base/tensor.h>
 #include "PreconditionSweeping.h"
 
 using namespace dealii;
 
 template<typename MatrixType, typename VectorType  >
-PreconditionSweeping<MatrixType, VectorType>::AdditionalData (const double in_alpha , QGauss<3> & in_qf, FESystem<3> & in_fe, DoFHandler<3> & in_dofh, WaveguideStructure & in_structure): alpha(in_alpha) {
-	quadrature_formula = in_qf;
-	fe = in_fe;
+PreconditionSweeping<MatrixType, VectorType>::AdditionalData (const double in_alpha , QGauss<3> & in_qf, FESystem<3> & in_fe, DoFHandler<3> & in_dofh, WaveguideStructure & in_structure):
+alpha(in_alpha)
+{
 
 }
 
@@ -178,12 +179,15 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 		std::cout << "Critical Error in the Preconditioner. System Matrix block count mismatch!" << std::endl;
 	}
 	for(unsigned int block = 1; block <System_Matrix.m(); block++ ) {
-		dealii::BlockMatrixArray<double, dealii::BlockVector<double> > temp;
-		temp.initialize(2,2);
+		dealii::BlockSparseMatrix<double> temp;
+		BlockSparsityPattern tsp(2,2);
+		tsp.block(0,0).SparsityPattern(data.structure.case_sectors[block -1],data.structure.case_sectors[block -1], data.dof_handler.max_couplings_between_dofs());
+		tsp.block(1,0).SparsityPattern(data.structure.case_sectors[block   ],data.structure.case_sectors[block -1], data.dof_handler.max_couplings_between_dofs());
+		tsp.block(0,1).SparsityPattern(data.structure.case_sectors[block -1],data.structure.case_sectors[block   ], data.dof_handler.max_couplings_between_dofs());
+		tsp.block(1,1).SparsityPattern(data.structure.case_sectors[block   ],data.structure.case_sectors[block   ], data.dof_handler.max_couplings_between_dofs());
 
-
-
-		FEValues<3>  	fe_values (data.fe, data.quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points );
+		temp.reinit(tsp);
+		FEValues<3> 		fe_values (data.fe, data.quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points );
 		std::vector<Point<3> > quadrature_points;
 		const unsigned int   					dofs_per_cell	= data.fe.dofs_per_cell;
 		const unsigned int   					n_q_points		= data.quadrature_formula.size();
