@@ -141,7 +141,7 @@ class Sector {
 		 */
 		void setNActiveCells(unsigned int );
 
-	private:
+	//private:
 
 		unsigned int LowestDof, NDofs, NInternalBoundaryDofs, NActiveCells;
 };

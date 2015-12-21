@@ -16,6 +16,7 @@
 #include "Parameters.cpp"
 #include "RightHandSide.cpp"
 #include "Sector.cpp"
+#include "PreconditionSweeping.cpp"
 #include "Waveguide.cpp"
 #include "WaveguideStructure.cpp"
 #include "ExactSolution.cpp"

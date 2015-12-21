@@ -32,15 +32,11 @@ class PreconditionSweeping : public Subscriptor
 		class AdditionalData
 		{
 			public:
-				/**
-				 * unless specified differently we want complete preconditioner weighing which means \f$\alpha = 1.0\f$
-				 */
-				AdditionalData (const double in_alpha , QGauss<3> & in_qf, FESystem<3> & in_fe, DoFHandler<3> & in_dofh, WaveguideStructure & in_structure);
 
 				/**
 				 * This constructor is the same as the other but it doesn't take a value for \f$\alpha\f$. Instead \f$\alpha\f$ is set to 1.0.
 				 */
-				AdditionalData ( QGauss<3> & in_qf, FESystem<3> & in_fe, DoFHandler<3> & in_dofh, WaveguideStructure & in_structure);
+				AdditionalData (  FESystem<3> & in_fe, WaveguideStructure & in_structure, DoFHandler<3>::active_cell_iterator cell , DoFHandler<3>::active_cell_iterator endc, int max_couplings);
 				/**
 				 * This member stores the value of alpha as set in the constructor call. See page 3777 in the afore mentioned paper about this preconditioner for a more detailed description.
 				 */
@@ -57,17 +53,16 @@ class PreconditionSweeping : public Subscriptor
 				FESystem<3>			fe;
 
 				/**
-				 * This member stores the same DOF-handler as the identical member in the Waveguide class. The reasoning is the same as for the quadrature formula.
-				 */
-				DoFHandler<3>		dof_handler;
-
-				/**
 				 * In order to calculate transformation tensors in the assembly method it is important to have a handle to the structure of the Waveguide.
 				 */
 				WaveguideStructure	structure;
+
+				DoFHandler<3>::active_cell_iterator cell, endc;
+
+				int max_couplings;
 		};
 
-		PreconditionSweeping();
+		PreconditionSweeping( PreconditionSweeping<MatrixType, VectorType>::AdditionalData &);
 
 
 		/**
@@ -76,18 +71,18 @@ class PreconditionSweeping : public Subscriptor
 		 * \param parameters This argument can be used to set the value of \f$\alpha\f$ to be used later in the computation.
 		 */
 
-		void initialize ( MatrixType & matrix,  const AdditionalData & parameters);
+		void initialize ( MatrixType & matrix) ;
 
 		/**
 		 * Need to figure out
 		 */
-		void vmult (VectorType &, const VectorType &);
+		void vmult (VectorType &, VectorType &) const;
 
 		/**
 		 * Need to figure out
 		 */
 
-		void Tvmult (VectorType &, const VectorType &);
+		void Tvmult (VectorType &,  VectorType &) const;
 
 		/**
 		 * Need to figure out
@@ -162,23 +157,28 @@ class PreconditionSweeping : public Subscriptor
 		 */
 		Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & point, bool inverse, bool epsilon, int block);
 
+		/**
+		 * This function constructs the boundary constraint object for a given block. This is similar to the one in the Waveguide class, it only differs in DOF-numbering as well as the zero-values on the block-interfaces.
+		 * \param block This index is needed so that the constraint matrix generated here can include the boundary values for the block interface.
+		 */
+		void MakeBoundaryConditions( int block) ;
+
 	private:
 
-		const double width;
-
-		const double l;
-
-		double alpha;
+		double width;
+		double l;
 
 		size_type n_rows;
 
 		size_type n_columns;
 
-		const unsigned int Sectors;
+		unsigned int Sectors;
 
 		std::vector<dealii::SparseDirectUMFPACK> inverse_blocks;
 
 		PreconditionSweeping<MatrixType, VectorType>::AdditionalData data;
+
+		ConstraintMatrix cm;
 };
 
 #endif

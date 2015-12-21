@@ -446,7 +446,7 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 
 	for(unsigned int i = 0; i < Sectors; i++) {
 		CellsPerSubdomain.push_back(0);
-		InternalBoundaryDofs(0);
+		InternalBoundaryDofs.push_back(0);
 	}
 
 	for(unsigned int i = 0; i < NumberOfDofs; i++) {
@@ -926,29 +926,23 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
-	/**
+
 	if(prm.PRM_S_Solver == "MINRES") {
 		condition_file.open((solutionpath + "/condition_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << condition_file_counter) )->str() + ".dat").c_str());
 		eigenvalue_file.open((solutionpath + "/eigenvalues_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << eigenvalue_file_counter) )->str() + ".dat").c_str());
-		SolverMinRes<Vector<double> > solver (solver_control, SolverMinRes<Vector<double> >::AdditionalData());
+		SolverMinRes<BlockVector<double> > solver (solver_control, SolverMinRes<BlockVector<double> >::AdditionalData());
 
 		if(prm.PRM_S_Preconditioner == "Identity") {
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
 		}
 
-		if(prm.PRM_S_Preconditioner == "Jacobi"){
-			PreconditionJacobi<SparseMatrix<double>> pre_jacobi;
-			pre_jacobi.initialize(system_matrix, PreconditionJacobi<SparseMatrix<double>>::AdditionalData());
+		if(prm.PRM_S_Preconditioner == "Sweeping"){
+			PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> >::AdditionalData data( fe,  structure, dof_handler.begin_active(), dof_handler.end(), dof_handler.max_couplings_between_dofs());
+			PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> > sweep( data);
+			sweep.initialize(system_matrix);
 			timerupdate();
-			solver.solve (system_matrix, solution, system_rhs, pre_jacobi);
-		}
-
-		if(prm.PRM_S_Preconditioner == "SSOR"){
-			PreconditionSSOR<SparseMatrix<double> > plu;
-			plu.initialize(system_matrix, .6);
-			timerupdate();
-			solver.solve (system_matrix, solution, system_rhs, plu);
+			solver.solve (system_matrix, solution, system_rhs, sweep);
 		}
 
 	}
@@ -956,31 +950,23 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 	if(prm.PRM_S_Solver == "GMRES") {
 		condition_file.open((solutionpath + "/condition_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << condition_file_counter) )->str() + ".dat").c_str());
 		eigenvalue_file.open((solutionpath + "/eigenvalues_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << eigenvalue_file_counter) )->str() + ".dat").c_str());
-		SolverGMRES<Vector<double> > solver (solver_control, SolverGMRES<Vector<double> >::AdditionalData(prm.PRM_S_GMRESSteps, true));
-		solver.connect_condition_number_slot(std_cxx11::bind(&Waveguide<dealii::SparseMatrix<double> , dealii::Vector<double> >::print_condition, this, std_cxx11::_1), true);
-		solver.connect_eigenvalues_slot(std_cxx11::bind(&Waveguide<dealii::SparseMatrix<double> , dealii::Vector<double> >::print_eigenvalues, this, std_cxx11::_1), true);
+		SolverGMRES<BlockVector<double> > solver (solver_control, SolverGMRES<BlockVector<double> >::AdditionalData(prm.PRM_S_GMRESSteps, true));
+		solver.connect_condition_number_slot(std_cxx11::bind(&Waveguide<dealii::BlockSparseMatrix<double> , dealii::BlockVector<double> >::print_condition, this, std_cxx11::_1), true);
+		solver.connect_eigenvalues_slot(std_cxx11::bind(&Waveguide<dealii::BlockSparseMatrix<double> , dealii::BlockVector<double> >::print_eigenvalues, this, std_cxx11::_1), true);
 
 		if(prm.PRM_S_Preconditioner == "Identity") {
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
 		}
-
-		if(prm.PRM_S_Preconditioner == "Jacobi"){
-			PreconditionJacobi<SparseMatrix<double>> pre_jacobi;
-			pre_jacobi.initialize(system_matrix, PreconditionJacobi<SparseMatrix<double>>::AdditionalData());
+		if(prm.PRM_S_Preconditioner == "Sweeping"){
+			PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> >::AdditionalData data( fe, structure,dof_handler.begin_active(), dof_handler.end(), dof_handler.max_couplings_between_dofs());
+			PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> > sweep(data);
+			sweep.initialize(system_matrix);
 			timerupdate();
-			solver.solve (system_matrix, solution, system_rhs, pre_jacobi);
+			solver.solve (system_matrix, solution, system_rhs, sweep);
 		}
-
-		if(prm.PRM_S_Preconditioner == "SSOR"){
-			PreconditionSSOR<SparseMatrix<double> > plu;
-			plu.initialize(system_matrix, .6);
-			timerupdate();
-			solver.solve (system_matrix, solution, system_rhs, plu);
-		}
-
 	}
-	 **/
+
 	if(prm.PRM_S_Solver == "UMFPACK") {
 		SparseDirectUMFPACK  A_direct;
 		A_direct.initialize(system_matrix);
