@@ -21,239 +21,24 @@
 using namespace dealii;
 
 template<typename MatrixType, typename VectorType  >
-PreconditionSweeping<MatrixType, VectorType>::PreconditionSweeping( PreconditionSweeping<MatrixType, VectorType>::AdditionalData & in_data):
-	l((double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (GlobalParams.PRM_M_W_Sectors)),
-	width(l * 0.1),
-	n_columns (GlobalParams.PRM_M_W_Sectors),
-	n_rows (GlobalParams.PRM_M_W_Sectors),
-	data( in_data.fe, in_data.structure, in_data.cell, in_data.endc, in_data.max_couplings)
+PreconditionSweeping<MatrixType, VectorType>::PreconditionSweeping( PreconditionSweeping<MatrixType, VectorType>::AdditionalData & in_data): data(in_data.alpha, in_data.nonzero)
 {
 	Sectors = GlobalParams.PRM_M_W_Sectors;
 }
 
 
 template<typename MatrixType, typename VectorType  >
-PreconditionSweeping<MatrixType, VectorType>::AdditionalData::AdditionalData (  FESystem<3> & in_fe, WaveguideStructure & in_structure, DoFHandler<3>::active_cell_iterator in_cell , DoFHandler<3>::active_cell_iterator in_endc, int in_couplings):
-alpha(1.0),
-quadrature_formula(2),
-fe(in_fe),
-structure(in_structure)
-{
-	cell = in_cell;
-	endc = in_endc;
-	max_couplings = in_couplings;
-}
+PreconditionSweeping<MatrixType, VectorType>::AdditionalData::AdditionalData (  double in_alpha, int in_nonzero):
+alpha(in_alpha),
+nonzero(in_nonzero)
+{}
 
-template<typename MatrixType, typename VectorType  >
-bool PreconditionSweeping<MatrixType, VectorType>::PML_in_X(Point<3> &p) {
-	double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
-	return p(0) < -(pmlboundary) ||p(0) > (pmlboundary);
-}
 
-template<typename MatrixType, typename VectorType>
-bool PreconditionSweeping<MatrixType, VectorType>::PML_in_Y(Point<3> &p) {
-	double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
-	return p(1) < -(pmlboundary) ||p(1) > (pmlboundary);
-}
 
-template<typename MatrixType, typename VectorType>
-bool PreconditionSweeping<MatrixType, VectorType>::PML_in_Z(Point<3> &p, unsigned int block) {
 
-	bool up =    (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin  ) - (block+1) * l + width) > 0;
-	bool down = -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin  ) - (block-1) * l - width) > 0;
-
-	return up || down;
-}
-
-template<typename MatrixType, typename VectorType >
-double PreconditionSweeping<MatrixType, VectorType>::PML_X_Distance(Point<3> &p){
-	double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
-	if(p(0) >0){
-		return p(0) - (pmlboundary) ;
-	} else {
-		return -p(0) - (pmlboundary);
-	}
-}
-
-template<typename MatrixType, typename VectorType >
-double PreconditionSweeping<MatrixType, VectorType>::PML_Y_Distance(Point<3> &p){
-	double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
-	if(p(1) >0){
-		return p(1) - (pmlboundary);
-	} else {
-		return -p(1) - (pmlboundary);
-	}
-}
-
-template<typename MatrixType, typename VectorType >
-double PreconditionSweeping<MatrixType, VectorType>::PML_Z_Distance(Point<3> &p, unsigned int block ){
-	double l = (double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (GlobalParams.PRM_M_W_Sectors);
-	double width = l * 0.1;
-	if( ( p(2) +GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin  )-  block * l < 0){
-		return -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin  ) - (block-1) * l - width);
-	} else {
-		return  (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin  ) - (block+1) * l + width);
-	}
-}
-
-template<>
-void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::MakeBoundaryConditions ( int block ){
-	DoFHandler<3>::active_cell_iterator cell, endc;
-	cm.clear();
-	cell = data.cell,
-	endc = data.endc;
-	for (; cell!=endc; ++cell)
-	{
-		for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
-			Point<3, double> center =(cell->face(i))->center(true, false);
-			if( center[0] < 0) center[0] *= (-1.0);
-			if( center[1] < 0) center[1] *= (-1.0);
-
-			// Set x-boundary values
-			if ( std::abs( center[0] - (15.5 * (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) /8.7 ) ) < 0.01 ){
-				std::vector<types::global_dof_index> local_dof_indices (data.fe.dofs_per_line);
-				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
-					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
-					for(unsigned int k = 0; k< GeometryInfo<3>::lines_per_face; k++) {
-						if(local_dof_indices[k] <data.structure.case_sectors[block-1].LowestDof || local_dof_indices[k] > data.structure.case_sectors[block].LowestDof + data.structure.case_sectors[block].NDofs + data.structure.case_sectors[block-1].LowestDof ) {
-
-						} else {
-							local_dof_indices[k] -= data.structure.case_sectors[block-1].LowestDof;
-							cm.add_line(local_dof_indices[k]);
-							cm.set_inhomogeneity(local_dof_indices[k], 0.0 );
-						}
-					}
-				}
-			}
-
-			// Set y-boundary values
-			if ( std::abs( center[1] - (15.5 * (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) /8.7 ) ) < 0.01 ){
-				std::vector<types::global_dof_index> local_dof_indices (data.fe.dofs_per_line);
-				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
-					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
-					for(int k = 0; k< GeometryInfo<3>::lines_per_face; k++) {
-						local_dof_indices[k] -= data.structure.case_sectors[block-1].LowestDof;
-						if(local_dof_indices[k] <0 || local_dof_indices[k] > data.structure.case_sectors[block].LowestDof + data.structure.case_sectors[block].NDofs ) {
-							local_dof_indices[k] = -1;
-						}
-					}
-					if(local_dof_indices[0] != -1) {
-						cm.add_line(local_dof_indices[0]);
-						cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
-					}
-					if(local_dof_indices[0] != -1) {
-						cm.add_line(local_dof_indices[1]);
-						cm.set_inhomogeneity(local_dof_indices[1], 0.0);
-					}
-				}
-			}
-
-			// Set z-boundary values for big z
-			if( std::abs(center[2] + GlobalParams.PRM_M_R_ZLength/2.0  + GlobalParams.PRM_M_BC_XYin - (block+1)*(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout)/GlobalParams.PRM_M_W_Sectors) < 0.01 ){
-				std::vector<types::global_dof_index> local_dof_indices (data.fe.dofs_per_line);
-				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
-					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
-					for(int k = 0; k< GeometryInfo<3>::lines_per_face; k++) {
-						local_dof_indices[k] -= data.structure.case_sectors[block-1].LowestDof;
-						if(local_dof_indices[k] <0 || local_dof_indices[k] > data.structure.case_sectors[block].LowestDof + data.structure.case_sectors[block].NDofs ) {
-							local_dof_indices[k] = -1;
-						}
-					}
-					if(local_dof_indices[0] != -1) {
-						cm.add_line(local_dof_indices[0]);
-						cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
-					}
-					if(local_dof_indices[0] != -1) {
-						cm.add_line(local_dof_indices[1]);
-						cm.set_inhomogeneity(local_dof_indices[1], 0.0);
-					}
-				}
-			}
-		}
-	}
-}
-
-template<typename MatrixType, typename VectorType >
-Tensor<2,3, std::complex<double>> PreconditionSweeping<MatrixType, VectorType>::get_Tensor(Point<3> & position, bool inverse , bool epsilon, int block) {
-
-	double omegaepsilon0 = GlobalParams.PRM_C_omega * ((System_Coordinate_in_Waveguide(position))?GlobalParams.PRM_M_W_EpsilonIn : GlobalParams.PRM_M_W_EpsilonOut);
-	std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
-	if(PML_in_X(position)){
-		double r,d, sigmax;
-		r = PML_X_Distance(position);
-		d = GlobalParams.PRM_M_R_XLength * 1.0 * GlobalParams.PRM_M_BC_Mantle/100.0;
-		sigmax = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaXMax;
-		sx.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaXMax);
-		sx.imag( sigmax / ( omegaepsilon0));
-	}
-	if(PML_in_Y(position)){
-		double r,d, sigmay;
-		r = PML_Y_Distance(position);
-		d = GlobalParams.PRM_M_R_YLength * 1.0 * GlobalParams.PRM_M_BC_Mantle/100.0;
-		sigmay = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaYMax;
-		sy.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaYMax);
-		sy.imag( sigmay / ( omegaepsilon0));
-	}
-	if(PML_in_Z(position, block)){
-		double r,d, sigmaz;
-		r = PML_Z_Distance(position, block);
-		d = (position(2)<0)? GlobalParams.PRM_M_BC_XYin : GlobalParams.PRM_M_BC_XYout;
-		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
-		sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
-		sz.imag( sigmaz / omegaepsilon0 );
-	}
-
-	Tensor<2,3, double> transformation = data.structure.TransformationTensor(position[0], position[1], position[2]);
-
-	Tensor<2,3, std::complex<double>> ret;
-	for(int l = 0; l<3; l++) {
-		for(int k = 0; k<3; k++) {
-			std::complex<double> temp(transformation[l][k],0.0);
-			ret[l][k] = temp;
-		}
-	}
-
-	if(epsilon) {
-		if(System_Coordinate_in_Waveguide(position) ) {
-			ret *= GlobalParams.PRM_M_W_EpsilonIn;
-		} else {
-			ret *= GlobalParams.PRM_M_W_EpsilonOut;
-		}
-		ret *= GlobalParams.PRM_C_Eps0;
-	} else {
-		ret *= GlobalParams.PRM_C_Mu0;
-	}
-
-	ret[0][0] *= sy * sz / sx ;
-	ret[0][1] *= sz ;
-	ret[0][2] *= sy ;
-
-	ret[1][0] *= sz ;
-	ret[1][1] *= sx * sz / sy ;
-	ret[1][2] *= sx ;
-
-	ret[2][0] *= sy ;
-	ret[2][1] *= sx ;
-	ret[2][2] *= sx * sy / sz ;
-
-	if(inverse) return invert(ret) ;
-
-	else return ret;
-}
-
-template<typename MatrixType, typename VectorType >
-Tensor<1,3, std::complex<double>> PreconditionSweeping<MatrixType, VectorType>::Conjugate_Vector(Tensor<1,3, std::complex<double>> input) {
-	Tensor<1,3, std::complex<double>> ret ;
-	for(int i= 0; i< 3; i++){
-		ret[i].real(input[i].real());
-		ret[i].imag( - input[i].imag());
-
-	}
-	return ret;
-}
 
 template <>
-void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::initialize( dealii::BlockSparseMatrix<double> &System_Matrix)
+void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::initialize( dealii::BlockSparseMatrix<double> &System_Matrix, dealii::BlockSparseMatrix<double> &Preconditioner_Matrix1, dealii::BlockSparseMatrix<double> &Preconditioner_Matrix2)
 {
 
 	// First Block. Prepare Solver directly.
@@ -265,100 +50,62 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 	if(System_Matrix.m() != System_Matrix.n()) {
 		std::cout << "Critical Error in the Preconditioner. System Matrix block count mismatch!" << std::endl;
 	}
-	for(unsigned int block = 1; block <System_Matrix.m(); block++ ) {
+	for(unsigned int block = 2; block <System_Matrix.m(); block++ ) {
 		dealii::BlockSparseMatrix<double> temp;
-		BlockSparsityPattern tsp(2,2);
-		tsp.block(0,0).reinit(data.structure.case_sectors[block -1].NDofs ,data.structure.case_sectors[block -1].NDofs , data.max_couplings);
-		tsp.block(1,0).reinit(data.structure.case_sectors[block   ].NDofs ,data.structure.case_sectors[block -1].NDofs , data.max_couplings);
-		tsp.block(0,1).reinit(data.structure.case_sectors[block -1].NDofs ,data.structure.case_sectors[block   ].NDofs , data.max_couplings);
-		tsp.block(1,1).reinit(data.structure.case_sectors[block   ].NDofs ,data.structure.case_sectors[block   ].NDofs , data.max_couplings);
+		BlockSparsityPattern tsp;
+		tsp.reinit(2,2);
 
-		std::vector<int> sizes;
-		sizes.push_back(data.structure.case_sectors[block -1].NDofs );
-		sizes.push_back(data.structure.case_sectors[block   ].NDofs );
-		dealii::BlockVector<double> system_rhs;
-		system_rhs.reinit(2);
-		system_rhs.block(0).reinit(sizes[block -1]);
-		system_rhs.block(1).reinit(sizes[block ]);
-		system_rhs.collect_sizes();
+		tsp.block(0,0).reinit(Preconditioner_Matrix2.block(block-1, block-1).m(),Preconditioner_Matrix2.block(block-1, block-1).n(), data.nonzero );
+		tsp.block(1,0).reinit(Preconditioner_Matrix2.block(block  , block-1).m(),Preconditioner_Matrix2.block(block  , block-1).n(), data.nonzero );
+		tsp.block(0,1).reinit(Preconditioner_Matrix2.block(block-1, block  ).m(),Preconditioner_Matrix2.block(block-1, block  ).n(), data.nonzero );
+		tsp.block(1,1).reinit(Preconditioner_Matrix2.block(block  , block  ).m(),Preconditioner_Matrix2.block(block  , block  ).n(), data.nonzero );
+		deallog << "Sizes:"<<std::endl;
+		deallog << " (" << Preconditioner_Matrix2.block(block-1, block-1).m()<< "," << Preconditioner_Matrix2.block(block-1, block-1).n() << ") "<< std::endl;
+		deallog << " (" << Preconditioner_Matrix2.block(block, block-1).m()<< "," << Preconditioner_Matrix2.block(block, block-1).n() << ") "<< std::endl;
+		deallog << " (" << Preconditioner_Matrix2.block(block-1, block).m()<< "," << Preconditioner_Matrix2.block(block-1, block).n() << ") "<< std::endl;
+		deallog << " (" << Preconditioner_Matrix2.block(block, block).m()<< "," << Preconditioner_Matrix2.block(block, block).n() << ") "<< std::endl;
+		tsp.collect_sizes();
+		tsp.compress();
+
+		//deallog << "Does it happen here?" << std::endl;
 		temp.reinit(tsp);
-		FEValues<3> 							fe_values (data.fe, data.quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points );
-		std::vector<Point<3> > 					quadrature_points;
-		const unsigned int   					dofs_per_cell	= data.fe.dofs_per_cell;
-		const unsigned int   					n_q_points		= data.quadrature_formula.size();
+		//deallog << "Nope!" << std::endl;
 
-		FullMatrix<double>						cell_matrix_real (dofs_per_cell, dofs_per_cell);
-		Vector<double>							cell_rhs (dofs_per_cell);
-		cell_rhs = 0;
-		Tensor<2,3, std::complex<double>> 		epsilon, mu;
-		std::vector<unsigned> 					local_dof_indices (dofs_per_cell);
-		const FEValuesExtractors::Vector 		real(0), imag(3);
-		DoFHandler<3>::active_cell_iterator 	cell, endc;
-		unsigned int 							bottom, top;
-		bottom = data.structure.case_sectors[block-1].LowestDof;
-		top = data.structure.case_sectors[block].LowestDof + data.structure.case_sectors[block].NDofs -1;
-
-		cell = data.cell,
-		endc = data.endc;
-
-		for (; cell!=endc; ++cell)
-		{
-			if(cell->subdomain_id() == block-1 || cell->subdomain_id() == block) {
-				fe_values.reinit (cell);
-				quadrature_points = fe_values.get_quadrature_points();
-				cell_matrix_real = 0;
-				cell->get_dof_indices (local_dof_indices);
-
-				for (unsigned int q_index=0; q_index<n_q_points; ++q_index)
-				{
-					epsilon = get_Tensor(quadrature_points[q_index],  false, true, block);
-					mu = get_Tensor(quadrature_points[q_index], true, false, block);
-					const double JxW = fe_values.JxW(q_index);
-					for (unsigned int i=0; i<dofs_per_cell; i++){
-						Tensor<1,3, std::complex<double>> I_Curl;
-						Tensor<1,3, std::complex<double>> I_Val;
-						for(int k = 0; k<3; k++){
-							I_Curl[k].imag(fe_values[imag].curl(i, q_index)[k]);
-							I_Curl[k].real(fe_values[real].curl(i, q_index)[k]);
-							I_Val[k].imag(fe_values[imag].value(i, q_index)[k]);
-							I_Val[k].real(fe_values[real].value(i, q_index)[k]);
-						}
-
-						for (unsigned int j=0; j<dofs_per_cell; j++){
-							Tensor<1,3, std::complex<double>> J_Curl;
-							Tensor<1,3, std::complex<double>> J_Val;
-							for(int k = 0; k<3; k++){
-								J_Curl[k].imag(fe_values[imag].curl(j, q_index)[k]);
-								J_Curl[k].real(fe_values[real].curl(j, q_index)[k]);
-								J_Val[k].imag(fe_values[imag].value(j, q_index)[k]);
-								J_Val[k].real(fe_values[real].value(j, q_index)[k]);
-							}
-
-							if(local_dof_indices[i] >= bottom && local_dof_indices[j] >= bottom && local_dof_indices[i] <= top && local_dof_indices[j] <= top) {
-								std::complex<double> x = (mu * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
-
-								cell_matrix_real[i][j] += x.real();
-							}
-						}
-					}
-				}
-				for ( unsigned int i =0; i< dofs_per_cell; i++) {
-					if(local_dof_indices[i] < bottom ||local_dof_indices[i] >= bottom + data.structure.case_sectors[block-1].NDofs +data.structure.case_sectors[block].NDofs){
-						local_dof_indices[i] = 0;
-					} else {
-						local_dof_indices[i] = local_dof_indices[i] - bottom;
-					}
-				}
-
-				MakeBoundaryConditions(block);
-				cm.distribute_local_to_global(cell_matrix_real, cell_rhs, local_dof_indices,temp, system_rhs, false);
-
-			}
+		if((block-1)%2 == 0) {
+			deallog << 1 << std::endl;
+			temp.block(0,0).reinit(Preconditioner_Matrix2.block(block-1, block-1).get_sparsity_pattern());
+			temp.block(0,0).copy_from(Preconditioner_Matrix2.block(block-1, block-1));
+			temp.block(1,0).reinit(Preconditioner_Matrix2.block(block  , block-1).get_sparsity_pattern());
+			temp.block(1,0).copy_from(Preconditioner_Matrix2.block(block  , block-1));
+			temp.block(0,1).reinit(Preconditioner_Matrix2.block(block-1, block  ).get_sparsity_pattern());
+			temp.block(0,1).copy_from(Preconditioner_Matrix2.block(block-1, block  ));
+			temp.block(1,1).reinit(Preconditioner_Matrix2.block(block  , block  ).get_sparsity_pattern());
+			temp.block(1,1).copy_from(Preconditioner_Matrix2.block(block  , block  ));
+			deallog << 2 << std::endl;
+		} else {
+			deallog << 3 << std::endl;
+			temp.block(0,0).reinit(Preconditioner_Matrix1.block(block-1, block-1).get_sparsity_pattern());
+			temp.block(0,0).copy_from(Preconditioner_Matrix1.block(block-1, block-1));
+			temp.block(1,0).reinit(Preconditioner_Matrix1.block(block  , block-1).get_sparsity_pattern());
+			temp.block(1,0).copy_from(Preconditioner_Matrix1.block(block  , block-1));
+			temp.block(0,1).reinit(Preconditioner_Matrix1.block(block-1, block  ).get_sparsity_pattern());
+			temp.block(0,1).copy_from(Preconditioner_Matrix1.block(block-1, block  ));
+			temp.block(1,1).reinit(Preconditioner_Matrix1.block(block  , block  ).get_sparsity_pattern());
+			temp.block(1,1).copy_from(Preconditioner_Matrix1.block(block  , block  ));
+			deallog << 4 << std::endl;
 		}
 
+		deallog << Preconditioner_Matrix2.block(block-1, block-1).get_sparsity_pattern().n_cols();
+		deallog << " " << Preconditioner_Matrix2.block(block-1, block-1).get_sparsity_pattern().n_rows();
+		deallog << " " << temp.block(0,0).n_nonzero_elements() << std::endl;
+
+		temp.compress(dealii::VectorOperation::insert);
 		SparseDirectUMFPACK solver;
+		deallog << "Point 1" << std::endl;
 		solver.initialize(temp);
+		deallog << "Point 2" << std::endl;
 		inverse_blocks.push_back(solver);
+		deallog << "Finished block" << block<< std::endl;
 	}
 
 }

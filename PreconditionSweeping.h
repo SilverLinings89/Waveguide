@@ -36,42 +36,31 @@ class PreconditionSweeping : public Subscriptor
 				/**
 				 * This constructor is the same as the other but it doesn't take a value for \f$\alpha\f$. Instead \f$\alpha\f$ is set to 1.0.
 				 */
-				AdditionalData (  FESystem<3> & in_fe, WaveguideStructure & in_structure, DoFHandler<3>::active_cell_iterator cell , DoFHandler<3>::active_cell_iterator endc, int max_couplings);
+				AdditionalData (  double in_alpha, int in_nonzero);
 				/**
 				 * This member stores the value of alpha as set in the constructor call. See page 3777 in the afore mentioned paper about this preconditioner for a more detailed description.
 				 */
 
 				double 				alpha;
-				/**
-				 * This is the same quadrature formula as used in the Waveguide class and it is required since similar matrices have to be assembled.
-				 */
-				QGauss<3> 			quadrature_formula;
 
-				/**
-				 * This member stores the same finite element as the identical member in the Waveguide class. The reasoning is the same as for the quadrature formula.
-				 */
-				FESystem<3>			fe;
-
-				/**
-				 * In order to calculate transformation tensors in the assembly method it is important to have a handle to the structure of the Waveguide.
-				 */
-				WaveguideStructure	structure;
-
-				DoFHandler<3>::active_cell_iterator cell, endc;
-
-				int max_couplings;
+				int 				nonzero;
 		};
 
-		PreconditionSweeping( PreconditionSweeping<MatrixType, VectorType>::AdditionalData &);
+		/**
+		 * This is the normal constructor for preconditioners. It uses an object of the internal AdditionalData type specifiying the data it requires.
+		 * \param data This parameter is a reference to an object of type PreconditionSweeping<MatrixType, VectorType>::AdditionalData. It holds two members alpha and nonzero which give the dof_handlers result for max_couplings and a preconditioner property for this special preconditioner which is a kind of weighting and is currently always set to 1.0.
+		 */
+		PreconditionSweeping( PreconditionSweeping<MatrixType, VectorType>::AdditionalData & data);
 
 
 		/**
 		 * This function generates all the inverse matrices for the blocks. It remains to be seen if this is really necessary for all the purely internal blocks which have similar structure.
 		 * \param matrix This parameter contains a reference to the Systemmatrix which gives all the information for the matrices. Maybe it will become necessary to also handle a separate matrix with the additional blocks i.e. the Information about the neighboring blocks being filled with the sweeping PML.
-		 * \param parameters This argument can be used to set the value of \f$\alpha\f$ to be used later in the computation.
+		 * \param PML_1 This matrix holds the first half of the blocks needed for the construction of the preconditioner.
+		 * \param PML_2 This matrix holds the second half of the blocks needed for the construction of the preconditioner.
 		 */
 
-		void initialize ( MatrixType & matrix) ;
+		void initialize ( MatrixType & matrix, MatrixType & PML_1, MatrixType & PML_2  ) ;
 
 		/**
 		 * Need to figure out
@@ -109,76 +98,14 @@ class PreconditionSweeping : public Subscriptor
 		 */
 		size_type n () const;
 
-		/**
-		 * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
-		 * \param position Stores the position in which to test for presence of a PML-Material.
-		 */
-		bool	PML_in_X(Point<3> & position);
-		/**
-		 * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the y-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
-		 * \param position Stores the position in which to test for presence of a PML-Material.
-		 */
-		bool	PML_in_Y(Point<3> & position);
-		/**
-		 * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the z-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
-		 * \param position Stores the position in which to test for presence of a PML-Material.
-		 * \param block The preconditioner builds several matrices which differ for each Sector. In order to compute such a matrix it regards the sector itself and the sector before with the exception of the first sector (for this case only the first sector is regarded. I.e. to build the fifth preconditioner block, the assembly function regards the sectors 4 and 5. In the block \f$ i \f$ we have PML for the lower ( \f$ z \f$ small) end of sector \f$ i-1 \f$ and the higher end of sector \f$ i \f$.
-		 */
-		bool	PML_in_Z(Point<3> & position, unsigned int block);
-
-		/**
-		 * This function calculates for a given point, its distance to a PML-boundary limiting the computational domain. This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction).
-		 * \param position Stores the position from which to calculate the distance to the PML-surface.
-		 */
-		double 	PML_X_Distance(Point<3> & position);
-		/**
-		 * This function calculates for a given point, its distance to a PML-boundary limiting the computational domain. This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction).
-		 * \param position Stores the position from which to calculate the distance to the PML-surface.
-		 */
-		double 	PML_Y_Distance(Point<3> & position);
-		/**
-		 * This function calculates for a given point, its distance to a PML-boundary limiting the computational domain. This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction).
-		 * \param position Stores the position from which to calculate the distance to the PML-surface.
-		 * \param block The preconditioner builds several matrices which differ for each Sector. In order to compute such a matrix it regards the sector itself and the sector before with the exception of the first sector (for this case only the first sector is regarded. I.e. to build the fifth preconditioner block, the assembly function regards the sectors 4 and 5. In the block \f$ i \f$ we have PML for the lower ( \f$ z \f$ small) end of sector \f$ i-1 \f$ and the higher end of sector \f$ i \f$.
-		 */
-		double 	PML_Z_Distance(Point<3> & position, unsigned int block );
-
-		/**
-		 * This function calculates the complex conjugate of every vector entry and returns the result in a copy. This function does not operate in place - it operates on a copy and hence returns a new object.
-		 */
-		Tensor<1,3, std::complex<double>> Conjugate_Vector(Tensor<1,3, std::complex<double>> input);
-
-		/**
-		 * In order to keep the code readable, this function is introduced to encapsulate all the calls to transformation-optics- and PML-related functions. In the assembly of the preconditioner matrices this function is called to get the complex 3x3 matrix \f$\boldsymbol{\mu}\f$ and \f$\boldsymbol{\epsilon}\f$.
-		 * \param point Since both the PML and the transformation-tensor are position-dependent, this has to be specified.
-		 * \param inverse In Maxwell's equations (written as a second order PDE) we need the inverse of one of the Tensors (either \f$\boldsymbol{\mu}\f$ or \f$\boldsymbol{\epsilon}\f$). This can be achieved by setting this flag.
-		 * \param epsilon The general computation of both \f$\boldsymbol{\mu}\f$ and \f$\boldsymbol{\epsilon}\f$ is the same so we use the same function. If this parameter is set to true, \f$\boldsymbol{\epsilon}\f$ will be returned.
-		 * \param block Considering the PML it makes a difference for which block a material tensor is supposed to be used. The same coordinate can be in a PML region for one calculation and outside of it for another resulting in different tensors. For this reason the block under investigation has to be passed as an argument to this function.
-		 */
-		Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & point, bool inverse, bool epsilon, int block);
-
-		/**
-		 * This function constructs the boundary constraint object for a given block. This is similar to the one in the Waveguide class, it only differs in DOF-numbering as well as the zero-values on the block-interfaces.
-		 * \param block This index is needed so that the constraint matrix generated here can include the boundary values for the block interface.
-		 */
-		void MakeBoundaryConditions( int block) ;
 
 	private:
-
-		double width;
-		double l;
-
-		size_type n_rows;
-
-		size_type n_columns;
 
 		unsigned int Sectors;
 
 		std::vector<dealii::SparseDirectUMFPACK> inverse_blocks;
 
 		PreconditionSweeping<MatrixType, VectorType>::AdditionalData data;
-
-		ConstraintMatrix cm;
 };
 
 #endif
