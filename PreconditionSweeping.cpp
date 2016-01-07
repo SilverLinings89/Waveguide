@@ -38,24 +38,24 @@ nonzero(in_nonzero)
 
 
 template <>
-void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::initialize( dealii::BlockSparseMatrix<double> &System_Matrix, dealii::BlockSparseMatrix<double> &Preconditioner_Matrix1, dealii::BlockSparseMatrix<double> &Preconditioner_Matrix2)
+void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::initialize( dealii::BlockSparseMatrix<double> * System_Matrix, dealii::BlockSparseMatrix<double> &Preconditioner_Matrix1, dealii::BlockSparseMatrix<double> &Preconditioner_Matrix2)
 {
 	SystemMatrix = System_Matrix;
-	for(unsigned int block = 0; block <System_Matrix.n_block_cols(); block++ ) {
+	for(unsigned int block = 0; block <System_Matrix->n_block_cols(); block++ ) {
 		SparseDirectUMFPACK solver;
 		inverse_blocks.push_back(solver);
 	}
 	// First Block. Prepare Solver directly.
 	SparseDirectUMFPACK solver;
-	inverse_blocks[0].initialize(System_Matrix.block(0,0));
+	inverse_blocks[0].initialize(System_Matrix->block(0,0));
 	deallog << "Done with block " << 1 <<  std::endl;
 
 
 	// Build local blocks
-	if(System_Matrix.m() != System_Matrix.n()) {
+	if(System_Matrix->m() != System_Matrix->n()) {
 		std::cout << "Critical Error in the Preconditioner. System Matrix block count mismatch!" << std::endl;
 	}
-	for(unsigned int block = 1; block <System_Matrix.n_block_cols(); block++ ) {
+	for(unsigned int block = 1; block <System_Matrix->n_block_cols(); block++ ) {
 		dealii::BlockSparseMatrix<double> temp;
 		BlockDynamicSparsityPattern tsp;
 		tsp.reinit(2,2);
@@ -210,7 +210,7 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 		inverse_blocks[block].initialize(temp);
 		deallog << "Done with block " << block +1 <<  std::endl;
 		temp.clear();
-		if(block == System_Matrix.n_block_cols() -1) deallog << "Done with all blocks!" << std::endl;
+		if(block == System_Matrix->n_block_cols() -1) deallog << "Done with all blocks!" << std::endl;
 	}
 
 	deallog << "All preconditioner-blocks have been constructed." << std::endl;
@@ -251,7 +251,7 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 	}
 }
 
-
+/**
 template<>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::vmult (  dealii::BlockVector<double> &  out_vec , dealii::BlockVector<double> & in_vec ) const {
 	// deallog << "Starting VMULT" << std::endl;
@@ -279,6 +279,7 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 
 }
 
+**/
 template<>
 dealii::BlockVector<double> PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::Hinv(unsigned int block, dealii::BlockVector<double> &in_vec ) {
 	dealii::BlockVector<double> temp;

@@ -1249,7 +1249,7 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 		if(prm.PRM_S_Preconditioner == "Sweeping"){
 			PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> >::AdditionalData data( 1.0, dof_handler.max_couplings_between_dofs());
 			PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> > sweep( data);
-			sweep.initialize(system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
+			sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, sweep);
 		}
@@ -1271,7 +1271,7 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 		if(prm.PRM_S_Preconditioner == "Sweeping"){
 			PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> >::AdditionalData data( 1.0, dof_handler.max_couplings_between_dofs());
 			PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> > sweep(data);
-			sweep.initialize(system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
+			sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, sweep);
 		}

@@ -60,7 +60,7 @@ class PreconditionSweeping : public Subscriptor
 		 * \param PML_2 This matrix holds the second half of the blocks needed for the construction of the preconditioner.
 		 */
 
-		void initialize ( MatrixType & matrix, MatrixType & PML_1, MatrixType & PML_2  ) ;
+		void initialize ( MatrixType * matrix, MatrixType & PML_1, MatrixType & PML_2  ) ;
 
 		/**
 		 * Need to figure out
