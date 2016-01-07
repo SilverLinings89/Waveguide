@@ -263,7 +263,7 @@
             <pattern_description>[Selection GMRES|UMFPACK|MINRES ]</pattern_description>
         </Solver>
         <GMRESSteps>
-            <value>10000</value>
+            <value>4000</value>
             <default_value>1200</default_value>
             <documentation>Steps until restart of Krylow subspace generation</documentation>
             <pattern>35</pattern>
@@ -284,14 +284,14 @@
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </PreconditionerBlockCount>
         <Steps>
-            <value>90000</value>
+            <value>3000</value>
             <default_value>90000</default_value>
             <documentation>Number of Steps the Solver is supposed to do.</documentation>
             <pattern>38</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </Steps>
         <Precision>
-            <value>1e-05</value>
+            <value>1e-06</value>
             <default_value>1e-5</default_value>
             <documentation>Minimal error value, the solver is supposed to accept as correct solution.</documentation>
             <pattern>39</pattern>

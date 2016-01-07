@@ -67,6 +67,8 @@ class PreconditionSweeping : public Subscriptor
 		 */
 		void vmult (VectorType &, VectorType &) const;
 
+		VectorType Hinv(unsigned int block, VectorType &in_vec ) ;
+
 		/**
 		 * Need to figure out
 		 */
@@ -106,6 +108,8 @@ class PreconditionSweeping : public Subscriptor
 		std::vector<dealii::SparseDirectUMFPACK> inverse_blocks;
 
 		PreconditionSweeping<MatrixType, VectorType>::AdditionalData data;
+
+		MatrixType *SystemMatrix;
 };
 
 #endif

@@ -1026,16 +1026,14 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 
 	log_assemble.start();
 	if(!is_stored) deallog << "Starting Assemblation process" << std::endl;
-	deallog << "Sectors: " << Sectors << " Half: " << Sectors / 2 << "." << std::endl;
+	deallog << "Sectors: " << Sectors << std::endl;
 
 	Threads::TaskGroup<void> task_group1;
 	int upperbound = ((Sectors % 2) == 0)? Sectors/2 : Sectors/2 + 1;
-	deallog << "Upper bound" << upperbound << std::endl;
 	for (int i = 0; i < upperbound; ++i) {
 		task_group1 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i);
 	}
 	task_group1.join_all ();
-	deallog << "Test" << std::endl;
 	Threads::TaskGroup<void> task_group2;
 	for (int i = 0; i < Sectors/2; ++i) {
 		task_group2 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i+1);
@@ -1232,6 +1230,8 @@ void Waveguide<MatrixType, VectorType>::timerupdate() {
 template<>
 void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >::solve () {
 	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
+	solver_control.log_frequency(10);
+
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
@@ -1242,7 +1242,8 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 
 		if(prm.PRM_S_Preconditioner == "Identity") {
 			timerupdate();
-			solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
+				solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
+
 		}
 
 		if(prm.PRM_S_Preconditioner == "Sweeping"){
@@ -1265,6 +1266,7 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 		if(prm.PRM_S_Preconditioner == "Identity") {
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
+
 		}
 		if(prm.PRM_S_Preconditioner == "Sweeping"){
 			PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> >::AdditionalData data( 1.0, dof_handler.max_couplings_between_dofs());
@@ -1283,6 +1285,8 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 	}
 
 	log_solver.stop();
+
+
 	cm.distribute(solution);
 }
 
