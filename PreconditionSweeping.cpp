@@ -35,6 +35,25 @@ nonzero(in_nonzero)
 
 
 
+template<>
+void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::Hinv(unsigned int block, dealii::BlockVector<double> &out_vec, dealii::BlockVector<double> &in_vec ) const {
+	dealii::BlockVector<double> temp;
+	temp.reinit(2);
+	temp.block(0).reinit(in_vec.block(block-1).size());
+	temp.block(1).reinit(in_vec.block(block).size());
+	temp.collect_sizes();
+	temp.block(0) = in_vec.block(block-1);
+	temp.block(1) = in_vec.block(block);
+	// deallog << "Input-vector prepared." << std::endl;
+
+	out_vec.reinit(2);
+	out_vec.block(0).reinit(in_vec.block(block-1).size());
+	out_vec.block(1).reinit(in_vec.block(block).size());
+	out_vec.collect_sizes();
+	// deallog << "Output-vector prepared." << std::endl;
+
+	inverse_blocks[block].vmult(out_vec, temp);
+}
 
 
 template <>
@@ -217,7 +236,7 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 }
 
 
-
+/**
 template<>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::vmult (  dealii::BlockVector<double> &  out_vec , dealii::BlockVector<double> & in_vec ) const {
 	// deallog << "Starting VMULT" << std::endl;
@@ -250,8 +269,8 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 		// deallog << "Block " << i+1 << " done." << std::endl;
 	}
 }
+**/
 
-/**
 template<>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::vmult (  dealii::BlockVector<double> &  out_vec , dealii::BlockVector<double> & in_vec ) const {
 	// deallog << "Starting VMULT" << std::endl;
@@ -260,47 +279,59 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 	// deallog << "Block 1 done." << std::endl;
 
 	out_vec = in_vec;
-	dealii::BlockVector<double> temp;
-	temp.reinit(1);
-	temp.block(0).reinit(in_vec.block(0).size());
-	temp.collect_sizes();
-	inverse_blocks[0].vmult(temp.block(0) , in_vec.block(0));
-	out_vec.block(1) = out_vec.block(1) - SystemMatrix->block(0,1).vmult(temp.block(0), in_vec.block(0));
+	dealii::Vector<double> temp;
+	inverse_blocks[0].vmult(out_vec.block(0), in_vec.block(0));
+	temp.reinit(in_vec.block(1).size());
+
+	SystemMatrix->block(1,0).vmult(temp, out_vec.block(0));
+	out_vec.block(1).add(-1.0, temp);
 
 	for(unsigned int i = 1; i< Blocks-1; i++) {
-
+		dealii::BlockVector<double> temp;
+		Hinv(i,temp, out_vec);
+		dealii::Vector<double> temp2;
+		temp2.reinit(in_vec.block(i+1).size());
+		SystemMatrix->block(i+1, i).vmult(temp2,temp.block(1));
+		out_vec.block(i+1).add(-1.0, temp2);
 	}
 
 	for(unsigned int i = 1; i< Blocks; i++) {
-
+		dealii::BlockVector<double> temp2;
+		Hinv(i, temp2, out_vec);
+		out_vec.block(i) = temp2.block(1);
 	}
-	inverse_blocks[0].vmult(out_vec.block(0) , in_vec.block(0));
 
+	for(unsigned int i = Blocks - 2; i> 0; i--) {
+		dealii::BlockVector<double> temp3;
+		temp3.reinit(Blocks);
+		for(unsigned int j = 0; j < Blocks; j++) {
+			temp3.block(j).reinit(in_vec.block(j).size());
+		}
+		temp3.collect_sizes();
+
+		for(unsigned int j = 0; j < Blocks; j++) {
+			temp3.block(j) = 0;
+		}
+
+		SystemMatrix->block(i, i+1).vmult(temp3.block(i),out_vec.block(i+1));
+
+		dealii::BlockVector<double> temp;
+		Hinv(i,temp, temp3);
+
+		out_vec.block(i).add(-1.0, temp.block(1));
+	}
+
+	dealii::Vector<double> temp3;
+	temp3.reinit(out_vec.block(0).size());
+	SystemMatrix->block(0, 1).vmult(temp3,out_vec.block(1));
+	dealii::Vector<double> temp4;
+	temp4.reinit(out_vec.block(0).size());
+	inverse_blocks[0].vmult(temp4 , temp3);
+	out_vec.block(0).add(-1.0, temp4);
 
 }
 
-**/
-template<>
-dealii::BlockVector<double> PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::Hinv(unsigned int block, dealii::BlockVector<double> &in_vec ) {
-	dealii::BlockVector<double> temp;
-	temp.reinit(2);
-	temp.block(0).reinit(in_vec.block(block-1).size());
-	temp.block(1).reinit(in_vec.block(block).size());
-	temp.collect_sizes();
-	temp.block(0) = in_vec.block(block-1);
-	temp.block(1) = in_vec.block(block);
-	// deallog << "Input-vector prepared." << std::endl;
 
-	dealii::BlockVector<double> temp2;
-	temp2.reinit(2);
-	temp2.block(0).reinit(in_vec.block(block-1).size());
-	temp2.block(1).reinit(in_vec.block(block).size());
-	temp2.collect_sizes();
-	// deallog << "Output-vector prepared." << std::endl;
-
-	inverse_blocks[block].vmult(temp2, temp);
-	return temp2;
-}
 
 
 

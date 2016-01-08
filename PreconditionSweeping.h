@@ -67,7 +67,7 @@ class PreconditionSweeping : public Subscriptor
 		 */
 		void vmult (VectorType &, VectorType &) const;
 
-		VectorType Hinv(unsigned int block, VectorType &in_vec ) ;
+		void Hinv(unsigned int block, VectorType &out_vec, VectorType &in_vec ) const;
 
 		/**
 		 * Need to figure out
