@@ -132,6 +132,7 @@ static Parameters GetParameters() {
 	{
 		ret.PRM_Op_MaxCases = prm.get_integer("MaxCases");
 		ret.PRM_Op_InitialStepWidth = prm.get_double("InitialStepWidth");
+		ret.PRM_S_DoOptimization = prm.get_bool("DoOptimization");
 	}
 	prm.leave_subsection();
 	ret.PRM_M_R_XLength = (15.5/4.3)* ((ret.PRM_M_C_RadiusIn+ ret.PRM_M_C_RadiusOut)/2.0);

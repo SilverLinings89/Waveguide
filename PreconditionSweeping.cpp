@@ -28,11 +28,18 @@ PreconditionSweeping<MatrixType, VectorType>::PreconditionSweeping( Precondition
 
 
 template<typename MatrixType, typename VectorType  >
-PreconditionSweeping<MatrixType, VectorType>::AdditionalData::AdditionalData (  double in_alpha, int in_nonzero):
+PreconditionSweeping<MatrixType, VectorType>::AdditionalData::AdditionalData (  double in_alpha, unsigned int in_nonzero):
 alpha(in_alpha),
 nonzero(in_nonzero)
 {}
 
+template<typename MatrixType, typename VectorType  >
+void PreconditionSweeping<MatrixType, VectorType>::AdditionalData::SetNonZero(unsigned int in_nonzero)
+{
+
+	nonzero = in_nonzero;
+
+}
 
 
 template<>
@@ -152,7 +159,6 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 
 		temp.reinit(dsp);
 
-		deallog << "Collecting done." << std::endl;
 		if((block-1)%2 == 0) {
 
 			temp.block(0,0) = 0;
@@ -225,11 +231,10 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 
 		}
 
-		deallog << "Point 1" << std::endl;
 		inverse_blocks[block].initialize(temp);
 		deallog << "Done with block " << block +1 <<  std::endl;
 		temp.clear();
-		if(block == System_Matrix->n_block_cols() -1) deallog << "Done with all blocks!" << std::endl;
+
 	}
 
 	deallog << "All preconditioner-blocks have been constructed." << std::endl;

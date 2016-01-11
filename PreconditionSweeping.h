@@ -36,14 +36,15 @@ class PreconditionSweeping : public Subscriptor
 				/**
 				 * This constructor is the same as the other but it doesn't take a value for \f$\alpha\f$. Instead \f$\alpha\f$ is set to 1.0.
 				 */
-				AdditionalData (  double in_alpha, int in_nonzero);
+				AdditionalData (  double in_alpha, unsigned int in_nonzero);
 				/**
 				 * This member stores the value of alpha as set in the constructor call. See page 3777 in the afore mentioned paper about this preconditioner for a more detailed description.
 				 */
+				void SetNonZero (unsigned int nonzero);
 
 				double 				alpha;
 
-				int 				nonzero;
+				unsigned int 				nonzero;
 		};
 
 		/**

@@ -350,5 +350,12 @@
             <pattern>46</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </MaxCases>
+	<DoOptimization>
+            <value>true</value>
+            <default_value>true</default_value>
+            <documentation>If this value is set to false, no shape optimization will be attempted.</documentation>
+            <pattern>47</pattern>
+            <pattern_description>[Bool]</pattern_description>
+        </DoOptimization>
     </Optimization>
 </ParameterHandler>

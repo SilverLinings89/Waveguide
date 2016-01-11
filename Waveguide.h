@@ -373,6 +373,10 @@ class Waveguide
 		BlockSparsityPattern 					temporary_pattern;
 		bool									temporary_pattern_preped;
 		FEValuesExtractors::Vector 				real, imag;
+		SolverControl          					solver_control;
+		PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> >::AdditionalData Sweeping_Additional_Data;
+		PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> > sweep;
+
 };
 
 

@@ -89,6 +89,7 @@ void ParameterReader::declare_parameters()
 	prm.enter_subsection("Optimization");
 		prm.declare_entry("InitialStepWidth", "1.0", Patterns::Double(0), "Step width for the first step.");
 		prm.declare_entry("MaxCases", "100", Patterns::Integer(1), "Number of Cases the Optimization is supposed to use.");
+		prm.declare_entry("DoOptimization", "true", Patterns::Bool(), "If this value is set to false, no shape optimization will be attempted.");
 	prm.leave_subsection();
 
 

@@ -33,7 +33,10 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
   Sectors(prm.PRM_M_W_Sectors),
   temporary_pattern_preped(false),
   real(0),
-  imag(3)
+  imag(3),
+  solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true),
+  Sweeping_Additional_Data(1.0, 1),
+  sweep(Sweeping_Additional_Data)
 {
 	assembly_progress = 0;
 	int i = 0;
@@ -55,7 +58,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
 	mkdir(solutionpath.c_str(), ACCESSPERMS);
 	deallog << "Will write solutions to " << solutionpath << std::endl;
 	is_stored = false;
-
+	solver_control.log_frequency(10);
 }
 
 template<typename MatrixType, typename VectorType >
@@ -139,10 +142,8 @@ template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::store() {
 	reinit_storage();
 	// storage.reinit(dof_handler.n_dofs());
-	for(unsigned int i = 0; i < dof_handler.n_dofs(); i++){
-		storage[i] = solution[i];
-	}
-	if(!is_stored) is_stored = true;
+	for (unsigned int i=0; i<solution.size(); ++i)  storage(i) = solution(i);
+	is_stored = true;
 }
 
 template<typename MatrixType, typename VectorType >
@@ -334,7 +335,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 	/**
 	Tensor<2,3, double> transformation = structure.TransformationTensor(position[0], position[1], position[2]);
 
-	Tensor<2,3, std::complex<double>> ret;
+	Tensor<2,3, std::complex<double>>( 1.0, ret;
 	for(int l = 0; l<3; l++) {
 		for(int k = 0; k<3; k++) {
 			std::complex<double> temp(transformation[l][k],0.0);
@@ -1229,8 +1230,7 @@ void Waveguide<MatrixType, VectorType>::timerupdate() {
 
 template<>
 void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >::solve () {
-	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
-	solver_control.log_frequency(10);
+	if(!is_stored) Sweeping_Additional_Data.SetNonZero(dof_handler.max_couplings_between_dofs());
 
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
@@ -1247,10 +1247,13 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 		}
 
 		if(prm.PRM_S_Preconditioner == "Sweeping"){
-			PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> >::AdditionalData data( 1.0, dof_handler.max_couplings_between_dofs());
-			PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> > sweep( data);
-			sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
+			if(!is_stored) sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
 			timerupdate();
+			if(is_stored) {
+				for (unsigned int i=0; i<solution.size(); ++i)  solution(i) = storage(i);
+
+			}
+
 			solver.solve (system_matrix, solution, system_rhs, sweep);
 		}
 
@@ -1269,10 +1272,11 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 
 		}
 		if(prm.PRM_S_Preconditioner == "Sweeping"){
-			PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> >::AdditionalData data( 1.0, dof_handler.max_couplings_between_dofs());
-			PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> > sweep(data);
-			sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
+			if(!is_stored)	sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
 			timerupdate();
+			if(is_stored) {
+				solution = storage;
+			}
 			solver.solve (system_matrix, solution, system_rhs, sweep);
 		}
 	}
@@ -1292,7 +1296,6 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 
 template<>
 void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::MPI::Vector >::solve () {
-	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
@@ -1321,7 +1324,6 @@ void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers:
 
 template< >
 void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector >::solve () {
-	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
