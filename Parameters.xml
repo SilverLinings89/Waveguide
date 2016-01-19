@@ -100,7 +100,7 @@
         </Region>
         <Waveguide>
             <Delta>
-                <value>2</value>
+                <value>0.5</value>
                 <default_value>1.0</default_value>
                 <documentation>Offset between the two connectors measured in micrometres.</documentation>
                 <pattern>13</pattern>
@@ -151,14 +151,14 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XY_20in>
             <XY_20out>
-                <value>4</value>
+                <value>0</value>
                 <default_value>0.2</default_value>
                 <documentation>Thickness of the PML area on the side of the output connector.</documentation>
                 <pattern>20</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XY_20out>
             <Mantle>
-                <value>20</value>
+                <value>0</value>
                 <default_value>10</default_value>
                 <documentation>Thickness of the PML area on 4 non-connector sides, the mantle.</documentation>
                 <pattern>21</pattern>
@@ -350,7 +350,7 @@
             <pattern>46</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </MaxCases>
-	<DoOptimization>
+        <DoOptimization>
             <value>true</value>
             <default_value>true</default_value>
             <documentation>If this value is set to false, no shape optimization will be attempted.</documentation>

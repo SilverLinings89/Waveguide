@@ -358,6 +358,7 @@ class Waveguide
 
 		int 									assembly_progress;
 		VectorType								storage;
+		VectorType								temp_storage;
 		bool									is_stored;
 		VectorType								system_rhs, preconditioner_rhs;
 		LogStream 								deallog;

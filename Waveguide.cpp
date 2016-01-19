@@ -63,58 +63,57 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::evaluate_out () {
-	double ret = 0.0;
+	double real = 0.0;
+	double imag = 0.0;
 	double z = prm.PRM_M_R_ZLength/2.0;
-	for (int  i = 0; i < StepsR; i++) {
-		double r = ((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0) / (StepsR + 1) * (i+1);
-		for(int j = 0; j < i; j++) {
-			double phi = 2 * GlobalParams.PRM_C_PI * j / i;
-			Point<3, double> position(r * cos(phi), r * sin(phi), z);
+	double r = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
+
+	for (double x = -r; x < r; x += r/5) {
+		for(double y = -r; y < r; y += r/5) {
+			Point<3, double> position(x, y, z);
 			Vector<double> result(6);
 			VectorTools::point_value(dof_handler, solution, position, result);
 			double Q1 = structure.getQ1(position[2] );
 			double Q2 = structure.getQ2(position[2] );
-			double l1 =  (result[0] / Q1) * ( TEMode00( position , 0) / Q1);
-			double l2 = (result[1] / Q2) * ( TEMode00( position , 0) / Q2);
-			double l3 = (result[3] / Q1) * ( TEMode00( position , 0) / Q1);
-			double l4 = (result[4] / Q2) * ( TEMode00( position , 0) / Q2);
-			ret += l1*l1 + l2*l2 + l3*l3 + l4*l4;
+			real +=  (result[0] / Q1) * ( TEMode00( position , 0) / Q1);
+			imag += (result[1] / Q2) * ( TEMode00( position , 1) / Q2);
+			real += (result[3] / Q1) * ( TEMode00( position , 0) / Q1);
+			imag += (result[4] / Q2) * ( TEMode00( position , 1) / Q2);
 		}
 	}
-	return sqrt(ret);
+	return sqrt(imag*imag + real*real);
 }
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::evaluate_in () {
-	double ret = 0.0;
+	double real = 0.0;
+	double imag = 0.0;
 	double z = -prm.PRM_M_R_ZLength/2.0 ;
-	for (int  i = 0; i < StepsR; i++) {
-		double r = ((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0) / (StepsR + 1) * (i+1);
-		for(int j = 0; j < i; j++) {
-			double phi = 2 * GlobalParams.PRM_C_PI * j / i;
-			Point<3, double> position(r * cos(phi), r * sin(phi), z);
+	double r = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
+
+	for (double x = -r; x < r; x += r/5) {
+		for(double y = -r; y < r; y += r/5) {
+			Point<3, double> position(x, y, z);
 			Vector<double> result(6);
 			VectorTools::point_value(dof_handler, solution, position, result);
 			double Q1 = structure.getQ1(position[2] );
 			double Q2 = structure.getQ2(position[2] );
-			double l1 =  (result[0] / Q1) * ( TEMode00( position , 0) / Q1);
-			double l2 = (result[1] / Q2) * ( TEMode00( position , 0) / Q2);
-			double l3 = (result[3] / Q1) * ( TEMode00( position , 0) / Q1);
-			double l4 = (result[4] / Q2) * ( TEMode00( position , 0) / Q2);
-			ret += l1*l1 + l2*l2 + l3*l3 + l4*l4;
+			real +=  (result[0] / Q1) * ( TEMode00( position , 0) / Q1);
+			imag += (result[1] / Q2) * ( TEMode00( position , 1) / Q2);
+			real += (result[3] / Q1) * ( TEMode00( position , 0) / Q1);
+			imag += (result[4] / Q2) * ( TEMode00( position , 1) / Q2);
+
 		}
 	}
-	return sqrt(ret);
+	return sqrt(imag*imag + real*real);
 }
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 	double quality_in	= evaluate_in();
 	double quality_out	= evaluate_out();
-	if(!is_stored) {
-		deallog << "Quality in: "<< quality_in << std::endl;
-		deallog << "Quality out: "<< quality_out << std::endl;
-	}
+	deallog << "Quality in: "<< quality_in << std::endl;
+	deallog << "Quality out: "<< quality_out << std::endl;
 	/**
 	differences.reinit(triangulation.n_active_cells());
 	QGauss<3>  quadrature_formula(4);
@@ -142,7 +141,7 @@ template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::store() {
 	reinit_storage();
 	// storage.reinit(dof_handler.n_dofs());
-	for (unsigned int i=0; i<solution.size(); ++i)  storage(i) = solution(i);
+	for (unsigned int i=0; i<solution.size(); ++i)  storage(i) = temp_storage(i);
 	is_stored = true;
 }
 
@@ -785,7 +784,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 	reinit_all();
 
-	cm.distribute(solution);
+	// cm.distribute(solution);
 
 	if(prm.PRM_O_VerboseOutput) {
 		if(!is_stored) 	deallog << "Done." << std::endl;
@@ -833,6 +832,10 @@ void Waveguide<MatrixType, VectorType>::reinit_solution() {
 	solution.reinit(Sectors);
 	for (int i = 0; i < Sectors; i++) solution.block(i).reinit(Block_Sizes[i]);
 	solution.collect_sizes();
+
+	temp_storage.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) temp_storage.block(i).reinit(Block_Sizes[i]);
+	temp_storage.collect_sizes();
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1277,6 +1280,7 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 			if(is_stored) {
 				solution = storage;
 			}
+			deallog << "Norm of the solution (sqr): " << solution.norm_sqr() << std::endl;
 			solver.solve (system_matrix, solution, system_rhs, sweep);
 		}
 	}
@@ -1290,6 +1294,7 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 
 	log_solver.stop();
 
+	temp_storage = solution;
 
 	cm.distribute(solution);
 }
@@ -1457,7 +1462,7 @@ void Waveguide<MatrixType, VectorType>::reset_changes ()
 {
 	reinit_all();
 
-	cm.distribute(solution);
+	// cm.distribute(solution);
 }
 
 template<typename MatrixType, typename VectorType >

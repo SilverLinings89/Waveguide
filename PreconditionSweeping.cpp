@@ -241,7 +241,6 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 }
 
 
-/**
 template<>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::vmult (  dealii::BlockVector<double> &  out_vec , dealii::BlockVector<double> & in_vec ) const {
 	// deallog << "Starting VMULT" << std::endl;
@@ -274,8 +273,9 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 		// deallog << "Block " << i+1 << " done." << std::endl;
 	}
 }
-**/
 
+
+/**
 template<>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::vmult (  dealii::BlockVector<double> &  out_vec , dealii::BlockVector<double> & in_vec ) const {
 	// deallog << "Starting VMULT" << std::endl;
@@ -337,7 +337,7 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 }
 
 
-
+**/
 
 
 template<>
