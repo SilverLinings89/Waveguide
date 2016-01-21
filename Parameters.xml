@@ -100,7 +100,7 @@
         </Region>
         <Waveguide>
             <Delta>
-                <value>2</value>
+                <value>0.5</value>
                 <default_value>1.0</default_value>
                 <documentation>Offset between the two connectors measured in micrometres.</documentation>
                 <pattern>13</pattern>
@@ -151,14 +151,14 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XY_20in>
             <XY_20out>
-                <value>4</value>
+                <value>0</value>
                 <default_value>0.2</default_value>
                 <documentation>Thickness of the PML area on the side of the output connector.</documentation>
                 <pattern>20</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XY_20out>
             <Mantle>
-                <value>20</value>
+                <value>0</value>
                 <default_value>10</default_value>
                 <documentation>Thickness of the PML area on 4 non-connector sides, the mantle.</documentation>
                 <pattern>21</pattern>
@@ -256,25 +256,25 @@
             <pattern_description>[Selection DealII|PETSc|Trilinos ]</pattern_description>
         </Library>
         <Solver>
-            <value>UMFPACK</value>
+            <value>GMRES</value>
             <default_value>GMRES</default_value>
             <documentation>Which Solver to use for the solution of the system matrix</documentation>
             <pattern>34</pattern>
             <pattern_description>[Selection GMRES|UMFPACK|MINRES ]</pattern_description>
         </Solver>
         <GMRESSteps>
-            <value>10000</value>
+            <value>4000</value>
             <default_value>1200</default_value>
             <documentation>Steps until restart of Krylow subspace generation</documentation>
             <pattern>35</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </GMRESSteps>
         <Preconditioner>
-            <value>Jacobi</value>
+            <value>Sweeping</value>
             <default_value>Identity</default_value>
             <documentation>Which preconditioner to use</documentation>
             <pattern>36</pattern>
-            <pattern_description>[Selection SOR|SSOR|Identity|Jacobi|ILU|Block_Jacobi|ParaSails|LU|ICC|BoomerAMG|Eisenstat ]</pattern_description>
+            <pattern_description>[Selection Identity|Jacobi|ILU|Block_Jacobi|LU|Sweeping ]</pattern_description>
         </Preconditioner>
         <PreconditionerBlockCount>
             <value>8</value>
@@ -284,14 +284,14 @@
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </PreconditionerBlockCount>
         <Steps>
-            <value>90000</value>
+            <value>3000</value>
             <default_value>90000</default_value>
             <documentation>Number of Steps the Solver is supposed to do.</documentation>
             <pattern>38</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </Steps>
         <Precision>
-            <value>1e-05</value>
+            <value>1e-06</value>
             <default_value>1e-5</default_value>
             <documentation>Minimal error value, the solver is supposed to accept as correct solution.</documentation>
             <pattern>39</pattern>
@@ -350,5 +350,12 @@
             <pattern>46</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </MaxCases>
+        <DoOptimization>
+            <value>true</value>
+            <default_value>true</default_value>
+            <documentation>If this value is set to false, no shape optimization will be attempted.</documentation>
+            <pattern>47</pattern>
+            <pattern_description>[Bool]</pattern_description>
+        </DoOptimization>
     </Optimization>
 </ParameterHandler>

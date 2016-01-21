@@ -8,10 +8,6 @@
 #include "ExactSolution.h"
 #include <sstream>
 #include <deal.II/numerics/vector_tools.h>
-// #include <deal.II/numerics/vector_tools.templates.h>
-
-
-
 #include <deal.II/base/std_cxx11/bind.h>
 
 using namespace dealii;
@@ -35,7 +31,12 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
   condition_file_counter(0),
   eigenvalue_file_counter(0),
   Sectors(prm.PRM_M_W_Sectors),
-  temporary_pattern_preped(false)
+  temporary_pattern_preped(false),
+  real(0),
+  imag(3),
+  solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true),
+  Sweeping_Additional_Data(1.0, 1),
+  sweep(Sweeping_Additional_Data)
 {
 	assembly_progress = 0;
 	int i = 0;
@@ -57,62 +58,62 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
 	mkdir(solutionpath.c_str(), ACCESSPERMS);
 	deallog << "Will write solutions to " << solutionpath << std::endl;
 	is_stored = false;
+	solver_control.log_frequency(10);
 }
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::evaluate_out () {
-	double ret = 0.0;
+	double real = 0.0;
+	double imag = 0.0;
 	double z = prm.PRM_M_R_ZLength/2.0;
-	for (int  i = 0; i < StepsR; i++) {
-		double r = ((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0) / (StepsR + 1) * (i+1);
-		for(int j = 0; j < i; j++) {
-			double phi = 2 * GlobalParams.PRM_C_PI * j / i;
-			Point<3, double> position(r * cos(phi), r * sin(phi), z);
+	double r = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
+
+	for (double x = -r; x < r; x += r/5) {
+		for(double y = -r; y < r; y += r/5) {
+			Point<3, double> position(x, y, z);
 			Vector<double> result(6);
 			VectorTools::point_value(dof_handler, solution, position, result);
 			double Q1 = structure.getQ1(position[2] );
 			double Q2 = structure.getQ2(position[2] );
-			double l1 =  (result[0] / Q1) * ( TEMode00( position , 0) / Q1);
-			double l2 = (result[1] / Q2) * ( TEMode00( position , 0) / Q2);
-			double l3 = (result[3] / Q1) * ( TEMode00( position , 0) / Q1);
-			double l4 = (result[4] / Q2) * ( TEMode00( position , 0) / Q2);
-			ret += l1*l1 + l2*l2 + l3*l3 + l4*l4;
+			real +=  (result[0] / Q1) * ( TEMode00( position , 0) / Q1);
+			imag += (result[1] / Q2) * ( TEMode00( position , 1) / Q2);
+			real += (result[3] / Q1) * ( TEMode00( position , 0) / Q1);
+			imag += (result[4] / Q2) * ( TEMode00( position , 1) / Q2);
 		}
 	}
-	return sqrt(ret);
+	return sqrt(imag*imag + real*real);
 }
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::evaluate_in () {
-	double ret = 0.0;
+	double real = 0.0;
+	double imag = 0.0;
 	double z = -prm.PRM_M_R_ZLength/2.0 ;
-	for (int  i = 0; i < StepsR; i++) {
-		double r = ((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0) / (StepsR + 1) * (i+1);
-		for(int j = 0; j < i; j++) {
-			double phi = 2 * GlobalParams.PRM_C_PI * j / i;
-			Point<3, double> position(r * cos(phi), r * sin(phi), z);
+	double r = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
+
+	for (double x = -r; x < r; x += r/5) {
+		for(double y = -r; y < r; y += r/5) {
+			Point<3, double> position(x, y, z);
 			Vector<double> result(6);
 			VectorTools::point_value(dof_handler, solution, position, result);
 			double Q1 = structure.getQ1(position[2] );
 			double Q2 = structure.getQ2(position[2] );
-			double l1 =  (result[0] / Q1) * ( TEMode00( position , 0) / Q1);
-			double l2 = (result[1] / Q2) * ( TEMode00( position , 0) / Q2);
-			double l3 = (result[3] / Q1) * ( TEMode00( position , 0) / Q1);
-			double l4 = (result[4] / Q2) * ( TEMode00( position , 0) / Q2);
-			ret += l1*l1 + l2*l2 + l3*l3 + l4*l4;
+			real +=  (result[0] / Q1) * ( TEMode00( position , 0) / Q1);
+			imag += (result[1] / Q2) * ( TEMode00( position , 1) / Q2);
+			real += (result[3] / Q1) * ( TEMode00( position , 0) / Q1);
+			imag += (result[4] / Q2) * ( TEMode00( position , 1) / Q2);
+
 		}
 	}
-	return sqrt(ret);
+	return sqrt(imag*imag + real*real);
 }
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 	double quality_in	= evaluate_in();
 	double quality_out	= evaluate_out();
-	if(!is_stored) {
-		deallog << "Quality in: "<< quality_in << std::endl;
-		deallog << "Quality out: "<< quality_out << std::endl;
-	}
+	deallog << "Quality in: "<< quality_in << std::endl;
+	deallog << "Quality out: "<< quality_out << std::endl;
 	/**
 	differences.reinit(triangulation.n_active_cells());
 	QGauss<3>  quadrature_formula(4);
@@ -140,10 +141,8 @@ template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::store() {
 	reinit_storage();
 	// storage.reinit(dof_handler.n_dofs());
-	for(unsigned int i = 0; i < dof_handler.n_dofs(); i++){
-		storage[i] = solution[i];
-	}
-	if(!is_stored) is_stored = true;
+	for (unsigned int i=0; i<solution.size(); ++i)  storage(i) = temp_storage(i);
+	is_stored = true;
 }
 
 template<typename MatrixType, typename VectorType >
@@ -243,6 +242,136 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 }
 
 template<typename MatrixType, typename VectorType >
+Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Preconditioner_Tensor(Point<3> & position, bool inverse , bool epsilon, int block) {
+	std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
+	Tensor<2,3, std::complex<double>> ret;
+
+	double omegaepsilon0 = GlobalParams.PRM_C_omega * ((System_Coordinate_in_Waveguide(position))?GlobalParams.PRM_M_W_EpsilonIn : GlobalParams.PRM_M_W_EpsilonOut);
+	std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
+	if(PML_in_X(position)){
+		double r,d, sigmax;
+		r = PML_X_Distance(position);
+		d = GlobalParams.PRM_M_R_XLength * 1.0 * GlobalParams.PRM_M_BC_Mantle/100.0;
+		sigmax = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaXMax;
+		sx.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaXMax);
+		sx.imag( sigmax / ( omegaepsilon0));
+		S1 /= sx;
+		S2 *= sx;
+		S3 *= sx;
+	}
+	if(PML_in_Y(position)){
+		double r,d, sigmay;
+		r = PML_Y_Distance(position);
+		d = GlobalParams.PRM_M_R_YLength * 1.0 * GlobalParams.PRM_M_BC_Mantle/100.0;
+		sigmay = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaYMax;
+		sy.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaYMax);
+		sy.imag( sigmay / ( omegaepsilon0));
+		S1 *= sy;
+		S2 /= sy;
+		S3 *= sy;
+	}
+	if(Preconditioner_PML_in_Z(position, block)){
+		double r,d, sigmaz;
+		r = Preconditioner_PML_Z_Distance(position, block);
+		d = (GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout + GlobalParams.PRM_M_R_ZLength) / GlobalParams.PRM_M_W_Sectors *0.1;
+		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
+		sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
+		sz.imag( sigmaz / omegaepsilon0 );
+		S1 *= sz;
+		S2 *= sz;
+		S3 /= sz;
+	}
+
+	if(inverse) {
+		std::complex<double> temp(1.0, 0.0);
+		S1 = temp / S1;
+		S2 = temp / S2;
+		S3 = temp / S3;
+	}
+
+	ret[0][0] = S1;
+	ret[1][1] = S2;
+	ret[2][2] = S3;
+
+	if(inverse) {
+		if(epsilon) {
+			if(System_Coordinate_in_Waveguide(position)) {
+				ret /= GlobalParams.PRM_M_W_EpsilonIn;
+			} else {
+				ret /= GlobalParams.PRM_M_W_EpsilonOut;
+			}
+			ret /= GlobalParams.PRM_C_Eps0;
+		} else {
+			ret /= GlobalParams.PRM_C_Mu0;
+		}
+	} else {
+		if(epsilon) {
+			if(System_Coordinate_in_Waveguide(position) ) {
+				ret *= GlobalParams.PRM_M_W_EpsilonIn;
+			} else {
+				ret *= GlobalParams.PRM_M_W_EpsilonOut;
+			}
+			ret *= GlobalParams.PRM_C_Eps0;
+		} else {
+			ret *= GlobalParams.PRM_C_Mu0;
+		}
+	}
+	Tensor<2,3, double> transformation = structure.TransformationTensor(position[0], position[1], position[2]);
+	Tensor<2,3, std::complex<double>> ret2;
+
+	for(int i = 0; i < 3; i++) {
+		for(int j = 0; j < 3; j++) {
+			ret2[i][j] = std::complex<double>(0.0, 0.0);
+			for(int k = 0; k < 3; k++) {
+				ret2[i][j] += ret[i][k] * transformation[k][j];
+			}
+		}
+	}
+	//deallog << "get_Tensor_2" << std::endl;
+
+	return ret2;
+
+	/**
+	Tensor<2,3, double> transformation = structure.TransformationTensor(position[0], position[1], position[2]);
+
+	Tensor<2,3, std::complex<double>>( 1.0, ret;
+	for(int l = 0; l<3; l++) {
+		for(int k = 0; k<3; k++) {
+			std::complex<double> temp(transformation[l][k],0.0);
+			ret[l][k] = temp;
+		}
+	}
+
+	if(epsilon) {
+		if(System_Coordinate_in_Waveguide(position) ) {
+			ret *= GlobalParams.PRM_M_W_EpsilonIn;
+		} else {
+			ret *= GlobalParams.PRM_M_W_EpsilonOut;
+		}
+		ret *= GlobalParams.PRM_C_Eps0;
+	} else {
+		ret *= GlobalParams.PRM_C_Mu0;
+	}
+
+	ret[0][0] *= sy * sz / sx ;
+	ret[0][1] *= sz ;
+	ret[0][2] *= sy ;
+
+	ret[1][0] *= sz ;
+	ret[1][1] *= sx * sz / sy ;
+	ret[1][2] *= sx ;
+
+	ret[2][0] *= sy ;
+	ret[2][1] *= sx ;
+	ret[2][2] *= sx * sy / sz ;
+
+	if(inverse) return invert(ret) ;
+
+	else return ret;
+	**/
+}
+
+template<typename MatrixType, typename VectorType >
 Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Conjugate_Tensor(Tensor<2,3, std::complex<double>> input) {
 	Tensor<2,3, std::complex<double>> ret ;
 	for(int i= 0; i< 3; i++){
@@ -280,6 +409,27 @@ bool Waveguide<MatrixType, VectorType>::PML_in_Y(Point<3> &p) {
 template<typename MatrixType, typename VectorType>
 bool Waveguide<MatrixType, VectorType>::PML_in_Z(Point<3> &p) {
 	return (p(2) > (GlobalParams.PRM_M_R_ZLength / 2.0 )) || ((p(2) <  -GlobalParams.PRM_M_R_ZLength / 2.0) && !(System_Coordinate_in_Waveguide(p)));
+}
+
+template<typename MatrixType, typename VectorType>
+bool Waveguide<MatrixType, VectorType>::Preconditioner_PML_in_Z(Point<3> &p, unsigned int block) {
+	double l = (double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (GlobalParams.PRM_M_W_Sectors);
+	double width = l * 0.1;
+	bool up =    (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin  ) - (block+1) * l + width) > 0;
+	bool down = -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin  ) - (block-1) * l - width) > 0;
+
+	return up || down;
+}
+
+template<typename MatrixType, typename VectorType >
+double Waveguide<MatrixType, VectorType>::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ){
+	double l = (double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (GlobalParams.PRM_M_W_Sectors);
+	double width = l * 0.1;
+	if( ( p(2) +GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin  )-  block * l < 0){
+		return -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin  ) - (block-1) * l - width);
+	} else {
+		return  (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin  ) - (block+1) * l + width);
+	}
 }
 
 template<typename MatrixType, typename VectorType >
@@ -411,14 +561,14 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 
 
 
-	double l = (double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (Sectors*2.0);
+	double l = (double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (Sectors);
 	deallog << "Länge eines Blocks:" << l << std::endl;
 
 	cell = triangulation.begin_active();
 	for (; cell!=endc; ++cell){
 
 		int temp  = (int) (((cell->center(true, false))[2] + (GlobalParams.PRM_M_R_ZLength/(2.0)) + GlobalParams.PRM_M_BC_XYin) / l);
-		if( temp >= 2* Sectors || temp < 0) deallog << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
+		if( temp >=  Sectors || temp < 0) deallog << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
 		cell->set_subdomain_id(temp);
 	}
 
@@ -438,6 +588,13 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 	std::vector<types::global_dof_index> dof_indices (fe.dofs_per_face);
 	std::vector<int> dof_subdomain(NumberOfDofs);
 	std::vector<bool> dof_at_boundary(NumberOfDofs);
+	std::vector<int> CellsPerSubdomain(Sectors);
+	std::vector<int> InternalBoundaryDofs(Sectors);
+
+	for(unsigned int i = 0; i < Sectors; i++) {
+		CellsPerSubdomain.push_back(0);
+		InternalBoundaryDofs.push_back(0);
+	}
 
 	for(unsigned int i = 0; i < NumberOfDofs; i++) {
 		dof_subdomain[i] = -1;
@@ -449,6 +606,7 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
 	{
+		CellsPerSubdomain[cell->subdomain_id()] += 1;
 		for(int i = 0; i < 6; i++) {
 			cell->face(i)->get_dof_indices(dof_indices);
 			int subdom = (cell->face(i)->center(false, false)[2] - structure.z_min ) * Sectors / (structure.z_max - structure.z_min);
@@ -456,6 +614,7 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 			for(int j = 0; j < fe.dofs_per_face; j++) {
 				if(dof_subdomain[dof_indices[j]] != subdom && dof_subdomain[dof_indices[j]] != -1 && subdom != -1 ) {
 					dof_at_boundary[dof_indices[j]] = true;
+					InternalBoundaryDofs[(dof_subdomain[dof_indices[j]] > subdom) ? dof_subdomain[dof_indices[j]] : subdom] += 1;
 				}
 				if(dof_subdomain[dof_indices[j]] < subdom) {
 					dof_subdomain[dof_indices[j]] = subdom;
@@ -539,7 +698,13 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 		deallog << i+3 <<std::endl;
 		set.push_back(temp);
 	}
-	deallog << "END" <<std::endl;
+	deallog << "Storing details in WaveguideStructure.case_sectors..." <<std::endl;
+	for(int i=0; i  < Sectors; i++) {
+		structure.case_sectors[i].setLowestDof( Dofs_Below_Subdomain[i] );
+		structure.case_sectors[i].setNActiveCells( CellsPerSubdomain[i] );
+		structure.case_sectors[i].setNDofs( Block_Sizes[i] );
+		structure.case_sectors[i].setNInternalBoundaryDofs(InternalBoundaryDofs[i]);
+	}
 
 }
 
@@ -577,11 +742,17 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	log_constraints.start();
 
 	MakeBoundaryConditions();
+	MakePreconditionerBoundaryConditions();
+
 	DoFTools::make_hanging_node_constraints(dof_handler, cm);
+	DoFTools::make_hanging_node_constraints(dof_handler, cm_pre1);
+	DoFTools::make_hanging_node_constraints(dof_handler, cm_pre2);
 
 	deallog << "Constructing Sparsity Pattern." << std::endl;
 
 	cm.close();
+	cm_pre1.close();
+	cm_pre2.close();
 	log_constraints.stop();
 	IndexSet tempset(dof_handler.n_dofs());
 	tempset.clear();
@@ -613,7 +784,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 	reinit_all();
 
-	cm.distribute(solution);
+	// cm.distribute(solution);
 
 	if(prm.PRM_O_VerboseOutput) {
 		if(!is_stored) 	deallog << "Done." << std::endl;
@@ -626,6 +797,13 @@ void Waveguide<MatrixType, VectorType>::reinit_all () {
 	reinit_rhs();
 	reinit_solution();
 	reinit_systemmatrix();
+	reinit_preconditioner();
+}
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::reinit_preconditioner () {
+	preconditioner_matrix_1.reinit( temporary_pattern);
+	preconditioner_matrix_2.reinit( temporary_pattern);
 }
 
 template<typename MatrixType, typename VectorType >
@@ -633,6 +811,10 @@ void Waveguide<MatrixType, VectorType>::reinit_rhs () {
 	system_rhs.reinit(Sectors);
 	for (int i = 0; i < Sectors; i++) system_rhs.block(i).reinit(Block_Sizes[i]);
 	system_rhs.collect_sizes();
+
+	preconditioner_rhs.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) preconditioner_rhs.block(i).reinit(Block_Sizes[i]);
+	preconditioner_rhs.collect_sizes();
 	// This is equivalent to system_rhs.reinit(dof_handler.n_dofs()) for a pure vector. It does the same operation on a block-system.
 }
 
@@ -650,6 +832,10 @@ void Waveguide<MatrixType, VectorType>::reinit_solution() {
 	solution.reinit(Sectors);
 	for (int i = 0; i < Sectors; i++) solution.block(i).reinit(Block_Sizes[i]);
 	solution.collect_sizes();
+
+	temp_storage.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) temp_storage.block(i).reinit(Block_Sizes[i]);
+	temp_storage.collect_sizes();
 }
 
 template<typename MatrixType, typename VectorType >
@@ -669,6 +855,10 @@ void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockV
 	system_rhs.reinit(Sectors);
 	for (int i = 0; i < Sectors; i++) system_rhs.block(i).reinit(MPI_COMM_WORLD, Block_Sizes[i], Block_Sizes[i]);
 	system_rhs.collect_sizes();
+
+	preconditioner_rhs.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) preconditioner_rhs.block(i).reinit(MPI_COMM_WORLD, Block_Sizes[i], Block_Sizes[i]);
+	preconditioner_rhs.collect_sizes();
 }
 
 template <>
@@ -688,6 +878,12 @@ void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockV
 }
 
 template<>
+void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockVector>::reinit_preconditioner () {
+	preconditioner_matrix_1.reinit( set, sparsity_pattern,  MPI_COMM_WORLD);
+	preconditioner_matrix_2.reinit( set, sparsity_pattern,  MPI_COMM_WORLD);
+}
+
+template<>
 void Waveguide<TrilinosWrappers::BlockSparseMatrix, TrilinosWrappers::MPI::BlockVector>::reinit_storage() {
 	storage.reinit(Sectors);
 	for (int i = 0; i < Sectors; i++) storage.block(i).reinit(set[i], MPI_COMM_WORLD);
@@ -700,6 +896,10 @@ void Waveguide<TrilinosWrappers::BlockSparseMatrix, TrilinosWrappers::MPI::Block
 	system_rhs.reinit(Sectors);
 	for (int i = 0; i < Sectors; i++) system_rhs.block(i).reinit(set[i], MPI_COMM_WORLD);
 	system_rhs.collect_sizes();
+
+	preconditioner_rhs.reinit(Sectors);
+	for (int i = 0; i < Sectors; i++) preconditioner_rhs.block(i).reinit(set[i], MPI_COMM_WORLD);
+	preconditioner_rhs.collect_sizes();
 	// system_rhs.reinit( complete_index_set(dof_handler.n_dofs()) );
 }
 
@@ -713,36 +913,53 @@ void Waveguide<TrilinosWrappers::BlockSparseMatrix, TrilinosWrappers::MPI::Block
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
-	QGauss<3>  quadrature_formula(2);
-	const FEValuesExtractors::Vector real(0);
-	const FEValuesExtractors::Vector imag(3);
-	FEValues<3> fe_values (fe, quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points );
+	QGauss<3>  			 quadrature_formula(2);
+	FEValues<3> 		fe_values (fe, quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points );
 	std::vector<Point<3> > quadrature_points;
 	const unsigned int   dofs_per_cell	= fe.dofs_per_cell;
 	const unsigned int   n_q_points		= quadrature_formula.size();
 
 	FullMatrix<double>	cell_matrix_real (dofs_per_cell, dofs_per_cell);
+	FullMatrix<double>	cell_matrix_pre1 (dofs_per_cell, dofs_per_cell);
+	FullMatrix<double>	cell_matrix_pre2 (dofs_per_cell, dofs_per_cell);
+
 	Vector<double>		cell_rhs (dofs_per_cell);
 	cell_rhs = 0;
-	Tensor<2,3, std::complex<double>> 		epsilon, mu;
+	Tensor<2,3, std::complex<double>> 		epsilon, epsilon_pre1, epsilon_pre2, mu, mu_pre1, mu_pre2;
 	std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
 	DoFHandler<3>::active_cell_iterator cell, endc;
-	int test = 0;
 	cell = dof_handler.begin_active(),
 	endc = dof_handler.end();
 
 	for (; cell!=endc; ++cell)
 	{
-		if(cell->subdomain_id() == in_part) {
+		unsigned int subdomain_id =cell->subdomain_id();
+		if( subdomain_id == in_part) {
 			fe_values.reinit (cell);
 			quadrature_points = fe_values.get_quadrature_points();
 			cell_matrix_real = 0;
-
+			cell_matrix_pre1 = 0;
+			cell_matrix_pre2 = 0;
 			for (unsigned int q_index=0; q_index<n_q_points; ++q_index)
 			{
 				epsilon = get_Tensor(quadrature_points[q_index],  false, true);
 				mu = get_Tensor(quadrature_points[q_index], true, false);
+				if(Preconditioner_PML_in_Z(quadrature_points[q_index], subdomain_id)) {
+					epsilon_pre1 = get_Preconditioner_Tensor(quadrature_points[q_index],false, true, subdomain_id);
+					mu_pre1 = get_Preconditioner_Tensor(quadrature_points[q_index],true, false, subdomain_id);
+				} else {
+					epsilon_pre1 = epsilon;
+					mu_pre1 = mu;
+				}
+				if(Preconditioner_PML_in_Z(quadrature_points[q_index], subdomain_id + 1 )) {
+					epsilon_pre2 = get_Preconditioner_Tensor(quadrature_points[q_index],false, true, subdomain_id + 1);
+					mu_pre2 = get_Preconditioner_Tensor(quadrature_points[q_index],true, false, subdomain_id + 1);
+				} else {
+					epsilon_pre2 = epsilon;
+					mu_pre2 = mu;
+
+				}
 				const double JxW = fe_values.JxW(q_index);
 				for (unsigned int i=0; i<dofs_per_cell; i++){
 					Tensor<1,3, std::complex<double>> I_Curl;
@@ -763,19 +980,26 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
 							J_Val[k].imag(fe_values[imag].value(j, q_index)[k]);
 							J_Val[k].real(fe_values[real].value(j, q_index)[k]);
 						}
-						test ++;
 
 						std::complex<double> x = (mu * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
-
+						std::complex<double> pre1 = (mu_pre1 * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon_pre1 * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
+						std::complex<double> pre2 = (mu_pre2 * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon_pre2 * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
 						cell_matrix_real[i][j] += x.real();
-
+						cell_matrix_pre1[i][j] += pre1.real();
+						cell_matrix_pre2[i][j] += pre2.real();
 					}
 				}
 			}
 			cell->get_dof_indices (local_dof_indices);
-
+			// deallog << "Starting distribution"<<std::endl;
 			cm.distribute_local_to_global(cell_matrix_real, cell_rhs, local_dof_indices,system_matrix, system_rhs, false);
+			// deallog << "P1 done"<<std::endl;
 
+			cm_pre1.distribute_local_to_global(cell_matrix_pre1, cell_rhs, local_dof_indices,preconditioner_matrix_1, preconditioner_rhs, false);
+			// deallog << "P2 done"<<std::endl;
+
+			cm_pre2.distribute_local_to_global(cell_matrix_pre2, cell_rhs, local_dof_indices,preconditioner_matrix_2, preconditioner_rhs, false);
+			// deallog << "P3 done"<<std::endl;
 
 	    }
 	}
@@ -804,17 +1028,18 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 		}
 	}
 
-
 	log_assemble.start();
 	if(!is_stored) deallog << "Starting Assemblation process" << std::endl;
+	deallog << "Sectors: " << Sectors << std::endl;
+
 	Threads::TaskGroup<void> task_group1;
-	for (int i = 0; i < Sectors; ++i) {
+	int upperbound = ((Sectors % 2) == 0)? Sectors/2 : Sectors/2 + 1;
+	for (int i = 0; i < upperbound; ++i) {
 		task_group1 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i);
 	}
 	task_group1.join_all ();
-	// deallog << "Test" << std::endl;
 	Threads::TaskGroup<void> task_group2;
-	for (int i = 0; i < Sectors; ++i) {
+	for (int i = 0; i < Sectors/2; ++i) {
 		task_group2 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i+1);
 	}
 	task_group2.join_all ();
@@ -891,6 +1116,115 @@ void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
 	}
 }
 
+template<typename MatrixType, typename VectorType>
+void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions ( ){
+	DoFHandler<3>::active_cell_iterator cell, endc;
+	cm_pre1.clear();
+	cm_pre2.clear();
+
+	cell = dof_handler.begin_active();
+	endc = dof_handler.end();
+	for (; cell!=endc; ++cell)
+	{
+		for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+			Point<3, double> center =(cell->face(i))->center(true, false);
+			if( center[0] < 0) center[0] *= (-1.0);
+			if( center[1] < 0) center[1] *= (-1.0);
+
+			// Set x-boundary values
+			if ( std::abs( center[0] - (15.5 * (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) /8.7 ) ) < 0.01 ){
+				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
+				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+					for(unsigned int k = 0; k < 2; k++) {
+						cm_pre1.add_line(local_dof_indices[k]);
+						cm_pre1.set_inhomogeneity(local_dof_indices[k], 0.0 );
+						cm_pre2.add_line(local_dof_indices[k]);
+						cm_pre2.set_inhomogeneity(local_dof_indices[k], 0.0 );
+					}
+				}
+			}
+
+			// Set y-boundary values
+			if ( std::abs( center[1] - (15.5 * (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) /8.7 ) ) < 0.01 ){
+				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
+				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+					for(unsigned int k = 0; k < 2; k++) {
+						cm_pre1.add_line(local_dof_indices[k]);
+						cm_pre1.set_inhomogeneity(local_dof_indices[k], 0.0 );
+						cm_pre2.add_line(local_dof_indices[k]);
+						cm_pre2.set_inhomogeneity(local_dof_indices[k], 0.0 );
+					}
+				}
+			}
+
+			//lower boundary both
+			if( std::abs(center[2] + GlobalParams.PRM_M_R_ZLength/2.0  + GlobalParams.PRM_M_BC_XYin) < 0.01 ){
+				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
+				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+					if((cell->face(i))->line(j)->at_boundary()) {
+						((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+						Tensor<1,3,double> ptemp = ((cell->face(i))->line(j))->center(true, false);
+						Point<3, double> p (ptemp[0], ptemp[1], ptemp[2]);
+						Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(0) - ((cell->face(i))->line(j))->vertex(1);
+						Point<3, double> direction (dtemp[0], dtemp[1], dtemp[2]);
+
+						double result = TEMode00(p,0);
+						if(PML_in_X(p) || PML_in_Y(p)) result = 0.0;
+						cm_pre1.add_line(local_dof_indices[0]);
+						cm_pre1.set_inhomogeneity(local_dof_indices[0], direction[0] * result);
+						cm_pre1.add_line(local_dof_indices[1]);
+						cm_pre1.set_inhomogeneity(local_dof_indices[1], 0.0);
+
+						cm_pre2.add_line(local_dof_indices[0]);
+						cm_pre2.set_inhomogeneity(local_dof_indices[0], direction[0] * result);
+						cm_pre2.add_line(local_dof_indices[1]);
+						cm_pre2.set_inhomogeneity(local_dof_indices[1], 0.0);
+
+					}
+				}
+			}
+
+			//upper boundary both
+			if( std::abs(center[2] - GlobalParams.PRM_M_R_ZLength/2.0  - GlobalParams.PRM_M_BC_XYout) < 0.01 ){
+				std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
+				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+					for(unsigned int k = 0; k < 2; k++) {
+						cm_pre1.add_line(local_dof_indices[k]);
+						cm_pre1.set_inhomogeneity(local_dof_indices[k], 0.0 );
+						cm_pre2.add_line(local_dof_indices[k]);
+						cm_pre2.set_inhomogeneity(local_dof_indices[k], 0.0 );
+					}
+				}
+			}
+
+
+			// in between
+			for(int l = 1; l <GlobalParams.PRM_M_W_Sectors; l++) {
+				if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0  + GlobalParams.PRM_M_BC_XYin) - l*(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout)/GlobalParams.PRM_M_W_Sectors ) < 0.01 ){
+					std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
+					for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+						((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+						for(unsigned int k = 0; k < 2; k++) {
+							if( l % 2 == 1){
+								cm_pre1.add_line(local_dof_indices[k]);
+								cm_pre1.set_inhomogeneity(local_dof_indices[k], 0.0 );
+							} else {
+								cm_pre2.add_line(local_dof_indices[k]);
+								cm_pre2.set_inhomogeneity(local_dof_indices[k], 0.0 );
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+
+}
+
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::timerupdate() {
 	log_precondition.stop();
@@ -899,32 +1233,31 @@ void Waveguide<MatrixType, VectorType>::timerupdate() {
 
 template<>
 void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >::solve () {
-	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
+	if(!is_stored) Sweeping_Additional_Data.SetNonZero(dof_handler.max_couplings_between_dofs());
+
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
-	/**
+
 	if(prm.PRM_S_Solver == "MINRES") {
 		condition_file.open((solutionpath + "/condition_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << condition_file_counter) )->str() + ".dat").c_str());
 		eigenvalue_file.open((solutionpath + "/eigenvalues_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << eigenvalue_file_counter) )->str() + ".dat").c_str());
-		SolverMinRes<Vector<double> > solver (solver_control, SolverMinRes<Vector<double> >::AdditionalData());
+		SolverMinRes<BlockVector<double> > solver (solver_control, SolverMinRes<BlockVector<double> >::AdditionalData());
 
 		if(prm.PRM_S_Preconditioner == "Identity") {
 			timerupdate();
-			solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
+				solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
+
 		}
 
-		if(prm.PRM_S_Preconditioner == "Jacobi"){
-			PreconditionJacobi<SparseMatrix<double>> pre_jacobi;
-			pre_jacobi.initialize(system_matrix, PreconditionJacobi<SparseMatrix<double>>::AdditionalData());
+		if(prm.PRM_S_Preconditioner == "Sweeping"){
+			if(!is_stored) sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
 			timerupdate();
-			solver.solve (system_matrix, solution, system_rhs, pre_jacobi);
-		}
+			if(is_stored) {
+				for (unsigned int i=0; i<solution.size(); ++i)  solution(i) = storage(i);
 
-		if(prm.PRM_S_Preconditioner == "SSOR"){
-			PreconditionSSOR<SparseMatrix<double> > plu;
-			plu.initialize(system_matrix, .6);
-			timerupdate();
-			solver.solve (system_matrix, solution, system_rhs, plu);
+			}
+
+			solver.solve (system_matrix, solution, system_rhs, sweep);
 		}
 
 	}
@@ -932,31 +1265,26 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 	if(prm.PRM_S_Solver == "GMRES") {
 		condition_file.open((solutionpath + "/condition_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << condition_file_counter) )->str() + ".dat").c_str());
 		eigenvalue_file.open((solutionpath + "/eigenvalues_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << eigenvalue_file_counter) )->str() + ".dat").c_str());
-		SolverGMRES<Vector<double> > solver (solver_control, SolverGMRES<Vector<double> >::AdditionalData(prm.PRM_S_GMRESSteps, true));
-		solver.connect_condition_number_slot(std_cxx11::bind(&Waveguide<dealii::SparseMatrix<double> , dealii::Vector<double> >::print_condition, this, std_cxx11::_1), true);
-		solver.connect_eigenvalues_slot(std_cxx11::bind(&Waveguide<dealii::SparseMatrix<double> , dealii::Vector<double> >::print_eigenvalues, this, std_cxx11::_1), true);
+		SolverGMRES<BlockVector<double> > solver (solver_control, SolverGMRES<BlockVector<double> >::AdditionalData(prm.PRM_S_GMRESSteps, true));
+		solver.connect_condition_number_slot(std_cxx11::bind(&Waveguide<dealii::BlockSparseMatrix<double> , dealii::BlockVector<double> >::print_condition, this, std_cxx11::_1), true);
+		solver.connect_eigenvalues_slot(std_cxx11::bind(&Waveguide<dealii::BlockSparseMatrix<double> , dealii::BlockVector<double> >::print_eigenvalues, this, std_cxx11::_1), true);
 
 		if(prm.PRM_S_Preconditioner == "Identity") {
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
-		}
 
-		if(prm.PRM_S_Preconditioner == "Jacobi"){
-			PreconditionJacobi<SparseMatrix<double>> pre_jacobi;
-			pre_jacobi.initialize(system_matrix, PreconditionJacobi<SparseMatrix<double>>::AdditionalData());
+		}
+		if(prm.PRM_S_Preconditioner == "Sweeping"){
+			if(!is_stored)	sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
 			timerupdate();
-			solver.solve (system_matrix, solution, system_rhs, pre_jacobi);
+			if(is_stored) {
+				solution = storage;
+			}
+			deallog << "Norm of the solution (sqr): " << solution.norm_sqr() << std::endl;
+			solver.solve (system_matrix, solution, system_rhs, sweep);
 		}
-
-		if(prm.PRM_S_Preconditioner == "SSOR"){
-			PreconditionSSOR<SparseMatrix<double> > plu;
-			plu.initialize(system_matrix, .6);
-			timerupdate();
-			solver.solve (system_matrix, solution, system_rhs, plu);
-		}
-
 	}
-	 **/
+
 	if(prm.PRM_S_Solver == "UMFPACK") {
 		SparseDirectUMFPACK  A_direct;
 		A_direct.initialize(system_matrix);
@@ -965,12 +1293,14 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 	}
 
 	log_solver.stop();
+
+	temp_storage = solution;
+
 	cm.distribute(solution);
 }
 
 template<>
 void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::MPI::Vector >::solve () {
-	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
@@ -999,7 +1329,6 @@ void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers:
 
 template< >
 void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector >::solve () {
-	SolverControl          solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true);
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
@@ -1091,6 +1420,15 @@ void Waveguide<MatrixType, VectorType>::output_results ()
 
 	patternscript << "plot \"pattern.gnu\" with dots" <<std::endl;
 	patternscript.flush();
+
+	std::ifstream source("Paramters.xml", std::ios::binary);
+	std::ofstream dest(solutionpath +"/Parameters.xml", std::ios::binary);
+
+	dest << source.rdbuf();
+
+	source.close();
+	dest.close();
+
 }
 
 template<typename MatrixType, typename VectorType>
@@ -1124,7 +1462,7 @@ void Waveguide<MatrixType, VectorType>::reset_changes ()
 {
 	reinit_all();
 
-	cm.distribute(solution);
+	// cm.distribute(solution);
 }
 
 template<typename MatrixType, typename VectorType >

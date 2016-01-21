@@ -218,6 +218,10 @@ struct Parameters {
 	 */
 	unsigned int 		PRM_S_MPITasks;
 
+	/**
+	 * This value states wether optimization should be attempted or if only the first shape should be calculated.
+	 */
+	bool				PRM_S_DoOptimization;
 };
 
 #endif

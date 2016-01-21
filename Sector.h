@@ -10,7 +10,7 @@ using namespace dealii;
  * \brief Sectors are used, to split the computational domain into chunks, whose degrees of freedom are likely coupled.
  * The interfaces between Sectors lie in the xy-plane and they are ordered by their z-value.
  * \author Pascal Kraft
- * \date 23.11.2015
+ * \date 17.12.2015
  */
 class Sector {
 
@@ -100,6 +100,50 @@ class Sector {
 		 * The values of Q1, Q2 and Q3 are needed to compute the solution in real coordinates from the one in transformed coordinates. This function returnes Q3 for a given position and the current transformation.
 		 */
 		double getQ3( double);
+
+		/**
+		 * This function returns the number of the lowest degree of freedom associated with this Sector. Keep in mind, that the degrees of freedom associated with edges on the lower (small \f$ z \f$) interface are not included since this functionality is supposed to help in the block-structure generation and those dofs are part of the neighboring block.
+		 */
+		unsigned int getLowestDof();
+
+		/**
+		 * This function returns the number of dofs which are part of this sector. The same remarks as for getLowestDof() apply.
+		 */
+		unsigned int getNDofs();
+
+		/**
+		 * In order to set appropriate boundary conditions it makes sense to determine, which degrees are associated with an edge which is part of an interface to another sector. Due to the reordering of dofs this is especially easy since the dofs on the interface are those in the interval \f[[\,\operatorname{LowestDof} + \operatorname{NDofs} - \operatorname{NInternalBoundaryDofs}\, , \,  \operatorname{LowestDof} + \operatorname{NDofs}\,]\f]
+		 */
+		unsigned int getNInternalBoundaryDofs();
+
+		/**
+		 * This function can be used to query the number of cells in a Sector / subdomain. In this case there are no problems with interface-dofs. Every cell belongs to exactly one sector (the problem arises from the fact, that one edge can (and most of the time will) belong to more then one cell).
+		 */
+		unsigned int getNActiveCells();
+
+		/**
+		 * Setter for the value that the getter should return. Called after Dof-reordering.
+		 */
+		void setLowestDof( unsigned int);
+
+		/**
+		 * Setter for the value that the getter should return. Called after Dof-reordering.
+		 */
+		void setNDofs(unsigned int);
+
+		/**
+		 * Setter for the value that the getter should return. Called after Dof-reordering.
+		 */
+		void setNInternalBoundaryDofs(unsigned int);
+
+		/**
+		 * Setter for the value that the getter should return. Called after Dof-reordering.
+		 */
+		void setNActiveCells(unsigned int );
+
+	//private:
+
+		unsigned int LowestDof, NDofs, NInternalBoundaryDofs, NActiveCells;
 };
 
 #endif

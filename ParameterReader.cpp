@@ -72,7 +72,7 @@ void ParameterReader::declare_parameters()
 		prm.declare_entry("Library", "DealII", Patterns::Selection("DealII|PETSc|Trilinos"), "Which library to use for the computation. (Deal is always available if you have any version installed. For PETSC and Trilinos it is not enough to have them installed - Deal has to be compiled for their usage.");
 		prm.declare_entry("Solver", "GMRES", Patterns::Selection("GMRES|UMFPACK|MINRES"), "Which Solver to use for the solution of the system matrix");
 		prm.declare_entry("GMRESSteps", "1200", Patterns::Integer(1), "Steps until restart of Krylow subspace generation");
-		prm.declare_entry("Preconditioner", "Identity", Patterns::Selection("SOR|SSOR|Identity|Jacobi|ILU|Block_Jacobi|ParaSails|LU|ICC|BoomerAMG|Eisenstat"), "Which preconditioner to use");
+		prm.declare_entry("Preconditioner", "Identity", Patterns::Selection("Identity|Jacobi|ILU|Block_Jacobi|LU|Sweeping"), "Which preconditioner to use");
 		prm.declare_entry("PreconditionerBlockCount", "20", Patterns::Integer(1), "Number of Blocks for Block-Preconditioners.");
 		prm.declare_entry("Steps", "90000", Patterns::Integer(1), "Number of Steps the Solver is supposed to do.");
 		prm.declare_entry("Precision", "1e-5", Patterns::Double(0), "Minimal error value, the solver is supposed to accept as correct solution.");
@@ -89,6 +89,7 @@ void ParameterReader::declare_parameters()
 	prm.enter_subsection("Optimization");
 		prm.declare_entry("InitialStepWidth", "1.0", Patterns::Double(0), "Step width for the first step.");
 		prm.declare_entry("MaxCases", "100", Patterns::Integer(1), "Number of Cases the Optimization is supposed to use.");
+		prm.declare_entry("DoOptimization", "true", Patterns::Bool(), "If this value is set to false, no shape optimization will be attempted.");
 	prm.leave_subsection();
 
 

@@ -107,3 +107,40 @@ Tensor<2,3, double> Sector::TransformationTensorInternal (double in_x, double in
 
 	return g;
 }
+
+unsigned int Sector::getLowestDof() {
+	return LowestDof;
+}
+
+
+unsigned int Sector::getNDofs() {
+	return NDofs;
+}
+
+unsigned int Sector::getNInternalBoundaryDofs() {
+	return NInternalBoundaryDofs;
+}
+
+unsigned int Sector::getNActiveCells() {
+	return NActiveCells;
+}
+
+
+void Sector::setLowestDof( unsigned int in_lowestdof) {
+	LowestDof = in_lowestdof;
+}
+
+
+void Sector::setNDofs( unsigned int in_ndofs) {
+	NDofs = in_ndofs;
+}
+
+
+void Sector::setNInternalBoundaryDofs( unsigned int in_ninternalboundarydofs) {
+	NInternalBoundaryDofs = in_ninternalboundarydofs;
+}
+
+
+void Sector::setNActiveCells( unsigned int in_nactivecells) {
+	NActiveCells = in_nactivecells;
+}

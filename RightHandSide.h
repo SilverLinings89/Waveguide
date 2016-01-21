@@ -6,7 +6,7 @@
 using namespace dealii;
 
 /**
- * \class RightHandSide This class is no longer in use, since it was initially used in the projection methods of deal to impose boundary conditions. However these dont really work for Dirichlet boundary conditions on Nedelec elements, which made it necessary to implement this functionality as a part of this project.
+ * This class is no longer in use, since it was initially used in the projection methods of deal to impose boundary conditions. However these dont really work for Dirichlet boundary conditions on Nedelec elements, which made it necessary to implement this functionality as a part of this project.
  * However, this class can be used as an example on how to write function-objects for the usage in the deal library.
  *
  * \author Pascal Kraft

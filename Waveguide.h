@@ -28,6 +28,7 @@
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/block_sparsity_pattern.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
+#include <deal.II/lac/block_matrix_array.h>
 #include <deal.II/lac/solver_gmres.h>
 #include <deal.II/lac/solver_minres.h>
 #include <deal.II/lac/precondition.h>
@@ -67,6 +68,7 @@
 #include "WaveguideStructure.h"
 #include "FileLogger.h"
 #include "FileLoggerData.h"
+#include "PreconditionSweeping.h"
 
 using namespace dealii;
 
@@ -85,7 +87,13 @@ template <typename MatrixType, typename VectorType>
 class Waveguide
 {
 	public:
-		Waveguide (Parameters &, WaveguideStructure &);
+	/**
+	 * This is the constructor that should be used to initialize objects of this type.
+	 *
+	 * \param param This is a reference to a parsed form of the input-file.
+	 * \param structure This parameter gives a reference to the structure of the real Waveguide. This is necessary since during matrix-assembly it is required to call a function which generates the transformation tensor which is purely structure-dependent.
+	 */
+		Waveguide (Parameters & param, WaveguideStructure & structure);
 
 		/**
 		 * This method as well as the rerun() method, are used by the optimization-algorithm to use and reuse the Waveguide-object. Since the system-matrix consumes a lot of memory it makes sense to reuse it, rather then creating a new one for every optimization step.
@@ -130,20 +138,36 @@ class Waveguide
 		void 		store();
 
 		/**
-		 * Calcualtion of \f$\epsilon\f$ and \f$\mu\f$ are very similar, which is why they are done in the same function. These tensors model all properties of the system:
+		 * Calculation of \f$\epsilon\f$ and \f$\mu\f$ are very similar, which is why they are done in the same function. These tensors model all properties of the system:
 		 * 	-# The PML-method near the boundaries,
 		 * 	-# the tensor-valued material-properties due to the space transformation and
-		 * 	-# the real material properties of the fibre
+		 * 	-# the real material properties of the fiber
 		 *
 		 * in the specified location.
 		 * \param point This parameter is used to pass the location to calculate the tensor for.
 		 * \param inverse If this parameter is set to true, instead of the material tensor, its inverse will be returned. For Maxwell"s equations this makes sense, if the following parameter is set to the inverse value since \f$\epsilon\f$ and \f$\mu^{-1}\f$ are needed to assemble the system.
 		 * \param epsilon: Specifies to either
 		 * - calculate \f$\epsilon\f$ if true or
-		 * - calcualte \f$\mu\f$ if false.
+		 * - calculate \f$\mu\f$ if false.
 		 */
 		Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & point, bool inverse, bool epsilon);
 
+		/**
+		 * This function is similar to the normal get_Tensor method, however it is used to generate material Tensors for the artificial PML at Sector interfaces. This is done in a seperate function because this makes it possible to tune the PML in the real system and those PML-layers that the Preconditioner uses, independently.
+		 * 	-# The PML-method near the boundaries,
+		 * 	-# the tensor-valued material-properties due to the space transformation and
+		 * 	-# the real material properties of the fiber
+		 *
+		 * in the specified location.
+		 * \param point This parameter is used to pass the location to calculate the tensor for.
+		 * \param inverse If this parameter is set to true, instead of the material tensor, its inverse will be returned. For Maxwell"s equations this makes sense, if the following parameter is set to the inverse value since \f$\epsilon\f$ and \f$\mu^{-1}\f$ are needed to assemble the system.
+		 * \param epsilon: Specifies to either
+		 * - calculate \f$\epsilon\f$ if true or
+		 * - calculate \f$\mu\f$ if false.
+		 *
+		 * \param block: A Sector-interface can be in a PML-region of the preconditioner or not. For example: In the third preconditioner-block, the system-matrix-approximation for sectors two and three is used. In this case we have a PML at the interface of sectors one and two as well as the interface of sectors three and four. So in this case, the interface between two and three has no PML since it is in the middle of the domain of interest. However, when we regard the following block, we regard sectors three and four and therefore have a PML at the interface of sectors two and three. For this reason it is necessary to pass the block under consideration as an argument to this function.
+		 */
+		Tensor<2,3, std::complex<double>> get_Preconditioner_Tensor(Point<3> & point, bool inverse, bool epsilon, int block);
 
 	private:
 		/**
@@ -221,6 +245,16 @@ class Waveguide
 		bool	PML_in_Z(Point<3> & position);
 
 		/**
+		 * Similar to the PML_in_Z only this function is used to generate the artificial PML used in the Preconditioner. These Layers are not only situated at the surface of the computational domain but also inside it at the interfaces of Sectors.
+		 */
+		bool Preconditioner_PML_in_Z(Point<3> &p, unsigned int block);
+
+		/**
+		 * This function fulfills the same purpose as those with similar names but it is supposed to be used together with Preconditioner_PML_in_Z instead of the versions without "Preconditioner".
+		 */
+		double Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block );
+
+		/**
 		 * This function calculates for a given point, its distance to a PML-boundary limiting the computational domain. This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction).
 		 * \param position Stores the position from which to calculate the distance to the PML-surface.
 		 */
@@ -240,6 +274,11 @@ class Waveguide
 		 * This function fills the ConstraintMatrix-object of the Waveguide-object with all constraints needed for condensation into the szstem-matrix. It's properties are derived from the Waveguide itself and the Waveguide-Structure-object available to it, therefore there are no parameters but those members need to be prepared accordingly..
 		 */
 		void	MakeBoundaryConditions ();
+
+		/**
+		 * This function generates the Constraint-Matrices for the two Preconditioner Matrices.
+		 */
+		void	MakePreconditionerBoundaryConditions ( );
 
 		/**
 		 * This function executes refined downstream ordering of degrees of freedom.
@@ -284,6 +323,11 @@ class Waveguide
 		void 	reinit_rhs();
 
 		/**
+		 * Reinit only the PML-Matrix which is used in the construction of the Preconditioner. This should only be used if the need for space is there. Otherwise this matrix while being a temporary object, is very large.
+		 */
+		void	reinit_preconditioner();
+
+		/**
 		 * Reinit only the system matrix.
 		 */
 		void 	reinit_systemmatrix();
@@ -304,18 +348,19 @@ class Waveguide
 		FESystem<3>								fe;
 		DoFHandler<3>							dof_handler, dof_handler_real;
 		VectorType								solution;
-		ConstraintMatrix 						cm;
+		ConstraintMatrix 						cm, cm_pre1, cm_pre2;
 
 		BlockDynamicSparsityPattern				sparsity_pattern;
-		MatrixType								system_matrix;
+		MatrixType								system_matrix, preconditioner_matrix_1, preconditioner_matrix_2;
 		Parameters								&prm;
 		ConstraintMatrix 						boundary_value_constraints_imaginary;
 		ConstraintMatrix 						boundary_value_constraints_real;
 
 		int 									assembly_progress;
 		VectorType								storage;
+		VectorType								temp_storage;
 		bool									is_stored;
-		VectorType								system_rhs;
+		VectorType								system_rhs, preconditioner_rhs;
 		LogStream 								deallog;
 		FileLoggerData 							log_data;
 		FileLogger 								log_constraints, log_assemble, log_precondition, log_total, log_solver;
@@ -328,6 +373,11 @@ class Waveguide
 		std::vector<dealii::IndexSet> 			set;
 		BlockSparsityPattern 					temporary_pattern;
 		bool									temporary_pattern_preped;
+		FEValuesExtractors::Vector 				real, imag;
+		SolverControl          					solver_control;
+		PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> >::AdditionalData Sweeping_Additional_Data;
+		PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> > sweep;
+
 };
 
 
