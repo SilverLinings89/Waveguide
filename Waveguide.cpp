@@ -500,12 +500,12 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 		triangulation.refine_global (prm.PRM_D_XY);
 	} else {
 
-		// Globales-Refinement hier setzen.
-		triangulation.refine_global (1);
+
+		triangulation.refine_global (GlobalParams.PRM_R_Global);
 		double MaxDistFromBoundary = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusIn)*1.4/2.0;
 
-		// semi-globales Refinement hier setzen.
-		for(int i = 0; i < 1; i++) {
+
+		for(int i = 0; i < GlobalParams.PRM_R_Semi; i++) {
 			cell = triangulation.begin_active();
 			for (; cell!=endc; ++cell){
 				if(std::abs(Distance2D(cell->center(true, false)) - (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusIn)/2.0 ) < MaxDistFromBoundary) {
@@ -516,9 +516,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 			MaxDistFromBoundary *= 0.7 ;
 		}
 
-		// Refinement im Wellenleiter hier setzen.
-
-		for(int i = 0; i < 1; i++) {
+		for(int i = 0; i < GlobalParams.PRM_R_Internal; i++) {
 			cell = triangulation.begin_active();
 			for (; cell!=endc; ++cell){
 				if( Distance2D(cell->center(true, false))< (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusIn)/2.0)  {

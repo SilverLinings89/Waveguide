@@ -135,6 +135,15 @@ static Parameters GetParameters() {
 		ret.PRM_S_DoOptimization = prm.get_bool("DoOptimization");
 	}
 	prm.leave_subsection();
+	prm.enter_subsection("Mesh-Refinement");
+	{
+		ret.PRM_R_Global = prm.get_integer("Global");
+		ret.PRM_R_Semi = prm.get_integer("SemiGlobal");
+		ret.PRM_R_Internal = prm.get_integer("Internal");
+	}
+	prm.leave_subsection();
+
+
 	ret.PRM_M_R_XLength = (15.5/4.3)* ((ret.PRM_M_C_RadiusIn+ ret.PRM_M_C_RadiusOut)/2.0);
 	ret.PRM_M_R_YLength = (15.5/4.3)* ((ret.PRM_M_C_RadiusIn+ ret.PRM_M_C_RadiusOut)/2.0);
 	return ret;
@@ -220,9 +229,12 @@ static Point<3> Triangulation_Stretch_Real (const Point<3> &p)
 	double r = (2* GlobalParams.PRM_M_C_RadiusIn - 2*GlobalParams.PRM_M_C_RadiusOut) * z * z * z  - (3* GlobalParams.PRM_M_C_RadiusIn - 3*GlobalParams.PRM_M_C_RadiusOut)*z*z + GlobalParams.PRM_M_C_RadiusIn;
 	r *= 2 / (GlobalParams.PRM_M_C_RadiusIn  +GlobalParams.PRM_M_C_RadiusOut);
 	double m = (2*GlobalParams.PRM_M_W_Delta)*z*z*z - (3 * GlobalParams.PRM_M_W_Delta)*z*z + GlobalParams.PRM_M_W_Delta/2;
+	double sigma = (sqrt(p[0]*p[0] +  p[1]*p[1]) - (1/7.12644))/(r * (GlobalParams.PRM_M_R_YLength - m - r));
+	if(sigma < 0.0) sigma = 0.0;
+	if(sigma > 1.0) sigma = 1.0;
 	Point<3> q = p;
-	q[0] *= r;
-	q[1] = (q[1]*r)-m ;
+	q[0] =  ( sigma * (r * 7.12644 ) + (1-sigma)* GlobalParams.PRM_M_R_YLength)  * p[0];
+	q[1] =  ( sigma * (r * 7.12644 + m) + (1-sigma)* GlobalParams.PRM_M_R_YLength)  * p[1];
 	return q;
 }
 

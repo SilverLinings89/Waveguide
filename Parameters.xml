@@ -358,4 +358,27 @@
             <pattern_description>[Bool]</pattern_description>
         </DoOptimization>
     </Optimization>
+    <Mesh-Refinement>
+        <Global>
+            <value>1</value>
+            <default_value>1</default_value>
+            <documentation>Global refinement-steps.</documentation>
+            <pattern>48</pattern>
+            <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
+        </Global>
+	<SemiGlobal>
+            <value>1</value>
+            <default_value>1</default_value>
+            <documentation>Semi-Global refinement-steps (close to the Waveguide-boundary and inside).</documentation>
+            <pattern>49</pattern>
+            <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
+        </SemiGlobal>
+	<Internal>
+            <value>1</value>
+            <default_value>1</default_value>
+            <documentation>Internal refinement-steps.</documentation>
+            <pattern>50</pattern>
+            <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
+        </Internal>
+    </Mesh-Refinement>
 </ParameterHandler>

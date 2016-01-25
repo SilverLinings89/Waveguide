@@ -222,6 +222,22 @@ struct Parameters {
 	 * This value states wether optimization should be attempted or if only the first shape should be calculated.
 	 */
 	bool				PRM_S_DoOptimization;
+
+	/**
+	 * This value sets the number of global refinements to be done. This also influeces the number of sectors since in the case \f$ 5 \cdot 2^{N_G} == N_S \cdot n \qquad n \in \mathbb{N} \f$ the sector-boundaries coincide with the cell-boundaries of the mesh.
+	 */
+	int 				PRM_R_Global;
+
+	/**
+	 * This value specifies how many semi-global refinement steps should be done.
+	 */
+	int					PRM_R_Semi;
+
+	/**
+	 * This parameter sets the amount of refinementsteps inside the waveguide to be performed.
+	 */
+	int					PRM_R_Internal;
+
 };
 
 #endif
