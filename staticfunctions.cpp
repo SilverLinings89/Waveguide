@@ -14,139 +14,14 @@ std::string total_filename 			= "total.log";
 int 	StepsR 			= 10;
 int 	StepsPhi 		= 10;
 
-static Parameters GetParameters() {
-	ParameterHandler prm;
-	ParameterReader param(prm);
-	param.read_parameters("./Parameters.xml");
-	struct Parameters ret;
-	prm.enter_subsection("Output");
-	{
-		ret.PRM_O_Grid	=	prm.get_bool("Output Grid");
-		ret.PRM_O_Dofs	=	prm.get_bool("Output Dofs");
-		ret.PRM_O_ActiveCells	=	prm.get_bool("Output Active Cells");
-		ret.PRM_O_VerboseOutput = prm.get_bool("Verbose Output");
-	}
-	prm.leave_subsection();
+inline double InterpolationPolynomial(double in_z, double in_val_zero, double in_val_one, double in_derivative_zero, double in_derivative_one) {
+	if (in_z < 0.0) return in_val_zero;
+	if (in_z > 1.0) return in_val_one;
+	return (2*(in_val_zero - in_val_one) + in_derivative_zero + in_derivative_one) * pow(in_z,3) + (3*(in_val_one - in_val_zero) - (2*in_derivative_zero) - in_derivative_one)*pow(in_z,2) + in_derivative_zero*in_z + in_val_zero;
+}
 
-	prm.enter_subsection("Measures");
-	{
-		prm.enter_subsection("Connectors");
-		{
-			ret.PRM_M_C_TypeIn	= prm.get("Type in");
-			ret.PRM_M_C_TypeOut	= prm.get("Type out");
-			ret.PRM_M_C_RadiusIn	= prm.get_double("Radius in");
-			ret.PRM_M_C_RadiusOut	= prm.get_double("Radius out");
-			ret.PRM_M_C_TiltIn	= prm.get_double("Tilt in");
-			ret.PRM_M_C_TiltOut	= prm.get_double("Tilt out");
-		}
-		prm.leave_subsection();
-
-		prm.enter_subsection("Region");
-		{
-			ret.PRM_M_R_XLength = prm.get_integer("XLength");
-			// PRM_M_R_XLength = ret.PRM_M_R_XLength;
-			ret.PRM_M_R_YLength = prm.get_integer("YLength");
-			// PRM_M_R_YLength = ret.PRM_M_R_YLength;
-			ret.PRM_M_R_ZLength = prm.get_integer("ZLength");
-			// PRM_M_R_ZLength = ret.PRM_M_R_ZLength;
-		}
-		prm.leave_subsection();
-
-		prm.enter_subsection("Waveguide");
-		{
-				ret.PRM_M_W_Delta = prm.get_double("Delta");
-				ret.PRM_M_W_EpsilonIn = prm.get_double("epsilon in");
-				ret.PRM_M_W_EpsilonOut = prm.get_double("epsilon out");
-				ret.PRM_M_W_Lambda = prm.get_double("Lambda");
-				ret.PRM_M_W_Sectors = prm.get_integer("Sectors");
-		}
-		prm.leave_subsection();
-
-		prm.enter_subsection("Boundary Conditions");
-		{
-			ret.PRM_M_BC_Type = prm.get("Type");
-			ret.PRM_M_BC_XYin = prm.get_double("XY in");
-			ret.PRM_M_BC_XYout = prm.get_double("XY out");
-			ret.PRM_M_BC_Mantle = prm.get_double("Mantle");
-			ret.PRM_M_BC_KappaXMax = prm.get_double("KappaXMax");
-			ret.PRM_M_BC_KappaYMax = prm.get_double("KappaYMax");
-			ret.PRM_M_BC_KappaZMax = prm.get_double("KappaZMax");
-			ret.PRM_M_BC_SigmaXMax = prm.get_double("SigmaXMax");
-			ret.PRM_M_BC_SigmaYMax = prm.get_double("SigmaYMax");
-			ret.PRM_M_BC_SigmaZMax = prm.get_double("SigmaZMax");
-			ret.PRM_M_BC_M = prm.get_integer("DampeningExponentM");
-		}
-		prm.leave_subsection();
-
-	}
-	prm.leave_subsection();
-
-	prm.enter_subsection("Discretization");
-	{
-		ret.PRM_D_Refinement = prm.get("refinement");
-		ret.PRM_D_XY = prm.get_integer("XY");
-		ret.PRM_D_Z = prm.get_integer("Z");
-	}
-	prm.leave_subsection();
-
-	prm.enter_subsection("Assembly");
-	{
-		ret.PRM_A_Threads = prm.get_integer("Threads");
-	}
-	prm.leave_subsection();
-
-	prm.enter_subsection("Solver");
-	{
-		ret.PRM_S_Library = prm.get("Library");
-		ret.PRM_S_Solver = prm.get("Solver");
-		ret.PRM_S_GMRESSteps = prm.get_integer("GMRESSteps");
-		ret.PRM_S_Preconditioner = prm.get("Preconditioner");
-		ret.PRM_S_PreconditionerBlockCount = prm.get_integer("PreconditionerBlockCount");
-		ret.PRM_S_Steps = prm.get_integer("Steps");
-		ret.PRM_S_Precision = prm.get_double("Precision");
-		ret.PRM_S_MPITasks = prm.get_integer("MPITasks");
-	}
-	prm.leave_subsection();
-
-	prm.enter_subsection("Constants");
-	{
-		ret.PRM_C_PI = dealii::numbers::PI;
-		if(! prm.get_bool("AllOne")){
-			ret.PRM_C_Eps0 = prm.get_double("EpsilonZero");
-			ret.PRM_C_Mu0 = prm.get_double("MuZero");
-			ret.PRM_C_c = 1/sqrt(ret.PRM_C_Eps0 * ret.PRM_C_Mu0);
-			ret.PRM_C_f0 = ret.PRM_C_c/0.63;
-			ret.PRM_C_omega = 2 * ret.PRM_C_PI * ret.PRM_C_f0;
-		} else {
-			ret.PRM_C_Eps0 = 1.0;
-			ret.PRM_C_Mu0 = 1.0;
-			ret.PRM_C_c			= 1.0/sqrt(ret.PRM_C_Eps0 * ret.PRM_C_Mu0);
-			ret.PRM_C_f0		= ret.PRM_C_c/ret.PRM_M_W_Lambda; 			// Overwritten by Param-Reader
-			ret.PRM_C_k0		= 2.0 * ret.PRM_C_PI * ret.PRM_M_W_Lambda;
-			ret.PRM_C_omega 	= 2.0 * ret.PRM_C_PI * ret.PRM_C_f0;
-		}
-	}
-	prm.leave_subsection();
-
-	prm.enter_subsection("Optimization");
-	{
-		ret.PRM_Op_MaxCases = prm.get_integer("MaxCases");
-		ret.PRM_Op_InitialStepWidth = prm.get_double("InitialStepWidth");
-		ret.PRM_S_DoOptimization = prm.get_bool("DoOptimization");
-	}
-	prm.leave_subsection();
-	prm.enter_subsection("Mesh-Refinement");
-	{
-		ret.PRM_R_Global = prm.get_integer("Global");
-		ret.PRM_R_Semi = prm.get_integer("SemiGlobal");
-		ret.PRM_R_Internal = prm.get_integer("Internal");
-	}
-	prm.leave_subsection();
-
-
-	ret.PRM_M_R_XLength = (15.5/4.3)* ((ret.PRM_M_C_RadiusIn+ ret.PRM_M_C_RadiusOut)/2.0);
-	ret.PRM_M_R_YLength = (15.5/4.3)* ((ret.PRM_M_C_RadiusIn+ ret.PRM_M_C_RadiusOut)/2.0);
-	return ret;
+inline double InterpolationPolynomialZeroDerivative(double in_z , double in_val_zero, double in_val_one) {
+	return InterpolationPolynomial(in_z, in_val_zero, in_val_one, 0.0, 0.0);
 }
 
 static double Distance2D (Point<3> position, Point<3> to = Point<3>()) {
@@ -197,6 +72,7 @@ template<int dim> static void mesh_info(const Triangulation<dim> &tria, const st
 	std::cout << " written to " << filename << std::endl << std::endl;
 }
 
+/**
 static Point<3> Triangulation_Stretch_X (const Point<3> &p)
 {
   Point<3> q = p;
@@ -204,39 +80,86 @@ static Point<3> Triangulation_Stretch_X (const Point<3> &p)
   return q;
 }
 
+static Point<3> Triangulation_Stretch_Y (const Point<3> &p)
+{
+  Point<3> q = p;
+  q[1] *= 15.5 * (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) /8.7 ;
+  return q;
+}
+**/
+
+static double sigma (double in_z, double min, double max) {
+	if( min == max ) return (in_z < min )? 0.0 : 1.0;
+	if(in_z < min) return 0.0;
+	if(in_z > max) return 1.0;
+	double ret = 0;
+	ret = (in_z - min) / ( max - min);
+	if(ret < 0.0) ret = 0.0;
+	if(ret > 1.0) ret = 1.0;
+	return ret;
+}
+
+
+static Point<3> Triangulation_Stretch_X (const Point<3> &p)
+{
+  Point<3> q = p;
+  q[0] *= GlobalParams.PRM_M_R_XLength / 2.0 ;
+  return q;
+}
 
 static Point<3> Triangulation_Stretch_Y (const Point<3> &p)
 {
   Point<3> q = p;
-  q[1] *= 15.5 * (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) /8.7;
+  q[1] *= GlobalParams.PRM_M_R_YLength / 2.0 ;
   return q;
 }
-
 
 static Point<3> Triangulation_Stretch_Z (const Point<3> &p)
 {
   Point<3> q = p;
-  q[2] *= ( GlobalParams.PRM_M_BC_XYout + GlobalParams.PRM_M_BC_XYin+ GlobalParams.PRM_M_R_ZLength) /2.0;
-  q[2] += ( GlobalParams.PRM_M_BC_XYout - GlobalParams.PRM_M_BC_XYin)/2.0;
+  double total_length = structure.System_Length();
+  q[2] *= total_length / 2.0;
   return q;
 }
 
-static Point<3> Triangulation_Stretch_Real (const Point<3> &p)
+static Point<3> Triangulation_Shift_Z (const Point<3> &p)
 {
-	double z = ((p[2] + GlobalParams.PRM_M_R_ZLength/2)/GlobalParams.PRM_M_R_ZLength);
-	if(z<0) z=0;
-	if(z>1) z = 1;
-	double r = (2* GlobalParams.PRM_M_C_RadiusIn - 2*GlobalParams.PRM_M_C_RadiusOut) * z * z * z  - (3* GlobalParams.PRM_M_C_RadiusIn - 3*GlobalParams.PRM_M_C_RadiusOut)*z*z + GlobalParams.PRM_M_C_RadiusIn;
-	r *= 2 / (GlobalParams.PRM_M_C_RadiusIn  +GlobalParams.PRM_M_C_RadiusOut);
-	double m = (2*GlobalParams.PRM_M_W_Delta)*z*z*z - (3 * GlobalParams.PRM_M_W_Delta)*z*z + GlobalParams.PRM_M_W_Delta/2;
-	double sigma = (sqrt(p[0]*p[0] +  p[1]*p[1]) - (1/7.12644))/(r * (GlobalParams.PRM_M_R_YLength - m - r));
-	if(sigma < 0.0) sigma = 0.0;
-	if(sigma > 1.0) sigma = 1.0;
+  Point<3> q = p;
+  double sector_length = structure.Sector_Length();
+  q[2] += (sector_length/2.0) * GlobalParams.PRM_M_BC_XYout;
+  return q;
+}
+
+static Point<3> Triangulation_Stretch_Real_Radius (const Point<3> &p)
+{
+	double r_goal = structure.get_r(structure.Z_to_Sector_and_local_z(p[2]).second);
+	double shift = structure.get_m(structure.Z_to_Sector_and_local_z(p[2]).second);
+	double r_current = (GlobalParams.PRM_M_R_XLength / 2.0 ) / 7.12644;
+	double r_max = (GlobalParams.PRM_M_R_XLength / 2.0 ) * (1.0 - GlobalParams.PRM_M_BC_Mantle);
+	double r_point = sqrt(p[0]*p[0] + p[1]*p[1]);
+	double stretch = sigma(r_point, r_current, r_max);
+	double factor = stretch * r_goal/r_current + (1-stretch);
 	Point<3> q = p;
-	q[0] =  ( sigma * (r * 7.12644 ) + (1-sigma)* GlobalParams.PRM_M_R_YLength)  * p[0];
-	q[1] =  ( sigma * (r * 7.12644 + m) + (1-sigma)* GlobalParams.PRM_M_R_YLength)  * p[1];
+	q[0] *= factor;
+	q[1] *= factor;
+	q[1] += factor * shift;
+	return p;
+}
+
+
+static Point<3> Triangulation_Stretch_Computational_Radius (const Point<3> &p)
+{
+	double r_goal = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
+	double r_current = (GlobalParams.PRM_M_R_XLength ) / 7.12644;
+	double r_max = (GlobalParams.PRM_M_R_XLength / 2.0 ) * (1.0 - GlobalParams.PRM_M_BC_Mantle);
+	double r_point = sqrt(p[0]*p[0] + p[1]*p[1]);
+	double factor = InterpolationPolynomialZeroDerivative(sigma(r_point, r_current, r_max), r_goal/r_current , 1.0);
+	Point<3> q = p;
+	q[0] *= factor;
+	q[1] *= factor;
 	return q;
 }
+
 
 static bool System_Coordinate_in_Waveguide(Point<3> p){
 	double value = Distance2D(p);

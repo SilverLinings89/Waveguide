@@ -5,7 +5,6 @@
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/sparse_matrix.h>
 
-#include "WaveguideStructure.h"
 #include "Waveguide.h"
 #include "Parameters.h"
 
@@ -39,19 +38,12 @@ class Optimization {
 		 */
 		Waveguide<M, V > &waveguide;
 
-		/**
-		 * This member is a handle to the WaveguideStructure-object used in the computation. This object need such a handle in order to
-		 *  -# retrieve information about the current shape
-		 *  -# set the parameters based on the results of runs.
-		 *
-		 *
-		 */
-		WaveguideStructure &structure;
+
 
 		/**
 		 * This is a constructor for the Optimization-object. It requires the handles to the two objects it has to control and an additional structure containing the data from the input-file.
 		 */
-		Optimization( Parameters , Waveguide<M, V >  & , WaveguideStructure &);
+		Optimization( Parameters , Waveguide<M, V >  & );
 
 		/**
 		 * This function is the core implementation of an optimization algorithm. Currently it is very fundamental in its technical prowess which can be improved upon in later versions. Essentially, it calculates the signal quality for a configurations and for small steps in every one of the dofs. After that, the optimization-step is estimated based on difference-quotients. Following this step, a large step is computed based upon the approximation of the gradient of the signal-quality functional and the iteration starts anew. If a decrease in quality is detected, the optimization-step is undone and the step-width is reduced.

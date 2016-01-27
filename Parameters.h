@@ -44,15 +44,15 @@ struct Parameters {
 	/**
 	 * Length of the computational domain in the \f$x\f$-direction.
 	 */
-	int				PRM_M_R_XLength;
+	double				PRM_M_R_XLength;
 	/**
 	 * Length of the computational domain in the \f$y\f$-direction.
 	 */
-	int 			PRM_M_R_YLength;
+	double 				PRM_M_R_YLength;
 	/**
 	 * Length of the computational domain in the \f$z\f$-direction.
 	 */
-	int				PRM_M_R_ZLength;
+	double				PRM_M_R_ZLength;
 	/**
 	 * Distance of the middlepoints of the input- and output-connector. The direction of the light propagation in the input-wavegudie is used as the \f$z\f$-direction. The shift of the two connectors orthogonally to the \f$z\f$-direction is used as the \f$y\f$-direction.
 	 */
@@ -80,7 +80,7 @@ struct Parameters {
 	/**
 	 * Thickness of the PML-region of the output-side of the system. In most cases this will be rather large, since it is supposed to absorb the complete signal without any reflections. The numerical error in this scheme reduces, if the PML-region is not too short.
 	 */
-	double			PRM_M_BC_XYout;
+	int			PRM_M_BC_XYout;
 	/**
 	 * Thickness of the PML-region along the waveguide. This parameter is quite flexible and should be tuned appropriately.
 	 */

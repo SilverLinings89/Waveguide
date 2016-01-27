@@ -4,12 +4,11 @@
 using namespace dealii;
 
 template<typename Matrix,typename Vector>
-Optimization<Matrix, Vector >::Optimization( Parameters in_System_Parameters ,Waveguide<Matrix, Vector >  &in_wg, WaveguideStructure &in_structure)
+Optimization<Matrix, Vector >::Optimization( Parameters in_System_Parameters ,Waveguide<Matrix, Vector >  &in_wg)
 	:
 		dofs((in_System_Parameters.PRM_M_W_Sectors +1)*3 -6),
 		System_Parameters(in_System_Parameters),
-		waveguide(in_wg),
-		structure(in_structure)
+		waveguide(in_wg)
 
 	{
 }

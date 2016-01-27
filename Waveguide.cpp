@@ -13,7 +13,7 @@
 using namespace dealii;
 
 template<typename MatrixType, typename VectorType >
-Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStructure &in_structure)
+Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
   :
   fe (FE_Nedelec<3> (0), 2),
   dof_handler (triangulation),
@@ -26,7 +26,6 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param, WaveguideStruct
   log_precondition(std::string("precondition.log"), log_data),
   log_total(std::string("total.log"), log_data),
   log_solver(std::string("solver.log"), log_data),
-  structure(in_structure),
   run_number(0),
   condition_file_counter(0),
   eigenvalue_file_counter(0),
@@ -396,45 +395,48 @@ Tensor<1,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Conjugate_V
 
 template<typename MatrixType, typename VectorType  >
 bool Waveguide<MatrixType, VectorType>::PML_in_X(Point<3> &p) {
-	double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
+	//double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
+	double pmlboundary = GlobalParams.PRM_M_R_XLength * (1- GlobalParams.PRM_M_BC_Mantle)*0.5;
 	return p(0) < -(pmlboundary) ||p(0) > (pmlboundary);
 }
 
 template<typename MatrixType, typename VectorType>
 bool Waveguide<MatrixType, VectorType>::PML_in_Y(Point<3> &p) {
-	double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
+	//double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
+	double pmlboundary = GlobalParams.PRM_M_R_YLength * (1- GlobalParams.PRM_M_BC_Mantle) * 0.5;
 	return p(1) < -(pmlboundary) ||p(1) > (pmlboundary);
 }
 
 template<typename MatrixType, typename VectorType>
 bool Waveguide<MatrixType, VectorType>::PML_in_Z(Point<3> &p) {
-	return (p(2) > (GlobalParams.PRM_M_R_ZLength / 2.0 )) || ((p(2) <  -GlobalParams.PRM_M_R_ZLength / 2.0) && !(System_Coordinate_in_Waveguide(p)));
+	return p(2) > (GlobalParams.PRM_M_R_ZLength / 2.0 );
 }
 
 template<typename MatrixType, typename VectorType>
 bool Waveguide<MatrixType, VectorType>::Preconditioner_PML_in_Z(Point<3> &p, unsigned int block) {
-	double l = (double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (GlobalParams.PRM_M_W_Sectors);
+	double l = structure.Sector_Length();
 	double width = l * 0.1;
-	bool up =    (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin  ) - (block+1) * l + width) > 0;
-	bool down = -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin  ) - (block-1) * l - width) > 0;
+	bool up =    (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0   ) - (block+1) * l + width) > 0;
+	bool down = -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0   ) - (block-1) * l - width) > 0;
 
 	return up || down;
 }
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ){
-	double l = (double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (GlobalParams.PRM_M_W_Sectors);
+	double l = structure.Sector_Length();
 	double width = l * 0.1;
-	if( ( p(2) +GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin  )-  block * l < 0){
-		return -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin  ) - (block-1) * l - width);
+	if( ( p(2) +GlobalParams.PRM_M_R_ZLength/2.0 )-  block * l < 0){
+		return -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - (block-1) * l - width);
 	} else {
-		return  (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin  ) - (block+1) * l + width);
+		return  (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - (block+1) * l + width);
 	}
 }
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::PML_X_Distance(Point<3> &p){
-	double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
+	//double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
+	double pmlboundary = GlobalParams.PRM_M_R_YLength * (1- GlobalParams.PRM_M_BC_Mantle) * 0.5;
 	if(p(0) >0){
 		return p(0) - (pmlboundary) ;
 	} else {
@@ -444,7 +446,8 @@ double Waveguide<MatrixType, VectorType>::PML_X_Distance(Point<3> &p){
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::PML_Y_Distance(Point<3> &p){
-	double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
+	//double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
+	double pmlboundary = GlobalParams.PRM_M_R_YLength * (1- GlobalParams.PRM_M_BC_Mantle) * 0.5;
 	if(p(1) >0){
 		return p(1) - (pmlboundary);
 	} else {
@@ -454,11 +457,7 @@ double Waveguide<MatrixType, VectorType>::PML_Y_Distance(Point<3> &p){
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::PML_Z_Distance(Point<3> &p){
-	if(p(2) >0){
-		return p(2) - (GlobalParams.PRM_M_R_ZLength / 2.0) ;
-	} else {
-		return -p(2) - (GlobalParams.PRM_M_R_ZLength / 2.0);
-	}
+	return p(2) - (GlobalParams.PRM_M_R_ZLength / 2.0) ;
 }
 
 template<typename MatrixType, typename VectorType >
@@ -468,7 +467,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	const double outer_radius = 1.0;
 	GridGenerator::subdivided_hyper_cube (triangulation, 5, -outer_radius, outer_radius);
 
-	static const CylindricalManifold<3, 3> round_description(2, 0.0001);
+	static const CylindricalManifold<3, 3> round_description(2);
 	unsigned int temp = 1;
 	triangulation.set_manifold (temp, round_description);
 	Triangulation<3>::active_cell_iterator
@@ -495,6 +494,10 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	GridTools::transform(& Triangulation_Stretch_X, triangulation);
 	GridTools::transform(& Triangulation_Stretch_Y, triangulation);
 	GridTools::transform(& Triangulation_Stretch_Z, triangulation);
+	GridTools::transform(& Triangulation_Stretch_Computational_Radius, triangulation);
+
+	mesh_info(triangulation, solutionpath + "/grid2.vtk");
+
 
 	if(prm.PRM_D_Refinement == "global"){
 		triangulation.refine_global (prm.PRM_D_XY);
@@ -508,7 +511,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 		for(int i = 0; i < GlobalParams.PRM_R_Semi; i++) {
 			cell = triangulation.begin_active();
 			for (; cell!=endc; ++cell){
-				if(std::abs(Distance2D(cell->center(true, false)) - (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusIn)/2.0 ) < MaxDistFromBoundary) {
+				if(std::abs(Distance2D(cell->center(true, false)) - (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0 ) < MaxDistFromBoundary) {
 					cell->set_refine_flag();
 				}
 			}
@@ -519,18 +522,19 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 		for(int i = 0; i < GlobalParams.PRM_R_Internal; i++) {
 			cell = triangulation.begin_active();
 			for (; cell!=endc; ++cell){
-				if( Distance2D(cell->center(true, false))< (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusIn)/2.0)  {
+				if( Distance2D(cell->center(true, false))< (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0)  {
 					cell->set_refine_flag();
 				}
 			}
 			triangulation.execute_coarsening_and_refinement();
-			MaxDistFromBoundary *= 0.7 ;
 		}
 
 	}
 
+
+	GridTools::transform(& Triangulation_Shift_Z , triangulation);
+
 	triangulation_real.copy_triangulation(triangulation);
-	GridTools::transform(& Triangulation_Stretch_Real, triangulation_real);
 
 
 	int counter = 0;
@@ -558,25 +562,21 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	deallog<<counter << " Zellen mit Dirichlet-Werten." << std::endl;
 
 
-
-	double l = (double)(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout) / (Sectors);
-	deallog << "Länge eines Blocks:" << l << std::endl;
-
 	cell = triangulation.begin_active();
 	for (; cell!=endc; ++cell){
 
-		int temp  = (int) (((cell->center(true, false))[2] + (GlobalParams.PRM_M_R_ZLength/(2.0)) + GlobalParams.PRM_M_BC_XYin) / l);
+		int temp  = structure.Z_to_Sector_and_local_z((cell->center(true, false))[2]).first;
 		if( temp >=  Sectors || temp < 0) deallog << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
 		cell->set_subdomain_id(temp);
 	}
 
 
-	if(GlobalParams.PRM_O_Grid) {
-		if(prm.PRM_O_VerboseOutput) deallog<< "Writing Mesh data to file \"grid-3D.vtk\"" << std::endl;
+	//if(GlobalParams.PRM_O_Grid) {
+	//	if(prm.PRM_O_VerboseOutput) deallog<< "Writing Mesh data to file \"grid-3D.vtk\"" << std::endl;
 		mesh_info(triangulation, solutionpath + "/grid.vtk");
-		if(prm.PRM_O_VerboseOutput) deallog<< "Done" << std::endl;
+	//	if(prm.PRM_O_VerboseOutput) deallog<< "Done" << std::endl;
 
-	}
+	//}
 
 }
 
@@ -1435,8 +1435,8 @@ void Waveguide<MatrixType, VectorType>::run ()
 	init_loggers ();
 	make_grid ();
 	setup_system ();
-	assemble_system ();
-	solve ();
+	// assemble_system ();
+	// solve ();
 	output_results ();
 	log_total.stop();
 	run_number++;

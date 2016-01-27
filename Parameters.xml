@@ -77,25 +77,25 @@
         </Connectors>
         <Region>
             <XLength>
-                <value>10</value>
-                <default_value>10</default_value>
+                <value>20</value>
+                <default_value>10.0</default_value>
                 <documentation>Length of the system in x-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
                 <pattern>10</pattern>
-                <pattern_description>[Integer range 0...2147483647 (inclusive)]</pattern_description>
+                <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XLength>
             <YLength>
-                <value>10</value>
-                <default_value>10</default_value>
+                <value>20</value>
+                <default_value>10.0</default_value>
                 <documentation>Length of the system in y-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
                 <pattern>11</pattern>
-                <pattern_description>[Integer range 0...2147483647 (inclusive)]</pattern_description>
+                <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </YLength>
             <ZLength>
                 <value>8</value>
-                <default_value>2</default_value>
+                <default_value>2.0</default_value>
                 <documentation>Length of the system in z-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
                 <pattern>12</pattern>
-                <pattern_description>[Integer range 0...2147483647 (inclusive)]</pattern_description>
+                <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </ZLength>
         </Region>
         <Waveguide>
@@ -151,14 +151,14 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XY_20in>
             <XY_20out>
-                <value>0</value>
-                <default_value>0.2</default_value>
-                <documentation>Thickness of the PML area on the side of the output connector.</documentation>
+                <value>1</value>
+                <default_value>1</default_value>
+                <documentation>Amount of standard-size sectors for PML region at the output end.</documentation>
                 <pattern>20</pattern>
-                <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
+                <pattern_description>[Integer 1...2147483647 (inclusive)]</pattern_description>
             </XY_20out>
             <Mantle>
-                <value>0</value>
+                <value>0.1</value>
                 <default_value>10</default_value>
                 <documentation>Thickness of the PML area on 4 non-connector sides, the mantle.</documentation>
                 <pattern>21</pattern>
@@ -358,7 +358,7 @@
             <pattern_description>[Bool]</pattern_description>
         </DoOptimization>
     </Optimization>
-    <Mesh-Refinement>
+    <MeshRefinement>
         <Global>
             <value>1</value>
             <default_value>1</default_value>
@@ -366,19 +366,19 @@
             <pattern>48</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </Global>
-	<SemiGlobal>
+        <SemiGlobal>
             <value>1</value>
             <default_value>1</default_value>
             <documentation>Semi-Global refinement-steps (close to the Waveguide-boundary and inside).</documentation>
             <pattern>49</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </SemiGlobal>
-	<Internal>
+        <Internal>
             <value>1</value>
             <default_value>1</default_value>
             <documentation>Internal refinement-steps.</documentation>
             <pattern>50</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </Internal>
-    </Mesh-Refinement>
+    </MeshRefinement>
 </ParameterHandler>

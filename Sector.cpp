@@ -35,6 +35,24 @@ void Sector::set_properties_force(double in_m_0, double in_m_1, double in_r_0, d
 
 }
 
+double Sector::get_r(double z) {
+	if ( z < 0.0 ) z = 0.0;
+	if ( z > 1.0 ) z = 1.0;
+	return InterpolationPolynomialZeroDerivative(z, r_0, r_1);
+}
+
+double Sector::get_m(double z) {
+	if ( z < 0.0 ) z = 0.0;
+	if ( z > 1.0 ) z = 1.0;
+	return InterpolationPolynomial(z, m_0, m_1, v_0, v_1);
+}
+
+double Sector::get_v(double z) {
+	if ( z < 0.0 ) z = 0.0;
+	if ( z > 1.0 ) z = 1.0;
+	return InterpolationPolynomialZeroDerivative(z, v_0, v_1);
+}
+
 double Sector::getQ1 ( double z) {
 	return 1/(r_0 + z*z*z*(2*r_0 - 2*r_1) - z*z*(3*r_0 - 3*r_1));
 }
@@ -44,7 +62,7 @@ double Sector::getQ2 ( double z) {
 }
 
 Tensor<2,3, double> Sector::TransformationTensorInternal (double in_x, double in_y, double z) {
-	if(z<0 || z>1) std::cout << "Falty implementation of internal Tensor calculation." << std::endl;
+	if(z<0 || z>1) std::cout << "Falty implementation of internal Tensor calculation: z: " << z << std::endl;
 	double RadiusInMultiplyer = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/(2* r_0);
 	double RadiusOutMultiplyer = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/(2* r_1);
 
@@ -103,7 +121,12 @@ Tensor<2,3, double> Sector::TransformationTensorInternal (double in_x, double in
 		}
 	}
 
-
+	for(int i = 0; i< 3; i++) {
+		for(int j = 0; j<3; j++) {
+			deallog << g[i][j] << " ";
+		}
+		deallog << std::endl;
+	}
 
 	return g;
 }
@@ -111,7 +134,6 @@ Tensor<2,3, double> Sector::TransformationTensorInternal (double in_x, double in
 unsigned int Sector::getLowestDof() {
 	return LowestDof;
 }
-
 
 unsigned int Sector::getNDofs() {
 	return NDofs;
@@ -125,21 +147,17 @@ unsigned int Sector::getNActiveCells() {
 	return NActiveCells;
 }
 
-
 void Sector::setLowestDof( unsigned int in_lowestdof) {
 	LowestDof = in_lowestdof;
 }
-
 
 void Sector::setNDofs( unsigned int in_ndofs) {
 	NDofs = in_ndofs;
 }
 
-
 void Sector::setNInternalBoundaryDofs( unsigned int in_ninternalboundarydofs) {
 	NInternalBoundaryDofs = in_ninternalboundarydofs;
 }
-
 
 void Sector::setNActiveCells( unsigned int in_nactivecells) {
 	NActiveCells = in_nactivecells;

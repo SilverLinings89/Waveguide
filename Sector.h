@@ -141,6 +141,24 @@ class Sector {
 		 */
 		void setNActiveCells(unsigned int );
 
+		/**
+		 * Get an interpolation of the radius for a coordinate z
+		 * \param double z is the \f$z \in [0,1]\f$ coordinate for the interpolation.
+		 */
+		double get_r(double z);
+
+		/**
+		 * Get an interpolation of the tilt for a coordinate z
+		 * \param double z is the \f$z \in [0,1]\f$ coordinate for the interpolation.
+		 */
+		double get_v(double z);
+
+		/**
+		 * Get an interpolation of the shift for a coordinate z
+		 * \param double z is the \f$z \in [0,1]\f$ coordinate for the interpolation.
+		 */
+		double get_m(double z);
+
 	//private:
 
 		unsigned int LowestDof, NDofs, NInternalBoundaryDofs, NActiveCells;

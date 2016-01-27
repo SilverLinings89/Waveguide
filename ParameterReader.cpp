@@ -29,9 +29,9 @@ void ParameterReader::declare_parameters()
 		prm.leave_subsection();
 
 		prm.enter_subsection("Region");
-			prm.declare_entry("XLength", "10", Patterns::Integer(0), "Length of the system in x-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres");
-			prm.declare_entry("YLength", "10", Patterns::Integer(0), "Length of the system in y-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres");
-			prm.declare_entry("ZLength", "2", Patterns::Integer(0), "Length of the system in z-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres");
+			prm.declare_entry("XLength", "10.0", Patterns::Double(0), "Length of the system in x-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres");
+			prm.declare_entry("YLength", "10.0", Patterns::Double(0), "Length of the system in y-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres");
+			prm.declare_entry("ZLength", "2.0", Patterns::Double(0), "Length of the system in z-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres");
 		prm.leave_subsection();
 
 		prm.enter_subsection("Waveguide");
@@ -45,7 +45,7 @@ void ParameterReader::declare_parameters()
 		prm.enter_subsection("Boundary Conditions");
 			prm.declare_entry("Type", "PML", Patterns::Selection("PML|HSIE"), "The way the output-connector is modeled. HSIE uses the Hardy-space infinite element for setting boundary conditions but isn't implemented yet.");
 			prm.declare_entry("XY in" , "0.2" , Patterns::Double(0), "Thickness of the PML area on the side of the input connector.");
-			prm.declare_entry("XY out" , "0.2" , Patterns::Double(0), "Thickness of the PML area on the side of the output connector.");
+			prm.declare_entry("XY out" , "1" , Patterns::Integer(1), "Amount of standard-size sectors for PML region at the output end.");
 			prm.declare_entry("Mantle" , "10" , Patterns::Double(0), "Thickness of the PML area on 4 non-connector sides, the mantle.");
 			prm.declare_entry("KappaXMax" , "10.0" , Patterns::Double(0), "PML Tuning Parameter");
 			prm.declare_entry("KappaYMax" , "10.0" , Patterns::Double(0), "PML Tuning Parameter");
@@ -92,7 +92,7 @@ void ParameterReader::declare_parameters()
 		prm.declare_entry("DoOptimization", "true", Patterns::Bool(), "If this value is set to false, no shape optimization will be attempted.");
 	prm.leave_subsection();
 
-	prm.enter_subsection("Mesh-Refinement");
+	prm.enter_subsection("MeshRefinement");
 		prm.declare_entry("Global", "1", Patterns::Integer(1), "Global refinement-steps.");
 		prm.declare_entry("SemiGlobal", "1", Patterns::Integer(1), "Semi-Global refinement-steps (close to the Waveguide-boundary and inside).");
 		prm.declare_entry("Internal", "1", Patterns::Integer(1), "Internal refinement-steps.");

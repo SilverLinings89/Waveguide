@@ -127,7 +127,7 @@ class WaveguideStructure {
 		/**
 		 * Since accessing the Parameters-file is an IO-operation and therefore needlessly slow, this constructor takes an argument of the ParameterHandler Type, which has the data preloaded from another context. It then proceeds to initialize all the constants to their value, which is derived from the ParameterHandler.
 		 */
-		WaveguideStructure (Parameters &);
+		WaveguideStructure (const Parameters &);
 
 		/**
 		 * This member encapsulates the main functionality of objects of this class: It calculates the most important structural information required in this code - the Material-Tensor. In fact, this function determines, in which sector the passed position lies and calls the appropriate function on that Sector-object.
@@ -151,13 +151,13 @@ class WaveguideStructure {
 		 * In order to be able to estimate the shape-parameters in the interior of the domain, a function for the interpolation of waveguide-centers distance to the \f$z\f$-axis is required.
 		 * \param z The \f$z\f$-coordinate for which to estimate \f$m\f$.
 		 */
-		double 	m(double z);
+		double 	estimate_m(double z);
 
 		/**
 		 * This function is used to interpolate the tilt of the Waveguide in the interior of the computational domain based on the boundary (connector) data provided in the input file. For the interpolation, a third order polynomial is used which satisfies the condition of having the derivative zero at both, the input and output connector and yielding a shape, that continuously connects the two interfaces.
 		 * \param z The \f$z\f$-coordinate for which to interpolate \f$v\f$.
 		 */
-		double 	v(double z);
+		double 	estimate_v(double z);
 
 		/**
 		 * This member calculates the value of Q1 for a provided \f$z\f$-coordinate. This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field).
@@ -184,6 +184,38 @@ class WaveguideStructure {
 		 * \param value The value, the dof should be set to.
 		 */
 		void	set_dof (int dof , double value );
+
+		/**
+		 * Using this method unifies the usage of coordinates. This function takes a global \f$z\f$ coordinate (in the computational domain) and returns both a Sector-Index and an internal \f$z\f$ coordinate indicating which sector this coordinate belongs to and how far along in the sector it is located.
+		 * \param double in_z global system \f$z\f$ coordinate for the transformation.
+		 */
+		std::pair<int, double> Z_to_Sector_and_local_z(double in_z);
+
+		/**
+		 * Returns the complete length of the computational domain.
+		 */
+		double System_Length();
+
+		/**
+		 * Returns the length of one sector
+		 */
+		double Sector_Length();
+
+		/**
+		 * Returns the radius for a system-coordinate;
+		 */
+		double get_r(double in_z);
+
+		/**
+		 * Returns the shift for a system-coordinate;
+		 */
+		double get_m(double in_z);
+
+		/**
+		 * Returns the tilt for a system-coordinate;
+		 */
+		double get_v(double in_z);
+
 
 };
 
