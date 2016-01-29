@@ -47,7 +47,7 @@
                 <pattern_description>[Selection Circle|Ellipse|Square ]</pattern_description>
             </Type_20out>
             <Radius_20in>
-                <value>2</value>
+                <value>2.5</value>
                 <default_value>2.5</default_value>
                 <documentation>Radius / Diameter for Circle / Square input connector. Ellipse not implemented.</documentation>
                 <pattern>6</pattern>
@@ -100,7 +100,7 @@
         </Region>
         <Waveguide>
             <Delta>
-                <value>0.5</value>
+                <value>0.2</value>
                 <default_value>1.0</default_value>
                 <documentation>Offset between the two connectors measured in micrometres.</documentation>
                 <pattern>13</pattern>
@@ -357,20 +357,20 @@
             <pattern>47</pattern>
             <pattern_description>[Bool]</pattern_description>
         </DoOptimization>
-	<MinimumFactor>
-	  <value>0.9</value>
-	  <default_value>0.9</default_value>
-	  <documentation>For the shifts and radii this is the lower boundary during optimization. It is relative to the smaller of the boundary values of the relevant value. I.e. if radii are 3 and 2 and this is set to 0.9 then the value will not fall below 1.8 for any sector boundary during computation.</documentation>
-	  <pattern>48</pattern>
-	  <pattern_description>[Double 0...1.0 (inclusive)]</pattern_description>
-	</MinimumFactor>
-	<MaximumFactor>
-	  <value>1.1</value>
-	  <default_value>1.1</default_value>
-	  <documentation>For the shifts and radii this is the upper boundary during optimization. It is relative to the larger of the boundary values of the relevant value. I.e. if radii are 3 and 2 and this is set to 1.1 then the value will not exceed 3.3 for any sector boundary during computation.</documentation>
-	  <pattern>49</pattern>
-	  <pattern_description>[Double 1.0...1.79769e+308 (inclusive)]</pattern_description>
-	</MaximumFactor>
+        <MinimumFactor>
+            <value>0.9</value>
+            <default_value>0.9</default_value>
+            <documentation>For the shifts and radii this is the lower boundary during optimization. It is relative to the smaller of the boundary values of the relevant value. I.e. if radii are 3 and 2 and this is set to 0.9 then the value will not fall below 1.8 for any sector boundary during computation.</documentation>
+            <pattern>48</pattern>
+            <pattern_description>[Double 0...1.0 (inclusive)]</pattern_description>
+        </MinimumFactor>
+        <MaximumFactor>
+            <value>1.1</value>
+            <default_value>1.1</default_value>
+            <documentation>For the shifts and radii this is the upper boundary during optimization. It is relative to the larger of the boundary values of the relevant value. I.e. if radii are 3 and 2 and this is set to 1.1 then the value will not exceed 3.3 for any sector boundary during computation.</documentation>
+            <pattern>49</pattern>
+            <pattern_description>[Double 1.0...1.79769e+308 (inclusive)]</pattern_description>
+        </MaximumFactor>
     </Optimization>
     <MeshRefinement>
         <Global>

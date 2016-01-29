@@ -607,7 +607,6 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 		dof_at_boundary[i] = false;
 
 	}
-	deallog << "Stage 1" << std::endl;
 	cell = dof_handler.begin_active(),
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
@@ -615,7 +614,7 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 		CellsPerSubdomain[cell->subdomain_id()] += 1;
 		for(int i = 0; i < 6; i++) {
 			cell->face(i)->get_dof_indices(dof_indices);
-			int subdom = (cell->face(i)->center(false, false)[2] - structure.z_min ) * Sectors / (structure.z_max - structure.z_min);
+			int subdom =  structure.Z_to_Sector_and_local_z(cell->face(i)->center(false, false)[2]).first;
 			if (subdom == Sectors) subdom -= 1;
 			for(int j = 0; j < fe.dofs_per_face; j++) {
 				if(dof_subdomain[dof_indices[j]] != subdom && dof_subdomain[dof_indices[j]] != -1 && subdom != -1 ) {
@@ -628,7 +627,6 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 			}
 		}
 	}
-	deallog << "Stage 2" << std::endl;
 	Block_Sizes.reserve(Sectors);
 	for(int i = 0; i < Sectors; i++ ) {
 		Block_Sizes[i] = 0;
