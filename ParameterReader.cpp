@@ -90,6 +90,8 @@ void ParameterReader::declare_parameters()
 		prm.declare_entry("InitialStepWidth", "1.0", Patterns::Double(0), "Step width for the first step.");
 		prm.declare_entry("MaxCases", "100", Patterns::Integer(1), "Number of Cases the Optimization is supposed to use.");
 		prm.declare_entry("DoOptimization", "true", Patterns::Bool(), "If this value is set to false, no shape optimization will be attempted.");
+		prm.declare_entry("MinimumFactor", "0.9", Patterns::Double(0.0, 1.0), "For the shifts and radii this is the lower boundary during optimization. It is relative to the smaller of the boundary values of the relevant value. I.e. if radii are 3 and 2 and this is set to 0.9 then the value will not fall below 1.8 for any sector boundary during computation.");
+		prm.declare_entry("MaximumFactor", "1.1", Patterns::Double(1.0), "For the shifts and radii this is the upper boundary during optimization. It is relative to the larger of the boundary values of the relevant value. I.e. if radii are 3 and 2 and this is set to 1.1 then the value will not exceed 3.3 for any sector boundary during computation.");
 	prm.leave_subsection();
 
 	prm.enter_subsection("MeshRefinement");

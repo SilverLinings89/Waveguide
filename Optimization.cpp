@@ -24,6 +24,7 @@ void Optimization<Matrix, Vector>::run() {
 	steps_counter ++;
 	waveguide.store();
 	double quality = waveguide.evaluate_overall();
+	std::vector<double> old_position(dofs);
 	if(GlobalParams.PRM_S_DoOptimization) {
 		std::cout << "Initial Passthrough-quality: " << 100*quality << "%." << std::endl;
 		std::cout << "Calculating Gradients ..." << std::endl;
@@ -47,7 +48,25 @@ void Optimization<Matrix, Vector>::run() {
 			for(int i = 0; i < dofs; i++) {
 				std::cout << "Gradient "<< i << ": ...";
 				double val = structure.get_dof(i);
-				structure.set_dof(i, val + step_width/10.0);
+				double new_val = val + step_width/10.0;
+				if(i%3 == 0){
+					if(new_val < GlobalParams.PRM_O_MinimumFactor * std::min(GlobalParams.PRM_M_C_RadiusIn, GlobalParams.PRM_M_C_RadiusOut)) {
+						new_val = GlobalParams.PRM_O_MinimumFactor * std::min(GlobalParams.PRM_M_C_RadiusIn, GlobalParams.PRM_M_C_RadiusOut);
+					}
+					if(new_val > GlobalParams.PRM_O_MaximumFactor * std::max(GlobalParams.PRM_M_C_RadiusIn, GlobalParams.PRM_M_C_RadiusOut)) {
+						new_val = GlobalParams.PRM_O_MaximumFactor *  std::max(GlobalParams.PRM_M_C_RadiusIn, GlobalParams.PRM_M_C_RadiusOut);
+					}
+				}
+				if(i%3 == 1){
+					if(new_val < - GlobalParams.PRM_O_MinimumFactor * GlobalParams.PRM_M_W_Delta/2.0) {
+						new_val = - GlobalParams.PRM_O_MinimumFactor * GlobalParams.PRM_M_W_Delta/2.0;
+					}
+					if(new_val >  GlobalParams.PRM_O_MinimumFactor * GlobalParams.PRM_M_W_Delta/2.0) {
+						new_val = - GlobalParams.PRM_O_MinimumFactor * GlobalParams.PRM_M_W_Delta/2.0;
+					}
+				}
+
+				structure.set_dof(i, new_val);
 				waveguide.rerun();
 				steps_counter ++;
 				double temp_quality = waveguide.evaluate_overall();
@@ -56,7 +75,6 @@ void Optimization<Matrix, Vector>::run() {
 				norm += gradient[i] * gradient[i];
 				structure.set_dof(i, val);
 			}
-			std::cout << "Gradient calculation done." ;
 			std::cout << "Gradient for dofs: (";
 			for(int i = 0; i < dofs; i++) {
 				std::cout << gradient[i];
@@ -68,14 +86,31 @@ void Optimization<Matrix, Vector>::run() {
 			for(int i = 0; i < dofs; i++) {
 				double step = (-1.0) * gradient[i] / norm;
 				step *= step_width;
-				double val = structure.get_dof(i);
-				std::cout << val + step ;
+				old_position[i] = structure.get_dof(i);
+				double val = structure.get_dof(i) + step;
+				if(i%3 == 0){
+					if(val < GlobalParams.PRM_O_MinimumFactor * std::min(GlobalParams.PRM_M_C_RadiusIn, GlobalParams.PRM_M_C_RadiusOut)) {
+						val = GlobalParams.PRM_O_MinimumFactor * std::min(GlobalParams.PRM_M_C_RadiusIn, GlobalParams.PRM_M_C_RadiusOut);
+					}
+					if(val > GlobalParams.PRM_O_MaximumFactor * std::max(GlobalParams.PRM_M_C_RadiusIn, GlobalParams.PRM_M_C_RadiusOut)) {
+						val = GlobalParams.PRM_O_MaximumFactor *  std::max(GlobalParams.PRM_M_C_RadiusIn, GlobalParams.PRM_M_C_RadiusOut);
+					}
+				}
+				if(i%3 == 1){
+					if(val < - GlobalParams.PRM_O_MinimumFactor * GlobalParams.PRM_M_W_Delta/2.0) {
+						val = - GlobalParams.PRM_O_MinimumFactor * GlobalParams.PRM_M_W_Delta/2.0;
+					}
+					if(val >  GlobalParams.PRM_O_MinimumFactor * GlobalParams.PRM_M_W_Delta/2.0) {
+						val = - GlobalParams.PRM_O_MinimumFactor * GlobalParams.PRM_M_W_Delta/2.0;
+					}
+				}
+				std::cout << val;
 				if( i < dofs - 1)std::cout << ",";
-				structure.set_dof(i, val + step);
+				structure.set_dof(i, val);
 			}
 			std::cout << ")" << std::endl;
 
-			std::cout << "Calculation solution after step... " ;
+			std::cout << "Calculating solution after step... " ;
 			waveguide.rerun();
 			steps_counter ++;
 			double step_quality = waveguide.evaluate_overall();
@@ -84,11 +119,7 @@ void Optimization<Matrix, Vector>::run() {
 				std::cout << "... not accepted (reduced quality). Undoing step and reducing step-width.";
 				std::cout << "New Step-width: " << step_width *0.1 << std::endl;
 				for(int i = 0; i < dofs; i++) {
-					double step = (-1.0) * gradient[i] / norm;
-					step *= step_width;
-					double val = structure.get_dof(i);
-					structure.set_dof(i, val - step);
-
+					structure.set_dof(i, old_position[i]);
 				}
 				step_width *= 0.1;
 			} else {

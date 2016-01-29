@@ -238,6 +238,16 @@ struct Parameters {
 	 */
 	int					PRM_R_Internal;
 
+	/**
+	 * For the shifts and radii this is the upper boundary during optimization. It is relative to the larger of the boundary values of the relevant value. I.e. if radii are 3 and 2 and this is set to 1.1 then the value will not exceed 3.3 for any sector boundary during computation.
+	 */
+	double 				PRM_O_MaximumFactor;
+
+	/**
+	 * For the shifts and radii this is the lower boundary during optimization. It is relative to the smaller of the boundary values of the relevant value. I.e. if radii are 3 and 2 and this is set to 0.9 then the value will not fall below 1.8 for any sector boundary during computation.
+	 */
+	double 				PRM_O_MinimumFactor;
+
 };
 
 #endif

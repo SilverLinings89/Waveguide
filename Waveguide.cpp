@@ -409,14 +409,12 @@ Tensor<1,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Conjugate_V
 
 template<typename MatrixType, typename VectorType  >
 bool Waveguide<MatrixType, VectorType>::PML_in_X(Point<3> &p) {
-	//double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
 	double pmlboundary = GlobalParams.PRM_M_R_XLength * (1- GlobalParams.PRM_M_BC_Mantle)*0.5;
 	return p(0) < -(pmlboundary) ||p(0) > (pmlboundary);
 }
 
 template<typename MatrixType, typename VectorType>
 bool Waveguide<MatrixType, VectorType>::PML_in_Y(Point<3> &p) {
-	//double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
 	double pmlboundary = GlobalParams.PRM_M_R_YLength * (1- GlobalParams.PRM_M_BC_Mantle) * 0.5;
 	return p(1) < -(pmlboundary) ||p(1) > (pmlboundary);
 }
@@ -460,7 +458,6 @@ double Waveguide<MatrixType, VectorType>::PML_X_Distance(Point<3> &p){
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::PML_Y_Distance(Point<3> &p){
-	//double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
 	double pmlboundary = GlobalParams.PRM_M_R_YLength * (1- GlobalParams.PRM_M_BC_Mantle) * 0.5;
 	if(p(1) >0){
 		return p(1) - (pmlboundary);
@@ -546,6 +543,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	GridTools::transform(& Triangulation_Shift_Z , triangulation);
 
 	triangulation_real.copy_triangulation(triangulation);
+	GridTools::transform(& Triangulation_Stretch_Real_Radius, triangulation_real);
 
 	int counter = 0;
 	cell = triangulation.begin_active();

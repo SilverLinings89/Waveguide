@@ -14,7 +14,7 @@ static Parameters GetParameters();
  * This function calculates the distance (norm of the difference) of the projection of two vectors in the \f$ xy\f$-plane. A formal description would be
  * \f[ d(\boldsymbol(x), \boldsymbol(y)) = ||\left( \boldsymbol{x} - \boldsymbol{y} \right) \cdot \begin{pmatrix}1\\1\\0\end{pmatrix}||_2 \f]
  */
-static double Distance2D (Point<3> position, Point<3> to = Point<3>());
+static inline double Distance2D (Point<3> position, Point<3> to);
 
 /**
  * For given vectors \f$\boldsymbol{a},\boldsymbol{b} \in \mathbb{R}^3\f$, this function calculates the following crossproduct:
@@ -36,9 +36,6 @@ static Point<3> Triangulation_Stretch_Y (const Point<3> &p);
 
 
 static Point<3> Triangulation_Stretch_Z (const Point<3> &p);
-
-
-static Point<3> Triangulation_Stretch_Real (const Point<3> &p);
 
 
 static bool System_Coordinate_in_Waveguide(Point<3> p);
