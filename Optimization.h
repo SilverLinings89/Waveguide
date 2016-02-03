@@ -25,6 +25,8 @@ class Optimization {
 		 * where \f$ s \f$ is the number of sectors used to model the system. If \f$ s=1 \f$ there is no optimization, since all properties of the waveguide are predetermined by the shapes boundary-conditions.
 		 */
 		const int dofs;
+
+		const int freedofs;
 		/**
 		 * Members like this one appear in many objects and are always used to store the parsed data from the input-file.
 		 */

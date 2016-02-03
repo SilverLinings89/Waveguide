@@ -76,7 +76,8 @@ using namespace dealii;
 
 
 static Parameters GlobalParams;
-static WaveguideStructure structure(GetParameters());
+static WaveguideStructure * structure = NULL ;
+static const CylindricalManifold<3, 3> round_description (2);
 
 /**
  * \class Waveguide
@@ -231,6 +232,11 @@ class Waveguide
 		 * Similar to the functio print_eigenvalues(const std::vector<std::complex<double>> &) , this function uses step-results of the GMRES-solver to make properties of the system-matrix available. In this case it is the condition number, estimated on the basis of said eigenvalues, that gets pushed to a file also.
 		 */
 		void	print_condition (double);
+
+		/**
+		 * This function occupies one slot of the Solver and will generate formatted output on the console and write the convergence history to a file.
+		 */
+		SolverControl::State check_iteration_state(const unsigned int, const double, const VectorType &);
 
 		/**
 		 * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis. Since there are 3 blocks of PML-type material, there are 3 functions.

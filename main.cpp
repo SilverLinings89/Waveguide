@@ -21,6 +21,7 @@
 #include "WaveguideStructure.cpp"
 #include "ExactSolution.cpp"
 #include "SolutionWeight.cpp"
+#include "GradientTable.cpp"
 
 using namespace dealii;
 
@@ -28,8 +29,9 @@ using namespace dealii;
 
 int main (int argc, char *argv[])
 {
-
 	GlobalParams = GetParameters();
+	structure = new WaveguideStructure(GlobalParams);
+
 	Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, GlobalParams.PRM_S_MPITasks);
 	if(GlobalParams.PRM_S_Library == "DealII" ) {
 		Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> > waveguide(GlobalParams);

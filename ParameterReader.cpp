@@ -95,9 +95,9 @@ void ParameterReader::declare_parameters()
 	prm.leave_subsection();
 
 	prm.enter_subsection("MeshRefinement");
-		prm.declare_entry("Global", "1", Patterns::Integer(1), "Global refinement-steps.");
-		prm.declare_entry("SemiGlobal", "1", Patterns::Integer(1), "Semi-Global refinement-steps (close to the Waveguide-boundary and inside).");
-		prm.declare_entry("Internal", "1", Patterns::Integer(1), "Internal refinement-steps.");
+		prm.declare_entry("Global", "1", Patterns::Integer(0), "Global refinement-steps.");
+		prm.declare_entry("SemiGlobal", "1", Patterns::Integer(0), "Semi-Global refinement-steps (close to the Waveguide-boundary and inside).");
+		prm.declare_entry("Internal", "1", Patterns::Integer(0), "Internal refinement-steps.");
 	prm.leave_subsection();
 
 

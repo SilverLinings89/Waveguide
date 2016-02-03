@@ -61,21 +61,6 @@ class WaveguideStructure {
 		const int sectors;
 
 		/**
-		 * All sectors in this version of the program have equal length in the \f$ z\f$-direction (in both the real and transformed coordinate system). This member stores the length of either of them.
-		 */
-		const double sector_z_length;
-
-		/**
-		 * To achieve maximal flexibility concerning the choice of coordinate systems, these parameters were introduced to make an arbitrary starting-point for the lower end of the computational domain possible.
-		 */
-		const double z_min;
-
-		/**
-		 * Similar to z_min, this variable stores the \f$z\f$-coordinate of the endpoint in that direction.
-		 */
-		const double z_max;
-
-		/**
 		 * This value is initialized with the value Delta from the input-file.
 		 */
 		const double deltaY;
@@ -176,14 +161,14 @@ class WaveguideStructure {
 		 * \param dof The index of the degree of freedom to be retrieved from the structure of the modelled waveguide.
 		 * \return This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd.
 		 */
-		double 	get_dof (int dof);
+		double 	get_dof (int dof, bool free);
 
 		/**
 		 * This function sets the value of the dof provided to the given value. It is important to consider, that some dofs are non-writable (i.e. the values of the degrees of freedom on the boundary, like the radius of the input-connector cannot be changed).
 		 * \param dof The index of the parameter to be changed.
 		 * \param value The value, the dof should be set to.
 		 */
-		void	set_dof (int dof , double value );
+		void	set_dof (int dof , double value, bool free );
 
 		/**
 		 * Using this method unifies the usage of coordinates. This function takes a global \f$z\f$ coordinate (in the computational domain) and returns both a Sector-Index and an internal \f$z\f$ coordinate indicating which sector this coordinate belongs to and how far along in the sector it is located.
@@ -216,7 +201,28 @@ class WaveguideStructure {
 		 */
 		double get_v(double in_z);
 
+		/**
+		 * This Method writes a comprehensive description of the current structure to the console.
+		 */
+		void WriteConfigurationToConsole();
 
+		/**
+		 * This vector of values saves the initial configuration
+		 */
+		Vector<double> InitialDofs;
+
+		/**
+		 * This vector of values saves the initial configuration
+		 */
+		double InitialQuality;
+
+		Vector<double> Dofs();
+
+		unsigned int NFreeDofs();
+
+		unsigned int NDofs();
+
+		bool IsDofFree(int );
 };
 
 #endif

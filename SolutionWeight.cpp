@@ -24,5 +24,5 @@ void SolutionWeight<dim>::vector_value (const Point<dim> &p,	Vector<double> &val
 
 template <int dim>
 SolutionWeight<dim>::SolutionWeight(): Function<dim>(6) {
-	prm = GetParameters();
+
 }

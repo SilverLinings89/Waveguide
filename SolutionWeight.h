@@ -43,8 +43,6 @@ class SolutionWeight : public Function<dim, double>
 		 */
 		virtual void vector_value (const Point<dim> &p,	Vector<double> &value) const;
 
-	private:
-		Parameters prm;
 
 };
 

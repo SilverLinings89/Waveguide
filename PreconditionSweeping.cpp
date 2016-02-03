@@ -67,6 +67,7 @@ template <>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::initialize( dealii::BlockSparseMatrix<double> * System_Matrix, dealii::BlockSparseMatrix<double> &Preconditioner_Matrix1, dealii::BlockSparseMatrix<double> &Preconditioner_Matrix2)
 {
 	SystemMatrix = System_Matrix;
+	inverse_blocks.clear();
 	for(unsigned int block = 0; block <System_Matrix->n_block_cols(); block++ ) {
 		SparseDirectUMFPACK solver;
 		inverse_blocks.push_back(solver);

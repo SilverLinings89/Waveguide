@@ -158,11 +158,18 @@ inline double InterpolationPolynomial(double in_z, double in_val_zero, double in
 	return (2*(in_val_zero - in_val_one) + in_derivative_zero + in_derivative_one) * pow(in_z,3) + (3*(in_val_one - in_val_zero) - (2*in_derivative_zero) - in_derivative_one)*pow(in_z,2) + in_derivative_zero*in_z + in_val_zero;
 }
 
+inline double InterpolationPolynomialDerivative(double in_z, double in_val_zero, double in_val_one, double in_derivative_zero, double in_derivative_one) {
+	if (in_z < 0.0) return in_derivative_zero;
+	if (in_z > 1.0) return in_derivative_one;
+	return 3* (2*(in_val_zero - in_val_one) + in_derivative_zero + in_derivative_one) * pow(in_z,2) + 2*(3*(in_val_one - in_val_zero) - (2*in_derivative_zero) - in_derivative_one)*in_z + in_derivative_zero;
+}
+
+
 inline double InterpolationPolynomialZeroDerivative(double in_z , double in_val_zero, double in_val_one) {
 	return InterpolationPolynomial(in_z, in_val_zero, in_val_one, 0.0, 0.0);
 }
 
-static inline double Distance2D (Point<3> position, Point<3> to = Point<3>()) {
+static double Distance2D (Point<3, double> position, Point<3, double> to = Point<3, double>()) {
 		return sqrt((position(0)-to(0))*(position(0)-to(0)) + (position(1)-to(1))*(position(1)-to(1)));
 }
 
@@ -238,7 +245,7 @@ static Point<3> Triangulation_Stretch_Y (const Point<3> &p)
 static Point<3> Triangulation_Stretch_Z (const Point<3> &p)
 {
   Point<3> q = p;
-  double total_length = structure.System_Length();
+  double total_length = structure->System_Length();
   q[2] *= total_length / 2.0;
   return q;
 }
@@ -246,15 +253,15 @@ static Point<3> Triangulation_Stretch_Z (const Point<3> &p)
 static Point<3> Triangulation_Shift_Z (const Point<3> &p)
 {
   Point<3> q = p;
-  double sector_length = structure.Sector_Length();
+  double sector_length = structure->Sector_Length();
   q[2] += (sector_length/2.0) * GlobalParams.PRM_M_BC_XYout;
   return q;
 }
 
 static Point<3> Triangulation_Stretch_Real_Radius (const Point<3> &p)
 {
-	double r_goal = structure.get_r(structure.Z_to_Sector_and_local_z(p[2]).second);
-	double shift = structure.get_m(structure.Z_to_Sector_and_local_z(p[2]).second);
+	double r_goal = structure->get_r(structure->Z_to_Sector_and_local_z(p[2]).second);
+	double shift = structure->get_m(structure->Z_to_Sector_and_local_z(p[2]).second);
 	double r_current = (GlobalParams.PRM_M_R_XLength / 2.0 ) / 7.12644;
 	double r_max = (GlobalParams.PRM_M_R_XLength / 2.0 ) * (1.0 - GlobalParams.PRM_M_BC_Mantle);
 	double r_point = sqrt(p[0]*p[0] + p[1]*p[1]);

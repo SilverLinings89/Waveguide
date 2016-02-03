@@ -15,7 +15,7 @@ using namespace dealii;
 template<typename MatrixType, typename VectorType >
 Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
   :
-  fe (FE_Nedelec<3> (0), 2),
+  fe(FE_Nedelec<3> (0), 2),
   dof_handler (triangulation),
   dof_handler_real(triangulation_real),
   prm(param),
@@ -33,7 +33,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
   temporary_pattern_preped(false),
   real(0),
   imag(3),
-  solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true),
+  solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, false, true),
   Sweeping_Additional_Data(1.0, 1),
   sweep(Sweeping_Additional_Data)
 {
@@ -72,8 +72,8 @@ double Waveguide<MatrixType, VectorType>::evaluate_out () {
 			Point<3, double> position(x, y, z);
 			Vector<double> result(6);
 			VectorTools::point_value(dof_handler, solution, position, result);
-			double Q1 = structure.getQ1(position[2] );
-			double Q2 = structure.getQ2(position[2] );
+			double Q1 = structure->getQ1(position[2] );
+			double Q2 = structure->getQ2(position[2] );
 			real +=  (result[0] / Q1) * ( TEMode00( position , 0) / Q1);
 			imag += (result[1] / Q2) * ( TEMode00( position , 1) / Q2);
 			real += (result[3] / Q1) * ( TEMode00( position , 0) / Q1);
@@ -95,8 +95,8 @@ double Waveguide<MatrixType, VectorType>::evaluate_in () {
 			Point<3, double> position(x, y, z);
 			Vector<double> result(6);
 			VectorTools::point_value(dof_handler, solution, position, result);
-			double Q1 = structure.getQ1(position[2] );
-			double Q2 = structure.getQ2(position[2] );
+			double Q1 = structure->getQ1(position[2] );
+			double Q2 = structure->getQ2(position[2] );
 			real +=  (result[0] / Q1) * ( TEMode00( position , 0) / Q1);
 			imag += (result[1] / Q2) * ( TEMode00( position , 1) / Q2);
 			real += (result[3] / Q1) * ( TEMode00( position , 0) / Q1);
@@ -129,8 +129,8 @@ double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 	result_file << "Delta:" << GlobalParams.PRM_M_W_Delta << std::endl;
 	result_file << "Solver: " << GlobalParams.PRM_S_Solver << std::endl;
 	result_file << "Preconditioner: " << GlobalParams.PRM_S_Preconditioner << std::endl;
-	result_file << "Minimal Stretch: " << structure.lowest << std::endl;
-	result_file << "Maximal Stretch: " << structure.highest << std::endl;
+	result_file << "Minimal Stretch: " << structure->lowest << std::endl;
+	result_file << "Maximal Stretch: " << structure->highest << std::endl;
 	result_file.close();
 
 	return quality_out/quality_in;
@@ -231,7 +231,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 	} else {
 
 		Tensor<2,3, std::complex<double>> ret2;
-		Tensor<2,3, double> transformation = structure.TransformationTensor(position[0], position[1], position[2]);
+		Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
 		double dist = position[0] * position[0] + position[1]*position[1];
 		dist = std::sqrt(dist);
 		double maxdist = GlobalParams.PRM_M_R_XLength/2.0 - GlobalParams.PRM_M_BC_Mantle * GlobalParams.PRM_M_R_XLength;
@@ -329,7 +329,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 			ret *= GlobalParams.PRM_C_Mu0;
 		}
 	}
-	Tensor<2,3, double> transformation = structure.TransformationTensor(position[0], position[1], position[2]);
+	Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
 	Tensor<2,3, std::complex<double>> ret2;
 
 	for(int i = 0; i < 3; i++) {
@@ -345,7 +345,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 	return ret2;
 
 	/**
-	Tensor<2,3, double> transformation = structure.TransformationTensor(position[0], position[1], position[2]);
+	Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
 
 	Tensor<2,3, std::complex<double>>( 1.0, ret;
 	for(int l = 0; l<3; l++) {
@@ -426,7 +426,7 @@ bool Waveguide<MatrixType, VectorType>::PML_in_Z(Point<3> &p) {
 
 template<typename MatrixType, typename VectorType>
 bool Waveguide<MatrixType, VectorType>::Preconditioner_PML_in_Z(Point<3> &p, unsigned int block) {
-	double l = structure.Sector_Length();
+	double l = structure->Sector_Length();
 	double width = l * 0.1;
 	bool up =    (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0   ) - (block+1) * l + width) > 0;
 	bool down = -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0   ) - (block-1) * l - width) > 0;
@@ -436,7 +436,7 @@ bool Waveguide<MatrixType, VectorType>::Preconditioner_PML_in_Z(Point<3> &p, uns
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ){
-	double l = structure.Sector_Length();
+	double l = structure->Sector_Length();
 	double width = l * 0.1;
 	if( ( p(2) +GlobalParams.PRM_M_R_ZLength/2.0 )-  block * l < 0){
 		return -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - (block-1) * l - width);
@@ -478,7 +478,6 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	const double outer_radius = 1.0;
 	GridGenerator::subdivided_hyper_cube (triangulation, 5, -outer_radius, outer_radius);
 
-	static const CylindricalManifold<3, 3> round_description(2);
 	unsigned int temp = 1;
 	triangulation.set_manifold (temp, round_description);
 	Triangulation<3>::active_cell_iterator
@@ -513,7 +512,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 
 
 		triangulation.refine_global (GlobalParams.PRM_R_Global);
-		double MaxDistFromBoundary = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusIn)*1.4/2.0;
+		double MaxDistFromBoundary = (GlobalParams.PRM_M_C_RadiusOut + GlobalParams.PRM_M_C_RadiusIn)*1.4/2.0;
 
 
 		for(int i = 0; i < GlobalParams.PRM_R_Semi; i++) {
@@ -573,7 +572,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	cell = triangulation.begin_active();
 	for (; cell!=endc; ++cell){
 
-		int temp  = structure.Z_to_Sector_and_local_z((cell->center(true, false))[2]).first;
+		int temp  = structure->Z_to_Sector_and_local_z((cell->center(true, false))[2]).first;
 		if( temp >=  Sectors || temp < 0) deallog << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
 		cell->set_subdomain_id(temp);
 	}
@@ -614,7 +613,7 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 		CellsPerSubdomain[cell->subdomain_id()] += 1;
 		for(int i = 0; i < 6; i++) {
 			cell->face(i)->get_dof_indices(dof_indices);
-			int subdom =  structure.Z_to_Sector_and_local_z(cell->face(i)->center(false, false)[2]).first;
+			int subdom =  structure->Z_to_Sector_and_local_z(cell->face(i)->center(false, false)[2]).first;
 			if (subdom == Sectors) subdom -= 1;
 			for(int j = 0; j < fe.dofs_per_face; j++) {
 				if(dof_subdomain[dof_indices[j]] != subdom && dof_subdomain[dof_indices[j]] != -1 && subdom != -1 ) {
@@ -631,7 +630,7 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 	for(int i = 0; i < Sectors; i++ ) {
 		Block_Sizes[i] = 0;
 	}
-	deallog << "Stage 3" << std::endl;
+
 	for(int i = 0; i < NumberOfDofs; i++) {
 		if(dof_subdomain[i] >= 0 && dof_subdomain[i] <= Sectors){
 			Block_Sizes[dof_subdomain[i]] ++;
@@ -639,29 +638,27 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 			deallog << "A critical error was detected while reordering dofs. Falty implementation." << std::endl;
 		}
 	}
-	deallog << "Stage 4" << std::endl;
 
 	Dofs_Below_Subdomain.reserve(Sectors);
 	Dofs_Below_Subdomain[0] = 0;
 	for(int i = 1; i  < Sectors; i++) {
 		Dofs_Below_Subdomain[i] = Dofs_Below_Subdomain[i-1] + Block_Sizes[i-1];
 	}
-	deallog << "Stage 5" << std::endl;
+
 	unsigned int dofcountertest = 0;
 	for (int i =0; i < Sectors; i++) {
 		dofcountertest += Block_Sizes[i];
 	}
-	deallog << "Stage 6" << std::endl;
+
 	if(dofcountertest != NumberOfDofs) {
 		deallog << "There are " << dof_handler.n_dofs() << " but " << dofcountertest << " were summed up!"<<std::endl;
 	}
-	deallog << "Stage 7" << std::endl;
 
 	std::vector<types::global_dof_index> New_Dofs;
 	for(int i =0; i < NumberOfDofs; i++) {
 		New_Dofs.push_back(i);
 	}
-	deallog << "Stage 8" << std::endl;
+
 	for(int i = 0; i < NumberOfDofs; i++) {
 		if(i < Dofs_Below_Subdomain[dof_subdomain[i]]) {
 			bool foundmatch = false;
@@ -675,7 +672,7 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 			if(!foundmatch) deallog << "Found no match for dof " << i << " which should at least be at position " << Dofs_Below_Subdomain[dof_subdomain[i]] <<"." <<std::endl;
 		}
 	}
-	deallog << "Stage 9" << std::endl;
+
 	for(int i = 0; i < NumberOfDofs; i++) {
 		if(New_Dofs[i] < Dofs_Below_Subdomain[dof_subdomain[i]]) {
 			deallog << "The ordering is incomplete!" << std::endl;
@@ -686,28 +683,20 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 	dof_handler.renumber_dofs(New_Dofs);
 	dof_handler_real.renumber_dofs(New_Dofs);
 
-	deallog << "Block indices: " << std::endl;
 
-	for(int i = 1 ; i < Sectors; i++) {
-		deallog <<"Dofs below Block "<< i+1<<":"<<  Dofs_Below_Subdomain[i] << std::endl;
-	}
-	deallog << "1" <<std::endl;
-
-	deallog << "2" <<std::endl;
 	for(int i = 0; i < Sectors; i++) {
 		IndexSet temp (dof_handler.n_dofs());
 		temp.clear();
 		deallog << "Adding Block "<< i +1 << " from " << Dofs_Below_Subdomain[i] << " to " << Dofs_Below_Subdomain[i]+Block_Sizes[i] -1<<std::endl;
 		temp.add_range(Dofs_Below_Subdomain[i],Dofs_Below_Subdomain[i]+Block_Sizes[i] -1);
-		deallog << i+3 <<std::endl;
 		set.push_back(temp);
 	}
-	deallog << "Storing details in WaveguideStructure.case_sectors..." <<std::endl;
+	deallog << "Storing details in Waveguidestructure->case_sectors..." <<std::endl;
 	for(int i=0; i  < Sectors; i++) {
-		structure.case_sectors[i].setLowestDof( Dofs_Below_Subdomain[i] );
-		structure.case_sectors[i].setNActiveCells( CellsPerSubdomain[i] );
-		structure.case_sectors[i].setNDofs( Block_Sizes[i] );
-		structure.case_sectors[i].setNInternalBoundaryDofs(InternalBoundaryDofs[i]);
+		structure->case_sectors[i].setLowestDof( Dofs_Below_Subdomain[i] );
+		structure->case_sectors[i].setNActiveCells( CellsPerSubdomain[i] );
+		structure->case_sectors[i].setNDofs( Block_Sizes[i] );
+		structure->case_sectors[i].setNInternalBoundaryDofs(InternalBoundaryDofs[i]);
 	}
 
 }
@@ -1034,7 +1023,6 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 
 	log_assemble.start();
 	if(!is_stored) deallog << "Starting Assemblation process" << std::endl;
-	deallog << "Sectors: " << Sectors << std::endl;
 
 	Threads::TaskGroup<void> task_group1;
 	int upperbound = ((Sectors % 2) == 0)? Sectors/2 : Sectors/2 + 1;
@@ -1056,6 +1044,7 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
 	DoFHandler<3>::active_cell_iterator cell, endc;
+	double sector_length = structure->Sector_Length();
 
 	cell = dof_handler.begin_active(),
 	endc = dof_handler.end();
@@ -1066,7 +1055,7 @@ void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
 			if( center[0] < 0) center[0] *= (-1.0);
 			if( center[1] < 0) center[1] *= (-1.0);
 
-			if ( std::abs( center[0] - (15.5 * (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) /8.7 ) ) < 0.01 ){
+			if ( std::abs( center[0] - GlobalParams.PRM_M_R_XLength/2.0) < 0.0001 ){
 				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
 				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1076,7 +1065,7 @@ void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
 					cm.set_inhomogeneity(local_dof_indices[1], 0.0);
 				}
 			}
-			if ( std::abs( center[1] - (15.5 * (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) /8.7 ) ) < 0.01 ){
+			if ( std::abs( center[1] - GlobalParams.PRM_M_R_YLength/2.0) < 0.0001 ){
 				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
 				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1086,7 +1075,7 @@ void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
 					cm.set_inhomogeneity(local_dof_indices[1], 0.0);
 				}
 			}
-			if( std::abs(center[2] + GlobalParams.PRM_M_R_ZLength/2.0  + GlobalParams.PRM_M_BC_XYin) < 0.01 ){
+			if( std::abs(center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) < 0.0001 ){
 				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
 				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 					if((cell->face(i))->line(j)->at_boundary()) {
@@ -1106,7 +1095,7 @@ void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
 					}
 				}
 			}
-			if( std::abs(center[2] - GlobalParams.PRM_M_R_ZLength/2.0  - GlobalParams.PRM_M_BC_XYout) < 0.01 ){
+			if( std::abs(center[2] - GlobalParams.PRM_M_R_ZLength/2.0  - GlobalParams.PRM_M_BC_XYout *sector_length) < 0.0001 ){
 				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
 				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1126,6 +1115,8 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions ( )
 	cm_pre1.clear();
 	cm_pre2.clear();
 
+	double sector_length = structure->Sector_Length();
+
 	cell = dof_handler.begin_active();
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
@@ -1136,7 +1127,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions ( )
 			if( center[1] < 0) center[1] *= (-1.0);
 
 			// Set x-boundary values
-			if ( std::abs( center[0] - (15.5 * (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) /8.7 ) ) < 0.01 ){
+			if ( std::abs( center[0] - GlobalParams.PRM_M_R_XLength/2.0) < 0.0001){
 				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
 				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1150,7 +1141,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions ( )
 			}
 
 			// Set y-boundary values
-			if ( std::abs( center[1] - (15.5 * (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) /8.7 ) ) < 0.01 ){
+			if ( std::abs( center[1] - GlobalParams.PRM_M_R_YLength/2.0) < 0.0001 ){
 				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
 				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1164,7 +1155,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions ( )
 			}
 
 			//lower boundary both
-			if( std::abs(center[2] + GlobalParams.PRM_M_R_ZLength/2.0  + GlobalParams.PRM_M_BC_XYin) < 0.01 ){
+			if( std::abs(center[2] + GlobalParams.PRM_M_R_ZLength/2.0  ) < 0.0001 ){
 				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
 				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 					if((cell->face(i))->line(j)->at_boundary()) {
@@ -1191,7 +1182,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions ( )
 			}
 
 			//upper boundary both
-			if( std::abs(center[2] - GlobalParams.PRM_M_R_ZLength/2.0  - GlobalParams.PRM_M_BC_XYout) < 0.01 ){
+			if( std::abs(center[2] - GlobalParams.PRM_M_R_ZLength/2.0  - GlobalParams.PRM_M_BC_XYout * sector_length) < 0.0001 ){
 				std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
 				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1207,7 +1198,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions ( )
 
 			// in between
 			for(int l = 1; l <GlobalParams.PRM_M_W_Sectors; l++) {
-				if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0  + GlobalParams.PRM_M_BC_XYin) - l*(GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout)/GlobalParams.PRM_M_W_Sectors ) < 0.01 ){
+				if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - l*sector_length ) < 0.0001 ){
 					std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
 					for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 						((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1242,44 +1233,21 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
-	if(prm.PRM_S_Solver == "MINRES") {
-		condition_file.open((solutionpath + "/condition_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << condition_file_counter) )->str() + ".dat").c_str());
-		eigenvalue_file.open((solutionpath + "/eigenvalues_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << eigenvalue_file_counter) )->str() + ".dat").c_str());
-		SolverMinRes<BlockVector<double> > solver (solver_control, SolverMinRes<BlockVector<double> >::AdditionalData());
-
-		if(prm.PRM_S_Preconditioner == "Identity") {
-			timerupdate();
-				solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
-
-		}
-
-		if(prm.PRM_S_Preconditioner == "Sweeping"){
-			if(!is_stored) sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
-			timerupdate();
-			if(is_stored) {
-				for (unsigned int i=0; i<solution.size(); ++i)  solution(i) = storage(i);
-
-			}
-
-			solver.solve (system_matrix, solution, system_rhs, sweep);
-		}
-
-	}
-
 	if(prm.PRM_S_Solver == "GMRES") {
 		condition_file.open((solutionpath + "/condition_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << condition_file_counter) )->str() + ".dat").c_str());
 		eigenvalue_file.open((solutionpath + "/eigenvalues_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << eigenvalue_file_counter) )->str() + ".dat").c_str());
 		SolverGMRES<BlockVector<double> > solver (solver_control, SolverGMRES<BlockVector<double> >::AdditionalData(prm.PRM_S_GMRESSteps, true));
 		solver.connect_condition_number_slot(std_cxx11::bind(&Waveguide<dealii::BlockSparseMatrix<double> , dealii::BlockVector<double> >::print_condition, this, std_cxx11::_1), true);
 		solver.connect_eigenvalues_slot(std_cxx11::bind(&Waveguide<dealii::BlockSparseMatrix<double> , dealii::BlockVector<double> >::print_eigenvalues, this, std_cxx11::_1), true);
-
+		solver.connect(std_cxx11::bind(&Waveguide<dealii::BlockSparseMatrix<double> , dealii::BlockVector<double> >::check_iteration_state, this, std_cxx11::_1, std_cxx11::_2, std_cxx11::_3));
 		if(prm.PRM_S_Preconditioner == "Identity") {
 			timerupdate();
 			solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
 
 		}
 		if(prm.PRM_S_Preconditioner == "Sweeping"){
-			if(!is_stored)	sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
+			// if(!is_stored)	sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
+			sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
 			timerupdate();
 			if(is_stored) {
 				solution = storage;
@@ -1301,6 +1269,23 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 	temp_storage = solution;
 
 	cm.distribute(solution);
+}
+
+template<typename MatrixType, typename VectorType >
+SolverControl::State  Waveguide<MatrixType, VectorType>::check_iteration_state (const unsigned int iteration, const double check_value, const VectorType & ){
+	SolverControl::State ret = SolverControl::State::iterate;
+	if(iteration > GlobalParams.PRM_S_Steps){
+		std::cout << std::endl;
+		return SolverControl::State::failure;
+	}
+	if(check_value < GlobalParams.PRM_S_Precision){
+		std::cout << std::endl;
+		return SolverControl::State::success;
+	}
+	std::cout << '\r';
+	std::cout << "Iteration: " << iteration << "\t Precision: " << check_value;
+	std::cout.flush();
+	return ret;
 }
 
 template<>
