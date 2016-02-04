@@ -26,7 +26,6 @@ PreconditionSweeping<MatrixType, VectorType>::PreconditionSweeping( Precondition
 	Sectors = GlobalParams.PRM_M_W_Sectors;
 }
 
-
 template<typename MatrixType, typename VectorType  >
 PreconditionSweeping<MatrixType, VectorType>::AdditionalData::AdditionalData (  double in_alpha, unsigned int in_nonzero):
 alpha(in_alpha),
@@ -40,7 +39,6 @@ void PreconditionSweeping<MatrixType, VectorType>::AdditionalData::SetNonZero(un
 	nonzero = in_nonzero;
 
 }
-
 
 template<>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::Hinv(unsigned int block, dealii::BlockVector<double> &out_vec, dealii::BlockVector<double> &in_vec ) const {
@@ -61,7 +59,6 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 
 	inverse_blocks[block].vmult(out_vec, temp);
 }
-
 
 template <>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::initialize( dealii::BlockSparseMatrix<double> * System_Matrix, dealii::BlockSparseMatrix<double> &Preconditioner_Matrix1, dealii::BlockSparseMatrix<double> &Preconditioner_Matrix2)
@@ -241,7 +238,6 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 	deallog << "All preconditioner-blocks have been constructed." << std::endl;
 }
 
-
 template<>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::vmult (  dealii::BlockVector<double> &  out_vec , dealii::BlockVector<double> & in_vec ) const {
 	// deallog << "Starting VMULT" << std::endl;
@@ -274,7 +270,6 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 		// deallog << "Block " << i+1 << " done." << std::endl;
 	}
 }
-
 
 /**
 template<>
@@ -339,7 +334,6 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 
 
 **/
-
 
 template<>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::Tvmult (  dealii::BlockVector<double> &  out_vec ,dealii::BlockVector<double> & in_vec ) const {

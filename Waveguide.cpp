@@ -1232,7 +1232,7 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
-
+	iteration_file.open((solutionpath + "/iteration_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 	if(prm.PRM_S_Solver == "GMRES") {
 		condition_file.open((solutionpath + "/condition_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << condition_file_counter) )->str() + ".dat").c_str());
 		eigenvalue_file.open((solutionpath + "/eigenvalues_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << eigenvalue_file_counter) )->str() + ".dat").c_str());
@@ -1267,7 +1267,9 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 	log_solver.stop();
 
 	temp_storage = solution;
-
+	condition_file.close();
+	eigenvalue_file.close();
+	iteration_file.close();
 	cm.distribute(solution);
 }
 
@@ -1275,16 +1277,19 @@ template<typename MatrixType, typename VectorType >
 SolverControl::State  Waveguide<MatrixType, VectorType>::check_iteration_state (const unsigned int iteration, const double check_value, const VectorType & ){
 	SolverControl::State ret = SolverControl::State::iterate;
 	if(iteration > GlobalParams.PRM_S_Steps){
-		std::cout << std::endl;
+		// std::cout << std::endl;
 		return SolverControl::State::failure;
 	}
 	if(check_value < GlobalParams.PRM_S_Precision){
-		std::cout << std::endl;
+		// std::cout << std::endl;
 		return SolverControl::State::success;
 	}
 	std::cout << '\r';
 	std::cout << "Iteration: " << iteration << "\t Precision: " << check_value;
 	std::cout.flush();
+
+	iteration_file << iteration << "\t" << check_value << "    " << std::endl;
+	iteration_file.flush();
 	return ret;
 }
 

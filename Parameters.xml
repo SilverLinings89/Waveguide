@@ -374,7 +374,7 @@
     </Optimization>
     <MeshRefinement>
         <Global>
-            <value>0</value>
+            <value>1</value>
             <default_value>1</default_value>
             <documentation>Global refinement-steps.</documentation>
             <pattern>50</pattern>

@@ -157,6 +157,7 @@ void WaveguideStructure::set_dof (int i, double val, bool free) {
 	int temp = i % 3;
 	int sec = i / 3 ;
 	if(free) {
+
 		if(temp == 0) {
 			case_sectors[sec  ].m_1	= val;
 			case_sectors[sec+1].m_0	= val;
@@ -169,40 +170,42 @@ void WaveguideStructure::set_dof (int i, double val, bool free) {
 			case_sectors[sec  ].v_1	= val;
 			case_sectors[sec+1].v_0	= val;
 		}
-	}
-	if (i < 3) {
-		if(temp == 0) {
-			case_sectors[0].m_0	= val;
-		}
-		if(temp == 1) {
-			case_sectors[0].r_0	= val;
-		}
-		if(temp == 2) {
-			case_sectors[0].v_0	= val;
-		}
+
 	} else {
-		if(i >= 3*GlobalParams.PRM_M_W_Sectors) {
+		if (i < 3) {
 			if(temp == 0) {
-				case_sectors[case_sectors.size() -1 ].m_1	= val;
+				case_sectors[0].m_0	= val;
 			}
 			if(temp == 1) {
-				case_sectors[case_sectors.size() -1 ].r_1	= val;
+				case_sectors[0].r_0	= val;
 			}
 			if(temp == 2) {
-				case_sectors[case_sectors.size() -1 ].v_1	= val;
+				case_sectors[0].v_0	= val;
 			}
 		} else {
-			if(temp == 0) {
-				case_sectors[sec-1].m_1	= val;
-				case_sectors[sec].m_0	= val;
-			}
-			if(temp == 1) {
-				case_sectors[sec-1].r_1	= val;
-				case_sectors[sec].r_0	= val;
-			}
-			if(temp == 2) {
-				case_sectors[sec-1].v_1	= val;
-				case_sectors[sec].v_0	= val;
+			if(i >= 3*GlobalParams.PRM_M_W_Sectors) {
+				if(temp == 0) {
+					case_sectors[case_sectors.size() -1 ].m_1	= val;
+				}
+				if(temp == 1) {
+					case_sectors[case_sectors.size() -1 ].r_1	= val;
+				}
+				if(temp == 2) {
+					case_sectors[case_sectors.size() -1 ].v_1	= val;
+				}
+			} else {
+				if(temp == 0) {
+					case_sectors[sec-1].m_1	= val;
+					case_sectors[sec].m_0	= val;
+				}
+				if(temp == 1) {
+					case_sectors[sec-1].r_1	= val;
+					case_sectors[sec].r_0	= val;
+				}
+				if(temp == 2) {
+					case_sectors[sec-1].v_1	= val;
+					case_sectors[sec].v_0	= val;
+				}
 			}
 		}
 	}

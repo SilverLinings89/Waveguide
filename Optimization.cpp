@@ -34,23 +34,12 @@ void Optimization<Matrix, Vector>::run() {
 		while (steps_counter < System_Parameters.PRM_Op_MaxCases && step_width > 0.00001)
 		{
 			GradientTable mytable(steps_counter,structure->InitialDofs, initial_quality, structure->Dofs () , quality );
-			std::cout << "Current configuration: ";
-			std::cout << "Waveguide Center: ";
-			for(int i = 0;  i<dofs; i +=3) {
-				std::cout << " m_" << i/3 << ": " << structure->get_dof(i, false);
-			}
-			std::cout << "; Radius: ";
-			for(int i = 1;  i<dofs; i +=3) {
-				std::cout << " r_" << i/3 << ": " << structure->get_dof(i, false);
-			}
-			std::cout << "; Waveguide Angle: ";
-			for(int i = 2; i<dofs; i +=3) {
-				std::cout << " v_" << i/3 << ": " << structure->get_dof(i, false);
-			}
+			std::cout << "Current configuration: " << std::endl;
+			structure->Print();
 			double norm = 0.0;
 			std::cout << std::endl;
 			for(int i = 0; i < freedofs; i++) {
-				std::cout << "Gradient "<< i << ": ...";
+				std::cout << "Gradient "<< i << ": ..." << std::endl;
 				double val = structure->get_dof(i, true);
 				double new_val = val + step_width/10.0;
 				if(i%3 == 0){
@@ -74,7 +63,7 @@ void Optimization<Matrix, Vector>::run() {
 				waveguide.rerun();
 				steps_counter ++;
 				double temp_quality = waveguide.evaluate_overall();
-				std::cout << "Quality after adjusting position (calculating gradient): " << temp_quality << std::endl;
+				std::cout << "Quality after adjusting position (calculating gradient): " << temp_quality *100 << "% "<< std::endl;
 				gradient[i] = quality - temp_quality;
 				norm += gradient[i] * gradient[i];
 				structure->set_dof(i, val, true);
@@ -142,19 +131,8 @@ void Optimization<Matrix, Vector>::run() {
 			mytable.PrintTable();
 		}
 
-		std::cout << "The best configuration was achieved in step number "<< best<<". The configuration is: ";
-		std::cout << "Radius: ";
-		for(int i = 0;  i<dofs; i +=3) {
-			std::cout << " m_" <<1+ i/3 << ": " << structure->get_dof(i, false);
-		}
-		std::cout << "; \t Waveguide Center: ";
-		for(int i = 1;  i<dofs; i +=3) {
-			std::cout << " r_" << 1+ i/3 << ": " << structure->get_dof(i, false);
-		}
-		std::cout << "; Waveguide Angle: ";
-		for(int i = 2; i<dofs; i +=3) {
-			std::cout << " v_" <<1+ i/3 << ": " << structure->get_dof(i, false);
-		}
+		std::cout << "The best configuration was achieved in step number "<< best<<". The configuration is: " << std::endl;
+		structure->Print();
 	} else {
 		std::cout << "Only one single calculation was done. The result has been saved. If you wish to optimize the shape, set the according parameter in the input-file." << std::endl;
 	}

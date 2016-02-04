@@ -376,7 +376,7 @@ class Waveguide
 		FileLogger 								log_constraints, log_assemble, log_precondition, log_total, log_solver;
 		int 									run_number;
 		int										condition_file_counter, eigenvalue_file_counter;
-		std::ofstream							eigenvalue_file, condition_file, result_file;
+		std::ofstream							eigenvalue_file, condition_file, result_file, iteration_file;
 		std::vector<int>						Dofs_Below_Subdomain, Block_Sizes;
 		const int 								Sectors;
 		std::vector<dealii::IndexSet> 			set;
