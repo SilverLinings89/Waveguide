@@ -223,6 +223,8 @@ class WaveguideStructure {
 		unsigned int NDofs();
 
 		bool IsDofFree(int );
+
+		void Print();
 };
 
 #endif

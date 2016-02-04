@@ -337,7 +337,7 @@
     </Constants>
     <Optimization>
         <InitialStepWidth>
-            <value>0.01</value>
+            <value>0.1</value>
             <default_value>1.0</default_value>
             <documentation>Step width for the first step.</documentation>
             <pattern>45</pattern>

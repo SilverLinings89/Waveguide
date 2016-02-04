@@ -27,7 +27,7 @@ void Optimization<Matrix, Vector>::run() {
 	waveguide.store();
 	double quality = waveguide.evaluate_overall();
 	const double initial_quality = quality;
-	std::vector<double> old_position(dofs);
+	std::vector<double> old_position(freedofs);
 	if(GlobalParams.PRM_S_DoOptimization) {
 		std::cout << "Initial Passthrough-quality: " << 100*quality << "%." << std::endl;
 		std::cout << "Calculating Gradients ..." << std::endl;
@@ -37,15 +37,15 @@ void Optimization<Matrix, Vector>::run() {
 			std::cout << "Current configuration: ";
 			std::cout << "Waveguide Center: ";
 			for(int i = 0;  i<dofs; i +=3) {
-				std::cout << " m_" <<1+ i/3 << ": " << structure->get_dof(i, false);
+				std::cout << " m_" << i/3 << ": " << structure->get_dof(i, false);
 			}
 			std::cout << "; Radius: ";
 			for(int i = 1;  i<dofs; i +=3) {
-				std::cout << " r_" << 1+ i/3 << ": " << structure->get_dof(i, false);
+				std::cout << " r_" << i/3 << ": " << structure->get_dof(i, false);
 			}
 			std::cout << "; Waveguide Angle: ";
 			for(int i = 2; i<dofs; i +=3) {
-				std::cout << " v_" <<1+ i/3 << ": " << structure->get_dof(i, false);
+				std::cout << " v_" << i/3 << ": " << structure->get_dof(i, false);
 			}
 			double norm = 0.0;
 			std::cout << std::endl;
@@ -78,7 +78,7 @@ void Optimization<Matrix, Vector>::run() {
 				gradient[i] = quality - temp_quality;
 				norm += gradient[i] * gradient[i];
 				structure->set_dof(i, val, true);
-				mytable.AddComputationResult(i +3, new_val-val, temp_quality);
+				mytable.AddComputationResult(i, new_val-val, temp_quality);
 			}
 			std::cout << "Gradient for free dofs: (";
 			for(int i = 0; i < freedofs; i++) {
@@ -129,7 +129,7 @@ void Optimization<Matrix, Vector>::run() {
 			if(step_quality < quality) {
 				std::cout << "... not accepted (reduced quality). Undoing step and reducing step-width.";
 				std::cout << "New Step-width: " << step_width *0.1 << std::endl;
-				for(int i = 0; i < dofs; i++) {
+				for(int i = 0; i < freedofs; i++) {
 					structure->set_dof(i, old_position[i], true);
 				}
 				step_width *= 0.1;

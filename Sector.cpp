@@ -32,7 +32,6 @@ void Sector::set_properties_force(double in_m_0, double in_m_1, double in_r_0, d
 	r_1 = in_r_1;
 	m_1 = in_m_1;
 	v_1 = in_v_1;
-
 }
 
 double Sector::get_r(double z) {
@@ -120,8 +119,6 @@ Tensor<2,3, double> Sector::TransformationTensorInternal (double in_x, double in
 			g[i][j] *= sp * Q[0]*Q[1]*Q[2] / (Q[i] * Q[j]);
 		}
 	}
-
-
 
 	return g;
 }

@@ -19,37 +19,58 @@ void WaveguideStructure::estimate_and_initialize() {
 		case_sectors[0].set_properties_force(m_0, m_1, r_0, r_1, v_0, v_1);
 	} else {
 		case_sectors.reserve(sectors);
-		double length = parameters.PRM_M_R_ZLength / (1.0 * sectors);
-		Sector temp(true, false, -parameters.PRM_M_R_ZLength/2, -parameters.PRM_M_R_ZLength/2 + length );
+		double length = Sector_Length();
+		Sector temp(true, false, -parameters.PRM_M_R_ZLength/(2.0), -parameters.PRM_M_R_ZLength/2.0 + length );
 		case_sectors.push_back(temp);
-		for(int  i = 1; i < sectors -1; i++) {
+		for(int  i = 1; i < sectors - GlobalParams.PRM_M_BC_XYout-1; i++) {
 			Sector temp2( false, false, -parameters.PRM_M_R_ZLength/(2.0) + length*(1.0 *i), -parameters.PRM_M_R_ZLength/(2.0) + length*(i + 1.0) );
 			case_sectors.push_back(temp2);
 		}
-		Sector temp3( false, true, parameters.PRM_M_R_ZLength/2 - length, parameters.PRM_M_R_ZLength/2 );
+		int t = sectors - GlobalParams.PRM_M_BC_XYout-1;
+		Sector temp3( false, true, -parameters.PRM_M_R_ZLength/(2.0) + length*(1.0 *t), -parameters.PRM_M_R_ZLength/(2.0) + length*(t + 1.0) );
 		case_sectors.push_back(temp3);
+		for(int  i = sectors - GlobalParams.PRM_M_BC_XYout ; i < sectors ; i++) {
+			Sector temp4( true, true, -parameters.PRM_M_R_ZLength/(2.0) + length*i, -parameters.PRM_M_R_ZLength/(2.0) + length*(i + 1.0) );
+			case_sectors.push_back(temp4);
+		}
 
-		double length_rel = 1.0/(sectors-GlobalParams.PRM_M_BC_XYout);
-		case_sectors[0].set_properties_force(m_0, InterpolationPolynomialZeroDerivative(length_rel, m_0, m_1), r_0, r_0 + (r_1 - r_0) /(sectors*1.0) , v_0, estimate_v(length_rel)) ;
+		double length_rel = 1.0/((double)(sectors-GlobalParams.PRM_M_BC_XYout));
+		case_sectors[0].set_properties_force(m_0, InterpolationPolynomialZeroDerivative(length_rel, m_0, m_1), r_0, InterpolationPolynomialZeroDerivative(length_rel, r_0, r_1) , 0, InterpolationPolynomialDerivative(length_rel, m_0, m_1, 0, 0)) ;
 		for(int  i = 1; i < sectors -GlobalParams.PRM_M_BC_XYout; i++) {
 			double z_l = i*length_rel;
 			double z_r = (i+1)*length_rel;
 			case_sectors[i].set_properties_force(InterpolationPolynomialZeroDerivative(z_l, m_0, m_1), InterpolationPolynomialZeroDerivative(z_r, m_0, m_1), InterpolationPolynomialZeroDerivative(z_l, r_0, r_1), InterpolationPolynomialZeroDerivative(z_r, r_0, r_1) , InterpolationPolynomialDerivative(z_l, m_0, m_1, 0, 0), InterpolationPolynomialDerivative(z_r, m_0, m_1, 0, 0)) ;
 		}
-		case_sectors[sectors -1].set_properties_force(estimate_m(1.0 - length_rel), m_1, r_1 - (r_1 - r_0) /(sectors*1.0), r_1  , estimate_v(1.0- length_rel), v_1) ;
+		for(int  i = sectors -GlobalParams.PRM_M_BC_XYout; i < sectors; i++) {
+			case_sectors[i].set_properties_force(m_1, m_1, r_1, r_1, 0, 0) ;
+		}
 	}
 
-	for (unsigned int i = 0;  i < NDofs(); ++ i) {
-		InitialDofs[i] = this->get_dof(i, false);
+	for (unsigned int i = 0;  i < NFreeDofs(); ++ i) {
+		InitialDofs[i] = this->get_dof(i, true);
 	}
 
+	Print();
+}
+
+void WaveguideStructure::Print () {
+	std::cout << "-------------------------------------------" << std::endl;
+	std::cout << "Sectors: " << sectors << std::endl;
+	for(int i = 0 ; i< sectors; i++) {
+
+		std::cout << "z_0: " << std::setw(13)<< case_sectors[i].z_0 << "\t z_1: "<< std::setw(13)<< case_sectors[i].z_1 << std::endl;
+		std::cout << "m_0: " << std::setw(13)<< case_sectors[i].m_0 << "\t m_1: "<< std::setw(13)<< case_sectors[i].m_1 << std::endl;
+		std::cout << "r_0: " << std::setw(13)<< case_sectors[i].r_0 << "\t r_1: "<< std::setw(13)<< case_sectors[i].r_1 << std::endl;
+		std::cout << "v_0: " << std::setw(13)<< case_sectors[i].v_0 << "\t v_1: "<< std::setw(13)<< case_sectors[i].v_1 << std::endl;
+		std::cout << "-------------------------------------------" << std::endl;
+	}
 }
 
 dealii::Vector<double> WaveguideStructure::Dofs() {
 	dealii::Vector<double> ret;
-	ret.reinit(this->NDofs());
-	for (unsigned int i = 0;  i < NDofs(); ++ i) {
-		ret[i] = this->get_dof(i, false);
+	ret.reinit(this->NFreeDofs());
+	for (unsigned int i = 0;  i < NFreeDofs(); ++ i) {
+		ret[i] = this->get_dof(i, true);
 	}
 	return ret;
 }
@@ -84,40 +105,106 @@ double WaveguideStructure::getQ2 ( double z) {
 }
 
 double WaveguideStructure::get_dof (int i, bool free) {
+
 	int temp = i % 3;
 	int sec = i / 3;
-	if(free) sec+=1;
-	double val = 0.0;
-	if(temp == 0) {
-		// request m
-		val = case_sectors[sec].m_1;
+	if(free) {
+		if(temp == 0) {
+			// request m
+			return case_sectors[sec].m_1;
+		}
+		if(temp == 1) {
+			// request r
+			return case_sectors[sec].r_1;
+		}
+		if(temp == 2) {
+			// request v
+			return case_sectors[sec].v_1;
+		}
+	} else {
+		if (i < 3) {
+			if(temp == 0) {
+				// request m
+				return case_sectors[0].m_0;
+			}
+			if(temp == 1) {
+				// request r
+				return case_sectors[0].r_0;
+			}
+			if(temp == 2) {
+				// request v
+				return case_sectors[0].v_0;
+			}
+		} else {
+			if(temp == 0) {
+				// request m
+				return case_sectors[sec-1].m_1;
+			}
+			if(temp == 1) {
+				// request r
+				return case_sectors[sec-1].r_1;
+			}
+			if(temp == 2) {
+				// request v
+				return case_sectors[sec-1].v_1;
+			}
+		}
 	}
-	if(temp == 1) {
-		// request r
-		val = case_sectors[sec].r_1;
-	}
-	if(temp == 2) {
-		// request v
-		val = case_sectors[sec].v_1;
-	}
-	return val;
+	return 0.0;
 }
 
 void WaveguideStructure::set_dof (int i, double val, bool free) {
 	int temp = i % 3;
 	int sec = i / 3 ;
-	if(free) sec +=1;
-	if(temp == 0) {
-		case_sectors[sec].m_1	= val;
-		case_sectors[sec+1].m_0	= val;
+	if(free) {
+		if(temp == 0) {
+			case_sectors[sec  ].m_1	= val;
+			case_sectors[sec+1].m_0	= val;
+		}
+		if(temp == 1) {
+			case_sectors[sec  ].r_1	= val;
+			case_sectors[sec+1].r_0	= val;
+		}
+		if(temp == 2) {
+			case_sectors[sec  ].v_1	= val;
+			case_sectors[sec+1].v_0	= val;
+		}
 	}
-	if(temp == 1) {
-		case_sectors[sec].r_1	= val;
-		case_sectors[sec+1].r_0	= val;
-	}
-	if(temp == 2) {
-		case_sectors[sec].v_1	= val;
-		case_sectors[sec+1].v_0	= val;
+	if (i < 3) {
+		if(temp == 0) {
+			case_sectors[0].m_0	= val;
+		}
+		if(temp == 1) {
+			case_sectors[0].r_0	= val;
+		}
+		if(temp == 2) {
+			case_sectors[0].v_0	= val;
+		}
+	} else {
+		if(i >= 3*GlobalParams.PRM_M_W_Sectors) {
+			if(temp == 0) {
+				case_sectors[case_sectors.size() -1 ].m_1	= val;
+			}
+			if(temp == 1) {
+				case_sectors[case_sectors.size() -1 ].r_1	= val;
+			}
+			if(temp == 2) {
+				case_sectors[case_sectors.size() -1 ].v_1	= val;
+			}
+		} else {
+			if(temp == 0) {
+				case_sectors[sec-1].m_1	= val;
+				case_sectors[sec].m_0	= val;
+			}
+			if(temp == 1) {
+				case_sectors[sec-1].r_1	= val;
+				case_sectors[sec].r_0	= val;
+			}
+			if(temp == 2) {
+				case_sectors[sec-1].v_1	= val;
+				case_sectors[sec].v_0	= val;
+			}
+		}
 	}
 }
 
@@ -137,7 +224,7 @@ WaveguideStructure::WaveguideStructure(const Parameters &in_params)
 		InitialQuality(0.0)
 {
 	//case_sectors = Sector[sectors];
-	InitialDofs.reinit(3*sectors+3);
+	InitialDofs.reinit(3*(sectors-GlobalParams.PRM_M_BC_XYout) -3);
 }
 
 double WaveguideStructure::Sector_Length() {
@@ -147,8 +234,6 @@ double WaveguideStructure::Sector_Length() {
 double WaveguideStructure::System_Length() {
 	return GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYout * Sector_Length();
 }
-
-
 
 std::pair<int, double> WaveguideStructure::Z_to_Sector_and_local_z(double in_z) {
 	double sector_length = Sector_Length();
