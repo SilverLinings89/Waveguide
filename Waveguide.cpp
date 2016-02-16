@@ -160,7 +160,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 		if(PML_in_X(position)){
 			double r,d, sigmax;
 			r = PML_X_Distance(position);
-			d = GlobalParams.PRM_M_R_XLength * 1.0 * GlobalParams.PRM_M_BC_Mantle/100.0;
+			d = GlobalParams.PRM_M_R_XLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
 			sigmax = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaXMax;
 			sx.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaXMax);
 			sx.imag( sigmax / ( omegaepsilon0));
@@ -171,7 +171,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 		if(PML_in_Y(position)){
 			double r,d, sigmay;
 			r = PML_Y_Distance(position);
-			d = GlobalParams.PRM_M_R_YLength * 1.0 * GlobalParams.PRM_M_BC_Mantle/100.0;
+			d = GlobalParams.PRM_M_R_YLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
 			sigmay = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaYMax;
 			sy.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaYMax);
 			sy.imag( sigmay / ( omegaepsilon0));
@@ -182,7 +182,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 		if(PML_in_Z(position)){
 			double r,d, sigmaz;
 			r = PML_Z_Distance(position);
-			d = (position(2)<0)? GlobalParams.PRM_M_BC_XYin : GlobalParams.PRM_M_BC_XYout;
+			d = GlobalParams.PRM_M_BC_XYout * structure->Sector_Length();
 			sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
 			sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
 			sz.imag( sigmaz / omegaepsilon0 );
@@ -202,29 +202,18 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 		ret[1][1] = S2;
 		ret[2][2] = S3;
 
-		if(inverse) {
-			if(epsilon) {
-				if(System_Coordinate_in_Waveguide(position)) {
-					ret /= GlobalParams.PRM_M_W_EpsilonIn;
-				} else {
-					ret /= GlobalParams.PRM_M_W_EpsilonOut;
-				}
-				ret /= GlobalParams.PRM_C_Eps0;
+		if(epsilon) {
+			if(System_Coordinate_in_Waveguide(position) ) {
+				ret *= GlobalParams.PRM_M_W_EpsilonIn;
 			} else {
-				ret /= GlobalParams.PRM_C_Mu0;
+				ret *= GlobalParams.PRM_M_W_EpsilonOut;
 			}
+			ret *= GlobalParams.PRM_C_Eps0;
 		} else {
-			if(epsilon) {
-				if(System_Coordinate_in_Waveguide(position) ) {
-					ret *= GlobalParams.PRM_M_W_EpsilonIn;
-				} else {
-					ret *= GlobalParams.PRM_M_W_EpsilonOut;
-				}
-				ret *= GlobalParams.PRM_C_Eps0;
-			} else {
-				ret *= GlobalParams.PRM_C_Mu0;
-			}
+			ret *= GlobalParams.PRM_C_Mu0;
 		}
+
+		if(inverse) ret = invert(ret);
 
 		return ret;
 
@@ -235,22 +224,22 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 		double dist = position[0] * position[0] + position[1]*position[1];
 		dist = std::sqrt(dist);
 		double maxdist = GlobalParams.PRM_M_R_XLength/2.0 - GlobalParams.PRM_M_BC_Mantle * GlobalParams.PRM_M_R_XLength;
-		double mindist = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusIn)/2.0;
+		double mindist = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
 		double sig = sigma(dist, mindist, maxdist);
 		double factor = InterpolationPolynomialZeroDerivative(sig, 1,0);
 		transformation *= factor;
 		for(int i = 0; i < 3; i++) {
 			transformation[i][i] += 1-factor;
 		}
-		if(inverse) transformation = invert(transformation);
 		for(int i = 0; i < 3; i++) {
 			for(int j = 0; j < 3; j++) {
 				ret2[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
 			}
 		}
 
-		return ret2;
+		if(inverse) ret2 = invert(ret2);
 
+		return ret2;
 	}
 }
 
@@ -264,7 +253,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 	if(PML_in_X(position)){
 		double r,d, sigmax;
 		r = PML_X_Distance(position);
-		d = GlobalParams.PRM_M_R_XLength * 1.0 * GlobalParams.PRM_M_BC_Mantle/100.0;
+		d = GlobalParams.PRM_M_R_XLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
 		sigmax = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaXMax;
 		sx.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaXMax);
 		sx.imag( sigmax / ( omegaepsilon0));
@@ -275,7 +264,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 	if(PML_in_Y(position)){
 		double r,d, sigmay;
 		r = PML_Y_Distance(position);
-		d = GlobalParams.PRM_M_R_YLength * 1.0 * GlobalParams.PRM_M_BC_Mantle/100.0;
+		d = GlobalParams.PRM_M_R_YLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
 		sigmay = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaYMax;
 		sy.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaYMax);
 		sy.imag( sigmay / ( omegaepsilon0));
@@ -286,7 +275,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 	if(Preconditioner_PML_in_Z(position, block)){
 		double r,d, sigmaz;
 		r = Preconditioner_PML_Z_Distance(position, block);
-		d = (GlobalParams.PRM_M_BC_XYin + GlobalParams.PRM_M_BC_XYout + GlobalParams.PRM_M_R_ZLength) / GlobalParams.PRM_M_W_Sectors *0.1;
+		d = structure->Sector_Length() * 0.1;
 		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
 		sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
 		sz.imag( sigmaz / omegaepsilon0 );
@@ -306,29 +295,16 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 	ret[1][1] = S2;
 	ret[2][2] = S3;
 
-	if(inverse) {
-		if(epsilon) {
-			if(System_Coordinate_in_Waveguide(position)) {
-				ret /= GlobalParams.PRM_M_W_EpsilonIn;
-			} else {
-				ret /= GlobalParams.PRM_M_W_EpsilonOut;
-			}
-			ret /= GlobalParams.PRM_C_Eps0;
+
+	if(epsilon) {
+		if(System_Coordinate_in_Waveguide(position) ) {
+			ret *= GlobalParams.PRM_M_W_EpsilonIn;
 		} else {
-			ret /= GlobalParams.PRM_C_Mu0;
+			ret *= GlobalParams.PRM_M_W_EpsilonOut;
 		}
-	} else {
-		if(epsilon) {
-			if(System_Coordinate_in_Waveguide(position) ) {
-				ret *= GlobalParams.PRM_M_W_EpsilonIn;
-			} else {
-				ret *= GlobalParams.PRM_M_W_EpsilonOut;
-			}
-			ret *= GlobalParams.PRM_C_Eps0;
-		} else {
-			ret *= GlobalParams.PRM_C_Mu0;
-		}
+		ret *= GlobalParams.PRM_C_Eps0;
 	}
+
 	Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
 	Tensor<2,3, std::complex<double>> ret2;
 
@@ -341,6 +317,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 		}
 	}
 	//deallog << "get_Tensor_2" << std::endl;
+	if ( inverse ) ret2 = invert(ret2);
 
 	return ret2;
 
@@ -409,13 +386,13 @@ Tensor<1,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Conjugate_V
 
 template<typename MatrixType, typename VectorType  >
 bool Waveguide<MatrixType, VectorType>::PML_in_X(Point<3> &p) {
-	double pmlboundary = GlobalParams.PRM_M_R_XLength * (1- GlobalParams.PRM_M_BC_Mantle)*0.5;
+	double pmlboundary = GlobalParams.PRM_M_R_XLength * (1- 2.0*GlobalParams.PRM_M_BC_Mantle)*0.5;
 	return p(0) < -(pmlboundary) ||p(0) > (pmlboundary);
 }
 
 template<typename MatrixType, typename VectorType>
 bool Waveguide<MatrixType, VectorType>::PML_in_Y(Point<3> &p) {
-	double pmlboundary = GlobalParams.PRM_M_R_YLength * (1- GlobalParams.PRM_M_BC_Mantle) * 0.5;
+	double pmlboundary = GlobalParams.PRM_M_R_YLength * (1- 2.0*GlobalParams.PRM_M_BC_Mantle) * 0.5;
 	return p(1) < -(pmlboundary) ||p(1) > (pmlboundary);
 }
 
@@ -428,9 +405,9 @@ template<typename MatrixType, typename VectorType>
 bool Waveguide<MatrixType, VectorType>::Preconditioner_PML_in_Z(Point<3> &p, unsigned int block) {
 	double l = structure->Sector_Length();
 	double width = l * 0.1;
-	bool up =    (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0   ) - (block+1) * l + width) > 0;
-	bool down = -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0   ) - (block-1) * l - width) > 0;
-
+	bool up =    (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 ) - ((double)block+1.0) * l + width) > 0;
+	bool down =  -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 ) - ((double)block-1.0) * l - width) > 0;
+	//std::cout <<std::endl<< p(2) << ":" << block << ":" << up << " " << down <<std::endl;
 	return up || down;
 }
 
@@ -438,17 +415,17 @@ template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ){
 	double l = structure->Sector_Length();
 	double width = l * 0.1;
-	if( ( p(2) +GlobalParams.PRM_M_R_ZLength/2.0 )-  block * l < 0){
-		return -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - (block-1) * l - width);
+	if( ( p(2) +GlobalParams.PRM_M_R_ZLength/2.0 )-  ((double)block) * l < 0){
+		return -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - ((double)block-1.0) * l - width);
 	} else {
-		return  (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - (block+1) * l + width);
+		return  (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - ((double)block+1.0) * l + width);
 	}
 }
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::PML_X_Distance(Point<3> &p){
 	//double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
-	double pmlboundary = GlobalParams.PRM_M_R_YLength * (1- GlobalParams.PRM_M_BC_Mantle) * 0.5;
+	double pmlboundary = GlobalParams.PRM_M_R_YLength * (1- 2.0*GlobalParams.PRM_M_BC_Mantle) * 0.5;
 	if(p(0) >0){
 		return p(0) - (pmlboundary) ;
 	} else {
@@ -458,7 +435,7 @@ double Waveguide<MatrixType, VectorType>::PML_X_Distance(Point<3> &p){
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::PML_Y_Distance(Point<3> &p){
-	double pmlboundary = GlobalParams.PRM_M_R_YLength * (1- GlobalParams.PRM_M_BC_Mantle) * 0.5;
+	double pmlboundary = GlobalParams.PRM_M_R_YLength * (1- 2.0*GlobalParams.PRM_M_BC_Mantle) * 0.5;
 	if(p(1) >0){
 		return p(1) - (pmlboundary);
 	} else {
@@ -750,28 +727,41 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	IndexSet tempset(dof_handler.n_dofs());
 	tempset.clear();
 	sparsity_pattern.reinit(Sectors, Sectors);
+	prec1_pattern.reinit(Sectors, Sectors);
+	prec2_pattern.reinit(Sectors, Sectors);
 	for ( int i = 0 ; i < Sectors; i++) {
 		for ( int j = 0 ; j < Sectors; j++) {
 			if(i == j)	{
 				sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j] );
+				prec1_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j] );
+				prec2_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j] );
 			} else {
 				if( std::abs(i - j) == 1 ) {
 					sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j]);
+					prec1_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j]);
+					prec2_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j]);
 				} else {
 					sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j]);
-
+					prec1_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j]);
+					prec2_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j]);
 				}
 			}
 		}
 	}
 
 	sparsity_pattern.collect_sizes();
-
+	prec1_pattern.collect_sizes();
+	prec2_pattern.collect_sizes();
 
 	//DynamicSparsityPattern c_sparsity(dof_handler.n_dofs());
 	DoFTools::make_sparsity_pattern (dof_handler, sparsity_pattern, cm, false);
 
+	DoFTools::make_sparsity_pattern(dof_handler, prec1_pattern, cm_pre1, false);
+	DoFTools::make_sparsity_pattern(dof_handler, prec2_pattern, cm_pre2, false);
+
 	sparsity_pattern.compress();
+	prec1_pattern.compress();
+	prec2_pattern.compress();
 
 	deallog << "Sparsity Pattern Construction done." << std::endl;
 
@@ -789,14 +779,20 @@ template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_all () {
 	reinit_rhs();
 	reinit_solution();
-	reinit_systemmatrix();
 	reinit_preconditioner();
+	reinit_systemmatrix();
+
 }
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_preconditioner () {
-	preconditioner_matrix_1.reinit( temporary_pattern);
-	preconditioner_matrix_2.reinit( temporary_pattern);
+	if(!temporary_pattern_preped) {
+		preconditioner1_pattern.copy_from(prec1_pattern);
+		preconditioner2_pattern.copy_from(prec2_pattern);
+
+	}
+	preconditioner_matrix_1.reinit( preconditioner1_pattern);
+	preconditioner_matrix_2.reinit( preconditioner2_pattern);
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1003,6 +999,7 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::assemble_system ()
 {
+
 	reinit_rhs();
 	// system_rhs.reinit(dof_handler.n_dofs());
 
@@ -1035,6 +1032,7 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 		task_group2 += Threads::new_task (&Waveguide<MatrixType, VectorType>::assemble_part , *this, 2*i+1);
 	}
 	task_group2.join_all ();
+
 
 	if(!is_stored)  deallog<<"Assembling done. L2-Norm of RHS: "<< system_rhs.l2_norm()<<std::endl;
 	log_assemble.stop();
@@ -1198,7 +1196,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions ( )
 
 			// in between
 			for(int l = 1; l <GlobalParams.PRM_M_W_Sectors; l++) {
-				if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - l*sector_length ) < 0.0001 ){
+				if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - ((double)l)*sector_length ) < 0.0001 ){
 					std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
 					for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 						((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1229,7 +1227,9 @@ void Waveguide<MatrixType, VectorType>::timerupdate() {
 template<>
 void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >::solve () {
 	if(!is_stored) Sweeping_Additional_Data.SetNonZero(dof_handler.max_couplings_between_dofs());
-
+	std::cout << "System Matrix non zero entries: " << system_matrix.n_actually_nonzero_elements() <<std::endl;
+	std::cout << "Preco1 Matrix non zero entries: " << preconditioner_matrix_1.n_actually_nonzero_elements() <<std::endl;
+	std::cout << "Preco2 Matrix non zero entries: " << preconditioner_matrix_2.n_actually_nonzero_elements() <<std::endl;
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 	iteration_file.open((solutionpath + "/iteration_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
@@ -1402,6 +1402,7 @@ void Waveguide<MatrixType, VectorType>::output_results ()
 
 	std::ofstream pattern (solutionpath + "/pattern.gnu");
 	sparsity_pattern.print_gnuplot(pattern);
+
 
 	std::ofstream patternscript (solutionpath + "/displaypattern.gnu");
 	patternscript << "set style line 1000 lw 1 lc \"black\"" <<std::endl;

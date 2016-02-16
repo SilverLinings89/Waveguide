@@ -360,7 +360,7 @@ class Waveguide
 		VectorType								solution;
 		ConstraintMatrix 						cm, cm_pre1, cm_pre2;
 
-		BlockDynamicSparsityPattern				sparsity_pattern;
+		BlockDynamicSparsityPattern				sparsity_pattern, prec1_pattern, prec2_pattern;
 		MatrixType								system_matrix, preconditioner_matrix_1, preconditioner_matrix_2;
 		Parameters								&prm;
 		ConstraintMatrix 						boundary_value_constraints_imaginary;
@@ -380,7 +380,7 @@ class Waveguide
 		std::vector<int>						Dofs_Below_Subdomain, Block_Sizes;
 		const int 								Sectors;
 		std::vector<dealii::IndexSet> 			set;
-		BlockSparsityPattern 					temporary_pattern;
+		BlockSparsityPattern 					temporary_pattern, preconditioner1_pattern, preconditioner2_pattern;
 		bool									temporary_pattern_preped;
 		FEValuesExtractors::Vector 				real, imag;
 		SolverControl          					solver_control;

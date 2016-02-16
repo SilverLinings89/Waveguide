@@ -71,7 +71,7 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 	}
 	// First Block. Prepare Solver directly.
 	SparseDirectUMFPACK solver;
-	inverse_blocks[0].initialize(System_Matrix->block(0,0));
+	inverse_blocks[0].initialize(Preconditioner_Matrix1.block(0,0));
 	deallog << "Done with block " << 1 <<  std::endl;
 
 
@@ -238,6 +238,7 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 	deallog << "All preconditioner-blocks have been constructed." << std::endl;
 }
 
+/**
 template<>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::vmult (  dealii::BlockVector<double> &  out_vec , dealii::BlockVector<double> & in_vec ) const {
 	// deallog << "Starting VMULT" << std::endl;
@@ -270,8 +271,8 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 		// deallog << "Block " << i+1 << " done." << std::endl;
 	}
 }
+**/
 
-/**
 template<>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::vmult (  dealii::BlockVector<double> &  out_vec , dealii::BlockVector<double> & in_vec ) const {
 	// deallog << "Starting VMULT" << std::endl;
@@ -333,7 +334,7 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 }
 
 
-**/
+
 
 template<>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::Tvmult (  dealii::BlockVector<double> &  out_vec ,dealii::BlockVector<double> & in_vec ) const {
