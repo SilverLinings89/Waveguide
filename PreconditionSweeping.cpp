@@ -17,6 +17,8 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/grid/tria.h>
 #include "PreconditionSweeping.h"
+#include <deal.II/lac/petsc_parallel_sparse_matrix.h>
+#include <deal.II/lac/petsc_parallel_block_vector.h>
 
 using namespace dealii;
 
@@ -39,7 +41,7 @@ void PreconditionSweeping<MatrixType, VectorType>::AdditionalData::SetNonZero(un
 	nonzero = in_nonzero;
 
 }
-
+/**
 template<>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::Hinv(unsigned int block, dealii::BlockVector<double> &out_vec, dealii::BlockVector<double> &in_vec ) const {
 	dealii::BlockVector<double> temp;
@@ -59,7 +61,14 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 
 	inverse_blocks[block].vmult(out_vec, temp);
 }
+**/
 
+template <>
+void PreconditionSweeping<PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::BlockVector>::initialize( PETScWrappers::MPI::SparseMatrix * System_Matrix, PETScWrappers::MPI::SparseMatrix &Preconditioner_Matrix1, PETScWrappers::MPI::SparseMatrix &Preconditioner_Matrix2) {
+
+}
+
+/**
 template <>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::initialize( dealii::BlockSparseMatrix<double> * System_Matrix, dealii::BlockSparseMatrix<double> &Preconditioner_Matrix1, dealii::BlockSparseMatrix<double> &Preconditioner_Matrix2)
 {
@@ -272,7 +281,7 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 	}
 }
 **/
-
+/**
 template<>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::vmult (  dealii::BlockVector<double> &  out_vec , dealii::BlockVector<double> & in_vec ) const {
 	// deallog << "Starting VMULT" << std::endl;
@@ -333,12 +342,10 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 
 }
 
-
-
-
 template<>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::Tvmult (  dealii::BlockVector<double> &  out_vec ,dealii::BlockVector<double> & in_vec ) const {
 	vmult (  out_vec ,  in_vec );
 }
 
+**/
 #endif

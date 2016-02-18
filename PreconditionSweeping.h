@@ -15,7 +15,7 @@ using namespace dealii;
  * \date 9.12.2015
  */
 template< typename MatrixType, typename VectorType>
-class PreconditionSweeping : public Subscriptor
+class PreconditionSweeping : public dealii::PETScWrappers::PreconditionerBase
    {
 
 	public:

@@ -248,6 +248,18 @@ struct Parameters {
 	 */
 	double 				PRM_O_MinimumFactor;
 
+	/**
+	 * This value stores the rank of the current process such that the function getting it doesnt have to be called several times.
+	 */
+	unsigned int	MPI_Rank;
+
+	/**
+	 * This is the MPI-communicator to be used globally.
+	 */
+
+	MPI_Comm			MPI_Communicator;
+
+
 };
 
 #endif

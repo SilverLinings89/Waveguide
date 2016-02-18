@@ -41,14 +41,6 @@
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/index_set.h>
 
-// Trilinos Headers
-#include <deal.II/lac/trilinos_precondition.h>
-#include <deal.II/lac/trilinos_solver.h>
-#include <deal.II/lac/trilinos_sparse_matrix.h>
-#include <deal.II/lac/trilinos_block_sparse_matrix.h>
-#include <deal.II/lac/trilinos_block_vector.h>
-#include <deal.II/lac/trilinos_vector.h>
-
 // PETSc Headers
 #include <deal.II/lac/petsc_precondition.h>
 #include <deal.II/lac/petsc_solver.h>
@@ -137,6 +129,9 @@ class Waveguide
 		 */
 		double 		evaluate_overall();
 
+		std::complex<double> evaluate_for_Position(double , double , double );
+
+		double evaluate_for_z(double);
 		/**
 		 * The storage has the following purpose: Regarding the optimization-process there are two kinds of runs. The first one, taking place with no knowledge of appropriate starting values for the degrees of freedom, and the following steps, in which the prior results can be used to estimate appropriate starting values for iterative solvers as well as the preconditioner. This function switches the behaviour in the following way: Once it is called, it stores the current solution in a run-independent variable, making it available for later runs. Also it sets a flag, indicating, that prior solutions are now available for usage in the solution process.
 		 */
@@ -352,6 +347,8 @@ class Waveguide
 		 */
 		void 	reinit_storage();
 
+		std::complex<double> gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc);
+
 		std::string								solutionpath;
 		DoFHandler<3>::active_cell_iterator		cell, endc;
 		Triangulation<3>						triangulation, triangulation_real;
@@ -384,8 +381,8 @@ class Waveguide
 		bool									temporary_pattern_preped;
 		FEValuesExtractors::Vector 				real, imag;
 		SolverControl          					solver_control;
-		PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> >::AdditionalData Sweeping_Additional_Data;
-		PreconditionSweeping<BlockSparseMatrix<double>, BlockVector<double> > sweep;
+		PreconditionSweeping<dealii::PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::BlockVector >::AdditionalData Sweeping_Additional_Data;
+		PreconditionSweeping<dealii::PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::BlockVector > sweep;
 
 };
 

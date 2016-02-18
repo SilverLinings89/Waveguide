@@ -147,8 +147,7 @@ static Parameters GetParameters() {
 	prm.leave_subsection();
 
 
-	//ret.PRM_M_R_XLength = (15.5/4.3)* ((ret.PRM_M_C_RadiusIn+ ret.PRM_M_C_RadiusOut)/2.0);
-	//ret.PRM_M_R_YLength = (15.5/4.3)* ((ret.PRM_M_C_RadiusIn+ ret.PRM_M_C_RadiusOut)/2.0);
+
 	return ret;
 }
 

@@ -9,7 +9,7 @@
 #include <sstream>
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/base/std_cxx11/bind.h>
-
+#include "QuadratureFormulaCircle.cpp"
 using namespace dealii;
 
 template<typename MatrixType, typename VectorType >
@@ -60,6 +60,74 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
 	solver_control.log_frequency(10);
 }
 
+template<typename MatrixType, typename VectorType>
+std::complex<double> Waveguide<MatrixType, VectorType>::evaluate_for_Position(double x, double y, double z ) {
+	Point<3, double> position(x, y, z);
+	Vector<double> result(6);
+	Vector<double> mode(3);
+
+	mode(0) = TEMode00( position , 0);
+	mode(1) = TEMode00( position , 1);
+	mode(2) = 0;
+
+	VectorTools::point_value(dof_handler, solution, position, result);
+
+	return std::complex<double>( mode(0)*result(0) + mode(1)*result(1) + mode(2)*result(2) , mode(0)*result(3) + mode(1)*result(4) + mode(2)*result(5) );
+}
+
+template<typename MatrixType, typename VectorType>
+std::complex<double> Waveguide<MatrixType, VectorType>::gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc)
+{
+	double* r = NULL;
+	double* t = NULL;
+	double* q = NULL;
+	double* A = NULL;
+	double  B;
+	double x, y;
+	std::complex<double> s(0.0, 0.0);
+
+	int i,j;
+
+	/* Load appropriate predefined table */
+	for (i = 0; i<GSPHERESIZE;i++)
+	{
+		if(n==gsphere[i].n)
+		{
+			r = gsphere[i].r;
+			t = gsphere[i].t;
+			q = gsphere[i].q;
+			A = gsphere[i].A;
+			B = gsphere[i].B;
+			break;
+		}
+	}
+
+	if (NULL==r) return -1.0;
+
+	for (i=0;i<n;i++)
+	{
+		for (j=0;j<n;j++)
+		{
+			x = r[j]*q[i];
+			y = r[j]*t[i];
+
+			s += A[j]*evaluate_for_Position(R*x-Xc,R*y-Yc,z);
+		}
+	}
+
+	s *= R*R*B;
+
+	return s;
+}
+
+template<typename MatrixType, typename VectorType>
+double Waveguide<MatrixType, VectorType>::evaluate_for_z(double z) {
+	double r = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
+	std::complex<double> exc = gauss_product_2D_sphere(z,10,r,0,0);
+	return std::sqrt(exc.real()*exc.real() + exc.imag()*exc.imag());
+}
+
+
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::evaluate_out () {
 	double real = 0.0;
@@ -109,8 +177,8 @@ double Waveguide<MatrixType, VectorType>::evaluate_in () {
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::evaluate_overall () {
-	double quality_in	= evaluate_in();
-	double quality_out	= evaluate_out();
+	double quality_in	= evaluate_for_z(-GlobalParams.PRM_M_R_ZLength/2.0);
+	double quality_out	= evaluate_for_z(GlobalParams.PRM_M_R_ZLength/2.0);
 	deallog << "Quality in: "<< quality_in << std::endl;
 	deallog << "Quality out: "<< quality_out << std::endl;
 	/**
@@ -872,34 +940,6 @@ void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockV
 	preconditioner_matrix_2.reinit( set, sparsity_pattern,  MPI_COMM_WORLD);
 }
 
-template<>
-void Waveguide<TrilinosWrappers::BlockSparseMatrix, TrilinosWrappers::MPI::BlockVector>::reinit_storage() {
-	storage.reinit(Sectors);
-	for (int i = 0; i < Sectors; i++) storage.block(i).reinit(set[i], MPI_COMM_WORLD);
-	storage.collect_sizes();
-	// storage.reinit( complete_index_set(dof_handler.n_dofs()) );
-}
-
-template<>
-void Waveguide<TrilinosWrappers::BlockSparseMatrix, TrilinosWrappers::MPI::BlockVector>::reinit_rhs() {
-	system_rhs.reinit(Sectors);
-	for (int i = 0; i < Sectors; i++) system_rhs.block(i).reinit(set[i], MPI_COMM_WORLD);
-	system_rhs.collect_sizes();
-
-	preconditioner_rhs.reinit(Sectors);
-	for (int i = 0; i < Sectors; i++) preconditioner_rhs.block(i).reinit(set[i], MPI_COMM_WORLD);
-	preconditioner_rhs.collect_sizes();
-	// system_rhs.reinit( complete_index_set(dof_handler.n_dofs()) );
-}
-
-template<>
-void Waveguide<TrilinosWrappers::BlockSparseMatrix, TrilinosWrappers::MPI::BlockVector>::reinit_solution() {
-	solution.reinit(Sectors);
-	for (int i = 0; i < Sectors; i++) solution.block(i).reinit(set[i], MPI_COMM_WORLD);
-	solution.collect_sizes();
-	//solution.reinit( complete_index_set(dof_handler.n_dofs()) );
-}
-
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::assemble_part ( unsigned int in_part) {
 	QGauss<3>  			 quadrature_formula(2);
@@ -1224,6 +1264,7 @@ void Waveguide<MatrixType, VectorType>::timerupdate() {
 	log_solver.start();
 }
 
+/**
 template<>
 void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >::solve () {
 	if(!is_stored) Sweeping_Additional_Data.SetNonZero(dof_handler.max_couplings_between_dofs());
@@ -1273,6 +1314,8 @@ void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >:
 	cm.distribute(solution);
 }
 
+**/
+
 template<typename MatrixType, typename VectorType >
 SolverControl::State  Waveguide<MatrixType, VectorType>::check_iteration_state (const unsigned int iteration, const double check_value, const VectorType & ){
 	SolverControl::State ret = SolverControl::State::iterate;
@@ -1293,50 +1336,33 @@ SolverControl::State  Waveguide<MatrixType, VectorType>::check_iteration_state (
 	return ret;
 }
 
-template<>
-void Waveguide<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::MPI::Vector >::solve () {
-	log_precondition.start();
-	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
-
-	if(prm.PRM_S_Solver == "GMRES") {
-		dealii::TrilinosWrappers::SolverGMRES solver(solver_control, dealii::TrilinosWrappers::SolverGMRES::AdditionalData(true, prm.PRM_S_GMRESSteps) );
-		timerupdate();
-		solver.solve(system_matrix, solution, system_rhs, dealii::TrilinosWrappers::PreconditionIdentity());
-		log_solver.stop();
-	}
-	if(prm.PRM_S_Solver == "MINRES") {
-		deallog << "The Trilinos Library does currently not offer MinRes. GMRES used instead."<<std::endl;
-		dealii::TrilinosWrappers::SolverGMRES solver(solver_control,dealii::TrilinosWrappers::SolverGMRES::AdditionalData(true, prm.PRM_S_GMRESSteps) );
-		timerupdate();
-		solver.solve(system_matrix, solution, system_rhs, dealii::TrilinosWrappers::PreconditionIdentity());
-		log_solver.stop();
-	}
-	if(prm.PRM_S_Solver == "UMFPACK") {
-		dealii::TrilinosWrappers::SolverDirect solver(solver_control,dealii::TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack") );
-		timerupdate();
-
-		solver.solve(system_matrix, solution, system_rhs);
-		log_solver.stop();
-	}
-	cm.distribute(solution);
-}
-
 template< >
 void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector >::solve () {
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
 	if(prm.PRM_S_Solver == "GMRES") {
-		dealii::PETScWrappers::SolverGMRES solver(solver_control,MPI_Comm(MPI_COMM_WORLD), dealii::PETScWrappers::SolverGMRES::AdditionalData(true, prm.PRM_S_GMRESSteps) );
+
+		dealii::PETScWrappers::SolverGMRES solver(solver_control,GlobalParams.MPI_Communicator, dealii::PETScWrappers::SolverGMRES::AdditionalData(true, prm.PRM_S_GMRESSteps) );
 		timerupdate();
-		solver.solve(system_matrix, solution, system_rhs, dealii::PETScWrappers::PreconditionNone());
-		log_solver.stop();
-	} else {
-		dealii::PETScWrappers::SolverCR solver(solver_control, MPI_Comm(MPI_COMM_WORLD), dealii::PETScWrappers::SolverCR::AdditionalData());
-		timerupdate();
-		solver.solve(system_matrix, solution, system_rhs, dealii::PETScWrappers::PreconditionNone());
+		if(prm.PRM_S_Preconditioner == "Sweeping"){
+			// if(!is_stored)	sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
+			sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
+			timerupdate();
+			if(is_stored) {
+				solution = storage;
+			}
+			deallog << "Norm of the solution (sqr): " << solution.norm_sqr() << std::endl;
+			solver.solve (system_matrix, solution, system_rhs, sweep);
+		}
+
+		if(prm.PRM_S_Preconditioner == "Identity") {
+			solver.solve(system_matrix, solution, system_rhs, dealii::PETScWrappers::PreconditionNone());
+		}
+
 		log_solver.stop();
 	}
+
 	cm.distribute(solution);
 }
 

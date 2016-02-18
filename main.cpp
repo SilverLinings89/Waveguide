@@ -14,7 +14,6 @@
 #include "Optimization.cpp"
 #include "ParameterReader.cpp"
 #include "Parameters.cpp"
-#include "RightHandSide.cpp"
 #include "Sector.cpp"
 #include "PreconditionSweeping.cpp"
 #include "Waveguide.cpp"
@@ -30,24 +29,20 @@ using namespace dealii;
 int main (int argc, char *argv[])
 {
 	GlobalParams = GetParameters();
+	//Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, GlobalParams.PRM_S_MPITasks);
+
+	Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
+
+	GlobalParams.MPI_Communicator = MPI_COMM_WORLD;
+	GlobalParams.MPI_Rank =Utilities::MPI::this_mpi_process(GlobalParams.MPI_Communicator);
+
 	structure = new WaveguideStructure(GlobalParams);
 
-	Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, GlobalParams.PRM_S_MPITasks);
-	if(GlobalParams.PRM_S_Library == "DealII" ) {
-		Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> > waveguide(GlobalParams);
-		Optimization<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> > opt(GlobalParams, waveguide);
-		opt.run();
-	}
-	if(GlobalParams.PRM_S_Library == "Trilinos") {
-		Waveguide<dealii::TrilinosWrappers::BlockSparseMatrix, dealii::TrilinosWrappers::MPI::BlockVector  > waveguide(GlobalParams);
-		Optimization<dealii::TrilinosWrappers::BlockSparseMatrix, dealii::TrilinosWrappers::MPI::BlockVector  > opt(GlobalParams, waveguide);
-		opt.run();
-	}
-	if(GlobalParams.PRM_S_Library == "PETSc") {
-			Waveguide<PETScWrappers::MPI::BlockSparseMatrix, dealii::PETScWrappers::MPI::BlockVector > waveguide(GlobalParams);
-			Optimization<PETScWrappers::MPI::BlockSparseMatrix, dealii::PETScWrappers::MPI::BlockVector> opt(GlobalParams, waveguide);
-			opt.run();
-		}
+
+	Waveguide<PETScWrappers::MPI::BlockSparseMatrix, dealii::PETScWrappers::MPI::BlockVector > waveguide(GlobalParams);
+	Optimization<PETScWrappers::MPI::BlockSparseMatrix, dealii::PETScWrappers::MPI::BlockVector> opt(GlobalParams, waveguide);
+	opt.run();
+
 	return 0;
 }
 
