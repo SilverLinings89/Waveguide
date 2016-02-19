@@ -64,7 +64,176 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 **/
 
 template <>
-void PreconditionSweeping<PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::BlockVector>::initialize( PETScWrappers::MPI::SparseMatrix * System_Matrix, PETScWrappers::MPI::SparseMatrix &Preconditioner_Matrix1, PETScWrappers::MPI::SparseMatrix &Preconditioner_Matrix2) {
+void PreconditionSweeping<PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::Vector>::initialize( PETScWrappers::SparseMatrix & local_matrix) {
+
+
+	// First Block. Prepare Solver directly.
+	if(GlobalParams.MPI_Rank == 0) {
+		inverse_block.solve(Preconditioner_Matrix1.block(0,0), PETScWrappers::Vector(Preconditioner_Matrix1.block(0,0).m()), PETScWrappers::Vector(Preconditioner_Matrix1.block(0,0).m()));
+
+	}
+
+	// Build local blocks
+	if(System_Matrix->m() != System_Matrix->n()) {
+		std::cout << "Critical Error in the Preconditioner. System Matrix block count mismatch!" << std::endl;
+	}
+	for(unsigned int block = 1; block <System_Matrix->n_block_cols(); block++ ) {
+		dealii::BlockSparseMatrix<double> temp;
+		BlockDynamicSparsityPattern tsp;
+		tsp.reinit(2,2);
+
+		if((block-1)%2 == 0) {
+			tsp.block(0,0).reinit(Preconditioner_Matrix2.block(block-1, block-1).m(),Preconditioner_Matrix2.block(block-1, block-1).n() );
+			SparseMatrix<double>::iterator it = Preconditioner_Matrix2.block(block-1, block-1).begin(),
+			end = Preconditioner_Matrix2.block(block-1, block-1).end();
+			for (; it!=end; ++it)
+			{
+				tsp.block(0,0).add(it->row(), it->column());
+			}
+
+			tsp.block(1,0).reinit(Preconditioner_Matrix2.block(block  , block-1).m(),Preconditioner_Matrix2.block(block  , block-1).n() );
+			it = Preconditioner_Matrix2.block(block, block-1).begin();
+			end = Preconditioner_Matrix2.block(block, block-1).end();
+			for (; it!=end; ++it)
+			{
+				tsp.block(1,0).add(it->row(), it->column());
+			}
+
+			tsp.block(0,1).reinit(Preconditioner_Matrix2.block(block-1, block ).m(),Preconditioner_Matrix2.block(block-1, block  ).n() );
+			it = Preconditioner_Matrix2.block(block-1, block).begin();
+			end = Preconditioner_Matrix2.block(block-1, block).end();
+			for (; it!=end; ++it)
+			{
+				tsp.block(0,1).add(it->row(), it->column());
+			}
+
+			tsp.block(1,1).reinit(Preconditioner_Matrix2.block(block  , block  ).m(),Preconditioner_Matrix2.block(block  , block  ).n() );
+			it = Preconditioner_Matrix2.block(block, block).begin();
+			end = Preconditioner_Matrix2.block(block, block).end();
+			for (; it!=end; ++it)
+			{
+				tsp.block(1,1).add(it->row(), it->column());
+			}
+
+		} else {
+			tsp.block(0,0).reinit(Preconditioner_Matrix1.block(block-1, block-1).m(),Preconditioner_Matrix1.block(block-1, block-1).n() );
+			SparseMatrix<double>::iterator it = Preconditioner_Matrix1.block(block-1, block-1).begin(),
+			end = Preconditioner_Matrix1.block(block-1, block-1).end();
+			for (; it!=end; ++it)
+			{
+				tsp.block(0,0).add(it->row(), it->column());
+			}
+
+			tsp.block(1,0).reinit(Preconditioner_Matrix1.block(block  , block-1).m(),Preconditioner_Matrix1.block(block  , block-1).n() );
+			it = Preconditioner_Matrix1.block(block, block-1).begin();
+			end = Preconditioner_Matrix1.block(block, block-1).end();
+			for (; it!=end; ++it)
+			{
+				tsp.block(1,0).add(it->row(), it->column());
+			}
+
+			tsp.block(0,1).reinit(Preconditioner_Matrix1.block(block-1, block  ).m(),Preconditioner_Matrix1.block(block-1, block  ).n() );
+			it = Preconditioner_Matrix1.block(block-1, block).begin();
+			end = Preconditioner_Matrix1.block(block-1, block).end();
+			for (; it!=end; ++it)
+			{
+				tsp.block(0,1).add(it->row(), it->column());
+			}
+
+			tsp.block(1,1).reinit(Preconditioner_Matrix1.block(block  , block  ).m(),Preconditioner_Matrix1.block(block  , block  ).n() );
+			it = Preconditioner_Matrix1.block(block, block).begin();
+			end = Preconditioner_Matrix1.block(block, block).end();
+			for (; it!=end; ++it)
+			{
+				tsp.block(1,1).add(it->row(), it->column());
+			}
+		}
+
+		tsp.collect_sizes();
+		BlockSparsityPattern dsp;
+		dsp.copy_from(tsp);
+
+		temp.reinit(dsp);
+
+		if((block-1)%2 == 0) {
+
+			temp.block(0,0) = 0;
+			SparseMatrix<double>::iterator it = Preconditioner_Matrix2.block(block-1, block-1).begin(),
+			end = Preconditioner_Matrix2.block(block-1, block-1).end();
+			for (; it!=end; ++it)
+			{
+				temp.block(0,0).set(it->row(), it->column(), it->value());
+			}
+
+			temp.block(1,0) = 0;
+			it = Preconditioner_Matrix2.block(block, block-1).begin();
+			end = Preconditioner_Matrix2.block(block, block-1).end();
+			for (; it!=end; ++it)
+			{
+				temp.block(1,0).set(it->row(), it->column(), it->value());
+			}
+
+			temp.block(0,1) = 0;
+			it = Preconditioner_Matrix2.block(block-1, block).begin();
+			end = Preconditioner_Matrix2.block(block-1, block).end();
+			for (; it!=end; ++it)
+			{
+				temp.block(0,1).set(it->row(), it->column(), it->value());
+			}
+
+			temp.block(1,1) = 0;
+			it = Preconditioner_Matrix2.block(block, block).begin();
+			end = Preconditioner_Matrix2.block(block, block).end();
+			for (; it!=end; ++it)
+			{
+				temp.block(1,1).set(it->row(), it->column(), it->value());
+			}
+
+
+		} else {
+
+			temp.block(0,0) = 0;
+			SparseMatrix<double>::iterator it = Preconditioner_Matrix1.block(block-1, block-1).begin(),
+			end = Preconditioner_Matrix1.block(block-1, block-1).end();
+			for (; it!=end; ++it)
+			{
+				temp.block(0,0).set(it->row(), it->column(), it->value());
+			}
+
+
+			temp.block(1,0) = 0;
+			it = Preconditioner_Matrix1.block(block, block-1).begin();
+			end = Preconditioner_Matrix1.block(block, block-1).end();
+			for (; it!=end; ++it)
+			{
+				temp.block(1,0).set(it->row(), it->column(), it->value());
+			}
+
+			temp.block(0,1) = 0;
+			it = Preconditioner_Matrix1.block(block-1, block).begin();
+			end = Preconditioner_Matrix1.block(block-1, block).end();
+			for (; it!=end; ++it)
+			{
+				temp.block(0,1).set(it->row(), it->column(), it->value());
+			}
+
+			temp.block(1,1) = 0;
+			it = Preconditioner_Matrix1.block(block, block).begin();
+			end = Preconditioner_Matrix1.block(block, block).end();
+			for (; it!=end; ++it)
+			{
+				temp.block(1,1).set(it->row(), it->column(), it->value());
+			}
+
+		}
+
+		inverse_blocks[block].initialize(temp);
+		deallog << "Done with block " << block +1 <<  std::endl;
+		temp.clear();
+
+	}
+
+	deallog << "All preconditioner-blocks have been constructed." << std::endl;
 
 }
 

@@ -106,11 +106,13 @@ class PreconditionSweeping : public dealii::PETScWrappers::PreconditionerBase
 
 		unsigned int Sectors;
 
-		std::vector<dealii::SparseDirectUMFPACK> inverse_blocks;
+		PETScWrappers::SparseDirectMUMPS inverse_block;
 
 		PreconditionSweeping<MatrixType, VectorType>::AdditionalData data;
 
 		MatrixType *SystemMatrix;
+
+
 };
 
 #endif

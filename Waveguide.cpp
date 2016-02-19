@@ -127,7 +127,6 @@ double Waveguide<MatrixType, VectorType>::evaluate_for_z(double z) {
 	return std::sqrt(exc.real()*exc.real() + exc.imag()*exc.imag());
 }
 
-
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::evaluate_out () {
 	double real = 0.0;
@@ -744,6 +743,16 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 		structure->case_sectors[i].setNInternalBoundaryDofs(InternalBoundaryDofs[i]);
 	}
 
+	if(GlobalParams.MPI_Rank == 0 ) {
+		GlobalParams.sub_block_lowest =0;
+		GlobalParams.block_lowest =0;
+		GlobalParams.block_highest = Block_Sizes[0] -1;
+	} else {
+		GlobalParams.sub_block_lowest = structure->case_sectors[GlobalParams.MPI_Rank-1].LowestDof;
+		GlobalParams.block_lowest = structure->case_sectors[GlobalParams.MPI_Rank].LowestDof;
+		GlobalParams.block_highest = structure->case_sectors[GlobalParams.MPI_Rank].LowestDof + Block_Sizes[GlobalParams.MPI_Rank];
+	}
+
 }
 
 template<typename MatrixType, typename VectorType >
@@ -936,8 +945,12 @@ void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockV
 
 template<>
 void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockVector>::reinit_preconditioner () {
-	preconditioner_matrix_1.reinit( set, sparsity_pattern,  MPI_COMM_WORLD);
-	preconditioner_matrix_2.reinit( set, sparsity_pattern,  MPI_COMM_WORLD);
+	if(!temporary_pattern_preped) {
+		preconditioner1_pattern.copy_from(prec1_pattern);
+		preconditioner2_pattern.copy_from(prec2_pattern);
+	}
+	preconditioner_matrix_1.reinit( set, prec1_pattern,  MPI_COMM_WORLD);
+	preconditioner_matrix_2.reinit( set, prec2_pattern,  MPI_COMM_WORLD);
 }
 
 template<typename MatrixType, typename VectorType >

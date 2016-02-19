@@ -259,7 +259,11 @@ struct Parameters {
 
 	MPI_Comm			MPI_Communicator;
 
+	unsigned int sub_block_lowest;
 
+	unsigned int block_lowest;
+
+	unsigned int block_highest;
 };
 
 #endif
