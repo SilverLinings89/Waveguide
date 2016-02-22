@@ -11,17 +11,22 @@
 #include <deal.II/lac/petsc_precondition.h>
 #include <deal.II/lac/petsc_sparse_matrix.h>
 #include <deal.II/lac/petsc_solver.h>
+#include <deal.II/lac/petsc_parallel_vector.h>
+#include <deal.II/lac/solver_control.h>
 
 class PreconditionerSweepingPetscParallel : public dealii::PETScWrappers::PreconditionerBase {
 public:
-	PreconditionerSweepingPetscParallel (unsigned int in_sub_lowest, unsigned int in_lowest, unsigned int in_highest, dealii::PETScWrappers::SparseMatrix * in_matrix);
+	PreconditionerSweepingPetscParallel (dealii::PETScWrappers::MPI::SparseMatrix * in_matrix);
 
-	unsigned int sub_lowest, lowest, highest;
-	dealii::PETScWrappers::SparseMatrix A;
+	unsigned int 								sub_lowest, lowest, highest;
+	SolverControl								cn;
+	dealii::PETScWrappers::SparseDirectMUMPS 	solver;
 
-	dealii::PETScWrappers::SparseDirectMUMPS solver;
+	dealii::PETScWrappers::MPI::SparseMatrix *	A;
 
-	void vmult(dealii::PETScWrappers::MPI::Vector & in_vec, const dealii::PETScWrappers::MPI::Vector & out_vec) const ;
+
+	void vmult(dealii::PETScWrappers::MPI::Vector & in_vec, const dealii::PETScWrappers::MPI::Vector & out_vec) ;
+
 };
 
 

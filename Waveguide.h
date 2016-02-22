@@ -355,13 +355,15 @@ class Waveguide
 		FESystem<3>								fe;
 		DoFHandler<3>							dof_handler, dof_handler_real;
 		VectorType								solution;
-		ConstraintMatrix 						cm, cm_pre1, cm_pre2;
+		ConstraintMatrix 						cm, cm_prec;
 
-		BlockDynamicSparsityPattern				sparsity_pattern, prec1_pattern, prec2_pattern;
-		MatrixType								system_matrix, preconditioner_matrix_1, preconditioner_matrix_2;
+		BlockDynamicSparsityPattern				sparsity_pattern, prec_pattern;
+		MatrixType								system_matrix;
+		MatrixType								preconditioner_matrix_large, preconditioner_matrix_small;
 		Parameters								&prm;
 		ConstraintMatrix 						boundary_value_constraints_imaginary;
 		ConstraintMatrix 						boundary_value_constraints_real;
+		ConstraintMatrix						hanging_global;
 
 		int 									assembly_progress;
 		VectorType								storage;
@@ -377,12 +379,12 @@ class Waveguide
 		std::vector<int>						Dofs_Below_Subdomain, Block_Sizes;
 		const int 								Sectors;
 		std::vector<dealii::IndexSet> 			set;
-		BlockSparsityPattern 					temporary_pattern, preconditioner1_pattern, preconditioner2_pattern;
+		BlockSparsityPattern 					temporary_pattern, preconditioner_pattern;
 		bool									temporary_pattern_preped;
 		FEValuesExtractors::Vector 				real, imag;
 		SolverControl          					solver_control;
-		PreconditionSweeping<dealii::PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::BlockVector >::AdditionalData Sweeping_Additional_Data;
-		PreconditionSweeping<dealii::PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::BlockVector > sweep;
+		// PreconditionSweeping<dealii::PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::BlockVector >::AdditionalData Sweeping_Additional_Data;
+		// PreconditionSweeping<dealii::PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::BlockVector > sweep;
 
 };
 

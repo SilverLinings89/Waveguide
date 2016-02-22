@@ -8,7 +8,7 @@
 
 #ifndef SweepingPreconditionerCppFlag
 #define SweepingPreconditionerCppFlag
-
+/**
 #include <deal.II/lac/block_matrix_array.h>
 
 #include <deal.II/lac/block_sparse_matrix.h>
@@ -41,6 +41,7 @@ void PreconditionSweeping<MatrixType, VectorType>::AdditionalData::SetNonZero(un
 	nonzero = in_nonzero;
 
 }
+**/
 /**
 template<>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::Hinv(unsigned int block, dealii::BlockVector<double> &out_vec, dealii::BlockVector<double> &in_vec ) const {
@@ -63,6 +64,7 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 }
 **/
 
+/**
 template <>
 void PreconditionSweeping<PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::Vector>::initialize( PETScWrappers::SparseMatrix & local_matrix) {
 
@@ -236,7 +238,7 @@ void PreconditionSweeping<PETScWrappers::MPI::SparseMatrix, dealii::PETScWrapper
 	deallog << "All preconditioner-blocks have been constructed." << std::endl;
 
 }
-
+**/
 /**
 template <>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::initialize( dealii::BlockSparseMatrix<double> * System_Matrix, dealii::BlockSparseMatrix<double> &Preconditioner_Matrix1, dealii::BlockSparseMatrix<double> &Preconditioner_Matrix2)
@@ -415,7 +417,7 @@ void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector
 
 	deallog << "All preconditioner-blocks have been constructed." << std::endl;
 }
-
+**/
 /**
 template<>
 void PreconditionSweeping<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double>>::vmult (  dealii::BlockVector<double> &  out_vec , dealii::BlockVector<double> & in_vec ) const {

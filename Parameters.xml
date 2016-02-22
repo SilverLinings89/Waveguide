@@ -249,7 +249,7 @@
     </Assembly>
     <Solver>
         <Library>
-            <value>DealII</value>
+            <value>PETSc</value>
             <default_value>DealII</default_value>
             <documentation>Which library to use for the computation. (Deal is always available if you have any version installed. For PETSC and Trilinos it is not enough to have them installed - Deal has to be compiled for their usage.</documentation>
             <pattern>33</pattern>
