@@ -733,7 +733,7 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 		IndexSet temp (dof_handler.n_dofs());
 		temp.clear();
 		deallog << "Adding Block "<< i +1 << " from " << Dofs_Below_Subdomain[i] << " to " << Dofs_Below_Subdomain[i]+Block_Sizes[i] -1<<std::endl;
-		temp.add_range(Dofs_Below_Subdomain[i],Dofs_Below_Subdomain[i]+Block_Sizes[i] -1);
+		temp.add_range(Dofs_Below_Subdomain[i],Dofs_Below_Subdomain[i]+Block_Sizes[i] );
 		set.push_back(temp);
 	}
 	deallog << "Storing details in Waveguidestructure->case_sectors..." <<std::endl;
@@ -806,18 +806,8 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	prec_pattern.reinit(Sectors, Sectors);
 	for ( int i = 0 ; i < Sectors; i++) {
 		for ( int j = 0 ; j < Sectors; j++) {
-			if(i == j)	{
-				sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j] );
-				prec_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j] );
-			} else {
-				if( std::abs(i - j) == 1 ) {
-					sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j]);
-					prec_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j]);
-				} else {
-					sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j]);
-					prec_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j]);
-				}
-			}
+			sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j] );
+			prec_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j] );
 		}
 	}
 
@@ -837,6 +827,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 	reinit_all();
 
+	deallog << "Initialization done." << std::endl;
 	// cm.distribute(solution);
 
 	if(prm.PRM_O_VerboseOutput) {
@@ -847,10 +838,15 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_all () {
+	std::cout << "1 - ";
 	reinit_rhs();
+	std::cout << "2 - ";
 	reinit_solution();
+	std::cout << "3 - ";
 	reinit_preconditioner();
+	std::cout << "4 - ";
 	reinit_systemmatrix();
+	std::cout << "5" << std::endl;
 
 }
 
@@ -905,7 +901,34 @@ void Waveguide<MatrixType, VectorType>::reinit_storage() {
 
 template <>
 void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockVector>::reinit_systemmatrix() {
-	system_matrix.reinit(set, sparsity_pattern,  MPI_COMM_WORLD);
+	std::vector<IndexSet> rowindices;
+	std::vector<IndexSet> colindices;
+
+	for(unsigned int i = 0; i < Sectors; i++) {
+		IndexSet temp (Block_Sizes[i]);
+		rowindices.push_back(temp);
+		colindices.push_back(temp);
+	}
+
+	colindices[GlobalParams.MPI_Rank].add_range(0,Block_Sizes[GlobalParams.MPI_Rank]);
+	rowindices[GlobalParams.MPI_Rank].add_range(0,Block_Sizes[GlobalParams.MPI_Rank]);
+
+	/**
+	for ( int i = 0 ; i < Sectors; i++) {
+		rowindices[i].add_range(0,Block_Sizes[i]);
+	}
+
+	system_matrix.reinit(Sectors, Sectors);
+	for(unsigned int row = 0; row < Sectors; row++) {
+		for (unsigned int column = 0; column < Sectors; column++) {
+			system_matrix.block(row,column).reinit()
+		}
+	}
+	**/
+
+
+	system_matrix.reinit(rowindices, sparsity_pattern,  MPI_COMM_WORLD);
+	system_matrix.collect_sizes();
 }
 
 template <>
@@ -940,9 +963,22 @@ void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockV
 	if(!temporary_pattern_preped) {
 		preconditioner_pattern.copy_from(prec_pattern);
 	}
-	preconditioner_matrix
-	preconditioner_matrix_large.reinit( MPI_COMM_SELF, dof_handler.n_dofs(), dof_handler.n_dofs(), dof_handler.n_dofs(), dof_handler.n_dofs(),dof_handler.max_couplings_between_dofs(), false);
+
+	preconditioner_matrix_large.reinit(Sectors, Sectors);
+	for(unsigned int i =0; i < Sectors; i++) {
+		for(unsigned int j =0; j < Sectors; j++) {
+			if((i == GlobalParams.MPI_Rank || i == GlobalParams.MPI_Rank-1 ) && (j == GlobalParams.MPI_Rank || j == GlobalParams.MPI_Rank-1)) {
+				preconditioner_matrix_large.block(i,j).reinit(MPI_COMM_SELF,Block_Sizes[i], Block_Sizes[j],Block_Sizes[i], Block_Sizes[j], dof_handler.max_couplings_between_dofs(),false, dof_handler.max_couplings_between_dofs());
+			}
+			else {
+				preconditioner_matrix_large.block(i,j).reinit(MPI_COMM_SELF,Block_Sizes[i], Block_Sizes[j],Block_Sizes[i], Block_Sizes[j], 0,false, 0);
+			}
+		}
+	}
+
 	preconditioner_matrix_small.reinit( MPI_COMM_SELF, GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1, GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1,GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1, GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1,dof_handler.max_couplings_between_dofs(), false);
+
+	preconditioner_matrix_large.collect_sizes();
 }
 
 template<typename MatrixType, typename VectorType >

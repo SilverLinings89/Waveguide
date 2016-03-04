@@ -359,7 +359,8 @@ class Waveguide
 
 		BlockDynamicSparsityPattern				sparsity_pattern, prec_pattern;
 		MatrixType								system_matrix;
-		MatrixType								preconditioner_matrix_large, preconditioner_matrix_small;
+		MatrixType								preconditioner_matrix_large;
+		dealii::PETScWrappers::MPI::SparseMatrix preconditioner_matrix_small;
 		Parameters								&prm;
 		ConstraintMatrix 						boundary_value_constraints_imaginary;
 		ConstraintMatrix 						boundary_value_constraints_real;
