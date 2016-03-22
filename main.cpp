@@ -39,8 +39,8 @@ int main (int argc, char *argv[])
 	structure = new WaveguideStructure(GlobalParams);
 
 
-	Waveguide<PETScWrappers::MPI::BlockSparseMatrix, dealii::PETScWrappers::MPI::BlockVector > waveguide(GlobalParams);
-	Optimization<PETScWrappers::MPI::BlockSparseMatrix, dealii::PETScWrappers::MPI::BlockVector> opt(GlobalParams, waveguide);
+	Waveguide<PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::Vector > waveguide(GlobalParams);
+	Optimization<PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::Vector> opt(GlobalParams, waveguide);
 	opt.run();
 
 	return 0;

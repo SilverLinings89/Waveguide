@@ -802,17 +802,8 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	log_constraints.stop();
 	IndexSet tempset(dof_handler.n_dofs());
 	tempset.clear();
-	sparsity_pattern.reinit(Sectors, Sectors);
-	prec_pattern.reinit(Sectors, Sectors);
-	for ( int i = 0 ; i < Sectors; i++) {
-		for ( int j = 0 ; j < Sectors; j++) {
-			sparsity_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j] );
-			prec_pattern.block(i,j).reinit(Block_Sizes[i], Block_Sizes[j] );
-		}
-	}
-
-	sparsity_pattern.collect_sizes();
-	prec_pattern.collect_sizes();
+	sparsity_pattern.reinit(dof_handler.n_dofs(), dof_handler.n_dofs());
+	prec_pattern.reinit(dof_handler.n_dofs(), dof_handler.n_dofs());
 
 	//DynamicSparsityPattern c_sparsity(dof_handler.n_dofs());
 	DoFTools::make_sparsity_pattern (dof_handler, sparsity_pattern, cm, false);
@@ -900,18 +891,19 @@ void Waveguide<MatrixType, VectorType>::reinit_storage() {
 }
 
 template <>
-void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockVector>::reinit_systemmatrix() {
-	std::vector<IndexSet> rowindices;
-	std::vector<IndexSet> colindices;
+void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_systemmatrix() {
 
-	for(unsigned int i = 0; i < Sectors; i++) {
-		IndexSet temp (Block_Sizes[i]);
-		rowindices.push_back(temp);
-		colindices.push_back(temp);
+	IndexSet temp (dof_handler.n_dofs());
+	if(GlobalParams.MPI_Rank >0) {
+		temp.add_range(Dofs_Below_Subdomain[GlobalParams.MPI_Rank -1],Dofs_Below_Subdomain[GlobalParams.MPI_Rank-1]+Block_Sizes[GlobalParams.MPI_Rank-1] );
+	}
+	temp.add_range(Dofs_Below_Subdomain[GlobalParams.MPI_Rank],Dofs_Below_Subdomain[GlobalParams.MPI_Rank]+Block_Sizes[GlobalParams.MPI_Rank] );
+	if(GlobalParams.MPI_Rank < Sectors-1) {
+		temp.add_range(Dofs_Below_Subdomain[GlobalParams.MPI_Rank+1],Dofs_Below_Subdomain[GlobalParams.MPI_Rank+1]+Block_Sizes[GlobalParams.MPI_Rank+1] );
 	}
 
-	colindices[GlobalParams.MPI_Rank].add_range(0,Block_Sizes[GlobalParams.MPI_Rank]);
-	rowindices[GlobalParams.MPI_Rank].add_range(0,Block_Sizes[GlobalParams.MPI_Rank]);
+	//colindices[GlobalParams.MPI_Rank].add_range(0,Block_Sizes[GlobalParams.MPI_Rank]);
+	//rowindices[GlobalParams.MPI_Rank].add_range(0,Block_Sizes[GlobalParams.MPI_Rank]);
 
 	/**
 	for ( int i = 0 ; i < Sectors; i++) {
@@ -927,58 +919,49 @@ void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockV
 	**/
 
 
-	system_matrix.reinit(rowindices, sparsity_pattern,  MPI_COMM_WORLD);
-	system_matrix.collect_sizes();
+	system_matrix.reinit(set[GlobalParams.MPI_Rank],temp,sparsity_pattern,MPI_COMM_WORLD );
+
 }
 
 template <>
-void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockVector>::reinit_rhs () {
-	system_rhs.reinit(Sectors);
-	for (int i = 0; i < Sectors; i++) system_rhs.block(i).reinit(MPI_COMM_WORLD, Block_Sizes[i], Block_Sizes[i]);
-	system_rhs.collect_sizes();
+void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_rhs () {
+	system_rhs.reinit(set[GlobalParams.MPI_Rank], MPI_COMM_WORLD);
 
-	preconditioner_rhs.reinit(Sectors);
-	for (int i = 0; i < Sectors; i++) preconditioner_rhs.block(i).reinit(MPI_COMM_WORLD, Block_Sizes[i], Block_Sizes[i]);
-	preconditioner_rhs.collect_sizes();
+	preconditioner_rhs.reinit(set[GlobalParams.MPI_Rank], MPI_COMM_WORLD);
+
 }
 
 template <>
-void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockVector>::reinit_solution() {
-	solution.reinit(Sectors);
-	for (int i = 0; i < Sectors; i++) solution.block(i).reinit(MPI_COMM_WORLD, Block_Sizes[i], Block_Sizes[i]);
-	solution.collect_sizes();
-	//solution.reinit(MPI_COMM_WORLD, dof_handler.n_dofs(), dof_handler.n_dofs());
+void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_solution() {
+	solution.reinit(set[GlobalParams.MPI_Rank], MPI_COMM_WORLD);
+
 }
 
 template<>
-void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockVector>::reinit_storage() {
-	storage.reinit(Sectors);
-	for (int i = 0; i < Sectors; i++) storage.block(i).reinit(MPI_COMM_WORLD, Block_Sizes[i], Block_Sizes[i]);
-	storage.collect_sizes();
-	//storage.reinit(MPI_COMM_WORLD, dof_handler.n_dofs(), dof_handler.n_dofs());
+void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_storage() {
+	storage.reinit(set[GlobalParams.MPI_Rank], MPI_COMM_WORLD);
+
 }
 
 template<>
-void Waveguide<PETScWrappers::MPI::BlockSparseMatrix, PETScWrappers::MPI::BlockVector>::reinit_preconditioner () {
+void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_preconditioner () {
 	if(!temporary_pattern_preped) {
 		preconditioner_pattern.copy_from(prec_pattern);
 	}
-
-	preconditioner_matrix_large.reinit(Sectors, Sectors);
-	for(unsigned int i =0; i < Sectors; i++) {
-		for(unsigned int j =0; j < Sectors; j++) {
-			if((i == GlobalParams.MPI_Rank || i == GlobalParams.MPI_Rank-1 ) && (j == GlobalParams.MPI_Rank || j == GlobalParams.MPI_Rank-1)) {
-				preconditioner_matrix_large.block(i,j).reinit(MPI_COMM_SELF,Block_Sizes[i], Block_Sizes[j],Block_Sizes[i], Block_Sizes[j], dof_handler.max_couplings_between_dofs(),false, dof_handler.max_couplings_between_dofs());
-			}
-			else {
-				preconditioner_matrix_large.block(i,j).reinit(MPI_COMM_SELF,Block_Sizes[i], Block_Sizes[j],Block_Sizes[i], Block_Sizes[j], 0,false, 0);
-			}
-		}
+	IndexSet temp (dof_handler.n_dofs());
+	if(GlobalParams.MPI_Rank >0) {
+		temp.add_range(Dofs_Below_Subdomain[GlobalParams.MPI_Rank -1],Dofs_Below_Subdomain[GlobalParams.MPI_Rank-1]+Block_Sizes[GlobalParams.MPI_Rank-1] );
 	}
+	temp.add_range(Dofs_Below_Subdomain[GlobalParams.MPI_Rank],Dofs_Below_Subdomain[GlobalParams.MPI_Rank]+Block_Sizes[GlobalParams.MPI_Rank] );
+	if(GlobalParams.MPI_Rank < Sectors-1) {
+		temp.add_range(Dofs_Below_Subdomain[GlobalParams.MPI_Rank+1],Dofs_Below_Subdomain[GlobalParams.MPI_Rank+1]+Block_Sizes[GlobalParams.MPI_Rank+1] );
+	}
+	preconditioner_matrix_large.reinit(set[GlobalParams.MPI_Rank],temp,sparsity_pattern,MPI_COMM_WORLD );
+
 
 	preconditioner_matrix_small.reinit( MPI_COMM_SELF, GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1, GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1,GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1, GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1,dof_handler.max_couplings_between_dofs(), false);
 
-	preconditioner_matrix_large.collect_sizes();
+
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1279,57 +1262,6 @@ void Waveguide<MatrixType, VectorType>::timerupdate() {
 	log_solver.start();
 }
 
-/**
-template<>
-void Waveguide<dealii::BlockSparseMatrix<double>, dealii::BlockVector<double> >::solve () {
-	if(!is_stored) Sweeping_Additional_Data.SetNonZero(dof_handler.max_couplings_between_dofs());
-	std::cout << "System Matrix non zero entries: " << system_matrix.n_actually_nonzero_elements() <<std::endl;
-	std::cout << "Preco1 Matrix non zero entries: " << preconditioner_matrix_1.n_actually_nonzero_elements() <<std::endl;
-	std::cout << "Preco2 Matrix non zero entries: " << preconditioner_matrix_2.n_actually_nonzero_elements() <<std::endl;
-	log_precondition.start();
-	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
-	iteration_file.open((solutionpath + "/iteration_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
-	if(prm.PRM_S_Solver == "GMRES") {
-		condition_file.open((solutionpath + "/condition_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << condition_file_counter) )->str() + ".dat").c_str());
-		eigenvalue_file.open((solutionpath + "/eigenvalues_in_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << eigenvalue_file_counter) )->str() + ".dat").c_str());
-		SolverGMRES<BlockVector<double> > solver (solver_control, SolverGMRES<BlockVector<double> >::AdditionalData(prm.PRM_S_GMRESSteps, true));
-		solver.connect_condition_number_slot(std_cxx11::bind(&Waveguide<dealii::BlockSparseMatrix<double> , dealii::BlockVector<double> >::print_condition, this, std_cxx11::_1), true);
-		solver.connect_eigenvalues_slot(std_cxx11::bind(&Waveguide<dealii::BlockSparseMatrix<double> , dealii::BlockVector<double> >::print_eigenvalues, this, std_cxx11::_1), true);
-		solver.connect(std_cxx11::bind(&Waveguide<dealii::BlockSparseMatrix<double> , dealii::BlockVector<double> >::check_iteration_state, this, std_cxx11::_1, std_cxx11::_2, std_cxx11::_3));
-		if(prm.PRM_S_Preconditioner == "Identity") {
-			timerupdate();
-			solver.solve (system_matrix, solution, system_rhs, PreconditionIdentity());
-
-		}
-		if(prm.PRM_S_Preconditioner == "Sweeping"){
-			// if(!is_stored)	sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
-			sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
-			timerupdate();
-			if(is_stored) {
-				solution = storage;
-			}
-			deallog << "Norm of the solution (sqr): " << solution.norm_sqr() << std::endl;
-			solver.solve (system_matrix, solution, system_rhs, sweep);
-		}
-	}
-
-	if(prm.PRM_S_Solver == "UMFPACK") {
-		SparseDirectUMFPACK  A_direct;
-		A_direct.initialize(system_matrix);
-		timerupdate();
-		A_direct.vmult(solution, system_rhs);
-	}
-
-	log_solver.stop();
-
-	temp_storage = solution;
-	condition_file.close();
-	eigenvalue_file.close();
-	iteration_file.close();
-	cm.distribute(solution);
-}
-
-**/
 
 template<typename MatrixType, typename VectorType >
 SolverControl::State  Waveguide<MatrixType, VectorType>::check_iteration_state (const unsigned int iteration, const double check_value, const VectorType & ){
@@ -1379,7 +1311,9 @@ void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector >::s
 			if(is_stored) {
 				solution = storage;
 			}
-			deallog << "Norm of the solution (sqr): " << solution.norm_sqr() << std::endl;
+			deallog << "Norm of the solution (sqr): ";
+			deallog << solution.norm_sqr() ;
+			deallog << std::endl;
 			solver.solve (system_matrix, solution, system_rhs, sweep);
 		}
 

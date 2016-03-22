@@ -357,7 +357,7 @@ class Waveguide
 		VectorType								solution;
 		ConstraintMatrix 						cm, cm_prec;
 
-		BlockDynamicSparsityPattern				sparsity_pattern, prec_pattern;
+		DynamicSparsityPattern				sparsity_pattern, prec_pattern;
 		MatrixType								system_matrix;
 		MatrixType								preconditioner_matrix_large;
 		dealii::PETScWrappers::MPI::SparseMatrix preconditioner_matrix_small;
@@ -380,7 +380,7 @@ class Waveguide
 		std::vector<int>						Dofs_Below_Subdomain, Block_Sizes;
 		const int 								Sectors;
 		std::vector<dealii::IndexSet> 			set;
-		BlockSparsityPattern 					temporary_pattern, preconditioner_pattern;
+		SparsityPattern 					temporary_pattern, preconditioner_pattern;
 		bool									temporary_pattern_preped;
 		FEValuesExtractors::Vector 				real, imag;
 		SolverControl          					solver_control;
