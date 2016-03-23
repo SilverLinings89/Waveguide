@@ -1,7 +1,8 @@
 #ifndef WaveguideFlag
 #define WaveguideFlag
 
-#include <deal.II/grid/tria.h>
+#include <deal.II/distributed/tria.h>
+#include <deal.II/distributed/grid_refinement.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
@@ -351,13 +352,15 @@ class Waveguide
 
 		std::string								solutionpath;
 		DoFHandler<3>::active_cell_iterator		cell, endc;
-		Triangulation<3>						triangulation, triangulation_real;
+		parallel::distributed::Triangulation<3>	triangulation;
+		//, triangulation_real;
 		FESystem<3>								fe;
-		DoFHandler<3>							dof_handler, dof_handler_real;
+		DoFHandler<3>							dof_handler;
+		//, dof_handler_real;
 		VectorType								solution;
 		ConstraintMatrix 						cm, cm_prec;
 
-		DynamicSparsityPattern				sparsity_pattern, prec_pattern;
+		DynamicSparsityPattern					sparsity_pattern, prec_pattern;
 		MatrixType								system_matrix;
 		MatrixType								preconditioner_matrix_large;
 		dealii::PETScWrappers::MPI::SparseMatrix preconditioner_matrix_small;
@@ -380,7 +383,9 @@ class Waveguide
 		std::vector<int>						Dofs_Below_Subdomain, Block_Sizes;
 		const int 								Sectors;
 		std::vector<dealii::IndexSet> 			set;
-		SparsityPattern 					temporary_pattern, preconditioner_pattern;
+		dealii::IndexSet						locally_owned_dofs;
+		dealii::IndexSet						locally_relevant_dofs;
+		SparsityPattern 						temporary_pattern, preconditioner_pattern;
 		bool									temporary_pattern_preped;
 		FEValuesExtractors::Vector 				real, imag;
 		SolverControl          					solver_control;

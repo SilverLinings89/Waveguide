@@ -35,7 +35,8 @@ int main (int argc, char *argv[])
 
 	GlobalParams.MPI_Communicator = MPI_COMM_WORLD;
 	GlobalParams.MPI_Rank =Utilities::MPI::this_mpi_process(GlobalParams.MPI_Communicator);
-
+	std::cout << GlobalParams.MPI_Rank << std::endl;
+	std::cout << Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)<< std::endl;
 	structure = new WaveguideStructure(GlobalParams);
 
 
