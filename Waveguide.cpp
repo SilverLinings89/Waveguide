@@ -18,7 +18,7 @@ template<typename MatrixType, typename VectorType >
 Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
   :
   fe(FE_Nedelec<3> (0), 2),
-  triangulation (MPI_COMM_WORLD, typename Triangulation<3>::MeshSmoothing(Triangulation<3>::smoothing_on_refinement | Triangulation<3>::smoothing_on_coarsening)),
+  triangulation (MPI_COMM_WORLD, typename Triangulation<3>::MeshSmoothing(Triangulation<3>::none )),
   //triangulation_real (MPI_COMM_WORLD, typename Triangulation<3>::MeshSmoothing(Triangulation<3>::smoothing_on_refinement | Triangulation<3>::smoothing_on_coarsening)),
   dof_handler (triangulation),
   //dof_handler_real(triangulation_real),
@@ -524,11 +524,47 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	log_total.start();
 	const double outer_radius = 1.0;
 	GridGenerator::subdivided_hyper_cube (triangulation, 5, -outer_radius, outer_radius);
+	if(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)%5 != 0) {
+		std::cout<< "ERROR WRONG PROCESS NUMBER. MUST HAVE SHAPE 5 * 2^n" << std::endl;
+	}
+
+	unsigned exp = 0;
+	while(std::pow(2,exp) * 5 < Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)) {
+		exp++;
+	}
+	if(std::pow(2,exp) * 5 != Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)) {
+		std::cout<< "ERROR WRONG PROCESS NUMBER. MUST HAVE SHAPE 5 * 2^n" << std::endl;
+	}
+	std::cout << "Worked" << std::endl;
+	Triangulation<3>::active_cell_iterator
+
+	cell = triangulation.begin_active(),
+	endc = triangulation.end();
+
+
+	for ( int j = 0; j < exp; j++) {
+		cell = triangulation.begin_active(),
+		endc = triangulation.end();
+		for (; cell!=endc; ++cell){
+			cell->set_refine_flag(dealii::RefinementPossibilities<3>::cut_z);
+		}
+		triangulation.execute_coarsening_and_refinement();
+	}
+	std::cout << "Worked2" << std::endl;
+
+	cell = triangulation.begin_active();
+	for (; cell!=endc; ++cell){
+
+		int temp  = structure->Z_to_Sector_and_local_z((cell->center(true, false))[2]).first;
+		if( temp >=  Sectors || temp < 0) deallog << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
+		cell->set_subdomain_id(temp);
+	}
+	std::cout << "Worked3" << std::endl;
 
 	unsigned int temp = 1;
 	triangulation.set_manifold (temp, round_description);
-	Triangulation<3>::active_cell_iterator
-	cell = triangulation.begin_active(),
+
+	cell = triangulation.begin_active();
 	endc = triangulation.end();
 
 	for (; cell!=endc; ++cell){
@@ -538,6 +574,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 			cell->set_all_manifold_ids(1);
 		}
 	}
+	std::cout << "Worked4" << std::endl;
 
 	cell = triangulation.begin_active();
 	for (; cell!=endc; ++cell){
@@ -547,11 +584,13 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 			cell->set_manifold_id(0);
 		}
 	}
+	std::cout << "Worked5" << std::endl;
 
 	GridTools::transform(& Triangulation_Stretch_X, triangulation);
 	GridTools::transform(& Triangulation_Stretch_Y, triangulation);
 	GridTools::transform(& Triangulation_Stretch_Z, triangulation);
 	GridTools::transform(& Triangulation_Stretch_Computational_Radius, triangulation);
+	std::cout << "Worked6" << std::endl;
 
 	if(prm.PRM_D_Refinement == "global"){
 		triangulation.refine_global (prm.PRM_D_XY);
@@ -561,7 +600,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 		triangulation.refine_global (GlobalParams.PRM_R_Global);
 		double MaxDistFromBoundary = (GlobalParams.PRM_M_C_RadiusOut + GlobalParams.PRM_M_C_RadiusIn)*1.4/2.0;
 
-
+		std::cout << "Worked7" << std::endl;
 		for(int i = 0; i < GlobalParams.PRM_R_Semi; i++) {
 			cell = triangulation.begin_active();
 			for (; cell!=endc; ++cell){
@@ -572,7 +611,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 			triangulation.execute_coarsening_and_refinement();
 			MaxDistFromBoundary *= 0.7 ;
 		}
-
+		std::cout << "Worked8" << std::endl;
 		for(int i = 0; i < GlobalParams.PRM_R_Internal; i++) {
 			cell = triangulation.begin_active();
 			for (; cell!=endc; ++cell){
@@ -582,8 +621,9 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 			}
 			triangulation.execute_coarsening_and_refinement();
 		}
-
+		std::cout << "Worked9" << std::endl;
 	}
+
 
 
 	GridTools::transform(& Triangulation_Shift_Z , triangulation);
@@ -616,18 +656,9 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	deallog<<counter << " Zellen mit Dirichlet-Werten." << std::endl;
 
 
-	cell = triangulation.begin_active();
-	for (; cell!=endc; ++cell){
-
-		int temp  = structure->Z_to_Sector_and_local_z((cell->center(true, false))[2]).first;
-		if( temp >=  Sectors || temp < 0) deallog << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
-		cell->set_subdomain_id(temp);
-	}
-
-
 	//if(GlobalParams.PRM_O_Grid) {
 	//	if(prm.PRM_O_VerboseOutput) deallog<< "Writing Mesh data to file \"grid-3D.vtk\"" << std::endl;
-		mesh_info(triangulation, solutionpath + "/grid.vtk");
+		mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() +".vtk");
 	//	if(prm.PRM_O_VerboseOutput) deallog<< "Done" << std::endl;
 
 	//}
