@@ -1,7 +1,7 @@
 #ifndef WaveguideFlag
 #define WaveguideFlag
 
-#include <deal.II/distributed/tria.h>
+#include <deal.II/distributed/shared_tria.h>
 #include <deal.II/distributed/grid_refinement.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/grid/grid_generator.h>
@@ -62,7 +62,7 @@
 #include "WaveguideStructure.h"
 #include "FileLogger.h"
 #include "FileLoggerData.h"
-#include "PreconditionSweeping.h"
+#include "PreconditionerSweeping.h"
 #include "staticfunctions.h"
 
 using namespace dealii;
@@ -112,7 +112,7 @@ class Waveguide
 		 * @date 13.11.2015
 		 * @author Pascal Kraft
 		 */
-		void 		assemble_part (unsigned int in_part);
+		void 		assemble_part ();
 
 		/**
 		 * In order to estimate the quality of the signal transmission, the signal-intensity at the input- and output-side are required. This function along with evaluate_out() are used for that purpose. An L2-type norm is calculated to estimate the intensity of the propagating modes.
@@ -171,6 +171,7 @@ class Waveguide
 		Tensor<2,3, std::complex<double>> get_Preconditioner_Tensor(Point<3> & point, bool inverse, bool epsilon, int block);
 
 	private:
+		void set_boundary_ids (parallel::shared::Triangulation<3> &tria) const;
 		/**
 		 * Grid-generation is a crucial part of any FEM-Code. This function holds all functionality concerning that topic. In the current implementation we start with a cubic Mesh. That mesh originally is subdivided in 5 cells per dimension yielding a total of 5*5*5 = 125 cells. The central cells in the x-z planes are given a cylindrical manifold-description forcing them to interpolate the new points during global refinement using a circular shape rather than linear interpolation. This leads to the description of a cylinder included within a cube. There are currently three techniques for mesh-refinement:
 		 * 	-# Global refinement: For such refinement-cases, any cell is subdivided in the middle of any dimension. In this case every cell is split into 8 new ones, increasing the number of cells massively. Pros: no hanging nodes. Cons: Very many new dofs that might be in areas, where the resolution of the mesh is already large enough.
@@ -352,7 +353,7 @@ class Waveguide
 
 		std::string								solutionpath;
 		DoFHandler<3>::active_cell_iterator		cell, endc;
-		parallel::distributed::Triangulation<3>	triangulation;
+		parallel::shared::Triangulation<3>	triangulation;
 		//, triangulation_real;
 		FESystem<3>								fe;
 		DoFHandler<3>							dof_handler;
@@ -362,8 +363,8 @@ class Waveguide
 
 		DynamicSparsityPattern					sparsity_pattern, prec_pattern;
 		MatrixType								system_matrix;
-		MatrixType								preconditioner_matrix_large;
-		dealii::PETScWrappers::MPI::SparseMatrix preconditioner_matrix_small;
+		PETScWrappers::SparseMatrix     		preconditioner_matrix_large;
+		PETScWrappers::SparseMatrix 			preconditioner_matrix_small;
 		Parameters								&prm;
 		ConstraintMatrix 						boundary_value_constraints_imaginary;
 		ConstraintMatrix 						boundary_value_constraints_real;
@@ -373,8 +374,10 @@ class Waveguide
 		VectorType								storage;
 		VectorType								temp_storage;
 		bool									is_stored;
-		VectorType								system_rhs, preconditioner_rhs;
+		VectorType								system_rhs;
+		Vector<double>							preconditioner_rhs;
 		LogStream 								deallog;
+		ConditionalOStream 						pout;
 		FileLoggerData 							log_data;
 		FileLogger 								log_constraints, log_assemble, log_precondition, log_total, log_solver;
 		int 									run_number;

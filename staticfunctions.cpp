@@ -163,7 +163,6 @@ inline double InterpolationPolynomialDerivative(double in_z, double in_val_zero,
 	return 3* (2*(in_val_zero - in_val_one) + in_derivative_zero + in_derivative_one) * pow(in_z,2) + 2*(3*(in_val_one - in_val_zero) - (2*in_derivative_zero) - in_derivative_one)*in_z + in_derivative_zero;
 }
 
-
 inline double InterpolationPolynomialZeroDerivative(double in_z , double in_val_zero, double in_val_one) {
 	return InterpolationPolynomial(in_z, in_val_zero, in_val_one, 0.0, 0.0);
 }
@@ -184,12 +183,12 @@ inline double dotproduct(Tensor<1, 3, double> a, Tensor<1, 3, double> b) {
 	return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
-template<int dim> static void mesh_info(const Triangulation<dim> &tria, const std::string &filename)
+template<int dim> static void mesh_info(const parallel::shared::Triangulation<dim> &tria, const std::string &filename)
 {
 	std::cout << "Mesh info:" << std::endl << " dimension: " << dim << std::endl << " no. of cells: " << tria.n_active_cells() << std::endl;
 	{
 		std::map<unsigned int, unsigned int> boundary_count;
-		typename Triangulation<dim>::active_cell_iterator
+		typename parallel::shared::Triangulation<dim>::active_cell_iterator
 		cell = tria.begin_active(),
 		endc = tria.end();
 		for (; cell!=endc; ++cell)
