@@ -1325,16 +1325,17 @@ void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector >::s
 
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
-	/**
+
 	if(prm.PRM_S_Solver == "GMRES") {
 
-		dealii::PETScWrappers::SolverGMRES solver(solver_control,GlobalParams.MPI_Communicator, dealii::PETScWrappers::SolverGMRES::AdditionalData(true, prm.PRM_S_GMRESSteps) );
+		PETScWrappers::SolverGMRES solver(solver_control, MPI_COMM_WORLD , dealii::PETScWrappers::SolverGMRES::AdditionalData( prm.PRM_S_GMRESSteps, true) );
 		timerupdate();
 		if(prm.PRM_S_Preconditioner == "Sweeping"){
 
 
 			// if(!is_stored)	sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
 			// sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
+			/**
 			std::cout << "Matrix rows: " << GlobalParams.sub_block_lowest << " till " << GlobalParams.block_highest << std::endl;
 			preconditioner_matrix_large.compress(VectorOperation::add);
 
@@ -1362,8 +1363,8 @@ void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector >::s
 			std::cout << "Starting Generation!" <<std::endl;
 			std::cout << "Matrix size large: " << preconditioner_matrix_large.n_nonzero_elements() << std::endl;
 			std::cout << "Matrix size small: " << preconditioner_matrix_small.n_nonzero_elements() << std::endl;
-
-			PreconditionerSweeping sweep( preconditioner_matrix_small, GlobalParams.block_lowest, GlobalParams.block_highest);
+			**/
+			PreconditionerSweeping sweep( preconditioner_matrix_large,GlobalParams.sub_block_lowest, GlobalParams.block_lowest, GlobalParams.block_highest);
 
 			std::cout << "Generation worked!" <<std::endl;
 			timerupdate();
@@ -1375,7 +1376,13 @@ void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector >::s
 			pout << std::endl;
 
 			solution.compress(VectorOperation::add);
-			//system_rhs.compress(VectorOperation::add);
+			system_rhs.compress(VectorOperation::add);
+			sweep.get_pc();
+			std::cout << "ASDF" <<std::endl;
+
+			solver.initialize(sweep);
+			std::cout << "asd;lfjk" <<std::endl;
+
 			solver.solve (system_matrix, solution, system_rhs,  sweep);
 		}
 
@@ -1383,13 +1390,14 @@ void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector >::s
 		pout << "A Solution was calculated!" <<std::endl;
 		log_solver.stop();
 	}
-	 **/
 
 
+ /**
 	SolverControl cn;
 	PETScWrappers::SparseDirectMUMPS solver(cn, MPI_COMM_WORLD);
 	//solver.set_symmetric_mode(true);
 	solver.solve(system_matrix, solution, system_rhs);
+	**/
 	cm.distribute(solution);
 }
 

@@ -31,6 +31,7 @@ class PreconditionerSweeping : public PETScWrappers::PreconditionerBase
     	int total_rows;
     	int total_cols;
     	int entries;
+    	int sub_lowest;
     	int lowest;
     	int highest;
     	int * positions;
@@ -49,7 +50,7 @@ class PreconditionerSweeping : public PETScWrappers::PreconditionerBase
      * Constructor. Take the matrix which is used to form the preconditioner,
      * and additional flags if there are any.
      */
-    PreconditionerSweeping (const dealii::PETScWrappers::MatrixBase     &matrix, int in_lowest, int in_highest);
+    PreconditionerSweeping (const dealii::PETScWrappers::MatrixBase     &matrix, int in_sub_lowest, int in_lowest, int in_highest);
 
     /**
      * Same as above but without setting a matrix to form the preconditioner.
@@ -69,10 +70,7 @@ class PreconditionerSweeping : public PETScWrappers::PreconditionerBase
     void vmult (PETScWrappers::VectorBase       &dst,
                     const PETScWrappers::VectorBase &src) const;
 
-    const PC &get_pc () const;
-
-
-
+    const PC & get_pc();
   protected:
     /**
      * Store a copy of the flags for this particular preconditioner.
@@ -89,6 +87,7 @@ class PreconditionerSweeping : public PETScWrappers::PreconditionerBase
      */
 
     KSP ksp;
+    PC Temppc;
   };
 
 #endif /* PRECONDITIONERSWEEPING_H_ */
