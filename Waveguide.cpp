@@ -1378,12 +1378,29 @@ void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector >::s
 			solution.compress(VectorOperation::add);
 			system_rhs.compress(VectorOperation::add);
 			sweep.get_pc();
-			std::cout << "ASDF" <<std::endl;
+			KSP ksp;
+			KSPCreate(PETSC_COMM_WORLD, &ksp);
+			KSPSetPC(ksp, sweep.get_pc());
+			KSPSetType(ksp, KSPGMRES);
+			KSPSetTolerances(ksp,prm.PRM_S_Precision, PETSC_DEFAULT,PETSC_DEFAULT,prm.PRM_S_GMRESSteps);
+			Mat system = static_cast<Mat>(system_matrix);
+			KSPSetOperators(ksp, system, system);
+			Vec sol, rhs;
+			VecDuplicate( static_cast<Vec>(system_rhs), & rhs);
+			VecDuplicate( static_cast<Vec>(system_rhs), & sol);
+			KSPSolve(ksp, sol, rhs );
+			// solver.initialize(sweep);
+			// solver.
+			// solver.solve (system_matrix, solution, system_rhs,  sweep);
+			int lowest, highest;
+			VecGetOwnershipRange(sol, &lowest, &highest);
+			PetscScalar * vals;
+			VecGetArray( sol, &vals);
+			solution.compress(VectorOperation::add);
+			for(int i = 0; i < highest-lowest; i++) {
+				solution[lowest + i] = vals[i];
+			}
 
-			solver.initialize(sweep);
-			std::cout << "asd;lfjk" <<std::endl;
-
-			solver.solve (system_matrix, solution, system_rhs,  sweep);
 		}
 
 
@@ -1398,6 +1415,8 @@ void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector >::s
 	//solver.set_symmetric_mode(true);
 	solver.solve(system_matrix, solution, system_rhs);
 	**/
+	solution.compress(VectorOperation::insert);
+
 	cm.distribute(solution);
 }
 
@@ -1450,6 +1469,7 @@ void Waveguide<MatrixType, VectorType>::output_results ()
 	std::ofstream outputvtk (solutionpath + "/solution-run" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +".vtk");
 	data_out.write_vtk(outputvtk);
 
+	/**
 	DataOut<3> data_out_real;
 
 	//data_out_real.attach_dof_handler(dof_handler_real);
@@ -1460,7 +1480,7 @@ void Waveguide<MatrixType, VectorType>::output_results ()
 
 	std::ofstream outputvtk2 (solutionpath + "/solution-real" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +".vtk");
 	data_out_real.write_vtk(outputvtk2);
-
+	 **/
 	std::ofstream pattern (solutionpath + "/pattern.gnu");
 	sparsity_pattern.print_gnuplot(pattern);
 
