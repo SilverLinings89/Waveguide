@@ -12,7 +12,7 @@
 #include <deal.II/lac/sparsity_tools.h>
 #include <deal.II/distributed/shared_tria.h>
 #include "QuadratureFormulaCircle.cpp"
-#include <deal.II/lac/petsc_precondition.h>
+#include <deal.II/lac/trilinos_precondition.h>
 #include "petscmat.h"
 #include "petscdraw.h"
 
@@ -630,7 +630,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	for (; cell!=endc; ++cell){
 		int temp  = (int) std::floor((cell->center(true, false)[2] + 1.0)/len);
 		if( temp >=  Sectors || temp < 0) pout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
-		cell->set_subdomain_id(temp);
+		//cell->set_subdomain_id(temp);
 	}
 
 	unsigned int temp = 1;
@@ -692,7 +692,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	for (; cell!=endc; ++cell){
 		int temp  = (int) std::floor((cell->center(true, false)[2] + 1.0)/len);
 		if( temp >=  Sectors || temp < 0) pout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
-		cell->set_subdomain_id(temp);
+		//cell->set_subdomain_id(temp);
 	}
 
 
@@ -762,19 +762,20 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 		pout << "Renumbering DOFs (Downstream...)" << std::endl;
 	}
 
-	const Point<3> direction(0,0,1);
-	std::vector<unsigned int, std::allocator<unsigned int>> new_dofs(dof_handler.n_dofs());
-	DoFRenumbering::compute_subdomain_wise( new_dofs , dof_handler);
+	// const Point<3> direction(0,0,1);
+	// std::vector<unsigned int, std::allocator<unsigned int>> new_dofs(dof_handler.n_dofs());
+	// DoFRenumbering::compute_subdomain_wise( new_dofs , dof_handler);
 
-	IndexSet current = dof_handler.locally_owned_dofs();
-	std::vector<unsigned int, std::allocator<unsigned int>> new_dofs_ordered(dof_handler.n_locally_owned_dofs());
-	pout << "locally owned: " << dof_handler.n_locally_owned_dofs() << " and set size: " << current.size() <<std::endl;
-	for(unsigned int i = 0;i < dof_handler.n_locally_owned_dofs(); i++) {
-		new_dofs_ordered[i] = new_dofs[current.nth_index_in_set(i)];
-	}
-	pout << "done" <<std::endl;
-	dof_handler.renumber_dofs(new_dofs_ordered);
+	// IndexSet current = dof_handler.locally_owned_dofs();
+	//std::vector<unsigned int, std::allocator<unsigned int>> new_dofs_ordered(dof_handler.n_locally_owned_dofs());
+	// pout << "locally owned: " << dof_handler.n_locally_owned_dofs() << " and set size: " << current.size() <<std::endl;
+	//for(unsigned int i = 0;i < dof_handler.n_locally_owned_dofs(); i++) {
+	// 	new_dofs_ordered[i] = new_dofs[current.nth_index_in_set(i)];
+	//}
+	//pout << "done" <<std::endl;
+	// dof_handler.renumber_dofs(new_dofs);
 	//DoFRenumbering::downstream(dof_handler_real, direction, false);
+
 	if(prm.PRM_O_Dofs) {
 		pout << "Number of degrees of freedom: " << dof_handler.n_dofs() << std::endl;
 	}
@@ -785,56 +786,61 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 	Do_Refined_Reordering();
 
-
 	pout << "Reordering done." << std::endl;
 
-	log_data.Dofs = dof_handler.n_dofs();
-	log_constraints.start();
-	cm.reinit(locally_relevant_dofs);
-	IndexSet large(dof_handler.n_dofs());
-	int lo = std::max( 0 , (int) GlobalParams.MPI_Rank-2);
-	int hi = std::min(Sectors-1,  (int)GlobalParams.MPI_Rank + 1);
+	locally_owned_dofs = dof_handler.locally_owned_dofs ();
+	DoFTools::extract_locally_active_dofs(dof_handler, locally_active_dofs);
+	DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
+	locally_relevant_dofs_per_subdomain = DoFTools::locally_relevant_dofs_per_subdomain(dof_handler);
+	extended_relevant_dofs = locally_relevant_dofs;
+	if(GlobalParams.MPI_Rank > 0) {
+		extended_relevant_dofs.add_indices(locally_relevant_dofs_per_subdomain[GlobalParams.MPI_Rank-1]);
+	}
 
-	large.add_range(0, dof_handler.n_dofs());
-	cm_prec.reinit(large);
+	pout << "Constructing Sparsity Patterns and Constrain Matrices ... ";
+	std::cout << GlobalParams.MPI_Rank << ": "<< locally_owned_dofs.is_contiguous() << " , " << locally_owned_dofs.n_elements() << std::endl;
+	std::cout << GlobalParams.MPI_Rank << ": "<< locally_active_dofs.is_contiguous() << " , " << locally_active_dofs.n_elements() << std::endl;
+	std::cout << GlobalParams.MPI_Rank << ": "<< locally_relevant_dofs.is_contiguous() << " , " << locally_relevant_dofs.n_elements() << std::endl;
+	std::cout << GlobalParams.MPI_Rank << ": "<< extended_relevant_dofs.is_contiguous() << " , " << extended_relevant_dofs.n_elements() << std::endl;
+	cm.clear();
+	cm.reinit(locally_relevant_dofs);
+
+	cm_prec.clear();
+	cm_prec.reinit(extended_relevant_dofs);
+
+	dynamic_system_pattern.reinit(dof_handler.n_dofs(), dof_handler.n_dofs(), locally_relevant_dofs);
+	dynamic_preconditioner_pattern.reinit(dof_handler.n_dofs(), dof_handler.n_dofs(), extended_relevant_dofs);
+
+	DoFTools::make_hanging_node_constraints(dof_handler, cm);
+	std::cout<<"TEST" <<std::endl;
+	DoFTools::make_hanging_node_constraints(dof_handler, cm_prec);
+
 
 	MakeBoundaryConditions();
 	MakePreconditionerBoundaryConditions();
 
-	DoFTools::make_hanging_node_constraints(dof_handler, cm);
-	DoFTools::make_hanging_node_constraints(dof_handler, cm_prec);
-
-	pout << "Constructing Sparsity Pattern." << std::endl;
 
 	cm.close();
 	cm_prec.close();
+
+	DoFTools::make_sparsity_pattern(dof_handler, dynamic_system_pattern, cm, false , GlobalParams.MPI_Rank);
+	DoFTools::make_sparsity_pattern(dof_handler, dynamic_preconditioner_pattern, cm_prec, false , GlobalParams.MPI_Rank);
+
+	pout << "done" << std::endl;
+
 	log_constraints.stop();
 
-	locally_owned_dofs = dof_handler.locally_owned_dofs ();
-    DoFTools::extract_locally_relevant_dofs (dof_handler,
-                                             locally_relevant_dofs);
-	sparsity_pattern.reinit(dof_handler.n_dofs(),dof_handler.n_dofs(), locally_relevant_dofs);
-	prec_pattern.reinit(dof_handler.n_dofs(),dof_handler.n_dofs(),locally_relevant_dofs);
-
+	// sparsity_pattern.reinit(dof_handler.n_dofs(),dof_handler.n_dofs(), locally_relevant_dofs);
+	// TrilinosWrappers::SparsityPattern sp(All, All, All,MPI_COMM_SELF);
 	//DynamicSparsityPattern c_sparsity(dof_handler.n_dofs());
-	DoFTools::make_sparsity_pattern (dof_handler, sparsity_pattern, cm, false);
+	// DoFTools::make_sparsity_pattern (dof_handler, sparsity_pattern, cm, false);
 
-	DoFTools::make_sparsity_pattern(dof_handler, prec_pattern, cm_prec, false);
+	// SparsityTools::distribute_sparsity_pattern (sparsity_pattern, dof_handler.n_locally_owned_dofs_per_processor(), MPI_COMM_WORLD, locally_relevant_dofs);
 
-    SparsityTools::distribute_sparsity_pattern (sparsity_pattern,
-                                                dof_handler.n_locally_owned_dofs_per_processor(),
-                                                MPI_COMM_WORLD,
-                                                locally_relevant_dofs);
-    SparsityTools::distribute_sparsity_pattern (prec_pattern,
-                                                    dof_handler.n_locally_owned_dofs_per_processor(),
-                                                    MPI_COMM_WORLD,
-                                                    locally_relevant_dofs);
+    std::vector<unsigned int> pos(1);
+    pos[0] = dof_handler.n_dofs();
 
-
-	//sparsity_pattern.compress();
-	//prec_pattern.compress();
-
-	pout << "Sparsity Pattern Construction done." << std::endl;
+    // pout << "Sparsity Pattern Construction done." << std::endl;
 
 	reinit_all();
 
@@ -862,12 +868,14 @@ void Waveguide<MatrixType, VectorType>::reinit_all () {
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_preconditioner () {
+	/**
 	if(!temporary_pattern_preped) {
 		preconditioner_pattern.copy_from(prec_pattern);
 
 	}
 	preconditioner_matrix_large.reinit( dof_handler.n_dofs(), dof_handler.n_dofs(), dof_handler.max_couplings_between_dofs(), false);
 	preconditioner_matrix_small.reinit( GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1, GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1,dof_handler.max_couplings_between_dofs(), false);
+	**/
 }
 
 template<typename MatrixType, typename VectorType >
@@ -877,17 +885,21 @@ void Waveguide<MatrixType, VectorType>::reinit_rhs () {
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_systemmatrix() {
-
-	if(!temporary_pattern_preped) {
-		temporary_pattern.copy_from(sparsity_pattern);
-
-		temporary_pattern_preped = true;
-	}
-	system_matrix.reinit( temporary_pattern);
+	TrilinosWrappers::SparsityPattern sp(locally_owned_dofs,
+	                                       locally_owned_dofs,
+	                                       locally_relevant_dofs,
+	                                       MPI_COMM_WORLD);
+	DoFTools::make_sparsity_pattern (dof_handler, sp,
+	                                   cm, false,
+	                                   Utilities::MPI::
+	                                   this_mpi_process(MPI_COMM_WORLD));
+	sp.compress();
+	system_matrix.reinit( sp);
 }
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_solution() {
+	/**
 	solution.reinit(Sectors);
 	for (int i = 0; i < Sectors; i++) solution.block(i).reinit(Block_Sizes[i]);
 	solution.collect_sizes();
@@ -895,43 +907,36 @@ void Waveguide<MatrixType, VectorType>::reinit_solution() {
 	temp_storage.reinit(Sectors);
 	for (int i = 0; i < Sectors; i++) temp_storage.block(i).reinit(Block_Sizes[i]);
 	temp_storage.collect_sizes();
+	**/
 }
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_storage() {
-	storage.reinit(Sectors);
-	for (int i = 0; i < Sectors; i++) storage.block(i).reinit(Block_Sizes[i]);
-	storage.collect_sizes();
+	//storage.reinit(Sectors);
+	//for (int i = 0; i < Sectors; i++) storage.block(i).reinit(Block_Sizes[i]);
+	//storage.collect_sizes();
 }
 
 template <>
-void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_systemmatrix() {
-	//colindices[GlobalParams.MPI_Rank].add_range(0,Block_Sizes[GlobalParams.MPI_Rank]);
-	//rowindices[GlobalParams.MPI_Rank].add_range(0,Block_Sizes[GlobalParams.MPI_Rank]);
+void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_systemmatrix() {
 
-	/**
-	for ( int i = 0 ; i < Sectors; i++) {
-		rowindices[i].add_range(0,Block_Sizes[i]);
-	}
-
-	system_matrix.reinit(Sectors, Sectors);
-	for(unsigned int row = 0; row < Sectors; row++) {
-		for (unsigned int column = 0; column < Sectors; column++) {
-			system_matrix.block(row,column).reinit()
-		}
-	}
-	**/
-	if(locally_owned_dofs.is_contiguous()) {
-		pout << "OK" <<std::endl;
-	} else {
-		pout << "NOT OK" <<std::endl;
-	}
-	//system_matrix.reinit(locally_owned_dofs, locally_owned_dofs,sparsity_pattern,MPI_COMM_WORLD);
-	system_matrix.reinit(MPI_COMM_WORLD, dof_handler.n_dofs(), dof_handler.n_dofs(), dof_handler.n_locally_owned_dofs(), dof_handler.n_locally_owned_dofs(), dof_handler.max_couplings_between_dofs());
+//	IndexSet active(dof_handler.n_dofs());
+//	DoFTools::extract_locally_active_dofs(dof_handler, active);
+//	TrilinosWrappers::SparsityPattern sp(locally_owned_dofs,
+//		                                       locally_owned_dofs,
+//		                                       active,
+//		                                       MPI_COMM_WORLD, dof_handler.max_couplings_between_dofs());
+//	DoFTools::make_sparsity_pattern (dof_handler, sp,
+//		                                   cm, true,
+//		                                   Utilities::MPI::
+//		                                   this_mpi_process(MPI_COMM_WORLD));
+//	sp.compress();
+//
+	system_matrix.reinit( dynamic_system_pattern);
 }
 
 template <>
-void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_rhs () {
+void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_rhs () {
 	system_rhs.reinit(locally_owned_dofs, MPI_COMM_WORLD);
 	// system_rhs.reinit(set[GlobalParams.MPI_Rank], MPI_COMM_WORLD);
 
@@ -940,24 +945,30 @@ void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::re
 }
 
 template <>
-void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_solution() {
+void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_solution() {
 	solution.reinit(locally_owned_dofs, MPI_COMM_WORLD);
-
 }
 
 template<>
-void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_storage() {
+void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector>::reinit_storage() {
 	storage.reinit(locally_owned_dofs,  MPI_COMM_WORLD);
-
 }
 
 template<>
-void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector>::reinit_preconditioner () {
+void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_preconditioner () {
 	// if(!temporary_pattern_preped) {
 	//	preconditioner_pattern.copy_from(prec_pattern);
 	// }
-	preconditioner_matrix_large.reinit( dof_handler.n_dofs(), dof_handler.n_dofs(), dof_handler.max_couplings_between_dofs(), false);
-	preconditioner_matrix_small.reinit( GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1, GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1,dof_handler.max_couplings_between_dofs(), false);
+//	IndexSet large(dof_handler.n_dofs());
+//	large.add_range(0, dof_handler.n_dofs());
+	preconditioner_pattern.copy_from(dynamic_preconditioner_pattern);
+	preconditioner_matrix_large.reinit(preconditioner_pattern);
+	IndexSet small(GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1);
+	small.add_range(0, GlobalParams.block_highest - GlobalParams.sub_block_lowest +1);
+	DynamicSparsityPattern dsp_temp;
+	dsp_temp.reinit(GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1, GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1, small);
+
+	preconditioner_matrix_small.reinit( small, dsp_temp , MPI_COMM_SELF);
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1028,10 +1039,10 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
 			}
 			cell->get_dof_indices (local_dof_indices);
 			// pout << "Starting distribution"<<std::endl;
-			cm.distribute_local_to_global     (cell_matrix_real, cell_rhs, local_dof_indices,system_matrix              , system_rhs        , false);
+			cm.distribute_local_to_global     (cell_matrix_real, cell_rhs, local_dof_indices,system_matrix, system_rhs, false);
 			// pout << "P1 done"<<std::endl;
 
-			cm_prec.distribute_local_to_global(cell_matrix_prec, cell_rhs, local_dof_indices,preconditioner_matrix_large, preconditioner_rhs, false);
+			// cm_prec.distribute_local_to_global(cell_matrix_prec, cell_rhs, local_dof_indices,preconditioner_matrix_large, preconditioner_rhs, false);
 
 			// pout << "P2 done"<<std::endl;
 
@@ -1126,59 +1137,78 @@ void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
 	{
-		for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
-			Point<3, double> center =(cell->face(i))->center(true, false);
-			if( center[0] < 0) center[0] *= (-1.0);
-			if( center[1] < 0) center[1] *= (-1.0);
+		if(cell->subdomain_id() == GlobalParams.MPI_Rank) {
+			for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+				Point<3, double> center =(cell->face(i))->center(true, false);
+				if( center[0] < 0) center[0] *= (-1.0);
+				if( center[1] < 0) center[1] *= (-1.0);
 
-			if ( std::abs( center[0] - GlobalParams.PRM_M_R_XLength/2.0) < 0.0001 ){
-				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
-				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
-					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
-					cm.add_line(local_dof_indices[0]);
-					cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
-					cm.add_line(local_dof_indices[1]);
-					cm.set_inhomogeneity(local_dof_indices[1], 0.0);
-				}
-			}
-			if ( std::abs( center[1] - GlobalParams.PRM_M_R_YLength/2.0) < 0.0001 ){
-				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
-				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
-					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
-					cm.add_line(local_dof_indices[0]);
-					cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
-					cm.add_line(local_dof_indices[1]);
-					cm.set_inhomogeneity(local_dof_indices[1], 0.0);
-				}
-			}
-			if( std::abs(center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) < 0.0001 ){
-				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
-				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
-					if((cell->face(i))->line(j)->at_boundary()) {
+				if ( std::abs( center[0] - GlobalParams.PRM_M_R_XLength/2.0) < 0.0001 ){
+					std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
+					for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 						((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
-						Tensor<1,3,double> ptemp = ((cell->face(i))->line(j))->center(true, false);
-						Point<3, double> p (ptemp[0], ptemp[1], ptemp[2]);
-						Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(0) - ((cell->face(i))->line(j))->vertex(1);
-						Point<3, double> direction (dtemp[0], dtemp[1], dtemp[2]);
-
-						double result = TEMode00(p,0);
-						if(PML_in_X(p) || PML_in_Y(p)) result = 0.0;
-						cm.add_line(local_dof_indices[0]);
-						cm.set_inhomogeneity(local_dof_indices[0], direction[0] * result);
-						cm.add_line(local_dof_indices[1]);
-						cm.set_inhomogeneity(local_dof_indices[1], 0.0);
-
+						if(locally_owned_dofs.is_element(local_dof_indices[0])) {
+							cm.add_line(local_dof_indices[0]);
+							cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
+						}
+						if(locally_owned_dofs.is_element(local_dof_indices[1])) {
+							cm.add_line(local_dof_indices[1]);
+							cm.set_inhomogeneity(local_dof_indices[1], 0.0);
+						}
 					}
 				}
-			}
-			if( std::abs(center[2] - GlobalParams.PRM_M_R_ZLength/2.0  - GlobalParams.PRM_M_BC_XYout *sector_length) < 0.0001 ){
-				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
-				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
-					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
-					cm.add_line(local_dof_indices[0]);
-					cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
-					cm.add_line(local_dof_indices[1]);
-					cm.set_inhomogeneity(local_dof_indices[1], 0.0);
+				if ( std::abs( center[1] - GlobalParams.PRM_M_R_YLength/2.0) < 0.0001 ){
+					std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
+					for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+						((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+						if(locally_owned_dofs.is_element(local_dof_indices[0])) {
+							cm.add_line(local_dof_indices[0]);
+							cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
+						}
+						if(locally_owned_dofs.is_element(local_dof_indices[1])) {
+							cm.add_line(local_dof_indices[1]);
+							cm.set_inhomogeneity(local_dof_indices[1], 0.0);
+						}
+					}
+				}
+				if( std::abs(center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) < 0.0001 ){
+					std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
+					for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+						if((cell->face(i))->line(j)->at_boundary()) {
+							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+							Tensor<1,3,double> ptemp = ((cell->face(i))->line(j))->center(true, false);
+							Point<3, double> p (ptemp[0], ptemp[1], ptemp[2]);
+							Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(0) - ((cell->face(i))->line(j))->vertex(1);
+							Point<3, double> direction (dtemp[0], dtemp[1], dtemp[2]);
+
+							double result = TEMode00(p,0);
+							if(PML_in_X(p) || PML_in_Y(p)) result = 0.0;
+							if(locally_owned_dofs.is_element(local_dof_indices[0])) {
+								cm.add_line(local_dof_indices[0]);
+								cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
+							}
+							if(locally_owned_dofs.is_element(local_dof_indices[1])) {
+								cm.add_line(local_dof_indices[1]);
+								cm.set_inhomogeneity(local_dof_indices[1], 0.0);
+							}
+
+						}
+					}
+				}
+				if( std::abs(center[2] - GlobalParams.PRM_M_R_ZLength/2.0  - GlobalParams.PRM_M_BC_XYout *sector_length) < 0.0001 ){
+					std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
+					for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+						((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+						if(locally_owned_dofs.is_element(local_dof_indices[0])) {
+							cm.add_line(local_dof_indices[0]);
+							cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
+						}
+						if(locally_owned_dofs.is_element(local_dof_indices[1])) {
+							cm.add_line(local_dof_indices[1]);
+							cm.set_inhomogeneity(local_dof_indices[1], 0.0);
+						}
+
+					}
 				}
 			}
 		}
@@ -1321,85 +1351,23 @@ SolverControl::State  Waveguide<MatrixType, VectorType>::check_iteration_state (
 }
 
 template< >
-void Waveguide<PETScWrappers::MPI::SparseMatrix, PETScWrappers::MPI::Vector >::solve () {
+void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::solve () {
 
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
 	if(prm.PRM_S_Solver == "GMRES") {
 
-		PETScWrappers::SolverGMRES solver(solver_control, MPI_COMM_WORLD , dealii::PETScWrappers::SolverGMRES::AdditionalData( prm.PRM_S_GMRESSteps, true) );
+		TrilinosWrappers::SolverGMRES solver(solver_control , dealii::TrilinosWrappers::SolverGMRES::AdditionalData( true, prm.PRM_S_GMRESSteps) );
 		timerupdate();
 		if(prm.PRM_S_Preconditioner == "Sweeping"){
 
+			PreconditionerSweeping sweep( preconditioner_matrix_small);
+			IndexSet local(dof_handler.n_dofs());
+			local.add_range(GlobalParams.sub_block_lowest, GlobalParams.block_highest);
+			preconditioner_matrix_small.reinit(local, local, preconditioner_matrix_large, MPI_COMM_SELF, 1e-13, true);
 
-			// if(!is_stored)	sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
-			// sweep.initialize(& system_matrix, preconditioner_matrix_1,preconditioner_matrix_2 );
-			/**
-			std::cout << "Matrix rows: " << GlobalParams.sub_block_lowest << " till " << GlobalParams.block_highest << std::endl;
-			preconditioner_matrix_large.compress(VectorOperation::add);
-
-			pout << system_matrix.n_nonzero_elements() << std::endl;
-			Mat matrix = static_cast<Mat>(preconditioner_matrix_large);
-			PetscViewer    viewer;
-			PetscViewerDrawOpen(PETSC_COMM_SELF,NULL,NULL,0,0,900,900,&viewer);
-			PetscObjectSetName((PetscObject)viewer, "TEST");
-			PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_BASIC);
-			MatView(matrix,viewer);
-
-
-			for ( unsigned int i = GlobalParams.sub_block_lowest; i <= GlobalParams.block_highest; i++ ) {
-				PETScWrappers::MatrixBase::const_iterator r =  preconditioner_matrix_large.begin(i);
-				PETScWrappers::MatrixBase::const_iterator end =  preconditioner_matrix_large.end(i);
-				for ( ; r != end; r++ ){
-					if( r->column() >= GlobalParams.sub_block_lowest && r->column() <= GlobalParams.block_highest ){
-						preconditioner_matrix_small.set((unsigned int)(i - GlobalParams.sub_block_lowest), (unsigned int)(r->column() - GlobalParams.sub_block_lowest), r->value());
-					}
-				}
-			}
-
-			preconditioner_matrix_small.compress(VectorOperation::insert);
-
-			std::cout << "Starting Generation!" <<std::endl;
-			std::cout << "Matrix size large: " << preconditioner_matrix_large.n_nonzero_elements() << std::endl;
-			std::cout << "Matrix size small: " << preconditioner_matrix_small.n_nonzero_elements() << std::endl;
-			**/
-			PreconditionerSweeping sweep( preconditioner_matrix_large,GlobalParams.sub_block_lowest, GlobalParams.block_lowest, GlobalParams.block_highest);
-
-			std::cout << "Generation worked!" <<std::endl;
-			timerupdate();
-			if(is_stored) {
-				solution = storage;
-			}
-			pout << "Norm of the solution (sqr): ";
-			pout << solution.norm_sqr() ;
-			pout << std::endl;
-
-			solution.compress(VectorOperation::add);
-			system_rhs.compress(VectorOperation::add);
-			sweep.get_pc();
-			KSP ksp;
-			KSPCreate(PETSC_COMM_WORLD, &ksp);
-			KSPSetPC(ksp, sweep.get_pc());
-			KSPSetType(ksp, KSPGMRES);
-			KSPSetTolerances(ksp,prm.PRM_S_Precision, PETSC_DEFAULT,PETSC_DEFAULT,prm.PRM_S_GMRESSteps);
-			Mat system = static_cast<Mat>(system_matrix);
-			KSPSetOperators(ksp, system, system);
-			Vec sol, rhs;
-			VecDuplicate( static_cast<Vec>(system_rhs), & rhs);
-			VecDuplicate( static_cast<Vec>(system_rhs), & sol);
-			KSPSolve(ksp, sol, rhs );
-			// solver.initialize(sweep);
-			// solver.
-			// solver.solve (system_matrix, solution, system_rhs,  sweep);
-			int lowest, highest;
-			VecGetOwnershipRange(sol, &lowest, &highest);
-			PetscScalar * vals;
-			VecGetArray( sol, &vals);
-			solution.compress(VectorOperation::add);
-			for(int i = 0; i < highest-lowest; i++) {
-				solution[lowest + i] = vals[i];
-			}
+			solver.solve(system_matrix,solution, system_rhs, sweep);
 
 		}
 
@@ -1482,7 +1450,7 @@ void Waveguide<MatrixType, VectorType>::output_results ()
 	data_out_real.write_vtk(outputvtk2);
 	 **/
 	std::ofstream pattern (solutionpath + "/pattern.gnu");
-	sparsity_pattern.print_gnuplot(pattern);
+	system_pattern.print_gnuplot(pattern);
 
 
 	std::ofstream patternscript (solutionpath + "/displaypattern.gnu");

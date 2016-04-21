@@ -42,12 +42,11 @@
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/index_set.h>
 
-// PETSc Headers
-#include <deal.II/lac/petsc_precondition.h>
-#include <deal.II/lac/petsc_solver.h>
-#include <deal.II/lac/petsc_sparse_matrix.h>
-#include <deal.II/lac/petsc_parallel_block_sparse_matrix.h>
-#include <deal.II/lac/petsc_parallel_block_vector.h>
+// Trilinos Headers
+#include <deal.II/lac/trilinos_precondition.h>
+#include <deal.II/lac/trilinos_solver.h>
+#include <deal.II/lac/trilinos_sparse_matrix.h>
+#include <deal.II/lac/trilinos_parallel_block_vector.h>
 
 #include <fstream>
 #include <iostream>
@@ -360,11 +359,14 @@ class Waveguide
 		//, dof_handler_real;
 		VectorType								solution;
 		ConstraintMatrix 						cm, cm_prec;
+		IndexSet								locally_owned_dofs, locally_relevant_dofs, locally_active_dofs, extended_relevant_dofs;
+		std::vector<IndexSet>					locally_relevant_dofs_per_subdomain;
 
-		DynamicSparsityPattern					sparsity_pattern, prec_pattern;
-		MatrixType								system_matrix;
-		PETScWrappers::SparseMatrix     		preconditioner_matrix_large;
-		PETScWrappers::SparseMatrix 			preconditioner_matrix_small;
+		DynamicSparsityPattern					dynamic_system_pattern, dynamic_preconditioner_pattern;
+		SparsityPattern							system_pattern, preconditioner_patttern;
+		TrilinosWrappers::SparseMatrix 			system_matrix;
+		SparseMatrix<double>		     		preconditioner_matrix_large;
+		TrilinosWrappers::SparseMatrix 			preconditioner_matrix_small;
 		Parameters								&prm;
 		ConstraintMatrix 						boundary_value_constraints_imaginary;
 		ConstraintMatrix 						boundary_value_constraints_real;
@@ -386,8 +388,6 @@ class Waveguide
 		std::vector<int>						Dofs_Below_Subdomain, Block_Sizes;
 		const int 								Sectors;
 		std::vector<dealii::IndexSet> 			set;
-		dealii::IndexSet						locally_owned_dofs;
-		dealii::IndexSet						locally_relevant_dofs;
 		SparsityPattern 						temporary_pattern, preconditioner_pattern;
 		bool									temporary_pattern_preped;
 		FEValuesExtractors::Vector 				real, imag;

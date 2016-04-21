@@ -1,13 +1,51 @@
 #include <cmath>
 #include <deal.II/base/utilities.h>
-#include <deal.II/lac/petsc_matrix_base.h>
-#include <deal.II/lac/petsc_vector_base.h>
-#include <deal.II/lac/petsc_precondition.h>
+#include <deal.II/lac/trilinos_solver.h>
 #include "PreconditionerSweeping.h"
-#include <petscksp.h>
 
 using namespace dealii;
 
+
+PreconditionerSweeping::PreconditionerSweeping (const TrilinosWrappers::SparseMatrix  &S)
+      :
+      preconditioner_matrix     (&S)
+    {}
+
+    void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
+                const TrilinosWrappers::MPI::Vector &src) const
+    {
+
+      const TrilinosWrappers::Vector itmp(src);
+      TrilinosWrappers::Vector otmp(dst);
+
+      {
+        SolverControl solver_control(5000, 1e-6 * src.l2_norm());
+        TrilinosWrappers::SolverDirect solver(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Mumps"));
+        solver.solve(*preconditioner_matrix, otmp, itmp);
+      }
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
 PetscErrorCode SampleShellPCApply(PC pc,Vec x,Vec y)
   {
 	std::cout << "Beginning Application of Precondtioner:" << std::endl;
@@ -130,11 +168,8 @@ PreconditionerSweeping::PreconditionerSweeping (const dealii::PETScWrappers::Mat
 
 	  ierr = PCShellSetContext(pc,& additional_data);
 
-	  /**
-	  ierr = PCShellSetDestroy(pc,SampleShellPCDestroy);
 
-	  ierr = PCShellSetName(pc,"SweepingPreconditioner");
-	   **/
+
 
   }
 
@@ -202,3 +237,4 @@ void  PreconditionerSweeping::initialize (const PETScWrappers::MatrixBase     &m
   }
 
 
+**/
