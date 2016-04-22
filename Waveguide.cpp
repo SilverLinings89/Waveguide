@@ -15,6 +15,8 @@
 #include <deal.II/lac/trilinos_precondition.h>
 #include "petscmat.h"
 #include "petscdraw.h"
+#include <deal.II/distributed/tria.h>
+#include <deal.II/grid/tria_boundary_lib.h>
 
 #include "PreconditionerSweeping.cpp"
 using namespace dealii;
@@ -23,7 +25,7 @@ template<typename MatrixType, typename VectorType >
 Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
   :
   fe(FE_Nedelec<3> (0), 2),
-  triangulation (MPI_COMM_WORLD, typename parallel::shared::Triangulation<3>::MeshSmoothing(Triangulation<3>::none ), true),
+  triangulation (MPI_COMM_WORLD, typename parallel::distributed::Triangulation<3>::MeshSmoothing(Triangulation<3>::none ), parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning),
   //triangulation_real (MPI_COMM_WORLD, typename Triangulation<3>::MeshSmoothing(Triangulation<3>::smoothing_on_refinement | Triangulation<3>::smoothing_on_coarsening)),
   dof_handler (triangulation),
   //dof_handler_real(triangulation_real),
@@ -532,59 +534,65 @@ double Waveguide<MatrixType, VectorType>::PML_Z_Distance(Point<3> &p){
 }
 
 template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::set_boundary_ids (parallel::shared::Triangulation<3> &tria) const
+void Waveguide<MatrixType, VectorType>::set_boundary_ids (parallel::distributed::Triangulation<3> &tria) const
 {
 	double len = 2.0 / Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
 
 	int counter = 0;
-	parallel::shared::Triangulation<3>::active_cell_iterator
-	cell = tria.begin_active(),
-	endc = tria.end();
+	parallel::shared::Triangulation<3>::active_cell_iterator cell = tria.begin_active();
+	parallel::shared::Triangulation<3>::active_cell_iterator endc = tria.end();
+	tria.set_all_manifold_ids(0);
 	for (; cell!=endc; ++cell){
-		int temp  = std::floor((cell->center(true, false)[2] + 1.0)/len);
-		cell->set_subdomain_id(temp);
-	}
-
-	cell = tria.begin_active();
-
-	for (; cell!=endc; ++cell){
-		if(cell->at_boundary()){
-			for(int j = 0; j<6; j++){
-				if(cell->face(j)->at_boundary()){
-					Point<3> ctr =cell->face(j)->center(true, false);
-					if(System_Coordinate_in_Waveguide(ctr)){
-						if(ctr(2) < 0) {
-
-							cell->face(j)->set_all_boundary_ids(11);
-							counter ++;
-						}
-
-						else {
-							cell->face(j)->set_all_boundary_ids(2);
-						}
-					}
-				}
-			}
+		if (Distance2D(cell->center() ) < 0.25 ) {
+			cell->set_all_manifold_ids(1);
+			cell->set_manifold_id(1);
 		}
 	}
+	unsigned int man = 1;
 
-	cell = triangulation.begin_active();
-	for (; cell!=endc; ++cell){
-			double distance_from_center = 0;
-			for( int j = 0; j<4; j++) distance_from_center += Distance2D(Point<3> (cell->vertex(j)));
-			if (distance_from_center < 3 ) {
-				cell->set_all_manifold_ids(1);
-			}
-	}
+	tria.set_manifold (man, round_description);
 
-	cell = triangulation.begin_active();
-	for (; cell!=endc; ++cell){
-		double distance_from_center = 0;
-		for( int j = 0; j<4; j++) distance_from_center += Distance2D(Point<3> (cell->vertex(j)));
-		if (distance_from_center < 1.2) {
-			cell->set_manifold_id(0);
-		}
-	}
+//	cell = tria.begin_active(),
+//	endc = tria.end();
+//	for (; cell!=endc; ++cell){
+//		int temp  = std::floor((cell->center(true, false)[2] + 1.0)/len);
+//		cell->set_subdomain_id(temp);
+//	}
+//
+//	cell = tria.begin_active();
+//
+//	for (; cell!=endc; ++cell){
+//		if(cell->at_boundary()){
+//			for(int j = 0; j<6; j++){
+//				if(cell->face(j)->at_boundary()){
+//					Point<3> ctr =cell->face(j)->center(true, false);
+//					if(System_Coordinate_in_Waveguide(ctr)){
+//						if(ctr(2) < 0) {
+//
+//							cell->face(j)->set_all_boundary_ids(11);
+//							counter ++;
+//						}
+//
+//						else {
+//							cell->face(j)->set_all_boundary_ids(2);
+//						}
+//					}
+//				}
+//			}
+//		}
+//	}
+
+
+
+
+//	cell = tria.begin_active();
+//	for (; cell!=endc; ++cell){
+//		double distance_from_center = 0;
+//		for( int j = 0; j<4; j++) distance_from_center += Distance2D(Point<3> (cell->vertex(j)));
+//		if (distance_from_center < 1.2) {
+//			cell->set_all_manifold_ids(0);
+//		}
+//	}
 
 
 }
@@ -592,21 +600,95 @@ void Waveguide<MatrixType, VectorType>::set_boundary_ids (parallel::shared::Tria
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::make_grid ()
 {
-	log_total.start();
-	const double outer_radius = 1.0;
-	GridGenerator::subdivided_hyper_cube (triangulation, 5, -outer_radius, outer_radius);
-	if(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)%5 != 0) {
-		pout<< "ERROR WRONG PROCESS NUMBER. MUST HAVE SHAPE 5 * 2^n" << std::endl;
+	Point<3> origin(-1,-1,-1);
+	std_cxx11::array< Tensor< 1, 3 >, 3 > edges;
+	edges[0][0] = 2;
+	edges[0][1] = 0;
+	edges[0][2] = 0;
+
+	edges[1][0] = 0;
+	edges[1][1] = 2;
+	edges[1][2] = 0;
+
+	edges[2][0] = 0;
+	edges[2][1] = 0;
+	edges[2][2] = 2;
+
+	const std_cxx11::array< Tensor< 1, 3 >, 3 > edges2(edges);
+
+	std::vector<unsigned int> subs(3);
+	subs[0] = 1;
+	subs[1] = 1;
+//	subs[2] = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);;
+	subs[2] = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
+	GridGenerator::subdivided_parallelepiped<3,3>(triangulation,origin, edges2, subs, false);
+
+
+	triangulation.repartition();
+	//	parallel::shared::Triangulation<3>::active_cell_iterator cell, endc;
+	triangulation.refine_global(3);
+
+	triangulation.signals.post_refinement.connect
+			    (std_cxx11::bind (&Waveguide<MatrixType, VectorType>::set_boundary_ids,
+			                      std_cxx11::cref(*this),
+			                      std_cxx11::ref(triangulation)));
+
+
+	triangulation.set_all_manifold_ids(0);
+
+	GridTools::transform( &Triangulation_Stretch_to_circle , triangulation);
+
+	unsigned int man = 1;
+
+	triangulation.set_manifold (man, round_description);
+
+	triangulation.set_all_manifold_ids(0);
+	cell = triangulation.begin_active();
+	endc = triangulation.end();
+	for (; cell!=endc; ++cell){
+		if (Distance2D(cell->center() ) < 0.25 ) {
+			cell->set_all_manifold_ids(1);
+			cell->set_manifold_id(1);
+		}
 	}
 
-	unsigned exp = 0;
-	while(std::pow(2,exp) * 5 < Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)) {
-		exp++;
+
+	triangulation.set_manifold (man, round_description);
+
+	triangulation.refine_global(1);
+
+	triangulation.set_all_manifold_ids(0);
+	cell = triangulation.begin_active();
+	endc = triangulation.end();
+	for (; cell!=endc; ++cell){
+		if (Distance2D(cell->center() ) < 0.25 ) {
+			cell->set_all_manifold_ids(1);
+			cell->set_manifold_id(1);
+		}
 	}
-	if(std::pow(2,exp) * 5 != Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)) {
-		pout<< "ERROR WRONG PROCESS NUMBER. MUST HAVE SHAPE 5 * 2^n" << std::endl;
-	}
-	pout << "exp = " << exp <<std::endl;
+
+
+	triangulation.set_manifold (man, round_description);
+
+	triangulation.refine_global(1);
+
+//	cell = triangulation.begin_active();
+//	endc = triangulation.end();
+//
+//	for ( ; cell!=endc; ++cell) {
+//		if(Distance2D(cell->center()) < 0.3) {
+//			cell->set_coarsen_flag();
+//		}
+//	}
+//
+//	triangulation.execute_coarsening_and_refinement();
+
+	//triangulation.refine_global(1);
+
+	// mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
+
+	std::cout << "done" << std::endl;
+
 	parallel::shared::Triangulation<3>::active_cell_iterator
 
 	cell = triangulation.begin_active(),
@@ -615,14 +697,21 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 		//cell->set_subdomain_id(0);
 	}
 
-	for ( int j = 1; j < exp; j++) {
-		cell = triangulation.begin_active(),
-		endc = triangulation.end();
-		for (; cell!=endc; ++cell){
-			cell->set_refine_flag(dealii::RefinementPossibilities<3>::cut_z);
-		}
-		triangulation.execute_coarsening_and_refinement();
+	int layers_per_sector = 4;
+	layers_per_sector /= GlobalParams.PRM_R_Global;
+	int reps = log2(layers_per_sector);
+	if( layers_per_sector > 0 && pow(2,reps) != layers_per_sector) {
+		pout << "The number of layers per sector has to be a power of 2. At least 2 layers are recommended for neccessary sparsity in the pattern for preconditioner to work." << std::endl;
+		exit(0);
 	}
+//	for ( int j = 0; j < reps; j++) {
+//		cell = triangulation.begin_active(),
+//		endc = triangulation.end();
+//		for (; cell!=endc; ++cell){
+//			cell->set_refine_flag(dealii::RefinementPossibilities<3>::cut_z);
+//		}
+//		triangulation.execute_coarsening_and_refinement();
+//	}
 
 	double len = 2.0 / Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
 
@@ -634,27 +723,11 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	}
 
 	unsigned int temp = 1;
-	triangulation.set_manifold (temp, round_description);
 
-	cell = triangulation.begin_active();
-	endc = triangulation.end();
+	//dealii::CylinderBoundary<3,3> cylinder (1,2);
 
-	for (; cell!=endc; ++cell){
-		double distance_from_center = 0;
-		for( int j = 0; j<4; j++) distance_from_center += Distance2D(Point<3> (cell->vertex(j)));
-		if (distance_from_center < 3 ) {
-			cell->set_all_manifold_ids(1);
-		}
-	}
+	//triangulation.set_boundary(1,cylinder);
 
-	cell = triangulation.begin_active();
-	for (; cell!=endc; ++cell){
-		double distance_from_center = 0;
-		for( int j = 0; j<4; j++) distance_from_center += Distance2D(Point<3> (cell->vertex(j)));
-		if (distance_from_center < 1.2) {
-			cell->set_manifold_id(0);
-		}
-	}
 
 	GridTools::transform(& Triangulation_Stretch_X, triangulation);
 	GridTools::transform(& Triangulation_Stretch_Y, triangulation);
@@ -664,9 +737,9 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 		triangulation.refine_global (prm.PRM_D_XY);
 	} else {
 
-		triangulation.refine_global (GlobalParams.PRM_R_Global);
+		//triangulation.refine_global (GlobalParams.PRM_R_Global);
+//		double MaxDistFromBoundary = (GlobalParams.PRM_M_C_RadiusOut + GlobalParams.PRM_M_C_RadiusIn)*1.4/2.0;
 		double MaxDistFromBoundary = (GlobalParams.PRM_M_C_RadiusOut + GlobalParams.PRM_M_C_RadiusIn)*1.4/2.0;
-
 		for(int i = 0; i < GlobalParams.PRM_R_Semi; i++) {
 			cell = triangulation.begin_active();
 			for (; cell!=endc; ++cell){
@@ -674,34 +747,29 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 					cell->set_refine_flag();
 				}
 			}
-			triangulation.execute_coarsening_and_refinement();
-			MaxDistFromBoundary *= 0.7 ;
+			//triangulation.execute_coarsening_and_refinement();
+			//MaxDistFromBoundary *= 0.7 ;
 		}
-		for(int i = 0; i < GlobalParams.PRM_R_Internal; i++) {
-			cell = triangulation.begin_active();
-			for (; cell!=endc; ++cell){
-				if( Distance2D(cell->center(true, false))< (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0)  {
-					cell->set_refine_flag();
-				}
-			}
-			triangulation.execute_coarsening_and_refinement();
-		}
+//		MaxDistFromBoundary = (GlobalParams.PRM_M_C_RadiusOut + GlobalParams.PRM_M_C_RadiusIn)*1.4/2.0;
+//		for(int i = 0; i < GlobalParams.PRM_R_Internal; i++) {
+//			cell = triangulation.begin_active();
+//			for (; cell!=endc; ++cell){
+//				if( Distance2D(cell->center(true, false))< (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0)  {
+//					cell->set_refine_flag();
+//				}
+//			}
+//			triangulation.execute_coarsening_and_refinement();
+//		}
 	}
 
-	cell = triangulation.begin_active();
-	for (; cell!=endc; ++cell){
-		int temp  = (int) std::floor((cell->center(true, false)[2] + 1.0)/len);
-		if( temp >=  Sectors || temp < 0) pout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
-		//cell->set_subdomain_id(temp);
-	}
-
+	mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
 
 	GridTools::transform(& Triangulation_Stretch_Z, triangulation);
 
 
 	GridTools::transform(& Triangulation_Shift_Z , triangulation);
 
-	mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
+	// mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
 
 }
 

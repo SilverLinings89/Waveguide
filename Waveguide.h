@@ -170,7 +170,7 @@ class Waveguide
 		Tensor<2,3, std::complex<double>> get_Preconditioner_Tensor(Point<3> & point, bool inverse, bool epsilon, int block);
 
 	private:
-		void set_boundary_ids (parallel::shared::Triangulation<3> &tria) const;
+		void set_boundary_ids (parallel::distributed::Triangulation<3> &tria) const;
 		/**
 		 * Grid-generation is a crucial part of any FEM-Code. This function holds all functionality concerning that topic. In the current implementation we start with a cubic Mesh. That mesh originally is subdivided in 5 cells per dimension yielding a total of 5*5*5 = 125 cells. The central cells in the x-z planes are given a cylindrical manifold-description forcing them to interpolate the new points during global refinement using a circular shape rather than linear interpolation. This leads to the description of a cylinder included within a cube. There are currently three techniques for mesh-refinement:
 		 * 	-# Global refinement: For such refinement-cases, any cell is subdivided in the middle of any dimension. In this case every cell is split into 8 new ones, increasing the number of cells massively. Pros: no hanging nodes. Cons: Very many new dofs that might be in areas, where the resolution of the mesh is already large enough.
@@ -351,8 +351,8 @@ class Waveguide
 		std::complex<double> gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc);
 
 		std::string								solutionpath;
-		DoFHandler<3>::active_cell_iterator		cell, endc;
-		parallel::shared::Triangulation<3>	triangulation;
+		parallel::distributed::Triangulation<3>::active_cell_iterator cell, endc;
+		parallel::distributed::Triangulation<3>	triangulation;
 		//, triangulation_real;
 		FESystem<3>								fe;
 		DoFHandler<3>							dof_handler;

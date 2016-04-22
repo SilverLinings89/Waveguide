@@ -183,7 +183,7 @@ inline double dotproduct(Tensor<1, 3, double> a, Tensor<1, 3, double> b) {
 	return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
-template<int dim> static void mesh_info(const parallel::shared::Triangulation<dim> &tria, const std::string &filename)
+template<int dim> static void mesh_info(const parallel::distributed::Triangulation<dim> &tria, const std::string &filename)
 {
 	std::cout << "Mesh info:" << std::endl << " dimension: " << dim << std::endl << " no. of cells: " << tria.n_active_cells() << std::endl;
 	{
@@ -271,6 +271,20 @@ static Point<3> Triangulation_Stretch_Real_Radius (const Point<3> &p)
 	q[1] += factor * shift;
 	return p;
 }
+
+static Point<3> Triangulation_Stretch_to_circle (const Point<3> &p)
+{
+	Point<3> q = p;
+	if(abs(q[0]) < 0.01 && abs(q[1]) - 0.25 < 0.01 ) {
+		q[1] *= sqrt(2);
+	}
+	if(abs(q[1]) < 0.01 && abs(q[0]) - 0.25 < 0.01 ) {
+			q[0] *= sqrt(2);
+	}
+	return q;
+}
+
+
 
 static Point<3> Triangulation_Stretch_Computational_Radius (const Point<3> &p)
 {
