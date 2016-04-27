@@ -264,6 +264,14 @@ struct Parameters {
 	unsigned int block_lowest;
 
 	unsigned int block_highest;
+
+	double z_evaluate;
+
+	double z_min, z_max;
+
+	bool evaluate_in;
+
+	bool evaluate_out;
 };
 
 #endif

@@ -17,6 +17,8 @@
 #include "petscdraw.h"
 #include <deal.II/distributed/tria.h>
 #include <deal.II/grid/tria_boundary_lib.h>
+#include <deal.II/lac/block_sparsity_pattern.h>
+#include <deal.II/lac/dynamic_sparsity_pattern.h>
 
 #include "PreconditionerSweeping.cpp"
 using namespace dealii;
@@ -194,8 +196,30 @@ double Waveguide<MatrixType, VectorType>::evaluate_in () {
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::evaluate_overall () {
-	double quality_in	= evaluate_for_z(-GlobalParams.PRM_M_R_ZLength/2.0);
-	double quality_out	= evaluate_for_z(GlobalParams.PRM_M_R_ZLength/2.0);
+	std::vector <double> qualities(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD));
+	double lower = 0.0;
+	double upper = 0.0;
+	if(GlobalParams.evaluate_in) {
+		std::cout << "Evaluation for input side by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << -GlobalParams.PRM_M_R_ZLength / 2.0 << std::endl;
+		lower = evaluate_for_z(-GlobalParams.PRM_M_R_ZLength / 2.0 + 0.0001);
+	}
+	if(GlobalParams.evaluate_out) {
+		std::cout << "Evaluation for output side by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << GlobalParams.PRM_M_R_ZLength / 2.0 << std::endl;
+		upper = evaluate_for_z(GlobalParams.PRM_M_R_ZLength / 2.0 - 0.0001);
+	}
+	lower = Utilities::MPI::sum(lower, MPI_COMM_WORLD);
+	upper = Utilities::MPI::sum(upper, MPI_COMM_WORLD);
+
+	for(int i = 0; i< Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
+		double contrib = 0.0;
+		if(i == GlobalParams.MPI_Rank) {
+			std::cout << "Evaluation of contribution by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << GlobalParams.z_evaluate<< std::endl;
+			 contrib = evaluate_for_z(GlobalParams.z_evaluate);
+		}
+		qualities[i] = Utilities::MPI::sum(contrib, MPI_COMM_WORLD);
+	}
+	double quality_in	= lower;
+	double quality_out	= upper;
 	pout << "Quality in: "<< quality_in << std::endl;
 	pout << "Quality out: "<< quality_out << std::endl;
 	/**
@@ -205,28 +229,36 @@ double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 	double L2error = differences.l2_norm();
 	**/
 	// if(!is_stored) pout << "L2 Norm of the error: " << L2error << std::endl;
-	result_file << "Number of Dofs: " << dof_handler.n_dofs() << std::endl;
-	//result_file << "L2 Norm of the error:" << L2error << std::endl;
-	result_file << "Z-Length: " << GlobalParams.PRM_M_R_ZLength << std::endl;
-	result_file << "Quality in: "<< quality_in << std::endl;
-	result_file << "Quality out: "<< quality_out << std::endl;
-	result_file << 	100* quality_out/quality_in << "%" << std::endl;
-	result_file << "Delta:" << GlobalParams.PRM_M_W_Delta << std::endl;
-	result_file << "Solver: " << GlobalParams.PRM_S_Solver << std::endl;
-	result_file << "Preconditioner: " << GlobalParams.PRM_S_Preconditioner << std::endl;
-	result_file << "Minimal Stretch: " << structure->lowest << std::endl;
-	result_file << "Maximal Stretch: " << structure->highest << std::endl;
-	result_file.close();
+	if(GlobalParams.MPI_Rank == 0) {
+		result_file << "Number of Dofs: " << dof_handler.n_dofs() << std::endl;
+		//result_file << "L2 Norm of the error:" << L2error << std::endl;
+		result_file << "Z-Length: " << GlobalParams.PRM_M_R_ZLength << std::endl;
+		result_file << "Quality in: "<< quality_in << std::endl;
+		result_file << "Quality out: "<< quality_out << std::endl;
+		result_file << 	100* quality_out/quality_in << "%" << std::endl;
+		result_file << "Delta:" << GlobalParams.PRM_M_W_Delta << std::endl;
+		result_file << "Solver: " << GlobalParams.PRM_S_Solver << std::endl;
+		result_file << "Preconditioner: " << GlobalParams.PRM_S_Preconditioner << std::endl;
+		result_file << "Minimal Stretch: " << structure->lowest << std::endl;
+		result_file << "Maximal Stretch: " << structure->highest << std::endl;
+		result_file.close();
 
+	}
+	pout << "Signal quality evolution: ";
+	for(int i =0; i < Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
+			pout << 100 * qualities[i]/ lower << "% ";
+			if(i != Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)-1) pout << " -> ";
+	}
+	pout << std::endl;
 	return quality_out/quality_in;
 }
 
 template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::store() {
+void Waveguide<MatrixType, VectorType >::store() {
 	reinit_storage();
 	// storage.reinit(dof_handler.n_dofs());
-	for (unsigned int i=0; i<solution.size(); ++i)  storage(i) = temp_storage(i);
-	is_stored = true;
+	/** storage = solution;
+	is_stored = true; **/
 }
 
 template<typename MatrixType, typename VectorType >
@@ -559,28 +591,28 @@ void Waveguide<MatrixType, VectorType>::set_boundary_ids (parallel::distributed:
 //		cell->set_subdomain_id(temp);
 //	}
 //
-//	cell = tria.begin_active();
-//
-//	for (; cell!=endc; ++cell){
-//		if(cell->at_boundary()){
-//			for(int j = 0; j<6; j++){
-//				if(cell->face(j)->at_boundary()){
-//					Point<3> ctr =cell->face(j)->center(true, false);
-//					if(System_Coordinate_in_Waveguide(ctr)){
-//						if(ctr(2) < 0) {
-//
-//							cell->face(j)->set_all_boundary_ids(11);
-//							counter ++;
-//						}
-//
-//						else {
-//							cell->face(j)->set_all_boundary_ids(2);
-//						}
-//					}
-//				}
-//			}
-//		}
-//	}
+	cell = tria.begin_active();
+
+	for (; cell!=endc; ++cell){
+		if(cell->at_boundary()){
+			for(int j = 0; j<6; j++){
+				if(cell->face(j)->at_boundary()){
+					Point<3> ctr =cell->face(j)->center(true, false);
+					if(System_Coordinate_in_Waveguide(ctr)){
+						if(ctr(2) < 0) {
+
+							cell->face(j)->set_all_boundary_ids(11);
+							counter ++;
+						}
+
+						else {
+							cell->face(j)->set_all_boundary_ids(2);
+						}
+					}
+				}
+			}
+		}
+	}
 
 
 
@@ -655,7 +687,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 
 	triangulation.set_manifold (man, round_description);
 
-	triangulation.refine_global(1);
+	//triangulation.refine_global(1);
 
 	triangulation.set_all_manifold_ids(0);
 	cell = triangulation.begin_active();
@@ -670,7 +702,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 
 	triangulation.set_manifold (man, round_description);
 
-	triangulation.refine_global(1);
+	//triangulation.refine_global(0);
 
 //	cell = triangulation.begin_active();
 //	endc = triangulation.end();
@@ -769,6 +801,33 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 
 	GridTools::transform(& Triangulation_Shift_Z , triangulation);
 
+	GlobalParams.z_min = 10000000.0;
+	GlobalParams.z_max = -10000000.0;
+	cell = triangulation.begin_active();
+	endc = triangulation.end();
+
+	for (; cell!=endc; ++cell){
+		if(cell->is_locally_owned()){
+			for(int face = 0; face < 6; face++) {
+				GlobalParams.z_min = std::min(GlobalParams.z_min, cell->face(face)->center()[2]);
+				GlobalParams.z_max = std::max(GlobalParams.z_max, cell->face(face)->center()[2]);
+			}
+		}
+	}
+
+	if(GlobalParams.z_min < (-GlobalParams.PRM_M_R_ZLength/2.0 + 0.00001) && GlobalParams.z_max >= -GlobalParams.PRM_M_R_ZLength/2.0 ) {
+		GlobalParams.evaluate_in = true;
+	} else {
+		GlobalParams.evaluate_in = false;
+	}
+
+	if(GlobalParams.z_min <= GlobalParams.PRM_M_R_ZLength/(2.0) && GlobalParams.z_max >= GlobalParams.PRM_M_R_ZLength/2.0 ) {
+		GlobalParams.evaluate_out = true;
+	} else {
+		GlobalParams.evaluate_out = false;
+	}
+
+	GlobalParams.z_evaluate = (GlobalParams.z_min + GlobalParams.z_max)/2.0;
 	// mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
 
 }
@@ -859,10 +918,11 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	locally_owned_dofs = dof_handler.locally_owned_dofs ();
 	DoFTools::extract_locally_active_dofs(dof_handler, locally_active_dofs);
 	DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
-	locally_relevant_dofs_per_subdomain = DoFTools::locally_relevant_dofs_per_subdomain(dof_handler);
+	std::vector<unsigned int> n_neighboring = dof_handler.n_locally_owned_dofs_per_processor();
+	//locally_relevant_dofs_per_subdomain = DoFTools::locally_relevant_dofs_per_subdomain(dof_handler);
 	extended_relevant_dofs = locally_relevant_dofs;
 	if(GlobalParams.MPI_Rank > 0) {
-		extended_relevant_dofs.add_indices(locally_relevant_dofs_per_subdomain[GlobalParams.MPI_Rank-1]);
+		extended_relevant_dofs.add_range(locally_owned_dofs.nth_index_in_set(0) - n_neighboring[GlobalParams.MPI_Rank-1], locally_owned_dofs.nth_index_in_set(0));
 	}
 
 	pout << "Constructing Sparsity Patterns and Constrain Matrices ... ";
@@ -873,43 +933,51 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	cm.clear();
 	cm.reinit(locally_relevant_dofs);
 
-	cm_prec.clear();
-	cm_prec.reinit(extended_relevant_dofs);
+	cm_prec_even.clear();
+	cm_prec_odd.clear();
+	cm_prec_even.reinit(locally_relevant_dofs);
+	cm_prec_odd.reinit(locally_relevant_dofs);
+	std::cout << "Size: " << locally_relevant_dofs.size() << std::endl;
 
-	dynamic_system_pattern.reinit(dof_handler.n_dofs(), dof_handler.n_dofs(), locally_relevant_dofs);
-	dynamic_preconditioner_pattern.reinit(dof_handler.n_dofs(), dof_handler.n_dofs(), extended_relevant_dofs);
+	system_pattern.reinit(locally_owned_dofs, locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+	pout << "done" << std::endl;
+
+
+//	dynamic_preconditioner_pattern_even.reinit(n_neighboring, n_neighboring);
+	preconditioner_pattern.reinit(locally_owned_dofs, locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+
+//	pout << "Dofs Per CPU: ";
+//	for(int i = 0 ; i < n_neighboring.size(); i++) {
+//		pout << n_neighboring[i] << " " <<std::endl;
+//		for (int j = 0; j < n_neighboring.size(); j++) {
+//			IndexSet is(n_neighboring[i]);
+//			if(i==GlobalParams.MPI_Rank && i == j) {
+//				is.add_range(0,n_neighboring[i]-1);
+//			}
+//			dynamic_preconditioner_pattern_even.block(i,j).reinit(n_neighboring[i], n_neighboring[j], is);
+//		}
+//	}
+//
+//	dynamic_preconditioner_pattern_even.collect_sizes();
 
 	DoFTools::make_hanging_node_constraints(dof_handler, cm);
-	std::cout<<"TEST" <<std::endl;
-	DoFTools::make_hanging_node_constraints(dof_handler, cm_prec);
-
+	DoFTools::make_hanging_node_constraints(dof_handler, cm_prec_even);
 
 	MakeBoundaryConditions();
 	MakePreconditionerBoundaryConditions();
 
-
 	cm.close();
-	cm_prec.close();
+	cm_prec_even.close();
 
-	DoFTools::make_sparsity_pattern(dof_handler, dynamic_system_pattern, cm, false , GlobalParams.MPI_Rank);
-	DoFTools::make_sparsity_pattern(dof_handler, dynamic_preconditioner_pattern, cm_prec, false , GlobalParams.MPI_Rank);
+	DoFTools::make_sparsity_pattern(dof_handler, system_pattern, cm, true , Utilities::MPI::this_mpi_process(MPI_COMM_WORLD));
+	DoFTools::make_sparsity_pattern(dof_handler, preconditioner_pattern, cm_prec_even, true , Utilities::MPI::this_mpi_process(MPI_COMM_WORLD));
+
+	//SparsityTools::distribute_sparsity_pattern(dynamic_system_pattern,n_neighboring, MPI_COMM_WORLD, locally_owned_dofs);
+	//SparsityTools::distribute_sparsity_pattern(dynamic_preconditioner_pattern_even,n_neighboring, MPI_COMM_WORLD, locally_owned_dofs);
 
 	pout << "done" << std::endl;
-
-	log_constraints.stop();
-
-	// sparsity_pattern.reinit(dof_handler.n_dofs(),dof_handler.n_dofs(), locally_relevant_dofs);
-	// TrilinosWrappers::SparsityPattern sp(All, All, All,MPI_COMM_SELF);
-	//DynamicSparsityPattern c_sparsity(dof_handler.n_dofs());
-	// DoFTools::make_sparsity_pattern (dof_handler, sparsity_pattern, cm, false);
-
-	// SparsityTools::distribute_sparsity_pattern (sparsity_pattern, dof_handler.n_locally_owned_dofs_per_processor(), MPI_COMM_WORLD, locally_relevant_dofs);
-
-    std::vector<unsigned int> pos(1);
-    pos[0] = dof_handler.n_dofs();
-
-    // pout << "Sparsity Pattern Construction done." << std::endl;
-
+	preconditioner_pattern.compress();
+	system_pattern.compress();
 	reinit_all();
 
 	pout << "Initialization done." << std::endl;
@@ -1000,7 +1068,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 //		                                   this_mpi_process(MPI_COMM_WORLD));
 //	sp.compress();
 //
-	system_matrix.reinit( dynamic_system_pattern);
+	system_matrix.reinit( system_pattern);
 }
 
 template <>
@@ -1029,14 +1097,9 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 	// }
 //	IndexSet large(dof_handler.n_dofs());
 //	large.add_range(0, dof_handler.n_dofs());
-	preconditioner_pattern.copy_from(dynamic_preconditioner_pattern);
-	preconditioner_matrix_large.reinit(preconditioner_pattern);
-	IndexSet small(GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1);
-	small.add_range(0, GlobalParams.block_highest - GlobalParams.sub_block_lowest +1);
-	DynamicSparsityPattern dsp_temp;
-	dsp_temp.reinit(GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1, GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1, small);
+	// preconditioner_pattern.copy_from(dynamic_preconditioner_pattern_even);
+	preconditioner_matrix_even.reinit(preconditioner_pattern);
 
-	preconditioner_matrix_small.reinit( small, dsp_temp , MPI_COMM_SELF);
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1116,48 +1179,7 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
 
 	    }
 
-		if( subdomain_id == GlobalParams.MPI_Rank - 1) {
-			fe_values.reinit (cell);
-			quadrature_points = fe_values.get_quadrature_points();
 
-			cell_matrix_prec = 0;
-			for (unsigned int q_index=0; q_index<n_q_points; ++q_index)
-			{
-				epsilon_pre1 = get_Preconditioner_Tensor(quadrature_points[q_index],false, true, subdomain_id);
-				mu_prec = get_Preconditioner_Tensor(quadrature_points[q_index],true, false, subdomain_id);
-
-				const double JxW = fe_values.JxW(q_index);
-				for (unsigned int i=0; i<dofs_per_cell; i++){
-					Tensor<1,3, std::complex<double>> I_Curl;
-					Tensor<1,3, std::complex<double>> I_Val;
-					for(int k = 0; k<3; k++){
-						I_Curl[k].imag(fe_values[imag].curl(i, q_index)[k]);
-						I_Curl[k].real(fe_values[real].curl(i, q_index)[k]);
-						I_Val[k].imag(fe_values[imag].value(i, q_index)[k]);
-						I_Val[k].real(fe_values[real].value(i, q_index)[k]);
-					}
-
-					for (unsigned int j=0; j<dofs_per_cell; j++){
-						Tensor<1,3, std::complex<double>> J_Curl;
-						Tensor<1,3, std::complex<double>> J_Val;
-						for(int k = 0; k<3; k++){
-							J_Curl[k].imag(fe_values[imag].curl(j, q_index)[k]);
-							J_Curl[k].real(fe_values[real].curl(j, q_index)[k]);
-							J_Val[k].imag(fe_values[imag].value(j, q_index)[k]);
-							J_Val[k].real(fe_values[real].value(j, q_index)[k]);
-						}
-
-						std::complex<double> pre1 = (mu_prec * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon_pre1 * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
-						cell_matrix_prec[i][j] += pre1.real();
-
-					}
-				}
-			}
-			cell->get_dof_indices (local_dof_indices);
-
-			cm_prec.distribute_local_to_global(cell_matrix_prec, cell_rhs, local_dof_indices,preconditioner_matrix_large, preconditioner_rhs, false);
-
-		}
 	}
 
 }
@@ -1205,7 +1227,7 @@ void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
 	{
-		if(cell->subdomain_id() == GlobalParams.MPI_Rank) {
+		if(cell->is_locally_owned()) {
 			for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
 				Point<3, double> center =(cell->face(i))->center(true, false);
 				if( center[0] < 0) center[0] *= (-1.0);
@@ -1253,7 +1275,7 @@ void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
 							if(PML_in_X(p) || PML_in_Y(p)) result = 0.0;
 							if(locally_owned_dofs.is_element(local_dof_indices[0])) {
 								cm.add_line(local_dof_indices[0]);
-								cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
+								cm.set_inhomogeneity(local_dof_indices[0], direction[0] * result );
 							}
 							if(locally_owned_dofs.is_element(local_dof_indices[1])) {
 								cm.add_line(local_dof_indices[1]);
@@ -1304,8 +1326,8 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions ( )
 					for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 						((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
 						for(unsigned int k = 0; k < 2; k++) {
-							cm_prec.add_line(local_dof_indices[k]);
-							cm_prec.set_inhomogeneity(local_dof_indices[k], 0.0 );
+							cm_prec_even.add_line(local_dof_indices[k]);
+							cm_prec_even.set_inhomogeneity(local_dof_indices[k], 0.0 );
 						}
 					}
 				}
@@ -1316,8 +1338,8 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions ( )
 					for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 						((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
 						for(unsigned int k = 0; k < 2; k++) {
-							cm_prec.add_line(local_dof_indices[k]);
-							cm_prec.set_inhomogeneity(local_dof_indices[k], 0.0 );
+							cm_prec_even.add_line(local_dof_indices[k]);
+							cm_prec_even.set_inhomogeneity(local_dof_indices[k], 0.0 );
 						}
 					}
 				}
@@ -1336,51 +1358,51 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions ( )
 
 								double result = TEMode00(p,0);
 								if(PML_in_X(p) || PML_in_Y(p)) result = 0.0;
-								cm_prec.add_line(local_dof_indices[0]);
-								cm_prec.set_inhomogeneity(local_dof_indices[0], direction[0] * result);
-								cm_prec.add_line(local_dof_indices[1]);
-								cm_prec.set_inhomogeneity(local_dof_indices[1], 0.0);
+								cm_prec_even.add_line(local_dof_indices[0]);
+								cm_prec_even.set_inhomogeneity(local_dof_indices[0], direction[0] * result);
+								cm_prec_even.add_line(local_dof_indices[1]);
+								cm_prec_even.set_inhomogeneity(local_dof_indices[1], 0.0);
 							}
 						}
 					}
 				}
 
 				//upper boundary both
-				if(GlobalParams.MPI_Rank >= Sectors-2 ) {
+				if((int)GlobalParams.MPI_Rank >= Sectors-2 ) {
 					if( std::abs(center[2] - GlobalParams.PRM_M_R_ZLength/2.0  - GlobalParams.PRM_M_BC_XYout * sector_length) < 0.0001 ){
 						std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
 							for(unsigned int k = 0; k < 2; k++) {
-								cm_prec.add_line(local_dof_indices[k]);
-								cm_prec.set_inhomogeneity(local_dof_indices[k], 0.0 );
+								cm_prec_even.add_line(local_dof_indices[k]);
+								cm_prec_even.set_inhomogeneity(local_dof_indices[k], 0.0 );
 							}
 						}
 					}
 				}
 				// in between below
-				if(GlobalParams.MPI_Rank > 1) {
+				if((int)GlobalParams.MPI_Rank > 1) {
 					if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - ((double)(GlobalParams.MPI_Rank-1))*sector_length ) < 0.0001 ){
 						std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
 							for(unsigned int k = 0; k < 2; k++) {
-								cm_prec.add_line(local_dof_indices[k]);
-								cm_prec.set_inhomogeneity(local_dof_indices[k], 0.0 );
+								cm_prec_even.add_line(local_dof_indices[k]);
+								cm_prec_even.set_inhomogeneity(local_dof_indices[k], 0.0 );
 
 							}
 						}
 					}
 				}
 
-				if(GlobalParams.MPI_Rank < Sectors -1) {
+				if((int)GlobalParams.MPI_Rank < Sectors -1) {
 					if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - ((double)(GlobalParams.MPI_Rank+1))*sector_length ) < 0.0001 ){
 						std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
 							for(unsigned int k = 0; k < 2; k++) {
-								cm_prec.add_line(local_dof_indices[k]);
-								cm_prec.set_inhomogeneity(local_dof_indices[k], 0.0 );
+								cm_prec_even.add_line(local_dof_indices[k]);
+								cm_prec_even.set_inhomogeneity(local_dof_indices[k], 0.0 );
 
 							}
 						}
@@ -1430,10 +1452,25 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		timerupdate();
 		if(prm.PRM_S_Preconditioner == "Sweeping"){
 
-			PreconditionerSweeping sweep( preconditioner_matrix_small);
-			IndexSet local(dof_handler.n_dofs());
-			local.add_range(GlobalParams.sub_block_lowest, GlobalParams.block_highest);
-			preconditioner_matrix_small.reinit(local, local, preconditioner_matrix_large, MPI_COMM_SELF, 1e-13, true);
+			std::vector<unsigned int> locally_owned_dofs_per_CPU = dof_handler.n_locally_owned_dofs_per_processor();
+			IndexSet All(locally_owned_dofs_per_CPU[GlobalParams.MPI_Rank]);
+			All.add_range(0,locally_owned_dofs_per_CPU[GlobalParams.MPI_Rank]-1);
+			SparsityPattern temp;
+			temp.reinit(locally_owned_dofs_per_CPU[GlobalParams.MPI_Rank], locally_owned_dofs_per_CPU[GlobalParams.MPI_Rank], dof_handler.max_couplings_between_dofs());
+			int below = 0;
+			for(int i =0; i < GlobalParams.MPI_Rank;  i++) {
+				below += locally_owned_dofs_per_CPU[i];
+			}
+			temp.compress();
+			dealii::TrilinosWrappers::SparseMatrix prec_matrix(locally_owned_dofs_per_CPU[GlobalParams.MPI_Rank], locally_owned_dofs_per_CPU[GlobalParams.MPI_Rank], dof_handler.max_couplings_between_dofs());
+
+			for (int current_row = below; current_row < below +locally_owned_dofs_per_CPU[GlobalParams.MPI_Rank]; current_row++  ) {
+				for(TrilinosWrappers::SparseMatrix::iterator row = preconditioner_matrix_even.begin(current_row); row != preconditioner_matrix_even.end(current_row); row++) {
+					prec_matrix.set(row->row() - below, row->column()-below, row->value());
+				}
+			}
+			prec_matrix.compress(VectorOperation::insert);
+			PreconditionerSweeping sweep( prec_matrix);
 
 			solver.solve(system_matrix,solution, system_rhs, sweep);
 
@@ -1451,7 +1488,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 	//solver.set_symmetric_mode(true);
 	solver.solve(system_matrix, solution, system_rhs);
 	**/
-	solution.compress(VectorOperation::insert);
+	//solution.compress(VectorOperation::insert);
 
 	cm.distribute(solution);
 }
@@ -1461,6 +1498,14 @@ void Waveguide<MatrixType, VectorType>::solve ()
 {
 
 
+}
+
+template< >
+void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector>::store() {
+	reinit_storage();
+	// storage.reinit(dof_handler.n_dofs());
+	storage = solution;
+	is_stored = true;
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1493,54 +1538,54 @@ void Waveguide<MatrixType, VectorType>::output_results ()
 {
 
 	// evaluate_overall();
+	if(GlobalParams.MPI_Rank == 0) {
+		DataOut<3> data_out;
 
-	DataOut<3> data_out;
+		data_out.attach_dof_handler (dof_handler);
+		data_out.add_data_vector (solution, "solution");
+		// data_out.add_data_vector(differences, "L2error");
 
-	data_out.attach_dof_handler (dof_handler);
-	data_out.add_data_vector (solution, "solution");
-	// data_out.add_data_vector(differences, "L2error");
+		data_out.build_patches ();
 
-	data_out.build_patches ();
+		std::ofstream outputvtk (solutionpath + "/solution-run" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +".vtk");
+		data_out.write_vtk(outputvtk);
 
-	std::ofstream outputvtk (solutionpath + "/solution-run" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +".vtk");
-	data_out.write_vtk(outputvtk);
+		/**
+		DataOut<3> data_out_real;
 
-	/**
-	DataOut<3> data_out_real;
+		//data_out_real.attach_dof_handler(dof_handler_real);
+		data_out_real.add_data_vector (solution, "solution");
+		// data_out.add_data_vector(differences, "L2error");
 
-	//data_out_real.attach_dof_handler(dof_handler_real);
-	data_out_real.add_data_vector (solution, "solution");
-	// data_out.add_data_vector(differences, "L2error");
+		data_out_real.build_patches ();
 
-	data_out_real.build_patches ();
-
-	std::ofstream outputvtk2 (solutionpath + "/solution-real" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +".vtk");
-	data_out_real.write_vtk(outputvtk2);
-	 **/
-	std::ofstream pattern (solutionpath + "/pattern.gnu");
-	system_pattern.print_gnuplot(pattern);
+		std::ofstream outputvtk2 (solutionpath + "/solution-real" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +".vtk");
+		data_out_real.write_vtk(outputvtk2);
+		 **/
+		std::ofstream pattern (solutionpath + "/pattern.gnu");
+		system_pattern.print_gnuplot(pattern);
 
 
-	std::ofstream patternscript (solutionpath + "/displaypattern.gnu");
-	patternscript << "set style line 1000 lw 1 lc \"black\"" <<std::endl;
-	for(int i = 0; i < prm.PRM_M_W_Sectors; i++) {
-		patternscript << "set arrow " << 1000 + 2*i << " from 0,-" << Dofs_Below_Subdomain[i] << " to "<<dof_handler.n_dofs()<<",-"<<Dofs_Below_Subdomain[i]<<" nohead ls 1000 front"<<std::endl;
-		patternscript << "set arrow " << 1001 + 2*i  << " from " << Dofs_Below_Subdomain[i] << ",0 to " << Dofs_Below_Subdomain[i] << ", -"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
+		std::ofstream patternscript (solutionpath + "/displaypattern.gnu");
+		patternscript << "set style line 1000 lw 1 lc \"black\"" <<std::endl;
+		for(int i = 0; i < prm.PRM_M_W_Sectors; i++) {
+			patternscript << "set arrow " << 1000 + 2*i << " from 0,-" << Dofs_Below_Subdomain[i] << " to "<<dof_handler.n_dofs()<<",-"<<Dofs_Below_Subdomain[i]<<" nohead ls 1000 front"<<std::endl;
+			patternscript << "set arrow " << 1001 + 2*i  << " from " << Dofs_Below_Subdomain[i] << ",0 to " << Dofs_Below_Subdomain[i] << ", -"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
+		}
+		patternscript << "set arrow " << 1000 + 2*prm.PRM_M_W_Sectors << " from 0,-" << dof_handler.n_dofs() << " to "<<dof_handler.n_dofs()<<",-"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
+		patternscript << "set arrow " << 1001 + 2*prm.PRM_M_W_Sectors << " from " << dof_handler.n_dofs() << ",0 to " << dof_handler.n_dofs() << ", -"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
+
+		patternscript << "plot \"pattern.gnu\" with dots" <<std::endl;
+		patternscript.flush();
+
+		std::ifstream source("Parameters.xml", std::ios::binary);
+		std::ofstream dest(solutionpath +"/Parameters.xml", std::ios::binary);
+
+		dest << source.rdbuf();
+
+		source.close();
+		dest.close();
 	}
-	patternscript << "set arrow " << 1000 + 2*prm.PRM_M_W_Sectors << " from 0,-" << dof_handler.n_dofs() << " to "<<dof_handler.n_dofs()<<",-"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
-	patternscript << "set arrow " << 1001 + 2*prm.PRM_M_W_Sectors << " from " << dof_handler.n_dofs() << ",0 to " << dof_handler.n_dofs() << ", -"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
-
-	patternscript << "plot \"pattern.gnu\" with dots" <<std::endl;
-	patternscript.flush();
-
-	std::ifstream source("Paramters.xml", std::ios::binary);
-	std::ofstream dest(solutionpath +"/Parameters.xml", std::ios::binary);
-
-	dest << source.rdbuf();
-
-	source.close();
-	dest.close();
-
 }
 
 template<typename MatrixType, typename VectorType>

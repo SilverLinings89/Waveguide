@@ -15,8 +15,8 @@ PreconditionerSweeping::PreconditionerSweeping (const TrilinosWrappers::SparseMa
                 const TrilinosWrappers::MPI::Vector &src) const
     {
 
-      const TrilinosWrappers::Vector itmp(src);
-      TrilinosWrappers::Vector otmp(dst);
+      const TrilinosWrappers::MPI::Vector itmp(src);
+      TrilinosWrappers::MPI::Vector otmp(dst);
 
       {
         SolverControl solver_control(5000, 1e-6 * src.l2_norm());
