@@ -20,7 +20,7 @@ PreconditionerSweeping::PreconditionerSweeping (const TrilinosWrappers::SparseMa
 
       {
         SolverControl solver_control(5000, 1e-6 * src.l2_norm());
-        TrilinosWrappers::SolverDirect solver(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Mumps"));
+        TrilinosWrappers::SolverDirect solver(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack"));
         solver.solve(*preconditioner_matrix, otmp, itmp);
       }
 

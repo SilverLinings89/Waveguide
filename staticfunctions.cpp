@@ -256,6 +256,7 @@ static Point<3> Triangulation_Shift_Z (const Point<3> &p)
   return q;
 }
 
+/**
 static Point<3> Triangulation_Stretch_Real_Radius (const Point<3> &p)
 {
 	double r_goal = structure->get_r(structure->Z_to_Sector_and_local_z(p[2]).second);
@@ -271,6 +272,7 @@ static Point<3> Triangulation_Stretch_Real_Radius (const Point<3> &p)
 	q[1] += factor * shift;
 	return p;
 }
+**/
 
 static Point<3> Triangulation_Stretch_to_circle (const Point<3> &p)
 {

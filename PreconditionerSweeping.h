@@ -17,10 +17,11 @@ using namespace dealii;
 
 class PreconditionerSweeping : public TrilinosWrappers::PreconditionBase
   {
+	using TrilinosWrappers::PreconditionBase::vmult;
   public:
 	PreconditionerSweeping (const TrilinosWrappers::SparseMatrix  &S);
 
-	void vmult (TrilinosWrappers::MPI::Vector       &dst,      const TrilinosWrappers::MPI::Vector &src) const;
+	virtual void vmult (TrilinosWrappers::MPI::Vector       &dst,      const TrilinosWrappers::MPI::Vector &src) const;
 
   private:
       const SmartPointer<const TrilinosWrappers::SparseMatrix> preconditioner_matrix;

@@ -352,9 +352,10 @@ class Waveguide
 
 		std::string								solutionpath;
 		parallel::distributed::Triangulation<3>::active_cell_iterator cell, endc;
-		parallel::distributed::Triangulation<3>	triangulation;
+
 		//, triangulation_real;
 		FESystem<3>										fe;
+		parallel::distributed::Triangulation<3>	triangulation;
 		DoFHandler<3>									dof_handler;
 		//, dof_handler_real;
 		VectorType										solution;
@@ -380,21 +381,27 @@ class Waveguide
 		VectorType										system_rhs;
 		Vector<double>									preconditioner_rhs;
 		LogStream 										deallog;
-		ConditionalOStream 								pout;
+
 		FileLoggerData 									log_data;
 		FileLogger 										log_constraints, log_assemble, log_precondition, log_total, log_solver;
 		int 											run_number;
 		int												condition_file_counter, eigenvalue_file_counter;
 		std::ofstream									eigenvalue_file, condition_file, result_file, iteration_file;
-		std::vector<int>								Dofs_Below_Subdomain, Block_Sizes;
 		const int 										Sectors;
+		std::vector<int>								Dofs_Below_Subdomain, Block_Sizes;
+
 		std::vector<dealii::IndexSet> 					set;
 		TrilinosWrappers::SparsityPattern 				temporary_pattern, preconditioner_pattern;
 		bool											temporary_pattern_preped;
 		FEValuesExtractors::Vector 						real, imag;
 		SolverControl          							solver_control;
+
+		std::vector<IndexSet>							locally_relevant_dofs_all_processors;
+		IndexSet										UpperDofs, LowerDofs;
+		std::vector<dealii::TrilinosWrappers::SparsityPattern> Preconditioner_Matrices;
 		// PreconditionSweeping<dealii::PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::BlockVector >::AdditionalData Sweeping_Additional_Data;
 		// PreconditionSweeping<dealii::PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::BlockVector > sweep;
+		ConditionalOStream 								pout;
 
 };
 
