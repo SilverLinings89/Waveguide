@@ -1057,39 +1057,50 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	/** Splitting the communicator into chunks) **/
 	// std::cout << "Stage 1 for processor " << GlobalParams.MPI_Rank << std::endl;
 	// MPI_Comm_split(MPI_COMM_WORLD, GlobalParams.MPI_Rank/2, GlobalParams.MPI_Rank, &comm_even );
-	split_comms = new MPI_Comm[3];
+	IndexSet none(dof_handler.n_dofs());
 
-	MPI_Comm temp_comm;
 	for(int i =0; i< mpi_size-1; i++) {
-		int color = 0 ;
-		int rank  = GlobalParams.MPI_Rank ;
-		if( (GlobalParams.MPI_Rank - i < 3 && GlobalParams.MPI_Rank - i >= 0) || (i==mpi_size-2 && GlobalParams.MPI_Rank ==0) ){
-			color =1;
+		bool spec = false ;
+		bool upper = false;
+
+		IndexSet is1(dof_handler.n_dofs());
+		IndexSet is2(dof_handler.n_dofs());
+
+		//int rank  = GlobalParams.MPI_Rank ;
+		if ( GlobalParams.MPI_Rank -i ==0) {
+			spec = true;
+			is2.add_indices(UpperDofs);
 		}
-		if(GlobalParams.MPI_Rank - i < 3 && GlobalParams.MPI_Rank - i >= 0) {
-			rank = GlobalParams.MPI_Rank - i;
+		if(GlobalParams.MPI_Rank - i == 1) {
+			upper = true;
+			spec = true;
+			is1.add_indices(LowerDofs);
+			is2.add_indices(is1);
 		}
-		if (i==mpi_size-2 && GlobalParams.MPI_Rank ==0) {
-			rank = 2;
+
+		if(!spec) {
+			is1.add_indices(locally_owned_dofs);
+			is1.subtract_set(locally_relevant_dofs_all_processors[i]);
+			is1.subtract_set(locally_relevant_dofs_all_processors[i+1]);
+			is2.add_indices(is1);
 		}
-		if(color == 1) {
-			if(rank == 0) {
-				MPI_Comm_split(MPI_COMM_WORLD,  color,rank		, &split_comms[0] );
-			}
-			if(rank == 1) {
-				MPI_Comm_split(MPI_COMM_WORLD,  color,rank		, &split_comms[1] );
-			}
-			if(rank == 2) {
-				MPI_Comm_split(MPI_COMM_WORLD,  color,rank		, &split_comms[2] );
-			}
-		}else {
-			MPI_Comm_split(MPI_COMM_WORLD,  color,rank		, &temp_comm );
+
+		int dofs = 0;
+		if(upper) {
+			dofs =  dof_handler.n_dofs();
 		}
+
+		pout << Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)<< std::endl;
+		std::cout << GlobalParams.MPI_Rank << " ready " << i << std::endl;
+
+		//TrilinosWrappers::SparsityPattern sp(is1, is1, is2, MPI_COMM_WORLD, dofs);
+		TrilinosWrappers::SparsityPattern sp(is1, MPI_COMM_WORLD, dofs);
+		std::cout << GlobalParams.MPI_Rank << " has reached the end of loop " << i << std::endl;
 
 	}
 
 
-
+	/*
 	if(GlobalParams.MPI_Rank != 1) {
 		std::cout << GlobalParams.MPI_Rank << ": ( " << Utilities::MPI::this_mpi_process(split_comms[0])<< ","<<Utilities::MPI::this_mpi_process(split_comms[1]) << "," <<Utilities::MPI::this_mpi_process(split_comms[2])<<" - " << Utilities::MPI::n_mpi_processes(split_comms[0])<< ","<<Utilities::MPI::n_mpi_processes(split_comms[1]) << "," <<Utilities::MPI::n_mpi_processes(split_comms[2]) << ")" << std::endl;
 	} else {
@@ -1130,46 +1141,35 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	sets[1] = UpperDofs;
 	sets[2] = LowerDofs;
 
-	/**
 	for( int i = 0; i < mpi_size-1; i++) {
 
 		//prec_pattern[i].reinit()
-		if( i == GlobalParams.MPI_Rank + 1) {
+		if( i ==(int) GlobalParams.MPI_Rank) {
 			if( GlobalParams.MPI_Rank != mpi_size-1) {
 				std::cout << "Process " << GlobalParams.MPI_Rank << " other for Block " << i << "( " << none.n_elements()<< ","<<UpperDofs.n_elements()<<")"<<std::endl;
-				prec_patterns[i-1].reinit(none, none, UpperDofs, 			split_comms[0], dof_handler.max_couplings_between_dofs());
+				prec_patterns[i].reinit(none, none, UpperDofs, 			split_comms[0], dof_handler.max_couplings_between_dofs());
 			}
 		}
-		if(i == GlobalParams.MPI_Rank) {
+		if(i+1 == (int)GlobalParams.MPI_Rank) {
 			if(GlobalParams.MPI_Rank !=0) {
 				std::cout << "Process " << GlobalParams.MPI_Rank << " self for Block " << i << "( " << LowerDofs.n_elements()<< ")"<< std::endl;
-				prec_patterns[i-1].reinit(LowerDofs, LowerDofs, LowerDofs, 	split_comms[1], dof_handler.max_couplings_between_dofs());
+				prec_patterns[i].reinit(LowerDofs, LowerDofs, LowerDofs, 	split_comms[1], dof_handler.max_couplings_between_dofs());
 			}
 		}
-		int temp = GlobalParams.MPI_Rank - 1;
-		if (temp < 0) temp += mpi_size;
-		if(i == temp) {
+		int temp = i+2;
+		if (temp == mpi_size) temp =0;
+		if(temp == (int)GlobalParams.MPI_Rank) {
 			if(GlobalParams.MPI_Rank != 1 ) {
-				std::cout << "Process " << GlobalParams.MPI_Rank << " extension for Block " << "( " << extend.n_elements()<< ")"<< i << std::endl;
-				prec_patterns[i-1].reinit(extend, extend, extend, 			split_comms[2], 1);
+				std::cout << "Process " << GlobalParams.MPI_Rank << " extension for Block " << i << "( " << extend.n_elements()<< ")"<< i << std::endl;
+				prec_patterns[i].reinit(extend, extend, extend, 			split_comms[2], 1);
 			}
 		}
 
-	} **/
-
-	if(GlobalParams.MPI_Rank == 0) {
-		self_prec_pattern.reinit(none, 			split_comms[0], dof_handler.max_couplings_between_dofs());
+		std::cout << "Stage 5 for processor " << GlobalParams.MPI_Rank << " with i=" <<i<<std::endl;
 	}
+	*/
 
-	if(GlobalParams.MPI_Rank == 1) {
-		self_prec_pattern.reinit(LowerDofs, split_comms[1], dof_handler.max_couplings_between_dofs());
-	}
-
-	if(GlobalParams.MPI_Rank == 2) {
-		self_prec_pattern.reinit(extend, split_comms[2], 0);
-	}
-
-	std::cout << "Stage 5 for processor " << GlobalParams.MPI_Rank << std::endl;
+	std::cout << "Stage 6 for processor " << GlobalParams.MPI_Rank << std::endl;
 	reinit_all();
 
 }
