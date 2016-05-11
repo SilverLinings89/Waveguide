@@ -355,7 +355,7 @@ class Waveguide
 
 		//, triangulation_real;
 		FESystem<3>										fe;
-		parallel::distributed::Triangulation<3>	triangulation;
+		parallel::distributed::Triangulation<3>			triangulation;
 		DoFHandler<3>									dof_handler;
 		//, dof_handler_real;
 		VectorType										solution;
@@ -373,7 +373,7 @@ class Waveguide
 		ConstraintMatrix 								boundary_value_constraints_imaginary;
 		ConstraintMatrix 								boundary_value_constraints_real;
 		ConstraintMatrix								hanging_global;
-
+		MPI_Comm *										split_comms;
 		int 											assembly_progress;
 		VectorType										storage;
 		VectorType										temp_storage;
@@ -396,9 +396,16 @@ class Waveguide
 		FEValuesExtractors::Vector 						real, imag;
 		SolverControl          							solver_control;
 
+		TrilinosWrappers::SparsityPattern *				prec_patterns;
+		TrilinosWrappers::SparsityPattern				self_prec_pattern;
+		TrilinosWrappers::SparsityPattern				other_prec_pattern;
+		TrilinosWrappers::SparsityPattern				extend_prec_pattern;
+
+
+
 		std::vector<IndexSet>							locally_relevant_dofs_all_processors;
 		IndexSet										UpperDofs, LowerDofs;
-		std::vector<dealii::TrilinosWrappers::SparsityPattern> Preconditioner_Matrices;
+		std::vector<dealii::TrilinosWrappers::SparseMatrix> Preconditioner_Matrices;
 		// PreconditionSweeping<dealii::PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::BlockVector >::AdditionalData Sweeping_Additional_Data;
 		// PreconditionSweeping<dealii::PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::BlockVector > sweep;
 		ConditionalOStream 								pout;

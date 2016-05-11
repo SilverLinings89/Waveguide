@@ -14,8 +14,6 @@
 #include <deal.II/distributed/shared_tria.h>
 #include "QuadratureFormulaCircle.cpp"
 #include <deal.II/lac/trilinos_precondition.h>
-#include "petscmat.h"
-#include "petscdraw.h"
 #include <deal.II/distributed/tria.h>
 #include <deal.II/grid/tria_boundary_lib.h>
 #include <deal.II/lac/block_sparsity_pattern.h>
@@ -963,6 +961,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	cm.close();
 	cm_prec_even.close();
 
+
 	DoFTools::make_sparsity_pattern(dof_handler, system_pattern, cm, true , Utilities::MPI::this_mpi_process(MPI_COMM_WORLD));
 	DoFTools::make_sparsity_pattern(dof_handler, preconditioner_pattern, cm_prec_even, true , Utilities::MPI::this_mpi_process(MPI_COMM_WORLD));
 
@@ -972,7 +971,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	pout << "done" << std::endl;
 	preconditioner_pattern.compress();
 	system_pattern.compress();
-	reinit_all();
+
 
 	pout << "Initialization done." << std::endl;
 	// cm.distribute(solution);
@@ -985,68 +984,193 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 	std::ostringstream set_string;
 
-	locally_relevant_dofs.block_write(set_string);
+	locally_relevant_dofs.write(set_string);
 
 	std::string local_set = set_string.str();
 
+	const char * test = local_set.c_str();
 
+	char * text_local_set = const_cast<char*> (test);
 
-	const char * text_local_set(local_set.c_str());
+	// std::cout << "Process " << GlobalParams.MPI_Rank << " has " << text_local_set <<std::endl << " wich has length " << strlen(text_local_set) << std::endl;
 
-	unsigned int text_local_length = sizeof(text_local_set) / sizeof(text_local_set[0]);
+	unsigned int text_local_length = strlen( text_local_set) ;
 
-	std::cout << "MaxLength in process " << GlobalParams.MPI_Rank << " before sync is " << text_local_length;
+	const int mpi_size = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
 
-	unsigned int max_length = Utilities::MPI::max(text_local_length, MPI_COMM_WORLD);
+	int * all_lens = new int[mpi_size];
+	int * displs = new int[mpi_size];
 
-	std::cout << "MaxLength in process " << GlobalParams.MPI_Rank << " after sync is " << max_length;
+	// std::cout << "MaxLength in process " << GlobalParams.MPI_Rank << " before sync is " << text_local_length;
 
+	MPI_Allgather(& text_local_length, 1, MPI_INT, all_lens, 1, MPI_INT, MPI_COMM_WORLD);
 
-	char *final_text = new char[max_length];
-
-	for(unsigned int i = 0; i< max_length; i++) {
-		if(i < text_local_length) {
-			final_text[i] = text_local_set[i];
-		} else {
-			final_text[i] = ' ';
-		}
+	// pout << "Outputting gater result 1: ";
+	for (int i = 0; i < mpi_size; i++) {
+		// pout << " " << all_lens[i] ;
 	}
+	// pout << std::endl;
 
-	pout << "Private Set: " << local_set << std::endl;
-	char * all_Sets = new char [Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD) * max_length];
+	int totlen = all_lens[mpi_size-1];
+	displs[0] = 0;
+	for (int i=0; i<mpi_size-1; i++) {
+		displs[i+1] = displs[i] + all_lens[i];
+		totlen += all_lens[i];
+	}
+	char * all_names = (char *)malloc( totlen );
+	if (!all_names) MPI_Abort( MPI_COMM_WORLD, 1 );
 
-
-	MPI_Allgather(final_text, sizeof(final_text), MPI_CHAR, all_Sets, sizeof(final_text) , MPI_CHAR, MPI_COMM_WORLD );
-
-	pout << all_Sets << std::endl;
-
+	MPI_Allgatherv( text_local_set, text_local_length, MPI_CHAR, all_names, all_lens, displs, MPI_CHAR,	MPI_COMM_WORLD );
 
 	pout << "-------------------------------------" << std::endl;
 
 	locally_relevant_dofs_all_processors.resize(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD));
 
+
 	for(unsigned int i= 0; i < Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++ ) {
-		std::istringstream ss;
-		char *temp = new char[max_length];
-		for( unsigned int j =0; j < max_length; j++ ) {
-			temp[j] = all_Sets[i*max_length + j];
-		}
-		ss.rdbuf()->pubsetbuf(temp,sizeof(temp));
-		locally_relevant_dofs_all_processors[i].clear();
-		locally_relevant_dofs_all_processors[i].block_read(ss);
+		// pout << &all_names[displs[i]]<< std::endl << "++++++++++++++++++++" <<std::endl;
 	}
 
-	std::cout<< "Reading worked in process number " << GlobalParams.MPI_Rank << std::endl;
+	for(unsigned int i= 0; i < Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++ ) {
+		std::istringstream ss;
+		char *temp = &all_names[displs[i]] ;
+		ss.rdbuf()->pubsetbuf(temp,strlen(temp));
+		locally_relevant_dofs_all_processors[i].clear();
+		locally_relevant_dofs_all_processors[i].read(ss);
+	}
+
+	// std::cout<< "Reading worked in process number " << GlobalParams.MPI_Rank << std::endl;
 
 	UpperDofs = locally_relevant_dofs;
 
+	LowerDofs = locally_relevant_dofs;
+
 	if(GlobalParams.MPI_Rank != 0 ) {
 		LowerDofs.add_indices(locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1], 0);
+
 	}
 
 	if(GlobalParams.MPI_Rank != Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD) -1 ) {
 		UpperDofs.add_indices(locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank+1], 0);
 	}
+
+	/** Splitting the communicator into chunks) **/
+	// std::cout << "Stage 1 for processor " << GlobalParams.MPI_Rank << std::endl;
+	// MPI_Comm_split(MPI_COMM_WORLD, GlobalParams.MPI_Rank/2, GlobalParams.MPI_Rank, &comm_even );
+	split_comms = new MPI_Comm[3];
+
+	MPI_Comm temp_comm;
+	for(int i =0; i< mpi_size-1; i++) {
+		int color = 0 ;
+		int rank  = GlobalParams.MPI_Rank ;
+		if( (GlobalParams.MPI_Rank - i < 3 && GlobalParams.MPI_Rank - i >= 0) || (i==mpi_size-2 && GlobalParams.MPI_Rank ==0) ){
+			color =1;
+		}
+		if(GlobalParams.MPI_Rank - i < 3 && GlobalParams.MPI_Rank - i >= 0) {
+			rank = GlobalParams.MPI_Rank - i;
+		}
+		if (i==mpi_size-2 && GlobalParams.MPI_Rank ==0) {
+			rank = 2;
+		}
+		if(color == 1) {
+			if(rank == 0) {
+				MPI_Comm_split(MPI_COMM_WORLD,  color,rank		, &split_comms[0] );
+			}
+			if(rank == 1) {
+				MPI_Comm_split(MPI_COMM_WORLD,  color,rank		, &split_comms[1] );
+			}
+			if(rank == 2) {
+				MPI_Comm_split(MPI_COMM_WORLD,  color,rank		, &split_comms[2] );
+			}
+		}else {
+			MPI_Comm_split(MPI_COMM_WORLD,  color,rank		, &temp_comm );
+		}
+
+	}
+
+
+
+	if(GlobalParams.MPI_Rank != 1) {
+		std::cout << GlobalParams.MPI_Rank << ": ( " << Utilities::MPI::this_mpi_process(split_comms[0])<< ","<<Utilities::MPI::this_mpi_process(split_comms[1]) << "," <<Utilities::MPI::this_mpi_process(split_comms[2])<<" - " << Utilities::MPI::n_mpi_processes(split_comms[0])<< ","<<Utilities::MPI::n_mpi_processes(split_comms[1]) << "," <<Utilities::MPI::n_mpi_processes(split_comms[2]) << ")" << std::endl;
+	} else {
+		std::cout << GlobalParams.MPI_Rank << ": ( " << Utilities::MPI::this_mpi_process(split_comms[0])<< ","<<Utilities::MPI::this_mpi_process(split_comms[1]) << " - " << Utilities::MPI::n_mpi_processes(split_comms[0])<< ","<<Utilities::MPI::n_mpi_processes(split_comms[1]) << ")" << std::endl;
+	}
+
+
+	//MPI_Comm_split(MPI_COMM_WORLD,  GlobalParams.MPI_Rank   /3, GlobalParams.MPI_Rank%3		, &split_comms[GlobalParams.MPI_Rank%3	] );
+	//MPI_Comm_split(MPI_COMM_WORLD, ((GlobalParams.MPI_Rank-1)%mpi_size)/3, (GlobalParams.MPI_Rank+1)%3 , &split_comms[(GlobalParams.MPI_Rank+1)%3] );
+	//MPI_Comm_split(MPI_COMM_WORLD, ((GlobalParams.MPI_Rank-2)%mpi_size)/3, (GlobalParams.MPI_Rank+2)%3	, &split_comms[(GlobalParams.MPI_Rank+2)%3] );
+
+	//std::cout << "Stage 2 for processor " << GlobalParams.MPI_Rank << std::endl;
+	// MPI_Comm_split(MPI_COMM_WORLD, (GlobalParams.MPI_Rank-1)/2  , GlobalParams.MPI_Rank, &comm_odd );
+	//std::cout << "Stage 3 for processor " << GlobalParams.MPI_Rank << std::endl;
+	IndexSet none(dof_handler.n_dofs());
+	IndexSet extend(dof_handler.n_dofs());
+	extend.add_range(0,dof_handler.n_dofs());
+	int min1 = (GlobalParams.MPI_Rank-1);
+	int min2 = (GlobalParams.MPI_Rank-2);
+	if (min1 < 0) min1 += mpi_size;
+	if (min2 < 0) min2 += mpi_size;
+	extend.subtract_set(locally_relevant_dofs_all_processors[min1]);
+	extend.subtract_set(locally_relevant_dofs_all_processors[min2]);
+	extend.compress();
+	none.clear();
+	none.add_index(0);
+	IndexSet singleIndex(dof_handler.n_dofs());
+	singleIndex.add_index(0);
+	UpperDofs.subtract_set(singleIndex);
+	LowerDofs.subtract_set(singleIndex);
+	UpperDofs.compress();
+	LowerDofs.compress();
+	prec_patterns = new TrilinosWrappers::SparsityPattern[mpi_size-1];
+	std::cout << "Process " << GlobalParams.MPI_Rank << " - Lower: " << LowerDofs.n_elements() << " | Upper: " << UpperDofs.n_elements() << " | Extension: " << extend.n_elements()<< std::endl;
+
+	IndexSet * sets = new IndexSet[3];
+	sets[0] = none;
+	sets[1] = UpperDofs;
+	sets[2] = LowerDofs;
+
+	/**
+	for( int i = 0; i < mpi_size-1; i++) {
+
+		//prec_pattern[i].reinit()
+		if( i == GlobalParams.MPI_Rank + 1) {
+			if( GlobalParams.MPI_Rank != mpi_size-1) {
+				std::cout << "Process " << GlobalParams.MPI_Rank << " other for Block " << i << "( " << none.n_elements()<< ","<<UpperDofs.n_elements()<<")"<<std::endl;
+				prec_patterns[i-1].reinit(none, none, UpperDofs, 			split_comms[0], dof_handler.max_couplings_between_dofs());
+			}
+		}
+		if(i == GlobalParams.MPI_Rank) {
+			if(GlobalParams.MPI_Rank !=0) {
+				std::cout << "Process " << GlobalParams.MPI_Rank << " self for Block " << i << "( " << LowerDofs.n_elements()<< ")"<< std::endl;
+				prec_patterns[i-1].reinit(LowerDofs, LowerDofs, LowerDofs, 	split_comms[1], dof_handler.max_couplings_between_dofs());
+			}
+		}
+		int temp = GlobalParams.MPI_Rank - 1;
+		if (temp < 0) temp += mpi_size;
+		if(i == temp) {
+			if(GlobalParams.MPI_Rank != 1 ) {
+				std::cout << "Process " << GlobalParams.MPI_Rank << " extension for Block " << "( " << extend.n_elements()<< ")"<< i << std::endl;
+				prec_patterns[i-1].reinit(extend, extend, extend, 			split_comms[2], 1);
+			}
+		}
+
+	} **/
+
+	if(GlobalParams.MPI_Rank == 0) {
+		self_prec_pattern.reinit(none, 			split_comms[0], dof_handler.max_couplings_between_dofs());
+	}
+
+	if(GlobalParams.MPI_Rank == 1) {
+		self_prec_pattern.reinit(LowerDofs, split_comms[1], dof_handler.max_couplings_between_dofs());
+	}
+
+	if(GlobalParams.MPI_Rank == 2) {
+		self_prec_pattern.reinit(extend, split_comms[2], 0);
+	}
+
+	std::cout << "Stage 5 for processor " << GlobalParams.MPI_Rank << std::endl;
+	reinit_all();
 
 }
 
@@ -1160,9 +1284,11 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 //	large.add_range(0, dof_handler.n_dofs());
 	// preconditioner_pattern.copy_from(dynamic_preconditioner_pattern_even);
 	// preconditioner_matrix_even.reinit(preconditioner_pattern);
-	IndexSet expanded = locally_relevant_dofs;
 
-
+	Preconditioner_Matrices[GlobalParams.MPI_Rank].reinit(self_prec_pattern);
+	if(GlobalParams.MPI_Rank != Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)-1) {
+		Preconditioner_Matrices[GlobalParams.MPI_Rank + 1 ].reinit(other_prec_pattern);
+	}
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1174,7 +1300,8 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
 	const unsigned int   n_q_points		= quadrature_formula.size();
 
 	FullMatrix<double>	cell_matrix_real (dofs_per_cell, dofs_per_cell);
-	FullMatrix<double>	cell_matrix_prec (dofs_per_cell, dofs_per_cell);
+	FullMatrix<double>	cell_matrix_prec1 (dofs_per_cell, dofs_per_cell);
+	FullMatrix<double>	cell_matrix_prec2 (dofs_per_cell, dofs_per_cell);
 
 	Vector<double>		cell_rhs (dofs_per_cell);
 	cell_rhs = 0;
@@ -1193,7 +1320,8 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
 			quadrature_points = fe_values.get_quadrature_points();
 
 			cell_matrix_real = 0;
-			cell_matrix_prec = 0;
+			cell_matrix_prec1 = 0;
+			cell_matrix_prec2 = 0;
 			for (unsigned int q_index=0; q_index<n_q_points; ++q_index)
 			{
 				epsilon = get_Tensor(quadrature_points[q_index],  false, true);
@@ -1226,8 +1354,10 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
 						cell_matrix_real[i][j] += x.real();
 
 						std::complex<double> pre1 = (mu_prec * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon_pre1 * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
-						cell_matrix_prec[i][j] += pre1.real();
+						cell_matrix_prec1[i][j] += pre1.real();
 
+						std::complex<double> pre2 = (mu_prec * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon_pre1 * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
+						cell_matrix_prec2[i][j] += pre2.real();
 					}
 				}
 			}
@@ -1236,8 +1366,11 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
 			cm.distribute_local_to_global     (cell_matrix_real, cell_rhs, local_dof_indices,system_matrix, system_rhs, false);
 			// pout << "P1 done"<<std::endl;
 
-			// cm_prec.distribute_local_to_global(cell_matrix_prec, cell_rhs, local_dof_indices,preconditioner_matrix_large, preconditioner_rhs, false);
+			cm_prec_even.distribute_local_to_global(cell_matrix_prec1, cell_rhs, local_dof_indices,Preconditioner_Matrices[GlobalParams.MPI_Rank], preconditioner_rhs, false);
 
+			if(GlobalParams.MPI_Rank != Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)-1) {
+				cm_prec_odd.distribute_local_to_global(cell_matrix_prec2, cell_rhs, local_dof_indices,Preconditioner_Matrices[GlobalParams.MPI_Rank +1], preconditioner_rhs, false);
+			}
 			// pout << "P2 done"<<std::endl;
 
 	    }

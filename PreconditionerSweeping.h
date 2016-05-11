@@ -12,7 +12,6 @@ using namespace dealii;
 #include <deal.II/base/config.h>
 #include <deal.II/lac/exceptions.h>
 #include <deal.II/lac/trilinos_precondition.h>
-#include <petscpc.h>
 
 
 class PreconditionerSweeping : public TrilinosWrappers::PreconditionBase
