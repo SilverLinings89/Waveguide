@@ -1,12 +1,11 @@
 #ifndef WaveguideFlag
 #define WaveguideFlag
 
-#include <deal.II/distributed/shared_tria.h>
-#include <deal.II/distributed/grid_refinement.h>
+
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
-#include <deal.II/lac/matrix_out.h>
+// #include <deal.II/lac/matrix_out.h>
 #include <deal.II/base/thread_management.h>
 #include <deal.II/base/multithread_info.h>
 #include <deal.II/grid/tria_accessor.h>
@@ -41,12 +40,16 @@
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/index_set.h>
+#include <deal.II/distributed/tria.h>
+#include <deal.II/distributed/grid_refinement.h>
 
 // Trilinos Headers
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_solver.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
-#include <deal.II/lac/trilinos_parallel_block_vector.h>
+// #include <deal.II/lac/trilinos_parallel_block_vector.h>
+#include <deal.II/lac/trilinos_sparsity_pattern.h>
+
 
 #include <fstream>
 #include <iostream>
@@ -359,7 +362,7 @@ class Waveguide
 		DoFHandler<3>									dof_handler;
 		//, dof_handler_real;
 		VectorType										solution;
-		ConstraintMatrix 								cm, cm_prec_odd, cm_prec_even;
+		ConstraintMatrix 								cm, cm_prec1, cm_prec2;
 		IndexSet										locally_owned_dofs, locally_relevant_dofs, locally_active_dofs, extended_relevant_dofs;
 		std::vector<IndexSet>							locally_relevant_dofs_per_subdomain;
 
@@ -405,7 +408,7 @@ class Waveguide
 
 		std::vector<IndexSet>							locally_relevant_dofs_all_processors;
 		IndexSet										UpperDofs, LowerDofs;
-		std::vector<dealii::TrilinosWrappers::SparseMatrix> Preconditioner_Matrices;
+		dealii::TrilinosWrappers::SparseMatrix* 		Preconditioner_Matrices;
 		// PreconditionSweeping<dealii::PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::BlockVector >::AdditionalData Sweeping_Additional_Data;
 		// PreconditionSweeping<dealii::PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::BlockVector > sweep;
 		ConditionalOStream 								pout;

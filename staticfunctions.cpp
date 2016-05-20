@@ -188,7 +188,7 @@ template<int dim> static void mesh_info(const parallel::distributed::Triangulati
 	std::cout << "Mesh info:" << std::endl << " dimension: " << dim << std::endl << " no. of cells: " << tria.n_active_cells() << std::endl;
 	{
 		std::map<unsigned int, unsigned int> boundary_count;
-		typename parallel::shared::Triangulation<dim>::active_cell_iterator
+		typename parallel::distributed::Triangulation<dim>::active_cell_iterator
 		cell = tria.begin_active(),
 		endc = tria.end();
 		for (; cell!=endc; ++cell)

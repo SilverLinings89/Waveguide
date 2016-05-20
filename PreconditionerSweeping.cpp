@@ -6,26 +6,36 @@
 using namespace dealii;
 
 
-PreconditionerSweeping::PreconditionerSweeping (const TrilinosWrappers::SparseMatrix  &S)
+PreconditionerSweeping::PreconditionerSweeping (const TrilinosWrappers::SparseMatrix  &S, int in_own, int in_others)
       :
-      preconditioner_matrix     (&S)
-    {}
-
-    void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
-                const TrilinosWrappers::MPI::Vector &src) const
+      preconditioner_matrix     (&S),
+	  input(2),
+	  output(2)
     {
+		own = in_own;
+		others = in_others;
+		itmp = TrilinosWrappers::MPI::Vector(complete_index_set(own + others));
+		otmp = TrilinosWrappers::MPI::Vector(complete_index_set(own + others));
+		input.block(0).reinit(complete_index_set(others), MPI_COMM_SELF);
+		input.block(1).reinit(complete_index_set(own), MPI_COMM_SELF);
+		output.block(0).reinit(complete_index_set(others), MPI_COMM_SELF);
+		output.block(1).reinit(complete_index_set(own), MPI_COMM_SELF);
+	}
 
-      const TrilinosWrappers::MPI::Vector itmp(src);
-      TrilinosWrappers::MPI::Vector otmp(dst);
+void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
+			const TrilinosWrappers::MPI::Vector &src) const
+{
+	for(int i = 0; i < own; i++) {
+		input.block(1).se[i] = src[i];
+	}
+	const TrilinosWrappers::MPI::Vector inp(input);
+	SolverControl solver_control(5000, 1e-6 * src.l2_norm());
+	TrilinosWrappers::SolverDirect solver(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack"));
+	solver.solve(*preconditioner_matrix, output, input);
 
-      {
-        SolverControl solver_control(5000, 1e-6 * src.l2_norm());
-        TrilinosWrappers::SolverDirect solver(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack"));
-        solver.solve(*preconditioner_matrix, otmp, itmp);
-      }
+	dst.reinit(output.block(1));
 
-
-    }
+}
 
 
 
