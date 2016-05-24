@@ -18,12 +18,11 @@ using namespace dealii;
 
 class PreconditionerSweeping : public TrilinosWrappers::PreconditionBase
   {
-	using TrilinosWrappers::PreconditionBase::vmult;
 
   public:
 	PreconditionerSweeping (const TrilinosWrappers::SparseMatrix  &S, int in_own, int in_others);
 
-	virtual void vmult (TrilinosWrappers::MPI::Vector       &dst,      const TrilinosWrappers::MPI::Vector &src) const;
+	void vmult (TrilinosWrappers::MPI::Vector       &dst,      const TrilinosWrappers::MPI::Vector &src) const;
 
   private:
 	int own, others;
