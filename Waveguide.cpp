@@ -1761,6 +1761,11 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
+	if(GlobalParams.MPI_Rank != 0) {
+		std::ofstream pattern (solutionpath + "/pattern" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".gnu");
+		prec_patterns[GlobalParams.MPI_Rank -1].print_gnuplot(pattern);
+	}
+
 	if(prm.PRM_S_Solver == "GMRES") {
 
 		TrilinosWrappers::SolverGMRES solver(solver_control , dealii::TrilinosWrappers::SolverGMRES::AdditionalData( true, prm.PRM_S_GMRESSteps) );
