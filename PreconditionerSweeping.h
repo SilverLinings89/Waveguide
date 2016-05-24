@@ -22,8 +22,9 @@ class PreconditionerSweeping : public TrilinosWrappers::PreconditionBase
   public:
 	PreconditionerSweeping (const TrilinosWrappers::SparseMatrix  &S, int in_own, int in_others);
 
-	void vmult (TrilinosWrappers::MPI::Vector       &dst,      const TrilinosWrappers::MPI::Vector &src) const;
+	// void vmult (TrilinosWrappers::MPI::Vector       &dst,      const TrilinosWrappers::MPI::Vector &src) const;
 
+	template <typename T> inline void vmult (T &src, const T &dst) const ;
   private:
 	int own, others;
       const SmartPointer<const TrilinosWrappers::SparseMatrix> preconditioner_matrix;

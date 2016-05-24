@@ -33,7 +33,13 @@ PreconditionerSweeping::PreconditionerSweeping (const TrilinosWrappers::SparseMa
 
 	}
 
-void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
+template<typename T>
+inline void PreconditionerSweeping::vmult (T &dst, const T &src) const {
+	std::cout << typeid(T).name() << std::endl;
+}
+
+/**
+inline void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 			const TrilinosWrappers::MPI::Vector &src) const
 {
 
@@ -61,3 +67,4 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 
 }
 
+**/
