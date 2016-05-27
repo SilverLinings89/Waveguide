@@ -30,15 +30,9 @@ PreconditionerSweeping::PreconditionerSweeping (const TrilinosWrappers::SparseMa
 		sizes.push_back(own);
 		//inputb.reinit(own + others, false);
 		//outputb.reinit(own + others, false);
-
+		TrilinosWrappers::PreconditionBlockwiseDirect::initialize(S, TrilinosWrappers::PreconditionBlockwiseDirect::AdditionalData());
 	}
 
-template<typename T>
-inline void PreconditionerSweeping::vmult (T &dst, const T &src) const {
-	std::cout << typeid(T).name() << std::endl;
-}
-
-/**
 inline void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 			const TrilinosWrappers::MPI::Vector &src) const
 {
@@ -48,6 +42,7 @@ inline void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &
 		inputb[i] = 0;
 	}
 
+
 	for(unsigned int i = 0; i < own; i++) {
 		inputb[i + others] = src(i);
 	}
@@ -55,16 +50,18 @@ inline void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &
 	dealii::Vector<double> outputb(own + others);
 
 	// const TrilinosWrappers::MPI::Vector inp(input);
-	SolverControl solver_control(5000, 1e-6 * src.l2_norm());
-	TrilinosWrappers::SolverDirect solver(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack"));
-	solver.solve(*preconditioner_matrix, outputb, inputb);
+
+	TrilinosWrappers::PreconditionBlockwiseDirect::vmult(outputb, inputb);
+	// SolverControl solver_control(5000, 1e-6 * src.l2_norm());
+	// TrilinosWrappers::SolverDirect solver(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack"));
+	// solver.solve(*preconditioner_matrix, outputb, inputb);
 
 	for(int i = 0; i < own; i++) {
 		dst[i] = outputb[others + i];
 	}
 
+	// dealii::Vector<double> outputb(own + others);
+
+
 	std::cout << GlobalParams.MPI_Rank << "Non-prec L2: " << src.l2_norm() << ", Prec L2: "<< dst.l2_norm() << std::endl;
-
 }
-
-**/

@@ -1808,9 +1808,13 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 			if (GlobalParams.MPI_Rank != 0 ) {
 				below = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1].n_elements();
 			}
+
+			TrilinosWrappers::PreconditionBlockwiseDirect bd;
+			bd.initialize(prec_matrix, TrilinosWrappers::PreconditionBlockwiseDirect::AdditionalData(7000));
 			PreconditionerSweeping sweep( prec_matrix, locally_owned_dofs.n_elements(), below);
 			std::cout << GlobalParams.MPI_Rank << " ready to solve" <<std::endl;
-			solver.solve(system_matrix,solution, system_rhs, sweep);
+			// solver.solve(system_matrix,solution, system_rhs, sweep);
+			solver.solve(system_matrix,solution, system_rhs, bd);
 
 		}
 
