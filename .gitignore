@@ -44,6 +44,7 @@ Thumbs.db
 *.1
 *.cmake
 Makefile
+main
 CMakeFiles/
 CMakeCache.txt
 Waveguide
