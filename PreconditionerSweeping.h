@@ -24,10 +24,11 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 
 	virtual void vmult (TrilinosWrappers::MPI::Vector       &dst,      const TrilinosWrappers::MPI::Vector &src) const;
 
+	TrilinosWrappers::SolverDirect solver;
 	// template <typename T> inline void vmult (T &src, const T &dst) const ;
   private:
 	SolverControl solver_control;
-	TrilinosWrappers::SolverDirect solver;
+
 	int own, others;
       const SmartPointer<const TrilinosWrappers::SparseMatrix> preconditioner_matrix;
       TrilinosWrappers::MPI::Vector itmp, otmp;
