@@ -35,9 +35,6 @@ PreconditionerSweeping::PreconditionerSweeping ( TrilinosWrappers::SolverDirect 
 
     }
 
-PreconditionerSweeping::~PreconditionerSweeping() {
-	delete solverpointer;
-}
 
 void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 			const TrilinosWrappers::MPI::Vector &src) const
