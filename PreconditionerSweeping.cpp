@@ -14,8 +14,8 @@ using namespace dealii;
 PreconditionerSweeping::PreconditionerSweeping (const TrilinosWrappers::SparseMatrix  &S, int in_own, int in_others)
       :
       preconditioner_matrix     (&S),
-	  solver_control(5000, 1e-6),
-	 solver(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack"))
+	  solver_control(5000, 1e-6)
+	 //solver(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack"))
 	  //input(2),
 	  //output(2)
 	  //inputb(in_own + in_others)
@@ -31,11 +31,19 @@ PreconditionerSweeping::PreconditionerSweeping (const TrilinosWrappers::SparseMa
 		sizes.push_back(others);
 		sizes.push_back(own);
 
+		TrilinosWrappers::SolverDirect solver(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack"));
+		solverpointer(solver);
+
+
 		//inputb.reinit(own + others, false);
 		//outputb.reinit(own + others, false);
 		//TrilinosWrappers::PreconditionBlockwiseDirect::initialize(S, TrilinosWrappers::PreconditionBlockwiseDirect::AdditionalData());
 
     }
+
+PreconditionerSweeping::~PreconditionerSweeping() {
+
+}
 
 void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 			const TrilinosWrappers::MPI::Vector &src) const
@@ -56,7 +64,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 	// const TrilinosWrappers::MPI::Vector inp(input);
 
 	//TrilinosWrappers::PreconditionBlockwiseDirect::vmult(outputb, inputb);
-	solver.solve(*preconditioner_matrix, outputb, inputb);
+	(*solverpointer).solve(*preconditioner_matrix, outputb, inputb);
 
 	for(int i = 0; i < own; i++) {
 		dst[i] = outputb[others + i];
