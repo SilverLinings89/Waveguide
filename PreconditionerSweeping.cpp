@@ -31,7 +31,7 @@ PreconditionerSweeping::PreconditionerSweeping (const TrilinosWrappers::SparseMa
 		sizes.push_back(others);
 		sizes.push_back(own);
 
-		TrilinosWrappers::SolverDirect solver(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack"));
+		TrilinosWrappers::SolverDirect * solver = new TrilinosWrappers::SolverDirect(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack"));
 		solverpointer(solver);
 
 
@@ -42,7 +42,7 @@ PreconditionerSweeping::PreconditionerSweeping (const TrilinosWrappers::SparseMa
     }
 
 PreconditionerSweeping::~PreconditionerSweeping() {
-
+	delete *solverpointer;
 }
 
 void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
