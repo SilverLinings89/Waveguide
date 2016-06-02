@@ -45,9 +45,9 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 		inputb[i] = 0;
 	}
 
-
+	IndexSet owneddofs = src.locally_owned_elements();
 	for(unsigned int i = 0; i < own; i++) {
-		inputb[i + others] = src(i);
+		inputb[i + others] = src(owneddofs.nth_index_in_set(i));
 	}
 
 	dealii::Vector<double> outputb(own + others);
@@ -58,7 +58,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 	solver->solve(*preconditioner_matrix, outputb, inputb);
 
 	for(int i = 0; i < own; i++) {
-		dst[i] = outputb[others + i];
+		dst[owneddofs.nth_index_in_set(i)] = outputb[others + i];
 	}
 
 	// dealii::Vector<double> outputb(own + others);
