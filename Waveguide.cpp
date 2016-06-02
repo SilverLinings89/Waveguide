@@ -1768,7 +1768,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 	if(prm.PRM_S_Solver == "GMRES") {
 
-		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES::AdditionalData( prm.PRM_S_GMRESSteps) );
+		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData( prm.PRM_S_GMRESSteps) );
 		timerupdate();
 		if(prm.PRM_S_Preconditioner == "Sweeping"){
 			std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
