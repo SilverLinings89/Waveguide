@@ -1814,6 +1814,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 			PreconditionerSweeping sweep( prec_matrix, locally_owned_dofs.n_elements(), below);
 			std::cout << GlobalParams.MPI_Rank << " ready to solve" <<std::endl;
 			// solver.solve(system_matrix,solution, system_rhs, sweep);
+			MPI_Barrier(MPI_COMM_WORLD);
 			solver.solve(system_matrix,solution, system_rhs, sweep);
 
 		}
