@@ -1768,7 +1768,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 	if(prm.PRM_S_Solver == "GMRES") {
 
-		TrilinosWrappers::SolverGMRES solver(solver_control , dealii::TrilinosWrappers::SolverGMRES::AdditionalData( true, prm.PRM_S_GMRESSteps) );
+		dealii::SolverGMRES solver(solver_control , dealii::SolverGMRES::AdditionalData( prm.PRM_S_GMRESSteps) );
 		timerupdate();
 		if(prm.PRM_S_Preconditioner == "Sweeping"){
 			std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
@@ -1809,12 +1809,12 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 				below = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1].n_elements();
 			}
 
-			TrilinosWrappers::PreconditionBlockwiseDirect bd;
-			bd.initialize(prec_matrix, TrilinosWrappers::PreconditionBlockwiseDirect::AdditionalData(7000));
+			// TrilinosWrappers::PreconditionBlockwiseDirect bd;
+			// bd.initialize(prec_matrix, TrilinosWrappers::PreconditionBlockwiseDirect::AdditionalData(7000));
 			PreconditionerSweeping sweep( prec_matrix, locally_owned_dofs.n_elements(), below);
 			std::cout << GlobalParams.MPI_Rank << " ready to solve" <<std::endl;
 			// solver.solve(system_matrix,solution, system_rhs, sweep);
-			solver.solve(system_matrix,solution, system_rhs, bd);
+			solver.solve(system_matrix,solution, system_rhs, sweep);
 
 		}
 
