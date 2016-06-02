@@ -11,15 +11,12 @@
 using namespace dealii;
 
 
-PreconditionerSweeping::PreconditionerSweeping (const TrilinosWrappers::SparseMatrix  &S, int in_own, int in_others)
+PreconditionerSweeping::PreconditionerSweeping ( TrilinosWrappers::SolverDirect * S, TrilinosWrappers::SparseMatrix & M, int in_own, int in_others)
       :
-      preconditioner_matrix     (&S),
-	  solver_control(5000, 1e-6)
-	 //solver(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack"))
-	  //input(2),
-	  //output(2)
-	  //inputb(in_own + in_others)
+      preconditioner_matrix     (&M)
+
     {
+		solver = S;
 		own = in_own;
 		others = in_others;
 		//itmp = TrilinosWrappers::MPI::Vector(complete_index_set(own + others));
@@ -31,9 +28,6 @@ PreconditionerSweeping::PreconditionerSweeping (const TrilinosWrappers::SparseMa
 		sizes.push_back(others);
 		sizes.push_back(own);
 
-		TrilinosWrappers::SolverDirect * solver = new TrilinosWrappers::SolverDirect(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack"));
-		solverpointer(solver);
-
 
 		//inputb.reinit(own + others, false);
 		//outputb.reinit(own + others, false);
@@ -42,7 +36,7 @@ PreconditionerSweeping::PreconditionerSweeping (const TrilinosWrappers::SparseMa
     }
 
 PreconditionerSweeping::~PreconditionerSweeping() {
-	delete *solverpointer;
+	delete solverpointer;
 }
 
 void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
@@ -64,7 +58,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 	// const TrilinosWrappers::MPI::Vector inp(input);
 
 	//TrilinosWrappers::PreconditionBlockwiseDirect::vmult(outputb, inputb);
-	(*solverpointer).solve(*preconditioner_matrix, outputb, inputb);
+	solver->solve(*preconditioner_matrix, outputb, inputb);
 
 	for(int i = 0; i < own; i++) {
 		dst[i] = outputb[others + i];
