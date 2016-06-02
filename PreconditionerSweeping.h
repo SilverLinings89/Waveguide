@@ -16,7 +16,7 @@ using namespace dealii;
 #include <deal.II/lac/vector.h>
 
 
-class PreconditionerSweeping : TrilinosWrappers::PreconditionBlockwiseDirect
+class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
   {
 
   public:
@@ -26,6 +26,8 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBlockwiseDirect
 
 	// template <typename T> inline void vmult (T &src, const T &dst) const ;
   private:
+	SolverControl solver_control;
+	TrilinosWrappers::SolverDirect solver;
 	int own, others;
       const SmartPointer<const TrilinosWrappers::SparseMatrix> preconditioner_matrix;
       TrilinosWrappers::MPI::Vector itmp, otmp;
