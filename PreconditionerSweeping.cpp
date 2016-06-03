@@ -65,7 +65,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 		// dealii::Vector<double> outputb(own + others);
 
 
-		std::cout << GlobalParams.MPI_Rank << "Non-prec L2: " << src.l2_norm() << ", Prec L2: "<< dst.l2_norm() << std::endl;
+		// std::cout << GlobalParams.MPI_Rank << "Non-prec L2: " << src.l2_norm() << ", Prec L2: "<< dst.l2_norm() << std::endl;
 	} else {
 		dst = src;
 	}
