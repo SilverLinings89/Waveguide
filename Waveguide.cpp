@@ -1811,7 +1811,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 			// TrilinosWrappers::PreconditionBlockwiseDirect bd;
 			// bd.initialize(prec_matrix, TrilinosWrappers::PreconditionBlockwiseDirect::AdditionalData(7000));
-			TrilinosWrappers::SolverDirect prec_sol(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Mumps"));
+			TrilinosWrappers::SolverDirect prec_sol(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Superlu"));
 
 			PreconditionerSweeping sweep( &prec_sol, prec_matrix, locally_owned_dofs.n_elements(), below);
 			std::cout << GlobalParams.MPI_Rank << " ready to solve" <<std::endl;
