@@ -40,7 +40,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 			const TrilinosWrappers::MPI::Vector &src) const
 {
 
-	if(GlobalParams.MPI_Rank != 0) {
+	if(GlobalParams.MPI_Rank == 0) {
 		dealii::Vector<double> inputb(own + others);
 		for(unsigned int i = 0; i < others; i++) {
 			inputb[i] = 0;
