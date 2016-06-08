@@ -1783,7 +1783,9 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 			}
 
 			// std::cout << GlobalParams.MPI_Rank << " prep matrix." <<std::endl;
-			dealii::TrilinosWrappers::SparseMatrix prec_matrix(own.n_elements(), own.n_elements(), dof_handler.max_couplings_between_dofs());
+			dealii::SparsityPattern temp_pattern;
+			temp_pattern.reinit(own.n_elements(), own.n_elements(), dof_handler.max_couplings_between_dofs())
+			dealii::SparseMatrix<double> prec_matrix(temp_pattern);
 
 			// std::cout << GlobalParams.MPI_Rank << " build matrix." <<std::endl;
 			if(GlobalParams.MPI_Rank == 0 ){
@@ -1809,15 +1811,15 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 			int empty_rows = 0;
 			double average = 0.0;
 			const unsigned int max_row = own.n_elements();
-			for ( unsigned int i = 0; i < max_row; i++) {
-				const unsigned int temp = prec_matrix.row_length(i);
-				if (temp == 0) {
-					empty_rows++;
-				}
-				average += (double)temp / (double)max_row;
-			}
+			// for ( unsigned int i = 0; i < max_row; i++) {
+				// const unsigned int temp = prec_matrix.row_length(i);
+				// if (temp == 0) {
+				//	empty_rows++;
+				// }
+				//average += (double)temp / (double)max_row;
+			// }
 
-			std::cout << GlobalParams.MPI_Rank << " has " << empty_rows << " empty rows and an average of " << average << " Elements."<<std::endl;
+			// std::cout << GlobalParams.MPI_Rank << " has " << empty_rows << " empty rows and an average of " << average << " Elements."<<std::endl;
 
 			std::cout << GlobalParams.MPI_Rank << " done building matrix. Init Sweep." <<std::endl;
 			int below = 0;
