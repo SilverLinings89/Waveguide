@@ -20,7 +20,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
   {
 
   public:
-	PreconditionerSweeping ( TrilinosWrappers::SolverDirect * S, TrilinosWrappers::SparseMatrix &M, int in_own, int in_others);
+	PreconditionerSweeping ( dealii::SparseDirectUMFPACK * S, TrilinosWrappers::SparseMatrix &M, int in_own, int in_others);
 
 	virtual void vmult (TrilinosWrappers::MPI::Vector       &dst,      const TrilinosWrappers::MPI::Vector &src) const;
 
@@ -34,7 +34,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
       //dealii::Vector<double> inputb, outputb ;
       //TrilinosWrappers::MPI::BlockVector input, output;
       std::vector<unsigned int> sizes;
-      TrilinosWrappers::SolverDirect * solver;
+      dealii::SparseDirectUMFPACK * solver;
   };
 
 #endif /* PRECONDITIONERSWEEPING_H_ */
