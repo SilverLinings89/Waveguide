@@ -1199,15 +1199,15 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_all () {
-	pout << "0-";
+	// pout << "0-";
 	reinit_rhs();
-	pout << "1-";
+	// pout << "1-";
 	reinit_solution();
-	pout << "2-";
+	// pout << "2-";
 	reinit_preconditioner();
-	pout << "3-";
+	// pout << "3-";
 	reinit_systemmatrix();
-	pout << "4";
+	// pout << "4";
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1281,7 +1281,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 
 template <>
 void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_rhs () {
-	std::cout << "Reinit rhs for p " << GlobalParams.MPI_Rank << std::endl;
+	// std::cout << "Reinit rhs for p " << GlobalParams.MPI_Rank << std::endl;
 
 	system_rhs.reinit(locally_owned_dofs, MPI_COMM_WORLD);
 
@@ -1325,7 +1325,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 		bool spec = false ;
 		bool upper = false;
 		bool lower = false;
-		std::cout << "Stage 2 for processor " << GlobalParams.MPI_Rank << std::endl;
+		// std::cout << "Stage 2 for processor " << GlobalParams.MPI_Rank << std::endl;
 
 
 		if ( GlobalParams.MPI_Rank -i == 0 ) {
@@ -1358,7 +1358,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 		}
 		TrilinosWrappers::SparseMatrix temporary;
 		prec_patterns[i].compress();
-		std::cout << GlobalParams.MPI_Rank << " compressed" <<std::endl;
+		// std::cout << GlobalParams.MPI_Rank << " compressed" <<std::endl;
 		MPI_Barrier(MPI_COMM_WORLD);
 		Preconditioner_Matrices[i].reinit(prec_patterns[i]);
 
@@ -1773,7 +1773,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData( prm.PRM_S_GMRESSteps) );
 		timerupdate();
 		if(prm.PRM_S_Preconditioner == "Sweeping"){
-			std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
+			// std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
 			IndexSet own (dof_handler.n_dofs());
 			if(GlobalParams.MPI_Rank == 0 ){
 				own.add_indices(locally_owned_dofs);
@@ -1781,10 +1781,10 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 				own.add_indices(LowerDofs);
 			}
 
-			std::cout << GlobalParams.MPI_Rank << " prep matrix." <<std::endl;
+			// std::cout << GlobalParams.MPI_Rank << " prep matrix." <<std::endl;
 			dealii::TrilinosWrappers::SparseMatrix prec_matrix(own.n_elements(), own.n_elements(), dof_handler.max_couplings_between_dofs());
 
-			std::cout << GlobalParams.MPI_Rank << " build matrix." <<std::endl;
+			// std::cout << GlobalParams.MPI_Rank << " build matrix." <<std::endl;
 			if(GlobalParams.MPI_Rank == 0 ){
 				for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
 					for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(own.nth_index_in_set(current_row)); row != system_matrix.end(own.nth_index_in_set(current_row)); row++) {
@@ -1813,7 +1813,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 				if (temp == 0) {
 					empty_rows++;
 				}
-				average += temp / max_row;
+				average += (double)temp / (double)max_row;
 			}
 
 			std::cout << GlobalParams.MPI_Rank << " has " << empty_rows << " empty rows and an average of " << average << " Elements."<<std::endl;
