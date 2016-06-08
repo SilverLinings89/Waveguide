@@ -1784,7 +1784,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 			// std::cout << GlobalParams.MPI_Rank << " prep matrix." <<std::endl;
 			dealii::SparsityPattern temp_pattern;
-			temp_pattern.reinit(own.n_elements(), own.n_elements(), dof_handler.max_couplings_between_dofs())
+			temp_pattern.reinit(own.n_elements(), own.n_elements(), dof_handler.max_couplings_between_dofs());
 			dealii::SparseMatrix<double> prec_matrix(temp_pattern);
 
 			// std::cout << GlobalParams.MPI_Rank << " build matrix." <<std::endl;
