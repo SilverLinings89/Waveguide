@@ -1784,7 +1784,28 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 			// std::cout << GlobalParams.MPI_Rank << " prep matrix." <<std::endl;
 			dealii::SparsityPattern temp_pattern;
-			temp_pattern.reinit(own.n_elements(), own.n_elements(), dof_handler.max_couplings_between_dofs());
+			temp_pattern.reinit(own.n_elements(),own.n_elements(), dof_handler.max_couplings_between_dofs());
+
+			if(GlobalParams.MPI_Rank == 0 ){
+
+				for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
+					for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(own.nth_index_in_set(current_row)); row != system_matrix.end(own.nth_index_in_set(current_row)); row++) {
+						if(own.is_element(row->column())) {
+							temp_pattern.add(current_row, own.index_within_set(row->column()));
+						}
+					}
+				}
+			} else {
+				for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
+					for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(own.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(own.nth_index_in_set(current_row)); row++) {
+						if(own.is_element(row->column())) {
+							temp_pattern.add(current_row, own.index_within_set(row->column()));
+						}
+					}
+				}
+			}
+			temp_pattern.compress();
+
 			dealii::SparseMatrix<double> prec_matrix(temp_pattern);
 
 			// std::cout << GlobalParams.MPI_Rank << " build matrix." <<std::endl;
