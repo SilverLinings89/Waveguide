@@ -351,6 +351,12 @@ class Waveguide
 		 */
 		void 	reinit_storage();
 
+		/**
+		 * This function performs a comparison of the local part of the system matrix and the Preconditioner matrix.
+		 */
+		void 	Analyse();
+
+
 		std::complex<double> gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc);
 
 		std::string								solutionpath;

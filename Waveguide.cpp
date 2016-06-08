@@ -521,7 +521,7 @@ bool Waveguide<MatrixType, VectorType>::PML_in_Z(Point<3> &p) {
 template<typename MatrixType, typename VectorType>
 bool Waveguide<MatrixType, VectorType>::Preconditioner_PML_in_Z(Point<3> &p, unsigned int block) {
 	double l = structure->Sector_Length();
-	double width = l * 0.1;
+	double width = l * 0.3;
 	bool up =    (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 ) - ((double)block+1.0) * l + width) > 0;
 	bool down =  -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 ) - ((double)block-1.0) * l - width) > 0;
 	//pout <<std::endl<< p(2) << ":" << block << ":" << up << " " << down <<std::endl;
@@ -531,7 +531,7 @@ bool Waveguide<MatrixType, VectorType>::Preconditioner_PML_in_Z(Point<3> &p, uns
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ){
 	double l = structure->Sector_Length();
-	double width = l * 0.1;
+	double width = l * 0.3;
 	if( ( p(2) +GlobalParams.PRM_M_R_ZLength/2.0 )-  ((double)block) * l < 0){
 		return -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - ((double)block-1.0) * l - width);
 	} else {
@@ -1584,6 +1584,8 @@ template<typename MatrixType, typename VectorType>
 void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  ){
 	DoFHandler<3>::active_cell_iterator cell, endc;
 	// cm_prec.clear();
+	double l = structure->Sector_Length();
+	double width = l * 0.3;
 	double sector_length = structure->Sector_Length();
 	cell = dof_handler.begin_active();
 	endc = dof_handler.end();
@@ -1668,7 +1670,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 				// in between below
 				if(GlobalParams.MPI_Rank >  1) {
 					// if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - ((double)(GlobalParams.MPI_Rank-1))*sector_length ) < 0.0001 ){
-					if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - (GlobalParams.MPI_Rank -1 )*sector_length ) < 0.0001 ){
+					if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - (GlobalParams.MPI_Rank -1 )*sector_length ) < width/3.0 ){
 						std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1683,7 +1685,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 
 				if(GlobalParams.MPI_Rank >  1) {
 					// if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - ((double)(GlobalParams.MPI_Rank-1))*sector_length ) < 0.0001 ){
-					if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - ( GlobalParams.MPI_Rank )*sector_length ) < 0.0001 ){
+					if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - ( GlobalParams.MPI_Rank )*sector_length ) <  width/3.0 ){
 						std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1697,7 +1699,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 				}
 
 				if((int)GlobalParams.MPI_Rank < Sectors -1) {
-					if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - (GlobalParams.MPI_Rank +1)*sector_length ) < 0.0001 ){
+					if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - (GlobalParams.MPI_Rank +1)*sector_length ) <  width/3.0 ){
 						std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1711,7 +1713,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 				}
 
 				if((int)GlobalParams.MPI_Rank < Sectors -1) {
-					if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - (GlobalParams.MPI_Rank + 2)*sector_length ) < 0.0001 ){
+					if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - (GlobalParams.MPI_Rank + 2)*sector_length ) <  width/3.0 ){
 						std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1803,19 +1805,31 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 
 			prec_matrix.compress(VectorOperation::insert);
+			int empty_rows = 0;
+			double average = 0.0;
+			const unsigned int max_row = own.n_elements();
+			for ( unsigned int i = 0; i < max_row; i++) {
+				const unsigned int temp = prec_matrix.row_length(i);
+				if (temp == 0) {
+					empty_rows++;
+				}
+				average += temp / max_row;
+			}
+
+			std::cout << GlobalParams.MPI_Rank << " has " << empty_rows << " empty rows and an average of " << average << " Elements."<<std::endl;
+
 			std::cout << GlobalParams.MPI_Rank << " done building matrix. Init Sweep." <<std::endl;
 			int below = 0;
 			if (GlobalParams.MPI_Rank != 0 ) {
 				below = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1].n_elements();
 			}
 
-			// TrilinosWrappers::PreconditionBlockwiseDirect bd;
-			// bd.initialize(prec_matrix, TrilinosWrappers::PreconditionBlockwiseDirect::AdditionalData(7000));
-			TrilinosWrappers::SolverDirect prec_sol(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Klu"));
+			// Analyse();
+
+			TrilinosWrappers::SolverDirect prec_sol(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Mumps"));
 
 			PreconditionerSweeping sweep( &prec_sol, prec_matrix, locally_owned_dofs.n_elements(), below);
 			std::cout << GlobalParams.MPI_Rank << " ready to solve" <<std::endl;
-			// solver.solve(system_matrix,solution, system_rhs, sweep);
 			MPI_Barrier(MPI_COMM_WORLD);
 			solver.solve(system_matrix,solution, system_rhs, sweep);
 
@@ -1836,6 +1850,31 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 	//solution.compress(VectorOperation::insert);
 
 	cm.distribute(solution);
+}
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::Analyse() {
+	unsigned int dofs_equal = 0;
+	unsigned int dofs_prec_missing = 0;
+	unsigned int dofs_system_missing = 0;
+	unsigned int dofs_differen_interior = 0;
+	int below = 0;
+	IndexSet relevant = locally_owned_dofs;
+
+	if (GlobalParams.MPI_Rank != 0 ) {
+		below = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1].n_elements();
+		relevant.add_indices(locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1]);
+	}
+
+
+	for (unsigned int current_row = 0; current_row < relevant.n_elements(); current_row++  ) {
+		for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(relevant.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(relevant.nth_index_in_set(current_row)); row++) {
+			if(relevant.is_element(row->column())) {
+				// prec_matrix.set(current_row, relevant.index_within_set(row->column()), row->value());
+			}
+		}
+	}
+
 }
 
 template<typename MatrixType, typename VectorType >
