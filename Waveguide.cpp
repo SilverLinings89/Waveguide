@@ -19,6 +19,7 @@
 #include <deal.II/lac/block_sparsity_pattern.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include "PreconditionerSweeping.cpp"
+#include <deal.II/lac/solver.h>
 using namespace dealii;
 
 template<typename MatrixType, typename VectorType >
@@ -718,7 +719,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 
 	// mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
 
-	std::cout << "done" << std::endl;
+	// std::cout << "done" << std::endl;
 
 	parallel::shared::Triangulation<3>::active_cell_iterator
 
@@ -919,10 +920,10 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	}
 
 	pout << "Constructing Sparsity Patterns and Constrain Matrices ... ";
-	std::cout << GlobalParams.MPI_Rank << ": "<< locally_owned_dofs.is_contiguous() << " , " << locally_owned_dofs.n_elements() << std::endl;
-	std::cout << GlobalParams.MPI_Rank << ": "<< locally_active_dofs.is_contiguous() << " , " << locally_active_dofs.n_elements() << std::endl;
-	std::cout << GlobalParams.MPI_Rank << ": "<< locally_relevant_dofs.is_contiguous() << " , " << locally_relevant_dofs.n_elements() << std::endl;
-	std::cout << GlobalParams.MPI_Rank << ": "<< extended_relevant_dofs.is_contiguous() << " , " << extended_relevant_dofs.n_elements() << std::endl;
+	// std::cout << GlobalParams.MPI_Rank << ": "<< locally_owned_dofs.is_contiguous() << " , " << locally_owned_dofs.n_elements() << std::endl;
+	// std::cout << GlobalParams.MPI_Rank << ": "<< locally_active_dofs.is_contiguous() << " , " << locally_active_dofs.n_elements() << std::endl;
+	// std::cout << GlobalParams.MPI_Rank << ": "<< locally_relevant_dofs.is_contiguous() << " , " << locally_relevant_dofs.n_elements() << std::endl;
+	// std::cout << GlobalParams.MPI_Rank << ": "<< extended_relevant_dofs.is_contiguous() << " , " << extended_relevant_dofs.n_elements() << std::endl;
 	cm.clear();
 	cm.reinit(locally_relevant_dofs);
 
@@ -930,7 +931,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	cm_prec2.clear();
 	cm_prec1.reinit(locally_relevant_dofs);
 	cm_prec2.reinit(locally_relevant_dofs);
-	std::cout << "Size: " << locally_relevant_dofs.size() << std::endl;
+	// std::cout << "Size: " << locally_relevant_dofs.size() << std::endl;
 
 	system_pattern.reinit(locally_owned_dofs, locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
 	pout << "done" << std::endl;
@@ -1037,7 +1038,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 		locally_relevant_dofs_all_processors[i].read(ss);
 	}
 
-	std::cout<< "Reading worked in process number " << GlobalParams.MPI_Rank << std::endl;
+	// std::cout<< "Reading worked in process number " << GlobalParams.MPI_Rank << std::endl;
 
 	UpperDofs = locally_owned_dofs;
 
@@ -1054,7 +1055,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 	prec_patterns = new TrilinosWrappers::SparsityPattern[mpi_size-1];
 
-	std::cout << "Stage 1 for processor " << GlobalParams.MPI_Rank << std::endl;
+	// std::cout << "Stage 1 for processor " << GlobalParams.MPI_Rank << std::endl;
 	// MPI_Comm_split(MPI_COMM_WORLD, GlobalParams.MPI_Rank/2, GlobalParams.MPI_Rank, &comm_even );
 	// IndexSet none(dof_handler.n_dofs());
 
@@ -1105,7 +1106,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 			}
 		}
 
-		std::cout << "Stage 4 for processor " << GlobalParams.MPI_Rank << std::endl;
+		// std::cout << "Stage 4 for processor " << GlobalParams.MPI_Rank << std::endl;
 
 
 		MPI_Barrier(MPI_COMM_WORLD);
@@ -1118,7 +1119,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 
 		// prec_patterns[i].reinit(locally_owned_dofs, MPI_COMM_WORLD, 0);
-		std::cout << GlobalParams.MPI_Rank << " has reached the end of loop " << i << std::endl;
+		// std::cout << GlobalParams.MPI_Rank << " has reached the end of loop " << i << std::endl;
 
 	}
 
@@ -1824,11 +1825,11 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 				below = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1].n_elements();
 			}
 
-			// Analyse();
+			dealii::SparseDirectUMFPACK preconditioner_solver;
+			preconditioner_solver.initialize(prec_matrix, dealii::SparseDirectUMFPACK::AdditionalData());
+			//TrilinosWrappers::SolverDirect prec_sol(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Mumps"));
 
-			TrilinosWrappers::SolverDirect prec_sol(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Mumps"));
-
-			PreconditionerSweeping sweep( &prec_sol, prec_matrix, locally_owned_dofs.n_elements(), below);
+			PreconditionerSweeping sweep( &preconditioner_solver, prec_matrix, locally_owned_dofs.n_elements(), below);
 			std::cout << GlobalParams.MPI_Rank << " ready to solve" <<std::endl;
 			MPI_Barrier(MPI_COMM_WORLD);
 			solver.solve(system_matrix,solution, system_rhs, sweep);
