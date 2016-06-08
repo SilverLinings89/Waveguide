@@ -56,7 +56,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 		// const TrilinosWrappers::MPI::Vector inp(input);
 
 		//TrilinosWrappers::PreconditionBlockwiseDirect::vmult(outputb, inputb);
-		solver->solve(*preconditioner_matrix, outputb, inputb);
+		solver->solve(outputb, inputb);
 
 		for(int i = 0; i < own; i++) {
 			dst[owneddofs.nth_index_in_set(i)] = outputb[others + i];
