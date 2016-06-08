@@ -11,9 +11,7 @@
 using namespace dealii;
 
 
-PreconditionerSweeping::PreconditionerSweeping ( dealii::SparseDirectUMFPACK * S, TrilinosWrappers::SparseMatrix & M, int in_own, int in_others)
-      :
-      preconditioner_matrix     (&M)
+PreconditionerSweeping::PreconditionerSweeping ( dealii::SparseDirectUMFPACK * S, int in_own, int in_others)
 
     {
 		solver = S;

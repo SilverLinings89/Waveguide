@@ -1807,7 +1807,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 			}
 
 
-			prec_matrix.compress(VectorOperation::insert);
+			// prec_matrix.compress(VectorOperation::insert);
 			int empty_rows = 0;
 			double average = 0.0;
 			const unsigned int max_row = own.n_elements();
@@ -1829,9 +1829,10 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 			dealii::SparseDirectUMFPACK preconditioner_solver;
 			preconditioner_solver.initialize(prec_matrix, dealii::SparseDirectUMFPACK::AdditionalData());
-			//TrilinosWrappers::SolverDirect prec_sol(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Mumps"));
+			TrilinosWrappers::SolverDirect prec_sol(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Mumps"));
 
-			PreconditionerSweeping sweep( &preconditioner_solver, prec_matrix, locally_owned_dofs.n_elements(), below);
+
+			PreconditionerSweeping sweep( &preconditioner_solver,  locally_owned_dofs.n_elements(), below);
 			std::cout << GlobalParams.MPI_Rank << " ready to solve" <<std::endl;
 			MPI_Barrier(MPI_COMM_WORLD);
 			solver.solve(system_matrix,solution, system_rhs, sweep);
