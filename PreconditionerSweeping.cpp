@@ -5,6 +5,7 @@
 #include <deal.II/lac/vector.templates.h>
 #include <deal.II/lac/trilinos_vector.h>
 #include <deal.II/lac/trilinos_vector_base.h>
+#include <deal.II/lac/solver.h>
 
 #include "PreconditionerSweeping.h"
 
