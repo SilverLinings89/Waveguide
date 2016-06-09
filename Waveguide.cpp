@@ -1776,10 +1776,12 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		if(prm.PRM_S_Preconditioner == "Sweeping"){
 			// std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
 			IndexSet own (dof_handler.n_dofs());
+			own.add_indices(locally_owned_dofs);
+
 			if(GlobalParams.MPI_Rank == 0 ){
-				own.add_indices(locally_owned_dofs);
+				// own.add_indices(locally_owned_dofs);
 			} else {
-				own.add_indices(LowerDofs);
+				// own.add_indices(LowerDofs);
 			}
 
 			// std::cout << GlobalParams.MPI_Rank << " prep matrix." <<std::endl;
@@ -1795,7 +1797,9 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 						}
 					}
 				}
+
 			} else {
+
 				for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
 					for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(own.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(own.nth_index_in_set(current_row)); row++) {
 						if(own.is_element(row->column())) {
@@ -1803,6 +1807,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 						}
 					}
 				}
+
 			}
 			temp_pattern.compress();
 
@@ -1845,7 +1850,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 			std::cout << GlobalParams.MPI_Rank << " done building matrix. Init Sweep." <<std::endl;
 			int below = 0;
 			if (GlobalParams.MPI_Rank != 0 ) {
-				below = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1].n_elements();
+				//below = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1].n_elements();
 			}
 
 			dealii::SparseDirectUMFPACK preconditioner_solver;
