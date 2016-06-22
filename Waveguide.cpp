@@ -309,12 +309,6 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 			S3 /= sz;
 		}
 
-		if(inverse) {
-			std::complex<double> temp(1.0, 0.0);
-			S1 = temp / S1;
-			S2 = temp / S2;
-			S3 = temp / S3;
-		}
 
 		ret[0][0] = S1;
 		ret[1][1] = S2;
@@ -400,13 +394,6 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 		S1 *= sz;
 		S2 *= sz;
 		S3 /= sz;
-	}
-
-	if(inverse) {
-		std::complex<double> temp(1.0, 0.0);
-		S1 = temp / S1;
-		S2 = temp / S2;
-		S3 = temp / S3;
 	}
 
 	ret[0][0] = S1;
@@ -1856,9 +1843,16 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 			}
 
 			dealii::SparseDirectUMFPACK preconditioner_solver;
-			preconditioner_solver.initialize(prec_matrix, dealii::SparseDirectUMFPACK::AdditionalData());
-			TrilinosWrappers::SolverDirect prec_sol(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Mumps"));
 
+			for(unsigned int i = 0; i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
+				pout << i <<std::endl;
+				if(i == GlobalParams.MPI_Rank) {
+					preconditioner_solver.initialize(prec_matrix, dealii::SparseDirectUMFPACK::AdditionalData());
+				}
+				MPI_Barrier(MPI_COMM_WORLD);
+			}
+
+			TrilinosWrappers::SolverDirect prec_sol(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Mumps"));
 
 			PreconditionerSweeping sweep( &preconditioner_solver,  locally_owned_dofs.n_elements(), below);
 			std::cout << GlobalParams.MPI_Rank << " ready to solve" <<std::endl;
