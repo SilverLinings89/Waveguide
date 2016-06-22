@@ -1479,6 +1479,10 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 	log_assemble.stop();
 	system_matrix.compress(VectorOperation::add);
 	system_rhs.compress(VectorOperation::add);
+	MPI_Barrier(MPI_COMM_WORLD);
+	for(int i = 0; i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)-1; i++) {
+		Preconditioner_Matrices[i].compress(VectorOperation::add);
+	}
 
 }
 
@@ -1771,10 +1775,8 @@ SolverControl::State  Waveguide<MatrixType, VectorType>::check_iteration_state (
 
 template< >
 void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::solve () {
-	MPI_Barrier(MPI_COMM_WORLD);
-	for(int i = 0; i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
-		Preconditioner_Matrices[i].compress(VectorOperation::add);
-	}
+
+
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
