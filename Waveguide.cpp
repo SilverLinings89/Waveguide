@@ -1781,7 +1781,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 			if(GlobalParams.MPI_Rank == 0 ){
 				// own.add_indices(locally_owned_dofs);
 			} else {
-				// own.add_indices(LowerDofs);
+				own.add_indices(LowerDofs);
 			}
 
 			// std::cout << GlobalParams.MPI_Rank << " prep matrix." <<std::endl;
