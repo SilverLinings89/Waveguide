@@ -1810,7 +1810,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 			}
 			temp_pattern.compress();
-			std::ofstream pattern (solutionpath + "/pattern" + GlobalParams.MPI_Rank + ".gnu");
+			std::ofstream pattern (solutionpath + "/pattern" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".gnu");
 			temp_pattern.print_gnuplot(pattern);
 			dealii::SparseMatrix<double> prec_matrix(temp_pattern);
 
