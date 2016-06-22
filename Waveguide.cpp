@@ -533,10 +533,11 @@ template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ){
 	double l = structure->Sector_Length();
 	double width = l * 0.3;
+
 	if( ( p(2) +GlobalParams.PRM_M_R_ZLength/2.0 )-  ((double)block) * l < 0){
-		return -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - ((double)block-1.0) * l - width);
+		return -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - ((double)block-1.0) * l + width);
 	} else {
-		return  (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - ((double)block+1.0) * l + width);
+		return  (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - ((double)block+1.0) * l - width);
 	}
 }
 
