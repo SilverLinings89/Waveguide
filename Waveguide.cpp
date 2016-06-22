@@ -1578,6 +1578,14 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 	double sector_length = structure->Sector_Length();
 	cell = dof_handler.begin_active();
 	endc = dof_handler.end();
+	IndexSet own (dof_handler.n_dofs());
+	own.add_indices(locally_owned_dofs);
+
+	if(GlobalParams.MPI_Rank == 0 ){
+		// own.add_indices(locally_owned_dofs);
+	} else {
+		own.add_indices(LowerDofs);
+	}
 	for (; cell!=endc; ++cell)
 	{
 		if(cell->subdomain_id() == GlobalParams.MPI_Rank || cell->subdomain_id() == GlobalParams.MPI_Rank -1 ) {
@@ -1592,10 +1600,12 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 					for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 						((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
 						for(unsigned int k = 0; k < 2; k++) {
-							cm_prec1.add_line(local_dof_indices[k]);
-							cm_prec1.set_inhomogeneity(local_dof_indices[k], 0.0 );
-							cm_prec2.add_line(local_dof_indices[k]);
-							cm_prec2.set_inhomogeneity(local_dof_indices[k], 0.0 );
+							if(own.is_element(local_dof_indices[k])) {
+								cm_prec1.add_line(local_dof_indices[k]);
+								cm_prec1.set_inhomogeneity(local_dof_indices[k], 0.0 );
+								cm_prec2.add_line(local_dof_indices[k]);
+								cm_prec2.set_inhomogeneity(local_dof_indices[k], 0.0 );
+							}
 						}
 					}
 				}
@@ -1606,10 +1616,12 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 					for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 						((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
 						for(unsigned int k = 0; k < 2; k++) {
-							cm_prec1.add_line(local_dof_indices[k]);
-							cm_prec1.set_inhomogeneity(local_dof_indices[k], 0.0 );
-							cm_prec2.add_line(local_dof_indices[k]);
-							cm_prec2.set_inhomogeneity(local_dof_indices[k], 0.0 );
+							if(own.is_element(local_dof_indices[k])) {
+								cm_prec1.add_line(local_dof_indices[k]);
+								cm_prec1.set_inhomogeneity(local_dof_indices[k], 0.0 );
+								cm_prec2.add_line(local_dof_indices[k]);
+								cm_prec2.set_inhomogeneity(local_dof_indices[k], 0.0 );
+							}
 						}
 					}
 				}
@@ -1628,14 +1640,18 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 
 								double result = TEMode00(p,0);
 								if(PML_in_X(p) || PML_in_Y(p)) result = 0.0;
-								cm_prec1.add_line(local_dof_indices[0]);
-								cm_prec1.set_inhomogeneity(local_dof_indices[0], direction[0] * result);
-								cm_prec1.add_line(local_dof_indices[1]);
-								cm_prec1.set_inhomogeneity(local_dof_indices[1], 0.0);
-								cm_prec2.add_line(local_dof_indices[0]);
-								cm_prec2.set_inhomogeneity(local_dof_indices[0], direction[0] * result);
-								cm_prec2.add_line(local_dof_indices[1]);
-								cm_prec2.set_inhomogeneity(local_dof_indices[1], 0.0);
+								if(locally_owned_dofs.is_element(local_dof_indices[0])) {
+									cm_prec1.add_line(local_dof_indices[0]);
+									cm_prec1.set_inhomogeneity(local_dof_indices[0], direction[0] * result);
+									cm_prec2.add_line(local_dof_indices[0]);
+									cm_prec2.set_inhomogeneity(local_dof_indices[0], direction[0] * result);
+								}
+								if(locally_owned_dofs.is_element(local_dof_indices[1])) {
+									cm_prec1.add_line(local_dof_indices[1]);
+									cm_prec1.set_inhomogeneity(local_dof_indices[1], 0.0);
+									cm_prec2.add_line(local_dof_indices[1]);
+									cm_prec2.set_inhomogeneity(local_dof_indices[1], 0.0);
+								}
 							}
 						}
 					}
@@ -1648,10 +1664,12 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
 							for(unsigned int k = 0; k < 2; k++) {
-								cm_prec1.add_line(local_dof_indices[k]);
-								cm_prec1.set_inhomogeneity(local_dof_indices[k], 0.0 );
-								cm_prec2.add_line(local_dof_indices[k]);
-								cm_prec2.set_inhomogeneity(local_dof_indices[k], 0.0 );
+								if(locally_owned_dofs.is_element(local_dof_indices[k])) {
+									cm_prec1.add_line(local_dof_indices[k]);
+									cm_prec1.set_inhomogeneity(local_dof_indices[k], 0.0 );
+									cm_prec2.add_line(local_dof_indices[k]);
+									cm_prec2.set_inhomogeneity(local_dof_indices[k], 0.0 );
+								}
 							}
 						}
 					}
@@ -1664,9 +1682,10 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
 							for(unsigned int k = 0; k < 2; k++) {
-								cm_prec1.add_line(local_dof_indices[k]);
-								cm_prec1.set_inhomogeneity(local_dof_indices[k], 0.0 );
-
+								if(locally_owned_dofs.is_element(local_dof_indices[k])) {
+									cm_prec1.add_line(local_dof_indices[k]);
+									cm_prec1.set_inhomogeneity(local_dof_indices[k], 0.0 );
+								}
 							}
 						}
 					}
@@ -1679,8 +1698,10 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
 							for(unsigned int k = 0; k < 2; k++) {
-								cm_prec2.add_line(local_dof_indices[k]);
-								cm_prec2.set_inhomogeneity(local_dof_indices[k], 0.0 );
+								if(locally_owned_dofs.is_element(local_dof_indices[k])) {
+									cm_prec2.add_line(local_dof_indices[k]);
+									cm_prec2.set_inhomogeneity(local_dof_indices[k], 0.0 );
+								}
 
 							}
 						}
@@ -1693,9 +1714,10 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
 							for(unsigned int k = 0; k < 2; k++) {
-								cm_prec1.add_line(local_dof_indices[k]);
-								cm_prec1.set_inhomogeneity(local_dof_indices[k], 0.0 );
-
+								if(locally_owned_dofs.is_element(local_dof_indices[k])) {
+									cm_prec1.add_line(local_dof_indices[k]);
+									cm_prec1.set_inhomogeneity(local_dof_indices[k], 0.0 );
+								}
 							}
 						}
 					}
@@ -1707,9 +1729,10 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
 							for(unsigned int k = 0; k < 2; k++) {
-								cm_prec2.add_line(local_dof_indices[k]);
-								cm_prec2.set_inhomogeneity(local_dof_indices[k], 0.0 );
-
+								if(locally_owned_dofs.is_element(local_dof_indices[k])) {
+									cm_prec2.add_line(local_dof_indices[k]);
+									cm_prec2.set_inhomogeneity(local_dof_indices[k], 0.0 );
+								}
 							}
 						}
 					}
@@ -1749,13 +1772,18 @@ SolverControl::State  Waveguide<MatrixType, VectorType>::check_iteration_state (
 template< >
 void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::solve () {
 	MPI_Barrier(MPI_COMM_WORLD);
+	for(int i = 0; i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
+		Preconditioner_Matrices[i].compress(VectorOperation::add);
+	}
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
+	/**
 	if(GlobalParams.MPI_Rank != 0) {
 		std::ofstream pattern (solutionpath + "/pattern" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".gnu");
 		prec_patterns[GlobalParams.MPI_Rank -1].print_gnuplot(pattern);
 	}
+	**/
 
 	if(prm.PRM_S_Solver == "GMRES") {
 
@@ -1822,6 +1850,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 			}
 
 
+			prec_matrix.compress(VectorOperation::insert);
 
 			std::cout << GlobalParams.MPI_Rank << " done building matrix. Init Sweep." <<std::endl;
 			int below = 0;
@@ -1831,7 +1860,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 			dealii::SparseDirectUMFPACK preconditioner_solver;
 
-			for(unsigned int i = 0; i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
+			for(int i = 0; i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
 				pout << i <<std::endl;
 				if(i == GlobalParams.MPI_Rank) {
 					std::cout << prec_matrix.l1_norm()<<std::endl;
