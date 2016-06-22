@@ -393,7 +393,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 	if(Preconditioner_PML_in_Z(position, block)){
 		double r,d, sigmaz;
 		r = Preconditioner_PML_Z_Distance(position, block);
-		d = structure->Sector_Length() * 0.1;
+		d = structure->Sector_Length() * 0.3;
 		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
 		sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
 		sz.imag( sigmaz / omegaepsilon0 );
@@ -535,9 +535,9 @@ double Waveguide<MatrixType, VectorType>::Preconditioner_PML_Z_Distance(Point<3>
 	double width = l * 0.3;
 
 	if( ( p(2) +GlobalParams.PRM_M_R_ZLength/2.0 )-  ((double)block) * l < 0){
-		return -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - ((double)block-1.0) * l + width);
+		return -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - ((double)block-1.0) * l - width);
 	} else {
-		return  (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - ((double)block+1.0) * l - width);
+		return  (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - ((double)block+1.0) * l + width);
 	}
 }
 
