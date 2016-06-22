@@ -1748,7 +1748,7 @@ SolverControl::State  Waveguide<MatrixType, VectorType>::check_iteration_state (
 
 template< >
 void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::solve () {
-
+	MPI_Barrier(MPI_COMM_WORLD);
 	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
