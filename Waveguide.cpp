@@ -1822,31 +1822,12 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 			}
 
 
-			// prec_matrix.compress(VectorOperation::insert);
-			int empty_rows = 0;
-			double average = 0.0;
-			const unsigned int max_row = own.n_elements();
-			// for ( unsigned int i = 0; i < max_row; i++) {
-				// const unsigned int temp = prec_matrix.row_length(i);
-				// if (temp == 0) {
-				//	empty_rows++;
-				// }
-				//average += (double)temp / (double)max_row;
-			// }
-
-			// std::cout << GlobalParams.MPI_Rank << " has " << empty_rows << " empty rows and an average of " << average << " Elements."<<std::endl;
-
-			std::cout << GlobalParams.MPI_Rank << " done building matrix. Init Sweep." <<std::endl;
-			int below = 0;
-			if (GlobalParams.MPI_Rank != 0 ) {
-				//below = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1].n_elements();
-			}
-
 			dealii::SparseDirectUMFPACK preconditioner_solver;
 
 			for(unsigned int i = 0; i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
 				pout << i <<std::endl;
 				if(i == GlobalParams.MPI_Rank) {
+					std::cout << prec_matrix.l1_norm() << std::endl;
 					preconditioner_solver.initialize(prec_matrix, dealii::SparseDirectUMFPACK::AdditionalData());
 				}
 				MPI_Barrier(MPI_COMM_WORLD);
