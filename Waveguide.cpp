@@ -80,6 +80,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
 	solver_control.log_frequency(10);
 	const int number = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD) -1;
 	Preconditioner_Matrices = new TrilinosWrappers::SparseMatrix[number];
+	deallog.attach( std::cout );
 }
 
 template<typename MatrixType, typename VectorType>
