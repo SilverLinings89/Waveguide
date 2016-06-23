@@ -29,6 +29,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 	SolverControl solver_control;
 
 	int own, others;
+	bool first;
       // const SmartPointer<const TrilinosWrappers::SparseMatrix> preconditioner_matrix;
       TrilinosWrappers::MPI::Vector itmp, otmp;
       //dealii::Vector<double> inputb, outputb ;

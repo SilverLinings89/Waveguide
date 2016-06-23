@@ -15,6 +15,7 @@ using namespace dealii;
 PreconditionerSweeping::PreconditionerSweeping ( dealii::SparseDirectUMFPACK * S, int in_own, int in_others)
 
     {
+	first = true;
 		solver = S;
 		own = in_own;
 		others = in_others;
@@ -38,34 +39,34 @@ PreconditionerSweeping::PreconditionerSweeping ( dealii::SparseDirectUMFPACK * S
 void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 			const TrilinosWrappers::MPI::Vector &src) const
 {
-
-	if(GlobalParams.MPI_Rank != -1) {
-		dealii::Vector<double> inputb(own + others);
-		for(unsigned int i = 0; i < others; i++) {
-			inputb[i] = 0;
-		}
-
-		IndexSet owneddofs = src.locally_owned_elements();
-		for(unsigned int i = 0; i < own; i++) {
-			inputb[i + others] = src(owneddofs.nth_index_in_set(i));
-		}
-
-		//dealii::Vector<double> outputb(own + others);
-
-		// const TrilinosWrappers::MPI::Vector inp(input);
-
-		//TrilinosWrappers::PreconditionBlockwiseDirect::vmult(outputb, inputb);
-		solver->solve( inputb);
-
-		for(int i = 0; i < own; i++) {
-			dst[owneddofs.nth_index_in_set(i)] = inputb[others + i];
-		}
-
-		// dealii::Vector<double> outputb(own + others);
-
-
-		// std::cout << GlobalParams.MPI_Rank << "Non-prec L2: " << src.l2_norm() << ", Prec L2: "<< dst.l2_norm() << std::endl;
-	} else {
-		dst = src;
+	if(first) {
+	std::cout << GlobalParams.MPI_Rank << ":"<< src.size() << std::endl;
+	first = false;
 	}
+	dealii::Vector<double> inputb(own + others);
+	for(unsigned int i = 0; i < others; i++) {
+		inputb[i] = 0;
+	}
+
+	IndexSet owneddofs = src.locally_owned_elements();
+	for(unsigned int i = 0; i < own; i++) {
+		inputb[i + others] = src(owneddofs.nth_index_in_set(i));
+	}
+
+	//dealii::Vector<double> outputb(own + others);
+
+	// const TrilinosWrappers::MPI::Vector inp(input);
+
+	//TrilinosWrappers::PreconditionBlockwiseDirect::vmult(outputb, inputb);
+	solver->solve( inputb);
+
+	for(int i = 0; i < own; i++) {
+		dst[owneddofs.nth_index_in_set(i)] = inputb[others + i];
+	}
+
+	// dealii::Vector<double> outputb(own + others);
+
+
+	// std::cout << GlobalParams.MPI_Rank << "Non-prec L2: " << src.l2_norm() << ", Prec L2: "<< dst.l2_norm() << std::endl;
+
 }
