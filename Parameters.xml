@@ -256,7 +256,7 @@
             <pattern_description>[Selection DealII|PETSc|Trilinos ]</pattern_description>
         </Library>
         <Solver>
-            <value>GMRES</value>
+            <value>UMFPACK</value>
             <default_value>GMRES</default_value>
             <documentation>Which Solver to use for the solution of the system matrix</documentation>
             <pattern>34</pattern>

@@ -11,7 +11,6 @@
 
 using namespace dealii;
 
-static bool firstcall = true;
 
 PreconditionerSweeping::PreconditionerSweeping ( dealii::SparseDirectUMFPACK * S, int in_own, int in_others)
 
@@ -39,10 +38,7 @@ PreconditionerSweeping::PreconditionerSweeping ( dealii::SparseDirectUMFPACK * S
 void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 			const TrilinosWrappers::MPI::Vector &src) const
 {
-	if(firstcall) {
-		std::cout << GlobalParams.MPI_Rank << ":"<< src.size() << std::endl;
-		firstcall = false;
-	}
+
 	dealii::Vector<double> inputb(own + others);
 	for(unsigned int i = 0; i < others; i++) {
 		inputb[i] = 0;

@@ -1884,7 +1884,12 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		pout << "A Solution was calculated!" <<std::endl;
 		log_solver.stop();
 	}
-
+	if(prm.PRM_S_Solver == "UMFPACK") {
+		SparseDirectUMFPACK  A_direct;
+		A_direct.initialize(system_matrix);
+		timerupdate();
+		A_direct.vmult(solution, system_rhs);
+	}
 
  /**
 	SolverControl cn;
