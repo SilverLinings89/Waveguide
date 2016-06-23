@@ -46,7 +46,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
   temporary_pattern_preped(false),
   real(0),
   imag(3),
-  solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, false, true),
+  solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true),
   pout(std::cout, GlobalParams.MPI_Rank==0)
    // Sweeping_Additional_Data(1.0, 1),
   // sweep(Sweeping_Additional_Data)
@@ -387,7 +387,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 	if(Preconditioner_PML_in_Z(position, block)){
 		double r,d, sigmaz;
 		r = Preconditioner_PML_Z_Distance(position, block);
-		d = structure->Sector_Length() * 0.3;
+		d = structure->Sector_Length() * 0.1;
 		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
 		sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
 		sz.imag( sigmaz / omegaepsilon0 );
@@ -509,7 +509,7 @@ bool Waveguide<MatrixType, VectorType>::PML_in_Z(Point<3> &p) {
 template<typename MatrixType, typename VectorType>
 bool Waveguide<MatrixType, VectorType>::Preconditioner_PML_in_Z(Point<3> &p, unsigned int block) {
 	double l = structure->Sector_Length();
-	double width = l * 0.3;
+	double width = l * 0.1;
 	bool up =    (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 ) - ((double)block+1.0) * l + width) > 0;
 	bool down =  -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 ) - ((double)block-1.0) * l - width) > 0;
 	//pout <<std::endl<< p(2) << ":" << block << ":" << up << " " << down <<std::endl;
@@ -519,7 +519,7 @@ bool Waveguide<MatrixType, VectorType>::Preconditioner_PML_in_Z(Point<3> &p, uns
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ){
 	double l = structure->Sector_Length();
-	double width = l * 0.3;
+	double width = l * 0.1;
 
 	if( ( p(2) +GlobalParams.PRM_M_R_ZLength/2.0 )-  ((double)block) * l < 0){
 		return -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - ((double)block-1.0) * l - width);
