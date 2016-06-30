@@ -220,7 +220,7 @@ class Waveguide
 		/**
 		 * This function takes the Waveguides solution-vector member and exports it in a .vtk-file along with the mesh-structure to make the results visible.
 		 */
-		void 	output_results ();
+		void 	output_results (bool details);
 
 		/**
 		 * This function is used bz the GMRE-solvers in deal. This solver uses the iteration-results to estimate the eigenvalues and this function is used via handle to use them. In this function, the eigenvalues are simply pushed into a file.
@@ -351,15 +351,10 @@ class Waveguide
 		 */
 		void 	reinit_storage();
 
-		/**
-		 * This function performs a comparison of the local part of the system matrix and the Preconditioner matrix.
-		 */
-		void 	Analyse();
-
 
 		std::complex<double> gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc);
 
-		std::string								solutionpath;
+		std::string										solutionpath;
 		parallel::distributed::Triangulation<3>::active_cell_iterator cell, endc;
 
 		//, triangulation_real;
@@ -391,8 +386,6 @@ class Waveguide
 		Vector<double>									preconditioner_rhs;
 		LogStream 										deallog;
 
-		FileLoggerData 									log_data;
-		FileLogger 										log_constraints, log_assemble, log_precondition, log_total, log_solver;
 		int 											run_number;
 		int												condition_file_counter, eigenvalue_file_counter;
 		std::ofstream									eigenvalue_file, condition_file, result_file, iteration_file;
@@ -415,9 +408,9 @@ class Waveguide
 		std::vector<IndexSet>							locally_relevant_dofs_all_processors;
 		IndexSet										UpperDofs, LowerDofs;
 		dealii::TrilinosWrappers::SparseMatrix* 		Preconditioner_Matrices;
-		// PreconditionSweeping<dealii::PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::BlockVector >::AdditionalData Sweeping_Additional_Data;
-		// PreconditionSweeping<dealii::PETScWrappers::MPI::SparseMatrix, dealii::PETScWrappers::MPI::BlockVector > sweep;
 		ConditionalOStream 								pout;
+
+		TimerOutput 									timer;
 
 };
 

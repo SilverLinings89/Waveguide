@@ -31,12 +31,6 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
   dof_handler (triangulation),
   //dof_handler_real(triangulation_real),
   prm(param),
-  log_data(),
-  log_constraints(std::string("constraints.log"), log_data),
-  log_assemble(std::string("assemble.log"), log_data),
-  log_precondition(std::string("precondition.log"), log_data),
-  log_total(std::string("total.log"), log_data),
-  log_solver(std::string("solver.log"), log_data),
   run_number(0),
   condition_file_counter(0),
   eigenvalue_file_counter(0),
@@ -76,11 +70,21 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
 	Dofs_Below_Subdomain[prm.PRM_M_W_Sectors];
 	mkdir(solutionpath.c_str(), ACCESSPERMS);
 	pout << "Will write solutions to " << solutionpath << std::endl;
+
+	if(GlobalParams.MPI_Rank == 0) {
+		std::ifstream source("Parameters.xml", std::ios::binary);
+		std::ofstream dest(solutionpath +"/Parameters.xml", std::ios::binary);
+		dest << source.rdbuf();
+		source.close();
+		dest.close();
+	}
+
 	is_stored = false;
 	solver_control.log_frequency(10);
 	const int number = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD) -1;
 	Preconditioner_Matrices = new TrilinosWrappers::SparseMatrix[number];
 	deallog.attach( std::cout );
+	timer(MPI_COMM_WORLD, pout, TimerOutput::summary, TimerOutput::wall_times);
 }
 
 template<typename MatrixType, typename VectorType>
@@ -1471,13 +1475,11 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 		}
 	}
 
-	log_assemble.start();
 	if(!is_stored) pout << "Starting Assemblation process" << std::endl;
 
 	assemble_part( );
 
 	if(!is_stored)  pout<<"Assembling done. L2-Norm of RHS: "<< system_rhs.l2_norm()<<std::endl;
-	log_assemble.stop();
 	system_matrix.compress(VectorOperation::add);
 	system_rhs.compress(VectorOperation::add);
 	MPI_Barrier(MPI_COMM_WORLD);
@@ -1755,8 +1757,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::timerupdate() {
-	log_precondition.stop();
-	log_solver.start();
+
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1782,7 +1783,6 @@ template< >
 void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::solve () {
 
 
-	log_precondition.start();
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
 	/**
@@ -1873,7 +1873,6 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 					std::cout << prec_matrix.l1_norm()<<std::endl;
 					preconditioner_solver.initialize(prec_matrix, dealii::SparseDirectUMFPACK::AdditionalData());
 				}
-				MPI_Barrier(MPI_COMM_WORLD);
 			}
 
 			TrilinosWrappers::SolverDirect prec_sol(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Mumps"));
@@ -1887,7 +1886,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 
 		pout << "A Solution was calculated!" <<std::endl;
-		log_solver.stop();
+
 	}
 
  /**
@@ -1899,31 +1898,6 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 	//solution.compress(VectorOperation::insert);
 
 	cm.distribute(solution);
-}
-
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::Analyse() {
-	unsigned int dofs_equal = 0;
-	unsigned int dofs_prec_missing = 0;
-	unsigned int dofs_system_missing = 0;
-	unsigned int dofs_differen_interior = 0;
-	int below = 0;
-	IndexSet relevant = locally_owned_dofs;
-
-	if (GlobalParams.MPI_Rank != 0 ) {
-		below = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1].n_elements();
-		relevant.add_indices(locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1]);
-	}
-
-
-	for (unsigned int current_row = 0; current_row < relevant.n_elements(); current_row++  ) {
-		for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(relevant.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(relevant.nth_index_in_set(current_row)); row++) {
-			if(relevant.is_element(row->column())) {
-				// prec_matrix.set(current_row, relevant.index_within_set(row->column()), row->value());
-			}
-		}
-	}
-
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1943,35 +1917,15 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector>::store(
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::init_loggers () {
-	log_data.PML_in 				= 	prm.PRM_M_BC_XYin;
-	log_data.PML_out 				=	prm.PRM_M_BC_XYout;
-	log_data.PML_mantle 			=	prm.PRM_M_BC_Mantle;
-	log_data.ParamSteps 			=	prm.PRM_S_Steps;
-	log_data.Precondition_BlockSize = 	0;
-	log_data.Precondition_weight 	=	0;
-	log_data.Solver_Precision 		=	prm.PRM_S_Precision;
-	log_data.XLength				=	prm.PRM_M_R_XLength;
-	log_data.YLength 				= 	prm.PRM_M_R_YLength;
-	log_data.ZLength 				= 	prm.PRM_M_R_ZLength;
-	log_data.preconditioner 		=	prm.PRM_S_Preconditioner;
-	log_data.solver 				= 	prm.PRM_S_Solver;
-	log_data.Dofs 					=	0;
-	log_constraints.Dofs			=	true;
-	log_constraints.PML_in			=	log_constraints.PML_mantle	= log_constraints.PML_out		= true;
-	log_assemble.Dofs				=	true;
-	log_precondition.Dofs			=	true;
-	log_precondition.preconditioner = 	log_precondition.cputime	= true;
-	log_solver.Dofs					=	true;
-	log_solver.solver				=	log_solver.preconditioner	= log_solver.Solver_Precision	= log_solver.cputime	= true;
-	log_total.Dofs					=	log_total.solver			= log_total.Solver_Precision	= log_total.cputime		= true;
+
 }
 
 template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::output_results ()
+void Waveguide<MatrixType, VectorType>::output_results ( bool details )
 {
 
 	// evaluate_overall();
-	if(GlobalParams.MPI_Rank == 0) {
+	if(details) {
 		DataOut<3> data_out;
 
 		data_out.attach_dof_handler (dof_handler);
@@ -1980,7 +1934,7 @@ void Waveguide<MatrixType, VectorType>::output_results ()
 
 		data_out.build_patches ();
 
-		std::ofstream outputvtk (solutionpath + "/solution-run" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +".vtk");
+		std::ofstream outputvtk (solutionpath + "/solution-run" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + "-P" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() +".vtk");
 		data_out.write_vtk(outputvtk);
 
 		/**
@@ -1995,42 +1949,52 @@ void Waveguide<MatrixType, VectorType>::output_results ()
 		std::ofstream outputvtk2 (solutionpath + "/solution-real" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +".vtk");
 		data_out_real.write_vtk(outputvtk2);
 		 **/
-		std::ofstream pattern (solutionpath + "/pattern.gnu");
-		system_pattern.print_gnuplot(pattern);
+		if ( false ) {
+			std::ofstream pattern (solutionpath + "/pattern.gnu");
+			system_pattern.print_gnuplot(pattern);
 
 
-		std::ofstream patternscript (solutionpath + "/displaypattern.gnu");
-		patternscript << "set style line 1000 lw 1 lc \"black\"" <<std::endl;
-		for(int i = 0; i < prm.PRM_M_W_Sectors; i++) {
-			patternscript << "set arrow " << 1000 + 2*i << " from 0,-" << Dofs_Below_Subdomain[i] << " to "<<dof_handler.n_dofs()<<",-"<<Dofs_Below_Subdomain[i]<<" nohead ls 1000 front"<<std::endl;
-			patternscript << "set arrow " << 1001 + 2*i  << " from " << Dofs_Below_Subdomain[i] << ",0 to " << Dofs_Below_Subdomain[i] << ", -"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
+			std::ofstream patternscript (solutionpath + "/displaypattern.gnu");
+			patternscript << "set style line 1000 lw 1 lc \"black\"" <<std::endl;
+			for(int i = 0; i < prm.PRM_M_W_Sectors; i++) {
+				patternscript << "set arrow " << 1000 + 2*i << " from 0,-" << Dofs_Below_Subdomain[i] << " to "<<dof_handler.n_dofs()<<",-"<<Dofs_Below_Subdomain[i]<<" nohead ls 1000 front"<<std::endl;
+				patternscript << "set arrow " << 1001 + 2*i  << " from " << Dofs_Below_Subdomain[i] << ",0 to " << Dofs_Below_Subdomain[i] << ", -"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
+			}
+			patternscript << "set arrow " << 1000 + 2*prm.PRM_M_W_Sectors << " from 0,-" << dof_handler.n_dofs() << " to "<<dof_handler.n_dofs()<<",-"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
+			patternscript << "set arrow " << 1001 + 2*prm.PRM_M_W_Sectors << " from " << dof_handler.n_dofs() << ",0 to " << dof_handler.n_dofs() << ", -"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
+
+			patternscript << "plot \"pattern.gnu\" with dots" <<std::endl;
+			patternscript.flush();
 		}
-		patternscript << "set arrow " << 1000 + 2*prm.PRM_M_W_Sectors << " from 0,-" << dof_handler.n_dofs() << " to "<<dof_handler.n_dofs()<<",-"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
-		patternscript << "set arrow " << 1001 + 2*prm.PRM_M_W_Sectors << " from " << dof_handler.n_dofs() << ",0 to " << dof_handler.n_dofs() << ", -"<<dof_handler.n_dofs()<<" nohead ls 1000 front"<<std::endl;
 
-		patternscript << "plot \"pattern.gnu\" with dots" <<std::endl;
-		patternscript.flush();
 
-		std::ifstream source("Parameters.xml", std::ios::binary);
-		std::ofstream dest(solutionpath +"/Parameters.xml", std::ios::binary);
-
-		dest << source.rdbuf();
-
-		source.close();
-		dest.close();
 	}
 }
 
 template<typename MatrixType, typename VectorType>
 void Waveguide<MatrixType, VectorType>::run ()
 {
-	init_loggers ();
+
+	timer.enter_subsection ("Setup Mesh");
 	make_grid ();
+	timer.leave_subsection();
+
+	timer.enter_subsection ("Setup FEM");
 	setup_system ();
+	timer.leave_subsection();
+
+	timer.enter_subsection ("Assemble");
 	assemble_system ();
+	timer.leave_subsection();
+
+	timer.enter_subsection ("Solve");
 	solve ();
-	output_results ();
-	log_total.stop();
+	timer.leave_subsection();
+
+	timer.enter_subsection ("Evaluate");
+	output_results (true);
+	timer.leave_subsection();
+
 	run_number++;
 }
 
@@ -2052,7 +2016,6 @@ void Waveguide<MatrixType, VectorType>::reset_changes ()
 {
 	reinit_all();
 
-	// cm.distribute(solution);
 }
 
 template<typename MatrixType, typename VectorType >
@@ -2061,8 +2024,7 @@ void Waveguide<MatrixType, VectorType>::rerun ()
 	reset_changes();
 	assemble_system ();
 	solve ();
-	output_results ();
-	log_total.stop();
+	output_results (false);
 
 	run_number++;
 }
