@@ -81,7 +81,7 @@ static const CylindricalManifold<3, 3> round_description (2);
  * This class is the core piece of the implementation.
  *
  * \author Pascal Kraft
- * \date 16.11.2015
+ * \date 03.07.2016
  */
 template <typename MatrixType, typename VectorType>
 class Waveguide
@@ -132,9 +132,35 @@ class Waveguide
 		 */
 		double 		evaluate_overall();
 
-		std::complex<double> evaluate_for_Position(double , double , double );
+		/**
+		 * To compute the output quality of the signal and it's transmition along the waveguid-axis, this function performs a comparison of the fundamental mode of a waveguide and the actual situation. For this purpose we integrate the product of the two functions over a cross-section of the waveguide in transformed coordinates. To perform this action we need to use numeric integration so the integral is decomposed into a sum over local evaluations. For this to be possible this function can be handed x,y and z coordinates and returns the according value.
+		 * \param x gives the x-coordinate.
+		 * \param y gives the y-coordinate.
+		 * \param z gives the z-coordinate.
+		 */
+		std::complex<double> evaluate_for_Position(double x, double y, double z);
 
+		/**
+		 * This function computes the signal quality at given z by calling evaluate_fo_Position and performing numeric integration.
+		 */
 		double evaluate_for_z(double);
+
+		/**
+		 * This function has the purpose of filling the qualities array in every process with the appropriate Values from the other ones.
+		 * Now it will become necessary to build an optimization-scheme ontop, which can handle this information on process one and then distribute a new shape to the others. The function will use the Waveguide-Property execute_rebuild to signal a need for recomputation.
+		 */
+		void 		evaluate();
+
+		/**
+		 * This function marks a sector for recomputation meaning it tells a process, that matrices have to be rebuilt because structural information has been changed.
+		 */
+		void 		mark_changed();
+
+		/**
+		 * This function does the opposite of mark_changed and sets the process to not rebuild matrices.
+		 */
+		void 		mark_unchanged();
+
 		/**
 		 * The storage has the following purpose: Regarding the optimization-process there are two kinds of runs. The first one, taking place with no knowledge of appropriate starting values for the degrees of freedom, and the following steps, in which the prior results can be used to estimate appropriate starting values for iterative solvers as well as the preconditioner. This function switches the behaviour in the following way: Once it is called, it stores the current solution in a run-independent variable, making it available for later runs. Also it sets a flag, indicating, that prior solutions are now available for usage in the solution process.
 		 */
@@ -173,7 +199,12 @@ class Waveguide
 		Tensor<2,3, std::complex<double>> get_Preconditioner_Tensor(Point<3> & point, bool inverse, bool epsilon, int block);
 
 	private:
+		/**
+		 * When the mesh cells are refined, boundary-ids have to be reset. Normally this can be done once at the end of the mesh-generation. If the mesh is distributed it is necessary to communicate this information after any mesh-changing operation. For this purpose, this function can be called on the changed mesh to set all ids properly again.
+		 * \param tria is the updated triangulation in which ids will be updated.
+		 */
 		void set_boundary_ids (parallel::distributed::Triangulation<3> &tria) const;
+
 		/**
 		 * Grid-generation is a crucial part of any FEM-Code. This function holds all functionality concerning that topic. In the current implementation we start with a cubic Mesh. That mesh originally is subdivided in 5 cells per dimension yielding a total of 5*5*5 = 125 cells. The central cells in the x-z planes are given a cylindrical manifold-description forcing them to interpolate the new points during global refinement using a circular shape rather than linear interpolation. This leads to the description of a cylinder included within a cube. There are currently three techniques for mesh-refinement:
 		 * 	-# Global refinement: For such refinement-cases, any cell is subdivided in the middle of any dimension. In this case every cell is split into 8 new ones, increasing the number of cells massively. Pros: no hanging nodes. Cons: Very many new dofs that might be in areas, where the resolution of the mesh is already large enough.
@@ -351,7 +382,9 @@ class Waveguide
 		 */
 		void 	reinit_storage();
 
-
+		/**
+		 * This function encapsulates a library call for 2D numeric integration over a circle with given properties. It is included that this function calls evaluate_for_Position(x,y,z)
+		 */
 		std::complex<double> gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc);
 
 		std::string										solutionpath;
@@ -411,7 +444,8 @@ class Waveguide
 		ConditionalOStream 								pout;
 
 		TimerOutput 									timer;
-
+		double *										qualities;
+		bool											execute_recomputation;
 };
 
 

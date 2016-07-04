@@ -284,7 +284,7 @@
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </PreconditionerBlockCount>
         <Steps>
-            <value>3000</value>
+            <value>4000</value>
             <default_value>90000</default_value>
             <documentation>Number of Steps the Solver is supposed to do.</documentation>
             <pattern>38</pattern>

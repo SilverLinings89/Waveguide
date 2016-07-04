@@ -85,6 +85,8 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
 	Preconditioner_Matrices = new TrilinosWrappers::SparseMatrix[number];
 	deallog.attach( std::cout );
 	timer(MPI_COMM_WORLD, pout, TimerOutput::summary, TimerOutput::wall_times);
+	qualities = new double[number];
+	execute_recomputation = false;
 }
 
 template<typename MatrixType, typename VectorType>
@@ -198,6 +200,24 @@ double Waveguide<MatrixType, VectorType>::evaluate_in () {
 		}
 	}
 	return sqrt(imag*imag + real*real);
+}
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::mark_changed() {
+	execute_recomputation = true;
+}
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::mark_changed() {
+	execute_recomputation = false;
+}
+
+
+template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::evaluate() {
+	double z_for_evaluation = (double)(1.0+GlobalParams.MPI_Rank)*structure->Sector_Length() + GlobalParams.PRM_M_R_ZLength/2.0 ;
+	double local_value = evaluate_for_z(z_for_evaluation) ;
+	MPI_Allgather(& local_value, 1, MPI_DOUBLE, qualities, 1, MPI_DOUBLE, MPI_COMM_WORLD);
 }
 
 template<typename MatrixType, typename VectorType >
