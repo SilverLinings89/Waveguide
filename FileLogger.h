@@ -35,6 +35,8 @@ class FileLogger {
 		 */
 		FileLogger();
 
+                ~FileLogger();
+                
 		/**
 		 * This flag signals, that the type of the Solver in use should be logged.
 		 */

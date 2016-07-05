@@ -8,6 +8,7 @@
 #include "ExactSolution.h"
 #include <string>
 #include <sstream>
+#include <deal.II/base/timer.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/base/std_cxx11/bind.h>
 #include <deal.II/lac/sparsity_tools.h>
@@ -41,7 +42,8 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
   real(0),
   imag(3),
   solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true),
-  pout(std::cout, GlobalParams.MPI_Rank==0)
+  pout(std::cout, GlobalParams.MPI_Rank==0),
+  timer(MPI_COMM_WORLD, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times)
    // Sweeping_Additional_Data(1.0, 1),
   // sweep(Sweeping_Additional_Data)
 {
@@ -84,7 +86,6 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
 	const int number = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD) -1;
 	Preconditioner_Matrices = new TrilinosWrappers::SparseMatrix[number];
 	deallog.attach( std::cout );
-	timer(MPI_COMM_WORLD, pout, TimerOutput::summary, TimerOutput::wall_times);
 	qualities = new double[number];
 	execute_recomputation = false;
 }
@@ -208,7 +209,7 @@ void Waveguide<MatrixType, VectorType>::mark_changed() {
 }
 
 template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::mark_changed() {
+void Waveguide<MatrixType, VectorType>::mark_unchanged() {
 	execute_recomputation = false;
 }
 

@@ -30,7 +30,7 @@ public:
 	/**
 	 * Deal Offers the ParameterHandler object wich contains all of the parsing-functionality. An object of that type is included in this one. This constructor simply uses a copy-constructor to initialize it.
 	 */
-	ParameterReader			(ParameterHandler &prmhandler);
+	ParameterReader (ParameterHandler &prmhandler);
 
 	/**
 	 * This member calls the read_input_from_xml()-function of the contained ParameterHandler and this replaces the default values with the values in the input file.

@@ -23,6 +23,8 @@ class GradientTable {
 public:
 	GradientTable( unsigned int in_step , dealii::Vector<double> in_configuration, double in_quality, dealii::Vector<double> in_last_configuration, double in_last_quality);
 
+        ~GradientTable ();
+        
 	const int ndofs;
 
 	const int nfreedofs;

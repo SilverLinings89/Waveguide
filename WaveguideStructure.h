@@ -114,6 +114,11 @@ class WaveguideStructure {
 		 */
 		WaveguideStructure (const Parameters &);
 
+                /**
+                 * Destructor of this class.
+                 */
+                ~WaveguideStructure();
+                
 		/**
 		 * This member encapsulates the main functionality of objects of this class: It calculates the most important structural information required in this code - the Material-Tensor. In fact, this function determines, in which sector the passed position lies and calls the appropriate function on that Sector-object.
 		 * \param in_x \f$x\f$-coordinate of the position for which to calculate the transformation tensor.
