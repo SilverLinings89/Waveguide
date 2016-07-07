@@ -22,7 +22,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
   public:
 	PreconditionerSweeping ( dealii::SparseDirectUMFPACK * S, int in_own, int in_others);
 
-        ~PreconditionerSweeping ();
+    ~PreconditionerSweeping ();
         
 	virtual void vmult (TrilinosWrappers::MPI::Vector       &dst,      const TrilinosWrappers::MPI::Vector &src) const;
 

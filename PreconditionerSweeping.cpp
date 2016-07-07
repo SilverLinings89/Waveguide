@@ -11,7 +11,9 @@
 
 using namespace dealii;
 
-
+PreconditionerSweeping::~PreconditionerSweeping (){
+	delete solver;
+}
 PreconditionerSweeping::PreconditionerSweeping ( dealii::SparseDirectUMFPACK * S, int in_own, int in_others)
 
     {
@@ -40,12 +42,12 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 {
 
 	dealii::Vector<double> inputb(own + others);
-	for(unsigned int i = 0; i < others; i++) {
+	for(int i = 0; i < others; i++) {
 		inputb[i] = 0;
 	}
 
 	IndexSet owneddofs = src.locally_owned_elements();
-	for(unsigned int i = 0; i < own; i++) {
+	for(int i = 0; i < own; i++) {
 		inputb[i + others] = src(owneddofs.nth_index_in_set(i));
 	}
 

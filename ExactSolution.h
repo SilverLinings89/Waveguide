@@ -19,9 +19,7 @@ template <int dim>
 class ExactSolution : public Function<dim, double>
 {
 	public:
-		ExactSolution ()  ;
-
-                ~ExactSolution ();
+		ExactSolution ();
                 
 		/**
 		 * This function calculates one single component of the solution vector. To calculate this, we do the following: We know the input on the boundary of the computational domain for \f$z = z_{in}\f$. So for a given position \f$ p = (x,y,z)\f$ we calculate \f[ f_c(x,y,z) = \sum_{j=0}^N \left( a_j \, \boldsymbol{\phi_j}(x,y,z_{in}) \right) \cdot \boldsymbol{e_c} \, \mathrm{e}^{i \omega (z-z_{in})}.\f]

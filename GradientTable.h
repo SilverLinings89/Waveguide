@@ -9,7 +9,8 @@
 #define GRADIENTTABLE_H_
 
 class GradientTable {
-	private:
+
+private:
 
 	dealii::Vector<double> steps;
 	dealii::Vector<double> qualities;
@@ -23,15 +24,13 @@ class GradientTable {
 public:
 	GradientTable( unsigned int in_step , dealii::Vector<double> in_configuration, double in_quality, dealii::Vector<double> in_last_configuration, double in_last_quality);
 
-        ~GradientTable ();
+    ~GradientTable ();
         
 	const int ndofs;
 
 	const int nfreedofs;
 
 	const unsigned int GlobalStep;
-
-	virtual ~GradientTable();
 
 	void SetInitialQuality(double in_quality);
 

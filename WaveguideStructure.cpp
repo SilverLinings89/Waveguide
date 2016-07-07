@@ -9,6 +9,10 @@
 
 using namespace dealii;
 
+WaveguideStructure::~WaveguideStructure() {
+
+}
+
 void WaveguideStructure::estimate_and_initialize() {
 	highest = 1.0;
 	lowest = 1.0;

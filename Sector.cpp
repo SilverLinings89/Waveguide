@@ -3,6 +3,10 @@
 #include "staticfunctions.cpp"
 using namespace dealii;
 
+Sector::~Sector() {
+
+}
+
 Sector::Sector(bool in_left, bool in_right, double in_z_0, double in_z_1):left(in_left), right(in_right), boundary(in_left && in_right), z_0(in_z_0), z_1(in_z_1) {
 	r_0 = 0;
 	r_1 = 0;

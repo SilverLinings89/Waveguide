@@ -91,6 +91,11 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
 }
 
 template<typename MatrixType, typename VectorType>
+Waveguide<MatrixType, VectorType>::~Waveguide() {
+
+}
+
+template<typename MatrixType, typename VectorType>
 std::complex<double> Waveguide<MatrixType, VectorType>::evaluate_for_Position(double x, double y, double z ) {
 	Point<3, double> position(x, y, z);
 	Vector<double> result(6);
@@ -1504,7 +1509,7 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 	system_matrix.compress(VectorOperation::add);
 	system_rhs.compress(VectorOperation::add);
 	MPI_Barrier(MPI_COMM_WORLD);
-	for(int i = 0; i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)-1; i++) {
+	for(unsigned int i = 0; i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)-1; i++) {
 		Preconditioner_Matrices[i].compress(VectorOperation::add);
 	}
 
@@ -1888,7 +1893,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 			dealii::SparseDirectUMFPACK preconditioner_solver;
 
-			for(int i = 0; i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
+			for(unsigned int i = 0; i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
 				pout << i <<std::endl;
 				if(i == GlobalParams.MPI_Rank) {
 					std::cout << prec_matrix.l1_norm()<<std::endl;

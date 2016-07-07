@@ -26,6 +26,10 @@ GradientTable::GradientTable(unsigned int in_step , dealii::Vector<double> in_co
 	}
 }
 
+GradientTable::~GradientTable() {
+
+}
+
 void GradientTable::AddComputationResult(int in_component, double in_step, double in_quality){
 	steps[in_component] = in_step;
 	qualities[in_component] = in_quality;
@@ -125,10 +129,6 @@ void GradientTable::PrintTable() {
 }
 
 void GradientTable::WriteTableToFile(std::string ){
-
-}
-
-GradientTable::~GradientTable() {
 
 }
 

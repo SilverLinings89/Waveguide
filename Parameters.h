@@ -257,7 +257,9 @@ struct Parameters {
 	 * This is the MPI-communicator to be used globally.
 	 */
 
-	MPI_Comm			MPI_Communicator;
+	MPI_Comm	MPI_Communicator;
+
+	unsigned int MPI_Size;
 
 	unsigned int sub_block_lowest;
 

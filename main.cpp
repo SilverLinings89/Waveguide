@@ -28,16 +28,12 @@ using namespace dealii;
 
 int main (int argc, char *argv[])
 {
+	Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
+
 	GlobalParams = GetParameters();
 	//Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, GlobalParams.PRM_S_MPITasks);
 
-	 Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
-
-	GlobalParams.MPI_Communicator = MPI_COMM_WORLD;
-	GlobalParams.MPI_Rank =Utilities::MPI::this_mpi_process(GlobalParams.MPI_Communicator);
-	std::cout << GlobalParams.MPI_Rank << std::endl;
-	std::cout << Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)<< std::endl;
-	structure = new WaveguideStructure(GlobalParams);
+	// Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
 
 	Waveguide<TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::MPI::Vector > waveguide(GlobalParams);

@@ -95,7 +95,7 @@ class Waveguide
 	 */
 		Waveguide (Parameters & param);
 
-                ~Waveguide ();
+        ~Waveguide ();
 
 		/**
 		 * This method as well as the rerun() method, are used by the optimization-algorithm to use and reuse the Waveguide-object. Since the system-matrix consumes a lot of memory it makes sense to reuse it, rather then creating a new one for every optimization step.

@@ -24,7 +24,7 @@ class Sector {
 		 */
 		Sector (bool in_left, bool in_right , double in_z_0, double in_z_1);
 
-                ~Sector ();
+        ~Sector ();
                 
 		/**
 		 * This value describes, if this Sector is at the left (small z) end of the computational domain.

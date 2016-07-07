@@ -47,7 +47,7 @@ class Optimization {
 		 */
 		Optimization( Parameters , Waveguide<M, V >  & );
 
-                ~Optimization ();
+        ~Optimization ();
                 
 		/**
 		 * This function is the core implementation of an optimization algorithm. Currently it is very fundamental in its technical prowess which can be improved upon in later versions. Essentially, it calculates the signal quality for a configurations and for small steps in every one of the dofs. After that, the optimization-step is estimated based on difference-quotients. Following this step, a large step is computed based upon the approximation of the gradient of the signal-quality functional and the iteration starts anew. If a decrease in quality is detected, the optimization-step is undone and the step-width is reduced.

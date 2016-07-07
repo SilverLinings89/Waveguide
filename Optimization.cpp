@@ -137,3 +137,8 @@ void Optimization<Matrix, Vector>::run() {
 		std::cout << "Only one single calculation was done. The result has been saved. If you wish to optimize the shape, set the according parameter in the input-file." << std::endl;
 	}
 }
+
+template<typename Matrix, typename Vector>
+Optimization<Matrix, Vector>::~Optimization() {
+
+}
