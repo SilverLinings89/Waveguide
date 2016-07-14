@@ -147,7 +147,7 @@ static Parameters GetParameters() {
 	prm.leave_subsection();
 
 	ret.MPI_Communicator = MPI_COMM_WORLD;
-	ret.MPI_Rank = Utilities::MPI::this_mpi_process(GlobalParams.MPI_Communicator);
+	ret.MPI_Rank = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
 	ret.MPI_Size = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
 
 	return ret;

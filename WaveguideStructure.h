@@ -128,11 +128,6 @@ class WaveguideStructure {
 		Tensor<2,3, double> TransformationTensor (double in_x, double in_y, double in_z);
 
 		/**
-		 * asdfasdf
-		 */
-		void 	run() ;
-
-		/**
 		 * At the beginning (before the first solution of a system) only the boundary conditions for the shape of the waveguide are known. Therefore the values for the degrees of freedom need to be estimated. This function sets all variables to appropiate values and estimates an appropriate shape based on averages and a polynomial interpolation of the boundary conditions on the shape.
 		 */
 		void 	estimate_and_initialize();

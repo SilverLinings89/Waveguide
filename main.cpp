@@ -34,9 +34,10 @@ int main (int argc, char *argv[])
 	//Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, GlobalParams.PRM_S_MPITasks);
 
 	// Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
-
+	structure = new WaveguideStructure(GlobalParams);
 
 	Waveguide<TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::MPI::Vector > waveguide(GlobalParams);
+
 	Optimization<TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::MPI::Vector> opt(GlobalParams, waveguide);
 	opt.run();
 

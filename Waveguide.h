@@ -200,6 +200,8 @@ class Waveguide
 		 */
 		Tensor<2,3, std::complex<double>> get_Preconditioner_Tensor(Point<3> & point, bool inverse, bool epsilon, int block);
 
+		double *										qualities;
+
 	private:
 		/**
 		 * When the mesh cells are refined, boundary-ids have to be reset. Normally this can be done once at the end of the mesh-generation. If the mesh is distributed it is necessary to communicate this information after any mesh-changing operation. For this purpose, this function can be called on the changed mesh to set all ids properly again.
@@ -412,7 +414,7 @@ class Waveguide
 		ConstraintMatrix 								boundary_value_constraints_imaginary;
 		ConstraintMatrix 								boundary_value_constraints_real;
 		ConstraintMatrix								hanging_global;
-		MPI_Comm *										split_comms;
+		// MPI_Comm *										split_comms;
 		int 											assembly_progress;
 		VectorType										storage;
 		VectorType										temp_storage;
@@ -425,6 +427,7 @@ class Waveguide
 		int												condition_file_counter, eigenvalue_file_counter;
 		std::ofstream									eigenvalue_file, condition_file, result_file, iteration_file;
 		const int 										Sectors;
+		const unsigned  int										Layers;
 		std::vector<int>								Dofs_Below_Subdomain, Block_Sizes;
 
 		std::vector<dealii::IndexSet> 					set;
@@ -446,7 +449,6 @@ class Waveguide
 		ConditionalOStream 								pout;
 
 		TimerOutput 									timer;
-		double *										qualities;
 		bool											execute_recomputation;
 };
 

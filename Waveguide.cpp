@@ -28,26 +28,26 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
   :
   fe(FE_Nedelec<3> (0), 2),
   triangulation (MPI_COMM_WORLD, typename parallel::distributed::Triangulation<3>::MeshSmoothing(Triangulation<3>::none ), parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning),
-  //triangulation_real (MPI_COMM_WORLD, typename Triangulation<3>::MeshSmoothing(Triangulation<3>::smoothing_on_refinement | Triangulation<3>::smoothing_on_coarsening)),
   dof_handler (triangulation),
-  //dof_handler_real(triangulation_real),
   prm(param),
   run_number(0),
   condition_file_counter(0),
   eigenvalue_file_counter(0),
   Sectors(prm.PRM_M_W_Sectors),
-  Dofs_Below_Subdomain(prm.PRM_M_W_Sectors),
-  Block_Sizes(prm.PRM_M_W_Sectors),
+  Layers(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
+  Dofs_Below_Subdomain(Layers),
+  Block_Sizes(Layers),
   temporary_pattern_preped(false),
   real(0),
   imag(3),
   solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true),
   pout(std::cout, GlobalParams.MPI_Rank==0),
   timer(MPI_COMM_WORLD, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times)
+
    // Sweeping_Additional_Data(1.0, 1),
   // sweep(Sweeping_Additional_Data)
 {
-
+	prec_patterns = new TrilinosWrappers::SparsityPattern[Layers];
 	assembly_progress = 0;
 	int i = 0;
 	bool dir_exists = true;
@@ -69,7 +69,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
 	out << "solutions/run";
 	out << i;
 	solutionpath = out.str();
-	Dofs_Below_Subdomain[prm.PRM_M_W_Sectors];
+	Dofs_Below_Subdomain[Layers];
 	mkdir(solutionpath.c_str(), ACCESSPERMS);
 	pout << "Will write solutions to " << solutionpath << std::endl;
 
@@ -83,7 +83,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
 
 	is_stored = false;
 	solver_control.log_frequency(10);
-	const int number = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD) -1;
+	const int number = Layers -1;
 	Preconditioner_Matrices = new TrilinosWrappers::SparseMatrix[number];
 	deallog.attach( std::cout );
 	qualities = new double[number];
@@ -228,7 +228,7 @@ void Waveguide<MatrixType, VectorType>::evaluate() {
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::evaluate_overall () {
-	std::vector <double> qualities(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD));
+	std::vector <double> qualities(Layers);
 	double lower = 0.0;
 	double upper = 0.0;
 	if(GlobalParams.evaluate_in) {
@@ -239,16 +239,16 @@ double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 		std::cout << "Evaluation for output side by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << GlobalParams.PRM_M_R_ZLength / 2.0 << std::endl;
 		upper = evaluate_for_z(GlobalParams.PRM_M_R_ZLength / 2.0 - 0.0001);
 	}
-	lower = Utilities::MPI::sum(lower, MPI_COMM_WORLD);
-	upper = Utilities::MPI::sum(upper, MPI_COMM_WORLD);
+	lower = Utilities::MPI::sum(lower, GlobalParams.MPI_Communicator);
+	upper = Utilities::MPI::sum(upper, GlobalParams.MPI_Communicator);
 
-	for(unsigned int i = 0; i< Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
+	for(unsigned int i = 0; i< Layers; i++) {
 		double contrib = 0.0;
 		if(i == GlobalParams.MPI_Rank) {
 			std::cout << "Evaluation of contribution by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << GlobalParams.z_evaluate<< std::endl;
 			 contrib = evaluate_for_z(GlobalParams.z_evaluate);
 		}
-		qualities[i] = Utilities::MPI::sum(contrib, MPI_COMM_WORLD);
+		qualities[i] = Utilities::MPI::sum(contrib, GlobalParams.MPI_Communicator);
 	}
 	double quality_in	= lower;
 	double quality_out	= upper;
@@ -277,9 +277,9 @@ double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 
 	}
 	pout << "Signal quality evolution: ";
-	for(unsigned int i =0; i < Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
+	for(unsigned int i =0; i < Layers; i++) {
 			pout << 100 * qualities[i]/ lower << "% ";
-			if(i != Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)-1) pout << " -> ";
+			if(i != Layers-1) pout << " -> ";
 	}
 	pout << std::endl;
 	return quality_out/quality_in;
@@ -670,8 +670,8 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	std::vector<unsigned int> subs(3);
 	subs[0] = 1;
 	subs[1] = 1;
-//	subs[2] = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);;
-	subs[2] = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
+//	subs[2] = Layers;;
+	subs[2] = Layers;
 	GridGenerator::subdivided_parallelepiped<3,3>(triangulation,origin, edges2, subs, false);
 
 
@@ -764,12 +764,12 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 //		triangulation.execute_coarsening_and_refinement();
 //	}
 
-	double len = 2.0 / Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
+	double len = 2.0 / Layers;
 
 	cell = triangulation.begin_active();
 	for (; cell!=endc; ++cell){
 		int temp  = (int) std::floor((cell->center(true, false)[2] + 1.0)/len);
-		if( temp >=  Sectors || temp < 0) pout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
+		if( temp >=  Layers || temp < 0) pout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
 		//cell->set_subdomain_id(temp);
 	}
 
@@ -849,20 +849,20 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 	std::vector<types::global_dof_index> dof_indices (fe.dofs_per_face);
-	std::vector<types::global_dof_index> DofsPerSubdomain(Sectors);
-	std::vector<int> InternalBoundaryDofs(Sectors);
+	std::vector<types::global_dof_index> DofsPerSubdomain(Layers);
+	std::vector<int> InternalBoundaryDofs(Layers);
 
 	DofsPerSubdomain = dof_handler.n_locally_owned_dofs_per_processor();
-	for( int i = 0; i < Sectors; i++) {
+	for( int i = 0; i < Layers; i++) {
 		Block_Sizes[i] = DofsPerSubdomain[i];
 	}
 
 	Dofs_Below_Subdomain[0] = 0;
 
-	for(int i = 1; i  < Sectors; i++) {
+	for(int i = 1; i  < Layers; i++) {
 		Dofs_Below_Subdomain[i] = Dofs_Below_Subdomain[i-1] + Block_Sizes[i-1];
 	}
-	for(int i = 0; i < Sectors; i++) {
+	for(int i = 0; i < Layers; i++) {
 		IndexSet temp (dof_handler.n_dofs());
 		temp.clear();
 		pout << "Adding Block "<< i +1 << " from " << Dofs_Below_Subdomain[i] << " to " << Dofs_Below_Subdomain[i]+ Block_Sizes[i] -1<<std::endl;
@@ -870,20 +870,11 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 		set.push_back(temp);
 	}
 	pout << "Storing details in Waveguidestructure->case_sectors..." <<std::endl;
-	for(int i=0; i  < Sectors; i++) {
+	for(int i=0; i  < Layers; i++) {
 		structure->case_sectors[i].setLowestDof( Dofs_Below_Subdomain[i] );
 		structure->case_sectors[i].setNActiveCells( GridTools::count_cells_with_subdomain_association(triangulation,i) );
 		structure->case_sectors[i].setNDofs( Block_Sizes[i] );
 		//structure->case_sectors[i].setNInternalBoundaryDofs(InternalBoundaryDofs[i]);
-	}
-	if(GlobalParams.MPI_Rank == 0 ) {
-		GlobalParams.sub_block_lowest =0;
-		GlobalParams.block_lowest =0;
-		GlobalParams.block_highest = Block_Sizes[0] -1;
-	} else {
-		GlobalParams.sub_block_lowest = structure->case_sectors[GlobalParams.MPI_Rank-1].LowestDof;
-		GlobalParams.block_lowest = structure->case_sectors[GlobalParams.MPI_Rank].LowestDof;
-		GlobalParams.block_highest = structure->case_sectors[GlobalParams.MPI_Rank].LowestDof + Block_Sizes[GlobalParams.MPI_Rank]-1;
 	}
 
 }
@@ -901,20 +892,6 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	if(prm.PRM_O_VerboseOutput) {
 		pout << "Renumbering DOFs (Downstream...)" << std::endl;
 	}
-
-	// const Point<3> direction(0,0,1);
-	// std::vector<unsigned int, std::allocator<unsigned int>> new_dofs(dof_handler.n_dofs());
-	// DoFRenumbering::compute_subdomain_wise( new_dofs , dof_handler);
-
-	// IndexSet current = dof_handler.locally_owned_dofs();
-	//std::vector<unsigned int, std::allocator<unsigned int>> new_dofs_ordered(dof_handler.n_locally_owned_dofs());
-	// pout << "locally owned: " << dof_handler.n_locally_owned_dofs() << " and set size: " << current.size() <<std::endl;
-	//for(unsigned int i = 0;i < dof_handler.n_locally_owned_dofs(); i++) {
-	// 	new_dofs_ordered[i] = new_dofs[current.nth_index_in_set(i)];
-	//}
-	//pout << "done" <<std::endl;
-	// dof_handler.renumber_dofs(new_dofs);
-	//DoFRenumbering::downstream(dof_handler_real, direction, false);
 
 	if(prm.PRM_O_Dofs) {
 		pout << "Number of degrees of freedom: " << dof_handler.n_dofs() << std::endl;
@@ -984,9 +961,9 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	cm_prec1.close();
 	cm_prec2.close();
 
-	DoFTools::make_sparsity_pattern(dof_handler, system_pattern, cm, true , Utilities::MPI::this_mpi_process(MPI_COMM_WORLD));
-	DoFTools::make_sparsity_pattern(dof_handler, preconditioner_pattern, cm_prec1, true , Utilities::MPI::this_mpi_process(MPI_COMM_WORLD));
-	DoFTools::make_sparsity_pattern(dof_handler, preconditioner_pattern, cm_prec2, true , Utilities::MPI::this_mpi_process(MPI_COMM_WORLD));
+	DoFTools::make_sparsity_pattern(dof_handler, system_pattern, cm, true , GlobalParams.MPI_Rank);
+	DoFTools::make_sparsity_pattern(dof_handler, preconditioner_pattern, cm_prec1, true , GlobalParams.MPI_Rank);
+	DoFTools::make_sparsity_pattern(dof_handler, preconditioner_pattern, cm_prec2, true , GlobalParams.MPI_Rank);
 
 	//SparsityTools::distribute_sparsity_pattern(dynamic_system_pattern,n_neighboring, MPI_COMM_WORLD, locally_owned_dofs);
 	//SparsityTools::distribute_sparsity_pattern(dynamic_preconditioner_pattern_even,n_neighboring, MPI_COMM_WORLD, locally_owned_dofs);
@@ -1003,7 +980,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 		if(!is_stored) 	pout << "Done." << std::endl;
 	}
 
-	// locally_relevant_dofs_all_processors(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD));
+	// locally_relevant_dofs_all_processors(Layers);
 
 	std::ostringstream set_string;
 
@@ -1019,7 +996,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 	unsigned int text_local_length = strlen( text_local_set) ;
 
-	const int mpi_size = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
+	const int mpi_size = Layers;
 
 	int * all_lens = new int[mpi_size];
 	int * displs = new int[mpi_size];
@@ -1041,14 +1018,14 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 	pout << "-------------------------------------" << std::endl;
 
-	locally_relevant_dofs_all_processors.resize(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD));
+	locally_relevant_dofs_all_processors.resize(Layers);
 
 
-	for(unsigned int i= 0; i < Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++ ) {
+	for(unsigned int i= 0; i < Layers; i++ ) {
 		// pout << &all_names[displs[i]]<< std::endl << "++++++++++++++++++++" <<std::endl;
 	}
 
-	for(unsigned int i= 0; i < Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++ ) {
+	for(unsigned int i= 0; i < Layers; i++ ) {
 		std::istringstream ss;
 		char *temp = &all_names[displs[i]] ;
 		ss.rdbuf()->pubsetbuf(temp,strlen(temp));
@@ -1068,11 +1045,11 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 		LowerDofs.add_indices(locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1], 0);
 	}
 
-	if(GlobalParams.MPI_Rank != Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD) -1 ) {
+	if(GlobalParams.MPI_Rank != Layers -1 ) {
 		UpperDofs.add_indices(locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank+1], 0);
 	}
 
-	prec_patterns = new TrilinosWrappers::SparsityPattern[mpi_size-1];
+
 
 	// std::cout << "Stage 1 for processor " << GlobalParams.MPI_Rank << std::endl;
 	// MPI_Comm_split(MPI_COMM_WORLD, GlobalParams.MPI_Rank/2, GlobalParams.MPI_Rank, &comm_even );
@@ -1134,7 +1111,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 		prec_patterns[i].reinit(owned, owned, writable, MPI_COMM_WORLD, dofs);
 
-		DoFTools::make_sparsity_pattern(dof_handler, prec_patterns[i], cm_prec1, true , Utilities::MPI::this_mpi_process(MPI_COMM_WORLD));
+		DoFTools::make_sparsity_pattern(dof_handler, prec_patterns[i], cm_prec1, true , GlobalParams.MPI_Rank);
 
 
 		// prec_patterns[i].reinit(locally_owned_dofs, MPI_COMM_WORLD, 0);
@@ -1142,79 +1119,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 	}
 
-
-	/*
-	if(GlobalParams.MPI_Rank != 1) {
-		std::cout << GlobalParams.MPI_Rank << ": ( " << Utilities::MPI::this_mpi_process(split_comms[0])<< ","<<Utilities::MPI::this_mpi_process(split_comms[1]) << "," <<Utilities::MPI::this_mpi_process(split_comms[2])<<" - " << Utilities::MPI::n_mpi_processes(split_comms[0])<< ","<<Utilities::MPI::n_mpi_processes(split_comms[1]) << "," <<Utilities::MPI::n_mpi_processes(split_comms[2]) << ")" << std::endl;
-	} else {
-		std::cout << GlobalParams.MPI_Rank << ": ( " << Utilities::MPI::this_mpi_process(split_comms[0])<< ","<<Utilities::MPI::this_mpi_process(split_comms[1]) << " - " << Utilities::MPI::n_mpi_processes(split_comms[0])<< ","<<Utilities::MPI::n_mpi_processes(split_comms[1]) << ")" << std::endl;
-	}
-
-
-	//MPI_Comm_split(MPI_COMM_WORLD,  GlobalParams.MPI_Rank   /3, GlobalParams.MPI_Rank%3		, &split_comms[GlobalParams.MPI_Rank%3	] );
-	//MPI_Comm_split(MPI_COMM_WORLD, ((GlobalParams.MPI_Rank-1)%mpi_size)/3, (GlobalParams.MPI_Rank+1)%3 , &split_comms[(GlobalParams.MPI_Rank+1)%3] );
-	//MPI_Comm_split(MPI_COMM_WORLD, ((GlobalParams.MPI_Rank-2)%mpi_size)/3, (GlobalParams.MPI_Rank+2)%3	, &split_comms[(GlobalParams.MPI_Rank+2)%3] );
-
-	//std::cout << "Stage 2 for processor " << GlobalParams.MPI_Rank << std::endl;
-	// MPI_Comm_split(MPI_COMM_WORLD, (GlobalParams.MPI_Rank-1)/2  , GlobalParams.MPI_Rank, &comm_odd );
-	//std::cout << "Stage 3 for processor " << GlobalParams.MPI_Rank << std::endl;
-	IndexSet none(dof_handler.n_dofs());
-	IndexSet extend(dof_handler.n_dofs());
-	extend.add_range(0,dof_handler.n_dofs());
-	int min1 = (GlobalParams.MPI_Rank-1);
-	int min2 = (GlobalParams.MPI_Rank-2);
-	if (min1 < 0) min1 += mpi_size;
-	if (min2 < 0) min2 += mpi_size;
-	extend.subtract_set(locally_relevant_dofs_all_processors[min1]);
-	extend.subtract_set(locally_relevant_dofs_all_processors[min2]);
-	extend.compress();
-	none.clear();
-	none.add_index(0);
-	IndexSet singleIndex(dof_handler.n_dofs());
-	singleIndex.add_index(0);
-	UpperDofs.subtract_set(singleIndex);
-	LowerDofs.subtract_set(singleIndex);
-	UpperDofs.compress();
-	LowerDofs.compress();
-	prec_patterns = new TrilinosWrappers::SparsityPattern[mpi_size-1];
-	std::cout << "Process " << GlobalParams.MPI_Rank << " - Lower: " << LowerDofs.n_elements() << " | Upper: " << UpperDofs.n_elements() << " | Extension: " << extend.n_elements()<< std::endl;
-
-	IndexSet * sets = new IndexSet[3];
-	sets[0] = none;
-	sets[1] = UpperDofs;
-	sets[2] = LowerDofs;
-
-	for( int i = 0; i < mpi_size-1; i++) {
-
-		//prec_pattern[i].reinit()
-		if( i ==(int) GlobalParams.MPI_Rank) {
-			if( GlobalParams.MPI_Rank != mpi_size-1) {
-				std::cout << "Process " << GlobalParams.MPI_Rank << " other for Block " << i << "( " << none.n_elements()<< ","<<UpperDofs.n_elements()<<")"<<std::endl;
-				prec_patterns[i].reinit(none, none, UpperDofs, 			split_comms[0], dof_handler.max_couplings_between_dofs());
-			}
-		}
-		if(i+1 == (int)GlobalParams.MPI_Rank) {
-			if(GlobalParams.MPI_Rank !=0) {
-				std::cout << "Process " << GlobalParams.MPI_Rank << " self for Block " << i << "( " << LowerDofs.n_elements()<< ")"<< std::endl;
-				prec_patterns[i].reinit(LowerDofs, LowerDofs, LowerDofs, 	split_comms[1], dof_handler.max_couplings_between_dofs());
-			}
-		}
-		int temp = i+2;
-		if (temp == mpi_size) temp =0;
-		if(temp == (int)GlobalParams.MPI_Rank) {
-			if(GlobalParams.MPI_Rank != 1 ) {
-				std::cout << "Process " << GlobalParams.MPI_Rank << " extension for Block " << i << "( " << extend.n_elements()<< ")"<< i << std::endl;
-				prec_patterns[i].reinit(extend, extend, extend, 			split_comms[2], 1);
-			}
-		}
-
-		std::cout << "Stage 5 for processor " << GlobalParams.MPI_Rank << " with i=" <<i<<std::endl;
-	}
-	*/
-
-	std::cout << "Stage 6 for processor " << GlobalParams.MPI_Rank << std::endl;
 	reinit_all();
-
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1255,8 +1160,7 @@ void Waveguide<MatrixType, VectorType>::reinit_systemmatrix() {
 	                                       MPI_COMM_WORLD);
 	DoFTools::make_sparsity_pattern (dof_handler, sp,
 	                                   cm, false,
-	                                   Utilities::MPI::
-	                                   this_mpi_process(MPI_COMM_WORLD));
+									   GlobalParams.MPI_Rank);
 	sp.compress();
 	system_matrix.reinit( sp);
 }
@@ -1339,7 +1243,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 
 	IndexSet none(dof_handler.n_dofs());
 
-	for(int i = 0; i < (int)Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)-1; i++) {
+	for(int i = 0; i < (int)Layers-1; i++) {
 		owned.clear();
 		writable.clear();
 		bool spec = false ;
@@ -1469,7 +1373,7 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
 				cm_prec1.distribute_local_to_global(cell_matrix_prec1, cell_rhs, local_dof_indices,Preconditioner_Matrices[GlobalParams.MPI_Rank-1], preconditioner_rhs, false);
 				// std::cout << GlobalParams.MPI_Rank << ": post 1" << std::endl;
 			}
-			if(GlobalParams.MPI_Rank != Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)-1) {
+			if(GlobalParams.MPI_Rank != Layers-1) {
 				// std::cout << GlobalParams.MPI_Rank << ": pre  2" << std::endl;
 				cm_prec2.distribute_local_to_global(cell_matrix_prec2, cell_rhs, local_dof_indices,Preconditioner_Matrices[GlobalParams.MPI_Rank], preconditioner_rhs, false);
 				// std::cout << GlobalParams.MPI_Rank << ": post 2" << std::endl;
@@ -1509,7 +1413,7 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 	system_matrix.compress(VectorOperation::add);
 	system_rhs.compress(VectorOperation::add);
 	MPI_Barrier(MPI_COMM_WORLD);
-	for(unsigned int i = 0; i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)-1; i++) {
+	for(unsigned int i = 0; i < Layers-1; i++) {
 		Preconditioner_Matrices[i].compress(VectorOperation::add);
 	}
 
@@ -1893,7 +1797,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 			dealii::SparseDirectUMFPACK preconditioner_solver;
 
-			for(unsigned int i = 0; i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
+			for(unsigned int i = 0; i < Layers; i++) {
 				pout << i <<std::endl;
 				if(i == GlobalParams.MPI_Rank) {
 					std::cout << prec_matrix.l1_norm()<<std::endl;
@@ -2018,7 +1922,7 @@ void Waveguide<MatrixType, VectorType>::run ()
 	timer.leave_subsection();
 
 	timer.enter_subsection ("Evaluate");
-	output_results (true);
+	evaluate ();
 	timer.leave_subsection();
 
 	run_number++;

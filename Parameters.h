@@ -261,11 +261,13 @@ struct Parameters {
 
 	unsigned int MPI_Size;
 
-	unsigned int sub_block_lowest;
+
+	/**unsigned int sub_block_lowest;
 
 	unsigned int block_lowest;
 
 	unsigned int block_highest;
+	**/
 
 	double z_evaluate;
 
