@@ -238,6 +238,10 @@ double WaveguideStructure::Sector_Length() {
 	return GlobalParams.PRM_M_R_ZLength / (GlobalParams.PRM_M_W_Sectors - GlobalParams.PRM_M_BC_XYout);
 }
 
+double WaveguideStructure::Layer_Length() {
+	return Sector_Length() * ((double)GlobalParams.PRM_M_W_Sectors) / ((double) GlobalParams.MPI_Size);
+}
+
 double WaveguideStructure::System_Length() {
 	return GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYout * Sector_Length();
 }

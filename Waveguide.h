@@ -421,7 +421,6 @@ class Waveguide
 		bool											is_stored;
 		VectorType										system_rhs;
 		Vector<double>									preconditioner_rhs;
-		LogStream 										deallog;
 
 		int 											run_number;
 		int												condition_file_counter, eigenvalue_file_counter;

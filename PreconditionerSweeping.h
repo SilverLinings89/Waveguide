@@ -15,19 +15,22 @@ using namespace dealii;
 #include <deal.II/lac/trilinos_parallel_block_vector.h>
 #include <deal.II/lac/vector.h>
 
+static SolverControl s(10,1.e-10, false, false);
+dealii::TrilinosWrappers::SolverDirect solver(s, TrilinosWrappers::SolverDirect::AdditionalData(false, "Amesos_Mumps"));
 
 class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
   {
 
   public:
-	PreconditionerSweeping ( dealii::SparseDirectUMFPACK * S, int in_own, int in_others);
+	PreconditionerSweeping ( int in_own, int in_others, int bandwidth);
 
     ~PreconditionerSweeping ();
         
 	virtual void vmult (TrilinosWrappers::MPI::Vector       &dst,      const TrilinosWrappers::MPI::Vector &src) const;
 
+	TrilinosWrappers::SparseMatrix matrix;
+
   private:
-	SolverControl solver_control;
 
 	int own, others;
 	  // const SmartPointer<const TrilinosWrappers::SparseMatrix> preconditioner_matrix;
@@ -35,7 +38,6 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
       //dealii::Vector<double> inputb, outputb ;
       //TrilinosWrappers::MPI::BlockVector input, output;
       std::vector<unsigned int> sizes;
-      dealii::SparseDirectUMFPACK * solver;
   };
 
 #endif /* PRECONDITIONERSWEEPING_H_ */

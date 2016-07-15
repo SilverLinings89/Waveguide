@@ -91,7 +91,7 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </YLength>
             <ZLength>
-                <value>80</value>
+                <value>8</value>
                 <default_value>2.0</default_value>
                 <documentation>Length of the system in z-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
                 <pattern>12</pattern>
@@ -128,7 +128,7 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </Lambda>
             <Sectors>
-                <value>32</value>
+                <value>4</value>
                 <default_value>2</default_value>
                 <documentation>Number of Sectors used for Modelling of the Waveguide.</documentation>
                 <pattern>17</pattern>
@@ -151,7 +151,7 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XY_20in>
             <XY_20out>
-                <value>4</value>
+                <value>1</value>
                 <default_value>1</default_value>
                 <documentation>Amount of standard-size sectors for PML region at the output end.</documentation>
                 <pattern>20</pattern>

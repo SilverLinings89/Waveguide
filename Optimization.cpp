@@ -30,16 +30,19 @@ void Optimization<Matrix, Vector>::run() {
 	if(!GlobalParams.PRM_S_DoOptimization) {
 		waveguide.run();
 	} else {
-		for (unsigned int i = 0; i < GlobalParams.PRM_Op_MaxCases; i++){
+		for (int i = 0; i < GlobalParams.PRM_Op_MaxCases; i++){
 			waveguide.run();
+			std::cout << "Run Complete for proc. ";
+			std::cout << GlobalParams.MPI_Rank;
+			std::cout<<", calculating Gradient" << std::endl;
 			MPI_Barrier(GlobalParams.MPI_Communicator);
-			for ( unsigned int j = 0; j < GlobalParams.MPI_Size; i++ ){
+			for (unsigned int j = 0; j < GlobalParams.MPI_Size; i++ ){
 				r[j] = 1 - waveguide.qualities[j];
 			}
-			for( unsigned int j = 0; j < freedofs; j++) {
+			for(  int j = 0; j < freedofs; j++) {
 				a(j) = structure->get_dof(j,true);
 			}
-			for (unsigned int j = 0; j < freedofs; j++) {
+			for (int j = 0; j < freedofs; j++) {
 				double old = structure->get_dof(j,true);
 				structure->set_dof(j, old + step, true);
 				MPI_Barrier(GlobalParams.MPI_Communicator);
@@ -58,10 +61,8 @@ void Optimization<Matrix, Vector>::run() {
 				Dinv.vmult(rt_2, rt_1,false);
 				a.add(-1.0,rt_2);
 			}
-			int count = 0;
 			double * arr = new double[freedofs];
 			if (GlobalParams.MPI_Rank == 0) {
-				count = freedofs;
 				for (int j = 0; j < freedofs; j++) {
 					arr[j] = a(j);
 				}

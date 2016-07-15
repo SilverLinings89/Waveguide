@@ -12,36 +12,24 @@
 using namespace dealii;
 
 PreconditionerSweeping::~PreconditionerSweeping (){
-	delete solver;
+	// delete solver;
 }
-PreconditionerSweeping::PreconditionerSweeping ( dealii::SparseDirectUMFPACK * S, int in_own, int in_others)
+PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int bandwidth):
 
-    {
-		solver = S;
+		matrix(in_own+in_others, in_own+in_others, bandwidth)
+{
 		own = in_own;
 		others = in_others;
-		//itmp = TrilinosWrappers::MPI::Vector(complete_index_set(own + others));
-		//otmp = TrilinosWrappers::MPI::Vector(complete_index_set(own + others));
-		//input.block(0).reinit(complete_index_set(others), MPI_COMM_SELF);
-		//input.block(1).reinit(complete_index_set(own), MPI_COMM_SELF);
-		//output.block(0).reinit(complete_index_set(others), MPI_COMM_SELF);
-		//output.block(1).reinit(complete_index_set(own), MPI_COMM_SELF);
 		sizes.push_back(others);
 		sizes.push_back(own);
-
-
-		//inputb.reinit(own + others, false);
-		//outputb.reinit(own + others, false);
-		//TrilinosWrappers::PreconditionBlockwiseDirect::initialize(S, TrilinosWrappers::PreconditionBlockwiseDirect::AdditionalData());
-
-    }
+   }
 
 
 void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
-			const TrilinosWrappers::MPI::Vector &src) const
+			const TrilinosWrappers::MPI::Vector &src)const
 {
 
-	dealii::Vector<double> inputb(own + others);
+	TrilinosWrappers::Vector inputb(own + others);
 	for(int i = 0; i < others; i++) {
 		inputb[i] = 0;
 	}
@@ -51,15 +39,15 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 		inputb[i + others] = src(owneddofs.nth_index_in_set(i));
 	}
 
-	//dealii::Vector<double> outputb(own + others);
+	TrilinosWrappers::Vector outputb(own + others);
 
 	// const TrilinosWrappers::MPI::Vector inp(input);
 
 	//TrilinosWrappers::PreconditionBlockwiseDirect::vmult(outputb, inputb);
-	solver->solve( inputb);
+	solver.solve( matrix , outputb, inputb);
 
 	for(int i = 0; i < own; i++) {
-		dst[owneddofs.nth_index_in_set(i)] = inputb[others + i];
+		dst[owneddofs.nth_index_in_set(i)] = outputb[others + i];
 	}
 
 	// dealii::Vector<double> outputb(own + others);

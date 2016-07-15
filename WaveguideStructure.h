@@ -187,6 +187,11 @@ class WaveguideStructure {
 		double Sector_Length();
 
 		/**
+		 * Returns the length of one layer
+		 */
+		double Layer_Length();
+
+		/**
 		 * Returns the radius for a system-coordinate;
 		 */
 		double get_r(double in_z);
