@@ -1124,6 +1124,17 @@ void Waveguide<MatrixType, VectorType>::reinit_all () {
 }
 
 template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::reinit_for_rerun () {
+	std::cout << "0-";
+	reinit_rhs();
+	std::cout << "1-";
+	reinit_preconditioner_fast();
+	std::cout << "2-";
+	reinit_systemmatrix();
+	std::cout << "3";
+}
+
+template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_preconditioner () {
 	/**
 	if(!temporary_pattern_preped) {
@@ -1190,15 +1201,8 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector>::reinit
 
 template<>
 void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_preconditioner () {
-	// if(!temporary_pattern_preped) {
-	//	preconditioner_pattern.copy_from(prec_pattern);
-	// }
-//	IndexSet large(dof_handler.n_dofs());
-//	large.add_range(0, dof_handler.n_dofs());
-	// preconditioner_pattern.copy_from(dynamic_preconditioner_pattern_even);
-	// preconditioner_matrix_even.reinit(preconditioner_pattern);
 
-	std::cout << "Reinit precond for p " << GlobalParams.MPI_Rank << std::endl;
+	// std::cout << "Reinit precond for p " << GlobalParams.MPI_Rank << std::endl;
 	IndexSet all(dof_handler.n_dofs());
 	all.add_range(0, dof_handler.n_dofs());
 
@@ -1252,6 +1256,13 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 		Preconditioner_Matrices[i].reinit(prec_patterns[i]);
 
 
+	}
+}
+
+template<>
+void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_preconditioner_fast () {
+	for(int i = 0; i < (int)Layers-1; i++) {
+		Preconditioner_Matrices[i].reinit(prec_patterns[i]);
 	}
 }
 
@@ -1656,96 +1667,93 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 		std::cout << GlobalParams.PRM_S_GMRESSteps << "-";
 		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData( GlobalParams.PRM_S_GMRESSteps) );
-		timerupdate();
-		if(prm.PRM_S_Preconditioner == "Sweeping"){
-			// std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
-			IndexSet own (dof_handler.n_dofs());
-			own.add_indices(locally_owned_dofs);
 
-			if(GlobalParams.MPI_Rank == 0 ){
-				// own.add_indices(locally_owned_dofs);
-			} else {
-				own.add_indices(LowerDofs);
-			}
+		// std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
+		IndexSet own (dof_handler.n_dofs());
+		own.add_indices(locally_owned_dofs);
 
-			int below = 0;
-			if (GlobalParams.MPI_Rank != 0 ) {
-				below = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1].n_elements();
-			}
-
-			PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs());
-
-			/**
-			// std::cout << GlobalParams.MPI_Rank << " prep matrix." <<std::endl;
-			dealii::SparsityPattern temp_pattern;
-			temp_pattern.reinit(own.n_elements(),own.n_elements(), dof_handler.max_couplings_between_dofs());
-
-			if(GlobalParams.MPI_Rank == 0 ){
-
-				for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
-					for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(own.nth_index_in_set(current_row)); row != system_matrix.end(own.nth_index_in_set(current_row)); row++) {
-						if(own.is_element(row->column())) {
-							temp_pattern.add(current_row, own.index_within_set(row->column()));
-						}
-					}
-				}
-
-			} else {
-
-				for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
-					for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(own.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(own.nth_index_in_set(current_row)); row++) {
-						if(own.is_element(row->column())) {
-							temp_pattern.add(current_row, own.index_within_set(row->column()));
-						}
-					}
-				}
-
-			}
-			temp_pattern.compress();
-			std::ofstream pattern (solutionpath + "/pattern" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".gnu");
-			temp_pattern.print_gnuplot(pattern);
-			**/
-			// dealii::TrilinosWrappers::SparseMatrix prec_matrix(own.n_elements(),own.n_elements(), dof_handler.max_couplings_between_dofs());
-
-			// std::cout << GlobalParams.MPI_Rank << " build matrix." <<std::endl;
-			if(GlobalParams.MPI_Rank == 0 ){
-				for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
-					for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(own.nth_index_in_set(current_row)); row != system_matrix.end(own.nth_index_in_set(current_row)); row++) {
-						if(own.is_element(row->column())) {
-							sweep.matrix.set(current_row, own.index_within_set(row->column()), row->value());
-						}
-					}
-				}
-			} else {
-				for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
-					for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(own.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(own.nth_index_in_set(current_row)); row++) {
-						if(own.is_element(row->column())) {
-							sweep.matrix.set(current_row, own.index_within_set(row->column()), row->value());
-						}
-					}
-				}
-			}
-
-
-			sweep.matrix.compress(VectorOperation::insert);
-
-			std::cout << GlobalParams.MPI_Rank << " done building matrix. Init Sweep." <<std::endl;
-
-
-			for(unsigned int i = 0; i < Layers; i++) {
-				pout << i <<std::endl;
-				if(i == GlobalParams.MPI_Rank) {
-					// std::cout << prec_matrix.l1_norm()<<std::endl;
-					//preconditioner_solver.initialize(prec_matrix, dealii::SparseDirectUMFPACK::AdditionalData());
-				}
-			}
-
-			MPI_Barrier(MPI_COMM_WORLD);
-			pout << "Solving... " ;
-			solver.solve(system_matrix,solution, system_rhs, sweep);
-			pout << "Done." << std::endl;
+		if(GlobalParams.MPI_Rank == 0 ){
+			// own.add_indices(locally_owned_dofs);
+		} else {
+			own.add_indices(LowerDofs);
 		}
 
+		int below = 0;
+		if (GlobalParams.MPI_Rank != 0 ) {
+			below = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1].n_elements();
+		}
+
+		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs());
+
+		/**
+		// std::cout << GlobalParams.MPI_Rank << " prep matrix." <<std::endl;
+		dealii::SparsityPattern temp_pattern;
+		temp_pattern.reinit(own.n_elements(),own.n_elements(), dof_handler.max_couplings_between_dofs());
+
+		if(GlobalParams.MPI_Rank == 0 ){
+
+			for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
+				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(own.nth_index_in_set(current_row)); row != system_matrix.end(own.nth_index_in_set(current_row)); row++) {
+					if(own.is_element(row->column())) {
+						temp_pattern.add(current_row, own.index_within_set(row->column()));
+					}
+				}
+			}
+
+		} else {
+
+			for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
+				for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(own.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(own.nth_index_in_set(current_row)); row++) {
+					if(own.is_element(row->column())) {
+						temp_pattern.add(current_row, own.index_within_set(row->column()));
+					}
+				}
+			}
+
+		}
+		temp_pattern.compress();
+		std::ofstream pattern (solutionpath + "/pattern" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".gnu");
+		temp_pattern.print_gnuplot(pattern);
+		**/
+		// dealii::TrilinosWrappers::SparseMatrix prec_matrix(own.n_elements(),own.n_elements(), dof_handler.max_couplings_between_dofs());
+
+		// std::cout << GlobalParams.MPI_Rank << " build matrix." <<std::endl;
+		if(GlobalParams.MPI_Rank == 0 ){
+			for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
+				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(own.nth_index_in_set(current_row)); row != system_matrix.end(own.nth_index_in_set(current_row)); row++) {
+					if(own.is_element(row->column())) {
+						sweep.matrix.set(current_row, own.index_within_set(row->column()), row->value());
+					}
+				}
+			}
+		} else {
+			for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
+				for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(own.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(own.nth_index_in_set(current_row)); row++) {
+					if(own.is_element(row->column())) {
+						sweep.matrix.set(current_row, own.index_within_set(row->column()), row->value());
+					}
+				}
+			}
+		}
+
+
+		sweep.matrix.compress(VectorOperation::insert);
+
+		std::cout << GlobalParams.MPI_Rank << " done building matrix. Init Sweep." <<std::endl;
+
+
+		for(unsigned int i = 0; i < Layers; i++) {
+			pout << i <<std::endl;
+			if(i == GlobalParams.MPI_Rank) {
+				// std::cout << prec_matrix.l1_norm()<<std::endl;
+				//preconditioner_solver.initialize(prec_matrix, dealii::SparseDirectUMFPACK::AdditionalData());
+			}
+		}
+
+		MPI_Barrier(MPI_COMM_WORLD);
+		pout << "Solving... " ;
+		solver.solve(system_matrix,solution, system_rhs, sweep);
+		pout << "Done." << std::endl;
 
 		pout << "A Solution was calculated!" <<std::endl;
 
@@ -1860,6 +1868,9 @@ void Waveguide<MatrixType, VectorType>::run ()
 	evaluate ();
 	timer.leave_subsection();
 
+	timer.print_summary();
+	timer.reset();
+
 	run_number++;
 }
 
@@ -1880,7 +1891,6 @@ template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reset_changes ()
 {
 	reinit_all();
-
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1893,22 +1903,28 @@ void Waveguide<MatrixType, VectorType>::rerun ()
 	timer.enter_subsection ("Setup FEM");
 
 	timer.leave_subsection();
-
+	std::cout << "Reinit for rerun." << std::endl;
 	timer.enter_subsection ("Reset");
-	reset_changes();
+	reinit_for_rerun();
 	timer.leave_subsection();
 
+	std::cout << "Assemble for rerun." << std::endl;
 	timer.enter_subsection ("Assemble");
 	assemble_system ();
 	timer.leave_subsection();
 
+	std::cout << "Solve for rerun." << std::endl;
 	timer.enter_subsection ("Solve");
 	solve ();
 	timer.leave_subsection();
 
+	std::cout << "Evaluate for rerun." << std::endl;
 	timer.enter_subsection ("Evaluate");
 	evaluate ();
 	timer.leave_subsection();
+
+	timer.print_summary();
+	timer.reset();
 
 	run_number++;
 

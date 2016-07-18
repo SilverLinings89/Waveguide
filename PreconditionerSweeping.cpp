@@ -12,7 +12,7 @@
 using namespace dealii;
 
 PreconditionerSweeping::~PreconditionerSweeping (){
-	// delete solver;
+	delete solver;
 }
 PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int bandwidth):
 
@@ -22,6 +22,8 @@ PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int
 		others = in_others;
 		sizes.push_back(others);
 		sizes.push_back(own);
+		solver = new TrilinosWrappers::SolverDirect(s, TrilinosWrappers::SolverDirect::AdditionalData(false, GlobalParams.PRM_S_Preconditioner));
+
    }
 
 
@@ -44,7 +46,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 	// const TrilinosWrappers::MPI::Vector inp(input);
 
 	//TrilinosWrappers::PreconditionBlockwiseDirect::vmult(outputb, inputb);
-	solver.solve( matrix , outputb, inputb);
+	solver->solve( matrix , outputb, inputb);
 
 	for(int i = 0; i < own; i++) {
 		dst[owneddofs.nth_index_in_set(i)] = outputb[others + i];

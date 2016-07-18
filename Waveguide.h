@@ -386,6 +386,9 @@ class Waveguide
 		 */
 		void 	reinit_storage();
 
+		void 	reinit_for_rerun();
+
+		void 	reinit_preconditioner_fast();
 		/**
 		 * This function encapsulates a library call for 2D numeric integration over a circle with given properties. It is included that this function calls evaluate_for_Position(x,y,z)
 		 */

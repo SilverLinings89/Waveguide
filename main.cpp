@@ -15,7 +15,6 @@
 #include "ParameterReader.cpp"
 #include "Parameters.cpp"
 #include "Sector.cpp"
-#include "PreconditionSweeping.cpp"
 #include "Waveguide.cpp"
 #include "WaveguideStructure.cpp"
 #include "ExactSolution.cpp"

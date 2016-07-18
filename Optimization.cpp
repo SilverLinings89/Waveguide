@@ -10,9 +10,10 @@ Optimization<Matrix, Vector >::Optimization( Parameters in_System_Parameters ,Wa
 		dofs(structure->NDofs()),
 		freedofs(structure->NFreeDofs()),
 		System_Parameters(in_System_Parameters),
-		waveguide(in_wg)
-
+		waveguide(in_wg),
+		pout(std::cout, GlobalParams.MPI_Rank==0)
 	{
+
 }
 
 template<typename Matrix,typename Vector>
@@ -36,24 +37,48 @@ void Optimization<Matrix, Vector>::run() {
 			std::cout << GlobalParams.MPI_Rank;
 			std::cout<<", calculating Gradient" << std::endl;
 			MPI_Barrier(GlobalParams.MPI_Communicator);
-			for (unsigned int j = 0; j < GlobalParams.MPI_Size; i++ ){
-				r[j] = 1 - waveguide.qualities[j];
+			pout<< "Residuals: ";
+
+			double reference = 1.0;
+			bool cont = true;
+			if(GlobalParams.MPI_Rank == 0){
+				reference = waveguide.evaluate_for_z(- GlobalParams.PRM_M_R_ZLength / 2.0);
+				if ( reference < 0.00001) {
+					cont = false;
+				}
 			}
+			if(!cont) {
+				std::cout << "No residual an incoming side - No signal."<< std::endl;
+				exit(0);
+			}
+			for (unsigned int j = 0; j < GlobalParams.MPI_Size; j++ ){
+				r[j] = 1- (abs(waveguide.qualities[j])/reference);
+				pout << r[j] << " ,";
+			}
+			pout<< std::endl;
+
 			for(  int j = 0; j < freedofs; j++) {
 				a(j) = structure->get_dof(j,true);
 			}
+			pout << "Starting gradient estimation" << std::endl;
 			for (int j = 0; j < freedofs; j++) {
 				double old = structure->get_dof(j,true);
 				structure->set_dof(j, old + step, true);
 				MPI_Barrier(GlobalParams.MPI_Communicator);
+				pout << "Gradient step "<< j <<" starting ..." << std::endl;
 				waveguide.rerun();
-				for(unsigned int k = 0; k < GlobalParams.MPI_Size; k++) {
-					double res = 1 - waveguide.qualities[k];
-					D[k][j]= (res - r[k])/step;
+				pout << "Gradient step " << j << " of " << freedofs << " done." << std::endl;
+				if(GlobalParams.MPI_Rank == 0){
+					for(unsigned int k = 0; k < GlobalParams.MPI_Size; k++) {
+						double res = 1- (abs(waveguide.qualities[j])/reference);
+						D[k][j]= (res - r[k])/step;
+					}
 				}
 				structure->set_dof(j, old , true);
 				MPI_Barrier(GlobalParams.MPI_Communicator);
 			}
+			pout << "All gradient steps done. Executing Gauss-Newton" << std::endl;
+
 			if (GlobalParams.MPI_Rank == 0) {
 				D.Tvmult(rt_1, r, false);
 				D.Tmmult(Prod, D, false);

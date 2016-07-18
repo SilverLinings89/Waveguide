@@ -16,7 +16,7 @@ using namespace dealii;
 #include <deal.II/lac/vector.h>
 
 static SolverControl s(10,1.e-10, false, false);
-dealii::TrilinosWrappers::SolverDirect solver(s, TrilinosWrappers::SolverDirect::AdditionalData(false, "Amesos_Mumps"));
+dealii::TrilinosWrappers::SolverDirect * solver;
 
 class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
   {

@@ -19,6 +19,8 @@ using namespace dealii;
 template< typename M, typename V >
 class Optimization {
 	public:
+
+		ConditionalOStream	pout;
 		/**
 		 * This member is not to be confused with the membler n_dofs in Waveguide which stores the number of degrees of freedom in the finite element implementation. This variable however stores the number of degrees of freedom for the shape of the waveguide and is calculated by
 		 * \f[ \operatorname{dofs} = (s + 1) \cdot 3 -6\f]
