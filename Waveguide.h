@@ -56,7 +56,7 @@
 #include <cmath>
 #include <math.h>
 #include <sstream>
-
+#include <mpi.h>
 
 #include "Parameters.h"
 #include "ParameterReader.h"
