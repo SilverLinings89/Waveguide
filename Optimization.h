@@ -28,6 +28,8 @@ class Optimization {
 		 */
 		const int dofs;
 
+		const int residuals_count;
+
 		const int freedofs;
 		/**
 		 * Members like this one appear in many objects and are always used to store the parsed data from the input-file.
