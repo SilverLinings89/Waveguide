@@ -28,6 +28,8 @@ void Optimization<Matrix, Vector>::run() {
 	dealii::Vector<double> rt_1 (freedofs);
 	dealii::Vector<double> rt_2 (freedofs);
 
+	pout << "Residual Count: " << residuals_count << std::endl;
+
 	dealii::Vector<double> a(freedofs);
 	if(!GlobalParams.PRM_S_DoOptimization) {
 		waveguide.run();
