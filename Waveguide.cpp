@@ -858,12 +858,14 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 		set.push_back(temp);
 	}
 	pout << "Storing details in Waveguidestructure->case_sectors..." <<std::endl;
+	/**
 	for(unsigned int i=0; i  < Layers; i++) {
 		structure->case_sectors[i].setLowestDof( Dofs_Below_Subdomain[i] );
 		structure->case_sectors[i].setNActiveCells( GridTools::count_cells_with_subdomain_association(triangulation,i) );
 		structure->case_sectors[i].setNDofs( Block_Sizes[i] );
 		//structure->case_sectors[i].setNInternalBoundaryDofs(InternalBoundaryDofs[i]);
 	}
+	**/
 
 }
 
@@ -889,7 +891,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 			pout << "Renumbering DOFs (Custom...)" << std::endl;
 	}
 
-	Do_Refined_Reordering();
+	// Do_Refined_Reordering();
 
 	pout << "Reordering done." << std::endl;
 
