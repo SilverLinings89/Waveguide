@@ -12,7 +12,7 @@ Optimization<Matrix, Vector >::Optimization( Parameters in_System_Parameters ,Wa
 		System_Parameters(in_System_Parameters),
 		waveguide(in_wg),
 		pout(std::cout, GlobalParams.MPI_Rank==0),
-		residuals_count(floor((double)GlobalParams.MPI_Size * (((double)GlobalParams.PRM_M_W_Sectors - (double)GlobalParams.PRM_M_BC_XYout)/((double)GlobalParams.PRM_M_W_Sectors))))
+		residuals_count((int)floor((double)GlobalParams.MPI_Size * (((double)GlobalParams.PRM_M_W_Sectors - (double)GlobalParams.PRM_M_BC_XYout)/((double)GlobalParams.PRM_M_W_Sectors))))
 	{
 
 }
