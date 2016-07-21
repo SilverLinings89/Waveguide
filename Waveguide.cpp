@@ -47,7 +47,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
    // Sweeping_Additional_Data(1.0, 1),
   // sweep(Sweeping_Additional_Data)
 {
-	prec_patterns = new TrilinosWrappers::SparsityPattern[Layers];
+	prec_patterns = new TrilinosWrappers::SparsityPattern[Layers-1];
 	assembly_progress = 0;
 	int i = 0;
 	bool dir_exists = true;
@@ -1212,7 +1212,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 
 	IndexSet none(dof_handler.n_dofs());
 
-	for(int i = 0; i < (int)Layers-1; i++) {
+	for(int i = 0; i < Layers-1; i++) {
 		owned.clear();
 		writable.clear();
 		bool spec = false ;
@@ -1249,7 +1249,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 				writable.add_indices(locally_relevant_dofs);
 			}
 		}
-		TrilinosWrappers::SparseMatrix temporary;
+		prec_patterns[i].reinit(owned, owned, writable, MPI_COMM_WORLD);
 		prec_patterns[i].compress();
 		// std::cout << GlobalParams.MPI_Rank << " compressed" <<std::endl;
 		MPI_Barrier(MPI_COMM_WORLD);
