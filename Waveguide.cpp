@@ -1105,6 +1105,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 		// prec_patterns[i].reinit(locally_owned_dofs, MPI_COMM_WORLD, 0);
 		// std::cout << GlobalParams.MPI_Rank << " has reached the end of loop " << i << std::endl;
 
+		prec_patterns[i].compress();
 	}
 
 	reinit_all();
@@ -1202,60 +1203,9 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector>::reinit
 template<>
 void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_preconditioner () {
 
-	// std::cout << "Reinit precond for p " << GlobalParams.MPI_Rank << std::endl;
-	IndexSet all(dof_handler.n_dofs());
-	all.add_range(0, dof_handler.n_dofs());
-
-	IndexSet owned(dof_handler.n_dofs());
-
-	IndexSet writable(dof_handler.n_dofs());
-
-	IndexSet none(dof_handler.n_dofs());
-
-	for(int i = 0; i < Layers-1; i++) {
-		owned.clear();
-		writable.clear();
-		bool spec = false ;
-		bool upper = false;
-		bool lower = false;
-		// std::cout << "Stage 2 for processor " << GlobalParams.MPI_Rank << std::endl;
-
-
-		if ( GlobalParams.MPI_Rank -i == 0 ) {
-			spec = true;
-			lower = true;
-		}
-
-		if ( GlobalParams.MPI_Rank - i == 1) {
-			upper = true;
-			spec = true;
-		}
-
-
-		if(!spec) {
-			owned.add_indices(locally_owned_dofs);
-			writable.add_indices(locally_owned_dofs);
-
-			// is2.add_indices(is1);
-		} else {
-			if(upper) {
-				owned = LowerDofs;
-				writable = LowerDofs;
-				writable.add_indices(locally_relevant_dofs);
-			}
-			if(lower) {
-				owned = none;
-				writable = UpperDofs;
-				writable.add_indices(locally_relevant_dofs);
-			}
-		}
-		prec_patterns[i].reinit(owned, owned, writable, MPI_COMM_WORLD);
-		prec_patterns[i].compress();
-		// std::cout << GlobalParams.MPI_Rank << " compressed" <<std::endl;
+	for(unsigned int i = 0; i < Layers -1; i++) {
 		MPI_Barrier(MPI_COMM_WORLD);
 		Preconditioner_Matrices[i].reinit(prec_patterns[i]);
-
-
 	}
 }
 
