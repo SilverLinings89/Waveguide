@@ -784,16 +784,16 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 			//triangulation.execute_coarsening_and_refinement();
 			//MaxDistFromBoundary *= 0.7 ;
 		}
-//		MaxDistFromBoundary = (GlobalParams.PRM_M_C_RadiusOut + GlobalParams.PRM_M_C_RadiusIn)*1.4/2.0;
-//		for(int i = 0; i < GlobalParams.PRM_R_Internal; i++) {
-//			cell = triangulation.begin_active();
-//			for (; cell!=endc; ++cell){
-//				if( Distance2D(cell->center(true, false))< (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0)  {
-//					cell->set_refine_flag();
-//				}
-//			}
-//			triangulation.execute_coarsening_and_refinement();
-//		}
+		MaxDistFromBoundary = (GlobalParams.PRM_M_C_RadiusOut + GlobalParams.PRM_M_C_RadiusIn)*1.4/2.0;
+		for(int i = 0; i < GlobalParams.PRM_R_Internal; i++) {
+			cell = triangulation.begin_active();
+			for (; cell!=endc; ++cell){
+				if( Distance2D(cell->center(true, false))< (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0)  {
+					cell->set_refine_flag();
+				}
+			}
+			triangulation.execute_coarsening_and_refinement();
+		}
 	}
 
 	// mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
