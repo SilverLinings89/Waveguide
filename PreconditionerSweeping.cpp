@@ -175,14 +175,14 @@ void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> src, deal
 void PreconditionerSweeping::UpperProduct(const dealii::Vector<double> src, dealii::Vector<double> dst) const {
 
 	dealii::Vector<double> in_temp (own+others);
-	for (int i = 0; i < others; i++) {
+	for (int i = 0; i < own; i++) {
 		in_temp[others + i] = src[i];
 	}
 
 	dealii::Vector<double> out_temp (own+others);
 	matrix.vmult(out_temp, in_temp);
 
-	for(int i = 0; i < own; i++) {
+	for(int i = 0; i < others; i++) {
 		dst[i] = out_temp[ i];
 	}
 
