@@ -1083,7 +1083,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 				owned = LowerDofs;
 				writable = LowerDofs;
 				writable.add_indices(locally_relevant_dofs);
-				dofs = dof_handler.max_couplings_between_dofs();
+				dofs = 2* dof_handler.max_couplings_between_dofs();
 			}
 			if(lower) {
 				owned = none;

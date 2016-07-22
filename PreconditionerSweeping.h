@@ -22,7 +22,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
   {
 
   public:
-	PreconditionerSweeping ( int in_own, int in_others, int bandwidth);
+	PreconditionerSweeping ( int in_own, int in_others, int bandwidth, IndexSet locallyowned);
 
     ~PreconditionerSweeping ();
         
@@ -31,7 +31,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 	TrilinosWrappers::SparseMatrix matrix;
 
   private:
-
+	int * indices;
 	int own, others;
 	  // const SmartPointer<const TrilinosWrappers::SparseMatrix> preconditioner_matrix;
       TrilinosWrappers::MPI::Vector itmp, otmp;

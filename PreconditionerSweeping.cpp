@@ -14,7 +14,7 @@ using namespace dealii;
 PreconditionerSweeping::~PreconditionerSweeping (){
 	delete solver;
 }
-PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int bandwidth):
+PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int bandwidth,  IndexSet locally_owned):
 
 		matrix(in_own+in_others, in_own+in_others, bandwidth)
 {
@@ -22,8 +22,14 @@ PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int
 		others = in_others;
 		sizes.push_back(others);
 		sizes.push_back(own);
+		IndexSet elements (own+others);
+		elements.add_range(0,own+elements);
 		solver = new TrilinosWrappers::SolverDirect(s, TrilinosWrappers::SolverDirect::AdditionalData(false, GlobalParams.PRM_S_Preconditioner));
-
+		itmp(elements , MPI_COMM_SELF);
+		indices = new int[locally_owned.n_elements()];
+		for(int i = 0; i < own; i++){
+			indices[i] = locally_owned.nth_index_in_set(i);
+		}
    }
 
 
@@ -31,30 +37,15 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 			const TrilinosWrappers::MPI::Vector &src)const
 {
 
-	TrilinosWrappers::Vector inputb(own + others);
-	for(int i = 0; i < others; i++) {
-		inputb[i] = 0;
-	}
-
-	IndexSet owneddofs = src.locally_owned_elements();
-	for(int i = 0; i < own; i++) {
-		inputb[i + others] = src(owneddofs.nth_index_in_set(i));
-	}
-
-	TrilinosWrappers::Vector outputb(own + others);
-
-	// const TrilinosWrappers::MPI::Vector inp(input);
-
-	//TrilinosWrappers::PreconditionBlockwiseDirect::vmult(outputb, inputb);
-	solver->solve( matrix , outputb, inputb);
 
 	for(int i = 0; i < own; i++) {
-		dst[owneddofs.nth_index_in_set(i)] = outputb[others + i];
+		itmp[i + others] = src(indices[i]);
 	}
 
-	// dealii::Vector<double> outputb(own + others);
+	solver->solve( matrix , otmp, itmp);
 
-
-	// std::cout << GlobalParams.MPI_Rank << "Non-prec L2: " << src.l2_norm() << ", Prec L2: "<< dst.l2_norm() << std::endl;
+	for(int i = 0; i < own; i++) {
+		dst[indices[i]] = otmp[others + i];
+	}
 
 }
