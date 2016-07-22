@@ -7,12 +7,12 @@ using namespace dealii;
 template<typename Matrix,typename Vector>
 Optimization<Matrix, Vector >::Optimization( Parameters in_System_Parameters ,Waveguide<Matrix, Vector >  &in_wg)
 	:
+		pout(std::cout, GlobalParams.MPI_Rank==0),
 		dofs(structure->NDofs()),
+		residuals_count((int)floor((double)GlobalParams.MPI_Size * (((double)GlobalParams.PRM_M_W_Sectors - (double)GlobalParams.PRM_M_BC_XYout)/((double)GlobalParams.PRM_M_W_Sectors)))),
 		freedofs(structure->NFreeDofs()),
 		System_Parameters(in_System_Parameters),
-		waveguide(in_wg),
-		pout(std::cout, GlobalParams.MPI_Rank==0),
-		residuals_count((int)floor((double)GlobalParams.MPI_Size * (((double)GlobalParams.PRM_M_W_Sectors - (double)GlobalParams.PRM_M_BC_XYout)/((double)GlobalParams.PRM_M_W_Sectors))))
+		waveguide(in_wg)
 	{
 
 }
@@ -54,7 +54,7 @@ void Optimization<Matrix, Vector>::run() {
 				pout << "No residual an incoming side - No signal."<< std::endl;
 				exit(0);
 			}
-			for (unsigned int j = 0; j < residuals_count; j++ ){
+			for (int j = 0; j < residuals_count; j++ ){
 				r[j] = 1- (abs(waveguide.qualities[j])/reference);
 				pout << r[j] << " ,";
 			}
@@ -72,7 +72,7 @@ void Optimization<Matrix, Vector>::run() {
 				waveguide.rerun();
 				pout << "Gradient step " << j+1 << " of " << freedofs << " done." << std::endl;
 				if(GlobalParams.MPI_Rank == 0){
-					for(unsigned int k = 0; k < residuals_count; k++) {
+					for( int k = 0; k < residuals_count; k++) {
 						double res = 1- (abs(waveguide.qualities[j])/reference);
 						D[k][j]= (res - r[k])/step;
 					}

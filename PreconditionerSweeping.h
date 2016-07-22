@@ -22,22 +22,24 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
   {
 
   public:
-	PreconditionerSweeping ( int in_own, int in_others, int bandwidth, IndexSet locallyowned);
+	PreconditionerSweeping ( int in_own, int in_others, int bandwidth, IndexSet locallyowned, int in_upper);
 
     ~PreconditionerSweeping ();
+
+    void Hinv(dealii::Vector<double> src, dealii::Vector<double> dst) const ;
         
+    void LowerProduct(dealii::Vector<double> src, dealii::Vector<double> dst) const ;
+
+    void UpperProduct(dealii::Vector<double> src, dealii::Vector<double> dst) const ;
+
 	virtual void vmult (TrilinosWrappers::MPI::Vector       &dst,      const TrilinosWrappers::MPI::Vector &src) const;
 
 	TrilinosWrappers::SparseMatrix matrix;
 
   private:
 	int * indices;
-	int own, others;
-	  // const SmartPointer<const TrilinosWrappers::SparseMatrix> preconditioner_matrix;
-      TrilinosWrappers::MPI::Vector itmp, otmp;
-      //dealii::Vector<double> inputb, outputb ;
-      //TrilinosWrappers::MPI::BlockVector input, output;
-      std::vector<unsigned int> sizes;
+	int own, others, upper;
+	TrilinosWrappers::MPI::Vector itmp, otmp;
   };
 
 #endif /* PRECONDITIONERSWEEPING_H_ */

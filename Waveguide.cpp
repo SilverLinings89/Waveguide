@@ -1522,7 +1522,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 				}
 
 				//upper boundary both
-				if((int)GlobalParams.MPI_Rank >= GlobalParams.MPI_Size -2 ) {
+				if(GlobalParams.MPI_Rank >= GlobalParams.MPI_Size -2 ) {
 					if( std::abs(center[2] - GlobalParams.PRM_M_R_ZLength/2.0  - GlobalParams.PRM_M_BC_XYout * sector_length) < 0.0001 ){
 						std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
@@ -1637,41 +1637,13 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 			below = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1].n_elements();
 		}
 
-		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs());
-
-		/**
-		// std::cout << GlobalParams.MPI_Rank << " prep matrix." <<std::endl;
-		dealii::SparsityPattern temp_pattern;
-		temp_pattern.reinit(own.n_elements(),own.n_elements(), dof_handler.max_couplings_between_dofs());
-
-		if(GlobalParams.MPI_Rank == 0 ){
-
-			for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
-				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(own.nth_index_in_set(current_row)); row != system_matrix.end(own.nth_index_in_set(current_row)); row++) {
-					if(own.is_element(row->column())) {
-						temp_pattern.add(current_row, own.index_within_set(row->column()));
-					}
-				}
-			}
-
-		} else {
-
-			for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
-				for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(own.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(own.nth_index_in_set(current_row)); row++) {
-					if(own.is_element(row->column())) {
-						temp_pattern.add(current_row, own.index_within_set(row->column()));
-					}
-				}
-			}
-
+		int t_upper = 0;
+		if (GlobalParams.MPI_Rank != GlobalParams.MPI_Size-1) {
+			t_upper = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank +1].n_elements();
 		}
-		temp_pattern.compress();
-		std::ofstream pattern (solutionpath + "/pattern" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".gnu");
-		temp_pattern.print_gnuplot(pattern);
-		**/
-		// dealii::TrilinosWrappers::SparseMatrix prec_matrix(own.n_elements(),own.n_elements(), dof_handler.max_couplings_between_dofs());
+		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, t_upper);
 
-		// std::cout << GlobalParams.MPI_Rank << " build matrix." <<std::endl;
+
 		if(GlobalParams.MPI_Rank == 0 ){
 			for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
 				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(own.nth_index_in_set(current_row)); row != system_matrix.end(own.nth_index_in_set(current_row)); row++) {
