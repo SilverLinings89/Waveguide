@@ -40,7 +40,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
   temporary_pattern_preped(false),
   real(0),
   imag(3),
-  solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, true, true),
+  solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, (GlobalParams.MPI_Rank == 0), true),
   pout(std::cout, GlobalParams.MPI_Rank==0),
   timer(MPI_COMM_WORLD, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times)
 
@@ -225,7 +225,7 @@ void Waveguide<MatrixType, VectorType>::evaluate() {
 	double z_for_evaluation = (double)(0.5+GlobalParams.MPI_Rank)*structure->Layer_Length() - GlobalParams.PRM_M_R_ZLength/2.0 ;
 	double local_value = evaluate_for_z(z_for_evaluation) ;
 	MPI_Allgather( & local_value, 1, MPI_DOUBLE, qualities, 1, MPI_DOUBLE, MPI_COMM_WORLD);
-	std::cout << "Done Gathering Qualities!"<< std::endl;
+	pout << "Done Gathering Qualities!"<< std::endl;
 }
 
 template<typename MatrixType, typename VectorType >
@@ -234,11 +234,11 @@ double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 	double lower = 0.0;
 	double upper = 0.0;
 	if(GlobalParams.evaluate_in) {
-		std::cout << "Evaluation for input side by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << -GlobalParams.PRM_M_R_ZLength / 2.0 << std::endl;
+		pout << "Evaluation for input side by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << -GlobalParams.PRM_M_R_ZLength / 2.0 << std::endl;
 		lower = evaluate_for_z(-GlobalParams.PRM_M_R_ZLength / 2.0 + 0.0001);
 	}
 	if(GlobalParams.evaluate_out) {
-		std::cout << "Evaluation for output side by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << GlobalParams.PRM_M_R_ZLength / 2.0 << std::endl;
+		pout << "Evaluation for output side by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << GlobalParams.PRM_M_R_ZLength / 2.0 << std::endl;
 		upper = evaluate_for_z(GlobalParams.PRM_M_R_ZLength / 2.0 - 0.0001);
 	}
 	lower = Utilities::MPI::sum(lower, GlobalParams.MPI_Communicator);
@@ -247,7 +247,7 @@ double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 	for(unsigned int i = 0; i< Layers; i++) {
 		double contrib = 0.0;
 		if(i == GlobalParams.MPI_Rank) {
-			std::cout << "Evaluation of contribution by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << GlobalParams.z_evaluate<< std::endl;
+			 pout << "Evaluation of contribution by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << GlobalParams.z_evaluate<< std::endl;
 			 contrib = evaluate_for_z(GlobalParams.z_evaluate);
 		}
 		qualities[i] = Utilities::MPI::sum(contrib, GlobalParams.MPI_Communicator);
@@ -796,7 +796,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 //		}
 	}
 
-	mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
+	// mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
 
 	GridTools::transform(& Triangulation_Stretch_Z, triangulation);
 
@@ -920,7 +920,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	// std::cout << "Size: " << locally_relevant_dofs.size() << std::endl;
 
 	system_pattern.reinit(locally_owned_dofs, locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
-	pout << "done" << std::endl;
+	pout << "Done" << std::endl;
 
 
 //	dynamic_preconditioner_pattern_even.reinit(n_neighboring, n_neighboring);
@@ -1128,13 +1128,13 @@ void Waveguide<MatrixType, VectorType>::reinit_all () {
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_for_rerun () {
-	std::cout << "0-";
+	pout << "0-";
 	reinit_rhs();
-	std::cout << "1-";
+	pout << "1-";
 	reinit_preconditioner_fast();
-	std::cout << "2-";
+	pout << "2-";
 	reinit_systemmatrix();
-	std::cout << "3";
+	pout << "3";
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1617,7 +1617,9 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 	if(GlobalParams.PRM_S_Solver == "GMRES") {
 
-		std::cout << GlobalParams.PRM_S_GMRESSteps << "-";
+		if(run_number == 0) {
+			pout << "Number of GMRES steps: " << GlobalParams.PRM_S_GMRESSteps << "-";
+		}
 		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData( GlobalParams.PRM_S_GMRESSteps) );
 
 		// std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
@@ -1690,25 +1692,14 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 
 		sweep.matrix.compress(VectorOperation::insert);
-
-		std::cout << GlobalParams.MPI_Rank << " done building matrix. Init Sweep." <<std::endl;
-
-
-		for(unsigned int i = 0; i < Layers; i++) {
-			pout << i <<std::endl;
-			if(i == GlobalParams.MPI_Rank) {
-				// std::cout << prec_matrix.l1_norm()<<std::endl;
-				//preconditioner_solver.initialize(prec_matrix, dealii::SparseDirectUMFPACK::AdditionalData());
-			}
-		}
-
 		MPI_Barrier(MPI_COMM_WORLD);
-		pout << "Solving... " ;
+		pout << "All preconditioner matrices built. Solving..." <<std::endl;
+
+
 		solver.solve(system_matrix,solution, system_rhs, sweep);
 		pout << "Done." << std::endl;
 
-		pout << "A Solution was calculated!" <<std::endl;
-
+		pout << "Norm of the solution: " << solution.l2_norm() << std::endl;
 	}
 
  /**
@@ -1855,22 +1846,22 @@ void Waveguide<MatrixType, VectorType>::rerun ()
 	timer.enter_subsection ("Setup FEM");
 
 	timer.leave_subsection();
-	std::cout << "Reinit for rerun." << std::endl;
+	pout << "Reinit for rerun." << std::endl;
 	timer.enter_subsection ("Reset");
 	reinit_for_rerun();
 	timer.leave_subsection();
 
-	std::cout << "Assemble for rerun." << std::endl;
+	pout << "Assemble for rerun." << std::endl;
 	timer.enter_subsection ("Assemble");
 	assemble_system ();
 	timer.leave_subsection();
 
-	std::cout << "Solve for rerun." << std::endl;
+	pout << "Solve for rerun." << std::endl;
 	timer.enter_subsection ("Solve");
 	solve ();
 	timer.leave_subsection();
 
-	std::cout << "Evaluate for rerun." << std::endl;
+	pout << "Evaluate for rerun." << std::endl;
 	timer.enter_subsection ("Evaluate");
 	evaluate ();
 	timer.leave_subsection();

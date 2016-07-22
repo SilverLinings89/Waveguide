@@ -58,15 +58,17 @@ void WaveguideStructure::estimate_and_initialize() {
 }
 
 void WaveguideStructure::Print () {
-	std::cout << "-------------------------------------------" << std::endl;
-	std::cout << "Sectors: " << sectors << std::endl;
-	for(int i = 0 ; i< sectors; i++) {
-
-		std::cout << "z_0: " << std::setw(13)<< case_sectors[i].z_0 << "\t z_1: "<< std::setw(13)<< case_sectors[i].z_1 << std::endl;
-		std::cout << "m_0: " << std::setw(13)<< case_sectors[i].m_0 << "\t m_1: "<< std::setw(13)<< case_sectors[i].m_1 << std::endl;
-		std::cout << "r_0: " << std::setw(13)<< case_sectors[i].r_0 << "\t r_1: "<< std::setw(13)<< case_sectors[i].r_1 << std::endl;
-		std::cout << "v_0: " << std::setw(13)<< case_sectors[i].v_0 << "\t v_1: "<< std::setw(13)<< case_sectors[i].v_1 << std::endl;
+	if(GlobalParams.MPI_Rank == 0) {
 		std::cout << "-------------------------------------------" << std::endl;
+		std::cout << "Sectors: " << sectors << std::endl;
+		for(int i = 0 ; i< sectors; i++) {
+
+			std::cout << "z_0: " << std::setw(13)<< case_sectors[i].z_0 << "\t z_1: "<< std::setw(13)<< case_sectors[i].z_1 << std::endl;
+			std::cout << "m_0: " << std::setw(13)<< case_sectors[i].m_0 << "\t m_1: "<< std::setw(13)<< case_sectors[i].m_1 << std::endl;
+			std::cout << "r_0: " << std::setw(13)<< case_sectors[i].r_0 << "\t r_1: "<< std::setw(13)<< case_sectors[i].r_1 << std::endl;
+			std::cout << "v_0: " << std::setw(13)<< case_sectors[i].v_0 << "\t v_1: "<< std::setw(13)<< case_sectors[i].v_1 << std::endl;
+			std::cout << "-------------------------------------------" << std::endl;
+		}
 	}
 }
 

@@ -36,9 +36,9 @@ void Optimization<Matrix, Vector>::run() {
 	} else {
 		for (int i = 0; i < GlobalParams.PRM_Op_MaxCases; i++){
 			waveguide.run();
-			std::cout << "Run Complete for proc. ";
-			std::cout << GlobalParams.MPI_Rank;
-			std::cout<<", calculating Gradient" << std::endl;
+			pout << "Run Complete for proc. ";
+			pout << GlobalParams.MPI_Rank;
+			pout <<", calculating Gradient" << std::endl;
 			MPI_Barrier(GlobalParams.MPI_Communicator);
 			pout<< "Residuals: ";
 
@@ -51,7 +51,7 @@ void Optimization<Matrix, Vector>::run() {
 				}
 			}
 			if(!cont) {
-				std::cout << "No residual an incoming side - No signal."<< std::endl;
+				pout << "No residual an incoming side - No signal."<< std::endl;
 				exit(0);
 			}
 			for (unsigned int j = 0; j < residuals_count; j++ ){
@@ -83,19 +83,19 @@ void Optimization<Matrix, Vector>::run() {
 			pout << "All gradient steps done. Executing Gauss-Newton" << std::endl;
 
 			if (GlobalParams.MPI_Rank == 0) {
-				std::cout << "Matrix D:"<<std::endl;
+				pout << "Matrix D:"<<std::endl;
 				D.print(std::cout);
 				D.Tvmult(rt_1, r, false);
-				std::cout << "D^t * r:"<<std::endl;
+				pout << "D^t * r:"<<std::endl;
 				rt_1.print(std::cout);
 				D.Tmmult(Prod, D, false);
-				std::cout << "D^t * D:"<<std::endl;
+				pout << "D^t * D:"<<std::endl;
 				Prod.print(std::cout);
 				Dinv.invert(Prod);
-				std::cout << "(D^t * D)^(-1):"<<std::endl;
+				pout << "(D^t * D)^(-1):"<<std::endl;
 				Dinv.print(std::cout);
 				Dinv.vmult(rt_2, rt_1,false);
-				std::cout << "-a:"<<std::endl;
+				pout << "-a:"<<std::endl;
 				rt_2.print(std::cout);
 				a.add(-1.0,rt_2);
 			}
