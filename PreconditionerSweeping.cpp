@@ -111,9 +111,9 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 			if(GlobalParams.MPI_Rank >0) {
 				dealii::Vector<double> back_sweep2 (others);
 				double * trans5 = new double [others];
-				UpperProduct(input, back_sweep);
+				UpperProduct(input, back_sweep2);
 				for (int i = 0; i < others; i++) {
-					trans5[i] = back_sweep(i);
+					trans5[i] = back_sweep2(i);
 				}
 				MPI_Send(trans5, others, MPI_DOUBLE, GlobalParams.MPI_Rank - 1, 0, MPI_COMM_WORLD);
 			}
