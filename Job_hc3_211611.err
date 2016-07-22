@@ -1,0 +1,36 @@
+terminate called after throwing an instance of 'dealii::StandardExceptions::ExcMessage'
+  what():  
+--------------------------------------------------------
+An error occurred in line <470> of file </home/kit/ianm/mx3529/libs/dealii-8.4.1/source/lac/trilinos_solver.cc> in function
+    void dealii::TrilinosWrappers::SolverDirect::do_solve()
+The violated condition was: 
+    Factory.Query(additional_data.solver_type.c_str())
+The name and call sequence of the exception was:
+    ExcMessage (std::string ("You tried to select the solver type <") + additional_data.solver_type + "> but this solver is not supported by Trilinos either " "because it does not exist, or because Trilinos was not " "configured for its use.")
+Additional Information: 
+You tried to select the solver type <Amesos_Umfpack> but this solver is not supported by Trilinos either because it does not exist, or because Trilinos was not configured for its use.
+--------------------------------------------------------
+
+[hc3n095:28997] *** Process received signal ***
+[hc3n095:28997] Signal: Aborted (6)
+[hc3n095:28997] Signal code:  (-6)
+[hc3n095:28997] [ 0] /lib64/libpthread.so.0(+0xf850)[0x2b0b12c6e850]
+[hc3n095:28997] [ 1] /lib64/libc.so.6(gsignal+0x35)[0x2b0b1777a875]
+[hc3n095:28997] [ 2] /lib64/libc.so.6(abort+0x181)[0x2b0b1777be51]
+[hc3n095:28997] [ 3] /opt/gcc/6/lib64/libstdc++.so.6(_ZN9__gnu_cxx27__verbose_terminate_handlerEv+0x15d)[0x2b0b1745694d]
+[hc3n095:28997] [ 4] /opt/gcc/6/lib64/libstdc++.so.6(+0x96916)[0x2b0b17454916]
+[hc3n095:28997] [ 5] /opt/gcc/6/lib64/libstdc++.so.6(+0x96961)[0x2b0b17454961]
+[hc3n095:28997] [ 6] /opt/gcc/6/lib64/libstdc++.so.6(+0x96b78)[0x2b0b17454b78]
+[hc3n095:28997] [ 7] ./main(_ZN6dealii18deal_II_exceptions9internals11issue_errorINS_18StandardExceptions10ExcMessageEEEvNS1_17ExceptionHandlingEPKciS7_S7_S7_T_+0xc0)[0x466b4c]
+[hc3n095:28997] [ 8] /home/kit/ianm/mx3529/share/dealii/lib/libdeal_II.g.so.8.4.1(_ZN6dealii16TrilinosWrappers12SolverDirect8do_solveEv+0x2c2)[0x2b0b00c652c6]
+[hc3n095:28997] [ 9] /home/kit/ianm/mx3529/share/dealii/lib/libdeal_II.g.so.8.4.1(_ZN6dealii16TrilinosWrappers12SolverDirect5solveERKNS0_12SparseMatrixERNS0_10VectorBaseERKS5_+0xc0)[0x2b0b00c65a48]
+[hc3n095:28997] [10] ./main(_ZNK22PreconditionerSweeping5vmultERN6dealii16TrilinosWrappers3MPI6VectorERKS3_+0x717)[0x4514e1]
+[hc3n095:28997] [11] ./main(_ZN6dealii11SolverGMRESINS_16TrilinosWrappers3MPI6VectorEE5solveINS1_12SparseMatrixE22PreconditionerSweepingEEvRKT_RS3_RKS3_RKT0_+0x3c2)[0x49a60a]
+[hc3n095:28997] [12] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE5solveEv+0x166d)[0x458c7b]
+[hc3n095:28997] [13] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE3runEv+0x200)[0x4a122a]
+[hc3n095:28997] [14] ./main(_ZN12OptimizationIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE3runEv+0xb13)[0x4a2419]
+[hc3n095:28997] [15] ./main(main+0x4ab)[0x45b478]
+[hc3n095:28997] [16] /lib64/libc.so.6(__libc_start_main+0xe6)[0x2b0b17766c36]
+[hc3n095:28997] [17] ./main[0x44c059]
+[hc3n095:28997] *** End of error message ***
+/jms/slurm/var/state/job211611/slurm_script: line 112: 28997 Abgebrochen             $JMS_job < "$JMS_i"

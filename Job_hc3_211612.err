@@ -1,0 +1,33 @@
+
+--------------------------------------------------------
+An error occurred in line <1539> of file </home/kit/ianm/mx3529/share/dealii/include/deal.II/lac/full_matrix.h> in function
+    void dealii::FullMatrix<number>::print(StreamType&, unsigned int, unsigned int) const [with StreamType = std::basic_ostream<char>; number = double]
+The violated condition was: 
+    !this->empty()
+The name and call sequence of the exception was:
+    ExcEmptyMatrix()
+Additional Information: 
+(none)
+
+Stacktrace:
+-----------
+#0  ./main: void dealii::FullMatrix<double>::print<std::ostream>(std::ostream&, unsigned int, unsigned int) const
+#1  ./main: Optimization<dealii::TrilinosWrappers::SparseMatrix, dealii::TrilinosWrappers::MPI::Vector>::run()
+#2  ./main: main
+--------------------------------------------------------
+
+[hc3n095:30895] *** Process received signal ***
+[hc3n095:30895] Signal: Aborted (6)
+[hc3n095:30895] Signal code:  (-6)
+[hc3n095:30895] [ 0] /lib64/libpthread.so.0(+0xf850)[0x2b549c2b7850]
+[hc3n095:30895] [ 1] /lib64/libc.so.6(gsignal+0x35)[0x2b54a0dc3875]
+[hc3n095:30895] [ 2] /lib64/libc.so.6(abort+0x181)[0x2b54a0dc4e51]
+[hc3n095:30895] [ 3] /home/kit/ianm/mx3529/share/dealii/lib/libdeal_II.g.so.8.4.1(_ZN6dealii18deal_II_exceptions9internals5abortERKNS_13ExceptionBaseEb+0x12a)[0x2b548a3ad2e4]
+[hc3n095:30895] [ 4] ./main(_ZN6dealii18deal_II_exceptions9internals11issue_errorINS_10FullMatrixIdE14ExcEmptyMatrixEEEvNS1_17ExceptionHandlingEPKciS8_S8_S8_T_+0x38)[0x466420]
+[hc3n095:30895] [ 5] ./main(_ZNK6dealii10FullMatrixIdE5printISoEEvRT_jj+0x119)[0x466599]
+[hc3n095:30895] [ 6] ./main(_ZN12OptimizationIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE3runEv+0x85d)[0x4a2163]
+[hc3n095:30895] [ 7] ./main(main+0x4ab)[0x45b478]
+[hc3n095:30895] [ 8] /lib64/libc.so.6(__libc_start_main+0xe6)[0x2b54a0dafc36]
+[hc3n095:30895] [ 9] ./main[0x44c059]
+[hc3n095:30895] *** End of error message ***
+/jms/slurm/var/state/job211612/slurm_script: line 112: 30895 Abgebrochen             $JMS_job < "$JMS_i"

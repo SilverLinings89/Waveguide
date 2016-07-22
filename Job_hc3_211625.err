@@ -1,0 +1,120 @@
+[hc3n180:18429] *** Process received signal ***
+[hc3n180:18429] Signal: Segmentation fault (11)
+[hc3n180:18429] Signal code: Address not mapped (1)
+[hc3n180:18429] Failing at address: 0xe1000008dc8
+[hc3n180:18430] *** Process received signal ***
+[hc3n180:18430] Signal: Segmentation fault (11)
+[hc3n180:18430] Signal code: Address not mapped (1)
+[hc3n180:18430] Failing at address: 0xe10000071a8
+[hc3n252:16996] *** Process received signal ***
+[hc3n252:16996] Signal: Segmentation fault (11)
+[hc3n252:16996] Signal code: Address not mapped (1)
+[hc3n252:16996] Failing at address: 0xe10000071a8
+[hc3n324:07385] *** Process received signal ***
+[hc3n324:07385] Signal: Segmentation fault (11)
+[hc3n324:07385] Signal code: Address not mapped (1)
+[hc3n324:07385] Failing at address: 0xe10000071a8
+[hc3n288:09110] *** Process received signal ***
+[hc3n288:09110] Signal: Segmentation fault (11)
+[hc3n288:09110] Signal code: Address not mapped (1)
+[hc3n288:09110] Failing at address: 0xe10000071a8
+[hc3n270:11403] *** Process received signal ***
+[hc3n270:11403] Signal: Segmentation fault (11)
+[hc3n270:11403] Signal code: Address not mapped (1)
+[hc3n270:11403] Failing at address: 0xe10000071a8
+[hc3n306:09497] *** Process received signal ***
+[hc3n306:09497] Signal: Segmentation fault (11)
+[hc3n306:09497] Signal code: Address not mapped (1)
+[hc3n306:09497] Failing at address: 0xe10000071a8
+[hc3n306:09498] *** Process received signal ***
+[hc3n306:09498] Signal: Segmentation fault (11)
+[hc3n306:09498] Signal code: Address not mapped (1)
+[hc3n306:09498] Failing at address: 0xe10000071a8
+[hc3n252:16995] *** Process received signal ***
+[hc3n252:16995] Signal: Segmentation fault (11)
+[hc3n252:16995] Signal code: Address not mapped (1)
+[hc3n252:16995] Failing at address: 0xe10000071a8
+[hc3n324:07386] *** Process received signal ***
+[hc3n324:07386] Signal: Segmentation fault (11)
+[hc3n324:07386] Signal code: Address not mapped (1)
+[hc3n324:07386] Failing at address: 0xe10000071a8
+[hc3n288:09111] *** Process received signal ***
+[hc3n288:09111] Signal: Segmentation fault (11)
+[hc3n288:09111] Signal code: Address not mapped (1)
+[hc3n288:09111] Failing at address: 0xe10000071a8
+[hc3n270:11404] *** Process received signal ***
+[hc3n270:11404] Signal: Segmentation fault (11)
+[hc3n270:11404] Signal code: Address not mapped (1)
+[hc3n270:11404] Failing at address: 0xe10000071a8
+[hc3n180:18429] [ 0] /lib64/libpthread.so.0(+0xf850)[0x2afba8b3a850]
+[hc3n180:18429] [ 1] ./main(_ZNSt16_Sp_counted_baseILN9__gnu_cxx12_Lock_policyE2EE10_M_releaseEv+0x13)[0x4642fb]
+[hc3n180:18429] [ 2] [hc3n180:18430] [ 0] /lib64/libpthread.so.0(+0xf850)[0x2b833aa09850]
+[hc3n180:18430] [ 1] ./main(_ZNSt16_Sp_counted_baseILN9__gnu_cxx12_Lock_policyE2EE10_M_releaseEv+0x13)[0x4642fb]
+[hc3n180:18430] [ 2] /home/kit/ianm/mx3529/share/dealii/lib/libdeal_II.g.so.8.4.1(_ZN6dealii16TrilinosWrappers12SparseMatrix6reinitERKNS0_15SparsityPatternE+0x34)[0x2b8328a07068]
+[hc3n180:18430] [ 3] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE21reinit_preconditionerEv+0x274)[0x451b44]
+[hc3n180:18430] [ 4] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE10reinit_allEv+0x19)[0x46c577]
+[hc3n180:18430] /home/kit/ianm/mx3529/share/dealii/lib/libdeal_II.g.so.8.4.1(_ZN6dealii16TrilinosWrappers12SparseMatrix6reinitERKNS0_15SparsityPatternE+0xb8)[0x2afb96b380ec]
+[hc3n180:18429] [ 3] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE21reinit_preconditionerEv+0x274)[0x451b44]
+[hc3n180:18429] [ 4] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE10reinit_allEv+0x19)[0x46c577]
+[hc3n180:18429] [ 5] [ 5] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE12setup_systemEv+0x1164)[0x49ddb0]
+[hc3n180:18429] [ 6] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE3runEv+0xbb)[0x4a10e7]
+[hc3n180:18429] [ 7] ./main(_ZN12OptimizationIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE3runEv+0xb52)[0x4a245a]
+[hc3n180:18429] [ 8] ./main(main+0x4ab)[0x45b3f4]
+[hc3n180:18429] [ 9] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE12setup_systemEv+0x1164)[0x49ddb0]
+[hc3n180:18430] [ 6] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE3runEv+0xbb)[0x4a10e7]
+[hc3n180:18430] [ 7] ./main(_ZN12OptimizationIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE3runEv+0xb52)[0x4a245a]
+[hc3n180:18430] [ 8] ./main(main+0x4ab)[0x45b3f4]
+[hc3n180:18430] [ 9] /lib64/libc.so.6(__libc_start_main+0xe6)[0x2afbad632c36]
+[hc3n180:18429] [10] ./main[0x44c059]
+[hc3n180:18429] *** End of error message ***
+/lib64/libc.so.6(__libc_start_main+0xe6)[0x2b833f501c36]
+[hc3n180:18430] [10] ./main[0x44c059]
+[hc3n180:18430] *** End of error message ***
+[hc3n324:07385] [ 0] /lib64/libpthread.so.0(+0xf850)[0x2b5ad34f1850]
+[hc3n324:07385] [ 1] ./main(_ZNSt16_Sp_counted_baseILN9__gnu_cxx12_Lock_policyE2EE10_M_releaseEv+0x13)[0x4642fb]
+[hc3n324:07385] [ 2] [hc3n324:07386] [ 0] /lib64/libpthread.so.0(+0xf850)[0x2b60da487850]
+[hc3n324:07386] [ 1] ./main(_ZNSt16_Sp_counted_baseILN9__gnu_cxx12_Lock_policyE2EE10_M_releaseEv+0x13)[0x4642fb]
+[hc3n324:07386] [ 2] /home/kit/ianm/mx3529/share/dealii/lib/libdeal_II.g.so.8.4.1(_ZN6dealii16TrilinosWrappers12SparseMatrix6reinitERKNS0_15SparsityPatternE+0x34)[0x2b5ac14ef068]
+[hc3n324:07385] [ 3] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE21reinit_preconditionerEv+0x274)[0x451b44]
+[hc3n324:07385] [ 4] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE10reinit_allEv+0x19)[0x46c577]
+[hc3n324:07385] [ 5] /home/kit/ianm/mx3529/share/dealii/lib/libdeal_II.g.so.8.4.1(_ZN6dealii16TrilinosWrappers12SparseMatrix6reinitERKNS0_15SparsityPatternE+0x34)[0x2b60c8485068]
+[hc3n324:07386] [ 3] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE21reinit_preconditionerEv+0x274)[0x451b44]
+[hc3n324:07386] [ 4] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE10reinit_allEv+0x19)[0x46c577]
+[hc3n324:07386] [ 5] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE12setup_systemEv+0x1164)[0x49ddb0]
+[hc3n324:07386] [ 6] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE3runEv+0xbb)[0x4a10e7]
+[hc3n324:07386] [ 7] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE12setup_systemEv+0x1164)[0x49ddb0]
+[hc3n324:07385] [ 6] ./main(_ZN12OptimizationIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE3runEv+0xb52)[0x4a245a]
+[hc3n324:07386] [ 8] ./main(main+0x4ab)[0x45b3f4]
+[hc3n324:07386] [ 9] /lib64/libc.so.6(__libc_start_main+0xe6)[0x2b60def7fc36]
+[hc3n324:07386] [10] ./main[0x44c059]
+[hc3n324:07386] *** End of error message ***
+./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE3runEv+0xbb)[0x4a10e7]
+[hc3n324:07385] [ 7] ./main(_ZN12OptimizationIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE3runEv+0xb52)[0x4a245a]
+[hc3n324:07385] [ 8] ./main(main+0x4ab)[0x45b3f4]
+[hc3n324:07385] [ 9] /lib64/libc.so.6(__libc_start_main+0xe6)[0x2b5ad7fe9c36]
+[hc3n324:07385] [10] ./main[0x44c059]
+[hc3n324:07385] *** End of error message ***
+[hc3n270:11403] [ 0] /lib64/libpthread.so.0(+0xf850)[0x2ace913a6850]
+[hc3n270:11403] [ 1] ./main(_ZNSt16_Sp_counted_baseILN9__gnu_cxx12_Lock_policyE2EE10_M_releaseEv+0x13)[0x4642fb]
+[hc3n270:11404] [ 0] /lib64/libpthread.so.0(+0xf850)[0x2ae9d0e87850]
+[hc3n270:11404] [ 1] ./main(_ZNSt16_Sp_counted_baseILN9__gnu_cxx12_Lock_policyE2EE10_M_releaseEv+0x13)[0x4642fb]
+[hc3n270:11404] [ 2] [hc3n270:11403] [ 2] /home/kit/ianm/mx3529/share/dealii/lib/libdeal_II.g.so.8.4.1(_ZN6dealii16TrilinosWrappers12SparseMatrix6reinitERKNS0_15SparsityPatternE+0x34)[0x2ace7f3a4068]
+[hc3n270:11403] [ 3] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE21reinit_preconditionerEv+0x274)[0x451b44]
+[hc3n270:11403] [ 4] /home/kit/ianm/mx3529/share/dealii/lib/libdeal_II.g.so.8.4.1(_ZN6dealii16TrilinosWrappers12SparseMatrix6reinitERKNS0_15SparsityPatternE+0x34)[0x2ae9bee85068]
+[hc3n270:11404] [ 3] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE21reinit_preconditionerEv+0x274)[0x451b44]
+[hc3n270:11404] [ 4] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE10reinit_allEv+0x19)[0x46c577]
+[hc3n270:11404] [ 5] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE12setup_systemEv+0x1164)[0x49ddb0]
+[hc3n270:11404] [ 6] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE3runEv+0xbb)[0x4a10e7]
+[hc3n270:11404] [ 7] ./main(_ZN12OptimizationIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE3runEv+0xb52)[0x4a245a]
+[hc3n270:11404] [ 8] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE10reinit_allEv+0x19)[0x46c577]
+[hc3n270:11403] [ 5] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE12setup_systemEv+0x1164)[0x49ddb0]
+[hc3n270:11403] [ 6] ./main(_ZN9WaveguideIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE3runEv+0xbb)[0x4a10e7]
+[hc3n270:11403] [ 7] ./main(_ZN12OptimizationIN6dealii16TrilinosWrappers12SparseMatrixENS1_3MPI6VectorEE3runEv+0xb52)[0x4a245a]
+[hc3n270:11403] [ 8] ./main(main+0x4ab)[0x45b3f4]
+[hc3n270:11404] [ 9] /lib64/libc.so.6(__libc_start_main+0xe6)[0x2ae9d597fc36]
+[hc3n270:11404] [10] ./main[0x44c059]
+[hc3n270:11404] *** End of error message ***
+./main(main+0x4ab)[0x45b3f4]
+[hc3n270:11403] [ 9] /lib64/libc.so.6(__libc_start_main+0xe6)[0x2ace95e9ec36]
+[hc3n270:11403] [10] ./main[0x44c059]
+[hc3n270:11403] *** End of error message ***
