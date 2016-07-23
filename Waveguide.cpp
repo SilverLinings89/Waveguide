@@ -1608,13 +1608,6 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
-	/**
-	if(GlobalParams.MPI_Rank != 0) {
-		std::ofstream pattern (solutionpath + "/pattern" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".gnu");
-		prec_patterns[GlobalParams.MPI_Rank -1].print_gnuplot(pattern);
-	}
-	**/
-
 	if(GlobalParams.PRM_S_Solver == "GMRES") {
 
 		if(run_number == 0) {
@@ -1623,15 +1616,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData( GlobalParams.PRM_S_GMRESSteps) );
 
 		// std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
-		IndexSet own (dof_handler.n_dofs());
-		own.add_indices(locally_owned_dofs);
-
-		if(GlobalParams.MPI_Rank == 0 ){
-			// own.add_indices(locally_owned_dofs);
-		} else {
-			own.add_indices(LowerDofs);
-		}
-
+		
 		int below = 0;
 		if (GlobalParams.MPI_Rank != 0 ) {
 			below = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1].n_elements();
@@ -1641,27 +1626,28 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		if (GlobalParams.MPI_Rank != GlobalParams.MPI_Size-1) {
 			t_upper = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank +1].n_elements();
 		}
+		
 		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, t_upper);
 
 
 		if(GlobalParams.MPI_Rank == 0 ){
-			for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
-				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(own.nth_index_in_set(current_row)); row != system_matrix.end(own.nth_index_in_set(current_row)); row++) {
-					if(own.is_element(row->column())) {
-						sweep.matrix.set(current_row, own.index_within_set(row->column()), row->value());
-					}
+			for (unsigned int current_row = 0; current_row < LowerDofs.n_elements(); current_row++  ) {
+				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(LowerDofs.nth_index_in_set(current_row)); row != system_matrix.end(LowerDofs.nth_index_in_set(current_row)); row++) {
+					sweep.matrix.set(current_row, LowerDofs.index_within_set(row->column()), row->value());
+					
 				}
 			}
 		} else {
-			for (unsigned int current_row = 0; current_row < own.n_elements(); current_row++  ) {
-				for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(own.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(own.nth_index_in_set(current_row)); row++) {
-					if(own.is_element(row->column())) {
-						sweep.matrix.set(current_row, own.index_within_set(row->column()), row->value());
+			for (unsigned int current_row = 0; current_row < LowerDofs.n_elements(); current_row++  ) {
+				for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(LowerDofs.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(LowerDofs.nth_index_in_set(current_row)); row++) {
+					if (row->value() != 0.0 && current_row > below && row->column() < below) {
+						std::cout << "-";
 					}
+					sweep.matrix.set(current_row, LowerDofs.index_within_set(row->column()), row->value());
 				}
 			}
 		}
-
+		std::cout << std::endl;
 
 		sweep.matrix.compress(VectorOperation::insert);
 		MPI_Barrier(MPI_COMM_WORLD);
@@ -1674,14 +1660,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		pout << "Norm of the solution: " << solution.l2_norm() << std::endl;
 	}
 
- /**
-	SolverControl cn;
-	PETScWrappers::SparseDirectMUMPS solver(cn, MPI_COMM_WORLD);
-	//solver.set_symmetric_mode(true);
-	solver.solve(system_matrix, solution, system_rhs);
-	**/
-	//solution.compress(VectorOperation::insert);
-
+ 
 	cm.distribute(solution);
 }
 

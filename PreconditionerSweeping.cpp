@@ -199,9 +199,9 @@ void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> & src, de
 		if (out_temp[others + i] != 0.0) {
 			std::cout << "--"; 
 		}
-		std::cout << std::endl;
+		
 	}
-
+	std::cout << std::endl;
 	std::cout << "LC" << GlobalParams.MPI_Rank << " " << dst.l2_norm() << std::endl;
 
 }
