@@ -59,7 +59,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 
 		double * trans2 = new double[others];
 		MPI_Recv(trans2, others, MPI_DOUBLE, GlobalParams.MPI_Rank-1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
+                std::cout << "P" << GlobalParams.MPI_Rank << " ";
 		dealii::Vector<double> temp2 (others);
 		for (int i = 0; i < others; i++) {
 			temp2[i] = trans2[i];
@@ -84,61 +84,64 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 
 			MPI_Send(trans3, own, MPI_DOUBLE, GlobalParams.MPI_Rank + 1, 0, MPI_COMM_WORLD);
 		}
+        }
+        
+        if (GlobalParams.MPI_Rank == 0) {
+            std::cout << "S1 done ...";
+        }
+        
+        dealii::Vector<double> temp (input);
+        // Line 8
+        Hinv(temp, input);
 
-		dealii::Vector<double> temp (input);
-		// Line 8
-		Hinv(temp, input);
+        if (GlobalParams.MPI_Rank == 0) {
+            std::cout << "P done ...";
+        }
+        
+        // Line 11
+        if ( GlobalParams.MPI_Rank == GlobalParams.MPI_Size -1) {
+                dealii::Vector<double> back_sweep (others);
+                double * trans4 = new double [others];
+                UpperProduct(input, back_sweep);
+                for (int i = 0; i < others; i++) {
+                        trans4[i] = back_sweep(i);
+                }
+                MPI_Send(trans4, others, MPI_DOUBLE, GlobalParams.MPI_Rank - 1, 0, MPI_COMM_WORLD);
+        } else {
+                double * trans4 = new double [own];
+                MPI_Recv(trans4, own, MPI_DOUBLE, GlobalParams.MPI_Rank+1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                std::cout << "P" << GlobalParams.MPI_Rank << " ";
+                dealii::Vector<double> back_sweep (own);
+                dealii::Vector<double> temp_calc (own);
+                for (int i = 0; i < own; i++) {
+                        temp_calc(i) = trans4[i];
+                }
+        
+                Hinv(temp_calc, back_sweep);
+                
+                input -= back_sweep;
+                
+                if(GlobalParams.MPI_Rank >0) {
+                        dealii::Vector<double> back_sweep2 (others);
+                        double * trans5 = new double [others];
+                        UpperProduct(input, back_sweep2);
+                        for (int i = 0; i < others; i++) {
+                                trans5[i] = back_sweep2(i);
+                        }
+                        MPI_Send(trans5, others, MPI_DOUBLE, GlobalParams.MPI_Rank - 1, 0, MPI_COMM_WORLD);
+                }
+        }
+        
+        if (GlobalParams.MPI_Rank == 0) {
+            std::cout << "S2 done ...";
+        }
+    
+        for(int i = 0; i < own; i++ ){
+                        dst[indices[i]] = input[i];
+        }
 
-		// Line 11
-		if ( GlobalParams.MPI_Rank == GlobalParams.MPI_Size -1) {
-			dealii::Vector<double> back_sweep (others);
-			double * trans4 = new double [others];
-			UpperProduct(input, back_sweep);
-			for (int i = 0; i < others; i++) {
-				trans4[i] = back_sweep(i);
-			}
-			MPI_Send(trans4, others, MPI_DOUBLE, GlobalParams.MPI_Rank - 1, 0, MPI_COMM_WORLD);
-		} else {
-			double * trans4 = new double [own];
-			MPI_Recv(trans4, own, MPI_DOUBLE, GlobalParams.MPI_Rank+1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-			dealii::Vector<double> back_sweep (own);
-			dealii::Vector<double> temp_calc (own);
-			for (int i = 0; i < own; i++) {
-				temp_calc(i) = trans4[i];
-			}
-			Hinv(temp_calc, back_sweep);
-			input -= back_sweep;
-			if(GlobalParams.MPI_Rank >0) {
-				dealii::Vector<double> back_sweep2 (others);
-				double * trans5 = new double [others];
-				UpperProduct(input, back_sweep2);
-				for (int i = 0; i < others; i++) {
-					trans5[i] = back_sweep2(i);
-				}
-				MPI_Send(trans5, others, MPI_DOUBLE, GlobalParams.MPI_Rank - 1, 0, MPI_COMM_WORLD);
-			}
-		}
-		for(int i = 0; i < own; i++ ){
-				dst[indices[i]] = input[i];
-		}
+    
 
-	}
-
-	/**
-		TrilinosWrappers::Vector inputb(own + others);
-
-		for(int i = 0; i < own; i++) {
-			inputb[i + others] = src(indices[i]);
-		}
-
-		TrilinosWrappers::Vector outputb(own + others);
-
-		solver->solve( matrix , outputb, inputb);
-
-		for(int i = 0; i < own; i++) {
-			dst[indices[i]] = outputb[others + i];
-		}
-	 **/
 }
 
 void PreconditionerSweeping::Hinv(const dealii::Vector<double> src, dealii::Vector<double> dst) const {
