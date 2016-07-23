@@ -197,7 +197,7 @@ void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> & src, de
 	for(int i = 0; i < own; i++) {
 		dst[i] = out_temp[others + i];
 		if (out_temp[others + i] != 0.0) {
-			std::cout << "--"
+			std::cout << "--"; 
 		}
 		std::cout << std::endl;
 	}
