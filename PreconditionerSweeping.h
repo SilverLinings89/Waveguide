@@ -26,11 +26,11 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 
     ~PreconditionerSweeping ();
 
-    void Hinv(dealii::Vector<double> src, dealii::Vector<double> dst) const ;
+    void Hinv(dealii::Vector<double> &src, dealii::Vector<double> &dst) const ;
         
-    void LowerProduct(dealii::Vector<double> src, dealii::Vector<double> dst) const ;
+    void LowerProduct(dealii::Vector<double> &src, dealii::Vector<double> &dst) const ;
 
-    void UpperProduct(dealii::Vector<double> src, dealii::Vector<double> dst) const ;
+    void UpperProduct(dealii::Vector<double> &src, dealii::Vector<double> &dst) const ;
 
 	virtual void vmult (TrilinosWrappers::MPI::Vector       &dst,      const TrilinosWrappers::MPI::Vector &src) const;
 

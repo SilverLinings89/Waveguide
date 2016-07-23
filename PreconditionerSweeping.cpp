@@ -90,9 +90,15 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
             std::cout << "S1 done ...";
         }
         
-        dealii::Vector<double> temp (input);
         // Line 8
-        Hinv(temp, input);
+                
+        if(GlobalParams.MPI_Rank != 0) {
+            dealii::Vector<double> temp (own);
+            for(int i =0; i < own; i++) {
+                temp(i) = input[i];
+            }
+            Hinv(temp, input);
+        }
 
         if (GlobalParams.MPI_Rank == 0) {
             std::cout << "P done ...";
@@ -144,7 +150,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 
 }
 
-void PreconditionerSweeping::Hinv(const dealii::Vector<double> src, dealii::Vector<double> dst) const {
+void PreconditionerSweeping::Hinv(const dealii::Vector<double> & src, dealii::Vector<double> & dst) const {
 	TrilinosWrappers::Vector inputb(own + others);
 
 	for(int i = 0; i < own; i++) {
@@ -160,7 +166,7 @@ void PreconditionerSweeping::Hinv(const dealii::Vector<double> src, dealii::Vect
 	}
 }
 
-void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> src, dealii::Vector<double> dst) const {
+void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> & src, dealii::Vector<double> & dst) const {
 
 	dealii::Vector<double> in_temp (own+others);
 	for (int i = 0; i < others; i++) {
@@ -175,7 +181,7 @@ void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> src, deal
 	}
 }
 
-void PreconditionerSweeping::UpperProduct(const dealii::Vector<double> src, dealii::Vector<double> dst) const {
+void PreconditionerSweeping::UpperProduct(const dealii::Vector<double> & src, dealii::Vector<double> & dst) const {
 
 	dealii::Vector<double> in_temp (own+others);
 	for (int i = 0; i < own; i++) {
