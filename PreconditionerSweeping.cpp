@@ -71,14 +71,21 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 
 		LowerProduct(temp2, temp3);
 
+		std::cout << "B" << GlobalParams.MPI_Rank << " " << temp3.l2_norm() << std::endl;
+
+
 		//Line 4
 		input -= temp3;
+		
+		std::cout << "C" << GlobalParams.MPI_Rank << " " << input.l2_norm() << std::endl;
 
 
 		if(GlobalParams.MPI_Rank != GlobalParams.MPI_Size -1) {
 			dealii::Vector<double> temp4 (own);
 
 			Hinv(input, temp4);
+
+			std::cout << "D" << GlobalParams.MPI_Rank << " " << temp4.l2_norm() << std::endl;
 
 			double * trans3 = new double [own];
 			for(int i = 0; i < own; i++) {
