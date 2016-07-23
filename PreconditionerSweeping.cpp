@@ -187,12 +187,12 @@ void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> & src, de
 	for (int i = 0; i < others; i++) {
 		in_temp[i] = src[i];
 	}
-	std::cout << "B" << GlobalParams.MPI_Rank << " " << input.l2_norm() << std::endl;
+	std::cout << "B" << GlobalParams.MPI_Rank << " " << in_temp.l2_norm() << std::endl;
 
 	dealii::Vector<double> out_temp (own+others);
 	matrix.vmult(out_temp, in_temp);
 
-	std::cout << "C" << GlobalParams.MPI_Rank << " " << input.l2_norm() << matrix.l1_norm() << std::endl;
+	std::cout << "C" << GlobalParams.MPI_Rank << " " << out_temp.l2_norm() << matrix.l1_norm() << std::endl;
 	
 	for(int i = 0; i < own; i++) {
 		dst[i] = out_temp[others + i];
