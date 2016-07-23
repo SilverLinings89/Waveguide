@@ -206,7 +206,7 @@ void PreconditionerSweeping::UpperProduct(const dealii::Vector<double> & src, de
 		in_temp[others + i] = src[i];
 	}
 
-	std::cout << "" << GlobalParams.MPI_Rank << " " << input.l2_norm() << std::endl;
+	std::cout << "" << GlobalParams.MPI_Rank << " " << in_temp.l2_norm() << std::endl;
 
 	dealii::Vector<double> out_temp (own+others);
 	matrix.vmult(out_temp, in_temp);
