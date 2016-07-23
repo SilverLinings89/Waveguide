@@ -58,7 +58,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 	} else {
 
 		double * trans2 = new double[others];
-		MPI_Recv(trans2, others, MPI_DOUBLE, GlobalParams.MPI_Rank-1, 0, MPI_COMM_WORLD);
+		MPI_Recv(trans2, others, MPI_DOUBLE, GlobalParams.MPI_Rank-1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         
 		dealii::Vector<double> temp2 (others);
 		for (int i = 0; i < others; i++) {
