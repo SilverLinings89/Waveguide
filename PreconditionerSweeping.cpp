@@ -99,7 +99,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
     MPI_Barrier(MPI_COMM_WORLD);
         
     if (GlobalParams.MPI_Rank == 0) {
-        std::cout << "S1 done ...";
+        std::cout << "S1 done ..." << std::endl;
     }
         
     // Line 8
@@ -113,7 +113,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
     }
 
     if (GlobalParams.MPI_Rank == 0) {
-        std::cout << "P done ...";
+        std::cout << "P done ..." << std::endl;
     }
         
     MPI_Barrier(MPI_COMM_WORLD);
@@ -152,7 +152,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
     }
         
     if (GlobalParams.MPI_Rank == 0) {
-        std::cout << "S2 done ...";
+        std::cout << "S2 done ..." << std::endl;
     }
     
 	//std::cout << "C" << GlobalParams.MPI_Rank << " " << input.l2_norm() << std::endl;
@@ -161,6 +161,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 		dst[indices[i]] = input[i];
     }
 
+	std::cout << "Result" << GlobalParams.MPI_Rank << ": " << input.l2_norm() << std::endl;
     
 
 }
