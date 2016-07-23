@@ -86,6 +86,8 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 		}
         }
         
+        MPI_Barrier(MPI_COMM_WORLD);
+        
         if (GlobalParams.MPI_Rank == 0) {
             std::cout << "S1 done ...";
         }
@@ -104,6 +106,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
             std::cout << "P done ...";
         }
         
+        MPI_Barrier(MPI_COMM_WORLD);
         // Line 11
         if ( GlobalParams.MPI_Rank == GlobalParams.MPI_Size -1) {
                 dealii::Vector<double> back_sweep (others);
