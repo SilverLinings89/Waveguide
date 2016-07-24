@@ -34,7 +34,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 
 	virtual void vmult (TrilinosWrappers::MPI::Vector       &dst,      const TrilinosWrappers::MPI::Vector &src) const;
 
-	TrilinosWrappers::SparseMatrix matrix;
+	TrilinosWrappers::SparseMatrix matrix, prec_matrix;
 
   private:
 	int * indices;

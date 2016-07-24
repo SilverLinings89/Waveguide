@@ -1128,13 +1128,13 @@ void Waveguide<MatrixType, VectorType>::reinit_all () {
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_for_rerun () {
-	pout << "0-";
+	// pout << "0-";
 	reinit_rhs();
-	pout << "1-";
+	// pout << "1-";
 	reinit_preconditioner_fast();
-	pout << "2-";
+	// pout << "2-";
 	reinit_systemmatrix();
-	pout << "3";
+	// pout << "3";
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1640,10 +1640,10 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		} else {
 			for (unsigned int current_row = 0; current_row < LowerDofs.n_elements(); current_row++  ) {
 				for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(LowerDofs.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(LowerDofs.nth_index_in_set(current_row)); row++) {
-					if (row->value() != 0.0 && current_row > below && row->column() < below) {
-						std::cout << "-";
-					}
 					sweep.matrix.set(current_row, LowerDofs.index_within_set(row->column()), row->value());
+					if(current_row >= below && row->column() < below) {
+						sweep.prec_matrix.set(current_row - below, LowerDofs.index_within_set(row->column()), row->value());
+					}
 				}
 			}
 		}

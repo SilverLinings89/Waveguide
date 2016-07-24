@@ -16,7 +16,8 @@ PreconditionerSweeping::~PreconditionerSweeping (){
 }
 PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int bandwidth,  IndexSet locally_owned, int in_upper):
 
-		matrix(in_own+in_others, in_own+in_others, bandwidth)
+		matrix(in_own+in_others, in_own+in_others, bandwidth),
+		prec_matrix(in_own, in_others, bandwidth)
 {
 		upper = in_upper;
 		own = in_own;
@@ -184,24 +185,24 @@ void PreconditionerSweeping::Hinv(const dealii::Vector<double> & src, dealii::Ve
 
 void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> & src, dealii::Vector<double> & dst) const {
 
-	dealii::Vector<double> in_temp (own+others);
-	for (int i = 0; i < others; i++) {
-		in_temp[i] = src[i];
-	}
+	// dealii::Vector<double> in_temp (own+others);
+	// for (int i = 0; i < others; i++) {
+	// 	in_temp[i] = src[i];
+	// }
 	//std::cout << "LA" << GlobalParams.MPI_Rank << " " << in_temp.l2_norm() << std::endl;
 
-	dealii::Vector<double> out_temp (own+others);
-	matrix.vmult(out_temp, in_temp);
+	// dealii::Vector<double> out_temp (own+others);
+	prec_matrix.vmult(dst, src);
 
 	//std::cout << "LB" << GlobalParams.MPI_Rank << " " << out_temp.l2_norm() << matrix.l1_norm() << std::endl;
 	
-	for(int i = 0; i < own; i++) {
-		dst[i] = out_temp[others + i];
+	// for(int i = 0; i < own; i++) {
+	//	dst[i] = out_temp[others + i];
 		//if (out_temp[others + i] != 0.0) {
 		//	std::cout << "--"; 
 		//}
 		
-	}
+	// }
 	//std::cout << std::endl;
 	//std::cout << "LC" << GlobalParams.MPI_Rank << " " << dst.l2_norm() << std::endl;
 
@@ -209,20 +210,20 @@ void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> & src, de
 
 void PreconditionerSweeping::UpperProduct(const dealii::Vector<double> & src, dealii::Vector<double> & dst) const {
 
-	dealii::Vector<double> in_temp (own+others);
-	for (int i = 0; i < own; i++) {
-		in_temp[others + i] = src[i];
-	}
+	// dealii::Vector<double> in_temp (own+others);
+	// for (int i = 0; i < own; i++) {
+	// 	in_temp[others + i] = src[i];
+	// }
 
 	//std::cout << "UA" << GlobalParams.MPI_Rank << " " << in_temp.l2_norm() << std::endl;
 
-	dealii::Vector<double> out_temp (own+others);
-	matrix.vmult(out_temp, in_temp);
+	// dealii::Vector<double> out_temp (own+others);
+	prec_matrix.Tvmult(dst, src);
 
 	//std::cout << "UB" << GlobalParams.MPI_Rank << " " << out_temp.l2_norm() << std::endl;
-	for(int i = 0; i < others; i++) {
-		dst[i] = out_temp[ i];
-	}
+	// for(int i = 0; i < others; i++) {
+	// 	dst[i] = out_temp[ i];
+	//}
 
 
 }
