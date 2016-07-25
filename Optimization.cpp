@@ -146,7 +146,7 @@ void Optimization<Matrix, Vector>::run() {
 					params_history.set(i,j,a(j));
 				}
 			}
-			MPI_BCast(arr, freedofs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+			MPI_Bcast(arr, freedofs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 			for(int j = 0; j<freedofs; j++) {
 				a(j) = arr[j];
 			}
