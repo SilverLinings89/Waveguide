@@ -1817,6 +1817,7 @@ void Waveguide<MatrixType, VectorType>::rerun ()
 	timer.leave_subsection();
 
 	timer.enter_subsection ("Setup FEM");
+	structure->Print();
 
 	timer.leave_subsection();
 	pout << "Reinit for rerun." << std::endl;
