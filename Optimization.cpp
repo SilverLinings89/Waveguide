@@ -28,6 +28,19 @@ void Optimization<Matrix, Vector>::run() {
 	dealii::Vector<double> rt_1 (freedofs);
 	dealii::Vector<double> rt_2 (freedofs);
 
+	double ct1 = 1;
+	double ct2 = 1;
+	double ct3 = 1;
+
+	if(GlobalParams.MPI_Rank == 0) {
+		ct1 = residuals_count-1;
+		ct2 = freedofs;
+		ct3 = GlobalParams.PRM_Op_MaxCases;
+	}
+	dealii::Vector<double> optimization_history (ct3);
+	dealii::FullMatrix<double> params_history(ct3, ct2);
+	dealii::FullMatrix<double> residuals_history(ct3, ct1);
+
 	pout << "Residual Count: " << residuals_count << std::endl;
 
 	dealii::Vector<double> a(freedofs);
@@ -56,6 +69,7 @@ void Optimization<Matrix, Vector>::run() {
 			double reference = 1.0;
 			bool cont = true;
 			if(GlobalParams.MPI_Rank == 0){
+				optimization_history[i] = quality;
 				reference = waveguide.evaluate_for_z(- GlobalParams.PRM_M_R_ZLength / 2.0);
 				if ( reference < 0.00001) {
 					cont = false;
@@ -93,6 +107,7 @@ void Optimization<Matrix, Vector>::run() {
 				if(GlobalParams.MPI_Rank == 0){
 					for( int k = 0; k < residuals_count-1; k++) {
 						double res = 1- (abs(waveguide.qualities[k])/reference);
+						residuals_history[i, k] = res;
 						D[k][j]= (res - r[k])/step;
 					}
 					double res = 1- (abs(waveguide.qualities[residuals_count-1])/reference);
@@ -125,6 +140,7 @@ void Optimization<Matrix, Vector>::run() {
 			if (GlobalParams.MPI_Rank == 0) {
 				for (int j = 0; j < freedofs; j++) {
 					arr[j] = a(j);
+					params_history[i,j] = a(j);
 				}
 			}
 			MPI_Scatter(arr, freedofs, MPI_DOUBLE, arr, freedofs, MPI_DOUBLE, 0, GlobalParams.MPI_Communicator);
@@ -144,7 +160,16 @@ void Optimization<Matrix, Vector>::run() {
 					std::cout << a(j) << ", ";
 				}
 				std::cout << std::endl;
+
+				std::cout << "Optimization History: "<<std::endl;
+				optimization_history.print(std::cout);
+				std::cout << "Residual History: "<<std::endl;
+				residuals_history.print(std::cout);
+				std::cout << "Parameters History: "<<std::endl;
+				params_history.print(std::cout);
+
 			}
+
 
 		}
 	}

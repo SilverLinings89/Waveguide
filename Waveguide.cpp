@@ -1291,11 +1291,13 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
 						std::complex<double> x = (mu * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
 						cell_matrix_real[i][j] += x.real();
 
+						/**
 						std::complex<double> pre1 = (mu_prec1 * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon_pre1 * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
 						cell_matrix_prec1[i][j] += pre1.real();
 
 						std::complex<double> pre2 = (mu_prec2 * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon_pre2 * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
 						cell_matrix_prec2[i][j] += pre2.real();
+						**/
 					}
 				}
 			}
@@ -1303,13 +1305,14 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
 			// pout << "Starting distribution"<<std::endl;
 			cm.distribute_local_to_global     (cell_matrix_real, cell_rhs, local_dof_indices,system_matrix, system_rhs, true);
 			// pout << "P1 done"<<std::endl;
-
-			if(GlobalParams.MPI_Rank != 0 ) {
-				cm_prec1.distribute_local_to_global(cell_matrix_prec1, cell_rhs, local_dof_indices,Preconditioner_Matrices[GlobalParams.MPI_Rank-1], preconditioner_rhs, true);
-			}
-			if(GlobalParams.MPI_Rank != Layers-1) {
-				cm_prec2.distribute_local_to_global(cell_matrix_prec2, cell_rhs, local_dof_indices, Preconditioner_Matrices[GlobalParams.MPI_Rank], preconditioner_rhs, true);
-			}
+			/**
+				if(GlobalParams.MPI_Rank != 0 ) {
+					cm_prec1.distribute_local_to_global(cell_matrix_prec1, cell_rhs, local_dof_indices,Preconditioner_Matrices[GlobalParams.MPI_Rank-1], preconditioner_rhs, true);
+				}
+				if(GlobalParams.MPI_Rank != Layers-1) {
+					cm_prec2.distribute_local_to_global(cell_matrix_prec2, cell_rhs, local_dof_indices, Preconditioner_Matrices[GlobalParams.MPI_Rank], preconditioner_rhs, true);
+				}
+			**/
 			// pout << "P2 done"<<std::endl;
 	    }
 	}
@@ -1624,7 +1627,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData( GlobalParams.PRM_S_GMRESSteps) );
 
 		// std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
-		
+		/**
 		int below = 0;
 		if (GlobalParams.MPI_Rank != 0 ) {
 			below = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1].n_elements();
@@ -1664,6 +1667,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		sweep.matrix.compress(VectorOperation::insert);
 
 		sweep.prec_matrix.compress(VectorOperation::insert);
+		**/
 
 		MPI_Barrier(MPI_COMM_WORLD);
 		pout << "All preconditioner matrices built. Solving..." <<std::endl;
