@@ -80,10 +80,10 @@ void Optimization<Matrix, Vector>::run() {
 				exit(0);
 			}
 			for (int j = 0; j < residuals_count-1; j++ ){
-				r[j] = 1.0 - (abs(waveguide.qualities[j])/reference);
+				r[j] = abs(1.0 - (waveguide.qualities[j]/reference));
 				pout << r[j] << " ,";
 			}
-			r[residuals_count-1] = 1.0 - quality/reference;
+			r[residuals_count-1] = abs(1.0 - quality/reference);
 			pout<< std::endl;
 
 			for(  int j = 0; j < freedofs; j++) {
@@ -106,12 +106,12 @@ void Optimization<Matrix, Vector>::run() {
 				pout << "Total quality: " << (quality/reference) * 100.0<< "%"<< std::endl;
 				if(GlobalParams.MPI_Rank == 0){
 					for( int k = 0; k < residuals_count-1; k++) {
-						double res = 1- (abs(waveguide.qualities[k])/reference);
+						double res = abs(1.0- (waveguide.qualities[k]/reference));
 						residuals_history.set(i,k,res);
-						D[k][j]= (res - r[k])/step;
+						D[k][j]= - (res - r[k])/step;
 					}
-					double res = 1.0- (quality/reference);
-					D[residuals_count-1][j]= (res - r[residuals_count-1])/step;
+					double res = abs(1.0- (quality/reference));
+					D[residuals_count-1][j]= -(res - r[residuals_count-1])/step;
 				}
 				structure->set_dof(j, old , true);
 				MPI_Barrier(GlobalParams.MPI_Communicator);
@@ -131,7 +131,7 @@ void Optimization<Matrix, Vector>::run() {
 				pout << "(D^t * D)^(-1):"<<std::endl;
 				Dinv.print(std::cout);
 				Dinv.vmult(rt_2, rt_1,false);
-				pout << "-a:"<<std::endl;
+				pout << "- step:"<<std::endl;
 				rt_2.print(std::cout);
 				a.add(-1.0,rt_2);
 				pout << "Norm of the step: " << rt_2.l2_norm() <<std::endl;
