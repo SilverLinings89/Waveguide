@@ -61,7 +61,7 @@ void Optimization<Matrix, Vector>::run() {
 
 			double quality = 0;
 
-			if((structure->Z_to_Sector_and_local_z(GlobalParams.PRM_M_R_ZLength/2.0 - 0.00001)).first == GlobalParams.MPI_Rank) {
+			if((structure->Z_to_Layer(GlobalParams.PRM_M_R_ZLength/2.0 - 0.00001)) == GlobalParams.MPI_Rank) {
 				quality = waveguide.evaluate_for_z(GlobalParams.PRM_M_R_ZLength/2.0 - 0.00001);
 			}
 

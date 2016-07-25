@@ -276,6 +276,21 @@ std::pair<int, double> WaveguideStructure::Z_to_Sector_and_local_z(double in_z) 
 
 	return ret;
 }
+int WaveguideStructure::Z_to_Layer(double in_z) {
+	double sector_length = Layer_Length();
+	int ret;
+
+	ret = std::floor((in_z + GlobalParams.PRM_M_R_ZLength/2.0 ) / sector_length);
+	if(ret == -1) {
+		ret = 0;
+	}
+
+	if(ret >= GlobalParams.MPI_Size) {
+		ret = GlobalParams.MPI_Size - 1;
+	}
+
+	return ret;
+}
 
 double WaveguideStructure::get_r(double in_z) {
 	std::pair<int, double> temp = Z_to_Sector_and_local_z(in_z);
