@@ -138,18 +138,18 @@ void Optimization<Matrix, Vector>::run() {
 				pout << "Norm of the step: " << rt_2.l2_norm() <<std::endl;
 			}
 			double * arr = new double[freedofs];
+			double alpha = 0.001;
 			if (GlobalParams.MPI_Rank == 0) {
 				for (int j = 0; j < freedofs; j++) {
-					arr[j] = a(j);
+					arr[j] = alpha * a(j);
 					params_history.set(i,j,a(j));
 				}
 			}
 			MPI_Scatter(arr, freedofs, MPI_DOUBLE, arr, freedofs, MPI_DOUBLE, 0, GlobalParams.MPI_Communicator);
-			if(GlobalParams.MPI_Rank != 0) {
-				for(int j = 0; j<freedofs; j++) {
-					a(j) = arr[j];
-				}
+			for(int j = 0; j<freedofs; j++) {
+				a(j) = arr[j];
 			}
+
 			for(int j = 0; j<freedofs; j++) {
 				structure->set_dof(j,a(j), true);
 			}
