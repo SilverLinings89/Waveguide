@@ -134,14 +134,15 @@ void Optimization<Matrix, Vector>::run() {
 				Dinv.vmult(rt_2, rt_1,false);
 				pout << "- step:"<<std::endl;
 				rt_2.print(std::cout);
+				rt_2 *= 0.001;
 				a.add(-1.0,rt_2);
 				pout << "Norm of the step: " << rt_2.l2_norm() <<std::endl;
 			}
 			double * arr = new double[freedofs];
-			double alpha = 0.001;
+
 			if (GlobalParams.MPI_Rank == 0) {
 				for (int j = 0; j < freedofs; j++) {
-					arr[j] = alpha * a(j);
+					arr[j] = a(j);
 					params_history.set(i,j,a(j));
 				}
 			}
