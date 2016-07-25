@@ -164,7 +164,7 @@ void Optimization<Matrix, Vector>::run() {
 				std::cout << std::endl;
 				std::cout << "Optimization History: "<<std::endl;
 
-				for(int l = 0; l< l+1; l++){
+				for(int l = 0; l< i+1; l++){
 					std:: cout << optimization_history(l);
 				}
 				std::cout << "Residual History: "<<std::endl;
