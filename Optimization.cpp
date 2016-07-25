@@ -80,10 +80,10 @@ void Optimization<Matrix, Vector>::run() {
 				exit(0);
 			}
 			for (int j = 0; j < residuals_count-1; j++ ){
-				r[j] = 1- (abs(waveguide.qualities[j])/reference);
+				r[j] = 1.0 - (abs(waveguide.qualities[j])/reference);
 				pout << r[j] << " ,";
 			}
-			r[residuals_count-1] = quality;
+			r[residuals_count-1] = 1.0 - quality/reference;
 			pout<< std::endl;
 
 			for(  int j = 0; j < freedofs; j++) {
@@ -103,14 +103,14 @@ void Optimization<Matrix, Vector>::run() {
 
 				quality = Utilities::MPI::max(quality, MPI_COMM_WORLD);
 
-				pout << "Total quality: " << quality * 100.0<< "%"<< std::endl;
+				pout << "Total quality: " << (quality/reference) * 100.0<< "%"<< std::endl;
 				if(GlobalParams.MPI_Rank == 0){
 					for( int k = 0; k < residuals_count-1; k++) {
 						double res = 1- (abs(waveguide.qualities[k])/reference);
 						residuals_history.set(i,k,res);
 						D[k][j]= (res - r[k])/step;
 					}
-					double res = 1- (abs(waveguide.qualities[residuals_count-1])/reference);
+					double res = 1.0- (quality/reference);
 					D[residuals_count-1][j]= (res - r[residuals_count-1])/step;
 				}
 				structure->set_dof(j, old , true);
