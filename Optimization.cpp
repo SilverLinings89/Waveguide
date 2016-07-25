@@ -109,7 +109,7 @@ void Optimization<Matrix, Vector>::run() {
 					for( int k = 0; k < residuals_count-1; k++) {
 						double res = abs(1.0- (waveguide.qualities[k]/reference));
 						residuals_history.set(i,k,res);
-						D[k][j]= - (res - r[k])/step;
+						D[k][j]= (res - r[k])/step;
 					}
 					double res = abs(1.0- (quality/reference));
 					D[residuals_count-1][j]= -(res - r[residuals_count-1])/step;
@@ -162,14 +162,27 @@ void Optimization<Matrix, Vector>::run() {
 					std::cout << a(j) << ", ";
 				}
 				std::cout << std::endl;
-
 				std::cout << "Optimization History: "<<std::endl;
-				optimization_history.print(std::cout);
-				std::cout << "Residual History: "<<std::endl;
-				residuals_history.print(std::cout);
-				std::cout << "Parameters History: "<<std::endl;
-				params_history.print(std::cout);
 
+				for(int l = 0; l< l+1; l++){
+					std:: cout << optimization_history(l);
+				}
+				std::cout << "Residual History: "<<std::endl;
+				for(int l = 0; l< l+1; l++){
+					for (int k = 0; k < residuals_count -1; k++) {
+						std:: cout << residuals_history.el(l,k) << "  ";
+					}
+					std::cout << std::endl;
+				}
+				// residuals_history.print(std::cout);
+				std::cout << "Parameters History: "<<std::endl;
+				// params_history.print(std::cout);
+				for(int l = 0; l< l+1; l++){
+					for (int k = 0; k < freedofs; k++) {
+						std:: cout << params_history.el(l,k) << "  ";
+					}
+					std::cout << std::endl;
+				}
 			}
 
 
