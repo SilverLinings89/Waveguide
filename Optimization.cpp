@@ -170,7 +170,7 @@ void Optimization<Matrix, Vector>::run() {
 				std::cout << "Residual History: "<<std::endl;
 				for(int l = 0; l< l+1; l++){
 					for (int k = 0; k < residuals_count -1; k++) {
-						std:: cout << residuals_history.el(l,k) << "  ";
+						std:: cout << residuals_history[l][k] << "  ";
 					}
 					std::cout << std::endl;
 				}
@@ -179,7 +179,7 @@ void Optimization<Matrix, Vector>::run() {
 				// params_history.print(std::cout);
 				for(int l = 0; l< l+1; l++){
 					for (int k = 0; k < freedofs; k++) {
-						std:: cout << params_history.el(l,k) << "  ";
+						std:: cout << params_history[l][k] << "  ";
 					}
 					std::cout << std::endl;
 				}
