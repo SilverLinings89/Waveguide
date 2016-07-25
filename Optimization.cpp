@@ -9,7 +9,7 @@ Optimization<Matrix, Vector >::Optimization( Parameters in_System_Parameters ,Wa
 	:
 		pout(std::cout, GlobalParams.MPI_Rank==0),
 		dofs(structure->NDofs()),
-		residuals_count((int)floor((double)GlobalParams.MPI_Size * (((double)GlobalParams.PRM_M_W_Sectors - (double)GlobalParams.PRM_M_BC_XYout)/((double)GlobalParams.PRM_M_W_Sectors)))),
+		residuals_count((int)floor((double)GlobalParams.MPI_Size * (((double)GlobalParams.PRM_M_W_Sectors - (double)GlobalParams.PRM_M_BC_XYout)/((double)GlobalParams.PRM_M_W_Sectors)))+1),
 		freedofs(structure->NFreeDofs()),
 		System_Parameters(in_System_Parameters),
 		waveguide(in_wg)
@@ -35,13 +35,24 @@ void Optimization<Matrix, Vector>::run() {
 		waveguide.run();
 	} else {
 		for (int i = 0; i < GlobalParams.PRM_Op_MaxCases; i++){
-			waveguide.run();
+			if(i == 0) {
+				waveguide.run();
+			} else {
+				waveguide.rerun();
+			}
 			pout << "Run Complete for proc. ";
 			pout << GlobalParams.MPI_Rank;
 			pout <<", calculating Gradient" << std::endl;
 			MPI_Barrier(GlobalParams.MPI_Communicator);
 			pout<< "Residuals: ";
 
+			double quality = 0;
+
+			if((structure->Z_to_Sector_and_local_z(GlobalParams.PRM_M_R_ZLength/2.0 - 0.00001)).first == GlobalParams.MPI_Rank) {
+				quality = waveguide.evaluate_for_z(GlobalParams.PRM_M_R_ZLength/2.0 - 0.00001);
+			}
+
+			quality = Utilities::MPI::max(quality, MPI_COMM_WORLD);
 			double reference = 1.0;
 			bool cont = true;
 			if(GlobalParams.MPI_Rank == 0){
@@ -51,13 +62,14 @@ void Optimization<Matrix, Vector>::run() {
 				}
 			}
 			if(!cont) {
-				pout << "No residual an incoming side - No signal."<< std::endl;
+				pout << "No residual on incoming side - No signal."<< std::endl;
 				exit(0);
 			}
-			for (int j = 0; j < residuals_count; j++ ){
+			for (int j = 0; j < residuals_count-1; j++ ){
 				r[j] = 1- (abs(waveguide.qualities[j])/reference);
 				pout << r[j] << " ,";
 			}
+			r[residuals_count-1] = quality;
 			pout<< std::endl;
 
 			for(  int j = 0; j < freedofs; j++) {
@@ -71,11 +83,20 @@ void Optimization<Matrix, Vector>::run() {
 				pout << "Gradient step "<< j+1 <<" starting ..." << std::endl;
 				waveguide.rerun();
 				pout << "Gradient step " << j+1 << " of " << freedofs << " done." << std::endl;
+				if((structure->Z_to_Sector_and_local_z(GlobalParams.PRM_M_R_ZLength/2.0 - 0.00001)).first == GlobalParams.MPI_Rank) {
+					quality = waveguide.evaluate_for_z(GlobalParams.PRM_M_R_ZLength/2.0 - 0.00001);
+				}
+
+				quality = Utilities::MPI::max(quality, MPI_COMM_WORLD);
+
+				pout << "Total quality: " << quality * 100.0<< "%"<< std::endl;
 				if(GlobalParams.MPI_Rank == 0){
-					for( int k = 0; k < residuals_count; k++) {
-						double res = 1- (abs(waveguide.qualities[j])/reference);
+					for( int k = 0; k < residuals_count-1; k++) {
+						double res = 1- (abs(waveguide.qualities[k])/reference);
 						D[k][j]= (res - r[k])/step;
 					}
+					double res = 1- (abs(waveguide.qualities[residuals_count-1])/reference);
+					D[residuals_count-1][j]= (res - r[residuals_count-1])/step;
 				}
 				structure->set_dof(j, old , true);
 				MPI_Barrier(GlobalParams.MPI_Communicator);
@@ -98,6 +119,7 @@ void Optimization<Matrix, Vector>::run() {
 				pout << "-a:"<<std::endl;
 				rt_2.print(std::cout);
 				a.add(-1.0,rt_2);
+				pout << "Norm of the step: " << rt_2.l2_norm() <<std::endl;
 			}
 			double * arr = new double[freedofs];
 			if (GlobalParams.MPI_Rank == 0) {
@@ -123,6 +145,7 @@ void Optimization<Matrix, Vector>::run() {
 				}
 				std::cout << std::endl;
 			}
+
 		}
 	}
 
