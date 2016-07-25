@@ -107,7 +107,7 @@ void Optimization<Matrix, Vector>::run() {
 				if(GlobalParams.MPI_Rank == 0){
 					for( int k = 0; k < residuals_count-1; k++) {
 						double res = 1- (abs(waveguide.qualities[k])/reference);
-						residuals_history[i, k] = res;
+						residuals_history.set(i,k,res);
 						D[k][j]= (res - r[k])/step;
 					}
 					double res = 1- (abs(waveguide.qualities[residuals_count-1])/reference);
@@ -140,7 +140,7 @@ void Optimization<Matrix, Vector>::run() {
 			if (GlobalParams.MPI_Rank == 0) {
 				for (int j = 0; j < freedofs; j++) {
 					arr[j] = a(j);
-					params_history[i,j] = a(j);
+					params_history.set(i,j,a(j));
 				}
 			}
 			MPI_Scatter(arr, freedofs, MPI_DOUBLE, arr, freedofs, MPI_DOUBLE, 0, GlobalParams.MPI_Communicator);
