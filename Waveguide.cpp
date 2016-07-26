@@ -1406,7 +1406,7 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 	const unsigned int   dofs_per_cell	= fe.dofs_per_cell;
 	const unsigned int   n_q_points		= quadrature_formula.size();
 
-	if(prm.PRM_O_VerboseOutput) {
+	if(prm.PRM_O_VerboseOutput && run_number == 0) {
 		if(!is_stored) {
 		pout << "Dofs per cell: " << dofs_per_cell << std::endl << "Quadrature Formula Size: " << n_q_points << std::endl;
 		pout << "Dofs per face: " << fe.dofs_per_face << std::endl << "Dofs per line: " << fe.dofs_per_line << std::endl;
@@ -1893,17 +1893,19 @@ void Waveguide<MatrixType, VectorType>::rerun ()
 	structure->Print();
 
 	timer.leave_subsection();
-	pout << "Reinit for rerun." << std::endl;
+	pout << "Reinit for rerun..." ;
+	pout.get_stream().flush();
 	timer.enter_subsection ("Reset");
 	reinit_for_rerun();
 	timer.leave_subsection();
 
-	pout << "Assemble for rerun." << std::endl;
+	pout << " Assemble for rerun... " ;
+	pout.get_stream().flush();
 	timer.enter_subsection ("Assemble");
 	assemble_system ();
 	timer.leave_subsection();
 
-	pout << "Solve for rerun." << std::endl;
+	pout << " Solve for rerun..." << std::endl;
 	timer.enter_subsection ("Solve");
 	solve ();
 	timer.leave_subsection();

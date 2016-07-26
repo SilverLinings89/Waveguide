@@ -30,6 +30,7 @@ void Optimization<Matrix, Vector>::run() {
 	dealii::Vector<double> rt_1 (freedofs);
 	dealii::Vector<double> rt_2 (freedofs);
 
+
 	double ct1 = 1;
 	double ct2 = 1;
 	double ct3 = 1;
@@ -57,42 +58,74 @@ void Optimization<Matrix, Vector>::run() {
 			}
 			pout << "Run Complete for proc. ";
 			pout << GlobalParams.MPI_Rank;
-			pout <<", calculating Gradient" << std::endl;
+			pout <<", Evaluating ..." << std::endl;
 			MPI_Barrier(GlobalParams.MPI_Communicator);
-			pout<< "Residuals: ";
 
+			int eval = 1;
 			double quality = 0;
 
-			if((structure->Z_to_Layer(GlobalParams.PRM_M_R_ZLength/2.0 - 0.00001)) == GlobalParams.MPI_Rank) {
-				quality = waveguide.evaluate_for_z(GlobalParams.PRM_M_R_ZLength/2.0 - 0.00001);
-			}
 
-			quality = Utilities::MPI::max(quality, MPI_COMM_WORLD);
 			double reference = 1.0;
 			bool cont = true;
-			if(GlobalParams.MPI_Rank == 0){
+			while (eval == 1) {
+				if((structure->Z_to_Layer(GlobalParams.PRM_M_R_ZLength/2.0 - 0.00001)) == GlobalParams.MPI_Rank) {
+					quality = waveguide.evaluate_for_z(GlobalParams.PRM_M_R_ZLength/2.0 - 0.00001);
+				}
 
-				reference = waveguide.evaluate_for_z(- GlobalParams.PRM_M_R_ZLength / 2.0);
-				if ( reference < 0.00001) {
-					cont = false;
-				}
-				optimization_history[i] = 100.0 * quality/reference ;
-				if (i > 0) {
-					if(optimization_history[i] < optimization_history[i-1]) {
-						alpha /= 4.0;
-						std::cout << "Reducing step width because of loss of quality in last step."<<std::endl;
+				quality = Utilities::MPI::max(quality, MPI_COMM_WORLD);
+				eval = 0;
+				if(GlobalParams.MPI_Rank == 0){
+
+					reference = waveguide.evaluate_for_z(- GlobalParams.PRM_M_R_ZLength / 2.0);
+					if ( reference < 0.00001) {
+						cont = false;
 					}
-					if(alpha < 0.00000001) {
-						abort_condition = true;
+					optimization_history[i] = 100.0 * quality/reference ;
+					if (i > 0) {
+						if(optimization_history[i] < optimization_history[i-1]) {
+							a.add(-1.0,rt_2);
+							alpha /= 4.0;
+							rt_2 *= 0.25;
+							a.add(1.0,rt_2);
+							eval = 1;
+							pout << "Reducing step width because of loss of quality in last step. Undoing the step and rerunning... "<<std::endl;
+						}
+						if(alpha < 0.00000001) {
+							pout << "The step has become too small. Finishing." << std::endl;
+							abort_condition = true;
+							MPI_Abort(MPI_COMM_WORLD,0);
+						}
 					}
 				}
+				eval = Utilities::MPI::max(eval, MPI_COMM_WORLD);
+				if (eval == 1) {
+					double * arr = new double[freedofs];
+
+					if (GlobalParams.MPI_Rank == 0) {
+						for (int j = 0; j < freedofs; j++) {
+							arr[j] = a(j);
+							params_history.set(i,j,a(j));
+						}
+					}
+					MPI_Bcast(arr, freedofs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+					for(int j = 0; j<freedofs; j++) {
+						a(j) = arr[j];
+					}
+
+					for(int j = 0; j<freedofs; j++) {
+						structure->set_dof(j,a(j), true);
+					}
+					MPI_Barrier(GlobalParams.MPI_Communicator);
+					waveguide.rerun();
+				}
+
+				alpha = Utilities::MPI::min(alpha, MPI_COMM_WORLD);
 			}
-			alpha = Utilities::MPI::min(alpha, MPI_COMM_WORLD);
-
 			if(!cont) {
 				pout << "No residual on incoming side - No signal."<< std::endl;
 				exit(0);
 			}
+			pout<< "Residuals: ";
 			for (int j = 0; j < residuals_count-1; j++ ){
 				r[j] = abs(1.0 - (waveguide.qualities[j]/reference));
 				pout << r[j] << " ,";
