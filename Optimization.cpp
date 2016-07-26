@@ -21,6 +21,8 @@ template<typename Matrix,typename Vector>
 void Optimization<Matrix, Vector>::run() {
 	structure->estimate_and_initialize();
 	double step = 0.00001;
+	double alpha = 0.1;
+
 	dealii::Vector<double> r (residuals_count);
 	dealii::FullMatrix<double> D(residuals_count, freedofs);
 	dealii::FullMatrix<double> Prod(freedofs, freedofs);
@@ -70,11 +72,19 @@ void Optimization<Matrix, Vector>::run() {
 			bool cont = true;
 			if(GlobalParams.MPI_Rank == 0){
 				optimization_history[i] = quality;
+				if (i > 0) {
+					if(optimization_history[i] > optimization_history[i-1]) {
+						alpha /= 4.0;
+						std::cout << "Reducing step width because of loss of quality in last step."<<std::endl;
+					}
+				}
 				reference = waveguide.evaluate_for_z(- GlobalParams.PRM_M_R_ZLength / 2.0);
 				if ( reference < 0.00001) {
 					cont = false;
 				}
 			}
+			alpha = Utilities::MPI::min(alpha, MPI_COMM_WORLD);
+
 			if(!cont) {
 				pout << "No residual on incoming side - No signal."<< std::endl;
 				exit(0);
@@ -83,8 +93,9 @@ void Optimization<Matrix, Vector>::run() {
 				r[j] = abs(1.0 - (waveguide.qualities[j]/reference));
 				pout << r[j] << " ,";
 			}
-			r[residuals_count-1] = abs(1.0 - quality/reference);
-			pout<< std::endl;
+			r[residuals_count-1] = ((double)i / 10.0) * abs(1.0 - quality/reference);
+			pout << r[residuals_count-1]<<std::endl;
+
 
 			for(  int j = 0; j < freedofs; j++) {
 				a(j) = structure->get_dof(j,true);
@@ -111,7 +122,7 @@ void Optimization<Matrix, Vector>::run() {
 						residuals_history.set(i,k,res);
 						D[k][j]= (res - r[k])/step;
 					}
-					double res = abs(1.0- (quality/reference));
+					double res = ((double)i / 10.0) * abs(1.0- (quality/reference));
 					D[residuals_count-1][j]= -(res - r[residuals_count-1])/step;
 				}
 				structure->set_dof(j, old , true);
@@ -134,7 +145,7 @@ void Optimization<Matrix, Vector>::run() {
 				Dinv.vmult(rt_2, rt_1,false);
 				pout << "- step:"<<std::endl;
 				rt_2.print(std::cout);
-				rt_2 *= 0.01;
+				rt_2 *= alpha;
 				a.add(1.0,rt_2);
 				pout << "Norm of the step: " << rt_2.l2_norm() <<std::endl;
 			}

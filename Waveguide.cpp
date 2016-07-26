@@ -490,6 +490,18 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 		S3 /= sz;
 	}
 
+	if(PML_in_Z(position)){
+		double r,d, sigmaz;
+		r = PML_Z_Distance(position);
+		d = GlobalParams.PRM_M_BC_XYout * structure->Sector_Length();
+		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
+		sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
+		sz.imag( sigmaz / omegaepsilon0 );
+		S1 *= sz;
+		S2 *= sz;
+		S3 /= sz;
+	}
+
 	ret[0][0] = S1;
 	ret[1][1] = S2;
 	ret[2][2] = S3;
