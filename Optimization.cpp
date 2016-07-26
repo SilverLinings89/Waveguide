@@ -202,7 +202,7 @@ void Optimization<Matrix, Vector>::run() {
 
 			if(abort_condition) {
 				pout << "A solution has been found. Terminanting." <<std::endl;
-				MPI_Abort(MPI_COMM_WORLD);
+				MPI_Abort(MPI_COMM_WORLD,0);
 			}
 			MPI_Barrier(GlobalParams.MPI_Communicator);
 
