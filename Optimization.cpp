@@ -22,7 +22,7 @@ void Optimization<Matrix, Vector>::run() {
 	structure->estimate_and_initialize();
 	double step = 0.00001;
 	double alpha = 0.1;
-
+	bool abort_condition = false;
 	dealii::Vector<double> r (residuals_count);
 	dealii::FullMatrix<double> D(residuals_count, freedofs);
 	dealii::FullMatrix<double> Prod(freedofs, freedofs);
@@ -71,16 +71,20 @@ void Optimization<Matrix, Vector>::run() {
 			double reference = 1.0;
 			bool cont = true;
 			if(GlobalParams.MPI_Rank == 0){
-				optimization_history[i] = quality;
-				if (i > 0) {
-					if(optimization_history[i] > optimization_history[i-1]) {
-						alpha /= 4.0;
-						std::cout << "Reducing step width because of loss of quality in last step."<<std::endl;
-					}
-				}
+
 				reference = waveguide.evaluate_for_z(- GlobalParams.PRM_M_R_ZLength / 2.0);
 				if ( reference < 0.00001) {
 					cont = false;
+				}
+				optimization_history[i] = 100.0 * quality/reference ;
+				if (i > 0) {
+					if(optimization_history[i] < optimization_history[i-1]) {
+						alpha /= 4.0;
+						std::cout << "Reducing step width because of loss of quality in last step."<<std::endl;
+					}
+					if(alpha < 0.00000001) {
+						abort_condition = true;
+					}
 				}
 			}
 			alpha = Utilities::MPI::min(alpha, MPI_COMM_WORLD);
@@ -196,6 +200,11 @@ void Optimization<Matrix, Vector>::run() {
 				}
 			}
 
+			if(abort_condition) {
+				pout << "A solution has been found. Terminanting." <<std::endl;
+				MPI_Abort(MPI_COMM_WORLD);
+			}
+			MPI_Barrier(GlobalParams.MPI_Communicator);
 
 		}
 	}
