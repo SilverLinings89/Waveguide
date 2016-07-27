@@ -83,10 +83,10 @@ void Optimization<Matrix, Vector>::run() {
 					optimization_history[i] = 100.0 * quality/reference ;
 					if (i > 0) {
 						if(optimization_history[i] < optimization_history[i-1]) {
-							a.add(-1.0,rt_2);
+							a.add(1.0,rt_2);
 							alpha /= 4.0;
 							rt_2 *= 0.25;
-							a.add(1.0,rt_2);
+							a.add(-1.0,rt_2);
 							eval = 1;
 							pout << "Reducing step width because of loss of quality in last step. Undoing the step and rerunning... "<<std::endl;
 						}
@@ -183,7 +183,7 @@ void Optimization<Matrix, Vector>::run() {
 				pout << "- step:"<<std::endl;
 				rt_2.print(std::cout);
 				rt_2 *= alpha;
-				a.add(1.0,rt_2);
+				a.add(-1.0,rt_2);
 				pout << "Norm of the step: " << rt_2.l2_norm() <<std::endl;
 			}
 			double * arr = new double[freedofs];

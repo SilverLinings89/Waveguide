@@ -1735,7 +1735,6 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 				}
 			}
 		}
-		std::cout << std::endl;
 
 		sweep.matrix.compress(VectorOperation::insert);
 
