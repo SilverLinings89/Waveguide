@@ -1700,7 +1700,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData( GlobalParams.PRM_S_GMRESSteps) );
 
 		// std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
-		/**
+
 		int below = 0;
 		if (GlobalParams.MPI_Rank != 0 ) {
 			below = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1].n_elements();
@@ -1740,19 +1740,23 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		sweep.matrix.compress(VectorOperation::insert);
 
 		sweep.prec_matrix.compress(VectorOperation::insert);
-		**/
+
 
 		MPI_Barrier(MPI_COMM_WORLD);
 		pout << "All preconditioner matrices built. Solving..." <<std::endl;
 
-		TrilinosWrappers::SolverDirect temp_s(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(false, GlobalParams.PRM_S_Preconditioner));
 
-		// solver.solve(system_matrix,solution, system_rhs, sweep);
-		temp_s.solve(system_matrix, solution, system_rhs);
+		 solver.solve(system_matrix,solution, system_rhs, sweep);
 
 		pout << "Done." << std::endl;
 
 		pout << "Norm of the solution: " << solution.l2_norm() << std::endl;
+	}
+
+	if(GlobalParams.PRM_S_Solver == "UMFPACK") {
+		SolverControl sc2(2,false,false);
+		TrilinosWrappers::SolverDirect temp_s(sc2, TrilinosWrappers::SolverDirect::AdditionalData(false, GlobalParams.PRM_S_Preconditioner));
+		temp_s.solve(system_matrix, solution, system_rhs);
 	}
 
  
