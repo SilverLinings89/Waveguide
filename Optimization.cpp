@@ -157,10 +157,10 @@ void Optimization<Matrix, Vector>::run() {
 					for( int k = 0; k < residuals_count-1; k++) {
 						double res = abs(1.0- (waveguide.qualities[k]/reference));
 						residuals_history.set(i,k,res);
-						D[k][j]= (res - r[k])/step;
+						D[k][j]= -(res - r[k])/step;
 					}
 					double res = ((double)i / 10.0) * abs(1.0- (quality/reference));
-					D[residuals_count-1][j]= (res - r[residuals_count-1])/step;
+					D[residuals_count-1][j]= -(res - r[residuals_count-1])/step;
 				}
 				structure->set_dof(j, old , true);
 				MPI_Barrier(GlobalParams.MPI_Communicator);
