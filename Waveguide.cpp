@@ -106,8 +106,11 @@ std::complex<double> Waveguide<MatrixType, VectorType>::evaluate_for_Position(do
 	mode(2) = 0;
 
 	VectorTools::point_value(dof_handler, solution, position, result);
+	std::complex<double> c1(result(0), - result(3));
+	std::complex<double> c2(result(1), - result(4));
+	std::complex<double> c3(result(2), - result(5));
 
-	return std::complex<double>( mode(0)*result(0) + mode(1)*result(1) + mode(2)*result(2) , mode(0)*result(3) + mode(1)*result(4) + mode(2)*result(5) );
+	return mode(0) * c1 + mode(1)*c2 + mode(2)*c3;
 }
 
 template<typename MatrixType, typename VectorType>
@@ -158,7 +161,7 @@ template<typename MatrixType, typename VectorType>
 double Waveguide<MatrixType, VectorType>::evaluate_for_z(double z) {
 	double r = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
 	std::complex<double> exc = gauss_product_2D_sphere(z,10,r,0,0);
-	return std::sqrt(exc.real()*exc.real() + exc.imag()*exc.imag());
+	return std::sqrt(std::norm(exc));
 }
 
 template<typename MatrixType, typename VectorType >
