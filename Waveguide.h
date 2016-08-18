@@ -376,6 +376,10 @@ class Waveguide
 		 * Reinit only the system matrix.
 		 */
 		void 	reinit_systemmatrix();
+        
+        void    reinit_cell_weights();
+        
+        void    calculate_cell_weights ();
 
 		/**
 		 * Reinit only the solution vector.
@@ -453,6 +457,8 @@ class Waveguide
 
 		TimerOutput 									timer;
 		bool											execute_recomputation;
+        VectorType                                      cell_weights;
+        IndexSet                                        locally_owned_cells;
 };
 
 

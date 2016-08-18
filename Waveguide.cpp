@@ -826,6 +826,15 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	GlobalParams.z_evaluate = (GlobalParams.z_min + GlobalParams.z_max)/2.0;
 	// mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
 
+    locally_owned_cells(triangulation.n_active_cells);
+    cell = triangulation.begin_active();
+	endc = triangulation.end();
+
+	for (; cell!=endc; ++cell){
+		if(cell->is_locally_owned()) {
+            locally_owned_cells.add_index(cell->active_cell_index());
+        }
+	}
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1116,9 +1125,24 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 }
 
 template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::calculate_cell_weights () {
+    cell = triangulation.begin_active();
+	endc = triangulation.end();
+
+	for (; cell!=endc; ++cell){
+		if(cell->is_locally_owned()) {
+            Tensor<2,3, std::complex<double>> tens = get_Tensor(cell->center(), false, true);
+            cell_weights(cell->active_cell_index()) = tens.norm();
+        }
+	}
+}
+
+template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_all () {
 	// pout << "0-";
 	reinit_rhs();
+    
+    reinit_cell_weights();
 	// pout << "1-";
 	reinit_solution();
 	// pout << "2-";
@@ -1184,7 +1208,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 	system_matrix.reinit( system_pattern);
 }
 
-template <>
+template <>get_Tensor(cell->center(), false, true)
 void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_rhs () {
 	// std::cout << "Reinit rhs for p " << GlobalParams.MPI_Rank << std::endl;
 
@@ -1197,6 +1221,12 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 template <>
 void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_solution() {
 	solution.reinit(locally_owned_dofs, MPI_COMM_WORLD);
+}
+
+template <>
+void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_cell_weights() {
+	cell_weights.reinit(locally_owned_cells, MPI_COMM_WORLD);
+    calculate_cell_weights();
 }
 
 template<>
@@ -1268,7 +1298,7 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
 					for(int k = 0; k<3; k++){
 						I_Curl[k].imag(fe_values[imag].curl(i, q_index)[k]);
 						I_Curl[k].real(fe_values[real].curl(i, q_index)[k]);
-						I_Val[k].imag(fe_values[imag].value(i, q_index)[k]);
+						I_Val[k].imag(fe_values[imag].value(i, q_index)[k]);get_Tensor(cell->center(), false, true)
 						I_Val[k].real(fe_values[real].value(i, q_index)[k]);
 					}
 
@@ -1707,6 +1737,17 @@ template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::output_results ( bool details )
 {
 
+    DataOut<3> data_out_cells;
+
+    //data_out_real.attach_dof_handler(dof_handler_real);
+    data_out_cells.add_data_vector (cell_weights, "Material Tensor Norm");
+    // data_out.add_data_vector(differences, "L2error");
+
+    data_out_cells.build_patches ();
+
+    std::ofstream outputvtu2 (solutionpath + "/cell-weights" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +".vtu");
+    data_out_cells.write_vtu(outputvtu2);
+        
 	// evaluate_overall();
 	if(details) {
 		DataOut<3> data_out;
@@ -1720,6 +1761,8 @@ void Waveguide<MatrixType, VectorType>::output_results ( bool details )
 		std::ofstream outputvtk (solutionpath + "/solution-run" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + "-P" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() +".vtk");
 		data_out.write_vtk(outputvtk);
 
+        
+        
 		/**
 		DataOut<3> data_out_real;
 
@@ -1783,7 +1826,9 @@ void Waveguide<MatrixType, VectorType>::run ()
 
 	timer.print_summary();
 	timer.reset();
-
+    
+    output_results();
+    
 	run_number++;
 }
 
