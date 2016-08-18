@@ -96,7 +96,7 @@ Waveguide<MatrixType, VectorType>::~Waveguide() {
 }
 
 template<typename MatrixType, typename VectorType>
-double Waveguide<MatrixType, VectorType>::evaluate_for_Position_Imag(double x, double y, double z ) {
+std::complex<double> Waveguide<MatrixType, VectorType>::evaluate_for_Position(double x, double y, double z ) {
 	Point<3, double> position(x, y, z);
 	Vector<double> result(6);
 	Vector<double> mode(3);
@@ -107,26 +107,16 @@ double Waveguide<MatrixType, VectorType>::evaluate_for_Position_Imag(double x, d
 
 	VectorTools::point_value(dof_handler, solution, position, result);
 
-	return  mode(0)*result(3) + mode(1)*result(4) + mode(2)*result(5) ;
+	std::complex<double> c1(result(0), - result(3));
+	std::complex<double> c2(result(1), - result(4));
+	std::complex<double> c3(result(2), - result(5));
+
+	return mode(0) * c1 + mode(1)*c2 + mode(2)*c3;
+
 }
 
 template<typename MatrixType, typename VectorType>
-double Waveguide<MatrixType, VectorType>::evaluate_for_Position_Real(double x, double y, double z ) {
-	Point<3, double> position(x, y, z);
-	Vector<double> result(6);
-	Vector<double> mode(3);
-
-	mode(0) = TEMode00( position , 0);
-	mode(1) = TEMode00( position , 1);
-	mode(2) = 0;
-
-	VectorTools::point_value(dof_handler, solution, position, result);
-
-	return  mode(0)*result(0) + mode(1)*result(1) + mode(2)*result(2);
-}
-
-template<typename MatrixType, typename VectorType>
-double Waveguide<MatrixType, VectorType>::gauss_product_2D_sphere_imag(double z, int n, double R, double Xc, double Yc)
+double Waveguide<MatrixType, VectorType>::gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc)
 {
 	double* r = NULL;
 	double* t = NULL;
@@ -160,51 +150,7 @@ double Waveguide<MatrixType, VectorType>::gauss_product_2D_sphere_imag(double z,
 		{
 			x = r[j]*q[i];
 			y = r[j]*t[i];
-			s += A[j]*evaluate_for_Position_Imag(R*x-Xc,R*y-Yc,z);
-		}
-	}
-
-	s *= R*R*B;
-
-	return s;
-}
-
-template<typename MatrixType, typename VectorType>
-double Waveguide<MatrixType, VectorType>::gauss_product_2D_sphere_real(double z, int n, double R, double Xc, double Yc)
-{
-	double* r = NULL;
-	double* t = NULL;
-	double* q = NULL;
-	double* A = NULL;
-	double  B;
-	double x, y;
-	double s = 0.0;
-
-	int i,j;
-
-	/* Load appropriate predefined table */
-	for (i = 0; i<GSPHERESIZE;i++)
-	{
-		if(n==gsphere[i].n)
-		{
-			r = gsphere[i].r;
-			t = gsphere[i].t;
-			q = gsphere[i].q;
-			A = gsphere[i].A;
-			B = gsphere[i].B;
-			break;
-		}
-	}
-
-	if (NULL==r) return -1.0;
-
-	for (i=0;i<n;i++)
-	{
-		for (j=0;j<n;j++)
-		{
-			x = r[j]*q[i];
-			y = r[j]*t[i];
-			s += A[j]*evaluate_for_Position_Real(R*x-Xc,R*y-Yc,z);
+			s += A[j]*evaluate_for_Position(R*x-Xc,R*y-Yc,z);
 		}
 	}
 
@@ -216,10 +162,8 @@ double Waveguide<MatrixType, VectorType>::gauss_product_2D_sphere_real(double z,
 template<typename MatrixType, typename VectorType>
 double Waveguide<MatrixType, VectorType>::evaluate_for_z(double z) {
 	double r = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
-	double real = gauss_product_2D_sphere_real(z,10,r,0,0);
-	double imag = gauss_product_2D_sphere_imag(z,10,r,0,0);
-	// std::complex<double> exc = gauss_product_2D_sphere(z,10,r,0,0);
-	return std::sqrt(real * real + imag*imag);
+	std::complex<double> res = gauss_product_2D_sphere(z,10,r,0,0);
+	return std::sqrt(std::norm(res));
 }
 
 template<typename MatrixType, typename VectorType >
