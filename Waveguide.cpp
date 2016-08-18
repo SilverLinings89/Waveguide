@@ -826,7 +826,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	GlobalParams.z_evaluate = (GlobalParams.z_min + GlobalParams.z_max)/2.0;
 	// mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
 
-    locally_owned_cells(triangulation.n_active_cells);
+    locally_owned_cells(triangulation.n_active_cells());
     cell = triangulation.begin_active();
 	endc = triangulation.end();
 
@@ -1131,7 +1131,8 @@ void Waveguide<MatrixType, VectorType>::calculate_cell_weights () {
 
 	for (; cell!=endc; ++cell){
 		if(cell->is_locally_owned()) {
-            Tensor<2,3, std::complex<double>> tens = get_Tensor(cell->center(), false, true);
+            Tensor<2,3, std::complex<double>> tens;
+            tens = get_Tensor(cell->center(), false, true);
             cell_weights(cell->active_cell_index()) = tens.norm();
         }
 	}
@@ -1208,7 +1209,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 	system_matrix.reinit( system_pattern);
 }
 
-template <>get_Tensor(cell->center(), false, true)
+template <>
 void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_rhs () {
 	// std::cout << "Reinit rhs for p " << GlobalParams.MPI_Rank << std::endl;
 
@@ -1298,7 +1299,7 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
 					for(int k = 0; k<3; k++){
 						I_Curl[k].imag(fe_values[imag].curl(i, q_index)[k]);
 						I_Curl[k].real(fe_values[real].curl(i, q_index)[k]);
-						I_Val[k].imag(fe_values[imag].value(i, q_index)[k]);get_Tensor(cell->center(), false, true)
+						I_Val[k].imag(fe_values[imag].value(i, q_index)[k]);
 						I_Val[k].real(fe_values[real].value(i, q_index)[k]);
 					}
 
@@ -1827,7 +1828,7 @@ void Waveguide<MatrixType, VectorType>::run ()
 	timer.print_summary();
 	timer.reset();
     
-    output_results();
+    output_results(false);
     
 	run_number++;
 }
