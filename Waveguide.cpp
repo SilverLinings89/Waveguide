@@ -1743,12 +1743,12 @@ void Waveguide<MatrixType, VectorType>::output_results ( bool details )
     DataOut<3> data_out_cells;
     data_out_cells.attach_dof_handler (dof_handler);
     //data_out_real.attach_dof_handler(dof_handler_real);
-    data_out_cells.add_data_vector (cell_weights, "Material Tensor Norm", DataOut_DoFData::DataVectorType::type_cell_data);
+    data_out_cells.add_data_vector (cell_weights, "Material Tensor Norm");
     // data_out.add_data_vector(differences, "L2error");
 
     data_out_cells.build_patches ();
 
-    std::ofstream outputvtu2 (solutionpath + "/cell-weights" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +".vtu");
+    std::ofstream outputvtu2 (solutionpath + "/cell-weights" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +"-"+static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str()+".vtu");
     data_out_cells.write_vtu(outputvtu2);
         
 	// evaluate_overall();
