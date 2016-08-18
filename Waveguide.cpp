@@ -21,6 +21,7 @@
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include "PreconditionerSweeping.cpp"
 #include <deal.II/lac/solver.h>
+#include <deal.II/numerics/data_out_dof_data.h>
 using namespace dealii;
 
 template<typename MatrixType, typename VectorType >
