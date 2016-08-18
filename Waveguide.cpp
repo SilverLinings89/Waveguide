@@ -116,7 +116,7 @@ std::complex<double> Waveguide<MatrixType, VectorType>::evaluate_for_Position(do
 }
 
 template<typename MatrixType, typename VectorType>
-double Waveguide<MatrixType, VectorType>::gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc)
+std::complex<double> Waveguide<MatrixType, VectorType>::gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc)
 {
 	double* r = NULL;
 	double* t = NULL;
@@ -124,7 +124,7 @@ double Waveguide<MatrixType, VectorType>::gauss_product_2D_sphere(double z, int 
 	double* A = NULL;
 	double  B;
 	double x, y;
-	double s = 0.0;
+	std::complex<double> s(0.0, 0.0);
 
 	int i,j;
 
