@@ -1740,9 +1740,9 @@ void Waveguide<MatrixType, VectorType>::output_results ( bool details )
 {
 
     DataOut<3> data_out_cells;
-
+    data_out_cells.attach_dof_handler (dof_handler);
     //data_out_real.attach_dof_handler(dof_handler_real);
-    data_out_cells.add_data_vector (cell_weights, "Material Tensor Norm");
+    data_out_cells.add_data_vector (cell_weights, "Material Tensor Norm", DataOut_DoFData::DataVectorType::type_cell_data);
     // data_out.add_data_vector(differences, "L2error");
 
     data_out_cells.build_patches ();
