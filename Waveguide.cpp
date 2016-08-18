@@ -826,7 +826,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	GlobalParams.z_evaluate = (GlobalParams.z_min + GlobalParams.z_max)/2.0;
 	// mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
 
-    locally_owned_cells(triangulation.n_active_cells());
+    locally_owned_cells.set_size(triangulation.n_active_cells());
     cell = triangulation.begin_active();
 	endc = triangulation.end();
 
@@ -1132,7 +1132,8 @@ void Waveguide<MatrixType, VectorType>::calculate_cell_weights () {
 	for (; cell!=endc; ++cell){
 		if(cell->is_locally_owned()) {
             Tensor<2,3, std::complex<double>> tens;
-            tens = get_Tensor(cell->center(), false, true);
+            Point<3> pos = cell->center();
+            tens = get_Tensor(pos, false, true);
             cell_weights(cell->active_cell_index()) = tens.norm();
         }
 	}
