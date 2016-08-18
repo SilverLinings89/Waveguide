@@ -302,95 +302,92 @@ void Waveguide<MatrixType, VectorType >::store() {
 
 template<typename MatrixType, typename VectorType >
 Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(Point<3> & position, bool inverse , bool epsilon) {
-	if(PML_in_Z(position)  || PML_in_X(position) || PML_in_Y(position)) {
-		Tensor<2,3, std::complex<double>> ret;
-		for(int i = 0; i<3; i++ ){
-			for(int j = 0; j<3; j++) {
-				ret[i][j] = 0.0;
-			}
-		}
-		std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
+	std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
+	Tensor<2,3, std::complex<double>> ret;
 
-		double omegaepsilon0 = GlobalParams.PRM_C_omega * ((System_Coordinate_in_Waveguide(position))?GlobalParams.PRM_M_W_EpsilonIn : GlobalParams.PRM_M_W_EpsilonOut);
-		std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
-		if(PML_in_X(position)){
-			double r,d, sigmax;
-			r = PML_X_Distance(position);
-			d = GlobalParams.PRM_M_R_XLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
-			sigmax = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaXMax;
-			sx.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaXMax);
-			sx.imag( sigmax / ( omegaepsilon0));
-			S1 /= sx;
-			S2 *= sx;
-			S3 *= sx;
-		}
-		if(PML_in_Y(position)){
-			double r,d, sigmay;
-			r = PML_Y_Distance(position);
-			d = GlobalParams.PRM_M_R_YLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
-			sigmay = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaYMax;
-			sy.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaYMax);
-			sy.imag( sigmay / ( omegaepsilon0));
-			S1 *= sy;
-			S2 /= sy;
-			S3 *= sy;
-		}
-		if(PML_in_Z(position)){
-			double r,d, sigmaz;
-			r = PML_Z_Distance(position);
-			d = GlobalParams.PRM_M_BC_XYout * structure->Sector_Length();
-			sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
-			sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
-			sz.imag( sigmaz / omegaepsilon0 );
-			S1 *= sz;
-			S2 *= sz;
-			S3 /= sz;
-		}
-
-
-		ret[0][0] = S1;
-		ret[1][1] = S2;
-		ret[2][2] = S3;
-
-		if(epsilon) {
-			if(System_Coordinate_in_Waveguide(position) ) {
-				ret *= GlobalParams.PRM_M_W_EpsilonIn;
-			} else {
-				ret *= GlobalParams.PRM_M_W_EpsilonOut;
-			}
-			ret *= GlobalParams.PRM_C_Eps0;
-		} else {
-			ret *= GlobalParams.PRM_C_Mu0;
-		}
-
-		if(inverse) ret = invert(ret);
-
-		return ret;
-
-	} else {
-
-		Tensor<2,3, std::complex<double>> ret2;
-		Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
-		double dist = position[0] * position[0] + position[1]*position[1];
-		dist = std::sqrt(dist);
-		double maxdist = GlobalParams.PRM_M_R_XLength/2.0 - GlobalParams.PRM_M_BC_Mantle * GlobalParams.PRM_M_R_XLength;
-		double mindist = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
-		double sig = sigma(dist, mindist, maxdist);
-		double factor = InterpolationPolynomialZeroDerivative(sig, 1,0);
-		transformation *= factor;
-		for(int i = 0; i < 3; i++) {
-			transformation[i][i] += 1-factor;
-		}
-		for(int i = 0; i < 3; i++) {
-			for(int j = 0; j < 3; j++) {
-				ret2[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
-			}
-		}
-
-		if(inverse) ret2 = invert(ret2);
-
-		return ret2;
+	double omegaepsilon0 = GlobalParams.PRM_C_omega * ((System_Coordinate_in_Waveguide(position))?GlobalParams.PRM_M_W_EpsilonIn : GlobalParams.PRM_M_W_EpsilonOut);
+	std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
+	if(PML_in_X(position)){
+		double r,d, sigmax;
+		r = PML_X_Distance(position);
+		d = GlobalParams.PRM_M_R_XLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
+		sigmax = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaXMax;
+		sx.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaXMax);
+		sx.imag( sigmax / ( omegaepsilon0));
+		S1 /= sx;
+		S2 *= sx;
+		S3 *= sx;
 	}
+	if(PML_in_Y(position)){
+		double r,d, sigmay;
+		r = PML_Y_Distance(position);
+		d = GlobalParams.PRM_M_R_YLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
+		sigmay = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaYMax;
+		sy.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaYMax);
+		sy.imag( sigmay / ( omegaepsilon0));
+		S1 *= sy;
+		S2 /= sy;
+		S3 *= sy;
+	}
+	if(PML_in_Z(position)){
+		double r,d, sigmaz;
+		r = PML_Z_Distance(position);
+		d = GlobalParams.PRM_M_BC_XYout * structure->Sector_Length();
+		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
+		sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
+		sz.imag( sigmaz / omegaepsilon0 );
+		S1 *= sz;
+		S2 *= sz;
+		S3 /= sz;
+	}
+
+	ret[0][0] = S1;
+	ret[1][1] = S2;
+	ret[2][2] = S3;
+    
+    if(epsilon) {
+		if(System_Coordinate_in_Waveguide(position) ) {
+			ret *= GlobalParams.PRM_M_W_EpsilonIn;
+		} else {
+			ret *= GlobalParams.PRM_M_W_EpsilonOut;
+		}
+		ret *= GlobalParams.PRM_C_Eps0;
+	}
+    
+    Tensor<2,3, std::complex<double>> ret2;
+	Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
+	double dist = position[0] * position[0] + position[1]*position[1];
+	dist = std::sqrt(dist);
+	double maxdist = GlobalParams.PRM_M_R_XLength/2.0 - GlobalParams.PRM_M_BC_Mantle * GlobalParams.PRM_M_R_XLength;
+	double mindist = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
+	double sig = sigma(dist, mindist, maxdist);
+	double factor = InterpolationPolynomialZeroDerivative(sig, 1,0);
+	transformation *= factor;
+	for(int i = 0; i < 3; i++) {
+		transformation[i][i] += 1-factor;
+	}
+	for(int i = 0; i < 3; i++) {
+		for(int j = 0; j < 3; j++) {
+			ret2[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
+		}
+	}
+
+	
+
+	Tensor<2,3, std::complex<double>> ret3;
+
+	for(int i = 0; i < 3; i++) {
+		for(int j = 0; j < 3; j++) {
+			ret3[i][j] = std::complex<double>(0.0, 0.0);
+			for(int k = 0; k < 3; k++) {
+				ret3[i][j] += ret[i][k] * ret2[k][j];
+			}
+		}
+	}
+	//pout << "get_Tensor_2" << std::endl;
+	if  ( inverse ) ret3 = invert(ret3);
+
+	return ret3;
 }
 
 template<typename MatrixType, typename VectorType >
@@ -449,9 +446,8 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 	ret[0][0] = S1;
 	ret[1][1] = S2;
 	ret[2][2] = S3;
-
-
-	if(epsilon) {
+    
+    if(epsilon) {
 		if(System_Coordinate_in_Waveguide(position) ) {
 			ret *= GlobalParams.PRM_M_W_EpsilonIn;
 		} else {
@@ -459,61 +455,42 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 		}
 		ret *= GlobalParams.PRM_C_Eps0;
 	}
-
+    
+    Tensor<2,3, std::complex<double>> ret2;
 	Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
-	Tensor<2,3, std::complex<double>> ret2;
+	double dist = position[0] * position[0] + position[1]*position[1];
+	dist = std::sqrt(dist);
+	double maxdist = GlobalParams.PRM_M_R_XLength/2.0 - GlobalParams.PRM_M_BC_Mantle * GlobalParams.PRM_M_R_XLength;
+	double mindist = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
+	double sig = sigma(dist, mindist, maxdist);
+	double factor = InterpolationPolynomialZeroDerivative(sig, 1,0);
+	transformation *= factor;
+	for(int i = 0; i < 3; i++) {
+		transformation[i][i] += 1-factor;
+	}
+	for(int i = 0; i < 3; i++) {
+		for(int j = 0; j < 3; j++) {
+			ret2[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
+		}
+	}
+
+	
+
+	Tensor<2,3, std::complex<double>> ret3;
 
 	for(int i = 0; i < 3; i++) {
 		for(int j = 0; j < 3; j++) {
-			ret2[i][j] = std::complex<double>(0.0, 0.0);
+			ret3[i][j] = std::complex<double>(0.0, 0.0);
 			for(int k = 0; k < 3; k++) {
-				ret2[i][j] += ret[i][k] * transformation[k][j];
+				ret3[i][j] += ret[i][k] * ret2[k][j];
 			}
 		}
 	}
 	//pout << "get_Tensor_2" << std::endl;
-	if  ( inverse ) ret2 = invert(ret2);
+	if  ( inverse ) ret3 = invert(ret3);
 
-	return ret2;
+	return ret3;
 
-	/**
-	Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
-
-	Tensor<2,3, std::complex<double>>( 1.0, ret;
-	for(int l = 0; l<3; l++) {
-		for(int k = 0; k<3; k++) {
-			std::complex<double> temp(transformation[l][k],0.0);
-			ret[l][k] = temp;
-		}
-	}
-
-	if(epsilon) {
-		if(System_Coordinate_in_Waveguide(position) ) {
-			ret *= GlobalParams.PRM_M_W_EpsilonIn;
-		} else {
-			ret *= GlobalParams.PRM_M_W_EpsilonOut;
-		}
-		ret *= GlobalParams.PRM_C_Eps0;
-	} else {
-		ret *= GlobalParams.PRM_C_Mu0;
-	}
-
-	ret[0][0] *= sy * sz / sx ;
-	ret[0][1] *= sz ;
-	ret[0][2] *= sy ;
-
-	ret[1][0] *= sz ;
-	ret[1][1] *= sx * sz / sy ;
-	ret[1][2] *= sx ;
-
-	ret[2][0] *= sy ;
-	ret[2][1] *= sx ;
-	ret[2][2] *= sx * sy / sz ;
-
-	if(inverse) return invert(ret) ;
-
-	else return ret;
-	**/
 }
 
 template<typename MatrixType, typename VectorType >
