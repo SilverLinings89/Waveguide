@@ -457,7 +457,10 @@ class Waveguide
 
 		TimerOutput 									timer;
 		bool											execute_recomputation;
-        VectorType                                      cell_weights;
+		Vector<float>                                   cell_weights;
+		Vector<float>                                   cell_weights_prec_1;
+		Vector<float>                                   cell_weights_prec_2;
+
         IndexSet                                        locally_owned_cells;
 };
 

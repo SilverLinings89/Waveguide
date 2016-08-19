@@ -776,10 +776,10 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 					cell->set_refine_flag();
 				}
 			}
-			//triangulation.execute_coarsening_and_refinement();
-			//MaxDistFromBoundary *= 0.7 ;
+			triangulation.execute_coarsening_and_refinement();
+			MaxDistFromBoundary = (MaxDistFromBoundary + ((GlobalParams.PRM_M_C_RadiusOut + GlobalParams.PRM_M_C_RadiusIn)/2.0))/2.0 ;
 		}
-		MaxDistFromBoundary = (GlobalParams.PRM_M_C_RadiusOut + GlobalParams.PRM_M_C_RadiusIn)*1.4/2.0;
+
 		for(int i = 0; i < GlobalParams.PRM_R_Internal; i++) {
 			cell = triangulation.begin_active();
 			for (; cell!=endc; ++cell){
@@ -827,15 +827,9 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	GlobalParams.z_evaluate = (GlobalParams.z_min + GlobalParams.z_max)/2.0;
 	// mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
 
-    locally_owned_cells.set_size(triangulation.n_active_cells());
     cell = triangulation.begin_active();
 	endc = triangulation.end();
 
-	for (; cell!=endc; ++cell){
-		if(cell->is_locally_owned()) {
-            locally_owned_cells.add_index(cell->active_cell_index());
-        }
-	}
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1134,10 +1128,28 @@ void Waveguide<MatrixType, VectorType>::calculate_cell_weights () {
 		if(cell->is_locally_owned()) {
             Tensor<2,3, std::complex<double>> tens;
             Point<3> pos = cell->center();
-            tens = get_Tensor(pos, false, true);
+            // tens = get_Tensor(pos, false, true);
+            tens = get_Tensor(pos,false, true);
             cell_weights(cell->active_cell_index()) = tens.norm();
+            tens = get_Preconditioner_Tensor(pos,false, true, GlobalParams.MPI_Rank);
+            cell_weights_prec_1(cell->active_cell_index()) = tens.norm();
+            tens = get_Preconditioner_Tensor(pos,false, true, GlobalParams.MPI_Rank+1);
+            cell_weights_prec_2(cell->active_cell_index()) = tens.norm();
         }
 	}
+
+	DataOut<3> data_out_cells;
+	data_out_cells.attach_dof_handler (dof_handler);
+	//data_out_real.attach_dof_handler(dof_handler_real);
+	data_out_cells.add_data_vector (cell_weights, "Material_Tensor_Norm",dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3, 3>::DataVectorType::type_cell_data );
+	data_out_cells.add_data_vector (cell_weights_prec_1, "Material_Tensor_Prec_Low",dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3, 3>::DataVectorType::type_cell_data );
+	data_out_cells.add_data_vector (cell_weights_prec_2, "Material_Tensor_Prec_Up",dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3, 3>::DataVectorType::type_cell_data );
+	// data_out.add_data_vector(differences, "L2error");
+
+	data_out_cells.build_patches ();
+
+	std::ofstream outputvtu2 (solutionpath + "/cell-weights" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +"-"+static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str()+".vtu");
+	data_out_cells.write_vtu(outputvtu2);
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1228,8 +1240,10 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 
 template <>
 void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_cell_weights() {
-	cell_weights.reinit(locally_owned_cells, MPI_COMM_WORLD);
-    calculate_cell_weights();
+	cell_weights.reinit(triangulation.n_active_cells());
+	cell_weights_prec_1.reinit(triangulation.n_active_cells());
+	cell_weights_prec_2.reinit(triangulation.n_active_cells());
+	calculate_cell_weights();
 }
 
 template<>
@@ -1318,13 +1332,13 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
 						std::complex<double> x = (mu * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
 						cell_matrix_real[i][j] += x.real();
 
-						/**
+
 						std::complex<double> pre1 = (mu_prec1 * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon_pre1 * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
 						cell_matrix_prec1[i][j] += pre1.real();
 
 						std::complex<double> pre2 = (mu_prec2 * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon_pre2 * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
 						cell_matrix_prec2[i][j] += pre2.real();
-						**/
+
 					}
 				}
 			}
@@ -1332,14 +1346,13 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
 			// pout << "Starting distribution"<<std::endl;
 			cm.distribute_local_to_global     (cell_matrix_real, cell_rhs, local_dof_indices,system_matrix, system_rhs, true);
 			// pout << "P1 done"<<std::endl;
-			/**
-				if(GlobalParams.MPI_Rank != 0 ) {
-					cm_prec1.distribute_local_to_global(cell_matrix_prec1, cell_rhs, local_dof_indices,Preconditioner_Matrices[GlobalParams.MPI_Rank-1], preconditioner_rhs, true);
-				}
-				if(GlobalParams.MPI_Rank != Layers-1) {
-					cm_prec2.distribute_local_to_global(cell_matrix_prec2, cell_rhs, local_dof_indices, Preconditioner_Matrices[GlobalParams.MPI_Rank], preconditioner_rhs, true);
-				}
-			**/
+
+			if(GlobalParams.MPI_Rank != 0 ) {
+				cm_prec1.distribute_local_to_global(cell_matrix_prec1, cell_rhs, local_dof_indices,Preconditioner_Matrices[GlobalParams.MPI_Rank-1], preconditioner_rhs, true);
+			}
+			if(GlobalParams.MPI_Rank != Layers-1) {
+				cm_prec2.distribute_local_to_global(cell_matrix_prec2, cell_rhs, local_dof_indices, Preconditioner_Matrices[GlobalParams.MPI_Rank], preconditioner_rhs, true);
+			}
 			// pout << "P2 done"<<std::endl;
 	    }
 	}
@@ -1665,7 +1678,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 			t_upper = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank +1].n_elements();
 		}
 		
-		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, t_upper);
+		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, t_upper, & cm);
 
 
 		if(GlobalParams.MPI_Rank == 0 ){
@@ -1682,6 +1695,12 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 				for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(LowerDofs.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(LowerDofs.nth_index_in_set(current_row)); row++) {
 					if(LowerDofs.is_element(row->column())){
 						sweep.matrix.set(current_row, LowerDofs.index_within_set(row->column()), row->value());
+					}
+				}
+			}
+			for (unsigned int current_row = below; current_row < LowerDofs.n_elements(); current_row++  ) {
+				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(LowerDofs.nth_index_in_set(current_row)); row != system_matrix.end(LowerDofs.nth_index_in_set(current_row)); row++) {
+					if(LowerDofs.is_element(row->column())){
 						if(current_row >= below && LowerDofs.index_within_set(row->column()) < below) {
 							sweep.prec_matrix.set(current_row - below, LowerDofs.index_within_set(row->column()), row->value());
 						}
@@ -1694,8 +1713,13 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 		sweep.prec_matrix.compress(VectorOperation::insert);
 
+		if(GlobalParams.MPI_Rank == 0) {
+			sweep.Prepare(solution);
+		}
 
 		MPI_Barrier(MPI_COMM_WORLD);
+
+
 		pout << "All preconditioner matrices built. Solving..." <<std::endl;
 
 
@@ -1740,16 +1764,7 @@ template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::output_results ( bool details )
 {
 
-    DataOut<3> data_out_cells;
-    data_out_cells.attach_dof_handler (dof_handler);
-    //data_out_real.attach_dof_handler(dof_handler_real);
-    data_out_cells.add_data_vector (cell_weights, "Material Tensor Norm");
-    // data_out.add_data_vector(differences, "L2error");
 
-    data_out_cells.build_patches ();
-
-    std::ofstream outputvtu2 (solutionpath + "/cell-weights" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +"-"+static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str()+".vtu");
-    data_out_cells.write_vtu(outputvtu2);
         
 	// evaluate_overall();
 	if(details) {
