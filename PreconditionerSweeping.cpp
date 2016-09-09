@@ -14,11 +14,13 @@ using namespace dealii;
 PreconditionerSweeping::~PreconditionerSweeping (){
 	delete solver;
 }
-PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int bandwidth,  IndexSet locally_owned, int in_upper, ConstraintMatrix * in_cm):
+PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int bandwidth,  IndexSet sweepable_dofs, IndexSet in_locally_owned_dofs, int in_upper, ConstraintMatrix * in_cm):
 
 		matrix(in_own+in_others, in_own+in_others, bandwidth),
-		prec_matrix(in_own, in_others, bandwidth)
-{
+		prec_matrix_lower(in_own, in_others, bandwidth),
+		prec_matrix_upper(in_others, in_own, bandwidth)
+	{
+		locally_owned_dofs = in_locally_owned_dofs;
 		cm = in_cm;
 		upper = in_upper;
 		own = in_own;
@@ -26,9 +28,10 @@ PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int
 		IndexSet elements (own+others);
 		elements.add_range(0,own+others);
 		solver = new TrilinosWrappers::SolverDirect(s, TrilinosWrappers::SolverDirect::AdditionalData(false, GlobalParams.PRM_S_Preconditioner));
-		indices = new int[locally_owned.n_elements()];
-		for(int i = 0; i < own; i++){
-			indices[i] = locally_owned.nth_index_in_set(i);
+		indices = new int[sweepable_dofs.n_elements()];
+		sweepable = sweepable_dofs.n_elements();
+		for(int i = 0; i < sweepable; i++){
+			indices[i] = sweepable_dofs.nth_index_in_set(i);
 		}
    }
 
@@ -36,7 +39,7 @@ PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int
 void PreconditionerSweeping::Prepare ( TrilinosWrappers::MPI::Vector & inp) {
 	boundary.reinit(own, false);
 	for(unsigned int i = 0; i<own; i++) {
-		boundary[i] = inp[i];
+		boundary[i] = inp[locally_owned_dofs.nth_index_in_set(i)];
 	}
 	return;
 }
@@ -46,7 +49,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 {
 	// line 1
 	dealii::Vector<double> input(own);
-	for (int i = 0; i < own; i++) {
+	for (int i = 0; i < sweepable; i++) {
 		input[i] = src[indices[i]];
 	}
 
@@ -58,14 +61,14 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 
 		solver->solve( matrix , outputb, input);
 
-		double *  trans1 = new double[own];
+		// double *  trans1 = new double[own];
 
 		for(int i = 0; i < own; i++) {
 			input[i] = outputb[i];
-			trans1[i] = outputb[i];
+			// trans1[i] = outputb[i];
 		}
 
-		MPI_Send(trans1, own, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
+		MPI_Send(&outputb[0], own, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
 
 	} else {
 
@@ -83,13 +86,13 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 
 		LowerProduct(temp2, temp3);
 
-		std::cout << "D" << GlobalParams.MPI_Rank << " " << temp3.l2_norm() << std::endl;
+		std::cout << "B" << GlobalParams.MPI_Rank << " " << temp3.l2_norm() << std::endl;
 
 
 		//Line 4
 		input -= temp3;
 		
-		std::cout << "E" << GlobalParams.MPI_Rank << " " << input.l2_norm() << std::endl;
+		std::cout << "C" << GlobalParams.MPI_Rank << " " << input.l2_norm() << std::endl;
 
 
 		if(GlobalParams.MPI_Rank != GlobalParams.MPI_Size -1) {
@@ -97,14 +100,9 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 
 			Hinv(input, temp4);
 
-			std::cout << "F" << GlobalParams.MPI_Rank << " " << temp4.l2_norm() << std::endl;
+			std::cout << "D" << GlobalParams.MPI_Rank << " " << temp4.l2_norm() << std::endl;
 
-			double * trans3 = new double [own];
-			for(int i = 0; i < own; i++) {
-				trans3[i] = temp4[i];
-			}
-
-			MPI_Send(trans3, own, MPI_DOUBLE, GlobalParams.MPI_Rank + 1, 0, MPI_COMM_WORLD);
+			MPI_Send(&temp4[0], own, MPI_DOUBLE, GlobalParams.MPI_Rank + 1, 0, MPI_COMM_WORLD);
 		}
 	}
         
@@ -119,25 +117,17 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
     if(GlobalParams.MPI_Rank != 0) {
         dealii::Vector<double> temp (own);
         for(int i =0; i < own; i++) {
-            temp(i) = input[i];
+            temp[i] = input[i];
         }
         Hinv(temp, input);
-    }
-
-    if (GlobalParams.MPI_Rank == 0) {
-        std::cout << "P done ..." << std::endl;
     }
         
     MPI_Barrier(MPI_COMM_WORLD);
     // Line 11
     if ( GlobalParams.MPI_Rank == GlobalParams.MPI_Size -1) {
             dealii::Vector<double> back_sweep (others);
-            double * trans4 = new double [others];
             UpperProduct(input, back_sweep);
-            for (int i = 0; i < others; i++) {
-                    trans4[i] = back_sweep(i);
-            }
-            MPI_Send(trans4, others, MPI_DOUBLE, GlobalParams.MPI_Rank - 1, 0, MPI_COMM_WORLD);
+            MPI_Send(&back_sweep[0], others, MPI_DOUBLE, GlobalParams.MPI_Rank - 1, 0, MPI_COMM_WORLD);
     } else {
             double * trans4 = new double [own];
             MPI_Recv(trans4, own, MPI_DOUBLE, GlobalParams.MPI_Rank+1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -145,21 +135,18 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
             dealii::Vector<double> back_sweep (own);
             dealii::Vector<double> temp_calc (own);
             for (int i = 0; i < own; i++) {
-                    temp_calc(i) = trans4[i];
+                    temp_calc[i] = trans4[i];
             }
-			std::cout << "B" << GlobalParams.MPI_Rank << " " << temp_calc.l2_norm() << std::endl;
+			std::cout << "E" << GlobalParams.MPI_Rank << " " << temp_calc.l2_norm() << std::endl;
             Hinv(temp_calc, back_sweep);
-                
+            std::cout << "F" << GlobalParams.MPI_Rank << " " << back_sweep.l2_norm() << std::endl;
             input -= back_sweep;
                 
             if(GlobalParams.MPI_Rank >0) {
                     dealii::Vector<double> back_sweep2 (others);
-                    double * trans5 = new double [others];
                     UpperProduct(input, back_sweep2);
-                    for (int i = 0; i < others; i++) {
-                            trans5[i] = back_sweep2(i);
-                    }
-                    MPI_Send(trans5, others, MPI_DOUBLE, GlobalParams.MPI_Rank - 1, 0, MPI_COMM_WORLD);
+                    std::cout << "G" << GlobalParams.MPI_Rank << " " << back_sweep2.l2_norm() << std::endl;
+                    MPI_Send(&back_sweep2[0], others, MPI_DOUBLE, GlobalParams.MPI_Rank - 1, 0, MPI_COMM_WORLD);
             }
     }
         
@@ -176,7 +163,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 	//std::cout << "C" << GlobalParams.MPI_Rank << " " << input.l2_norm() << std::endl;
 
     for(int i = 0; i < own; i++ ){
-		dst[indices[i]] = input[i];
+		dst[i + locally_owned_dofs.nth_index_in_set(0)] = input[i];
     }
 
     //cm->distribute(dst);
@@ -205,28 +192,10 @@ void PreconditionerSweeping::Hinv(const dealii::Vector<double> & src, dealii::Ve
 void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> & src, dealii::Vector<double> & dst) const {
 
 	if(GlobalParams.MPI_Rank == 0) {
-		std::cout << "FEHLER!" <<std::endl;
+		std::cout << "ERROR!" <<std::endl;
 	}
-	// dealii::Vector<double> in_temp (own+others);
-	// for (int i = 0; i < others; i++) {
-	// 	in_temp[i] = src[i];
-	// }
-	//std::cout << "LA" << GlobalParams.MPI_Rank << " " << in_temp.l2_norm() << std::endl;
 
-	// dealii::Vector<double> out_temp (own+others);
-	prec_matrix.vmult(dst, src);
-
-	//std::cout << "LB" << GlobalParams.MPI_Rank << " " << out_temp.l2_norm() << matrix.l1_norm() << std::endl;
-	
-//	for(int i = 0; i < own; i++) {
-	//	dst[i] = out_temp[others + i];
-		//if (out_temp[others + i] != 0.0) {
-		//	std::cout << "--"; 
-		//}
-		
-	//}
-	//std::cout << std::endl;
-	//std::cout << "LC" << GlobalParams.MPI_Rank << " " << dst.l2_norm() << std::endl;
+	prec_matrix_lower.vmult(dst, src);
 
 }
 
@@ -234,23 +203,10 @@ void PreconditionerSweeping::UpperProduct(const dealii::Vector<double> & src, de
 
 
 	if(GlobalParams.MPI_Rank == 0) {
-		std::cout << "FEHLER!" <<std::endl;
+		std::cout << "ERROR!" <<std::endl;
 	}
-	// dealii::Vector<double> in_temp (own+others);
-	// for (int i = 0; i < own; i++) {
-	//  	in_temp[others + i] = src[i];
-	// }
 
-	//std::cout << "UA" << GlobalParams.MPI_Rank << " " << in_temp.l2_norm() << std::endl;
-
-	// dealii::Vector<double> out_temp (own+others);
-	prec_matrix.Tvmult(dst, src);
-
-	// std::cout << "UB" << GlobalParams.MPI_Rank << " " << out_temp.l2_norm() << std::endl;
-	// for(int i = 0; i < others; i++) {
-	// 	dst[i] = out_temp[ i];
-	//}
-
+	prec_matrix_upper.vmult(dst, src);
 
 }
 

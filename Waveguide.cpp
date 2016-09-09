@@ -1493,7 +1493,8 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 	endc = dof_handler.end();
 	IndexSet own (dof_handler.n_dofs());
 	own.add_indices(locally_owned_dofs);
-
+	sweepable.set_size(dof_handler.n_dofs());
+	sweepable.add_indices(locally_owned_dofs);
 	if(GlobalParams.MPI_Rank == 0 ){
 		// own.add_indices(locally_owned_dofs);
 	} else {
@@ -1502,6 +1503,16 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 	for (; cell!=endc; ++cell)
 	{
 		if(cell->subdomain_id() == GlobalParams.MPI_Rank || cell->subdomain_id() == GlobalParams.MPI_Rank -1 ) {
+			Point<3, double> cell_center =cell->center(true, false);
+			if( PML_in_X(cell_center) || PML_in_Y(cell_center) || PML_in_Z(cell_center)) {
+				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_cell);
+				cell->get_dof_indices(local_dof_indices);
+				IndexSet localdofs(dof_handler.n_dofs());
+				for(unsigned int k =0 ; k< local_dof_indices.size(); k++) {
+					localdofs.add_index(local_dof_indices[k]);
+				}
+				sweepable.subtract_set(localdofs);
+			}
 			for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
 				Point<3, double> center =(cell->face(i))->center(true, false);
 				if( center[0] < 0) center[0] *= (-1.0);
@@ -1678,40 +1689,58 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 			t_upper = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank +1].n_elements();
 		}
 		
-		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, t_upper, & cm);
+		// PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, t_upper, & cm);
+		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs(), sweepable, locally_owned_dofs, t_upper, & cm);
 
+		unsigned int dofs_below = LowerDofs.nth_index_in_set(0);
+		unsigned int total_dofs_local = LowerDofs.n_elements();
 
 		if(GlobalParams.MPI_Rank == 0 ){
 			for (unsigned int current_row = 0; current_row < LowerDofs.n_elements(); current_row++  ) {
-				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(LowerDofs.nth_index_in_set(current_row)); row != system_matrix.end(LowerDofs.nth_index_in_set(current_row)); row++) {
+				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(current_row); row != system_matrix.end(current_row); row++) {
 					if(LowerDofs.is_element(row->column())){
-						sweep.matrix.set(current_row, LowerDofs.index_within_set(row->column()), row->value());
+						sweep.matrix.set(current_row, row->column(), row->value());
 					}
 					
 				}
 			}
 		} else {
 			for (unsigned int current_row = 0; current_row < LowerDofs.n_elements(); current_row++  ) {
-				for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(LowerDofs.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(LowerDofs.nth_index_in_set(current_row)); row++) {
-					if(LowerDofs.is_element(row->column())){
-						sweep.matrix.set(current_row, LowerDofs.index_within_set(row->column()), row->value());
+				for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(LowerDofs.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(current_row + dofs_below); row++) {
+					if(row->column() >= dofs_below && row->column() < dofs_below + total_dofs_local){
+						sweep.matrix.set(current_row, row->column() - dofs_below, row->value());
 					}
 				}
 			}
-			for (unsigned int current_row = below; current_row < LowerDofs.n_elements(); current_row++  ) {
-				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(LowerDofs.nth_index_in_set(current_row)); row != system_matrix.end(LowerDofs.nth_index_in_set(current_row)); row++) {
-					if(LowerDofs.is_element(row->column())){
-						if(current_row >= below && LowerDofs.index_within_set(row->column()) < below) {
-							sweep.prec_matrix.set(current_row - below, LowerDofs.index_within_set(row->column()), row->value());
-						}
+			unsigned int lower_entries, upper_entries;
+			lower_entries = 0;
+			upper_entries = 0;
+			for (unsigned int current_row = below; current_row < total_dofs_local; current_row++  ) {
+				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(dofs_below + current_row); row != system_matrix.end(dofs_below + current_row); row++) {
+					if(row->column() >= dofs_below && row->column() - dofs_below < below){
+						sweep.prec_matrix_lower.set(current_row - below, row->column() - dofs_below, row->value());
+						sweep.prec_matrix_upper.set(row->column() - dofs_below , current_row- below ,  row->value());
+						lower_entries ++;
 					}
 				}
 			}
+			/**
+			for (unsigned int current_row = 0; current_row < below; current_row++  ) {
+				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(current_row + dofs_below); row != system_matrix.end(current_row + dofs_below); row++) {
+					if(row->column()-dofs_below+below >= 0 && row->column() - dofs_below < total_dofs_local){
+						sweep.prec_matrix_upper.set(current_row , row->column() - dofs_below - below, row->value());
+						upper_entries ++;
+					}
+				}
+			}
+			**/
+			std::cout << "Copy in proc " << GlobalParams.MPI_Rank << " gave " << lower_entries << " lower and " << upper_entries << " upper entries" << std::endl;
 		}
 
 		sweep.matrix.compress(VectorOperation::insert);
 
-		sweep.prec_matrix.compress(VectorOperation::insert);
+		sweep.prec_matrix_lower.compress(VectorOperation::insert);
+		sweep.prec_matrix_upper.compress(VectorOperation::insert);
 
 		if(GlobalParams.MPI_Rank == 0) {
 			sweep.Prepare(solution);

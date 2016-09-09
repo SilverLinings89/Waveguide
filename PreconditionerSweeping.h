@@ -22,7 +22,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
   {
 
   public:
-	PreconditionerSweeping ( int in_own, int in_others, int bandwidth, IndexSet locallyowned, int in_upper, ConstraintMatrix * in_cm);
+	PreconditionerSweeping ( int in_own, int in_others, int bandwidth, IndexSet sweepable, IndexSet locally_owned,  int in_upper, ConstraintMatrix * in_cm);
 
     ~PreconditionerSweeping ();
 
@@ -34,7 +34,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 
 	virtual void vmult (TrilinosWrappers::MPI::Vector       &dst,      const TrilinosWrappers::MPI::Vector &src) const;
 
-	TrilinosWrappers::SparseMatrix matrix, prec_matrix;
+	TrilinosWrappers::SparseMatrix matrix, prec_matrix_lower, prec_matrix_upper;
 
 	void Prepare(TrilinosWrappers::MPI::Vector &src);
 
@@ -44,6 +44,8 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 	TrilinosWrappers::MPI::Vector itmp, otmp;
 	ConstraintMatrix * cm;
 	Vector<double> boundary;
+	unsigned int sweepable;
+	IndexSet locally_owned_dofs;
   };
 
 #endif /* PRECONDITIONERSWEEPING_H_ */

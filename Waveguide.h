@@ -461,7 +461,7 @@ class Waveguide
 		Vector<float>                                   cell_weights_prec_1;
 		Vector<float>                                   cell_weights_prec_2;
 
-        IndexSet                                        locally_owned_cells;
+        IndexSet                                        locally_owned_cells, sweepable;
 };
 
 
