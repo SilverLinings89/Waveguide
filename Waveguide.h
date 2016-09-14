@@ -140,9 +140,11 @@ class Waveguide
 		 * \param z gives the z-coordinate.
 		 */
 		std::complex<double> evaluate_for_Position(double x, double y, double z);
-
 		/**
-		 * This function computes the signal quality at given z by calling evaluate_fo_Position and performing numeric integration.
+		 * To compute the output quality of the signal and it's transmition along the waveguid-axis, this function performs a comparison of the fundamental mode of a waveguide and the actual situation. For this purpose we integrate the product of the two functions over a cross-section of the waveguide in transformed coordinates. To perform this action we need to use numeric integration so the integral is decomposed into a sum over local evaluations. For this to be possible this function can be handed x,y and z coordinates and returns the according value.
+		 * \param x gives the x-coordinate.
+		 * \param y gives the y-coordinate.
+		 * \param z gives the z-coordinate.
 		 */
 		double evaluate_for_z(double);
 
@@ -374,6 +376,10 @@ class Waveguide
 		 * Reinit only the system matrix.
 		 */
 		void 	reinit_systemmatrix();
+        
+        void    reinit_cell_weights();
+        
+        void    calculate_cell_weights ();
 
 		/**
 		 * Reinit only the solution vector.
@@ -388,6 +394,7 @@ class Waveguide
 		void 	reinit_for_rerun();
 
 		void 	reinit_preconditioner_fast();
+
 		/**
 		 * This function encapsulates a library call for 2D numeric integration over a circle with given properties. It is included that this function calls evaluate_for_Position(x,y,z)
 		 */
@@ -401,7 +408,7 @@ class Waveguide
 		parallel::distributed::Triangulation<3>			triangulation;
 		DoFHandler<3>									dof_handler;
 		//, dof_handler_real;
-		VectorType										solution;
+		VectorType										solution, EstimatedSolution, ErrorOfSolution ;
 		ConstraintMatrix 								cm, cm_prec1, cm_prec2;
 		IndexSet										locally_owned_dofs, locally_relevant_dofs, locally_active_dofs, extended_relevant_dofs;
 		std::vector<IndexSet>							locally_relevant_dofs_per_subdomain;
@@ -451,6 +458,11 @@ class Waveguide
 
 		TimerOutput 									timer;
 		bool											execute_recomputation;
+		Vector<float>                                   cell_weights;
+		Vector<float>                                   cell_weights_prec_1;
+		Vector<float>                                   cell_weights_prec_2;
+
+        IndexSet                                        locally_owned_cells, sweepable;
 };
 
 

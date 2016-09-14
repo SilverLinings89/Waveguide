@@ -293,8 +293,9 @@ static Point<3> Triangulation_Stretch_to_circle (const Point<3> &p)
 static Point<3> Triangulation_Stretch_Computational_Radius (const Point<3> &p)
 {
 	double r_goal = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
-	double r_current = (GlobalParams.PRM_M_R_XLength ) / 7.12644;
-	double r_max = (GlobalParams.PRM_M_R_XLength / 2.0 ) * (1.0 - GlobalParams.PRM_M_BC_Mantle);
+	//double r_current = (GlobalParams.PRM_M_R_XLength ) / 7.12644;
+	double r_current = (GlobalParams.PRM_M_R_XLength ) / 5.65;
+	double r_max = (GlobalParams.PRM_M_R_XLength / 2.0 ) * (1.0 - (2.0*GlobalParams.PRM_M_BC_Mantle));
 	double r_point = sqrt(p[0]*p[0] + p[1]*p[1]);
 	double factor = InterpolationPolynomialZeroDerivative(sigma(r_point, r_current, r_max), r_goal/r_current , 1.0);
 	Point<3> q = p;

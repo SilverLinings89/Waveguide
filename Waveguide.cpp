@@ -21,6 +21,7 @@
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include "PreconditionerSweeping.cpp"
 #include <deal.II/lac/solver.h>
+#include <deal.II/numerics/data_out_dof_data.h>
 using namespace dealii;
 
 template<typename MatrixType, typename VectorType >
@@ -111,6 +112,7 @@ std::complex<double> Waveguide<MatrixType, VectorType>::evaluate_for_Position(do
 	std::complex<double> c3(result(2), - result(5));
 
 	return mode(0) * c1 + mode(1)*c2 + mode(2)*c3;
+
 }
 
 template<typename MatrixType, typename VectorType>
@@ -160,8 +162,9 @@ std::complex<double> Waveguide<MatrixType, VectorType>::gauss_product_2D_sphere(
 template<typename MatrixType, typename VectorType>
 double Waveguide<MatrixType, VectorType>::evaluate_for_z(double z) {
 	double r = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
-	std::complex<double> exc = gauss_product_2D_sphere(z,10,r,0,0);
-	return std::sqrt(std::norm(exc));
+
+	std::complex<double> res = gauss_product_2D_sphere(z,10,r,0,0);
+	return std::sqrt(std::norm(res));
 }
 
 template<typename MatrixType, typename VectorType >
@@ -220,7 +223,6 @@ template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::mark_unchanged() {
 	execute_recomputation = false;
 }
-
 
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::evaluate() {
@@ -298,97 +300,143 @@ void Waveguide<MatrixType, VectorType >::store() {
 	is_stored = true; **/
 }
 
+template<>
+void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::estimate_solution() {
+	MPI_Barrier(MPI_COMM_WORLD);
+	pout << "Starting solution estimation..." << std::endl;
+	DoFHandler<3>::active_cell_iterator cell, endc;
+	pout << "Lambda: " << GlobalParams.PRM_M_W_Lambda << std::endl;
+	unsigned int min_dof = locally_owned_dofs.nth_index_in_set(0);
+	unsigned int max_dof = locally_owned_dofs.nth_index_in_set(locally_owned_dofs.n_elements()-1 );
+
+	cell = dof_handler.begin_active(),
+	endc = dof_handler.end();
+	for (; cell!=endc; ++cell)
+	{
+		if(cell->is_locally_owned()) {
+			for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
+				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+
+					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+					Tensor<1,3,double> ptemp = ((cell->face(i))->line(j))->center(true, false);
+					if( std::abs(ptemp[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) > 0.0001 ){
+						Point<3, double> p (ptemp[0], ptemp[1], ptemp[2]);
+						Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(0) - ((cell->face(i))->line(j))->vertex(1);
+						dtemp = dtemp / dtemp.norm();
+						Point<3, double> direction (dtemp[0], dtemp[1], dtemp[2]);
+
+
+						//double phi = (ptemp[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) *2 * GlobalParams.PRM_C_PI / (GlobalParams.PRM_M_W_Lambda / GlobalParams.PRM_M_W_EpsilonIn);
+						double phi = (ptemp[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) * 2* GlobalParams.PRM_C_PI / (GlobalParams.PRM_M_W_Lambda / std::sqrt(GlobalParams.PRM_M_W_EpsilonIn));
+						double result_real = TEMode00(p,0) * std::cos(phi) ;
+						double result_imag = - TEMode00(p,0) * std::sin(phi) ;
+						if(PML_in_X(p) || PML_in_Y(p)) result_real = 0.0;
+						if(PML_in_X(p) || PML_in_Y(p)) result_imag = 0.0;
+
+						if(local_dof_indices[0] >= min_dof && local_dof_indices[0] < max_dof) {
+							EstimatedSolution[local_dof_indices[0]] = direction[0] * result_real ;
+						}
+						if(local_dof_indices[1] >= min_dof && local_dof_indices[1] < max_dof) {
+							EstimatedSolution[local_dof_indices[1]] = direction[0] * result_imag ;
+						}
+					}
+				}
+			}
+		}
+	}
+	MPI_Barrier(MPI_COMM_WORLD);
+	EstimatedSolution.compress(VectorOperation::insert);
+}
+
 template<typename MatrixType, typename VectorType >
 Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(Point<3> & position, bool inverse , bool epsilon) {
-	if(PML_in_Z(position)  || PML_in_X(position) || PML_in_Y(position)) {
-		Tensor<2,3, std::complex<double>> ret;
-		for(int i = 0; i<3; i++ ){
-			for(int j = 0; j<3; j++) {
-				ret[i][j] = 0.0;
-			}
-		}
-		std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
+	std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
+	Tensor<2,3, std::complex<double>> ret;
 
-		double omegaepsilon0 = GlobalParams.PRM_C_omega * ((System_Coordinate_in_Waveguide(position))?GlobalParams.PRM_M_W_EpsilonIn : GlobalParams.PRM_M_W_EpsilonOut);
-		std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
-		if(PML_in_X(position)){
-			double r,d, sigmax;
-			r = PML_X_Distance(position);
-			d = GlobalParams.PRM_M_R_XLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
-			sigmax = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaXMax;
-			sx.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaXMax);
-			sx.imag( sigmax / ( omegaepsilon0));
-			S1 /= sx;
-			S2 *= sx;
-			S3 *= sx;
-		}
-		if(PML_in_Y(position)){
-			double r,d, sigmay;
-			r = PML_Y_Distance(position);
-			d = GlobalParams.PRM_M_R_YLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
-			sigmay = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaYMax;
-			sy.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaYMax);
-			sy.imag( sigmay / ( omegaepsilon0));
-			S1 *= sy;
-			S2 /= sy;
-			S3 *= sy;
-		}
-		if(PML_in_Z(position)){
-			double r,d, sigmaz;
-			r = PML_Z_Distance(position);
-			d = GlobalParams.PRM_M_BC_XYout * structure->Sector_Length();
-			sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
-			sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
-			sz.imag( sigmaz / omegaepsilon0 );
-			S1 *= sz;
-			S2 *= sz;
-			S3 /= sz;
-		}
-
-
-		ret[0][0] = S1;
-		ret[1][1] = S2;
-		ret[2][2] = S3;
-
-		if(epsilon) {
-			if(System_Coordinate_in_Waveguide(position) ) {
-				ret *= GlobalParams.PRM_M_W_EpsilonIn;
-			} else {
-				ret *= GlobalParams.PRM_M_W_EpsilonOut;
-			}
-			ret *= GlobalParams.PRM_C_Eps0;
-		} else {
-			ret *= GlobalParams.PRM_C_Mu0;
-		}
-
-		if(inverse) ret = invert(ret);
-
-		return ret;
-
-	} else {
-
-		Tensor<2,3, std::complex<double>> ret2;
-		Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
-		double dist = position[0] * position[0] + position[1]*position[1];
-		dist = std::sqrt(dist);
-		double maxdist = GlobalParams.PRM_M_R_XLength/2.0 - GlobalParams.PRM_M_BC_Mantle * GlobalParams.PRM_M_R_XLength;
-		double mindist = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
-		double sig = sigma(dist, mindist, maxdist);
-		double factor = InterpolationPolynomialZeroDerivative(sig, 1,0);
-		transformation *= factor;
-		for(int i = 0; i < 3; i++) {
-			transformation[i][i] += 1-factor;
-		}
-		for(int i = 0; i < 3; i++) {
-			for(int j = 0; j < 3; j++) {
-				ret2[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
-			}
-		}
-
-		if(inverse) ret2 = invert(ret2);
-
-		return ret2;
+	double omegaepsilon0 = GlobalParams.PRM_C_omega * ((System_Coordinate_in_Waveguide(position))?GlobalParams.PRM_M_W_EpsilonIn : GlobalParams.PRM_M_W_EpsilonOut);
+	std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
+	if(PML_in_X(position)){
+		double r,d, sigmax;
+		r = PML_X_Distance(position);
+		d = GlobalParams.PRM_M_R_XLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
+		sigmax = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaXMax;
+		sx.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaXMax);
+		sx.imag( sigmax / ( omegaepsilon0));
+		S1 /= sx;
+		S2 *= sx;
+		S3 *= sx;
 	}
+	if(PML_in_Y(position)){
+		double r,d, sigmay;
+		r = PML_Y_Distance(position);
+		d = GlobalParams.PRM_M_R_YLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
+		sigmay = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaYMax;
+		sy.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaYMax);
+		sy.imag( sigmay / ( omegaepsilon0));
+		S1 *= sy;
+		S2 /= sy;
+		S3 *= sy;
+	}
+	if(PML_in_Z(position)){
+		double r,d, sigmaz;
+		r = PML_Z_Distance(position);
+		d = GlobalParams.PRM_M_BC_XYout * structure->Sector_Length();
+		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
+		sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
+		sz.imag( sigmaz / omegaepsilon0 );
+		S1 *= sz;
+		S2 *= sz;
+		S3 /= sz;
+	}
+
+	ret[0][0] = S1;
+	ret[1][1] = S2;
+	ret[2][2] = S3;
+    
+    if(epsilon) {
+		if(System_Coordinate_in_Waveguide(position) ) {
+			ret *= GlobalParams.PRM_M_W_EpsilonIn;
+		} else {
+			ret *= GlobalParams.PRM_M_W_EpsilonOut;
+		}
+		ret *= GlobalParams.PRM_C_Eps0;
+	}
+    
+    Tensor<2,3, std::complex<double>> ret2;
+	Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
+	double dist = position[0] * position[0] + position[1]*position[1];
+	dist = std::sqrt(dist);
+	double maxdist = GlobalParams.PRM_M_R_XLength/2.0 - GlobalParams.PRM_M_BC_Mantle * GlobalParams.PRM_M_R_XLength;
+	double mindist = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
+	double sig = sigma(dist, mindist, maxdist);
+	double factor = InterpolationPolynomialZeroDerivative(sig, 1,0);
+	transformation *= factor;
+	for(int i = 0; i < 3; i++) {
+		transformation[i][i] += 1-factor;
+	}
+	for(int i = 0; i < 3; i++) {
+		for(int j = 0; j < 3; j++) {
+			ret2[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
+		}
+	}
+
+	
+
+	Tensor<2,3, std::complex<double>> ret3;
+
+	for(int i = 0; i < 3; i++) {
+		for(int j = 0; j < 3; j++) {
+			ret3[i][j] = std::complex<double>(0.0, 0.0);
+			for(int k = 0; k < 3; k++) {
+				ret3[i][j] += ret[i][k] * ret2[k][j];
+			}
+		}
+	}
+
+	if  ( inverse ) ret3 = invert(ret3);
+
+	return ret3;
 }
 
 template<typename MatrixType, typename VectorType >
@@ -432,12 +480,23 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 		S3 /= sz;
 	}
 
+	if(PML_in_Z(position)){
+		double r,d, sigmaz;
+		r = PML_Z_Distance(position);
+		d = GlobalParams.PRM_M_BC_XYout * structure->Sector_Length();
+		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
+		sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
+		sz.imag( sigmaz / omegaepsilon0 );
+		S1 *= sz;
+		S2 *= sz;
+		S3 /= sz;
+	}
+
 	ret[0][0] = S1;
 	ret[1][1] = S2;
 	ret[2][2] = S3;
-
-
-	if(epsilon) {
+    
+    if(epsilon) {
 		if(System_Coordinate_in_Waveguide(position) ) {
 			ret *= GlobalParams.PRM_M_W_EpsilonIn;
 		} else {
@@ -445,61 +504,42 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 		}
 		ret *= GlobalParams.PRM_C_Eps0;
 	}
-
+    
+    Tensor<2,3, std::complex<double>> ret2;
 	Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
-	Tensor<2,3, std::complex<double>> ret2;
+	double dist = position[0] * position[0] + position[1]*position[1];
+	dist = std::sqrt(dist);
+	double maxdist = GlobalParams.PRM_M_R_XLength/2.0 - GlobalParams.PRM_M_BC_Mantle * GlobalParams.PRM_M_R_XLength;
+	double mindist = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
+	double sig = sigma(dist, mindist, maxdist);
+	double factor = InterpolationPolynomialZeroDerivative(sig, 1,0);
+	transformation *= factor;
+	for(int i = 0; i < 3; i++) {
+		transformation[i][i] += 1-factor;
+	}
+	for(int i = 0; i < 3; i++) {
+		for(int j = 0; j < 3; j++) {
+			ret2[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
+		}
+	}
+
+	
+
+	Tensor<2,3, std::complex<double>> ret3;
 
 	for(int i = 0; i < 3; i++) {
 		for(int j = 0; j < 3; j++) {
-			ret2[i][j] = std::complex<double>(0.0, 0.0);
+			ret3[i][j] = std::complex<double>(0.0, 0.0);
 			for(int k = 0; k < 3; k++) {
-				ret2[i][j] += ret[i][k] * transformation[k][j];
+				ret3[i][j] += ret[i][k] * ret2[k][j];
 			}
 		}
 	}
 	//pout << "get_Tensor_2" << std::endl;
-	if  ( inverse ) ret2 = invert(ret2);
+	if  ( inverse ) ret3 = invert(ret3);
 
-	return ret2;
+	return ret3;
 
-	/**
-	Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
-
-	Tensor<2,3, std::complex<double>>( 1.0, ret;
-	for(int l = 0; l<3; l++) {
-		for(int k = 0; k<3; k++) {
-			std::complex<double> temp(transformation[l][k],0.0);
-			ret[l][k] = temp;
-		}
-	}
-
-	if(epsilon) {
-		if(System_Coordinate_in_Waveguide(position) ) {
-			ret *= GlobalParams.PRM_M_W_EpsilonIn;
-		} else {
-			ret *= GlobalParams.PRM_M_W_EpsilonOut;
-		}
-		ret *= GlobalParams.PRM_C_Eps0;
-	} else {
-		ret *= GlobalParams.PRM_C_Mu0;
-	}
-
-	ret[0][0] *= sy * sz / sx ;
-	ret[0][1] *= sz ;
-	ret[0][2] *= sy ;
-
-	ret[1][0] *= sz ;
-	ret[1][1] *= sx * sz / sy ;
-	ret[1][2] *= sx ;
-
-	ret[2][0] *= sy ;
-	ret[2][1] *= sx ;
-	ret[2][2] *= sx * sy / sz ;
-
-	if(inverse) return invert(ret) ;
-
-	else return ret;
-	**/
 }
 
 template<typename MatrixType, typename VectorType >
@@ -784,10 +824,10 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 					cell->set_refine_flag();
 				}
 			}
-			//triangulation.execute_coarsening_and_refinement();
-			//MaxDistFromBoundary *= 0.7 ;
+			triangulation.execute_coarsening_and_refinement();
+			MaxDistFromBoundary = (MaxDistFromBoundary + ((GlobalParams.PRM_M_C_RadiusOut + GlobalParams.PRM_M_C_RadiusIn)/2.0))/2.0 ;
 		}
-		MaxDistFromBoundary = (GlobalParams.PRM_M_C_RadiusOut + GlobalParams.PRM_M_C_RadiusIn)*1.4/2.0;
+
 		for(int i = 0; i < GlobalParams.PRM_R_Internal; i++) {
 			cell = triangulation.begin_active();
 			for (; cell!=endc; ++cell){
@@ -834,6 +874,9 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 
 	GlobalParams.z_evaluate = (GlobalParams.z_min + GlobalParams.z_max)/2.0;
 	// mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
+
+    cell = triangulation.begin_active();
+	endc = triangulation.end();
 
 }
 
@@ -1084,14 +1127,15 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 		} else {
 			if(upper) {
 				owned = LowerDofs;
-				writable = LowerDofs;
-				writable.add_indices(locally_relevant_dofs);
-				dofs = 2* dof_handler.max_couplings_between_dofs();
+				writable = locally_relevant_dofs;
+				writable.add_indices(LowerDofs);
+				dofs =  2* dof_handler.max_couplings_between_dofs();
 			}
 			if(lower) {
 				owned = none;
-				writable = UpperDofs;
-				writable.add_indices(locally_relevant_dofs);
+				writable = locally_relevant_dofs;
+				// UpperDofs;
+				// writable.add_indices(locally_relevant_dofs);
 			}
 		}
 
@@ -1104,8 +1148,15 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 
 		prec_patterns[i].reinit(owned, owned, writable, MPI_COMM_WORLD, dofs);
 
-		DoFTools::make_sparsity_pattern(dof_handler, prec_patterns[i], cm_prec1, true , GlobalParams.MPI_Rank);
-
+		if( lower ){
+			DoFTools::make_sparsity_pattern(dof_handler, prec_patterns[i], cm_prec2, true , GlobalParams.MPI_Rank);
+		}else {
+			if(upper) {
+				DoFTools::make_sparsity_pattern(dof_handler, prec_patterns[i], cm_prec1, true , GlobalParams.MPI_Rank);
+			} else {
+				DoFTools::make_sparsity_pattern(dof_handler, prec_patterns[i], cm_prec1, true , GlobalParams.MPI_Rank);
+			}
+		}
 
 		// prec_patterns[i].reinit(locally_owned_dofs, MPI_COMM_WORLD, 0);
 		// std::cout << GlobalParams.MPI_Rank << " has reached the end of loop " << i << std::endl;
@@ -1117,9 +1168,44 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 }
 
 template<typename MatrixType, typename VectorType >
+void Waveguide<MatrixType, VectorType>::calculate_cell_weights () {
+    cell = triangulation.begin_active();
+	endc = triangulation.end();
+
+	for (; cell!=endc; ++cell){
+		if(cell->is_locally_owned()) {
+            Tensor<2,3, std::complex<double>> tens;
+            Point<3> pos = cell->center();
+            // tens = get_Tensor(pos, false, true);
+            tens = get_Tensor(pos,false, true);
+            cell_weights(cell->active_cell_index()) = tens.norm();
+            tens = get_Preconditioner_Tensor(pos,false, true, GlobalParams.MPI_Rank);
+            cell_weights_prec_1(cell->active_cell_index()) = tens.norm();
+            tens = get_Preconditioner_Tensor(pos,false, true, GlobalParams.MPI_Rank+1);
+            cell_weights_prec_2(cell->active_cell_index()) = tens.norm();
+        }
+	}
+
+	DataOut<3> data_out_cells;
+	data_out_cells.attach_dof_handler (dof_handler);
+	//data_out_real.attach_dof_handler(dof_handler_real);
+	data_out_cells.add_data_vector (cell_weights, "Material_Tensor_Norm",dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3, 3>::DataVectorType::type_cell_data );
+	data_out_cells.add_data_vector (cell_weights_prec_1, "Material_Tensor_Prec_Low",dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3, 3>::DataVectorType::type_cell_data );
+	data_out_cells.add_data_vector (cell_weights_prec_2, "Material_Tensor_Prec_Up",dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3, 3>::DataVectorType::type_cell_data );
+	// data_out.add_data_vector(differences, "L2error");
+
+	data_out_cells.build_patches ();
+
+	std::ofstream outputvtu2 (solutionpath + "/cell-weights" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +"-"+static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str()+".vtu");
+	data_out_cells.write_vtu(outputvtu2);
+}
+
+template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::reinit_all () {
 	// pout << "0-";
 	reinit_rhs();
+    
+    reinit_cell_weights();
 	// pout << "1-";
 	reinit_solution();
 	// pout << "2-";
@@ -1198,6 +1284,16 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 template <>
 void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_solution() {
 	solution.reinit(locally_owned_dofs, MPI_COMM_WORLD);
+	EstimatedSolution.reinit(locally_owned_dofs, MPI_COMM_WORLD);
+	ErrorOfSolution.reinit(locally_owned_dofs, MPI_COMM_WORLD);
+}
+
+template <>
+void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_cell_weights() {
+	cell_weights.reinit(triangulation.n_active_cells());
+	cell_weights_prec_1.reinit(triangulation.n_active_cells());
+	cell_weights_prec_2.reinit(triangulation.n_active_cells());
+	calculate_cell_weights();
 }
 
 template<>
@@ -1286,28 +1382,26 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
 						std::complex<double> x = (mu * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
 						cell_matrix_real[i][j] += x.real();
 
+
 						std::complex<double> pre1 = (mu_prec1 * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon_pre1 * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
 						cell_matrix_prec1[i][j] += pre1.real();
 
 						std::complex<double> pre2 = (mu_prec2 * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon_pre2 * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.PRM_C_omega*GlobalParams.PRM_C_omega;
 						cell_matrix_prec2[i][j] += pre2.real();
+
 					}
 				}
 			}
 			cell->get_dof_indices (local_dof_indices);
 			// pout << "Starting distribution"<<std::endl;
-			cm.distribute_local_to_global     (cell_matrix_real, cell_rhs, local_dof_indices,system_matrix, system_rhs, false);
+			cm.distribute_local_to_global     (cell_matrix_real, cell_rhs, local_dof_indices,system_matrix, system_rhs, true);
 			// pout << "P1 done"<<std::endl;
 
 			if(GlobalParams.MPI_Rank != 0 ) {
-				// std::cout << GlobalParams.MPI_Rank << ": pre  1" << std::endl;
-				cm_prec1.distribute_local_to_global(cell_matrix_prec1, cell_rhs, local_dof_indices,Preconditioner_Matrices[GlobalParams.MPI_Rank-1], preconditioner_rhs, false);
-				// std::cout << GlobalParams.MPI_Rank << ": post 1" << std::endl;
+				cm_prec1.distribute_local_to_global(cell_matrix_prec1, cell_rhs, local_dof_indices,Preconditioner_Matrices[GlobalParams.MPI_Rank-1], preconditioner_rhs, true);
 			}
 			if(GlobalParams.MPI_Rank != Layers-1) {
-				// std::cout << GlobalParams.MPI_Rank << ": pre  2" << std::endl;
-				cm_prec2.distribute_local_to_global(cell_matrix_prec2, cell_rhs, local_dof_indices,Preconditioner_Matrices[GlobalParams.MPI_Rank], preconditioner_rhs, false);
-				// std::cout << GlobalParams.MPI_Rank << ": post 2" << std::endl;
+				cm_prec2.distribute_local_to_global(cell_matrix_prec2, cell_rhs, local_dof_indices, Preconditioner_Matrices[GlobalParams.MPI_Rank], preconditioner_rhs, true);
 			}
 			// pout << "P2 done"<<std::endl;
 	    }
@@ -1329,7 +1423,7 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 	const unsigned int   dofs_per_cell	= fe.dofs_per_cell;
 	const unsigned int   n_q_points		= quadrature_formula.size();
 
-	if(prm.PRM_O_VerboseOutput) {
+	if(prm.PRM_O_VerboseOutput && run_number == 0) {
 		if(!is_stored) {
 		pout << "Dofs per cell: " << dofs_per_cell << std::endl << "Quadrature Formula Size: " << n_q_points << std::endl;
 		pout << "Dofs per face: " << fe.dofs_per_face << std::endl << "Dofs per line: " << fe.dofs_per_line << std::endl;
@@ -1340,13 +1434,24 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 
 	assemble_part( );
 
+	MPI_Barrier(MPI_COMM_WORLD);
 	if(!is_stored)  pout<<"Assembling done. L2-Norm of RHS: "<< system_rhs.l2_norm()<<std::endl;
+
 	system_matrix.compress(VectorOperation::add);
 	system_rhs.compress(VectorOperation::add);
-	MPI_Barrier(MPI_COMM_WORLD);
+
 	for(unsigned int i = 0; i < Layers-1; i++) {
-		Preconditioner_Matrices[i].compress(VectorOperation::add);
+		// if(i == GlobalParams.MPI_Rank || i+1 == GlobalParams.MPI_Rank) {
+			Preconditioner_Matrices[i].compress(VectorOperation::add);
+		//}
 	}
+
+	cm.distribute(solution);
+	cm.distribute(EstimatedSolution);
+	cm.distribute(ErrorOfSolution);
+	MPI_Barrier(MPI_COMM_WORLD);
+	pout << "Distributing solution done." <<std::endl;
+	estimate_solution();
 
 }
 
@@ -1401,6 +1506,7 @@ void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
 							Tensor<1,3,double> ptemp = ((cell->face(i))->line(j))->center(true, false);
 							Point<3, double> p (ptemp[0], ptemp[1], ptemp[2]);
 							Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(0) - ((cell->face(i))->line(j))->vertex(1);
+							dtemp = dtemp / dtemp.norm();
 							Point<3, double> direction (dtemp[0], dtemp[1], dtemp[2]);
 
 							double result = TEMode00(p,0);
@@ -1447,7 +1553,8 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 	endc = dof_handler.end();
 	IndexSet own (dof_handler.n_dofs());
 	own.add_indices(locally_owned_dofs);
-
+	sweepable.set_size(dof_handler.n_dofs());
+	sweepable.add_indices(locally_owned_dofs);
 	if(GlobalParams.MPI_Rank == 0 ){
 		// own.add_indices(locally_owned_dofs);
 	} else {
@@ -1456,6 +1563,16 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 	for (; cell!=endc; ++cell)
 	{
 		if(cell->subdomain_id() == GlobalParams.MPI_Rank || cell->subdomain_id() == GlobalParams.MPI_Rank -1 ) {
+			Point<3, double> cell_center =cell->center(true, false);
+			if( PML_in_X(cell_center) || PML_in_Y(cell_center) || PML_in_Z(cell_center)) {
+				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_cell);
+				cell->get_dof_indices(local_dof_indices);
+				IndexSet localdofs(dof_handler.n_dofs());
+				for(unsigned int k =0 ; k< local_dof_indices.size(); k++) {
+					localdofs.add_index(local_dof_indices[k]);
+				}
+				sweepable.subtract_set(localdofs);
+			}
 			for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
 				Point<3, double> center =(cell->face(i))->center(true, false);
 				if( center[0] < 0) center[0] *= (-1.0);
@@ -1503,6 +1620,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 								Tensor<1,3,double> ptemp = ((cell->face(i))->line(j))->center(true, false);
 								Point<3, double> p (ptemp[0], ptemp[1], ptemp[2]);
 								Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(0) - ((cell->face(i))->line(j))->vertex(1);
+								dtemp = dtemp / dtemp.norm();
 								Point<3, double> direction (dtemp[0], dtemp[1], dtemp[2]);
 
 								double result = TEMode00(p,0);
@@ -1541,10 +1659,10 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 						}
 					}
 				}
-				// in between below
-				if(GlobalParams.MPI_Rank >  1) {
+				// in between if upper
+				if(GlobalParams.MPI_Rank >  0) {
 					// if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - ((double)(GlobalParams.MPI_Rank-1))*sector_length ) < 0.0001 ){
-					if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - (GlobalParams.MPI_Rank -1 )*layer_length ) < 0.0001){
+					if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - (GlobalParams.MPI_Rank +1)*layer_length ) < 0.0001){
 						std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1560,20 +1678,22 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 
 
 
-				if((int)GlobalParams.MPI_Rank < Sectors -1) {
-					if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - (GlobalParams.MPI_Rank +1)*layer_length ) <  0.001 ){
+				if((int)GlobalParams.MPI_Rank < Sectors ) {
+					if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - (GlobalParams.MPI_Rank )*layer_length ) <  0.001 ){
 						std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
 							for(unsigned int k = 0; k < 2; k++) {
 								if(locally_owned_dofs.is_element(local_dof_indices[k])) {
-									cm_prec1.add_line(local_dof_indices[k]);
-									cm_prec1.set_inhomogeneity(local_dof_indices[k], 0.0 );
+									cm_prec2.add_line(local_dof_indices[k]);
+									cm_prec2.set_inhomogeneity(local_dof_indices[k], 0.0 );
 								}
 							}
 						}
 					}
 				}
+
+
 			}
 		}
 	}
@@ -1613,13 +1733,14 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 	if(GlobalParams.PRM_S_Solver == "GMRES") {
 
+
 		if(run_number == 0) {
 			pout << "Number of GMRES steps: " << GlobalParams.PRM_S_GMRESSteps << "-";
 		}
 		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData( GlobalParams.PRM_S_GMRESSteps) );
 
 		// std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
-		
+
 		int below = 0;
 		if (GlobalParams.MPI_Rank != 0 ) {
 			below = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1].n_elements();
@@ -1630,41 +1751,79 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 			t_upper = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank +1].n_elements();
 		}
 		
-		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, t_upper);
+		// PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, t_upper, & cm);
+		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs(), sweepable, locally_owned_dofs, t_upper, & cm);
 
+
+
+		unsigned int dofs_below = LowerDofs.nth_index_in_set(0);
+		unsigned int total_dofs_local = LowerDofs.n_elements();
 
 		if(GlobalParams.MPI_Rank == 0 ){
-			for (unsigned int current_row = 0; current_row < LowerDofs.n_elements(); current_row++  ) {
-				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(LowerDofs.nth_index_in_set(current_row)); row != system_matrix.end(LowerDofs.nth_index_in_set(current_row)); row++) {
-					sweep.matrix.set(current_row, LowerDofs.index_within_set(row->column()), row->value());
+			for (unsigned int current_row = 0; current_row < LowerDofs.n_elements(); current_row++ ) {
+				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(current_row); row != system_matrix.end(current_row); row++) {
+					if(LowerDofs.is_element(row->column())){
+						sweep.matrix.set(current_row, row->column(), row->value());
+					}
 					
 				}
 			}
 		} else {
-			for (unsigned int current_row = 0; current_row < LowerDofs.n_elements(); current_row++  ) {
-				for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(LowerDofs.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(LowerDofs.nth_index_in_set(current_row)); row++) {
-					sweep.matrix.set(current_row, LowerDofs.index_within_set(row->column()), row->value());
-					if(current_row >= below && row->column() < below) {
-						sweep.prec_matrix.set(current_row - below, LowerDofs.index_within_set(row->column()), row->value());
+			for (unsigned int current_row = 0; current_row < LowerDofs.n_elements(); current_row++ ) {
+				for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(LowerDofs.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(current_row + dofs_below); row++) {
+					if(row->column() >= dofs_below && row->column() < dofs_below + total_dofs_local){
+						sweep.matrix.set(current_row, row->column() - dofs_below, row->value());
 					}
 				}
 			}
+			unsigned int lower_entries, upper_entries;
+			lower_entries = 0;
+			upper_entries = 0;
+			for (unsigned int current_row = below; current_row < total_dofs_local; current_row++ ) {
+				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(dofs_below + current_row); row != system_matrix.end(dofs_below + current_row); row++) {
+					if(row->column() >= dofs_below && row->column() - dofs_below < below){
+						sweep.prec_matrix_lower.set(current_row - below, row->column() - dofs_below, row->value());
+						sweep.prec_matrix_upper.set(row->column() - dofs_below , current_row- below ,  row->value());
+						lower_entries ++;
+					}
+				}
+			}
+
+			std::cout << "Copy in proc " << GlobalParams.MPI_Rank << " gave " << lower_entries << " lower and " << upper_entries << " upper entries" << std::endl;
 		}
-		std::cout << std::endl;
 
 		sweep.matrix.compress(VectorOperation::insert);
+
+		sweep.prec_matrix_lower.compress(VectorOperation::insert);
+		sweep.prec_matrix_upper.compress(VectorOperation::insert);
+
+		if(GlobalParams.MPI_Rank == 0) {
+			sweep.Prepare(solution);
+		}
+
 		MPI_Barrier(MPI_COMM_WORLD);
+
+
 		pout << "All preconditioner matrices built. Solving..." <<std::endl;
 
 
+
 		solver.solve(system_matrix,solution, system_rhs, sweep);
+
 		pout << "Done." << std::endl;
 
 		pout << "Norm of the solution: " << solution.l2_norm() << std::endl;
 	}
 
+	if(GlobalParams.PRM_S_Solver == "UMFPACK") {
+		SolverControl sc2(2,false,false);
+		TrilinosWrappers::SolverDirect temp_s(sc2, TrilinosWrappers::SolverDirect::AdditionalData(false, GlobalParams.PRM_S_Preconditioner));
+		temp_s.solve(system_matrix, solution, system_rhs);
+	}
+
  
 	cm.distribute(solution);
+	cm.distribute(EstimatedSolution);
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1687,16 +1846,42 @@ void Waveguide<MatrixType, VectorType>::init_loggers () {
 
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::output_results ( bool details )
+template<>
+void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::output_results ( bool details )
 {
 
+	for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {
+		unsigned int index = locally_owned_dofs.nth_index_in_set(i);
+		ErrorOfSolution[index] = solution[index] - EstimatedSolution[index];
+	}
+
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	// ErrorOfSolution.compress(VectorOperation::insert);
+
+	//solution.compress(VectorOperation::unknown);
+
+
+
+	TrilinosWrappers::MPI::Vector solution_output(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+	solution_output = solution;
+
+	TrilinosWrappers::MPI::Vector estimate_output(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+	estimate_output = EstimatedSolution;
+
+	TrilinosWrappers::MPI::Vector error_output(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+	error_output = ErrorOfSolution;
+
+
+	std::cout << GlobalParams.MPI_Rank << ": " <<locally_owned_dofs.n_elements()<< "," <<locally_owned_dofs.nth_index_in_set(0) << "," << locally_owned_dofs.nth_index_in_set(locally_owned_dofs.n_elements()-1) <<std::endl;
 	// evaluate_overall();
-	if(details) {
+	if(true) {
 		DataOut<3> data_out;
 
 		data_out.attach_dof_handler (dof_handler);
-		data_out.add_data_vector (solution, "solution");
+		data_out.add_data_vector (solution_output, "Solution",dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3, 3>::DataVectorType::type_dof_data);
+		data_out.add_data_vector (error_output, "Error_Of_Estimated_Solution",dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3, 3>::DataVectorType::type_dof_data);
+		data_out.add_data_vector (estimate_output, "Estimated_Solution",dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3, 3>::DataVectorType::type_dof_data);
 		// data_out.add_data_vector(differences, "L2error");
 
 		data_out.build_patches ();
@@ -1704,6 +1889,8 @@ void Waveguide<MatrixType, VectorType>::output_results ( bool details )
 		std::ofstream outputvtk (solutionpath + "/solution-run" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + "-P" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() +".vtk");
 		data_out.write_vtk(outputvtk);
 
+        
+        
 		/**
 		DataOut<3> data_out_real;
 
@@ -1767,7 +1954,9 @@ void Waveguide<MatrixType, VectorType>::run ()
 
 	timer.print_summary();
 	timer.reset();
-
+    
+    output_results(false);
+    
 	run_number++;
 }
 
@@ -1798,19 +1987,22 @@ void Waveguide<MatrixType, VectorType>::rerun ()
 	timer.leave_subsection();
 
 	timer.enter_subsection ("Setup FEM");
+	structure->Print();
 
 	timer.leave_subsection();
-	pout << "Reinit for rerun." << std::endl;
+	pout << "Reinit for rerun..." ;
+	pout.get_stream().flush();
 	timer.enter_subsection ("Reset");
 	reinit_for_rerun();
 	timer.leave_subsection();
 
-	pout << "Assemble for rerun." << std::endl;
+	pout << " Assemble for rerun... " ;
+	pout.get_stream().flush();
 	timer.enter_subsection ("Assemble");
 	assemble_system ();
 	timer.leave_subsection();
 
-	pout << "Solve for rerun." << std::endl;
+	pout << " Solve for rerun..." << std::endl;
 	timer.enter_subsection ("Solve");
 	solve ();
 	timer.leave_subsection();

@@ -59,6 +59,7 @@ void WaveguideStructure::estimate_and_initialize() {
 
 void WaveguideStructure::Print () {
 	if(GlobalParams.MPI_Rank == 0) {
+		//std::cout << "Structure for Process " <<GlobalParams.MPI_Rank << std::endl;
 		std::cout << "-------------------------------------------" << std::endl;
 		std::cout << "Sectors: " << sectors << std::endl;
 		for(int i = 0 ; i< sectors; i++) {
@@ -271,6 +272,21 @@ std::pair<int, double> WaveguideStructure::Z_to_Sector_and_local_z(double in_z) 
 		if(abs(( GlobalParams.PRM_M_R_ZLength / 2.0 ) + in_z - total_length ) > 0.0001) {
 			deallog << "Internal Bug in coding. See WaveguideStructure.cpp - Z_to_Sector_and_local_z (Case 2)." << std::endl;
 		}
+	}
+
+	return ret;
+}
+int WaveguideStructure::Z_to_Layer(double in_z) {
+	double sector_length = Layer_Length();
+	int ret;
+
+	ret = std::floor((in_z + GlobalParams.PRM_M_R_ZLength/2.0 ) / sector_length);
+	if(ret == -1) {
+		ret = 0;
+	}
+
+	if(ret >= GlobalParams.MPI_Size) {
+		ret = GlobalParams.MPI_Size - 1;
 	}
 
 	return ret;

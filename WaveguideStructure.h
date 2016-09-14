@@ -211,6 +211,8 @@ class WaveguideStructure {
 		 */
 		void WriteConfigurationToConsole();
 
+		int Z_to_Layer(double);
+
 		/**
 		 * This vector of values saves the initial configuration
 		 */
