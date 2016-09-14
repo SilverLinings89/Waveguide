@@ -30,7 +30,7 @@ PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int
 		solver = new TrilinosWrappers::SolverDirect(s, TrilinosWrappers::SolverDirect::AdditionalData(false, GlobalParams.PRM_S_Preconditioner));
 		indices = new int[sweepable_dofs.n_elements()];
 		sweepable = sweepable_dofs.n_elements();
-		for(int i = 0; i < sweepable; i++){
+		for(unsigned int i = 0; i < sweepable; i++){
 			indices[i] = sweepable_dofs.nth_index_in_set(i);
 		}
    }
@@ -38,7 +38,7 @@ PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int
 
 void PreconditionerSweeping::Prepare ( TrilinosWrappers::MPI::Vector & inp) {
 	boundary.reinit(own, false);
-	for(unsigned int i = 0; i<own; i++) {
+	for(int i = 0; i<own; i++) {
 		boundary[i] = inp[locally_owned_dofs.nth_index_in_set(i)];
 	}
 	return;
@@ -49,7 +49,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 {
 	// line 1
 	dealii::Vector<double> input(own);
-	for (int i = 0; i < sweepable; i++) {
+	for (unsigned int i = 0; i < sweepable; i++) {
 		input[i] = src[indices[i]];
 	}
 
@@ -153,16 +153,14 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
     if (GlobalParams.MPI_Rank == 0) {
         std::cout << "S2 done ..." << std::endl;
 
-        for(unsigned int i = 0 ; i < own; i++) {
+        for(int i = 0 ; i < own; i++) {
         	if(boundary[i] != 0.0){
         		input[i] = boundary[i];
         	}
         }
     }
     
-	//std::cout << "C" << GlobalParams.MPI_Rank << " " << input.l2_norm() << std::endl;
-
-    for(int i = 0; i < own; i++ ){
+	for(int i = 0; i < own; i++ ){
 		dst[i + locally_owned_dofs.nth_index_in_set(0)] = input[i];
     }
 
@@ -174,13 +172,17 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 }
 
 void PreconditionerSweeping::Hinv(const dealii::Vector<double> & src, dealii::Vector<double> & dst) const {
-	TrilinosWrappers::Vector inputb(own + others);
+	IndexSet is (own+others);
+	is.add_range(0, own+others-1);
+
+	TrilinosWrappers::MPI::Vector inputb(is, MPI_COMM_SELF);
 
 	for(int i = 0; i < own; i++) {
 		inputb[i + others] = src(i);
 	}
 
-	TrilinosWrappers::Vector outputb(own + others);
+
+	TrilinosWrappers::MPI::Vector outputb(is, MPI_COMM_SELF);
 
 	solver->solve( matrix , outputb, inputb);
 

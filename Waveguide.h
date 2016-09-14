@@ -394,6 +394,7 @@ class Waveguide
 		void 	reinit_for_rerun();
 
 		void 	reinit_preconditioner_fast();
+
 		/**
 		 * This function encapsulates a library call for 2D numeric integration over a circle with given properties. It is included that this function calls evaluate_for_Position(x,y,z)
 		 */
@@ -407,7 +408,7 @@ class Waveguide
 		parallel::distributed::Triangulation<3>			triangulation;
 		DoFHandler<3>									dof_handler;
 		//, dof_handler_real;
-		VectorType										solution;
+		VectorType										solution, EstimatedSolution, ErrorOfSolution ;
 		ConstraintMatrix 								cm, cm_prec1, cm_prec2;
 		IndexSet										locally_owned_dofs, locally_relevant_dofs, locally_active_dofs, extended_relevant_dofs;
 		std::vector<IndexSet>							locally_relevant_dofs_per_subdomain;

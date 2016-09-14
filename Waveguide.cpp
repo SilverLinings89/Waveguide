@@ -224,7 +224,6 @@ void Waveguide<MatrixType, VectorType>::mark_unchanged() {
 	execute_recomputation = false;
 }
 
-
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::evaluate() {
 	pout << "Starting Evaluation" << std::endl;
@@ -299,6 +298,55 @@ void Waveguide<MatrixType, VectorType >::store() {
 	// storage.reinit(dof_handler.n_dofs());
 	/** storage = solution;
 	is_stored = true; **/
+}
+
+template<>
+void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::estimate_solution() {
+	MPI_Barrier(MPI_COMM_WORLD);
+	pout << "Starting solution estimation..." << std::endl;
+	DoFHandler<3>::active_cell_iterator cell, endc;
+	pout << "Lambda: " << GlobalParams.PRM_M_W_Lambda << std::endl;
+	unsigned int min_dof = locally_owned_dofs.nth_index_in_set(0);
+	unsigned int max_dof = locally_owned_dofs.nth_index_in_set(locally_owned_dofs.n_elements()-1 );
+
+	cell = dof_handler.begin_active(),
+	endc = dof_handler.end();
+	for (; cell!=endc; ++cell)
+	{
+		if(cell->is_locally_owned()) {
+			for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
+				for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+
+					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+					Tensor<1,3,double> ptemp = ((cell->face(i))->line(j))->center(true, false);
+					if( std::abs(ptemp[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) > 0.0001 ){
+						Point<3, double> p (ptemp[0], ptemp[1], ptemp[2]);
+						Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(0) - ((cell->face(i))->line(j))->vertex(1);
+						dtemp = dtemp / dtemp.norm();
+						Point<3, double> direction (dtemp[0], dtemp[1], dtemp[2]);
+
+
+						//double phi = (ptemp[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) *2 * GlobalParams.PRM_C_PI / (GlobalParams.PRM_M_W_Lambda / GlobalParams.PRM_M_W_EpsilonIn);
+						double phi = (ptemp[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) * 2* GlobalParams.PRM_C_PI / (GlobalParams.PRM_M_W_Lambda / std::sqrt(GlobalParams.PRM_M_W_EpsilonIn));
+						double result_real = TEMode00(p,0) * std::cos(phi) ;
+						double result_imag = - TEMode00(p,0) * std::sin(phi) ;
+						if(PML_in_X(p) || PML_in_Y(p)) result_real = 0.0;
+						if(PML_in_X(p) || PML_in_Y(p)) result_imag = 0.0;
+
+						if(local_dof_indices[0] >= min_dof && local_dof_indices[0] < max_dof) {
+							EstimatedSolution[local_dof_indices[0]] = direction[0] * result_real ;
+						}
+						if(local_dof_indices[1] >= min_dof && local_dof_indices[1] < max_dof) {
+							EstimatedSolution[local_dof_indices[1]] = direction[0] * result_imag ;
+						}
+					}
+				}
+			}
+		}
+	}
+	MPI_Barrier(MPI_COMM_WORLD);
+	EstimatedSolution.compress(VectorOperation::insert);
 }
 
 template<typename MatrixType, typename VectorType >
@@ -385,7 +433,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 			}
 		}
 	}
-	//pout << "get_Tensor_2" << std::endl;
+
 	if  ( inverse ) ret3 = invert(ret3);
 
 	return ret3;
@@ -1236,6 +1284,8 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 template <>
 void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_solution() {
 	solution.reinit(locally_owned_dofs, MPI_COMM_WORLD);
+	EstimatedSolution.reinit(locally_owned_dofs, MPI_COMM_WORLD);
+	ErrorOfSolution.reinit(locally_owned_dofs, MPI_COMM_WORLD);
 }
 
 template <>
@@ -1384,15 +1434,24 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 
 	assemble_part( );
 
+	MPI_Barrier(MPI_COMM_WORLD);
 	if(!is_stored)  pout<<"Assembling done. L2-Norm of RHS: "<< system_rhs.l2_norm()<<std::endl;
+
 	system_matrix.compress(VectorOperation::add);
 	system_rhs.compress(VectorOperation::add);
-	MPI_Barrier(MPI_COMM_WORLD);
+
 	for(unsigned int i = 0; i < Layers-1; i++) {
-		Preconditioner_Matrices[i].compress(VectorOperation::add);
+		// if(i == GlobalParams.MPI_Rank || i+1 == GlobalParams.MPI_Rank) {
+			Preconditioner_Matrices[i].compress(VectorOperation::add);
+		//}
 	}
 
 	cm.distribute(solution);
+	cm.distribute(EstimatedSolution);
+	cm.distribute(ErrorOfSolution);
+	MPI_Barrier(MPI_COMM_WORLD);
+	pout << "Distributing solution done." <<std::endl;
+	estimate_solution();
 
 }
 
@@ -1447,6 +1506,7 @@ void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
 							Tensor<1,3,double> ptemp = ((cell->face(i))->line(j))->center(true, false);
 							Point<3, double> p (ptemp[0], ptemp[1], ptemp[2]);
 							Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(0) - ((cell->face(i))->line(j))->vertex(1);
+							dtemp = dtemp / dtemp.norm();
 							Point<3, double> direction (dtemp[0], dtemp[1], dtemp[2]);
 
 							double result = TEMode00(p,0);
@@ -1560,6 +1620,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 								Tensor<1,3,double> ptemp = ((cell->face(i))->line(j))->center(true, false);
 								Point<3, double> p (ptemp[0], ptemp[1], ptemp[2]);
 								Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(0) - ((cell->face(i))->line(j))->vertex(1);
+								dtemp = dtemp / dtemp.norm();
 								Point<3, double> direction (dtemp[0], dtemp[1], dtemp[2]);
 
 								double result = TEMode00(p,0);
@@ -1672,6 +1733,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 	if(GlobalParams.PRM_S_Solver == "GMRES") {
 
+
 		if(run_number == 0) {
 			pout << "Number of GMRES steps: " << GlobalParams.PRM_S_GMRESSteps << "-";
 		}
@@ -1692,11 +1754,13 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		// PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, t_upper, & cm);
 		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs(), sweepable, locally_owned_dofs, t_upper, & cm);
 
+
+
 		unsigned int dofs_below = LowerDofs.nth_index_in_set(0);
 		unsigned int total_dofs_local = LowerDofs.n_elements();
 
 		if(GlobalParams.MPI_Rank == 0 ){
-			for (unsigned int current_row = 0; current_row < LowerDofs.n_elements(); current_row++  ) {
+			for (unsigned int current_row = 0; current_row < LowerDofs.n_elements(); current_row++ ) {
 				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(current_row); row != system_matrix.end(current_row); row++) {
 					if(LowerDofs.is_element(row->column())){
 						sweep.matrix.set(current_row, row->column(), row->value());
@@ -1705,7 +1769,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 				}
 			}
 		} else {
-			for (unsigned int current_row = 0; current_row < LowerDofs.n_elements(); current_row++  ) {
+			for (unsigned int current_row = 0; current_row < LowerDofs.n_elements(); current_row++ ) {
 				for(TrilinosWrappers::SparseMatrix::iterator row = Preconditioner_Matrices[GlobalParams.MPI_Rank-1].begin(LowerDofs.nth_index_in_set(current_row)); row != Preconditioner_Matrices[GlobalParams.MPI_Rank-1].end(current_row + dofs_below); row++) {
 					if(row->column() >= dofs_below && row->column() < dofs_below + total_dofs_local){
 						sweep.matrix.set(current_row, row->column() - dofs_below, row->value());
@@ -1715,7 +1779,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 			unsigned int lower_entries, upper_entries;
 			lower_entries = 0;
 			upper_entries = 0;
-			for (unsigned int current_row = below; current_row < total_dofs_local; current_row++  ) {
+			for (unsigned int current_row = below; current_row < total_dofs_local; current_row++ ) {
 				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(dofs_below + current_row); row != system_matrix.end(dofs_below + current_row); row++) {
 					if(row->column() >= dofs_below && row->column() - dofs_below < below){
 						sweep.prec_matrix_lower.set(current_row - below, row->column() - dofs_below, row->value());
@@ -1724,16 +1788,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 					}
 				}
 			}
-			/**
-			for (unsigned int current_row = 0; current_row < below; current_row++  ) {
-				for(TrilinosWrappers::SparseMatrix::iterator row = system_matrix.begin(current_row + dofs_below); row != system_matrix.end(current_row + dofs_below); row++) {
-					if(row->column()-dofs_below+below >= 0 && row->column() - dofs_below < total_dofs_local){
-						sweep.prec_matrix_upper.set(current_row , row->column() - dofs_below - below, row->value());
-						upper_entries ++;
-					}
-				}
-			}
-			**/
+
 			std::cout << "Copy in proc " << GlobalParams.MPI_Rank << " gave " << lower_entries << " lower and " << upper_entries << " upper entries" << std::endl;
 		}
 
@@ -1752,7 +1807,8 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		pout << "All preconditioner matrices built. Solving..." <<std::endl;
 
 
-		 solver.solve(system_matrix,solution, system_rhs, sweep);
+
+		solver.solve(system_matrix,solution, system_rhs, sweep);
 
 		pout << "Done." << std::endl;
 
@@ -1767,6 +1823,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
  
 	cm.distribute(solution);
+	cm.distribute(EstimatedSolution);
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1789,18 +1846,42 @@ void Waveguide<MatrixType, VectorType>::init_loggers () {
 
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::output_results ( bool details )
+template<>
+void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::output_results ( bool details )
 {
 
+	for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {
+		unsigned int index = locally_owned_dofs.nth_index_in_set(i);
+		ErrorOfSolution[index] = solution[index] - EstimatedSolution[index];
+	}
 
-        
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	// ErrorOfSolution.compress(VectorOperation::insert);
+
+	//solution.compress(VectorOperation::unknown);
+
+
+
+	TrilinosWrappers::MPI::Vector solution_output(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+	solution_output = solution;
+
+	TrilinosWrappers::MPI::Vector estimate_output(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+	estimate_output = EstimatedSolution;
+
+	TrilinosWrappers::MPI::Vector error_output(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+	error_output = ErrorOfSolution;
+
+
+	std::cout << GlobalParams.MPI_Rank << ": " <<locally_owned_dofs.n_elements()<< "," <<locally_owned_dofs.nth_index_in_set(0) << "," << locally_owned_dofs.nth_index_in_set(locally_owned_dofs.n_elements()-1) <<std::endl;
 	// evaluate_overall();
-	if(details) {
+	if(true) {
 		DataOut<3> data_out;
 
 		data_out.attach_dof_handler (dof_handler);
-		data_out.add_data_vector (solution, "solution");
+		data_out.add_data_vector (solution_output, "Solution",dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3, 3>::DataVectorType::type_dof_data);
+		data_out.add_data_vector (error_output, "Error_Of_Estimated_Solution",dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3, 3>::DataVectorType::type_dof_data);
+		data_out.add_data_vector (estimate_output, "Estimated_Solution",dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3, 3>::DataVectorType::type_dof_data);
 		// data_out.add_data_vector(differences, "L2error");
 
 		data_out.build_patches ();
