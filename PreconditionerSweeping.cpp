@@ -28,10 +28,10 @@ PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int
 		IndexSet elements (own+others);
 		elements.add_range(0,own+others);
 		solver = new TrilinosWrappers::SolverDirect(s, TrilinosWrappers::SolverDirect::AdditionalData(false, GlobalParams.PRM_S_Preconditioner));
-		indices = new int[sweepable_dofs.n_elements()];
-		sweepable = sweepable_dofs.n_elements();
+		indices = new int[in_locally_owned_dofs.n_elements()];
+		sweepable = in_locally_owned_dofs.n_elements();
 		for(unsigned int i = 0; i < sweepable; i++){
-			indices[i] = sweepable_dofs.nth_index_in_set(i);
+			indices[i] = in_locally_owned_dofs.nth_index_in_set(i);
 		}
    }
 
@@ -175,14 +175,14 @@ void PreconditionerSweeping::Hinv(const dealii::Vector<double> & src, dealii::Ve
 	IndexSet is (own+others);
 	is.add_range(0, own+others-1);
 
-	TrilinosWrappers::MPI::Vector inputb(is, MPI_COMM_SELF);
-
+	// TrilinosWrappers::MPI::Vector inputb(is, MPI_COMM_SELF);
+	TrilinosWrappers::Vector inputb(own + others);
 	for(int i = 0; i < own; i++) {
 		inputb[i + others] = src(i);
 	}
 
-
-	TrilinosWrappers::MPI::Vector outputb(is, MPI_COMM_SELF);
+	TrilinosWrappers::Vector outputb(own + others);
+	//TrilinosWrappers::MPI::Vector outputb(is, MPI_COMM_SELF);
 
 	solver->solve( matrix , outputb, inputb);
 

@@ -444,68 +444,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 	std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
 	Tensor<2,3, std::complex<double>> ret;
 
-	double omegaepsilon0 = GlobalParams.PRM_C_omega * ((System_Coordinate_in_Waveguide(position))?GlobalParams.PRM_M_W_EpsilonIn : GlobalParams.PRM_M_W_EpsilonOut);
-	std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
-	if(PML_in_X(position)){
-		double r,d, sigmax;
-		r = PML_X_Distance(position);
-		d = GlobalParams.PRM_M_R_XLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
-		sigmax = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaXMax;
-		sx.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaXMax);
-		sx.imag( sigmax / ( omegaepsilon0));
-		S1 /= sx;
-		S2 *= sx;
-		S3 *= sx;
-	}
-	if(PML_in_Y(position)){
-		double r,d, sigmay;
-		r = PML_Y_Distance(position);
-		d = GlobalParams.PRM_M_R_YLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
-		sigmay = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaYMax;
-		sy.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaYMax);
-		sy.imag( sigmay / ( omegaepsilon0));
-		S1 *= sy;
-		S2 /= sy;
-		S3 *= sy;
-	}
-	if(Preconditioner_PML_in_Z(position, block)){
-		double r,d, sigmaz;
-		r = Preconditioner_PML_Z_Distance(position, block);
-		d = structure->Layer_Length() * 0.1;
-		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
-		sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
-		sz.imag( sigmaz / omegaepsilon0 );
-		S1 *= sz;
-		S2 *= sz;
-		S3 /= sz;
-	}
-
-	if(PML_in_Z(position)){
-		double r,d, sigmaz;
-		r = PML_Z_Distance(position);
-		d = GlobalParams.PRM_M_BC_XYout * structure->Sector_Length();
-		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
-		sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
-		sz.imag( sigmaz / omegaepsilon0 );
-		S1 *= sz;
-		S2 *= sz;
-		S3 /= sz;
-	}
-
-	ret[0][0] = S1;
-	ret[1][1] = S2;
-	ret[2][2] = S3;
-    
-    if(epsilon) {
-		if(System_Coordinate_in_Waveguide(position) ) {
-			ret *= GlobalParams.PRM_M_W_EpsilonIn;
-		} else {
-			ret *= GlobalParams.PRM_M_W_EpsilonOut;
-		}
-		ret *= GlobalParams.PRM_C_Eps0;
-	}
-    
-    Tensor<2,3, std::complex<double>> ret2;
+	Tensor<2,3, std::complex<double>> MaterialTensor;
 	Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
 	double dist = position[0] * position[0] + position[1]*position[1];
 	dist = std::sqrt(dist);
@@ -519,26 +458,75 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 	}
 	for(int i = 0; i < 3; i++) {
 		for(int j = 0; j < 3; j++) {
-			ret2[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
+			MaterialTensor[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
 		}
 	}
 
-	
-
-	Tensor<2,3, std::complex<double>> ret3;
-
-	for(int i = 0; i < 3; i++) {
-		for(int j = 0; j < 3; j++) {
-			ret3[i][j] = std::complex<double>(0.0, 0.0);
-			for(int k = 0; k < 3; k++) {
-				ret3[i][j] += ret[i][k] * ret2[k][j];
-			}
-		}
+	double omegaepsilon0 = GlobalParams.PRM_C_omega * ((System_Coordinate_in_Waveguide(position))?GlobalParams.PRM_M_W_EpsilonIn : GlobalParams.PRM_M_W_EpsilonOut);
+	std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0),sz_p(0.0,0.0);
+	if(PML_in_X(position)){
+		double r,d, sigmax;
+		r = PML_X_Distance(position);
+		d = GlobalParams.PRM_M_R_XLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
+		sigmax = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaXMax;
+		sx.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaXMax);
+		sx.imag( sigmax / ( omegaepsilon0));
 	}
+	if(PML_in_Y(position)){
+		double r,d, sigmay;
+		r = PML_Y_Distance(position);
+		d = GlobalParams.PRM_M_R_YLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
+		sigmay = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaYMax;
+		sy.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaYMax);
+		sy.imag( sigmay / ( omegaepsilon0));
+	}
+	if(Preconditioner_PML_in_Z(position, block)){
+		double r,d, sigmaz;
+		r = Preconditioner_PML_Z_Distance(position, block);
+		d = structure->Layer_Length() * 1.0;
+		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
+		sz_p.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
+		sz_p.imag( sigmaz / omegaepsilon0 );
+	}
+
+	if(PML_in_Z(position)){
+		double r,d, sigmaz;
+		r = PML_Z_Distance(position);
+		d = GlobalParams.PRM_M_BC_XYout * structure->Sector_Length();
+		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
+
+		sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
+		sz.imag( sigmaz / omegaepsilon0 );
+	}
+
+	sz += sz_p;
+
+	MaterialTensor[0][0] *= sy*sz/sx;
+	MaterialTensor[0][1] *= sz;
+	MaterialTensor[0][2] *= sy;
+
+	MaterialTensor[1][0] *= sz;
+	MaterialTensor[1][1] *= sx*sz/sy;
+	MaterialTensor[1][2] *= sx;
+
+	MaterialTensor[2][0] *= sy;
+	MaterialTensor[2][1] *= sx;
+	MaterialTensor[2][2] *= sx*sy/sz;
+
+    if(epsilon) {
+		if(System_Coordinate_in_Waveguide(position) ) {
+			MaterialTensor *= GlobalParams.PRM_M_W_EpsilonIn;
+		} else {
+			MaterialTensor *= GlobalParams.PRM_M_W_EpsilonOut;
+		}
+		MaterialTensor *= GlobalParams.PRM_C_Eps0;
+	}
+    
+
 	//pout << "get_Tensor_2" << std::endl;
-	if  ( inverse ) ret3 = invert(ret3);
+	if  ( inverse ) MaterialTensor = invert(MaterialTensor);
 
-	return ret3;
+	return MaterialTensor;
 
 }
 
@@ -585,23 +573,26 @@ bool Waveguide<MatrixType, VectorType>::PML_in_Z(Point<3> &p) {
 template<typename MatrixType, typename VectorType>
 bool Waveguide<MatrixType, VectorType>::Preconditioner_PML_in_Z(Point<3> &p, unsigned int block) {
 	double l = structure->Layer_Length();
-	double width = l * 0.1;
-	bool up =    (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 ) - ((double)block+1.0) * l + width) > 0;
+	double width = l * 1.0;
+	// bool up =    (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 ) - ((double)block+1.0) * l + width) > 0;
 	bool down =  -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0 ) - ((double)block-1.0) * l - width) > 0;
 	//pout <<std::endl<< p(2) << ":" << block << ":" << up << " " << down <<std::endl;
-	return up || down;
+	//return up || down;
+	return down;
 }
 
 template<typename MatrixType, typename VectorType >
 double Waveguide<MatrixType, VectorType>::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ){
 	double l = structure->Layer_Length();
-	double width = l * 0.1;
+	double width = l * 1.0;
 
 	if( ( p(2) +GlobalParams.PRM_M_R_ZLength/2.0 )-  ((double)block) * l < 0){
 		return -(( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - ((double)block-1.0) * l - width);
-	} else {
-		return  (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - ((double)block+1.0) * l + width);
 	}
+	/**
+	else {
+		return  (( p(2) + GlobalParams.PRM_M_R_ZLength/2.0  ) - ((double)block+1.0) * l + width);
+	}**/
 }
 
 template<typename MatrixType, typename VectorType >
@@ -1352,6 +1343,7 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
 			{
 				epsilon = get_Tensor(quadrature_points[q_index],  false, true);
 				mu = get_Tensor(quadrature_points[q_index], true, false);
+
 				epsilon_pre1 = get_Preconditioner_Tensor(quadrature_points[q_index],false, true, subdomain_id);
 				mu_prec1 = get_Preconditioner_Tensor(quadrature_points[q_index],true, false, subdomain_id);
 
@@ -1609,9 +1601,9 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 						}
 					}
 				}
-
+				/**
 				//lower boundary both
-				if( GlobalParams.MPI_Rank < 2 ) {
+				if( GlobalParams.MPI_Rank == 0  ) {
 					if( std::abs(center[2] + GlobalParams.PRM_M_R_ZLength/2.0  ) < 0.0001 ){
 						std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
@@ -1630,6 +1622,30 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 									cm_prec1.set_inhomogeneity(local_dof_indices[0], direction[0] * result);
 									cm_prec2.add_line(local_dof_indices[0]);
 									cm_prec2.set_inhomogeneity(local_dof_indices[0], direction[0] * result);
+								}
+								if(locally_owned_dofs.is_element(local_dof_indices[1])) {
+									cm_prec1.add_line(local_dof_indices[1]);
+									cm_prec1.set_inhomogeneity(local_dof_indices[1], 0.0);
+									cm_prec2.add_line(local_dof_indices[1]);
+									cm_prec2.set_inhomogeneity(local_dof_indices[1], 0.0);
+								}
+							}
+						}
+					}
+				}**/
+
+				if( GlobalParams.MPI_Rank <= 1 ) {
+					if( std::abs(center[2] + GlobalParams.PRM_M_R_ZLength/2.0  ) < 0.0001 ){
+						std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
+						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+							if((cell->face(i))->line(j)->at_boundary()) {
+								((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+
+								if(locally_owned_dofs.is_element(local_dof_indices[0])) {
+									cm_prec1.add_line(local_dof_indices[0]);
+									cm_prec1.set_inhomogeneity(local_dof_indices[0], 0.0);
+									cm_prec2.add_line(local_dof_indices[0]);
+									cm_prec2.set_inhomogeneity(local_dof_indices[0], 0.0);
 								}
 								if(locally_owned_dofs.is_element(local_dof_indices[1])) {
 									cm_prec1.add_line(local_dof_indices[1]);
@@ -1732,7 +1748,10 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
 	if(GlobalParams.PRM_S_Solver == "GMRES") {
-
+		int mindof = locally_owned_dofs.nth_index_in_set(0);
+		for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++ ) {
+			solution[mindof + i] = EstimatedSolution[mindof + i];
+		}
 
 		if(run_number == 0) {
 			pout << "Number of GMRES steps: " << GlobalParams.PRM_S_GMRESSteps << "-";
