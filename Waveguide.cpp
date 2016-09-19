@@ -1633,7 +1633,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 						}
 					}
 				}**/
-
+				/**
 				if( GlobalParams.MPI_Rank <= 1 ) {
 					if( std::abs(center[2] + GlobalParams.PRM_M_R_ZLength/2.0  ) < 0.0001 ){
 						std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
@@ -1675,8 +1675,10 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 						}
 					}
 				}
+
+				**/
 				// in between if upper
-				if(GlobalParams.MPI_Rank >  0) {
+				//if(GlobalParams.MPI_Rank >  0) {
 					// if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - ((double)(GlobalParams.MPI_Rank-1))*sector_length ) < 0.0001 ){
 					if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - (GlobalParams.MPI_Rank +1)*layer_length ) < 0.0001){
 						std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
@@ -1690,24 +1692,24 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 							}
 						}
 					}
-				}
+			//	}
 
 
 
-				if((int)GlobalParams.MPI_Rank < Sectors ) {
+				//if((int)GlobalParams.MPI_Rank < Sectors ) {
 					if( std::abs( (center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) - (GlobalParams.MPI_Rank )*layer_length ) <  0.001 ){
 						std::vector<types::global_dof_index> local_dof_indices ( fe.dofs_per_line);
 						for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
 							for(unsigned int k = 0; k < 2; k++) {
-								if(locally_owned_dofs.is_element(local_dof_indices[k])) {
+								//if(locally_owned_dofs.is_element(local_dof_indices[k])) {
 									cm_prec2.add_line(local_dof_indices[k]);
 									cm_prec2.set_inhomogeneity(local_dof_indices[k], 0.0 );
-								}
+								//}
 							}
 						}
 					}
-				}
+				//}
 
 
 			}
