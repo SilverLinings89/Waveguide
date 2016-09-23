@@ -34,6 +34,7 @@
 using namespace dealii;
 
 /**
+ * \class WaveguideStructure
  * This class is one of the three main classes for this project. The other two are the Optimization-class and the Waveguide-class. This one saves all the information on the currently modelled Waveguide and is mainly used on the one hand to store structural information and on the other hand to calculate material-tensors.
  * During the whole optimization-process only one object of this type is used and it continually gets update to reflect the most recent update information.
  *

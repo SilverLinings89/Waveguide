@@ -1784,8 +1784,8 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 	}
 
  
-	cm.distribute(solution);
-	cm.distribute(EstimatedSolution);
+	// cm.distribute(solution);
+	// cm.distribute(EstimatedSolution);
 }
 
 template<typename MatrixType, typename VectorType >

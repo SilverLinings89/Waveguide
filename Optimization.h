@@ -11,6 +11,7 @@
 using namespace dealii;
 
 /**
+ * \class Optimization
  * The Optimization-class gives one of the three main parts to the project. The other two being the WaveguideStructure-class (holding all the structural information and functionality such as calculating material-tensors or changing the shape) and the Waveguide-class (offering the complete solution-process for a fixed shape). This class however determines the changes between optimization-steps and administrates the optimization-process. It stores signal-quality values for different configurations of the system and builds estimates of better shapes based upon them.
  * To fulfill its purpose it offers two functions: One is its constructor, which requires a Waveguide-object, a WaveguideStructure-object and Parameters (parsed from the input file) to already exist. The second is a run method. This function does all the heavy lifting and contains all implementation about the shape-optimization.
  * \author Pascal Kraft

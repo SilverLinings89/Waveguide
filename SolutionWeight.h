@@ -16,6 +16,7 @@
 using namespace dealii;
 
 /**
+ * \class SolutionWeight
  * SolutionWeight is a class, that has been derived from the class Function and which can be used to generate handles to functions, that return specific values. The pattern of passing object built from classes derived from Function is a commonly used one in Deal.II. This function offers a weight for locations inside the waveguide. In order to integrate or calculate the L2-norm inside the Waveguide, this is needed. The value of the function to be used is multiplied with this weighing-function which returns 1 for any point inside the Waveguide and 0 outside of it.
  * Mathematically, this function can be represented by \f[ f: \mathbb{R}^{dim} \to \mathbb{R}^{2 \cdot dim} , \, \boldsymbol{x} \mapsto \begin{cases}(1, \ldots, 1)^T \in \mathbb{R}^{dim}&\text{ for} \, \boldsymbol{x} \in \Omega_W \\ \boldsymbol{0} &\text{ else}\end{cases}
  *  \f], where \f$ \Omega_W\f$ is the set of all points contained in the Waveguide.

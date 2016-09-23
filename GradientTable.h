@@ -1,5 +1,5 @@
 /*
- * GradientTable.h
+ * \class GradientTable
  *
  *  Created on: 03.02.2016
  *      Author: ae14
