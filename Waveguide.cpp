@@ -45,8 +45,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
   pout(std::cout, GlobalParams.MPI_Rank==0),
   timer(MPI_COMM_WORLD, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times)
 
-   // Sweeping_Additional_Data(1.0, 1),
-  // sweep(Sweeping_Additional_Data)
+
 {
 	prec_patterns = new TrilinosWrappers::SparsityPattern[Layers-1];
 	assembly_progress = 0;
