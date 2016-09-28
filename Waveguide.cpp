@@ -1626,6 +1626,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 					}
 				}
 
+
 				if( GlobalParams.MPI_Rank == 0 && std::abs(center[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) < 0.0001 ){
 					std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
 					for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
@@ -1651,6 +1652,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 						}
 					}
 				}
+
 			}
 		}
 	}
@@ -1692,9 +1694,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 			solution[mindof + i] = EstimatedSolution[mindof + i];
 		}
 
-		if(run_number == 0) {
-			pout << "Number of GMRES steps: " << GlobalParams.PRM_S_GMRESSteps << "-";
-		}
+
 		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData( GlobalParams.PRM_S_GMRESSteps) );
 
 		// std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
