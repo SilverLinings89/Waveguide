@@ -55,7 +55,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 		input[i] = src[indices[i]];
 	}
 
-	double norm_in = input.l2_norm();
+	// double norm_in = input.l2_norm();
 
 	if (GlobalParams.MPI_Rank == GlobalParams.MPI_Size -1) {
 
@@ -169,7 +169,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
 
     //cm->distribute(dst);
 
-	std::cout <<  GlobalParams.MPI_Rank << ": " << norm_in << " --> " << input.l2_norm() << std::endl;
+	// std::cout <<  GlobalParams.MPI_Rank << ": " << norm_in << " --> " << input.l2_norm() << std::endl;
     
 
 }

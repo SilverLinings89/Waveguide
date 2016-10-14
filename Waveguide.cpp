@@ -251,10 +251,11 @@ double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 	for(unsigned int i = 0; i< Layers; i++) {
 		double contrib = 0.0;
 		if(i == GlobalParams.MPI_Rank) {
-			 pout << "Evaluation of contribution by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << GlobalParams.z_evaluate<< std::endl;
+			 std::cout << "Evaluation of contribution by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << GlobalParams.z_evaluate<<":" ;
 			 contrib = evaluate_for_z(GlobalParams.z_evaluate);
+			 std::cout << contrib << std::endl;
 		}
-		qualities[i] = Utilities::MPI::sum(contrib, GlobalParams.MPI_Communicator);
+		qualities[i] = Utilities::MPI::max(contrib, GlobalParams.MPI_Communicator);
 	}
 	double quality_in	= lower;
 	double quality_out	= upper;

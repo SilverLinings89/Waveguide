@@ -388,7 +388,7 @@
             <pattern_description>[Integer range 0...2147483647 (inclusive)]</pattern_description>
         </SemiGlobal>
         <Internal>
-            <value>0</value>
+            <value>1</value>
             <default_value>1</default_value>
             <documentation>Internal refinement-steps.</documentation>
             <pattern>52</pattern>

@@ -104,7 +104,7 @@ class Waveguide
 
 		/**
 		 * This method as well as the run() method, are used by the optimization-algorithm to use and reuse the Waveguide-object. Since the system-matrix consumes a lot of memory it makes sense to reuse it, rather then creating a new one for every optimization step.
-		 * All properties of the object have to be created properly for this function to work.
+		 * All properties of thenon intersecting planes bent object have to be created properly for this function to work.
 		 */
 
 		void 		rerun ();
@@ -454,6 +454,8 @@ class Waveguide
 		std::vector<IndexSet>							locally_relevant_dofs_all_processors;
 		IndexSet										UpperDofs, LowerDofs;
 		dealii::TrilinosWrappers::SparseMatrix* 		Preconditioner_Matrices;
+		dealii::TrilinosWrappers::BlockSparseMatrix Preconditioner_Matrix_Odd;
+		dealii::TrilinosWrappers::BlockSparseMatrix Preconditioner_Matrix_Even;
 		ConditionalOStream 								pout;
 
 		TimerOutput 									timer;
