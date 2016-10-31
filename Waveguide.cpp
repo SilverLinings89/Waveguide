@@ -1,6 +1,8 @@
 #ifndef WaveguideCppFlag
 #define WaveguideCppFlag
 
+
+#include <sys/time.h>
 #include "Waveguide.h"
 #include "staticfunctions.cpp"
 #include "WaveguideStructure.h"
@@ -1767,9 +1769,18 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 
 
 		pout << "All preconditioner matrices built. Solving..." <<std::endl;
-
-
-
+        
+        struct timeval tp;
+        gettimeofday(&tp, NULL);
+        long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+        start_solver_milis = tp.tv_sec * 1000 + tp.tv_usec / 1000;    
+        
+		solver.connect (std_cxx11::bind (&Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::residual_tracker,
+                                   this,
+                                   std_cxx11::_1,
+                                   std_cxx11::_2,
+                                   std_cxx11::_3));
+        
 		solver.solve(system_matrix,solution, system_rhs, sweep);
 
 		pout << "Done." << std::endl;
@@ -1791,7 +1802,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 template<typename MatrixType, typename VectorType >
 void Waveguide<MatrixType, VectorType>::solve ()
 {
-
+    
 
 }
 
@@ -1979,6 +1990,17 @@ void Waveguide<MatrixType, VectorType>::rerun ()
 
 	run_number++;
 
+}
+
+template<typename MatrixType, typename VectorType >
+SolverControl::State Waveguide<MatrixType, VectorType>::residual_tracker(unsigned int Iteration, double residual, VectorType vec) {
+    
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+        
+    result_file << "" << Iteration << "\t" << residual << "\t" << ms <<std::endl;
+    return SolverControl::success;
 }
 
 #endif

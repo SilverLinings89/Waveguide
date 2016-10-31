@@ -395,6 +395,8 @@ class Waveguide
 
 		void 	reinit_preconditioner_fast();
 
+		SolverControl::State residual_tracker(unsigned int Iteration, double resiudal, VectorType vec);
+
 		/**
 		 * This function encapsulates a library call for 2D numeric integration over a circle with given properties. It is included that this function calls evaluate_for_Position(x,y,z)
 		 */
@@ -454,8 +456,8 @@ class Waveguide
 		std::vector<IndexSet>							locally_relevant_dofs_all_processors;
 		IndexSet										UpperDofs, LowerDofs;
 		dealii::TrilinosWrappers::SparseMatrix* 		Preconditioner_Matrices;
-		dealii::TrilinosWrappers::BlockSparseMatrix Preconditioner_Matrix_Odd;
-		dealii::TrilinosWrappers::BlockSparseMatrix Preconditioner_Matrix_Even;
+		//dealii::TrilinosWrappers::BlockSparseMatrix Preconditioner_Matrix_Odd;
+		//dealii::TrilinosWrappers::BlockSparseMatrix Preconditioner_Matrix_Even;
 		ConditionalOStream 								pout;
 
 		TimerOutput 									timer;
@@ -463,7 +465,7 @@ class Waveguide
 		Vector<float>                                   cell_weights;
 		Vector<float>                                   cell_weights_prec_1;
 		Vector<float>                                   cell_weights_prec_2;
-
+        long int                                    start_solver_milis;
         IndexSet                                        locally_owned_cells, sweepable;
 };
 
