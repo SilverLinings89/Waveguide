@@ -1698,8 +1698,10 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		}
 
 
-		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData( GlobalParams.PRM_S_GMRESSteps) );
+		// dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData( GlobalParams.PRM_S_GMRESSteps) );
 
+		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData(30) );
+		
 		// std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
 
 		int above = 0;
@@ -1715,10 +1717,10 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		}
 		
 		// PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, t_upper, & cm);
-		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), above, dof_handler.max_couplings_between_dofs(), sweepable, locally_owned_dofs, t_upper, & cm);
+		// PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), above, dof_handler.max_couplings_between_dofs(), sweepable, locally_owned_dofs, t_upper, & cm);
 
 
-
+        /**
 		unsigned int dofs_below = mindof;
 		unsigned int total_dofs_local = UpperDofs.n_elements();
 
@@ -1766,7 +1768,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 		}
 
 		MPI_Barrier(MPI_COMM_WORLD);
-
+        **/ 
 
 		pout << "All preconditioner matrices built. Solving..." <<std::endl;
         
@@ -1781,8 +1783,11 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
                                    std_cxx11::_2,
                                    std_cxx11::_3));
         
-		solver.solve(system_matrix,solution, system_rhs, sweep);
-
+		// solver.solve(system_matrix,solution, system_rhs, sweep);
+        PreconditionJacobi<TrilinosWrappers::SparseMatrix> precondition;
+        precondition.initialize (system_matrix, .6);
+        solver.solve(system_matrix,solution, system_rhs, precondition);
+        
 		pout << "Done." << std::endl;
 
 		pout << "Norm of the solution: " << solution.l2_norm() << std::endl;
