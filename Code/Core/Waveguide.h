@@ -5,7 +5,6 @@
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
-// #include <deal.II/lac/matrix_out.h>
 #include <deal.II/base/thread_management.h>
 #include <deal.II/base/multithread_info.h>
 #include <deal.II/grid/tria_accessor.h>
@@ -58,13 +57,11 @@
 #include <sstream>
 #include <mpi.h>
 
-#include "Parameters.h"
-#include "ParameterReader.h"
-#include "WaveguideStructure.h"
-#include "FileLogger.h"
-#include "FileLoggerData.h"
-#include "PreconditionerSweeping.h"
-#include "staticfunctions.h"
+#include "../Helpers/Parameters.h"
+#include "../Helpers/ParameterReader.h"
+#include "./WaveguideStructure.h"
+#include "./PreconditionerSweeping.h"
+#include "../Helpers/staticfunctions.h"
 
 using namespace dealii;
 
@@ -82,7 +79,6 @@ static const CylindricalManifold<3, 3> round_description (2);
  * \author Pascal Kraft
  * \date 03.07.2016
  */
-template <typename MatrixType, typename VectorType>
 class Waveguide
 {
 	public:
@@ -271,7 +267,7 @@ class Waveguide
 		/**
 		 * This function occupies one slot of the Solver and will generate formatted output on the console and write the convergence history to a file.
 		 */
-		SolverControl::State check_iteration_state(const unsigned int, const double, const VectorType &);
+		SolverControl::State check_iteration_state(const unsigned int, const double, const dealii::TrilinosWrappers::MPI::Vector &);
 
 		/**
 		 * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
@@ -348,16 +344,6 @@ class Waveguide
 		Tensor<1,3, std::complex<double>> Conjugate_Vector(Tensor<1,3, std::complex<double>> input);
 
 		/**
-		 * This project is designed to keep logs of several performance parameters. These use a custom implementation of the FileLogger class. This function initializes these loggers - meaning it generates file handles such that in functional code, data can immediately logged. This functionality should either be rewritten or included from a library since this is a standard functionality.
-		 */
-		void	init_loggers();
-
-		/**
-		 * This function stops the precondition-timer and starts the solver-timer. Weird implementation on the side of Deal makes am odd workaround necessary to keep code readable in this case. This function is not important for functional understanding of the code or FEM.
-		 */
-		void 	timerupdate();
-
-		/**
 		 * Reinit all datastorage objects.
 		 */
 		void 	reinit_all();
@@ -395,7 +381,7 @@ class Waveguide
 
 		void 	reinit_preconditioner_fast();
 
-		SolverControl::State residual_tracker(unsigned int Iteration, double resiudal, VectorType vec);
+		SolverControl::State residual_tracker(unsigned int Iteration, double resiudal, dealii::TrilinosWrappers::MPI::Vector vec);
 
 		/**
 		 * This function encapsulates a library call for 2D numeric integration over a circle with given properties. It is included that this function calls evaluate_for_Position(x,y,z)
@@ -410,7 +396,7 @@ class Waveguide
 		parallel::distributed::Triangulation<3>			triangulation;
 		DoFHandler<3>									dof_handler;
 		//, dof_handler_real;
-		VectorType										solution, EstimatedSolution, ErrorOfSolution ;
+		dealii::TrilinosWrappers::MPI::Vector										solution, EstimatedSolution, ErrorOfSolution ;
 		ConstraintMatrix 								cm, cm_prec1, cm_prec2;
 		IndexSet										locally_owned_dofs, locally_relevant_dofs, locally_active_dofs, extended_relevant_dofs;
 		std::vector<IndexSet>							locally_relevant_dofs_per_subdomain;
@@ -427,10 +413,10 @@ class Waveguide
 		ConstraintMatrix								hanging_global;
 		// MPI_Comm *										split_comms;
 		int 											assembly_progress;
-		VectorType										storage;
-		VectorType										temp_storage;
+		dealii::TrilinosWrappers::MPI::Vector										storage;
+		dealii::TrilinosWrappers::MPI::Vector										temp_storage;
 		bool											is_stored;
-		VectorType										system_rhs;
+		dealii::TrilinosWrappers::MPI::Vector										system_rhs;
 		Vector<double>									preconditioner_rhs;
 
 		int 											run_number;

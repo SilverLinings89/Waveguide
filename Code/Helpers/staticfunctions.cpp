@@ -3,7 +3,6 @@
 
 #include "ParameterReader.h"
 
-
 using namespace dealii;
 
 std::string constraints_filename 	= "constraints.log";
@@ -18,7 +17,7 @@ int 	StepsPhi 		= 10;
 static Parameters GetParameters() {
 	ParameterHandler prm;
 	ParameterReader param(prm);
-	param.read_parameters("./Parameters.xml");
+	param.read_parameters("./Parameters/Parameters.xml");
 	struct Parameters ret;
 	prm.enter_subsection("Output");
 	{

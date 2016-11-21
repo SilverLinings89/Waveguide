@@ -4,10 +4,16 @@
 
 #include <sys/time.h>
 #include "Waveguide.h"
-#include "staticfunctions.cpp"
 #include "WaveguideStructure.h"
 #include "SolutionWeight.h"
-#include "ExactSolution.h"
+#include "../Helpers/staticfunctions.cpp"
+#include "../Helpers/ExactSolution.h"
+#include "../Helpers/QuadratureFormulaCircle.cpp"
+#include "PreconditionerSweeping.cpp"
+#include <iostream>
+#include <fstream>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <string>
 #include <sstream>
 #include <deal.II/base/timer.h>
@@ -15,22 +21,20 @@
 #include <deal.II/base/std_cxx11/bind.h>
 #include <deal.II/lac/sparsity_tools.h>
 #include <deal.II/distributed/shared_tria.h>
-#include "QuadratureFormulaCircle.cpp"
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/distributed/tria.h>
 #include <deal.II/grid/tria_boundary_lib.h>
 #include <deal.II/lac/block_sparsity_pattern.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
-#include "PreconditionerSweeping.cpp"
 #include <deal.II/lac/solver.h>
 #include <deal.II/numerics/data_out_dof_data.h>
+
 using namespace dealii;
 
-template<typename MatrixType, typename VectorType >
-Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
+Waveguide::Waveguide (Parameters &param )
   :
   fe(FE_Nedelec<3> (0), 2),
-  triangulation (MPI_COMM_WORLD, typename parallel::distributed::Triangulation<3>::MeshSmoothing(Triangulation<3>::none ), parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning),
+  triangulation (MPI_COMM_WORLD, parallel::distributed::Triangulation<3>::MeshSmoothing(Triangulation<3>::none ), parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning),
   dof_handler (triangulation),
   prm(param),
   run_number(0),
@@ -46,8 +50,6 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
   solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, (GlobalParams.MPI_Rank == 0), true),
   pout(std::cout, GlobalParams.MPI_Rank==0),
   timer(MPI_COMM_WORLD, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times)
-
-
 {
 	prec_patterns = new TrilinosWrappers::SparsityPattern[Layers-1];
 	assembly_progress = 0;
@@ -55,7 +57,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
 	bool dir_exists = true;
 	while(dir_exists) {
 		std::stringstream out;
-		out << "solutions/run";
+		out << "Solutions/run";
 		out << i;
 		solutionpath = out.str();
 		struct stat myStat;
@@ -76,7 +78,7 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
 	pout << "Will write solutions to " << solutionpath << std::endl;
 
 	if(GlobalParams.MPI_Rank == 0) {
-		std::ifstream source("Parameters.xml", std::ios::binary);
+		std::ifstream source("Parameters/Parameters.xml", std::ios::binary);
 		std::ofstream dest(solutionpath +"/Parameters.xml", std::ios::binary);
 		dest << source.rdbuf();
 		source.close();
@@ -90,15 +92,15 @@ Waveguide<MatrixType, VectorType>::Waveguide (Parameters &param )
 	deallog.attach( std::cout );
 	qualities = new double[number];
 	execute_recomputation = false;
+	start_solver_milis = 0;
 }
 
-template<typename MatrixType, typename VectorType>
-Waveguide<MatrixType, VectorType>::~Waveguide() {
+Waveguide::~Waveguide() {
 
 }
 
-template<typename MatrixType, typename VectorType>
-std::complex<double> Waveguide<MatrixType, VectorType>::evaluate_for_Position(double x, double y, double z ) {
+
+std::complex<double> Waveguide::evaluate_for_Position(double x, double y, double z ) {
 	Point<3, double> position(x, y, z);
 	Vector<double> result(6);
 	Vector<double> mode(3);
@@ -116,8 +118,8 @@ std::complex<double> Waveguide<MatrixType, VectorType>::evaluate_for_Position(do
 
 }
 
-template<typename MatrixType, typename VectorType>
-std::complex<double> Waveguide<MatrixType, VectorType>::gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc)
+
+std::complex<double> Waveguide::gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc)
 {
 	double* r = NULL;
 	double* t = NULL;
@@ -160,16 +162,16 @@ std::complex<double> Waveguide<MatrixType, VectorType>::gauss_product_2D_sphere(
 	return s;
 }
 
-template<typename MatrixType, typename VectorType>
-double Waveguide<MatrixType, VectorType>::evaluate_for_z(double z) {
+
+double Waveguide::evaluate_for_z(double z) {
 	double r = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
 
 	std::complex<double> res = gauss_product_2D_sphere(z,10,r,0,0);
 	return std::sqrt(std::norm(res));
 }
 
-template<typename MatrixType, typename VectorType >
-double Waveguide<MatrixType, VectorType>::evaluate_out () {
+
+double Waveguide::evaluate_out () {
 	double real = 0.0;
 	double imag = 0.0;
 	double z = prm.PRM_M_R_ZLength/2.0;
@@ -191,8 +193,8 @@ double Waveguide<MatrixType, VectorType>::evaluate_out () {
 	return sqrt(imag*imag + real*real);
 }
 
-template<typename MatrixType, typename VectorType >
-double Waveguide<MatrixType, VectorType>::evaluate_in () {
+
+double Waveguide::evaluate_in () {
 	double real = 0.0;
 	double imag = 0.0;
 	double z = -prm.PRM_M_R_ZLength/2.0 ;
@@ -215,18 +217,16 @@ double Waveguide<MatrixType, VectorType>::evaluate_in () {
 	return sqrt(imag*imag + real*real);
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::mark_changed() {
+
+void Waveguide::mark_changed() {
 	execute_recomputation = true;
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::mark_unchanged() {
+void Waveguide::mark_unchanged() {
 	execute_recomputation = false;
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::evaluate() {
+void Waveguide::evaluate() {
 	pout << "Starting Evaluation" << std::endl;
 	double z_for_evaluation = (double)(0.5+GlobalParams.MPI_Rank)*structure->Layer_Length() - GlobalParams.PRM_M_R_ZLength/2.0 ;
 	double local_value = evaluate_for_z(z_for_evaluation) ;
@@ -234,8 +234,8 @@ void Waveguide<MatrixType, VectorType>::evaluate() {
 	pout << "Done Gathering Qualities!"<< std::endl;
 }
 
-template<typename MatrixType, typename VectorType >
-double Waveguide<MatrixType, VectorType>::evaluate_overall () {
+
+double Waveguide::evaluate_overall () {
 	std::vector <double> qualities(Layers);
 	double lower = 0.0;
 	double upper = 0.0;
@@ -294,16 +294,14 @@ double Waveguide<MatrixType, VectorType>::evaluate_overall () {
 	return quality_out/quality_in;
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType >::store() {
+void Waveguide::store() {
 	reinit_storage();
 	// storage.reinit(dof_handler.n_dofs());
 	/** storage = solution;
 	is_stored = true; **/
 }
 
-template<>
-void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::estimate_solution() {
+void Waveguide::estimate_solution() {
 	MPI_Barrier(MPI_COMM_WORLD);
 	pout << "Starting solution estimation..." << std::endl;
 	DoFHandler<3>::active_cell_iterator cell, endc;
@@ -351,8 +349,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 	EstimatedSolution.compress(VectorOperation::insert);
 }
 
-template<typename MatrixType, typename VectorType >
-Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(Point<3> & position, bool inverse , bool epsilon) {
+Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, bool inverse , bool epsilon) {
 	std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
 	Tensor<2,3, std::complex<double>> ret;
 
@@ -441,8 +438,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Tensor(
 	return ret3;
 }
 
-template<typename MatrixType, typename VectorType >
-Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Preconditioner_Tensor(Point<3> & position, bool inverse , bool epsilon, int block) {
+Tensor<2,3, std::complex<double>> Waveguide::get_Preconditioner_Tensor(Point<3> & position, bool inverse , bool epsilon, int block) {
 	std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
 	Tensor<2,3, std::complex<double>> ret;
 
@@ -532,8 +528,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::get_Precond
 
 }
 
-template<typename MatrixType, typename VectorType >
-Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Conjugate_Tensor(Tensor<2,3, std::complex<double>> input) {
+Tensor<2,3, std::complex<double>> Waveguide::Conjugate_Tensor(Tensor<2,3, std::complex<double>> input) {
 	Tensor<2,3, std::complex<double>> ret ;
 	for(int i= 0; i< 3; i++){
 		for(int j = 0; j<3; j++){
@@ -544,8 +539,7 @@ Tensor<2,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Conjugate_T
 	return ret;
 }
 
-template<typename MatrixType, typename VectorType >
-Tensor<1,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Conjugate_Vector(Tensor<1,3, std::complex<double>> input) {
+Tensor<1,3, std::complex<double>> Waveguide::Conjugate_Vector(Tensor<1,3, std::complex<double>> input) {
 	Tensor<1,3, std::complex<double>> ret ;
 	for(int i= 0; i< 3; i++){
 		ret[i].real(input[i].real());
@@ -555,25 +549,21 @@ Tensor<1,3, std::complex<double>> Waveguide<MatrixType, VectorType>::Conjugate_V
 	return ret;
 }
 
-template<typename MatrixType, typename VectorType  >
-bool Waveguide<MatrixType, VectorType>::PML_in_X(Point<3> &p) {
+bool Waveguide::PML_in_X(Point<3> &p) {
 	double pmlboundary = GlobalParams.PRM_M_R_XLength * (1- 2.0*GlobalParams.PRM_M_BC_Mantle)*0.5;
 	return p(0) < -(pmlboundary) ||p(0) > (pmlboundary);
 }
 
-template<typename MatrixType, typename VectorType>
-bool Waveguide<MatrixType, VectorType>::PML_in_Y(Point<3> &p) {
+bool Waveguide::PML_in_Y(Point<3> &p) {
 	double pmlboundary = GlobalParams.PRM_M_R_YLength * (1- 2.0*GlobalParams.PRM_M_BC_Mantle) * 0.5;
 	return p(1) < -(pmlboundary) ||p(1) > (pmlboundary);
 }
 
-template<typename MatrixType, typename VectorType>
-bool Waveguide<MatrixType, VectorType>::PML_in_Z(Point<3> &p) {
+bool Waveguide::PML_in_Z(Point<3> &p) {
 	return p(2) > (GlobalParams.PRM_M_R_ZLength / 2.0 );
 }
 
-template<typename MatrixType, typename VectorType>
-bool Waveguide<MatrixType, VectorType>::Preconditioner_PML_in_Z(Point<3> &p, unsigned int block) {
+bool Waveguide::Preconditioner_PML_in_Z(Point<3> &p, unsigned int block) {
 	double l = structure->Layer_Length();
 	double width = l * 1.0;
 	if( block == GlobalParams.MPI_Size-2) return false;
@@ -589,8 +579,7 @@ bool Waveguide<MatrixType, VectorType>::Preconditioner_PML_in_Z(Point<3> &p, uns
 	// return down;
 }
 
-template<typename MatrixType, typename VectorType >
-double Waveguide<MatrixType, VectorType>::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ){
+double Waveguide::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ){
 	double l = structure->Layer_Length();
 	double width = l * 1.0;
 
@@ -605,8 +594,7 @@ double Waveguide<MatrixType, VectorType>::Preconditioner_PML_Z_Distance(Point<3>
 	}**/
 }
 
-template<typename MatrixType, typename VectorType >
-double Waveguide<MatrixType, VectorType>::PML_X_Distance(Point<3> &p){
+double Waveguide::PML_X_Distance(Point<3> &p){
 	//double pmlboundary = (((GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) / 2.0 ) * 15.5 / 4.35) * ((100.0 - GlobalParams.PRM_M_BC_Mantle)/100.0);
 	double pmlboundary = GlobalParams.PRM_M_R_YLength * (1- 2.0*GlobalParams.PRM_M_BC_Mantle) * 0.5;
 	if(p(0) >0){
@@ -616,8 +604,7 @@ double Waveguide<MatrixType, VectorType>::PML_X_Distance(Point<3> &p){
 	}
 }
 
-template<typename MatrixType, typename VectorType >
-double Waveguide<MatrixType, VectorType>::PML_Y_Distance(Point<3> &p){
+double Waveguide::PML_Y_Distance(Point<3> &p){
 	double pmlboundary = GlobalParams.PRM_M_R_YLength * (1- 2.0*GlobalParams.PRM_M_BC_Mantle) * 0.5;
 	if(p(1) >0){
 		return p(1) - (pmlboundary);
@@ -626,15 +613,12 @@ double Waveguide<MatrixType, VectorType>::PML_Y_Distance(Point<3> &p){
 	}
 }
 
-template<typename MatrixType, typename VectorType >
-double Waveguide<MatrixType, VectorType>::PML_Z_Distance(Point<3> &p){
+double Waveguide::PML_Z_Distance(Point<3> &p){
 	return p(2) - (GlobalParams.PRM_M_R_ZLength / 2.0) ;
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::set_boundary_ids (parallel::distributed::Triangulation<3> &tria) const
+void Waveguide::set_boundary_ids (parallel::distributed::Triangulation<3> &tria) const
 {
-
 	int counter = 0;
 	parallel::shared::Triangulation<3>::active_cell_iterator cell = tria.begin_active();
 	parallel::shared::Triangulation<3>::active_cell_iterator endc = tria.end();
@@ -649,13 +633,6 @@ void Waveguide<MatrixType, VectorType>::set_boundary_ids (parallel::distributed:
 
 	tria.set_manifold (man, round_description);
 
-//	cell = tria.begin_active(),
-//	endc = tria.end();
-//	for (; cell!=endc; ++cell){
-//		int temp  = std::floor((cell->center(true, false)[2] + 1.0)/len);
-//		cell->set_subdomain_id(temp);
-//	}
-//
 	cell = tria.begin_active();
 
 	for (; cell!=endc; ++cell){
@@ -680,8 +657,7 @@ void Waveguide<MatrixType, VectorType>::set_boundary_ids (parallel::distributed:
 	}
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::make_grid ()
+void Waveguide::make_grid ()
 {
 	Point<3> origin(-1,-1,-1);
 	std_cxx11::array< Tensor< 1, 3 >, 3 > edges;
@@ -712,7 +688,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 	triangulation.refine_global(3);
 
 	triangulation.signals.post_refinement.connect
-			    (std_cxx11::bind (&Waveguide<MatrixType, VectorType>::set_boundary_ids,
+			    (std_cxx11::bind (&Waveguide::set_boundary_ids,
 			                      std_cxx11::cref(*this),
 			                      std_cxx11::ref(triangulation)));
 
@@ -881,8 +857,7 @@ void Waveguide<MatrixType, VectorType>::make_grid ()
 
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
+void Waveguide::Do_Refined_Reordering() {
 	std::vector<types::global_dof_index> dof_indices (fe.dofs_per_face);
 	std::vector<types::global_dof_index> DofsPerSubdomain(Layers);
 	std::vector<int> InternalBoundaryDofs(Layers);
@@ -916,8 +891,8 @@ void Waveguide<MatrixType, VectorType>::Do_Refined_Reordering() {
 
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::setup_system ()
+
+void Waveguide::setup_system ()
 {
 
 	if(prm.PRM_O_VerboseOutput && prm.PRM_O_Dofs) {
@@ -1170,8 +1145,7 @@ void Waveguide<MatrixType, VectorType>::setup_system ()
 	reinit_all();
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::calculate_cell_weights () {
+void Waveguide::calculate_cell_weights () {
     cell = triangulation.begin_active();
 	endc = triangulation.end();
 
@@ -1203,12 +1177,11 @@ void Waveguide<MatrixType, VectorType>::calculate_cell_weights () {
 	data_out_cells.write_vtu(outputvtu2);
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::reinit_all () {
+void Waveguide::reinit_all () {
 	// pout << "0-";
 	reinit_rhs();
     
-    reinit_cell_weights();
+  reinit_cell_weights();
 	// pout << "1-";
 	reinit_solution();
 	// pout << "2-";
@@ -1218,8 +1191,7 @@ void Waveguide<MatrixType, VectorType>::reinit_all () {
 	// pout << "4";
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::reinit_for_rerun () {
+void Waveguide::reinit_for_rerun () {
 	// pout << "0-";
 	reinit_rhs();
 	// pout << "1-";
@@ -1229,25 +1201,7 @@ void Waveguide<MatrixType, VectorType>::reinit_for_rerun () {
 	// pout << "3";
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::reinit_preconditioner () {
-	/**
-	if(!temporary_pattern_preped) {
-		preconditioner_pattern.copy_from(prec_pattern);
-
-	}
-	preconditioner_matrix_large.reinit( dof_handler.n_dofs(), dof_handler.n_dofs(), dof_handler.max_couplings_between_dofs(), false);
-	preconditioner_matrix_small.reinit( GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1, GlobalParams.block_highest - GlobalParams.sub_block_lowest + 1,dof_handler.max_couplings_between_dofs(), false);
-	**/
-}
-
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::reinit_rhs () {
-
-	}
-
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::reinit_systemmatrix() {
+void Waveguide::reinit_systemmatrix() {
 	TrilinosWrappers::SparsityPattern sp(locally_owned_dofs,
 	                                       locally_owned_dofs,
 	                                       locally_relevant_dofs,
@@ -1259,23 +1213,12 @@ void Waveguide<MatrixType, VectorType>::reinit_systemmatrix() {
 	system_matrix.reinit( sp);
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::reinit_solution() {
 
-}
-
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::reinit_storage() {
-
-}
-
-template <>
-void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_systemmatrix() {
+void Waveguide::reinit_systemmatrix() {
 	system_matrix.reinit( system_pattern);
 }
 
-template <>
-void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_rhs () {
+void Waveguide::reinit_rhs () {
 	// std::cout << "Reinit rhs for p " << GlobalParams.MPI_Rank << std::endl;
 
 	system_rhs.reinit(locally_owned_dofs, MPI_COMM_WORLD);
@@ -1284,28 +1227,24 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 
 }
 
-template <>
-void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_solution() {
+void Waveguide::reinit_solution() {
 	solution.reinit(locally_owned_dofs, MPI_COMM_WORLD);
 	EstimatedSolution.reinit(locally_owned_dofs, MPI_COMM_WORLD);
 	ErrorOfSolution.reinit(locally_owned_dofs, MPI_COMM_WORLD);
 }
 
-template <>
-void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_cell_weights() {
+void Waveguide::reinit_cell_weights() {
 	cell_weights.reinit(triangulation.n_active_cells());
 	cell_weights_prec_1.reinit(triangulation.n_active_cells());
 	cell_weights_prec_2.reinit(triangulation.n_active_cells());
 	calculate_cell_weights();
 }
 
-template<>
-void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector>::reinit_storage() {
+void Waveguide::reinit_storage() {
 	storage.reinit(locally_owned_dofs,  MPI_COMM_WORLD);
 }
 
-template<>
-void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_preconditioner () {
+void Waveguide::reinit_preconditioner () {
 
 	for(unsigned int i = 0; i < Layers -1; i++) {
 		MPI_Barrier(MPI_COMM_WORLD);
@@ -1313,15 +1252,13 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::r
 	}
 }
 
-template<>
-void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::reinit_preconditioner_fast () {
+void Waveguide::reinit_preconditioner_fast () {
 	for(int i = 0; i < (int)Layers-1; i++) {
 		Preconditioner_Matrices[i].reinit(prec_patterns[i]);
 	}
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
+void Waveguide::assemble_part ( ) {
 	QGauss<3>  			 quadrature_formula(2);
 	FEValues<3> 		fe_values (fe, quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points );
 	std::vector<Point<3> > quadrature_points;
@@ -1412,8 +1349,8 @@ void Waveguide<MatrixType, VectorType>::assemble_part ( ) {
 	}
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::assemble_system ()
+
+void Waveguide::assemble_system ()
 {
 
 	reinit_rhs();
@@ -1459,8 +1396,7 @@ void Waveguide<MatrixType, VectorType>::assemble_system ()
 
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
+void Waveguide::MakeBoundaryConditions (){
 	DoFHandler<3>::active_cell_iterator cell, endc;
 	double sector_length = structure->Sector_Length();
 
@@ -1547,8 +1483,7 @@ void Waveguide<MatrixType, VectorType>::MakeBoundaryConditions (){
 	}
 }
 
-template<typename MatrixType, typename VectorType>
-void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  ){
+void Waveguide::MakePreconditionerBoundaryConditions (  ){
 	DoFHandler<3>::active_cell_iterator cell, endc;
 	// cm_prec.clear();
 	double layer_length = structure->Layer_Length();
@@ -1661,13 +1596,7 @@ void Waveguide<MatrixType, VectorType>::MakePreconditionerBoundaryConditions (  
 	}
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::timerupdate() {
-
-}
-
-template<typename MatrixType, typename VectorType >
-SolverControl::State  Waveguide<MatrixType, VectorType>::check_iteration_state (const unsigned int iteration, const double check_value, const VectorType & ){
+SolverControl::State  Waveguide::check_iteration_state (const unsigned int iteration, const double check_value, const dealii::TrilinosWrappers::MPI::Vector & ){
 	SolverControl::State ret = SolverControl::State::iterate;
 	if(iteration > GlobalParams.PRM_S_Steps){
 		// pout << std::endl;
@@ -1685,8 +1614,7 @@ SolverControl::State  Waveguide<MatrixType, VectorType>::check_iteration_state (
 	return ret;
 }
 
-template< >
-void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::solve () {
+void Waveguide::solve () {
 
 	solver_control.log_frequency(1);
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
@@ -1777,7 +1705,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
         long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
         start_solver_milis = tp.tv_sec * 1000 + tp.tv_usec / 1000;    
         
-		solver.connect (std_cxx11::bind (&Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::residual_tracker,
+		solver.connect(std_cxx11::bind (&Waveguide::residual_tracker,
                                    this,
                                    std_cxx11::_1,
                                    std_cxx11::_2,
@@ -1804,28 +1732,15 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector >::
 	// cm.distribute(EstimatedSolution);
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::solve ()
-{
-    
-
-}
-
-template< >
-void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::Vector>::store() {
+void Waveguide::store() {
 	reinit_storage();
 	// storage.reinit(dof_handler.n_dofs());
 	storage = solution;
 	is_stored = true;
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::init_loggers () {
 
-}
-
-template<>
-void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::output_results ( bool details )
+void Waveguide::output_results ( bool details )
 {
 
 	for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {
@@ -1903,8 +1818,7 @@ void Waveguide<TrilinosWrappers::SparseMatrix, TrilinosWrappers::MPI::Vector>::o
 	}
 }
 
-template<typename MatrixType, typename VectorType>
-void Waveguide<MatrixType, VectorType>::run ()
+void Waveguide::run ()
 {
 
 	timer.enter_subsection ("Setup Mesh");
@@ -1938,27 +1852,27 @@ void Waveguide<MatrixType, VectorType>::run ()
 	run_number++;
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::print_eigenvalues(const std::vector<std::complex<double>> &input) {
+
+void Waveguide::print_eigenvalues(const std::vector<std::complex<double>> &input) {
 	for (unsigned int i = 0; i < input.size(); i++){
 		eigenvalue_file << input.at(i).real() << "\t" << input.at(i).imag() << std::endl;
 	}
 	eigenvalue_file << std::endl;
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::print_condition(double condition) {
+
+void Waveguide::print_condition(double condition) {
 	condition_file << condition << std::endl;
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::reset_changes ()
+
+void Waveguide::reset_changes ()
 {
 	reinit_all();
 }
 
-template<typename MatrixType, typename VectorType >
-void Waveguide<MatrixType, VectorType>::rerun ()
+
+void Waveguide::rerun ()
 {
 	timer.enter_subsection ("Setup Mesh");
 
@@ -1997,8 +1911,8 @@ void Waveguide<MatrixType, VectorType>::rerun ()
 
 }
 
-template<typename MatrixType, typename VectorType >
-SolverControl::State Waveguide<MatrixType, VectorType>::residual_tracker(unsigned int Iteration, double residual, VectorType vec) {
+
+SolverControl::State Waveguide::residual_tracker(unsigned int Iteration, double residual, dealii::TrilinosWrappers::MPI::Vector vec) {
     
     struct timeval tp;
     gettimeofday(&tp, NULL);

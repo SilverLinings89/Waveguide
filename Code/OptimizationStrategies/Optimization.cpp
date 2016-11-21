@@ -1,11 +1,11 @@
-#include "Optimization.h"
-#include "Waveguide.h"
-#include "GradientTable.h"
+#include "../OptimizationStrategies/Optimization.h"
+
+#include "../Core/Waveguide.h"
+#include "../OutputGenerators/Console/GradientTable.h"
 
 using namespace dealii;
 
-template<typename Matrix,typename Vector>
-Optimization<Matrix, Vector >::Optimization( Parameters in_System_Parameters ,Waveguide<Matrix, Vector >  &in_wg)
+Optimization::Optimization( Parameters in_System_Parameters ,Waveguide  &in_wg)
 	:
 		pout(std::cout, GlobalParams.MPI_Rank==0),
 		dofs(structure->NDofs()),
@@ -17,8 +17,7 @@ Optimization<Matrix, Vector >::Optimization( Parameters in_System_Parameters ,Wa
 
 }
 
-template<typename Matrix,typename Vector>
-void Optimization<Matrix, Vector>::run() {
+void Optimization::run() {
 	structure->estimate_and_initialize();
 	double step = 0.00001;
 	double alpha = 0.1;
@@ -234,7 +233,7 @@ void Optimization<Matrix, Vector>::run() {
 			}
 
 			if(abort_condition) {
-				pout << "A solution has been found. Terminanting." <<std::endl;
+				pout << "A solution has been found. Terminating." <<std::endl;
 				MPI_Abort(MPI_COMM_WORLD,0);
 			}
 			MPI_Barrier(GlobalParams.MPI_Communicator);
@@ -244,7 +243,6 @@ void Optimization<Matrix, Vector>::run() {
 
 }
 
-template<typename Matrix, typename Vector>
-Optimization<Matrix, Vector>::~Optimization() {
+Optimization::~Optimization() {
 
 }

@@ -103,7 +103,6 @@ void ParameterReader::declare_parameters()
 
 }
 
-
 void ParameterReader::read_parameters(const std::string inputfile) {
 	declare_parameters();
 	std::ifstream ifile (inputfile, std::ifstream::in);
