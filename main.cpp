@@ -1,11 +1,19 @@
 #ifndef MainCppFlag
 #define MainCppFlag
 
+#include <iostream>
+#include <fstream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <string>
+#include <sstream>
+
+
 #include "Code/Core/Waveguide.h"
 #include "Code/Core/WaveguideStructure.h"
-#include "Code/Helpers/staticfunctions.cpp"
 #include "Code/Helpers/Parameters.h"
 #include "Code/Helpers/ParameterReader.cpp"
+#include "Code/Helpers/staticfunctions.cpp"
 #include "Code/OptimizationStrategies/Optimization.cpp"
 #include "Code/Helpers/ParameterReader.cpp"
 #include "Code/Helpers/Parameters.cpp"

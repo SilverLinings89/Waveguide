@@ -1,6 +1,6 @@
 #include "Sector.h"
 #include <deal.II/base/tensor.h>
-#include "staticfunctions.cpp"
+#include "../Helpers/staticfunctions.cpp"
 using namespace dealii;
 
 Sector::~Sector() {

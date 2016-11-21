@@ -10,12 +10,6 @@
 #include "../Helpers/ExactSolution.h"
 #include "../Helpers/QuadratureFormulaCircle.cpp"
 #include "PreconditionerSweeping.cpp"
-#include <iostream>
-#include <fstream>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string>
-#include <sstream>
 #include <deal.II/base/timer.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/base/std_cxx11/bind.h>
@@ -99,7 +93,6 @@ Waveguide::~Waveguide() {
 
 }
 
-
 std::complex<double> Waveguide::evaluate_for_Position(double x, double y, double z ) {
 	Point<3, double> position(x, y, z);
 	Vector<double> result(6);
@@ -117,7 +110,6 @@ std::complex<double> Waveguide::evaluate_for_Position(double x, double y, double
 	return mode(0) * c1 + mode(1)*c2 + mode(2)*c3;
 
 }
-
 
 std::complex<double> Waveguide::gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc)
 {
@@ -162,14 +154,12 @@ std::complex<double> Waveguide::gauss_product_2D_sphere(double z, int n, double 
 	return s;
 }
 
-
 double Waveguide::evaluate_for_z(double z) {
 	double r = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
 
 	std::complex<double> res = gauss_product_2D_sphere(z,10,r,0,0);
 	return std::sqrt(std::norm(res));
 }
-
 
 double Waveguide::evaluate_out () {
 	double real = 0.0;
@@ -192,7 +182,6 @@ double Waveguide::evaluate_out () {
 	}
 	return sqrt(imag*imag + real*real);
 }
-
 
 double Waveguide::evaluate_in () {
 	double real = 0.0;
@@ -217,15 +206,6 @@ double Waveguide::evaluate_in () {
 	return sqrt(imag*imag + real*real);
 }
 
-
-void Waveguide::mark_changed() {
-	execute_recomputation = true;
-}
-
-void Waveguide::mark_unchanged() {
-	execute_recomputation = false;
-}
-
 void Waveguide::evaluate() {
 	pout << "Starting Evaluation" << std::endl;
 	double z_for_evaluation = (double)(0.5+GlobalParams.MPI_Rank)*structure->Layer_Length() - GlobalParams.PRM_M_R_ZLength/2.0 ;
@@ -233,7 +213,6 @@ void Waveguide::evaluate() {
 	MPI_Allgather( & local_value, 1, MPI_DOUBLE, qualities, 1, MPI_DOUBLE, MPI_COMM_WORLD);
 	pout << "Done Gathering Qualities!"<< std::endl;
 }
-
 
 double Waveguide::evaluate_overall () {
 	std::vector <double> qualities(Layers);
@@ -294,12 +273,6 @@ double Waveguide::evaluate_overall () {
 	return quality_out/quality_in;
 }
 
-void Waveguide::store() {
-	reinit_storage();
-	// storage.reinit(dof_handler.n_dofs());
-	/** storage = solution;
-	is_stored = true; **/
-}
 
 void Waveguide::estimate_solution() {
 	MPI_Barrier(MPI_COMM_WORLD);
@@ -852,7 +825,7 @@ void Waveguide::make_grid ()
 	GlobalParams.z_evaluate = (GlobalParams.z_min + GlobalParams.z_max)/2.0;
 	// mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
 
-    cell = triangulation.begin_active();
+  cell = triangulation.begin_active();
 	endc = triangulation.end();
 
 }
@@ -890,7 +863,6 @@ void Waveguide::Do_Refined_Reordering() {
 	**/
 
 }
-
 
 void Waveguide::setup_system ()
 {
@@ -1213,10 +1185,11 @@ void Waveguide::reinit_systemmatrix() {
 	system_matrix.reinit( sp);
 }
 
-
+/**
 void Waveguide::reinit_systemmatrix() {
 	system_matrix.reinit( system_pattern);
 }
+**/
 
 void Waveguide::reinit_rhs () {
 	// std::cout << "Reinit rhs for p " << GlobalParams.MPI_Rank << std::endl;
@@ -1645,11 +1618,10 @@ void Waveguide::solve () {
 		}
 		
 		// PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, t_upper, & cm);
-		// PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), above, dof_handler.max_couplings_between_dofs(), sweepable, locally_owned_dofs, t_upper, & cm);
+		 PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), above, dof_handler.max_couplings_between_dofs(), sweepable, locally_owned_dofs, t_upper, & cm);
 
 
-        /**
-		unsigned int dofs_below = mindof;
+    unsigned int dofs_below = mindof;
 		unsigned int total_dofs_local = UpperDofs.n_elements();
 
 		if(GlobalParams.MPI_Rank == GlobalParams.MPI_Size-1 ){
@@ -1696,7 +1668,7 @@ void Waveguide::solve () {
 		}
 
 		MPI_Barrier(MPI_COMM_WORLD);
-        **/ 
+
 
 		pout << "All preconditioner matrices built. Solving..." <<std::endl;
         
@@ -1711,12 +1683,15 @@ void Waveguide::solve () {
                                    std_cxx11::_2,
                                    std_cxx11::_3));
         
-		// solver.solve(system_matrix,solution, system_rhs, sweep);
-        PreconditionJacobi<TrilinosWrappers::SparseMatrix> precondition;
+	 solver.solve(system_matrix,solution, system_rhs, sweep);
+
+	 /**
+	 PreconditionJacobi<TrilinosWrappers::SparseMatrix> precondition;
         precondition.initialize (system_matrix, .6);
         solver.solve(system_matrix,solution, system_rhs, precondition);
-        
-		pout << "Done." << std::endl;
+    **/
+
+	  pout << "Done." << std::endl;
 
 		pout << "Norm of the solution: " << solution.l2_norm() << std::endl;
 	}

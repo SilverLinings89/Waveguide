@@ -28,7 +28,7 @@
 #include <deal.II/lac/vector.h>
 #include <deal.II/base/point.h>
 
-#include "Parameters.h"
+#include "../Helpers/Parameters.h"
 #include "Sector.h"
 
 using namespace dealii;

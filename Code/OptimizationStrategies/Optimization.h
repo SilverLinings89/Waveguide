@@ -5,8 +5,8 @@
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/sparse_matrix.h>
 
-#include "Waveguide.h"
-#include "Parameters.h"
+#include "../Core/Waveguide.h"
+#include "../Helpers/Parameters.h"
 
 using namespace dealii;
 
