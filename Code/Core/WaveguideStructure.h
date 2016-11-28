@@ -212,7 +212,10 @@ class WaveguideStructure {
 		 */
 		void WriteConfigurationToConsole();
 
-		int Z_to_Layer(double);
+		/**
+		 * For a given value \f$ z \f$ this function returns the Layer in which points with this \f$ z \f$-coordinate would be located.
+		 */
+		int Z_to_Layer(double z);
 
 		/**
 		 * This vector of values saves the initial configuration
@@ -224,14 +227,9 @@ class WaveguideStructure {
 		 */
 		double InitialQuality;
 
-		Vector<double> Dofs();
-
-		unsigned int NFreeDofs();
-
-		unsigned int NDofs();
-
-		bool IsDofFree(int );
-
+		/**
+		 * Console output of the current Waveguide Structure.
+		 */
 		void Print();
 };
 

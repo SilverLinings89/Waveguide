@@ -269,47 +269,7 @@ class Waveguide
 		 */
 		SolverControl::State check_iteration_state(const unsigned int, const double, const dealii::TrilinosWrappers::MPI::Vector &);
 
-		/**
-		 * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
-		 * \param position Stores the position in which to test for presence of a PML-Material.
-		 */
-		bool	PML_in_X(Point<3> & position);
-		/**
-		 * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the y-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
-		 * \param position Stores the position in which to test for presence of a PML-Material.
-		 */
-		bool	PML_in_Y(Point<3> & position);
-		/**
-		 * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the z-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
-		 * \param position Stores the position in which to test for presence of a PML-Material.
-		 */
-		bool	PML_in_Z(Point<3> & position);
 
-		/**
-		 * Similar to the PML_in_Z only this function is used to generate the artificial PML used in the Preconditioner. These Layers are not only situated at the surface of the computational domain but also inside it at the interfaces of Sectors.
-		 */
-		bool Preconditioner_PML_in_Z(Point<3> &p, unsigned int block);
-
-		/**
-		 * This function fulfills the same purpose as those with similar names but it is supposed to be used together with Preconditioner_PML_in_Z instead of the versions without "Preconditioner".
-		 */
-		double Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block );
-
-		/**
-		 * This function calculates for a given point, its distance to a PML-boundary limiting the computational domain. This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction).
-		 * \param position Stores the position from which to calculate the distance to the PML-surface.
-		 */
-		double 	PML_X_Distance(Point<3> & position);
-		/**
-		 * This function calculates for a given point, its distance to a PML-boundary limiting the computational domain. This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction).
-		 * \param position Stores the position from which to calculate the distance to the PML-surface.
-		 */
-		double 	PML_Y_Distance(Point<3> & position);
-		/**
-		 * This function calculates for a given point, its distance to a PML-boundary limiting the computational domain. This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction).
-		 * \param position Stores the position from which to calculate the distance to the PML-surface.
-		 */
-		double 	PML_Z_Distance(Point<3> & position);
 
 		/**
 		 * This function fills the ConstraintMatrix-object of the Waveguide-object with all constraints needed for condensation into the szstem-matrix. It's properties are derived from the Waveguide itself and the Waveguide-Structure-object available to it, therefore there are no parameters but those members need to be prepared accordingly..
@@ -362,10 +322,16 @@ class Waveguide
 		 * Reinit only the system matrix.
 		 */
 		void 	reinit_systemmatrix();
+
+		/**
+		 * The cell weights can be used to store any scalar information about each cell of the mesh. This reinit-function prepares the data structures for its usage.
+		 */
+		void    reinit_cell_weights();
         
-        void    reinit_cell_weights();
-        
-        void    calculate_cell_weights ();
+    /**
+     * In calculate cell weights an arbitrary value for each cell can be computed and then this value can be sent to the output to generate a plot of it. An example for this procedure is the computation of the norm of the material tensor to check it's validity across the mesh.
+     */
+		void    calculate_cell_weights ();
 
 		/**
 		 * Reinit only the solution vector.
@@ -377,10 +343,19 @@ class Waveguide
 		 */
 		void 	reinit_storage();
 
+		/**
+		 * When a run has already been completed, not all data structures need to be completely be rebuilt. They only need to be emptied. This function does just that.
+		 */
 		void 	reinit_for_rerun();
 
+		/**
+		 * Similar to the function reinit_for_rerun but focused on the data structures used by the preconditioner.
+		 */
 		void 	reinit_preconditioner_fast();
 
+		/**
+		 * While the solver runs, this function performs an action on the residual. In the most common use case this action is to print it to the console or to push it to some data stream.
+		 */
 		SolverControl::State residual_tracker(unsigned int Iteration, double resiudal, dealii::TrilinosWrappers::MPI::Vector vec);
 
 		/**

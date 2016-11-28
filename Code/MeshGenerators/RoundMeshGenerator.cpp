@@ -182,5 +182,43 @@ void RoundMeshGenerator::RoundMeshGenerator() {
   endc = p_triangulation->end();
 }
 
+void RoundMeshGenerator::set_boundary_ids() {
+  int counter = 0;
+  cell = p_triangulation->begin_active();
+  endc = p_triangulation->end();
+  p_triangulation->set_all_manifold_ids(0);
+  for (; cell!=endc; ++cell){
+    if (Distance2D(cell->center() ) < 0.25 ) {
+      cell->set_all_manifold_ids(1);
+      cell->set_manifold_id(1);
+    }
+  }
+  unsigned int man = 1;
+
+  p_triangulation->set_manifold (man, round_description);
+
+  cell = p_triangulation->begin_active();
+
+  for (; cell!=endc; ++cell){
+    if(cell->at_boundary()){
+      for(int j = 0; j<6; j++){
+        if(cell->face(j)->at_boundary()){
+          Point<3> ctr =cell->face(j)->center(true, false);
+          if(System_Coordinate_in_Waveguide(ctr)){
+            if(ctr(2) < 0) {
+
+              cell->face(j)->set_all_boundary_ids(11);
+              counter ++;
+            }
+
+            else {
+              cell->face(j)->set_all_boundary_ids(2);
+            }
+          }
+        }
+      }
+    }
+  }
+}
 
 #endif RoundMeshGeneratorCppFlag

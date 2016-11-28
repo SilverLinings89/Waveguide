@@ -1,10 +1,14 @@
-#ifndef WaveguideFlag
-#define WaveguideFlag
+#ifndef RoundMeshGenerator_H_
+#define RoundMeshGenerator_H_
 
 #include "./MeshGenerator.h"
 
-class RoundMeshGenerator : MeshGenerator {
+class RoundMeshGenerator : public MeshGenerator {
+
+  void set_boundary_ids();
+
+
 
 };
 
-#endif
+#endif RoundMeshGenerator_H_

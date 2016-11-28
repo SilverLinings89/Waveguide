@@ -589,46 +589,6 @@ double Waveguide::PML_Z_Distance(Point<3> &p){
 	return p(2) - (GlobalParams.PRM_M_R_ZLength / 2.0) ;
 }
 
-void Waveguide::set_boundary_ids (parallel::distributed::Triangulation<3> &tria) const
-{
-	int counter = 0;
-	parallel::shared::Triangulation<3>::active_cell_iterator cell = tria.begin_active();
-	parallel::shared::Triangulation<3>::active_cell_iterator endc = tria.end();
-	tria.set_all_manifold_ids(0);
-	for (; cell!=endc; ++cell){
-		if (Distance2D(cell->center() ) < 0.25 ) {
-			cell->set_all_manifold_ids(1);
-			cell->set_manifold_id(1);
-		}
-	}
-	unsigned int man = 1;
-
-	tria.set_manifold (man, round_description);
-
-	cell = tria.begin_active();
-
-	for (; cell!=endc; ++cell){
-		if(cell->at_boundary()){
-			for(int j = 0; j<6; j++){
-				if(cell->face(j)->at_boundary()){
-					Point<3> ctr =cell->face(j)->center(true, false);
-					if(System_Coordinate_in_Waveguide(ctr)){
-						if(ctr(2) < 0) {
-
-							cell->face(j)->set_all_boundary_ids(11);
-							counter ++;
-						}
-
-						else {
-							cell->face(j)->set_all_boundary_ids(2);
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
 void Waveguide::make_grid ()
 {
 
@@ -989,12 +949,6 @@ void Waveguide::reinit_systemmatrix() {
 	sp.compress();
 	system_matrix.reinit( sp);
 }
-
-/**
-void Waveguide::reinit_systemmatrix() {
-	system_matrix.reinit( system_pattern);
-}
-**/
 
 void Waveguide::reinit_rhs () {
 	// std::cout << "Reinit rhs for p " << GlobalParams.MPI_Rank << std::endl;

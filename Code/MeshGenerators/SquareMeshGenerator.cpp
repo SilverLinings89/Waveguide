@@ -17,7 +17,8 @@
 
 using namespace dealii;
 
-void SquareMeshGenerator::SquareMeshGenerator() {
+void SquareMeshGenerator::SquareMeshGenerator(SpaceTransformation & in_ct) {
+  ct = in_ct;
   Layers = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
   Point<3> origin(-1,-1,-1);
   std_cxx11::array< Tensor< 1, 3 >, 3 > edges;
@@ -47,7 +48,7 @@ void SquareMeshGenerator::SquareMeshGenerator() {
   p_triangulation->refine_global(3);
 
   p_triangulation->signals.post_refinement.connect
-          (std_cxx11::bind (&Waveguide::set_boundary_ids,
+          (std_cxx11::bind (&this->set_boundary_ids,
                             std_cxx11::cref(*this),
                             std_cxx11::ref(p_triangulation)));
 
@@ -153,5 +154,8 @@ void SquareMeshGenerator::SquareMeshGenerator() {
   endc = p_triangulation->end();
 }
 
+void SquareMeshGenerator::set_boundary_ids() {
+  return;
+}
 
 #endif SquareMeshGeneratorCppFlag
