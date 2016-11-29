@@ -1,6 +1,20 @@
+#ifndef PRECONDITIONERSWEEPING_H_
+#define PRECONDITIONERSWEEPING_H_
+
+using namespace dealii;
+#include <deal.II/base/config.h>
+#include <deal.II/lac/exceptions.h>
+#include <deal.II/lac/trilinos_precondition.h>
+#include <deal.II/lac/trilinos_parallel_block_vector.h>
+#include <deal.II/lac/vector.h>
+
+static SolverControl s(10,1.e-10, false, false);
+dealii::TrilinosWrappers::SolverDirect * solver;
+
+
 /**
- * \class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
- * This class implements the DealII preconditioner interface and offers a sweeping preconditioning mechanism.
+ * \class PreconditionerSweeping
+ * \brief This class implements the DealII preconditioner interface and offers a sweeping preconditioning mechanism.
  *
  * Details can be found in the paper <a href="http://www.sciencedirect.com/science/article/pii/S0021999112000460">A sweeping preconditioner for time-harmonic Maxwell’s equations with finite elements</a>. The general idea is as follows:
  * Let \f$\Omega\f$ be the computational domain (internally) truncated by an absorbing boundary condition. This domain can be split into  layers along a direction (in our case \f$ z \f$  and triangulated. We therefore have a triangulation spread across multiple processes. We chose the splitting such, that the degrees of freedom are ordered process-wise. Let \f$ K \f$ be the number of Layers and \f$ T_i \quad \imath \in \{1,\ldots,K\} \f$ the parts of the triangulation.
@@ -20,25 +34,9 @@
  * \f]
  * where \f$ P_{0,n_i} \f$ describes the extraction of the first \f$ n_i \f$ components. For the one block which has no neighbor the inverse of the block of the system matrix can be used. The inversion does not have to be performed numerically - a decomposition (performed by UMFPACK or MUMPS) is sufficient.
  *
- *  \date 19.02.2016
+ *  \date 28.11.2016
  *  \author Pascal Kraft
  **/
-
-#ifndef PRECONDITIONERSWEEPING_H_
-#define PRECONDITIONERSWEEPING_H_
-
-using namespace dealii;
-#include <deal.II/base/config.h>
-#include <deal.II/lac/exceptions.h>
-#include <deal.II/lac/trilinos_precondition.h>
-#include <deal.II/lac/trilinos_parallel_block_vector.h>
-#include <deal.II/lac/vector.h>
-
-static SolverControl s(10,1.e-10, false, false);
-dealii::TrilinosWrappers::SolverDirect * solver;
-
-
-
 class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
   {
 

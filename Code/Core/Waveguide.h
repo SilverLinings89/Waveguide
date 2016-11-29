@@ -72,7 +72,8 @@ static const CylindricalManifold<3, 3> round_description (2);
 
 /**
  * \class Waveguide
- * This class encapsulates all important data about the abstracted shape of the Waveguide, meaning a cylinder.
+ * \brief This class encapsulates all important mechanism for solving a FEM problem. In earlier versions this also included space transformation and computation of materials. Now it only includes FEM essentials and solving the system matrix.
+ *
  * Upon initialization it requires structural information about the waveguide that will be simulated. The object then continues to initialize the FEM-framework. After allocating space for all objects, the assemblation-process of the system-matrix begins. Following this step, the user-selected preconditioner and solver are used to solve the system and generate outputs.
  * This class is the core piece of the implementation.
  *

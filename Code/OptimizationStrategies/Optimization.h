@@ -12,53 +12,40 @@ using namespace dealii;
 
 /**
  * \class Optimization
- * The Optimization-class gives one of the three main parts to the project. The other two being the WaveguideStructure-class (holding all the structural information and functionality such as calculating material-tensors or changing the shape) and the Waveguide-class (offering the complete solution-process for a fixed shape). This class however determines the changes between optimization-steps and administrates the optimization-process. It stores signal-quality values for different configurations of the system and builds estimates of better shapes based upon them.
- * To fulfill its purpose it offers two functions: One is its constructor, which requires a Waveguide-object, a WaveguideStructure-object and Parameters (parsed from the input file) to already exist. The second is a run method. This function does all the heavy lifting and contains all implementation about the shape-optimization.
+ * \brief This class is an abstract interface to describe the general workings of an optimization scheme. It is used to compute optimization steps and controls the DOFs of the ShapeTransformation.
+ *
+ * In general there are two kinds of Optimization Schemes derived from this class. On the one hand there are finite-difference kind schemes which are based on the idea of varying the value of one shape parameter slightly, resolving the problem (which is now slightl varied compaired to the original one) and hence computing the entry of the shape gradient. Repeating this pattern for any un-restrained dof we can  compute the complete gradient.
+ * The other version is based on an adjoint model where we solve the forward problem and its dual and can compute the shape gradient for all DOFs from these two results.
  * \author Pascal Kraft
- * \date 23.11.2015
+ * \date 28.11.2016
  */
 
 class Optimization {
 	public:
 
 		ConditionalOStream	pout;
-		/**
-		 * This member is not to be confused with the membler n_dofs in Waveguide which stores the number of degrees of freedom in the finite element implementation. This variable however stores the number of degrees of freedom for the shape of the waveguide and is calculated by
-		 * \f[ \operatorname{dofs} = (s + 1) \cdot 3 -6\f]
-		 * where \f$ s \f$ is the number of sectors used to model the system. If \f$ s=1 \f$ there is no optimization, since all properties of the waveguide are predetermined by the shapes boundary-conditions.
-		 */
+
 		const int dofs;
 
-		const int residuals_count;
-
 		const int freedofs;
-		/**
-		 * Members like this one appear in many objects and are always used to store the parsed data from the input-file.
-		 */
-		const Parameters System_Parameters;
 
-		/**
-		 * This member is a handle to the Waveguide-object used in the computation. This object needs such a handle in order to be able to
-		 *  -# start calculations for a certain shape
-		 *  -# retrieve signal quality information after a run has been completed.
-		 *
-		 */
-		Waveguide &waveguide;
+		Waveguide waveguide;
 
+		SpaceTransformation st;
 
+		MeshGenerator mg;
 
-		/**
-		 * This is a constructor for the Optimization-object. It requires the handles to the two objects it has to control and an additional structure containing the data from the input-file.
-		 */
-		Optimization( Parameters , Waveguide  & );
+		OptimizationAlgorithm oa;
 
-    ~Optimization ();
-                
+		virtual Optimization( Parameters , Waveguide  & );
+
+		virtual ~Optimization();
+
 		/**
 		 * This function is the core implementation of an optimization algorithm. Currently it is very fundamental in its technical prowess which can be improved upon in later versions. Essentially, it calculates the signal quality for a configurations and for small steps in every one of the dofs. After that, the optimization-step is estimated based on difference-quotients. Following this step, a large step is computed based upon the approximation of the gradient of the signal-quality functional and the iteration starts anew. If a decrease in quality is detected, the optimization-step is undone and the step-width is reduced.
 		 * This function controls both the Waveguide- and the Waveguide-structure object.
 		 */
-		void run();
+		virtual void run() = 0;
 
 };
 

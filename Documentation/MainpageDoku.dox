@@ -20,5 +20,6 @@
   Also it should be noted that there exists a very large documentation about dealii which might help the reader understand this code. Lastly dealii is basically only available on Linux since it nearly always requires a build-process which would not be possible with out enormous problems on different OS. As far as mathematical knowledge is concerned, a basic education in linear algebra, krylov subspace methods, transformation-optics, functional analysis, optics and optimization theory will further the understanding of both the code and this documentation of it.
  
  \author Pascal Kraft
- \version 1.1
- */
+ \version  1.6
+ */ 
+

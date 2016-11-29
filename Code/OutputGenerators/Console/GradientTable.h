@@ -1,13 +1,13 @@
-/*
- * \class GradientTable
- *
- *  Created on: 03.02.2016
- *      Author: ae14
- */
-
 #ifndef GRADIENTTABLE_H_
 #define GRADIENTTABLE_H_
 
+/**
+ * \class GradientTable
+ * \brief The Gradient Table is an OutputGenerator, intended to write information about the shape gradient to the console upon its computation.
+ *
+ * \date 28.11.2016
+ * \author Pascal Kraft
+ **/
 class GradientTable {
 
 private:

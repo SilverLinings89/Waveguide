@@ -1,13 +1,15 @@
-/**
- * \class Parameters
- * Diese Struktur enthält alle Variablen, die auch im Input-File zur Verfügung stehen, und noch ein paar mehr. Sie wird befüllt, wenn das File gelesen wird und statisch verfügbar gemacht.
- * Dies reduziert den Aufwand das Objekt immer wieder hin und her zureichen und ist insofern sinnvoll als dass sowieso die Werte konstant sind, weil es sich bei allen um System-Parameter handelt.
- * @author: Pascal Kraft
- * @date: 07.09.2015
- */
+
 #ifndef ParametersFlag
 #define ParametersFlag
 
+/**
+ * \class Parameters
+ * \brief This structure contains all information contained in the input file and some values that can simply be computed from it.
+ *
+ * In the application, static Variable of this type makes the input parameters available globally.
+ * \author: Pascal Kraft
+ * \date: 28.11.2016
+ */
 struct Parameters {
 	/**
 	 * Output more details about the grid.

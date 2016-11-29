@@ -7,7 +7,9 @@
 using namespace dealii;
 
 /**
- * This class is derived from the Function class and can be used to estimate the L2-error for a straight waveguide. In the case of a completely cylindrical waveguide, an analytic solution is known (the modes of the input-signal themselves) and this class offers a representation of this analytical solution. If the waveguide has any other shape, this solution does not lose its value completely - it can still be used as a starting-vector for iterative solvers.
+ * \class ExactSolution
+ * \brief This class is derived from the Function class and can be used to estimate the L2-error for a straight waveguide. In the case of a completely cylindrical waveguide, an analytic solution is known (the modes of the input-signal themselves) and this class offers a representation of this analytical solution. If the waveguide has any other shape, this solution does not lose its value completely - it can still be used as a starting-vector for iterative solvers.
+ *
  * The structure of this class is defined by the properties of the Function-class meaning that we have two functions:
  *  -#  virtual double value (const Point<dim> &p, const unsigned int component ) calculates the value for a single component of the vector-valued return-value.
  *  -#  virtual void vector_value (const Point<dim> &p,	Vector<double> &value) puts these individual components into the parameter value, which is a reference to a vector, handed over to store the result.

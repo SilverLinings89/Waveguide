@@ -8,6 +8,7 @@ using namespace dealii;
 /**
  * \class Sector
  * \brief Sectors are used, to split the computational domain into chunks, whose degrees of freedom are likely coupled.
+ *
  * The interfaces between Sectors lie in the xy-plane and they are ordered by their z-value.
  * \author Pascal Kraft
  * \date 17.12.2015

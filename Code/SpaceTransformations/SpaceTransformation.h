@@ -10,7 +10,16 @@
 
 
 using namespace dealii;
-
+/**
+ * \class SpaceTransformation
+ * \brief The SpaceTransformation class encapsulates the coordinate transformation used in the simulation.
+ *
+ * Two important decisions have to be made in the computation: Which shape should be used for the waveguide? This can either be rectangular or tubular. Should the coordinate-transformation always be equal to identity in any domain where PML is applied? (yes or no).
+ * However, the space transformation is the only information required to compute the Tensor \f$g\f$ which is a 3x3 matrix whilch (multiplied by the material value of the untransfomred coordinate either inside or outside the waveguide) gives us the value of \f$\epsilon\f$ and \f$\mu\f$.
+ * From this class we derive several different classes which then specify the interface specified in this class.
+ * \author Pascal Kraft
+ * \date 17.12.2015
+ */
 class SpaceTransformation {
 
   const unsigned int dofs_per_layer;
@@ -146,14 +155,29 @@ class SpaceTransformation {
    */
   double InitialQuality;
 
+  /**
+   * Other objects can use this function to retrieve an array of the current values of the degrees of freedom of the functional we are optimizing. This also includes restrained degrees of freedom and other functions can be used to determine this property. This has to be done because in different cases the number of restrained degrees of freedom can vary and we want no logic about this in other functions.
+   */
   Vector<double> Dofs();
 
+  /**
+   * This function returns the number of unrestrained degrees of freedom of the current optimization run.
+   */
   unsigned int NFreeDofs();
 
+  /**
+   * This function returns the total number of DOFs including restrained ones. This is the lenght of the array returned by Dofs().
+   */
   unsigned int NDofs();
 
+  /**
+   * Since Dofs() also returns restrained degrees of freedom, this function can be applied to determine if a degree of freedom is indeed free or restrained. "restrained" means that for example the DOF represents the radius at one of the connectors (input or output) and therefore we forbid the optimization scheme to vary this value.
+   */
   bool IsDofFree(int );
 
+  /**
+   * Console output of the current Waveguide Structure.
+   */
   void Print();
 
 
