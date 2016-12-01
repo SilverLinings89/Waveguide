@@ -23,6 +23,8 @@ using namespace dealii;
 class Optimization {
 	public:
 
+    const int type = -1; // This means that this is not actually an Optimization-implementation. 0 = FD, 1 = Adj.
+
 		ConditionalOStream	pout;
 
 		const int dofs;
@@ -35,7 +37,7 @@ class Optimization {
 
 		MeshGenerator mg;
 
-		OptimizationAlgorithm oa;
+		OptimizationAlgorithm  * oa;
 
 		virtual Optimization( Parameters , Waveguide  & );
 

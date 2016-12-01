@@ -13,6 +13,8 @@ using namespace dealii;
  */
 class FDOptimization : public Optimization {
 
+  const int type = 0; // Allows callers to identify the exact type easily. 0 = FD, 1 = Adj.
+
   FDOptimization();
 
   ~FDOptimization();

@@ -8,6 +8,7 @@
 #include <string>
 #include <sstream>
 
+#include <mpi.h>
 
 #include "Code/Core/Waveguide.h"
 #include "Code/Core/WaveguideStructure.h"
@@ -34,12 +35,69 @@ int main (int argc, char *argv[])
 
 	GlobalParams = GetParameters();
 
-	structure = new WaveguideStructure(GlobalParams);
+	MPI_Comm * mpi_primal, * mpi_dual;
 
-	Waveguide waveguide(GlobalParams);
+	MeshGenerator * mg;
+	if(GlobalParams.PRM_M_C_TypeIn == "circle"){
+	  mg = new RoundMeshGenerator();
+	} else {
+	  mg = new SquareMeshGenerator();
+	}
 
-	Optimization opt(GlobalParams, waveguide);
-	opt.run();
+	SpaceTransformation * st;
+
+	if(GlobalParams.PRM_M_C_TypeIn == "circle"){
+    if(GlobalParams.PRM_M_BC_Homog == "true") {
+      st = new HomogenousTransformationCircular();
+    } else {
+      st = new InhomogenousTransformationCircular();
+    }
+	} else {
+	  if(GlobalParams.PRM_M_BC_Homog == "true") {
+      st = new HomogenousTransformationRectangular();
+    } else {
+      st = new InhomogenousTransformationRectangular();
+    }
+	}
+
+	SpaceTransformation * dst;
+
+	dst = new DualProblemTransformationWrapper(st);
+
+	if(GlobalParams.PRM_OptimizationStrategy == "adjoint" ) {
+	  // adjoint based
+	  int primal_rank = GlobalParams.MPI_Rank;
+	  int dual_rank = GlobalParams.MPI_Size - 1 - GlobalParams.MPI_Rank;
+	  if(dual_rank < 0) {
+	    dual_rank += GlobalParams.MPI_Size;
+	  }
+	  MPI_Comm_split(MPI_COMM_WORLD, 1, primal_rank, mpi_primal);
+	  MPI_Comm_split(MPI_COMM_WORLD, 1, dual_rank, mpi_dual);
+	} else {
+	  // fd based
+    int primal_rank = GlobalParams.MPI_Rank;
+	  MPI_Comm_split(MPI_COMM_WORLD, 1, primal_rank, mpi_primal);
+	}
+
+	// structure = new WaveguideStructure(GlobalParams);
+
+	Waveguide * primal_waveguide;
+	primal_waveguide = new Waveguide(mpi_primal, mg, st);
+
+	Waveguide * dual_waveguide;
+
+	if(GlobalParams.PRM_OptimizationStrategy == "adjoint") {
+	  dual_waveguide = new Waveguide(mpi_dual, mg, dst);
+	}
+
+	Optimization * opt;
+
+	if(GlobalParams.PRM_OptimizationStategy == "adjoint") {
+	  opt = new AdjointOptimization();
+	} else {
+	  opt = new FDOptimization();
+	}
+
 
 	return 0;
 }
