@@ -1,130 +1,232 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ParameterHandler>
     <Output>
-        <Output_20Grid>
-            <value>false</value>
-            <default_value>false</default_value>
-            <documentation>Determines if Grid should be written to .eps file for visualization.</documentation>
-            <pattern>0</pattern>
-            <pattern_description>[Bool]</pattern_description>
-        </Output_20Grid>
-        <Output_20Dofs>
-            <value>true</value>
-            <default_value>true</default_value>
-            <documentation>Determines if details about Degrees of freedom should be written to the console.</documentation>
-            <pattern>1</pattern>
-            <pattern_description>[Bool]</pattern_description>
-        </Output_20Dofs>
-        <Output_20Active_20Cells>
-            <value>true</value>
-            <default_value>true</default_value>
-            <documentation>Determines if the number of active cells should be written to the console.</documentation>
-            <pattern>2</pattern>
-            <pattern_description>[Bool]</pattern_description>
-        </Output_20Active_20Cells>
-        <Verbose_20Output>
-            <value>true</value>
-            <default_value>true</default_value>
-            <documentation>Determines if a lot of helpful data should be written to the console.</documentation>
-            <pattern>3</pattern>
-            <pattern_description>[Bool]</pattern_description>
-        </Verbose_20Output>
+        <Optimization>
+            <Gnuplot>
+                <Optimization_20History_20Live>
+                    <value>false</value>
+                    <default_value>false</default_value>
+                    <documentation>Currently not implemented. This will open an X-window at runtime and show the current shape to allow for full tracking of the current procedure while it runs (to be able to abort as early as possible.</documentation>
+                    <pattern>0</pattern>
+                    <pattern_description>[Bool]</pattern_description>
+                </Optimization_20History_20Live>
+                <Optimization_20History_20Shapes>
+                    <value>true</value>
+                    <default_value>true</default_value>
+                    <documentation>If this value is set to 'true', after every step a plot and a data file of the current shape will be generated. The plot shows single (tubular) or multiple (rectangular) crossections of the current waveguide shape.</documentation>
+                    <pattern>1</pattern>
+                    <pattern_description>[Bool]</pattern_description>
+                </Optimization_20History_20Shapes>
+                <Optimization_20History>
+                    <value>false</value>
+                    <default_value>false</default_value>
+                    <documentation>If this value is set to 'true', a plot and data file will be generated logging the values of the signal quality after every step of the current optimization scheme.</documentation>
+                    <pattern>2</pattern>
+                    <pattern_description>[Bool]</pattern_description>
+                </Optimization_20History>
+            </Gnuplot>
+            <VTK>
+                <TransformationWeights>
+                    <TransformationWeightsAll>
+                        <value>false</value>
+                        <default_value>false</default_value>
+                        <documentation>If this is enabled, a .vtk file is generated in every step logging the norm of the transformation tensor as 3D data.</documentation>
+                        <pattern>3</pattern>
+                        <pattern_description>[Bool]</pattern_description>
+                    </TransformationWeightsAll>
+                    <TransformationWeightsFirst>
+                        <value>false</value>
+                        <default_value>false</default_value>
+                        <documentation>If this is enabled, a .vtk file is generated in the first step logging the norm of the transformation tensor as 3D data.</documentation>
+                        <pattern>4</pattern>
+                        <pattern_description>[Bool]</pattern_description>
+                    </TransformationWeightsFirst>
+                    <TransformationWeightsLast>
+                        <value>false</value>
+                        <default_value>false</default_value>
+                        <documentation>If this is enabled, a .vtk file is generated in the last step logging the norm of the transformation tensor as 3D data.</documentation>
+                        <pattern>5</pattern>
+                        <pattern_description>[Bool]</pattern_description>
+                    </TransformationWeightsLast>
+                </TransformationWeights>
+                <Solution>
+                    <SolutionAll>
+                        <value>false</value>
+                        <default_value>false</default_value>
+                        <documentation>If this is enabled, a .vtk file is generated in every step logging the solution as 3D data.</documentation>
+                        <pattern>6</pattern>
+                        <pattern_description>[Bool]</pattern_description>
+                    </SolutionAll>
+                    <SolutionFirst>
+                        <value>true</value>
+                        <default_value>true</default_value>
+                        <documentation>If this is enabled, a .vtk file is generated in the first step logging the solution as 3D data.</documentation>
+                        <pattern>7</pattern>
+                        <pattern_description>[Bool]</pattern_description>
+                    </SolutionFirst>
+                    <SolutionLast>
+                        <value>true</value>
+                        <default_value>true</default_value>
+                        <documentation>If this is enabled, a .vtk file is generated in the last step logging the solution as 3D data.</documentation>
+                        <pattern>8</pattern>
+                        <pattern_description>[Bool]</pattern_description>
+                    </SolutionLast>
+                </Solution>
+            </VTK>
+        </Optimization>
+        <Convergence>
+            <DataFiles>
+                <ConvergenceFirst>
+                    <value>true</value>
+                    <default_value>true</default_value>
+                    <documentation>This causes the code to generate a datafile with the data of the system matrix solution process of the first step.</documentation>
+                    <pattern>9</pattern>
+                    <pattern_description>[Bool]</pattern_description>
+                </ConvergenceFirst>
+                <ConvergenceLast>
+                    <value>true</value>
+                    <default_value>true</default_value>
+                    <documentation>This causes the code to generate a datafile with the data of the system matrix solution process of the last step.</documentation>
+                    <pattern>10</pattern>
+                    <pattern_description>[Bool]</pattern_description>
+                </ConvergenceLast>
+                <ConvergenceAll>
+                    <value>false</value>
+                    <default_value>false</default_value>
+                    <documentation>This causes the code to generate a datafile with the data of the system matrix solution process of all steps.</documentation>
+                    <pattern>11</pattern>
+                    <pattern_description>[Bool]</pattern_description>
+                </ConvergenceAll>
+            </DataFiles>
+            <Plots>
+                <ConvergenceFirst>
+                    <value>true</value>
+                    <default_value>true</default_value>
+                    <documentation>This causes the code to generate a plot of the data of the system matrix solution process of the first step.</documentation>
+                    <pattern>12</pattern>
+                    <pattern_description>[Bool]</pattern_description>
+                </ConvergenceFirst>
+                <ConvergenceLast>
+                    <value>true</value>
+                    <default_value>true</default_value>
+                    <documentation>This causes the code to generate a plot of the data of the system matrix solution process of the last step.</documentation>
+                    <pattern>13</pattern>
+                    <pattern_description>[Bool]</pattern_description>
+                </ConvergenceLast>
+                <ConvergenceAll>
+                    <value>false</value>
+                    <default_value>false</default_value>
+                    <documentation>This causes the code to generate a plot of the data of the system matrix solution process of all steps.</documentation>
+                    <pattern>14</pattern>
+                    <pattern_description>[Bool]</pattern_description>
+                </ConvergenceAll>
+            </Plots>
+        </Convergence>
+        <General>
+            <SummaryFile>
+                <value>true</value>
+                <default_value>true</default_value>
+                <documentation>This generates an output of the simulation (mathematical terms. Convergence rates, residuals, parameters etc.)</documentation>
+                <pattern>15</pattern>
+                <pattern_description>[Bool]</pattern_description>
+            </SummaryFile>
+            <LogFile>
+                <value>true</value>
+                <default_value>true</default_value>
+                <documentation>This generates a general log (Code steps, warnings, errors, diagnostics)</documentation>
+                <pattern>16</pattern>
+                <pattern_description>[Bool]</pattern_description>
+            </LogFile>
+        </General>
     </Output>
     <Measures>
         <Connectors>
-            <Type_20in>
+            <Shape>
                 <value>Circle</value>
                 <default_value>Circle</default_value>
                 <documentation>Describes the shape of the input connector.</documentation>
-                <pattern>4</pattern>
-                <pattern_description>[Selection Circle|Ellipse|Square ]</pattern_description>
-            </Type_20in>
-            <Type_20out>
-                <value>Circle</value>
-                <default_value>Circle</default_value>
-                <documentation>Describes the shape of the input connector.</documentation>
-                <pattern>5</pattern>
-                <pattern_description>[Selection Circle|Ellipse|Square ]</pattern_description>
-            </Type_20out>
-            <Radius_20in>
-                <value>2</value>
-                <default_value>2.5</default_value>
-                <documentation>Radius / Diameter for Circle / Square input connector. Ellipse not implemented.</documentation>
-                <pattern>6</pattern>
+                <pattern>17</pattern>
+                <pattern_description>[Selection Circle|Rectangle ]</pattern_description>
+            </Shape>
+            <Dimension1_In>
+                <value>2.0</value>
+                <default_value>2.0</default_value>
+                <documentation>First dimension of the input connector. For a circular waveguide this is the radius. For a rectangular waveguide this is the width.</documentation>
+                <pattern>18</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
-            </Radius_20in>
-            <Radius_20out>
-                <value>2</value>
-                <default_value>2.5</default_value>
-                <documentation>Radius / Diameter for Circle / Square output connector. Ellipse not implemented.</documentation>
-                <pattern>7</pattern>
+            </Dimension1_In>
+            <Dimension2_In>
+                <value>2.0</value>
+                <default_value>2.0</default_value>
+                <documentation>Second dimension of the input connector. For a circular waveguide this has no meaning. For a rectangular waveguide this is the height.</documentation>
+                <pattern>19</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
-            </Radius_20out>
-            <Tilt_20in>
-                <value>0</value>
-                <default_value>0.0</default_value>
-                <documentation>Tilt of the input connector. In the documentation this values is named v_0.</documentation>
-                <pattern>8</pattern>
+            </Dimension2_In>
+            <Dimension1_Out>
+                <value>2.0</value>
+                <default_value>2.0</default_value>
+                <documentation>First dimension of the output connector. For a circular waveguide this is the radius. For a rectangular waveguide this is the width.</documentation>
+                <pattern>20</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
-            </Tilt_20in>
-            <Tilt_20out>
-                <value>0</value>
-                <default_value>0.0</default_value>
-                <documentation>Tilt of the output connector. In the documentation this values is named v_1.</documentation>
-                <pattern>9</pattern>
+            </Dimension1_Out>
+            <Dimension2_Out>
+                <value>2.0</value>
+                <default_value>2.0</default_value>
+                <documentation>Second dimension of the output connector. For a circular waveguide this has no meaning. For a rectangular waveguide this is the height.</documentation>
+                <pattern>21</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
-            </Tilt_20out>
+            </Dimension2_Out>
         </Connectors>
         <Region>
             <XLength>
                 <value>20</value>
                 <default_value>10.0</default_value>
                 <documentation>Length of the system in x-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
-                <pattern>10</pattern>
+                <pattern>22</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XLength>
             <YLength>
                 <value>20</value>
                 <default_value>10.0</default_value>
                 <documentation>Length of the system in y-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
-                <pattern>11</pattern>
+                <pattern>23</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </YLength>
             <ZLength>
                 <value>6</value>
                 <default_value>2.0</default_value>
                 <documentation>Length of the system in z-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
-                <pattern>12</pattern>
+                <pattern>24</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </ZLength>
         </Region>
         <Waveguide>
             <Delta>
-                <value>0</value>
+                <value>1.0</value>
                 <default_value>1.0</default_value>
                 <documentation>Offset between the two connectors measured in micrometres.</documentation>
-                <pattern>13</pattern>
+                <pattern>25</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </Delta>
             <epsilon_20in>
                 <value>2.21</value>
                 <default_value>2.2</default_value>
                 <documentation>Material-Property of the optical fiber (optical thickness).</documentation>
-                <pattern>14</pattern>
+                <pattern>26</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </epsilon_20in>
             <epsilon_20out>
                 <value>2.2</value>
                 <default_value>1.0</default_value>
                 <documentation>Material-Property of environment of the fiber (optical thickness).</documentation>
-                <pattern>15</pattern>
+                <pattern>27</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </epsilon_20out>
             <Lambda>
                 <value>5.6328</value>
                 <default_value>5.6328</default_value>
                 <documentation>Vacuum-wavelength of the incoming wave.</documentation>
-                <pattern>16</pattern>
+                <pattern>28</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </Lambda>
             <Sectors>
@@ -143,110 +245,131 @@
                 <pattern>18</pattern>
                 <pattern_description>[Selection PML|HSIE ]</pattern_description>
             </Type>
-            <XY_20in>
-                <value>0</value>
-                <default_value>0.2</default_value>
-                <documentation>Thickness of the PML area on the side of the input connector.</documentation>
-                <pattern>19</pattern>
-                <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
-            </XY_20in>
-            <XY_20out>
+            <ZMinus>
                 <value>1</value>
                 <default_value>1</default_value>
-                <documentation>Amount of standard-size sectors for PML region at the output end.</documentation>
+                <documentation>Thickness of the PML area on the side of the input connector. Measused in sectors of normal size of a sector.</documentation>
+                <pattern>19</pattern>
+                <pattern_description>[Integer 0...2147483647 (inclusive)]</pattern_description>
+            </ZMinus>
+            <XMinus>
+                <value>1.0</value>
+                <default_value>1.0</default_value>
+                <documentation>Thickness of the PML on the negative X-axis. Measured in micrometers</documentation>
                 <pattern>20</pattern>
-                <pattern_description>[Integer 1...2147483647 (inclusive)]</pattern_description>
-            </XY_20out>
-            <Mantle>
-                <value>0.1</value>
-                <default_value>10</default_value>
-                <documentation>Thickness of the PML area on 4 non-connector sides, the mantle.</documentation>
+                <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
+            </XMinus>
+            <XPlus>
+                <value>1.0</value>
+                <default_value>1.0</default_value>
+                <documentation>Thickness of the PML on the positive X-axis. Measured in micrometers</documentation>
                 <pattern>21</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
-            </Mantle>
+            </XPlus>
+            <YMinus>
+                <value>1.0</value>
+                <default_value>1.0</default_value>
+                <documentation>Thickness of the PML on the negative Y-axis. Measured in micrometers</documentation>
+                <pattern>22</pattern>
+                <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
+            </YMinus>
+            <YPlus>
+                <value>1.0</value>
+                <default_value>1.0</default_value>
+                <documentation>Thickness of the PML on the positive Y-axis. Measured in micrometers</documentation>
+                <pattern>23</pattern>
+                <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
+            </YPlus>
+           
             <KappaXMax>
                 <value>5</value>
                 <default_value>10.0</default_value>
                 <documentation>PML Tuning Parameter</documentation>
-                <pattern>22</pattern>
+                <pattern>24</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </KappaXMax>
             <KappaYMax>
                 <value>5</value>
                 <default_value>10.0</default_value>
                 <documentation>PML Tuning Parameter</documentation>
-                <pattern>23</pattern>
+                <pattern>25</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </KappaYMax>
             <KappaZMax>
                 <value>5</value>
                 <default_value>10.0</default_value>
                 <documentation>PML Tuning Parameter</documentation>
-                <pattern>24</pattern>
+                <pattern>26</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </KappaZMax>
             <SigmaXMax>
                 <value>10</value>
                 <default_value>10.0</default_value>
                 <documentation>PML Tuning Parameter</documentation>
-                <pattern>25</pattern>
+                <pattern>27</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </SigmaXMax>
             <SigmaYMax>
                 <value>10</value>
                 <default_value>10.0</default_value>
                 <documentation>PML Tuning Parameter</documentation>
-                <pattern>26</pattern>
+                <pattern>28</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </SigmaYMax>
             <SigmaZMax>
                 <value>10</value>
                 <default_value>10.0</default_value>
                 <documentation>PML Tuning Parameter</documentation>
-                <pattern>27</pattern>
+                <pattern>29</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </SigmaZMax>
             <DampeningExponentM>
                 <value>3</value>
                 <default_value>3</default_value>
                 <documentation>Dampening Exponent M for the intensety of dampening in the PML region.</documentation>
-                <pattern>28</pattern>
+                <pattern>30</pattern>
                 <pattern_description>[Integer range 0...2147483647 (inclusive)]</pattern_description>
             </DampeningExponentM>
         </Boundary_20Conditions>
     </Measures>
-    <Discretization>
-        <refinement>
-            <value>adaptive</value>
-            <default_value>adaptive</default_value>
-            <documentation>This value describes if the XY-plane discretization should be refined homogeneously or adaptively. The latter is not implemented yet.</documentation>
-            <pattern>29</pattern>
-            <pattern_description>[Selection global|adaptive ]</pattern_description>
-        </refinement>
-        <XY>
-            <value>2</value>
-            <default_value>2</default_value>
-            <documentation>Number of refinement steps used in the XY-plane.</documentation>
-            <pattern>30</pattern>
-            <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
-        </XY>
-        <Z>
-            <value>3</value>
-            <default_value>3</default_value>
-            <documentation>Number of layers in the z-direction.</documentation>
+    <Schema>
+        <Homogeneity>
+            <value>true</value>
+            <default_value>true</default_value>
+            <documentation>If this is enabled, a space transformation is used which is equal the identity on the PML-region for the dampening along the x and y axis.</documentation>
             <pattern>31</pattern>
-            <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
-        </Z>
-    </Discretization>
-    <Assembly>
-        <Threads>
-            <value>4</value>
-            <default_value>4</default_value>
-            <documentation>Number of threads used in the assembly process.</documentation>
+            <pattern_description>[Bool]</pattern_description>
+        </Homogeneity>
+        <Optimization_20Schema>
+            <value>Adjoint</value>
+            <default_value>Adjoint</default_value>
+            <documentation>If this is set to adjoint, the shape gradient will be computed by means of an adjoint based method. If it is set to FD, finite differences are use.</documentation>
             <pattern>32</pattern>
-            <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
-        </Threads>
-    </Assembly>
+            <pattern_description>[Selection Adjoint|FD ]</pattern_description>
+        </Optimization_20Schema>
+        <Optimization_20Steps>
+            <value>10</value>
+            <default_value>10</default_value>
+            <documentation>Number of Optimization steps to be performed.</documentation>
+            <pattern>33</pattern>
+            <pattern_description>[Integer 1...2147483647 (inclusive)]</pattern_description>
+        </Optimization_20Steps>
+        <Steping_20Method>
+            <value>10</value>
+            <default_value>10</default_value>
+            <documentation>Method of step computation. Steepest uses steepest descent. CG uses a conjugate gradient method to compute the next step.</documentation>
+            <pattern>34</pattern>
+            <pattern_description>[Selection Adjoint|FD]</pattern_description>
+        </Steping_20Method>
+        <Step_20Width>
+            <value>Adjoint</value>
+            <default_value>Adjoint</default_value>
+            <documentation>This parameter descibes the scheme used to compute the next step width. This can be adjoint (if an adjoint schema is used, which causees the computation of multiple shape hradient with differing step widths in the parameters. This would be too costly for FD and ist therefore not available in that mode. An experimental approach can be used which tries to use information from the gradient and a seperate step width control to compute the step. </documentation>
+            <pattern>35</pattern>
+            <pattern_description>[Selection Adjoint|Experimental]</pattern_description>
+        </Step_20Width>
+        
+    </Schema>
     <Solver>
         <Library>
             <value>PETSc</value>
