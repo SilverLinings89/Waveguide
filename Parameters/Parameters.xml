@@ -361,11 +361,11 @@
             <pattern_description>[Selection Steepest|CG]</pattern_description>
         </Stepping_20Method>
         <Step_20Width>
-            <value>Adjoint</value>
-            <default_value>Adjoint</default_value>
+            <value>LineSearch</value>
+            <default_value>LineSearch</default_value>
             <documentation>This parameter descibes the scheme used to compute the next step width. This can be adjoint (if an adjoint schema is used, which causees the computation of multiple shape hradient with differing step widths in the parameters. This would be too costly for FD and ist therefore not available in that mode. An experimental approach can be used which tries to use information from the gradient and a seperate step width control to compute the step. </documentation>
             <pattern>35</pattern>
-            <pattern_description>[Selection Adjoint|Experimental]</pattern_description>
+            <pattern_description>[Selection LineSearch|Experimental]</pattern_description>
         </Step_20Width>       
     </Schema>
     <Solver>

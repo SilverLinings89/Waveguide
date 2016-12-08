@@ -89,6 +89,14 @@ Waveguide::Waveguide (Parameters &param )
 	start_solver_milis = 0;
 }
 
+Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st) {
+  mg = in_mg;
+  st = in_st;
+  mpi_comm = in_mpi_comm;
+
+
+}
+
 Waveguide::~Waveguide() {
 
 }
@@ -591,8 +599,7 @@ double Waveguide::PML_Z_Distance(Point<3> &p){
 
 void Waveguide::make_grid ()
 {
-
-
+  mg->prepare_triangulation(& triangulation);
 }
 
 void Waveguide::Do_Refined_Reordering() {
@@ -617,15 +624,7 @@ void Waveguide::Do_Refined_Reordering() {
 		temp.add_range(Dofs_Below_Subdomain[i],Dofs_Below_Subdomain[i]+Block_Sizes[i] );
 		set.push_back(temp);
 	}
-	pout << "Storing details in Waveguidestructure->case_sectors..." <<std::endl;
-	/**
-	for(unsigned int i=0; i  < Layers; i++) {
-		structure->case_sectors[i].setLowestDof( Dofs_Below_Subdomain[i] );
-		structure->case_sectors[i].setNActiveCells( GridTools::count_cells_with_subdomain_association(triangulation,i) );
-		structure->case_sectors[i].setNDofs( Block_Sizes[i] );
-		//structure->case_sectors[i].setNInternalBoundaryDofs(InternalBoundaryDofs[i]);
-	}
-	**/
+
 
 }
 

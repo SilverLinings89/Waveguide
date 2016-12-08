@@ -21,133 +21,199 @@ static Parameters GetParameters() {
 	struct Parameters ret;
 	prm.enter_subsection("Output");
 	{
-		ret.PRM_O_Grid	=	prm.get_bool("Output Grid");
-		ret.PRM_O_Dofs	=	prm.get_bool("Output Dofs");
-		ret.PRM_O_ActiveCells	=	prm.get_bool("Output Active Cells");
-		ret.PRM_O_VerboseOutput = prm.get_bool("Verbose Output");
+	  prm.enter_subsection("Gnuplot");
+	  {
+	    ret.O_O_G_HistoryLive = prm.get_bool("Optimization History Live");
+	    ret.O_O_G_HistoryShapes = prm.get_bool("Optimization History Shapes");
+	    ret.O_O_G_History = prm.get_bool("Optimization History");
+	  }
+	  prm.leave_subsection();
+
+	  prm.enter_subsection("VTK");
+	  {
+	    prm.enter_subsection("TransformationWeights");
+	    {
+	        ret.O_O_V_T_TransformationWeightsAll = prm.get_bool("TransformationWeightsAll");
+	        ret.O_O_V_T_TransformationWeightsFirst = prm.get_bool("TransformationWeightsFirst");
+	        ret.O_O_V_T_TransformationWeightsLast = prm.get_bool("TransformationWeightsLast");
+      }
+	    prm.leave_subsection();
+
+	    prm.enter_subsection("Solution");
+	    {
+	      ret.O_O_V_S_SolutionAll = prm.get_bool("SolutionAll");
+	      ret.O_O_V_S_SolutionFirst = prm.get_bool("SolutionFirst");
+	      ret.O_O_V_S_SolutionLast = prm.get_bool("SolutionLast");
+	    }
+	    prm.leave_subsection();
+
+	  }
+	  prm.leave_subsection();
+
+    prm.enter_subsection("Convergence");
+    {
+      prm.enter_subsection("DataFiles");
+      {
+        ret.O_C_D_ConvergenceFirst = prm.get_bool("ConvergenceFirst");
+        ret.O_C_D_ConvergenceLast = prm.get_bool("ConvergenceLast");
+        ret.O_C_D_ConvergenceAll = prm.get_bool("ConvergenceAll");
+      }
+      prm.leave_subsection();
+
+      prm.enter_subsection("Plots");
+      {
+        ret.O_C_P_ConvergenceFirst = prm.get_bool("ConvergenceFirst");
+        ret.O_C_P_ConvergenceLast = prm.get_bool("ConvergenceLast");
+        ret.O_C_P_ConvergenceAll = prm.get_bool("ConvergenceAll");
+      }
+      prm.leave_subsection();
+
+    }
+    prm.leave_subsection();
+
+    prm.enter_subsection("General");
+    {
+      ret.O_G_Summary = prm.get_bool("SummaryFile");
+      ret.O_G_Log = prm.get_bool("LogFile");
+    }
+    prm.leave_subsection();
+
 	}
-	prm.leave_subsection();
+  prm.leave_subsection();
 
-	prm.enter_subsection("Measures");
-	{
-		prm.enter_subsection("Connectors");
-		{
-			ret.PRM_M_C_TypeIn	= prm.get("Type in");
-			ret.PRM_M_C_TypeOut	= prm.get("Type out");
-			ret.PRM_M_C_RadiusIn	= prm.get_double("Radius in");
-			ret.PRM_M_C_RadiusOut	= prm.get_double("Radius out");
-			ret.PRM_M_C_TiltIn	= prm.get_double("Tilt in");
-			ret.PRM_M_C_TiltOut	= prm.get_double("Tilt out");
-		}
-		prm.leave_subsection();
+  prm.enter_subsection("Measures");
+  {
+    prm.enter_subsection("Connectors");
+    {
+      switch(prm.get("Shape")){
+        case "Circle" : ret.M_C_Shape = ConnectorType::Circle; break;
+        case "Rectangle" : ret.M_C_Shape = ConnectorType::Rectangle; break;
+      }
+      ret.M_C_Dim1In = prm.get_double("Dimension1_In");
+      ret.M_C_Dim2In = prm.get_double("Dimension2_In");
+      ret.M_C_Dim1Out = prm.get_double("Dimension1_Out");
+      ret.M_C_Dim2Out = prm.get_double("Dimension2_Out");
+    }
+    prm.leave_subsection();
 
-		prm.enter_subsection("Region");
-		{
-			ret.PRM_M_R_XLength = prm.get_double("XLength");
-			// PRM_M_R_XLength = ret.PRM_M_R_XLength;
-			ret.PRM_M_R_YLength = prm.get_double("YLength");
-			// PRM_M_R_YLength = ret.PRM_M_R_YLength;
-			ret.PRM_M_R_ZLength = prm.get_double("ZLength");
-			// PRM_M_R_ZLength = ret.PRM_M_R_ZLength;
-		}
-		prm.leave_subsection();
+    prm.enter_subsection("Region");
+    {
+      ret.M_R_XLength = prm.get_double("XLength");
+      ret.M_R_YLength = prm.get_double("YLength");
+      ret.M_R_ZLength = prm.get_double("ZLength");
+    }
+    prm.leave_subsection();
 
-		prm.enter_subsection("Waveguide");
-		{
-				ret.PRM_M_W_Delta = prm.get_double("Delta");
-				ret.PRM_M_W_EpsilonIn = prm.get_double("epsilon in");
-				ret.PRM_M_W_EpsilonOut = prm.get_double("epsilon out");
-				ret.PRM_M_W_Lambda = prm.get_double("Lambda");
-				ret.PRM_M_W_Sectors = prm.get_integer("Sectors");
-		}
-		prm.leave_subsection();
+    prm.enter_subsection("Waveguide");
+    {
+      ret.M_W_Delta = prm.get_double("Delta");
+      ret.M_W_epsilonin = prm.get_double("epsilon in");
+      ret.M_W_epsilonout = prm.get_double("epsilon out");
+      ret.M_W_Lambda = prm.get_double("Lambda");
+      ret.M_W_Sectors = prm.get_integer("Sectors");
+    }
+    prm.leave_subsection();
 
-		prm.enter_subsection("Boundary Conditions");
-		{
-			ret.PRM_M_BC_Type = prm.get("Type");
-			ret.PRM_M_BC_XYin = prm.get_double("XY in");
-			ret.PRM_M_BC_XYout = prm.get_integer("XY out");
-			ret.PRM_M_BC_Mantle = prm.get_double("Mantle");
-			ret.PRM_M_BC_KappaXMax = prm.get_double("KappaXMax");
-			ret.PRM_M_BC_KappaYMax = prm.get_double("KappaYMax");
-			ret.PRM_M_BC_KappaZMax = prm.get_double("KappaZMax");
-			ret.PRM_M_BC_SigmaXMax = prm.get_double("SigmaXMax");
-			ret.PRM_M_BC_SigmaYMax = prm.get_double("SigmaYMax");
-			ret.PRM_M_BC_SigmaZMax = prm.get_double("SigmaZMax");
-			ret.PRM_M_BC_M = prm.get_integer("DampeningExponentM");
-		}
-		prm.leave_subsection();
+    prm.enter_subsection("Boundary Conditions");
+    {
+      switch(prm.get("Type")){
+        case "PML":ret.M_BC_Type= BoundaryConditionType::PML; break;
+        case "HSIE":ret.M_BC_Type= BoundaryConditionType::HSIE; break;
+      }
+      ret.M_BC_Zplus = prm.get_integer("ZPlus");
+      ret.M_BC_XMinus = prm.get_double("XMinus");
+      ret.M_BC_XPlus = prm.get_double("XPlus");
+      ret.M_BC_YMinus = prm.get_double("YMinus");
+      ret.M_BC_YPlus = prm.get_double("YPlus");
+      ret.M_BC_KappaXMax = prm.get_double("KappaXMax");
+      ret.M_BC_KappaYMax = prm.get_double("KappaYMax");
+      ret.M_BC_KappaZMax = prm.get_double("KappaZMax");
+      ret.M_BC_SigmaXMax = prm.get_double("SigmaXMax");
+      ret.M_BC_SigmaYMax = prm.get_double("SigmaYMax");
+      ret.M_BC_SigmaZMax = prm.get_double("SigmaZMax");
+      ret.M_BC_DampeningExponent = prm.get_double("DampeningExponentM");
+    }
+    prm.leave_subsection();
 
-	}
-	prm.leave_subsection();
+  }
+  prm.leave_subsection();
 
-	prm.enter_subsection("Discretization");
-	{
-		ret.PRM_D_Refinement = prm.get("refinement");
-		ret.PRM_D_XY = prm.get_integer("XY");
-		ret.PRM_D_Z = prm.get_integer("Z");
-	}
-	prm.leave_subsection();
+  prm.enter_subsection("Schema");
+  {
+    ret.Sc_Homogeneity = prm.get_bool("Homogeneity");
+    switch(prm.get("Optimization Schema")){
+      case "Adjoint": ret.Sc_Schema = OptimizationSchema::Adjoint; break;
+      case "FD": ret.Sc_Schema = OptimizationSchema::FD; break;
+    }
+    ret.Sc_OptimizationSteps = prm.get_integer("Optimization Steps");
+    switch(prm.get("Stepping Method")){
+      case "Steepest": ret.Sc_SteppingMethod = SteppingMethod::Steepest; break;
+      case "CG": ret.Sc_SteppingMethod = SteppingMethod::CG; break;
+    };
+    switch(prm.get("Step Width")) {
+      case "LineSearch": ret.Sc_StepWidth = StepWidth::LineSearch; break;
+      case "Experimental": ret.Sc_StepWidth = StepWidth::Experimental; break;
+    };
+  }
+  prm.leave_subsection();
 
-	prm.enter_subsection("Assembly");
-	{
-		ret.PRM_A_Threads = prm.get_integer("Threads");
-	}
-	prm.leave_subsection();
+  prm.enter_subsection("Solver");
+  {
+    switch(prm.get("Solver")){
+      case "GMRES": ret.So_Solver = SolverOptions::GMRES; break;
+      case "MINRES": ret.So_Solver = SolverOptions::MINRES; break;
+      case "UMFPACK": ret.So_Solver = SolverOptions::UMFPACK; break;
+    }
+    ret.So_RestartSteps = prm.get_integer("GMRESSteps");
+    switch(prm.get("Preconditioner")) {
+      case "Sweeping": ret.So_Preconditioner = PreconditionerOptions::Sweeping; break;
+      case "Anesis_Lapack": ret.So_Preconditioner = PreconditionerOptions::Amesos_Lapack; break;
+    }
+    ret.So_TotalSteps = prm.get_integer("Steps");
+    ret.So_Precision = prm.get_double("Precision");
+  }
+  prm.leave_subsection();
 
-	prm.enter_subsection("Solver");
-	{
-		ret.PRM_S_Library = prm.get("Library");
-		ret.PRM_S_Solver = prm.get("Solver");
-		ret.PRM_S_GMRESSteps = prm.get_integer("GMRESSteps");
-		ret.PRM_S_Preconditioner = prm.get("Preconditioner");
-		ret.PRM_S_PreconditionerBlockCount = prm.get_integer("PreconditionerBlockCount");
-		ret.PRM_S_Steps = prm.get_integer("Steps");
-		ret.PRM_S_Precision = prm.get_double("Precision");
-		ret.PRM_S_MPITasks = prm.get_integer("MPITasks");
-	}
-	prm.leave_subsection();
+  prm.enter_subsection("Constants");
+  {
+    ret.C_AllOne = prm.get_bool("AllOne");
+    if(ret.C_AllOne) {
+      ret.C_Epsilon = 1.0;
+      ret.C_Mu = 1.0;
+    } else {
+      ret.C_Epsilon = prm.get_double("EpsilonZero");
+      ret.C_Mu = prm.get_double("MuZero");
+    }
+    ret.C_c = 1.0 / sqrt(ret.C_Epsilon * ret.C_Mu);
+    ret.C_f0 = ret.C_c/ret.M_W_Lambda;
+    ret.C_Pi = prm.get_double("Pi");
+    ret.C_k0 = 2.0 * ret.C_Pi * ret.M_W_Lambda;
+    ret.C_omega = 2.0 * ret.C_Pi * ret.C_f0;
+  }
+  prm.leave_subsection();
 
-	prm.enter_subsection("Constants");
-	{
-		ret.PRM_C_PI = dealii::numbers::PI;
-		if(! prm.get_bool("AllOne")){
-			ret.PRM_C_Eps0 = prm.get_double("EpsilonZero");
-			ret.PRM_C_Mu0 = prm.get_double("MuZero");
-			ret.PRM_C_c = 1/sqrt(ret.PRM_C_Eps0 * ret.PRM_C_Mu0);
-			ret.PRM_C_f0 = ret.PRM_C_c/0.63;
-			ret.PRM_C_omega = 2 * ret.PRM_C_PI * ret.PRM_C_f0;
-		} else {
-			ret.PRM_C_Eps0 = 1.0;
-			ret.PRM_C_Mu0 = 1.0;
-			ret.PRM_C_c			= 1.0/sqrt(ret.PRM_C_Eps0 * ret.PRM_C_Mu0);
-			ret.PRM_C_f0		= ret.PRM_C_c/ret.PRM_M_W_Lambda; 			// Overwritten by Param-Reader
-			ret.PRM_C_k0		= 2.0 * ret.PRM_C_PI * ret.PRM_M_W_Lambda;
-			ret.PRM_C_omega 	= 2.0 * ret.PRM_C_PI * ret.PRM_C_f0;
-		}
-	}
-	prm.leave_subsection();
+  prm.enter_subsection("Refinement");
+  {
+    ret.R_Global = prm.get_integer("Global");
+    ret.R_Local = prm.get_integer("SemiGlobal");
+    ret.R_Interior = prm.get_integer("Internal");
+  }
+  prm.leave_subsection();
 
-	prm.enter_subsection("Optimization");
-	{
-		ret.PRM_Op_MaxCases = prm.get_integer("MaxCases");
-		ret.PRM_Op_InitialStepWidth = prm.get_double("InitialStepWidth");
-		ret.PRM_S_DoOptimization = prm.get_bool("DoOptimization");
-		ret.PRM_O_MinimumFactor = prm.get_double("MinimumFactor");
-		ret.PRM_O_MaximumFactor = prm.get_double("MaximumFactor");
-	}
-	prm.leave_subsection();
-	prm.enter_subsection("MeshRefinement");
-	{
-		ret.PRM_R_Global = prm.get_integer("Global");
-		ret.PRM_R_Semi = prm.get_integer("SemiGlobal");
-		ret.PRM_R_Internal = prm.get_integer("Internal");
-	}
-	prm.leave_subsection();
-
-	ret.MPI_Communicator = MPI_COMM_WORLD;
+	ret.MPIC_World = MPI_COMM_WORLD;
 	ret.MPI_Rank = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
-	ret.MPI_Size = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
+	ret.NumberProcesses = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
+
+	ret.Head = (ret.MPI_Rank == 0);
+
+	if(ret.MPI_Rank > ret.NumberProcesses - ret.M_BC_Zplus -1 ) {
+	  ret.PMLSector = true;
+	} else {
+	  ret.PMLSector = false;
+	}
+
+	ret.LayersPerSector = (ret.NumberProcesses - ret.M_BC_Zplus)/ret.M_W_Sectors;
+
 
 	return ret;
 }
@@ -230,14 +296,14 @@ static double sigma (double in_z, double min, double max) {
 static Point<3> Triangulation_Stretch_X (const Point<3> &p)
 {
   Point<3> q = p;
-  q[0] *= GlobalParams.PRM_M_R_XLength / 2.0 ;
+  q[0] *= GlobalParams.M_R_XLength / 2.0 ;
   return q;
 }
 
 static Point<3> Triangulation_Stretch_Y (const Point<3> &p)
 {
   Point<3> q = p;
-  q[1] *= GlobalParams.PRM_M_R_YLength / 2.0 ;
+  q[1] *= GlobalParams.M_R_YLength / 2.0 ;
   return q;
 }
 
@@ -253,7 +319,7 @@ static Point<3> Triangulation_Shift_Z (const Point<3> &p)
 {
   Point<3> q = p;
   double sector_length = structure->Sector_Length();
-  q[2] += (sector_length/2.0) * GlobalParams.PRM_M_BC_XYout;
+  q[2] += (sector_length/2.0) * GlobalParams.M_BC_Zplus;
   return q;
 }
 

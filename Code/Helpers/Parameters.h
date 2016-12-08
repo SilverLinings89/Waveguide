@@ -12,7 +12,7 @@
  */
 
 enum ConnectorType{
-    circle, rectangle
+    Circle, Rectangle
 };
 
 enum BoundaryConditionType{
@@ -28,8 +28,16 @@ enum SolverOptions {
 };
 
 enum PreconditionerOptions {
-Sweeping,Amesos_Lapack,Amesos_Scalapack,Amesos_Klu,Amesos_Umfpack,Amesos_Pardiso,Amesos_Taucs,Amesos_Superlu,Amesos_Superludist,Amesos_Dscpack,Amesos_Mumps
-}
+  Sweeping,Amesos_Lapack,Amesos_Scalapack,Amesos_Klu,Amesos_Umfpack,Amesos_Pardiso,Amesos_Taucs,Amesos_Superlu,Amesos_Superludist,Amesos_Dscpack,Amesos_Mumps
+};
+
+enum SteppingMethod {
+    Steepest, CG
+};
+
+enum StepWidth {
+  Experimental, LineSearch
+};
 
 struct Parameters {
     
@@ -37,7 +45,7 @@ struct Parameters {
     
     bool O_O_G_HistoryShapes;
     
-    bool O_O_G_HistoryLive;
+    bool O_O_G_History;
     
     bool O_O_V_T_TransformationWeightsAll;
     
@@ -125,8 +133,14 @@ struct Parameters {
     
     int Sc_OptimizationSteps;
     
+    SteppingMethod Sc_SteppingMethod;
+
+    StepWidth Sc_StepWidth;
+
     SolverOptions So_Solver;
     
+    PreconditionerOptions So_Preconditioner;
+
     int So_RestartSteps;
     
     int So_TotalSteps;
@@ -141,6 +155,14 @@ struct Parameters {
     
     double C_Pi;
     
+    double C_c;
+
+    double C_f0;
+
+    double C_k0;
+
+    double C_omega;
+
     int R_Global;
     
     int R_Local;
@@ -149,11 +171,19 @@ struct Parameters {
     
     
     
-	unsigned int	MPI_Rank;
+    unsigned int	MPI_Rank;
 
-	MPI_Comm	MPI_Communicator;
+    MPI_Comm	MPIC_World;
 
-	unsigned int MPI_Size;
+    bool PMLSector;
+
+    int LayersPerSector;
+
+    int NumberProcesses;
+
+    bool Head = false;
+
+    // unsigned int MPI_Size;
 
 };
 

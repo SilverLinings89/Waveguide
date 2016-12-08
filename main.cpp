@@ -38,7 +38,7 @@ int main (int argc, char *argv[])
 	MPI_Comm * mpi_primal, * mpi_dual;
 
 	MeshGenerator * mg;
-	if(GlobalParams.PRM_M_C_TypeIn == "circle"){
+	if(GlobalParams.M_C_Shape == ConnectorType::Circle ){
 	  mg = new RoundMeshGenerator();
 	} else {
 	  mg = new SquareMeshGenerator();
@@ -46,14 +46,14 @@ int main (int argc, char *argv[])
 
 	SpaceTransformation * st;
 
-	if(GlobalParams.PRM_M_C_TypeIn == "circle"){
-    if(GlobalParams.PRM_M_BC_Homog == "true") {
+	if(GlobalParams.M_C_Shape == ConnectorType::Circle){
+    if(GlobalParams.Sc_Homogeneity) {
       st = new HomogenousTransformationCircular();
     } else {
       st = new InhomogenousTransformationCircular();
     }
 	} else {
-	  if(GlobalParams.PRM_M_BC_Homog == "true") {
+	  if(GlobalParams.Sc_Homogeneity) {
       st = new HomogenousTransformationRectangular();
     } else {
       st = new InhomogenousTransformationRectangular();
@@ -64,12 +64,12 @@ int main (int argc, char *argv[])
 
 	dst = new DualProblemTransformationWrapper(st);
 
-	if(GlobalParams.PRM_OptimizationStrategy == "adjoint" ) {
+	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint ) {
 	  // adjoint based
 	  int primal_rank = GlobalParams.MPI_Rank;
-	  int dual_rank = GlobalParams.MPI_Size - 1 - GlobalParams.MPI_Rank;
+	  int dual_rank = GlobalParams.NumberProcesses - 1 - GlobalParams.MPI_Rank;
 	  if(dual_rank < 0) {
-	    dual_rank += GlobalParams.MPI_Size;
+	    dual_rank += GlobalParams.NumberProcesses;
 	  }
 	  MPI_Comm_split(MPI_COMM_WORLD, 1, primal_rank, mpi_primal);
 	  MPI_Comm_split(MPI_COMM_WORLD, 1, dual_rank, mpi_dual);
@@ -86,16 +86,16 @@ int main (int argc, char *argv[])
 
 	Waveguide * dual_waveguide;
 
-	if(GlobalParams.PRM_OptimizationStrategy == "adjoint") {
+	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
 	  dual_waveguide = new Waveguide(mpi_dual, mg, dst);
 	}
 
 	Optimization * opt;
 
-	if(GlobalParams.PRM_OptimizationStategy == "adjoint") {
-	  opt = new AdjointOptimization();
+	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
+	  opt = new AdjointOptimization(primal_waveguide, dual_waveguide, mg, st, dst);
 	} else {
-	  opt = new FDOptimization();
+	  opt = new FDOptimization(primal_waveguide, mg, st);
 	}
 
 

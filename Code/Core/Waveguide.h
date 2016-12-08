@@ -89,7 +89,8 @@ class Waveguide
 	 * \param param This is a reference to a parsed form of the input-file.
 	 * \param structure This parameter gives a reference to the structure of the real Waveguide. This is necessary since during matrix-assembly it is required to call a function which generates the transformation tensor which is purely structure-dependent.
 	 */
-		Waveguide (Parameters & param);
+
+		Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st );
 
         ~Waveguide ();
 
@@ -364,6 +365,26 @@ class Waveguide
 		 */
 		std::complex<double> gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc);
 
+
+		// HIER BEGINNT DIE NEUE VERSION...
+
+		MeshGenerator * mg;
+
+		SpaceTransformation * st;
+
+		MPI_Comm mpi_comm;
+
+
+
+
+
+
+
+
+
+
+
+		// HIER BEGINNT DIE ALTE VERSION ...
 		std::string										solutionpath;
 		parallel::distributed::Triangulation<3>::active_cell_iterator cell, endc;
 
@@ -383,7 +404,6 @@ class Waveguide
 		TrilinosWrappers::SparseMatrix 					system_matrix;
 		dealii::TrilinosWrappers::SparseMatrix			preconditioner_matrix_odd;
 		dealii::TrilinosWrappers::SparseMatrix			preconditioner_matrix_even;
-		Parameters										&prm;
 		ConstraintMatrix 								boundary_value_constraints_imaginary;
 		ConstraintMatrix 								boundary_value_constraints_real;
 		ConstraintMatrix								hanging_global;
