@@ -25,80 +25,79 @@
 
 using namespace dealii;
 
-Waveguide::Waveguide (Parameters &param )
-  :
-  fe(FE_Nedelec<3> (0), 2),
-  triangulation (MPI_COMM_WORLD, parallel::distributed::Triangulation<3>::MeshSmoothing(Triangulation<3>::none ), parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning),
-  dof_handler (triangulation),
-  prm(param),
-  run_number(0),
-  condition_file_counter(0),
-  eigenvalue_file_counter(0),
-  Sectors(prm.PRM_M_W_Sectors),
-  Layers(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
-  Dofs_Below_Subdomain(Layers),
-  Block_Sizes(Layers),
-  temporary_pattern_preped(false),
-  real(0),
-  imag(3),
-  solver_control (prm.PRM_S_Steps, prm.PRM_S_Precision, (GlobalParams.MPI_Rank == 0), true),
-  pout(std::cout, GlobalParams.MPI_Rank==0),
-  timer(MPI_COMM_WORLD, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times)
+Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st):
+    fe(FE_Nedelec<3> (0), 2),
+    triangulation (MPI_COMM_WORLD, parallel::distributed::Triangulation<3>::MeshSmoothing(Triangulation<3>::none ), parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning),
+    dof_handler (triangulation),
+    run_number(0),
+    condition_file_counter(0),
+    eigenvalue_file_counter(0),
+    Sectors(GlobalParams.M_W_Sectors),
+    Layers(GlobalParams.NumberProcesses),
+    Dofs_Below_Subdomain(Layers),
+    Block_Sizes(Layers),
+    temporary_pattern_preped(false),
+    real(0),
+    imag(3),
+    solver_control (GlobalParams.So_TotalSteps, GlobalParams.So_Precision, (GlobalParams.MPI_Rank == 0), true),
+    pout(std::cout, GlobalParams.MPI_Rank==0),
+    timer(MPI_COMM_WORLD, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times),
+    is_stored(false)
 {
-	prec_patterns = new TrilinosWrappers::SparsityPattern[Layers-1];
-	assembly_progress = 0;
-	int i = 0;
-	bool dir_exists = true;
-	while(dir_exists) {
-		std::stringstream out;
-		out << "Solutions/run";
-		out << i;
-		solutionpath = out.str();
-		struct stat myStat;
-		const char *myDir = solutionpath.c_str();
-		if ((stat(myDir, &myStat) == 0) && (((myStat.st_mode) & S_IFMT) == S_IFDIR)) {
-			i++;
-		} else {
-			dir_exists = false;
-		}
-	}
-	i = Utilities::MPI::min(i, MPI_COMM_WORLD);
-	std::stringstream out;
-	out << "solutions/run";
-	out << i;
-	solutionpath = out.str();
-	Dofs_Below_Subdomain[Layers];
-	mkdir(solutionpath.c_str(), ACCESSPERMS);
-	pout << "Will write solutions to " << solutionpath << std::endl;
-
-	if(GlobalParams.MPI_Rank == 0) {
-		std::ifstream source("Parameters/Parameters.xml", std::ios::binary);
-		std::ofstream dest(solutionpath +"/Parameters.xml", std::ios::binary);
-		dest << source.rdbuf();
-		source.close();
-		dest.close();
-	}
-
-	is_stored = false;
-	solver_control.log_frequency(10);
-	const int number = Layers -1;
-	Preconditioner_Matrices = new TrilinosWrappers::SparseMatrix[number];
-	deallog.attach( std::cout );
-	qualities = new double[number];
-	execute_recomputation = false;
-	start_solver_milis = 0;
-}
-
-Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st) {
   mg = in_mg;
   st = in_st;
   mpi_comm = in_mpi_comm;
+  prec_patterns = new TrilinosWrappers::SparsityPattern[Layers-1];
+  assembly_progress = 0;
+  int i = 0;
+  bool dir_exists = true;
+  while(dir_exists) {
+    std::stringstream out;
+    out << "Solutions/run";
+    out << i;
+    solutionpath = out.str();
+    struct stat myStat;
+    const char *myDir = solutionpath.c_str();
+    if ((stat(myDir, &myStat) == 0) && (((myStat.st_mode) & S_IFMT) == S_IFDIR)) {
+      i++;
+    } else {
+      dir_exists = false;
+    }
+  }
+  i = Utilities::MPI::max(i, MPI_COMM_WORLD);
+  std::stringstream out;
+  out << "Solutions/run";
 
+  // TODO check if this directory is really available for all processes and throw an error otherwise.
+
+  out << i;
+  solutionpath = out.str();
+  Dofs_Below_Subdomain[Layers];
+  mkdir(solutionpath.c_str(), ACCESSPERMS);
+  pout << "Will write solutions to " << solutionpath << std::endl;
+
+  // Copy Parameter file to the output directory in processor 0. This should be replaced with an output generator eventually.
+  if(GlobalParams.MPI_Rank == 0) {
+    std::ifstream source("Parameters/Parameters.xml", std::ios::binary);
+    std::ofstream dest(solutionpath +"/Parameters.xml", std::ios::binary);
+    dest << source.rdbuf();
+    source.close();
+    dest.close();
+  }
+
+  is_stored = false;
+  solver_control.log_frequency(10);
+  const int number = Layers -1;
+  Preconditioner_Matrices = new TrilinosWrappers::SparseMatrix[number];
+  deallog.attach( std::cout );
+  qualities = new double[number];
+  execute_recomputation = false;
+  start_solver_milis = 0;
 
 }
 
 Waveguide::~Waveguide() {
-
+  delete Preconditioner_Matrices;
 }
 
 std::complex<double> Waveguide::evaluate_for_Position(double x, double y, double z ) {
