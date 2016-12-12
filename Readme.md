@@ -6,6 +6,15 @@ Core elements are a refined adjoint based optimization scheme and a sweeping pre
 
 This is a work in progress and not currently ready for general usage. Please refer to pascal.kraft@kit.edu for more information.
 
+# Naming convenctions
+
+| Expression | Meaning                                                                                                     |
+|------------|-------------------------------------------------------------------------------------------------------------|
+| Sector     | A sector is an expression used in shape modeling and refers to a subset of the area between the connectors. |
+| Layer      | used in the implementation and represents the part of the triangulation owned by one Process.               |
+| Connector  | The structure in the two halfspaces towards z->\infty and z->-\infty                                        |
+| ...        | ...                                                                                                         |
+
 # Thanks
 
 My thanks go to the CRC 1173 which is funding my research.

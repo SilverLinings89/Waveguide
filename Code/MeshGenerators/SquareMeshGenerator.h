@@ -51,52 +51,6 @@ class SquareMeshGenerator : public MeshGenerator {
   bool phys_coordinate_in_waveguide(Point<3> position);
 
   /**
-   * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
-   * \param position Stores the position in which to test for presence of a PML-Material.
-   */
-  bool  PML_in_X(Point<3> & position);
-
-  /**
-   * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the y-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
-   * \param position Stores the position in which to test for presence of a PML-Material.
-   */
-  bool  PML_in_Y(Point<3> & position);
-
-  /**
-   * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the z-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
-   * \param position Stores the position in which to test for presence of a PML-Material.
-   */
-  bool  PML_in_Z(Point<3> & position);
-
-  /**
-   * Similar to the PML_in_Z only this function is used to generate the artificial PML used in the Preconditioner. These Layers are not only situated at the surface of the computational domain but also inside it at the interfaces of Sectors.
-   */
-  bool Preconditioner_PML_in_Z(Point<3> &p, unsigned int block);
-
-  /**
-   * This function fulfills the same purpose as those with similar names but it is supposed to be used together with Preconditioner_PML_in_Z instead of the versions without "Preconditioner".
-   */
-  double Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block );
-
-  /**
-   * This function calculates for a given point, its distance to a PML-boundary limiting the computational domain. This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction).
-   * \param position Stores the position from which to calculate the distance to the PML-surface.
-   */
-  double  PML_X_Distance(Point<3> & position);
-
-  /**
-   * This function calculates for a given point, its distance to a PML-boundary limiting the computational domain. This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction).
-   * \param position Stores the position from which to calculate the distance to the PML-surface.
-   */
-  double  PML_Y_Distance(Point<3> & position);
-
-  /**
-   * This function calculates for a given point, its distance to a PML-boundary limiting the computational domain. This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction).
-   * \param position Stores the position from which to calculate the distance to the PML-surface.
-   */
-  double  PML_Z_Distance(Point<3> & position);
-
-  /**
    * This function is a helper during distributed mesh generation.
    *
    */
