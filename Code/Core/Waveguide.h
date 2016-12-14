@@ -153,60 +153,13 @@ class Waveguide
 		void 		evaluate();
 
 		/**
-		 * This function marks a sector for recomputation meaning it tells a process, that matrices have to be rebuilt because structural information has been changed.
-		 */
-		void 		mark_changed();
-
-		/**
-		 * This function does the opposite of mark_changed and sets the process to not rebuild matrices.
-		 */
-		void 		mark_unchanged();
-
-		/**
 		 * The storage has the following purpose: Regarding the optimization-process there are two kinds of runs. The first one, taking place with no knowledge of appropriate starting values for the degrees of freedom, and the following steps, in which the prior results can be used to estimate appropriate starting values for iterative solvers as well as the preconditioner. This function switches the behaviour in the following way: Once it is called, it stores the current solution in a run-independent variable, making it available for later runs. Also it sets a flag, indicating, that prior solutions are now available for usage in the solution process.
 		 */
 		void 		store();
 
-		/**
-		 * Calculation of \f$\epsilon\f$ and \f$\mu\f$ are very similar, which is why they are done in the same function. These tensors model all properties of the system:
-		 * 	-# The PML-method near the boundaries,
-		 * 	-# the tensor-valued material-properties due to the space transformation and
-		 * 	-# the real material properties of the fiber
-		 *
-		 * in the specified location.
-		 * \param point This parameter is used to pass the location to calculate the tensor for.
-		 * \param inverse If this parameter is set to true, instead of the material tensor, its inverse will be returned. For Maxwell"s equations this makes sense, if the following parameter is set to the inverse value since \f$\epsilon\f$ and \f$\mu^{-1}\f$ are needed to assemble the system.
-		 * \param epsilon: Specifies to either
-		 * - calculate \f$\epsilon\f$ if true or
-		 * - calculate \f$\mu\f$ if false.
-		 */
-		Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & point, bool inverse, bool epsilon);
-
-		/**
-		 * This function is similar to the normal get_Tensor method, however it is used to generate material Tensors for the artificial PML at Sector interfaces. This is done in a seperate function because this makes it possible to tune the PML in the real system and those PML-layers that the Preconditioner uses, independently.
-		 * 	-# The PML-method near the boundaries,
-		 * 	-# the tensor-valued material-properties due to the space transformation and
-		 * 	-# the real material properties of the fiber
-		 *
-		 * in the specified location.
-		 * \param point This parameter is used to pass the location to calculate the tensor for.
-		 * \param inverse If this parameter is set to true, instead of the material tensor, its inverse will be returned. For Maxwell"s equations this makes sense, if the following parameter is set to the inverse value since \f$\epsilon\f$ and \f$\mu^{-1}\f$ are needed to assemble the system.
-		 * \param epsilon: Specifies to either
-		 * - calculate \f$\epsilon\f$ if true or
-		 * - calculate \f$\mu\f$ if false.
-		 *
-		 * \param block: A Sector-interface can be in a PML-region of the preconditioner or not. For example: In the third preconditioner-block, the system-matrix-approximation for sectors two and three is used. In this case we have a PML at the interface of sectors one and two as well as the interface of sectors three and four. So in this case, the interface between two and three has no PML since it is in the middle of the domain of interest. However, when we regard the following block, we regard sectors three and four and therefore have a PML at the interface of sectors two and three. For this reason it is necessary to pass the block under consideration as an argument to this function.
-		 */
-		Tensor<2,3, std::complex<double>> get_Preconditioner_Tensor(Point<3> & point, bool inverse, bool epsilon, int block);
-
 		double *										qualities;
 
 	private:
-		/**
-		 * When the mesh cells are refined, boundary-ids have to be reset. Normally this can be done once at the end of the mesh-generation. If the mesh is distributed it is necessary to communicate this information after any mesh-changing operation. For this purpose, this function can be called on the changed mesh to set all ids properly again.
-		 * \param tria is the updated triangulation in which ids will be updated.
-		 */
-		void set_boundary_ids (parallel::distributed::Triangulation<3> &tria) const;
 
 		/**
 		 * Grid-generation is a crucial part of any FEM-Code. This function holds all functionality concerning that topic. In the current implementation we start with a cubic Mesh. That mesh originally is subdivided in 5 cells per dimension yielding a total of 5*5*5 = 125 cells. The central cells in the x-z planes are given a cylindrical manifold-description forcing them to interpolate the new points during global refinement using a circular shape rather than linear interpolation. This leads to the description of a cylinder included within a cube. There are currently three techniques for mesh-refinement:
@@ -286,7 +239,7 @@ class Waveguide
 		/**
 		 * This function executes refined downstream ordering of degrees of freedom.
 		 */
-		void 	Do_Refined_Reordering();
+		void 	Compute_Dof_Numbers();
 
 
 		/**
@@ -390,13 +343,19 @@ class Waveguide
 
 		unsigned int rank;
 
+		FEValuesExtractors::Vector            real, imag;
+
+		SolverControl                       solver_control;
+
 		ConstraintMatrix                cm, cm_prec_even, cm_prec_odd;
+
+		DoFHandler<3>                 dof_handler;
+
 
 		// HIER BEGINNT DIE ALTE VERSION ...
 		std::string										solutionpath;
 
 		//, triangulation_real;
-		DoFHandler<3>									dof_handler;
 		//, dof_handler_real;
 		dealii::TrilinosWrappers::MPI::Vector										solution, EstimatedSolution, ErrorOfSolution ;
 		IndexSet										locally_owned_dofs, locally_relevant_dofs, locally_active_dofs, extended_relevant_dofs;
@@ -411,8 +370,8 @@ class Waveguide
 		ConstraintMatrix 								boundary_value_constraints_real;
 		ConstraintMatrix								hanging_global;
 		// MPI_Comm *										split_comms;
-		int 											assembly_progress;
-		dealii::TrilinosWrappers::MPI::Vector										storage;
+
+		dealii::TrilinosWrappers::MPI::BlockVector										storage;
 		dealii::TrilinosWrappers::MPI::Vector										temp_storage;
 		bool											is_stored;
 		Vector<double>									preconditioner_rhs;
@@ -427,14 +386,6 @@ class Waveguide
 		std::vector<dealii::IndexSet> 					set;
 		TrilinosWrappers::SparsityPattern 				temporary_pattern, preconditioner_pattern;
 		bool											temporary_pattern_preped;
-		FEValuesExtractors::Vector 						real, imag;
-		SolverControl          							solver_control;
-
-		TrilinosWrappers::SparsityPattern *				prec_patterns;
-		TrilinosWrappers::SparsityPattern				self_prec_pattern;
-		TrilinosWrappers::SparsityPattern				other_prec_pattern;
-		TrilinosWrappers::SparsityPattern				extend_prec_pattern;
-
 
 
 		std::vector<IndexSet>							locally_relevant_dofs_all_processors;

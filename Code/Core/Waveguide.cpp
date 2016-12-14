@@ -28,7 +28,7 @@ using namespace dealii;
 
 Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st):
     fe(FE_Nedelec<3> (0), 2),
-    triangulation (MPI_COMM_WORLD, parallel::distributed::Triangulation<3>::MeshSmoothing(Triangulation<3>::none ), parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning),
+    triangulation (mpi_comm, parallel::distributed::Triangulation<3>::MeshSmoothing(Triangulation<3>::none ), parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning),
     dof_handler (triangulation),
     run_number(0),
     condition_file_counter(0),
@@ -42,7 +42,7 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
     imag(3),
     solver_control (GlobalParams.So_TotalSteps, GlobalParams.So_Precision, (GlobalParams.MPI_Rank == 0), true),
     pout(std::cout, GlobalParams.MPI_Rank==0),
-    timer(MPI_COMM_WORLD, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times),
+    timer(mpi_comm, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times),
     is_stored(false),
     even(Utilities::MPI::this_mpi_process(in_mpi_comm)%2 == 0),
     rank(Utilities::MPI::this_mpi_process(in_mpi_comm))
@@ -50,8 +50,6 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
   mg = in_mg;
   st = in_st;
   mpi_comm = in_mpi_comm;
-  prec_patterns = new TrilinosWrappers::SparsityPattern[Layers-1];
-  assembly_progress = 0;
   int i = 0;
   bool dir_exists = true;
   while(dir_exists) {
@@ -67,7 +65,7 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
       dir_exists = false;
     }
   }
-  i = Utilities::MPI::max(i, MPI_COMM_WORLD);
+  i = Utilities::MPI::max(i, mpi_comm);
   std::stringstream out;
   out << "Solutions/run";
 
@@ -220,7 +218,7 @@ void Waveguide::evaluate() {
 	pout << "Starting Evaluation" << std::endl;
 	double z_for_evaluation = (double)(0.5+GlobalParams.MPI_Rank)*structure->Layer_Length() - GlobalParams.PRM_M_R_ZLength/2.0 ;
 	double local_value = evaluate_for_z(z_for_evaluation) ;
-	MPI_Allgather( & local_value, 1, MPI_DOUBLE, qualities, 1, MPI_DOUBLE, MPI_COMM_WORLD);
+	MPI_Allgather( & local_value, 1, MPI_DOUBLE, qualities, 1, MPI_DOUBLE, mpi_comm);
 	pout << "Done Gathering Qualities!"<< std::endl;
 }
 
@@ -284,10 +282,10 @@ double Waveguide::evaluate_overall () {
 }
 
 void Waveguide::estimate_solution() {
-	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Barrier(mpi_comm);
 	pout << "Starting solution estimation..." << std::endl;
 	DoFHandler<3>::active_cell_iterator cell, endc;
-	pout << "Lambda: " << GlobalParams.PRM_M_W_Lambda << std::endl;
+	pout << "Lambda: " << GlobalParams.M_W_Lambda << std::endl;
 	unsigned int min_dof = locally_owned_dofs.nth_index_in_set(0);
 	unsigned int max_dof = locally_owned_dofs.nth_index_in_set(locally_owned_dofs.n_elements()-1 );
 
@@ -327,7 +325,7 @@ void Waveguide::estimate_solution() {
 			}
 		}
 	}
-	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Barrier(mpi_comm);
 	EstimatedSolution.compress(VectorOperation::insert);
 }
 
@@ -536,7 +534,7 @@ void Waveguide::make_grid ()
   mg->prepare_triangulation(& triangulation);
 }
 
-void Waveguide::Do_Refined_Reordering() {
+void Waveguide::Compute_Dof_Numbers() {
 	std::vector<types::global_dof_index> dof_indices (fe.dofs_per_face);
 	std::vector<types::global_dof_index> DofsPerSubdomain(Layers);
 	std::vector<int> InternalBoundaryDofs(Layers);
@@ -566,27 +564,7 @@ void Waveguide::Do_Refined_Reordering() {
 void Waveguide::setup_system ()
 {
 
-	if(prm.PRM_O_VerboseOutput && prm.PRM_O_Dofs) {
-		pout << "Distributing Degrees of freedom." << std::endl;
-	}
 	dof_handler.distribute_dofs (fe);
-	//dof_handler_real.distribute_dofs (fe);
-
-	if(prm.PRM_O_VerboseOutput) {
-		pout << "Renumbering DOFs (Downstream...)" << std::endl;
-	}
-
-	if(prm.PRM_O_Dofs) {
-		pout << "Number of degrees of freedom: " << dof_handler.n_dofs() << std::endl;
-	}
-
-	if(prm.PRM_O_VerboseOutput) {
-			pout << "Renumbering DOFs (Custom...)" << std::endl;
-	}
-
-	// Do_Refined_Reordering();
-
-	pout << "Reordering done." << std::endl;
 
 	locally_owned_dofs = dof_handler.locally_owned_dofs ();
 	DoFTools::extract_locally_active_dofs(dof_handler, locally_active_dofs);
@@ -612,12 +590,12 @@ void Waveguide::setup_system ()
 	cm_prec2.reinit(locally_relevant_dofs);
 	// std::cout << "Size: " << locally_relevant_dofs.size() << std::endl;
 
-	system_pattern.reinit(locally_owned_dofs, locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+	system_pattern.reinit(locally_owned_dofs, locally_owned_dofs, locally_relevant_dofs, mpi_comm);
 	pout << "Done" << std::endl;
 
 
 //	dynamic_preconditioner_pattern_even.reinit(n_neighboring, n_neighboring);
-	preconditioner_pattern.reinit(locally_owned_dofs, locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+	preconditioner_pattern.reinit(locally_owned_dofs, locally_owned_dofs, locally_relevant_dofs, mpi_comm);
 
 //	pout << "Dofs Per CPU: ";
 //	for(int i = 0 ; i < n_neighboring.size(); i++) {
@@ -648,8 +626,8 @@ void Waveguide::setup_system ()
 	DoFTools::make_sparsity_pattern(dof_handler, preconditioner_pattern, cm_prec1, true , GlobalParams.MPI_Rank);
 	DoFTools::make_sparsity_pattern(dof_handler, preconditioner_pattern, cm_prec2, true , GlobalParams.MPI_Rank);
 
-	//SparsityTools::distribute_sparsity_pattern(dynamic_system_pattern,n_neighboring, MPI_COMM_WORLD, locally_owned_dofs);
-	//SparsityTools::distribute_sparsity_pattern(dynamic_preconditioner_pattern_even,n_neighboring, MPI_COMM_WORLD, locally_owned_dofs);
+	//SparsityTools::distribute_sparsity_pattern(dynamic_system_pattern,n_neighboring, mpi_comm, locally_owned_dofs);
+	//SparsityTools::distribute_sparsity_pattern(dynamic_preconditioner_pattern_even,n_neighboring, mpi_comm, locally_owned_dofs);
 
 	pout << "done" << std::endl;
 	preconditioner_pattern.compress();
@@ -686,7 +664,7 @@ void Waveguide::setup_system ()
 
 	// std::cout << "MaxLength in process " << GlobalParams.MPI_Rank << " before sync is " << text_local_length;
 
-	MPI_Allgather(& text_local_length, 1, MPI_INT, all_lens, 1, MPI_INT, MPI_COMM_WORLD);
+	MPI_Allgather(& text_local_length, 1, MPI_INT, all_lens, 1, MPI_INT, mpi_comm);
 
 	int totlen = all_lens[mpi_size-1];
 	displs[0] = 0;
@@ -695,9 +673,9 @@ void Waveguide::setup_system ()
 		totlen += all_lens[i];
 	}
 	char * all_names = (char *)malloc( totlen );
-	if (!all_names) MPI_Abort( MPI_COMM_WORLD, 1 );
+	if (!all_names) MPI_Abort( mpi_comm, 1 );
 
-	MPI_Allgatherv( text_local_set, text_local_length, MPI_CHAR, all_names, all_lens, displs, MPI_CHAR,	MPI_COMM_WORLD );
+	MPI_Allgatherv( text_local_set, text_local_length, MPI_CHAR, all_names, all_lens, displs, MPI_CHAR,	mpi_comm );
 
 	pout << "-------------------------------------" << std::endl;
 
@@ -735,7 +713,7 @@ void Waveguide::setup_system ()
 
 
 	// std::cout << "Stage 1 for processor " << GlobalParams.MPI_Rank << std::endl;
-	// MPI_Comm_split(MPI_COMM_WORLD, GlobalParams.MPI_Rank/2, GlobalParams.MPI_Rank, &comm_even );
+	// MPI_Comm_split(mpi_comm, GlobalParams.MPI_Rank/2, GlobalParams.MPI_Rank, &comm_even );
 	// IndexSet none(dof_handler.n_dofs());
 
 	IndexSet all(dof_handler.n_dofs());
@@ -791,11 +769,11 @@ void Waveguide::setup_system ()
 		// std::cout << "Stage 4 for processor " << GlobalParams.MPI_Rank << std::endl;
 
 
-		MPI_Barrier(MPI_COMM_WORLD);
+		MPI_Barrier(mpi_comm);
 
-		// prec_patterns[i].reinit(owned, owned, writable, MPI_COMM_WORLD, dofs);
+		// prec_patterns[i].reinit(owned, owned, writable, mpi_comm, dofs);
 
-		prec_patterns[i].reinit(owned, owned, writable, MPI_COMM_WORLD, dofs);
+		prec_patterns[i].reinit(owned, owned, writable, mpi_comm, dofs);
 
 		if( lower ){
 			DoFTools::make_sparsity_pattern(dof_handler, prec_patterns[i], cm_prec2, true , GlobalParams.MPI_Rank);
@@ -807,7 +785,7 @@ void Waveguide::setup_system ()
 			}
 		}
 
-		// prec_patterns[i].reinit(locally_owned_dofs, MPI_COMM_WORLD, 0);
+		// prec_patterns[i].reinit(locally_owned_dofs, mpi_comm, 0);
 		// std::cout << GlobalParams.MPI_Rank << " has reached the end of loop " << i << std::endl;
 
 		prec_patterns[i].compress();
@@ -1009,16 +987,16 @@ void Waveguide::reinit_systemmatrix() {
 void Waveguide::reinit_rhs () {
 	// std::cout << "Reinit rhs for p " << GlobalParams.MPI_Rank << std::endl;
 
-	system_rhs.reinit(locally_owned_dofs, MPI_COMM_WORLD);
+	system_rhs.reinit(locally_owned_dofs, mpi_comm);
 
 	preconditioner_rhs.reinit(dof_handler.n_dofs());
 
 }
 
 void Waveguide::reinit_solution() {
-	solution.reinit(locally_owned_dofs, MPI_COMM_WORLD);
-	EstimatedSolution.reinit(locally_owned_dofs, MPI_COMM_WORLD);
-	ErrorOfSolution.reinit(locally_owned_dofs, MPI_COMM_WORLD);
+	solution.reinit(locally_owned_dofs, mpi_comm);
+	EstimatedSolution.reinit(locally_owned_dofs, mpi_comm);
+	ErrorOfSolution.reinit(locally_owned_dofs, mpi_comm);
 }
 
 void Waveguide::reinit_cell_weights() {
@@ -1029,13 +1007,13 @@ void Waveguide::reinit_cell_weights() {
 }
 
 void Waveguide::reinit_storage() {
-	storage.reinit(locally_owned_dofs,  MPI_COMM_WORLD);
+	storage.reinit(locally_owned_dofs,  mpi_comm);
 }
 
 void Waveguide::reinit_preconditioner () {
 
 	for(unsigned int i = 0; i < Layers -1; i++) {
-		MPI_Barrier(MPI_COMM_WORLD);
+		MPI_Barrier(mpi_comm);
 		Preconditioner_Matrices[i].reinit(prec_patterns[i]);
 	}
 }
@@ -1172,7 +1150,7 @@ void Waveguide::assemble_system ()
   }
 
 
-	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Barrier(mpi_comm);
 	if(!is_stored)  pout<<"Assembling done. L2-Norm of RHS: "<< system_rhs.l2_norm()<<std::endl;
 
 	system_matrix.compress(VectorOperation::add);
@@ -1187,7 +1165,7 @@ void Waveguide::assemble_system ()
 	cm.distribute(solution);
 	cm.distribute(EstimatedSolution);
 	cm.distribute(ErrorOfSolution);
-	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Barrier(mpi_comm);
 	pout << "Distributing solution done." <<std::endl;
 	estimate_solution();
 
@@ -1491,7 +1469,7 @@ void Waveguide::solve () {
 			sweep.Prepare(solution);
 		}
 
-		MPI_Barrier(MPI_COMM_WORLD);
+		MPI_Barrier(mpi_comm);
 
 
 		pout << "All preconditioner matrices built. Solving..." <<std::endl;
@@ -1547,7 +1525,7 @@ void Waveguide::output_results ( bool details )
 		ErrorOfSolution[index] = solution[index] - EstimatedSolution[index];
 	}
 
-	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Barrier(mpi_comm);
 
 	// ErrorOfSolution.compress(VectorOperation::insert);
 
@@ -1555,13 +1533,13 @@ void Waveguide::output_results ( bool details )
 
 
 
-	TrilinosWrappers::MPI::Vector solution_output(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+	TrilinosWrappers::MPI::Vector solution_output(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
 	solution_output = solution;
 
-	TrilinosWrappers::MPI::Vector estimate_output(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+	TrilinosWrappers::MPI::Vector estimate_output(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
 	estimate_output = EstimatedSolution;
 
-	TrilinosWrappers::MPI::Vector error_output(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+	TrilinosWrappers::MPI::Vector error_output(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
 	error_output = ErrorOfSolution;
 
 
@@ -1623,6 +1601,8 @@ void Waveguide::run ()
 	timer.enter_subsection ("Setup Mesh");
 	make_grid ();
 	timer.leave_subsection();
+
+	Compute_Dof_Numbers();
 
 	timer.enter_subsection ("Setup FEM");
 	setup_system ();
