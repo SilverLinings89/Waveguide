@@ -36,11 +36,7 @@ class SpaceTransformation {
 
   bool is_identity(Point<3> coord);
 
-  Tensor<2,3, std::complex<double>> get_epsilon(Point<3> coordinate);
-
-  Tensor<2,3, std::complex<double>> get_mu(Point<3> coordinate);
-
-  Tensor<2,3, double> get_transformation_tensor(Point<3> coordinate);
+  Tensor<2,3, std::complex<double>> get_transformation_tensor(Point<3> coordinate);
 
   /**
    * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis. Since there are 3 blocks of PML-type material, there are 3 functions.

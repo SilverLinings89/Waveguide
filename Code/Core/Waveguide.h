@@ -374,34 +374,37 @@ class Waveguide
 
 		MPI_Comm mpi_comm;
 
+		parallel::distributed::Triangulation<3>::active_cell_iterator cell, endc;
 
+		FESystem<3>                   fe;
 
+		parallel::distributed::Triangulation<3>     triangulation;
 
+		dealii::TrilinosWrappers::MPI::Vector                   system_rhs;
 
+		TrilinosWrappers::BlockSparseMatrix          system_matrix;
 
+		TrilinosWrappers::BlockSparseMatrix prec_matrix_odd, prec_matrix_even;
 
+		const bool even;
 
+		unsigned int rank;
 
-
+		ConstraintMatrix                cm, cm_prec_even, cm_prec_odd;
 
 		// HIER BEGINNT DIE ALTE VERSION ...
 		std::string										solutionpath;
-		parallel::distributed::Triangulation<3>::active_cell_iterator cell, endc;
 
 		//, triangulation_real;
-		FESystem<3>										fe;
-		parallel::distributed::Triangulation<3>			triangulation;
 		DoFHandler<3>									dof_handler;
 		//, dof_handler_real;
 		dealii::TrilinosWrappers::MPI::Vector										solution, EstimatedSolution, ErrorOfSolution ;
-		ConstraintMatrix 								cm, cm_prec1, cm_prec2;
 		IndexSet										locally_owned_dofs, locally_relevant_dofs, locally_active_dofs, extended_relevant_dofs;
 		std::vector<IndexSet>							locally_relevant_dofs_per_subdomain;
 
 		DynamicSparsityPattern							dynamic_system_pattern;
 		DynamicSparsityPattern							dynamic_preconditioner_pattern_odd, dynamic_preconditioner_pattern_even;
 		TrilinosWrappers::SparsityPattern				system_pattern;
-		TrilinosWrappers::SparseMatrix 					system_matrix;
 		dealii::TrilinosWrappers::SparseMatrix			preconditioner_matrix_odd;
 		dealii::TrilinosWrappers::SparseMatrix			preconditioner_matrix_even;
 		ConstraintMatrix 								boundary_value_constraints_imaginary;
@@ -412,7 +415,6 @@ class Waveguide
 		dealii::TrilinosWrappers::MPI::Vector										storage;
 		dealii::TrilinosWrappers::MPI::Vector										temp_storage;
 		bool											is_stored;
-		dealii::TrilinosWrappers::MPI::Vector										system_rhs;
 		Vector<double>									preconditioner_rhs;
 
 		int 											run_number;
@@ -438,8 +440,6 @@ class Waveguide
 		std::vector<IndexSet>							locally_relevant_dofs_all_processors;
 		IndexSet										UpperDofs, LowerDofs;
 		dealii::TrilinosWrappers::SparseMatrix* 		Preconditioner_Matrices;
-		//dealii::TrilinosWrappers::BlockSparseMatrix Preconditioner_Matrix_Odd;
-		//dealii::TrilinosWrappers::BlockSparseMatrix Preconditioner_Matrix_Even;
 		ConditionalOStream 								pout;
 
 		TimerOutput 									timer;
