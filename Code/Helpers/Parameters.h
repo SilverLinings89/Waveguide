@@ -169,7 +169,7 @@ struct Parameters {
     
     int R_Interior;
     
-    
+    double LayerThickness;
     
     unsigned int	MPI_Rank;
 
@@ -177,7 +177,7 @@ struct Parameters {
 
     bool PMLSector;
 
-    int LayersPerSector;
+    double LayersPerSector;
 
     int NumberProcesses;
 

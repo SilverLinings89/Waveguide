@@ -214,6 +214,7 @@ static Parameters GetParameters() {
 
 	ret.LayersPerSector = (ret.NumberProcesses - ret.M_BC_Zplus)/ret.M_W_Sectors;
 
+	ret.LayerThickness = ret.M_R_ZLength / (ret.NumberProcesses - ret.M_BC_Zplus);
 
 	return ret;
 }
@@ -353,11 +354,9 @@ static Point<3> Triangulation_Stretch_to_circle (const Point<3> &p)
 	return q;
 }
 
-
-
 static Point<3> Triangulation_Stretch_Computational_Radius (const Point<3> &p)
 {
-	double r_goal = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
+	double r_goal = (GlobalParams.M_C_Dim1In + GlobalParams.PRM_M_C_RadiusOut)/2.0;
 	//double r_current = (GlobalParams.PRM_M_R_XLength ) / 7.12644;
 	double r_current = (GlobalParams.PRM_M_R_XLength ) / 5.65;
 	double r_max = (GlobalParams.PRM_M_R_XLength / 2.0 ) * (1.0 - (2.0*GlobalParams.PRM_M_BC_Mantle));

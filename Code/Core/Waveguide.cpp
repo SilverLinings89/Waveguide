@@ -169,51 +169,6 @@ double Waveguide::evaluate_for_z(double z) {
 	return std::sqrt(std::norm(res));
 }
 
-double Waveguide::evaluate_out () {
-	double real = 0.0;
-	double imag = 0.0;
-	double z = prm.PRM_M_R_ZLength/2.0;
-	double r = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
-
-	for (double x = -r; x < r; x += r/5) {
-		for(double y = -r; y < r; y += r/5) {
-			Point<3, double> position(x, y, z);
-			Vector<double> result(6);
-			VectorTools::point_value(dof_handler, solution, position, result);
-			double Q1 = structure->getQ1(position[2] );
-			double Q2 = structure->getQ2(position[2] );
-			real +=  (result[0] / Q1) * ( TEMode00( position , 0) / Q1);
-			imag += (result[1] / Q2) * ( TEMode00( position , 1) / Q2);
-			real += (result[3] / Q1) * ( TEMode00( position , 0) / Q1);
-			imag += (result[4] / Q2) * ( TEMode00( position , 1) / Q2);
-		}
-	}
-	return sqrt(imag*imag + real*real);
-}
-
-double Waveguide::evaluate_in () {
-	double real = 0.0;
-	double imag = 0.0;
-	double z = -prm.PRM_M_R_ZLength/2.0 ;
-	double r = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
-
-	for (double x = -r; x < r; x += r/5) {
-		for(double y = -r; y < r; y += r/5) {
-			Point<3, double> position(x, y, z);
-			Vector<double> result(6);
-			VectorTools::point_value(dof_handler, solution, position, result);
-			double Q1 = structure->getQ1(position[2] );
-			double Q2 = structure->getQ2(position[2] );
-			real +=  (result[0] / Q1) * ( TEMode00( position , 0) / Q1);
-			imag += (result[1] / Q2) * ( TEMode00( position , 1) / Q2);
-			real += (result[3] / Q1) * ( TEMode00( position , 0) / Q1);
-			imag += (result[4] / Q2) * ( TEMode00( position , 1) / Q2);
-
-		}
-	}
-	return sqrt(imag*imag + real*real);
-}
-
 void Waveguide::evaluate() {
 	pout << "Starting Evaluation" << std::endl;
 	double z_for_evaluation = (double)(0.5+GlobalParams.MPI_Rank)*structure->Layer_Length() - GlobalParams.PRM_M_R_ZLength/2.0 ;
@@ -227,15 +182,15 @@ double Waveguide::evaluate_overall () {
 	double lower = 0.0;
 	double upper = 0.0;
 	if(GlobalParams.evaluate_in) {
-		pout << "Evaluation for input side by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << -GlobalParams.PRM_M_R_ZLength / 2.0 << std::endl;
-		lower = evaluate_for_z(-GlobalParams.PRM_M_R_ZLength / 2.0 + 0.0001);
+		// pout << "Evaluation for input side by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << -GlobalParams.PRM_M_R_ZLength / 2.0 << std::endl;
+		lower = evaluate_for_z(-GlobalParams.M_R_ZLength / 2.0 + 0.0000001);
 	}
 	if(GlobalParams.evaluate_out) {
-		pout << "Evaluation for output side by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << GlobalParams.PRM_M_R_ZLength / 2.0 << std::endl;
-		upper = evaluate_for_z(GlobalParams.PRM_M_R_ZLength / 2.0 - 0.0001);
+		// pout << "Evaluation for output side by Task " << GlobalParams.MPI_Rank <<" with lower " << GlobalParams.z_min << " and upper " << GlobalParams.z_max << " at " << GlobalParams.PRM_M_R_ZLength / 2.0 << std::endl;
+		upper = evaluate_for_z(GlobalParams.M_R_ZLength / 2.0 -  0.0000001);
 	}
-	lower = Utilities::MPI::sum(lower, GlobalParams.MPI_Communicator);
-	upper = Utilities::MPI::sum(upper, GlobalParams.MPI_Communicator);
+	lower = Utilities::MPI::sum(lower, mpi_comm);
+	upper = Utilities::MPI::sum(upper, mpi_comm);
 
 	for(unsigned int i = 0; i< Layers; i++) {
 		double contrib = 0.0;
@@ -244,7 +199,7 @@ double Waveguide::evaluate_overall () {
 			 contrib = evaluate_for_z(GlobalParams.z_evaluate);
 			 std::cout << contrib << std::endl;
 		}
-		qualities[i] = Utilities::MPI::max(contrib, GlobalParams.MPI_Communicator);
+		qualities[i] = Utilities::MPI::max(contrib, mpi_comm);
 	}
 	double quality_in	= lower;
 	double quality_out	= upper;
@@ -300,7 +255,7 @@ void Waveguide::estimate_solution() {
 
 					((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
 					Tensor<1,3,double> ptemp = ((cell->face(i))->line(j))->center(true, false);
-					if( std::abs(ptemp[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) > 0.0001 ){
+					if( std::abs(ptemp[2] + GlobalParams.M_R_ZLength/2.0 ) > 0.0001 ){
 						Point<3, double> p (ptemp[0], ptemp[1], ptemp[2]);
 						Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(0) - ((cell->face(i))->line(j))->vertex(1);
 						dtemp = dtemp / dtemp.norm();
@@ -308,7 +263,7 @@ void Waveguide::estimate_solution() {
 
 
 						//double phi = (ptemp[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) *2 * GlobalParams.PRM_C_PI / (GlobalParams.PRM_M_W_Lambda / GlobalParams.PRM_M_W_EpsilonIn);
-						double phi = (ptemp[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) * 2* GlobalParams.PRM_C_PI / (GlobalParams.PRM_M_W_Lambda / std::sqrt(GlobalParams.PRM_M_W_EpsilonIn));
+						double phi = (ptemp[2] + GlobalParams.M_R_ZLength/2.0 ) * 2* GlobalParams.C_Pi / (GlobalParams.M_W_Lambda / std::sqrt(GlobalParams.M_W_epsilonin));
 						double result_real = TEMode00(p,0) * std::cos(phi) ;
 						double result_imag = - TEMode00(p,0) * std::sin(phi) ;
 						if(PML_in_X(p) || PML_in_Y(p)) result_real = 0.0;
@@ -329,184 +284,7 @@ void Waveguide::estimate_solution() {
 	EstimatedSolution.compress(VectorOperation::insert);
 }
 
-Tensor<2,3, std::complex<double>> Waveguide::get_Tensor(Point<3> & position, bool inverse , bool epsilon) {
-	std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
-	Tensor<2,3, std::complex<double>> ret;
 
-	double omegaepsilon0 = GlobalParams.PRM_C_omega * ((System_Coordinate_in_Waveguide(position))?GlobalParams.PRM_M_W_EpsilonIn : GlobalParams.PRM_M_W_EpsilonOut);
-	std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
-	if(PML_in_X(position)){
-		double r,d, sigmax;
-		r = PML_X_Distance(position);
-		d = GlobalParams.PRM_M_R_XLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
-		sigmax = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaXMax;
-		sx.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaXMax);
-		sx.imag( sigmax / ( omegaepsilon0));
-		S1 /= sx;
-		S2 *= sx;
-		S3 *= sx;
-	}
-	if(PML_in_Y(position)){
-		double r,d, sigmay;
-		r = PML_Y_Distance(position);
-		d = GlobalParams.PRM_M_R_YLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
-		sigmay = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaYMax;
-		sy.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaYMax);
-		sy.imag( sigmay / ( omegaepsilon0));
-		S1 *= sy;
-		S2 /= sy;
-		S3 *= sy;
-	}
-	if(PML_in_Z(position)){
-		double r,d, sigmaz;
-		r = PML_Z_Distance(position);
-		d = GlobalParams.PRM_M_BC_XYout * structure->Sector_Length();
-		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
-		sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
-		sz.imag( sigmaz / omegaepsilon0 );
-		S1 *= sz;
-		S2 *= sz;
-		S3 /= sz;
-	}
-
-	ret[0][0] = S1;
-	ret[1][1] = S2;
-	ret[2][2] = S3;
-    
-    if(epsilon) {
-		if(System_Coordinate_in_Waveguide(position) ) {
-			ret *= GlobalParams.PRM_M_W_EpsilonIn;
-		} else {
-			ret *= GlobalParams.PRM_M_W_EpsilonOut;
-		}
-		ret *= GlobalParams.PRM_C_Eps0;
-	}
-    
-    Tensor<2,3, std::complex<double>> ret2;
-	Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
-	double dist = position[0] * position[0] + position[1]*position[1];
-	dist = std::sqrt(dist);
-	double maxdist = GlobalParams.PRM_M_R_XLength/2.0 - GlobalParams.PRM_M_BC_Mantle * GlobalParams.PRM_M_R_XLength;
-	double mindist = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
-	double sig = sigma(dist, mindist, maxdist);
-	double factor = InterpolationPolynomialZeroDerivative(sig, 1,0);
-	transformation *= factor;
-	for(int i = 0; i < 3; i++) {
-		transformation[i][i] += 1-factor;
-	}
-	for(int i = 0; i < 3; i++) {
-		for(int j = 0; j < 3; j++) {
-			ret2[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
-		}
-	}
-
-	
-
-	Tensor<2,3, std::complex<double>> ret3;
-
-	for(int i = 0; i < 3; i++) {
-		for(int j = 0; j < 3; j++) {
-			ret3[i][j] = std::complex<double>(0.0, 0.0);
-			for(int k = 0; k < 3; k++) {
-				ret3[i][j] += ret[i][k] * ret2[k][j];
-			}
-		}
-	}
-
-	if  ( inverse ) ret3 = invert(ret3);
-
-	return ret3;
-}
-
-Tensor<2,3, std::complex<double>> Waveguide::get_Preconditioner_Tensor(Point<3> & position, bool inverse , bool epsilon, int block) {
-	std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
-	Tensor<2,3, std::complex<double>> ret;
-
-	Tensor<2,3, std::complex<double>> MaterialTensor;
-	Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
-	double dist = position[0] * position[0] + position[1]*position[1];
-	dist = std::sqrt(dist);
-	double maxdist = GlobalParams.PRM_M_R_XLength/2.0 - GlobalParams.PRM_M_BC_Mantle * GlobalParams.PRM_M_R_XLength;
-	double mindist = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0;
-	double sig = sigma(dist, mindist, maxdist);
-	double factor = InterpolationPolynomialZeroDerivative(sig, 1,0);
-	transformation *= factor;
-	for(int i = 0; i < 3; i++) {
-		transformation[i][i] += 1-factor;
-	}
-	for(int i = 0; i < 3; i++) {
-		for(int j = 0; j < 3; j++) {
-			MaterialTensor[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
-		}
-	}
-
-	double omegaepsilon0 = GlobalParams.PRM_C_omega * ((System_Coordinate_in_Waveguide(position))?GlobalParams.PRM_M_W_EpsilonIn : GlobalParams.PRM_M_W_EpsilonOut);
-	std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0),sz_p(0.0,0.0);
-	if(PML_in_X(position)){
-		double r,d, sigmax;
-		r = PML_X_Distance(position);
-		d = GlobalParams.PRM_M_R_XLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
-		sigmax = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaXMax;
-		sx.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaXMax);
-		sx.imag( sigmax / ( omegaepsilon0));
-	}
-	if(PML_in_Y(position)){
-		double r,d, sigmay;
-		r = PML_Y_Distance(position);
-		d = GlobalParams.PRM_M_R_YLength * 1.0 * GlobalParams.PRM_M_BC_Mantle;
-		sigmay = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaYMax;
-		sy.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaYMax);
-		sy.imag( sigmay / ( omegaepsilon0));
-	}
-	if(Preconditioner_PML_in_Z(position, block)){
-		double r,d, sigmaz;
-		r = Preconditioner_PML_Z_Distance(position, block);
-		d = structure->Layer_Length() * 1.0;
-		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
-		sz_p.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
-		sz_p.imag( sigmaz / omegaepsilon0 );
-	}
-
-	if(PML_in_Z(position)){
-		double r,d, sigmaz;
-		r = PML_Z_Distance(position);
-		d = GlobalParams.PRM_M_BC_XYout * structure->Sector_Length();
-		sigmaz = pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_SigmaZMax;
-
-		sz.real( 1 + pow(r/d , GlobalParams.PRM_M_BC_M) * GlobalParams.PRM_M_BC_KappaZMax);
-		sz.imag( sigmaz / omegaepsilon0 );
-	}
-
-	sz += sz_p;
-
-	MaterialTensor[0][0] *= sy*sz/sx;
-	MaterialTensor[0][1] *= sz;
-	MaterialTensor[0][2] *= sy;
-
-	MaterialTensor[1][0] *= sz;
-	MaterialTensor[1][1] *= sx*sz/sy;
-	MaterialTensor[1][2] *= sx;
-
-	MaterialTensor[2][0] *= sy;
-	MaterialTensor[2][1] *= sx;
-	MaterialTensor[2][2] *= sx*sy/sz;
-
-    if(epsilon) {
-		if(System_Coordinate_in_Waveguide(position) ) {
-			MaterialTensor *= GlobalParams.PRM_M_W_EpsilonIn;
-		} else {
-			MaterialTensor *= GlobalParams.PRM_M_W_EpsilonOut;
-		}
-		MaterialTensor *= GlobalParams.PRM_C_Eps0;
-	}
-    
-
-	//pout << "get_Tensor_2" << std::endl;
-	if  ( inverse ) MaterialTensor = invert(MaterialTensor);
-
-	return MaterialTensor;
-
-}
 
 Tensor<2,3, std::complex<double>> Waveguide::Conjugate_Tensor(Tensor<2,3, std::complex<double>> input) {
 	Tensor<2,3, std::complex<double>> ret ;
@@ -1024,12 +802,6 @@ void Waveguide::reinit_preconditioner_fast () {
 	}
 }
 
-void Waveguide::assemble_part ( ) {
-
-
-}
-
-
 void Waveguide::assemble_system ()
 {
 
@@ -1084,7 +856,7 @@ void Waveguide::assemble_system ()
       cell_matrix_prec2 = 0;
       for (unsigned int q_index=0; q_index<n_q_points; ++q_index)
       {
-        transformation = st->get_transformation_tensor(quadrature_points[q_index]);
+        transformation = st->get_Tensor(quadrature_points[q_index]);
 
         if( mg->math_coordinate_in_waveguide(quadrature_points[q_index])) {
           epsilon = transformation * eps_in;

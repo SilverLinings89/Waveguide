@@ -1,6 +1,8 @@
 #ifndef HomogenousTransformationCircular_CPP
 #define HomogenousTransformationCircular_CPP
 
+#include "../Helpers/staticfunctions.h"
+
 using namespace dealii;
 
 HomogenousTransformationCircular::HomogenousTransformationCircular ():
@@ -14,7 +16,6 @@ HomogenousTransformationCircular::HomogenousTransformationCircular ():
 
 
 }
-
 
 bool HomogenousTransformationCircular::PML_in_X(Point<3> &p) {
   return p(0) < XMinus ||p(0) > XPlus;
@@ -69,6 +70,179 @@ double HomogenousTransformationCircular::PML_Z_Distance(Point<3> &p){
   } else {
     return p(2) - (GlobalParams.M_R_ZLength / 2.0);
   }
+}
+
+Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Tensor(Point<3> & position) {
+  std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
+  Tensor<2,3, std::complex<double>> ret;
+
+  double omegaepsilon0 = GlobalParams.C_omega;
+  // * ((System_Coordinate_in_Waveguide(position))?GlobalParams.M_W_epsilonin : GlobalParams.M_W_epsilonout);
+  std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
+  if(PML_in_X(position)){
+    double r,d, sigmax;
+    r = PML_X_Distance(position);
+    if(position[0] < 0){
+      d = GlobalParams.M_BC_XMinus;
+    } else {
+      d = GlobalParams.M_BC_XPlus;
+    }
+    sigmax = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaXMax;
+    sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax);
+    sx.imag( sigmax / ( omegaepsilon0));
+    S1 /= sx;
+    S2 *= sx;
+    S3 *= sx;
+  }
+  if(PML_in_Y(position)){
+    double r,d, sigmay;
+    r = PML_Y_Distance(position);
+    if(position[1] < 0){
+      d = GlobalParams.M_BC_YMinus;
+    } else {
+      d = GlobalParams.M_BC_YPlus;
+    }
+    sigmay = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax;
+    sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax);
+    sy.imag( sigmay / ( omegaepsilon0));
+    S1 *= sy;
+    S2 /= sy;
+    S3 *= sy;
+  }
+  if(PML_in_Z(position)){
+    double r,d, sigmaz;
+    r = PML_Z_Distance(position);
+    d = (GlobalParams.M_R_ZLength / (GlobalParams.NumberProcesses - GlobalParams.M_BC_Zplus)) * GlobalParams.M_BC_Zplus ;
+    sigmaz = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax;
+    sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax);
+    sz.imag( sigmaz / omegaepsilon0 );
+    S1 *= sz;
+    S2 *= sz;
+    S3 /= sz;
+  }
+
+  ret[0][0] = S1;
+  ret[1][1] = S2;
+  ret[2][2] = S3;
+
+  Tensor<2,3, std::complex<double>> ret2;
+  Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
+  double dist = position[0] * position[0] + position[1]*position[1];
+  dist = sqrt(dist);
+  double v1 = GlobalParams.M_R_XLength/2.0 - std::min(GlobalParams.M_BC_XMinus, GlobalParams.M_BC_XPlus);
+  double v2 = GlobalParams.M_R_YLength/2.0 - std::min(GlobalParams.M_BC_YMinus, GlobalParams.M_BC_YPlus);
+  double maxdist = std::min(v1, v2);
+  double mindist = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
+  double sig = sigma(dist, mindist, maxdist);
+  double factor = InterpolationPolynomialZeroDerivative(sig, 1,0);
+  transformation *= factor;
+  for(int i = 0; i < 3; i++) {
+    transformation[i][i] += 1-factor;
+  }
+  for(int i = 0; i < 3; i++) {
+    for(int j = 0; j < 3; j++) {
+      ret2[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
+    }
+  }
+
+  Tensor<2,3, std::complex<double>> ret3;
+
+  for(int i = 0; i < 3; i++) {
+    for(int j = 0; j < 3; j++) {
+      ret3[i][j] = std::complex<double>(0.0, 0.0);
+      for(int k = 0; k < 3; k++) {
+        ret3[i][j] += ret[i][k] * ret2[k][j];
+      }
+    }
+  }
+
+
+  return ret3;
+}
+
+Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Preconditioner_Tensor(Point<3> & position, int block) {
+  std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
+  Tensor<2,3, std::complex<double>> ret;
+
+  Tensor<2,3, std::complex<double>> MaterialTensor;
+  Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
+  double dist = position[0] * position[0] + position[1]*position[1];
+  dist = sqrt(dist);
+  double v1 = GlobalParams.M_R_XLength/2.0 - std::min(GlobalParams.M_BC_XMinus, GlobalParams.M_BC_XPlus);
+  double v2 = GlobalParams.M_R_YLength/2.0 - std::min(GlobalParams.M_BC_YMinus, GlobalParams.M_BC_YPlus);
+  double maxdist = std::min(v1, v2);
+  double mindist = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
+  double sig = sigma(dist, mindist, maxdist);
+  double factor = InterpolationPolynomialZeroDerivative(sig, 1,0);
+  transformation *= factor;
+  for(int i = 0; i < 3; i++) {
+    transformation[i][i] += 1-factor;
+  }
+  for(int i = 0; i < 3; i++) {
+    for(int j = 0; j < 3; j++) {
+      MaterialTensor[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
+    }
+  }
+
+  double omegaepsilon0 = GlobalParams.C_omega;
+  std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0),sz_p(0.0,0.0);
+  if(PML_in_X(position)){
+    double r,d, sigmax;
+    r = PML_X_Distance(position);
+    if(position[0] < 0){
+      d = GlobalParams.M_BC_XMinus;
+    } else {
+      d = GlobalParams.M_BC_XPlus;
+    }
+    sigmax = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaXMax;
+    sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax);
+    sx.imag( sigmax / ( omegaepsilon0));
+  }
+  if(PML_in_Y(position)){
+    double r,d, sigmay;
+    r = PML_Y_Distance(position);
+    if(position[1] < 0){
+      d = GlobalParams.M_BC_YMinus;
+    } else {
+      d = GlobalParams.M_BC_YPlus;
+    }
+    sigmay = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax;
+    sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax);
+    sy.imag( sigmay / ( omegaepsilon0));
+  }
+  if(Preconditioner_PML_in_Z(position, block)){
+    double r,d, sigmaz;
+    r = Preconditioner_PML_Z_Distance(position, block);
+    d = GlobalParams.LayerThickness;
+    sigmaz = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax;
+    sz_p.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax);
+    sz_p.imag( sigmaz / omegaepsilon0 );
+  }
+
+  if(PML_in_Z(position)){
+    double r,d, sigmaz;
+    r = PML_Z_Distance(position);
+    d = GlobalParams.M_BC_Zplus * GlobalParams.LayerThickness;
+    sigmaz = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax;
+    sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax);
+    sz.imag( sigmaz / omegaepsilon0 );
+  }
+
+  sz += sz_p;
+
+  MaterialTensor[0][0] *= sy*sz/sx;
+  MaterialTensor[0][1] *= sz;
+  MaterialTensor[0][2] *= sy;
+
+  MaterialTensor[1][0] *= sz;
+  MaterialTensor[1][1] *= sx*sz/sy;
+  MaterialTensor[1][2] *= sx;
+
+  MaterialTensor[2][0] *= sy;
+  MaterialTensor[2][1] *= sx;
+  MaterialTensor[2][2] *= sx*sy/sz;
+
+  return MaterialTensor;
 }
 
 #endif

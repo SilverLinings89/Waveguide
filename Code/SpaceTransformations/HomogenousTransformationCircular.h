@@ -34,7 +34,9 @@ class HomogenousTransformationCircular : public SpaceTransformation {
 
   Tensor<2,3, std::complex<double>> get_mu(Point<3> coordinate);
 
-  Tensor<2,3, double> get_transformation_tensor(Point<3> coordinate);
+  Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & coordinate);
+
+  Tensor<2,3, std::complex<double>> get_Preconditioner_Tensor(Point<3> & coordinate, int block);
 
   const double XMinus, XPlus, YMinus, YPlus, ZMinus, ZPlus;
 
