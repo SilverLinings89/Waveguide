@@ -13,12 +13,16 @@
  */
 class SquareMeshGenerator : public MeshGenerator {
 
+  SpaceTransformation * ct;
+  unsigned int Layers;
+  Point<3> origin;
+  std_cxx11::array< Tensor< 1, 3 >, 3 > edges;
+  std::vector<unsigned int> subs;
+
   const double MaxDistX;
   const double MaxDistY;
 
   SquareMeshGenerator(SpaceTransformation * st);
-
-  void set_boundary_ids();
 
   /**
    * This function is intended to execute a global refinement of the mesh. This means that every cell will be refined in every direction (effectively multiplying the number of DOFs by 8). This version is the most expensive refinement possible and should be used with caution.
@@ -62,7 +66,9 @@ class SquareMeshGenerator : public MeshGenerator {
    */
   void prepare_triangulation(parallel::distributed::Triangulation<3> * in_tria)  ;
 
+  void set_boundary_ids(parallel::distributed::Triangulation<3> &tria) const;
 
+  parallel::distributed::Triangulation<3>::active_cell_iterator cell, endc;
 
 };
 

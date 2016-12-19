@@ -15,6 +15,8 @@
 #include <deal.II/grid/tria_iterator.h>
 #include <deal.II/grid/grid_tools.h>
 
+#include "SquareMeshGenerator.h"
+
 using namespace dealii;
 
 SquareMeshGenerator::SquareMeshGenerator(SpaceTransformation * in_ct) :
@@ -23,7 +25,7 @@ SquareMeshGenerator::SquareMeshGenerator(SpaceTransformation * in_ct) :
     {
   ct = in_ct;
   Layers = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
-  Point<3> origin(-1,-1,-1);
+  origin = Point<3>(-1,-1,-1);
   std_cxx11::array< Tensor< 1, 3 >, 3 > edges;
   edges[0][0] = 2;
   edges[0][1] = 0;
@@ -37,19 +39,20 @@ SquareMeshGenerator::SquareMeshGenerator(SpaceTransformation * in_ct) :
   edges[2][1] = 0;
   edges[2][2] = 2;
 
-  std::vector<unsigned int> subs(3);
+  subs.resize(3);
   subs[0] = 1;
   subs[1] = 1;
   subs[2] = Layers;
 
 }
 
-void SquareMeshGenerator::set_boundary_ids() {
+void SquareMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3> &tria) const  {
   return;
 }
 
 void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangulation<3> * in_tria){
-    const std_cxx11::array< Tensor< 1, 3 >, 3 > edges2(edges);
+
+  const std_cxx11::array< Tensor< 1, 3 >, 3 > edges2(edges);
 
     GridGenerator::subdivided_parallelepiped<3,3>(* in_tria, origin, edges2, subs, false);
 
@@ -58,7 +61,7 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
     in_tria->refine_global(3);
 
     in_tria->signals.post_refinement.connect
-            (std_cxx11::bind (&Waveguide::set_boundary_ids,
+            (std_cxx11::bind (&SquareMeshGenerator::set_boundary_ids,
                               std_cxx11::cref(*this),
                               std_cxx11::ref(in_tria)));
 
@@ -68,8 +71,6 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
     GridTools::transform( &Triangulation_Stretch_to_circle , *in_tria);
 
     unsigned int man = 1;
-
-    in_tria->set_manifold (man, round_description);
 
     in_tria->set_all_manifold_ids(0);
 

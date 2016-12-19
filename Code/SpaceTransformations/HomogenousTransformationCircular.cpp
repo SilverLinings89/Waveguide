@@ -2,6 +2,8 @@
 #define HomogenousTransformationCircular_CPP
 
 #include "../Helpers/staticfunctions.h"
+#include "../Helpers/QuadratureFormulaCircle.cpp"
+#include "HomogenousTransformationCircular.h"
 
 using namespace dealii;
 
@@ -243,6 +245,56 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Precondi
   MaterialTensor[2][2] *= sx*sy/sz;
 
   return MaterialTensor;
+}
+
+std::complex<double> HomogenousTransformationCircular::gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc, Waveguide * in_w)
+{
+  double* r = NULL;
+  double* t = NULL;
+  double* q = NULL;
+  double* A = NULL;
+  double  B;
+  double x, y;
+  std::complex<double> s(0.0, 0.0);
+
+  int i,j;
+
+  /* Load appropriate predefined table */
+  for (i = 0; i<GSPHERESIZE;i++)
+  {
+    if(n==gsphere[i].n)
+    {
+      r = gsphere[i].r;
+      t = gsphere[i].t;
+      q = gsphere[i].q;
+      A = gsphere[i].A;
+      B = gsphere[i].B;
+      break;
+    }
+  }
+
+  if (NULL==r) return -1.0;
+
+  for (i=0;i<n;i++)
+  {
+    for (j=0;j<n;j++)
+    {
+      x = r[j]*q[i];
+      y = r[j]*t[i];
+      s += A[j]*in_w->evaluate_for_Position(R*x-Xc,R*y-Yc,z);
+    }
+  }
+
+  s *= R*R*B;
+
+  return s;
+}
+
+std::complex<double> HomogenousTransformationCircular::evaluate_for_z(double in_z, Waveguide * in_w) {
+  double r = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
+
+  std::complex<double> res = gauss_product_2D_sphere(in_z,10,r,0,0, in_w);
+  return sqrt(std::norm(res));
 }
 
 #endif

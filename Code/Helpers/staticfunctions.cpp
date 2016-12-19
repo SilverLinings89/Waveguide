@@ -85,9 +85,11 @@ static Parameters GetParameters() {
   {
     prm.enter_subsection("Connectors");
     {
-      switch(prm.get("Shape")){
-        case "Circle" : ret.M_C_Shape = ConnectorType::Circle; break;
-        case "Rectangle" : ret.M_C_Shape = ConnectorType::Rectangle; break;
+      std::string temp = prm.get("Shape");
+      if(temp == "Circle") {
+        ret.M_C_Shape = ConnectorType::Circle;
+      } else {
+        ret.M_C_Shape = ConnectorType::Rectangle;
       }
       ret.M_C_Dim1In = prm.get_double("Dimension1_In");
       ret.M_C_Dim2In = prm.get_double("Dimension2_In");
@@ -116,9 +118,11 @@ static Parameters GetParameters() {
 
     prm.enter_subsection("Boundary Conditions");
     {
-      switch(prm.get("Type")){
-        case "PML":ret.M_BC_Type= BoundaryConditionType::PML; break;
-        case "HSIE":ret.M_BC_Type= BoundaryConditionType::HSIE; break;
+      std::string temp = prm.get("Type");
+      if (temp == "PML") {
+        ret.M_BC_Type= BoundaryConditionType::PML;
+      } else {
+        ret.M_BC_Type= BoundaryConditionType::HSIE;
       }
       ret.M_BC_Zplus = prm.get_integer("ZPlus");
       ret.M_BC_XMinus = prm.get_double("XMinus");
@@ -141,33 +145,44 @@ static Parameters GetParameters() {
   prm.enter_subsection("Schema");
   {
     ret.Sc_Homogeneity = prm.get_bool("Homogeneity");
-    switch(prm.get("Optimization Schema")){
-      case "Adjoint": ret.Sc_Schema = OptimizationSchema::Adjoint; break;
-      case "FD": ret.Sc_Schema = OptimizationSchema::FD; break;
+    std::string temp = prm.get("Optimization Schema");
+    if(temp == "Adjoint") {
+      ret.Sc_Schema = OptimizationSchema::Adjoint;
+    } else if (temp == "FD") {
+      ret.Sc_Schema = OptimizationSchema::FD;
     }
     ret.Sc_OptimizationSteps = prm.get_integer("Optimization Steps");
-    switch(prm.get("Stepping Method")){
-      case "Steepest": ret.Sc_SteppingMethod = SteppingMethod::Steepest; break;
-      case "CG": ret.Sc_SteppingMethod = SteppingMethod::CG; break;
+    temp = prm.get("Stepping Method");
+    if(temp == "Steepest") {
+      ret.Sc_SteppingMethod = SteppingMethod::Steepest;
+    } else if (temp == "CG") {
+      ret.Sc_SteppingMethod = SteppingMethod::CG;
     };
-    switch(prm.get("Step Width")) {
-      case "LineSearch": ret.Sc_StepWidth = StepWidth::LineSearch; break;
-      case "Experimental": ret.Sc_StepWidth = StepWidth::Experimental; break;
+    temp = prm.get("Step Width");
+    if( temp == "LineSearch"){
+      ret.Sc_StepWidth = StepWidth::LineSearch;
+    } else if (temp == "Experimental"){
+      ret.Sc_StepWidth = StepWidth::Experimental;
     };
   }
   prm.leave_subsection();
 
   prm.enter_subsection("Solver");
   {
-    switch(prm.get("Solver")){
-      case "GMRES": ret.So_Solver = SolverOptions::GMRES; break;
-      case "MINRES": ret.So_Solver = SolverOptions::MINRES; break;
-      case "UMFPACK": ret.So_Solver = SolverOptions::UMFPACK; break;
+    std::string temp = prm.get("Solver");
+    if(temp == "GMRES"){
+      ret.So_Solver = SolverOptions::GMRES;
+    } else if (temp == "MINRES"){
+      ret.So_Solver = SolverOptions::MINRES;
+    } else if (temp == "UMFPACK") {
+      ret.So_Solver = SolverOptions::UMFPACK;
     }
     ret.So_RestartSteps = prm.get_integer("GMRESSteps");
-    switch(prm.get("Preconditioner")) {
-      case "Sweeping": ret.So_Preconditioner = PreconditionerOptions::Sweeping; break;
-      case "Anesis_Lapack": ret.So_Preconditioner = PreconditionerOptions::Amesos_Lapack; break;
+    temp = prm.get("Preconditioner");
+    if (temp == "Sweeping") {
+      ret.So_Preconditioner = PreconditionerOptions::Sweeping;
+    } else if(temp == "Amesos_Lapack") {
+      ret.So_Preconditioner = PreconditionerOptions::Amesos_Lapack;
     }
     ret.So_TotalSteps = prm.get_integer("Steps");
     ret.So_Precision = prm.get_double("Precision");
@@ -356,10 +371,10 @@ static Point<3> Triangulation_Stretch_to_circle (const Point<3> &p)
 
 static Point<3> Triangulation_Stretch_Computational_Radius (const Point<3> &p)
 {
-	double r_goal = (GlobalParams.M_C_Dim1In + GlobalParams.PRM_M_C_RadiusOut)/2.0;
+	double r_goal = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
 	//double r_current = (GlobalParams.PRM_M_R_XLength ) / 7.12644;
-	double r_current = (GlobalParams.PRM_M_R_XLength ) / 5.65;
-	double r_max = (GlobalParams.PRM_M_R_XLength / 2.0 ) * (1.0 - (2.0*GlobalParams.PRM_M_BC_Mantle));
+	double r_current = (GlobalParams.M_R_XLength ) / 5.65;
+	double r_max = (GlobalParams.M_R_XLength / 2.0 ) * (1.0 - (2.0*GlobalParams.M_BC_XMinus));
 	double r_point = sqrt(p[0]*p[0] + p[1]*p[1]);
 	double factor = InterpolationPolynomialZeroDerivative(sigma(r_point, r_current, r_max), r_goal/r_current , 1.0);
 	Point<3> q = p;
@@ -370,14 +385,14 @@ static Point<3> Triangulation_Stretch_Computational_Radius (const Point<3> &p)
 
 static bool System_Coordinate_in_Waveguide(Point<3> p){
 	double value = Distance2D(p);
-	return ( value < (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0);
+	return ( value < (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0);
 }
 
 static double TEMode00 (Point<3, double> p ,const unsigned int component)
 {
 
 	if(component == 0) {
-		double d2 = (Distance2D(p)) / (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut) ;
+		double d2 = (Distance2D(p)) / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) ;
 		return exp(-d2*d2);
 	}
 	return 0.0;
@@ -388,13 +403,13 @@ static double Solution (Point<3, double> p ,const unsigned int component)
 	if(component == 0) {
 		double res =TEMode00(p,0);
 		std::complex<double> i (0,1);
-		std::complex<double> ret = -1.0 * res * std::exp(-i*(GlobalParams.PRM_C_PI/2) *(p[2]+GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin));
+		std::complex<double> ret = -1.0 * res * std::exp(-i*(GlobalParams.C_Pi/2) *(p[2]+GlobalParams.M_R_ZLength/2.0 ));
 		return ret.real();
 	}
 	if(component == 3) {
 		double res =TEMode00(p,0);
 		std::complex<double> i (0,1);
-		std::complex<double> ret = -1.0 * res * std::exp(-i*(GlobalParams.PRM_C_PI/2) *(p[2]+GlobalParams.PRM_M_R_ZLength/2.0 + GlobalParams.PRM_M_BC_XYin));
+		std::complex<double> ret = -1.0 * res * std::exp(-i*(GlobalParams.C_Pi/2) *(p[2]+GlobalParams.M_R_ZLength/2.0 ));
 		return ret.imag();
 	}
 

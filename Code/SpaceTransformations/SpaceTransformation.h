@@ -8,6 +8,7 @@
 #include <deal.II/lac/vector.h>
 #include <deal.II/base/point.h>
 
+#include "../Core/Waveguide.h"
 
 using namespace dealii;
 /**
@@ -22,6 +23,7 @@ using namespace dealii;
  */
 class SpaceTransformation {
 
+public:
   const unsigned int dofs_per_layer;
 
   const unsigned int boundary_dofs_in;
@@ -38,6 +40,7 @@ class SpaceTransformation {
 
   Tensor<2,3, std::complex<double>> get_Tensor(Point<3> coordinate);
 
+  Tensor<2,3, std::complex<double>> get_Preconditioner_Tensor(Point<3> coordinate, int block);
   /**
    * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
    * \param position Stores the position in which to test for presence of a PML-Material.
@@ -218,6 +221,14 @@ class SpaceTransformation {
    * Console output of the current Waveguide Structure.
    */
   void Print();
+
+  /**
+   * Since the Wavegudie itself may be circular or rectangular now, the evaluation routines should be moved to a point in the code where this information is included in the code. Since I dont want to create derived classes from waveguide (which I should do eventually) I will for now include this functionality into the space transformation which is shape-sensitive.
+   * The waveguide only offers the evaluation at a point. The quadrature-rule has to be imposed by the space transformation.
+   */
+  virtual std::complex<double> evaluate_for_z(double, Waveguide *) = 0;
+
+
 
 
 };

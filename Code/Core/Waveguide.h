@@ -48,6 +48,7 @@
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 // #include <deal.II/lac/trilinos_parallel_block_vector.h>
 #include <deal.II/lac/trilinos_sparsity_pattern.h>
+#include <deal.II/lac/trilinos_block_sparse_matrix.h>
 
 
 #include <fstream>
@@ -62,6 +63,9 @@
 #include "./WaveguideStructure.h"
 #include "./PreconditionerSweeping.h"
 #include "../Helpers/staticfunctions.h"
+
+#include "../MeshGenerators/MeshGenerator.h"
+#include "../SpaceTransformations/SpaceTransformation.h"
 
 using namespace dealii;
 
@@ -159,6 +163,12 @@ class Waveguide
 
 		double *										qualities;
 
+    /**
+     * This function is currently not in use. It is supposed to create a useful input-vector for the first step of the iteration. However currently this is not used, since current cases simply use a zero-vector for the first step and previous solutions in the subsequent steps.
+     *
+     */
+    void  estimate_solution();
+
 	private:
 
 		/**
@@ -187,11 +197,7 @@ class Waveguide
 		 */
 		void 	assemble_system ();
 
-		/**
-		 * This function is currently not in use. It is supposed to create a useful input-vector for the first step of the iteration. However currently this is not used, since current cases simply use a zero-vector for the first step and previous solutions in the subsequent steps.
-		 *
-		 */
-		void	estimate_solution();
+
 
 		/**
 		 * Upon successful assembly of the system-matrix, the solution has to be calculated. This is done in this function. There are multiple Templates of this function for enabling switching between libraries. The Dealii implementation uses deal's native solvers as well as data-types. The other templated editions use the PETSc and Trilinos equivalents. The type of solver to be used and its parameters are specified via the parameter GYU
@@ -351,6 +357,14 @@ class Waveguide
 
 		DoFHandler<3>                 dof_handler;
 
+	  std::vector<IndexSet> i_prec_even_owned_row;
+	  std::vector<IndexSet> i_prec_even_owned_col;
+	  std::vector<IndexSet> i_prec_even_writable;
+	  std::vector<IndexSet> i_prec_odd_owned_row;
+	  std::vector<IndexSet> i_prec_odd_owned_col;
+	  std::vector<IndexSet> i_prec_odd_writable;
+	  std::vector<IndexSet> i_sys_owned;
+
 
 		// HIER BEGINNT DIE ALTE VERSION ...
 		std::string										solutionpath;
@@ -361,15 +375,10 @@ class Waveguide
 		IndexSet										locally_owned_dofs, locally_relevant_dofs, locally_active_dofs, extended_relevant_dofs;
 		std::vector<IndexSet>							locally_relevant_dofs_per_subdomain;
 
-		DynamicSparsityPattern							dynamic_system_pattern;
-		DynamicSparsityPattern							dynamic_preconditioner_pattern_odd, dynamic_preconditioner_pattern_even;
-		TrilinosWrappers::SparsityPattern				system_pattern;
-		dealii::TrilinosWrappers::SparseMatrix			preconditioner_matrix_odd;
-		dealii::TrilinosWrappers::SparseMatrix			preconditioner_matrix_even;
+
 		ConstraintMatrix 								boundary_value_constraints_imaginary;
 		ConstraintMatrix 								boundary_value_constraints_real;
 		ConstraintMatrix								hanging_global;
-		// MPI_Comm *										split_comms;
 
 		dealii::TrilinosWrappers::MPI::BlockVector										storage;
 		dealii::TrilinosWrappers::MPI::Vector										temp_storage;
@@ -384,13 +393,13 @@ class Waveguide
 		std::vector<int>								Dofs_Below_Subdomain, Block_Sizes;
 
 		std::vector<dealii::IndexSet> 					set;
-		TrilinosWrappers::SparsityPattern 				temporary_pattern, preconditioner_pattern;
+
 		bool											temporary_pattern_preped;
 
 
 		std::vector<IndexSet>							locally_relevant_dofs_all_processors;
 		IndexSet										UpperDofs, LowerDofs;
-		dealii::TrilinosWrappers::SparseMatrix* 		Preconditioner_Matrices;
+
 		ConditionalOStream 								pout;
 
 		TimerOutput 									timer;

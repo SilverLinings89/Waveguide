@@ -14,12 +14,16 @@
 #include <deal.II/grid/tria_iterator.h>
 #include <deal.II/grid/grid_tools.h>
 
+#include "RoundMeshGenerator.h"
 
 using namespace dealii;
 
-void RoundMeshGenerator::RoundMeshGenerator() {
+RoundMeshGenerator::RoundMeshGenerator(SpaceTransformation * in_ct) :
+        MaxDistX((GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In)*1.4/2.0),
+        MaxDistY((GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In)*1.4/2.0)
+        {
   Layers = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
-  origin(-1,-1,-1);
+  origin = Point<3>(-1,-1,-1);
   edges[0][0] = 2;
   edges[0][1] = 0;
   edges[0][2] = 0;
@@ -34,44 +38,45 @@ void RoundMeshGenerator::RoundMeshGenerator() {
 
   const std_cxx11::array< Tensor< 1, 3 >, 3 > edges2(edges);
 
-  subs(3);
+  subs.reserve(3);
   subs[0] = 1;
   subs[1] = 1;
   subs[2] = Layers;
+  ct = in_ct;
 
 }
 
-void RoundMeshGenerator::set_boundary_ids() {
+void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3> & tria) const {
   int counter = 0;
-  cell = p_triangulation->begin_active();
-  endc = p_triangulation->end();
-  p_triangulation->set_all_manifold_ids(0);
-  for (; cell!=endc; ++cell){
-    if (Distance2D(cell->center() ) < 0.25 ) {
-      cell->set_all_manifold_ids(1);
-      cell->set_manifold_id(1);
+  parallel::distributed::Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
+  endc2 = tria.end();
+  tria.set_all_manifold_ids(0);
+  for (; cell2!=endc2; ++cell2){
+    if (Distance2D(cell2->center() ) < 0.25 ) {
+      cell2->set_all_manifold_ids(1);
+      cell2->set_manifold_id(1);
     }
   }
   unsigned int man = 1;
 
-  p_triangulation->set_manifold (man, round_description);
+  tria.set_manifold (man, round_description);
 
-  cell = p_triangulation->begin_active();
+  cell2 = tria.begin_active();
 
-  for (; cell!=endc; ++cell){
-    if(cell->at_boundary()){
+  for (; cell2!=endc2; ++cell2){
+    if(cell2->at_boundary()){
       for(int j = 0; j<6; j++){
-        if(cell->face(j)->at_boundary()){
-          Point<3> ctr =cell->face(j)->center(true, false);
+        if(cell2->face(j)->at_boundary()){
+          Point<3> ctr =cell2->face(j)->center(true, false);
           if(System_Coordinate_in_Waveguide(ctr)){
             if(ctr(2) < 0) {
 
-              cell->face(j)->set_all_boundary_ids(11);
+              cell2->face(j)->set_all_boundary_ids(11);
               counter ++;
             }
 
             else {
-              cell->face(j)->set_all_boundary_ids(2);
+              cell2->face(j)->set_all_boundary_ids(2);
             }
           }
         }
@@ -81,6 +86,7 @@ void RoundMeshGenerator::set_boundary_ids() {
 }
 
 void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulation<3> * in_tria){
+
     const std_cxx11::array< Tensor< 1, 3 >, 3 > edges2(edges);
 
     GridGenerator::subdivided_parallelepiped<3,3>(* in_tria, origin, edges2, subs, false);
@@ -90,7 +96,7 @@ void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulat
     in_tria->refine_global(3);
 
     in_tria->signals.post_refinement.connect
-            (std_cxx11::bind (&Waveguide::set_boundary_ids,
+            (std_cxx11::bind (&RoundMeshGenerator::set_boundary_ids,
                               std_cxx11::cref(*this),
                               std_cxx11::ref(in_tria)));
 

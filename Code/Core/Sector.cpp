@@ -66,8 +66,8 @@ double Sector::getQ2 ( double z) {
 
 Tensor<2,3, double> Sector::TransformationTensorInternal (double in_x, double in_y, double z) {
 	if(z<0 || z>1) std::cout << "Falty implementation of internal Tensor calculation: z: " << z << std::endl;
-	double RadiusInMultiplyer = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/(2* r_0);
-	double RadiusOutMultiplyer = (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/(2* r_1);
+	double RadiusInMultiplyer = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/(2* r_0);
+	double RadiusOutMultiplyer = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/(2* r_1);
 
 	double temp = 1 / (RadiusInMultiplyer - 3*RadiusInMultiplyer*z*z + 2*RadiusInMultiplyer*z*z*z + 3*RadiusOutMultiplyer*z*z - 2*RadiusOutMultiplyer*z*z*z);
 	double zz = z*z;

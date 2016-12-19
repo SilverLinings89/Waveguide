@@ -25,7 +25,26 @@
 #include "Code/Core/SolutionWeight.cpp"
 #include "Code/OutputGenerators/Console/GradientTable.cpp"
 
+#include "Code/MeshGenerators/MeshGenerator.cpp"
+#include "Code/MeshGenerators/RoundMeshGenerator.cpp"
+#include "Code/MeshGenerators/SquareMeshGenerator.cpp"
+
+#include "Code/SpaceTransformations/SpaceTransformation.cpp"
+#include "Code/SpaceTransformations/InhomogenousTransformationRectangular.h"
+#include "Code/SpaceTransformations/InhomogenousTransformationCircular.h"
+#include "Code/SpaceTransformations/HomogenousTransformationCircular.cpp"
+#include "Code/SpaceTransformations/HomogenousTransformationRectangular.h"
+#include "Code/SpaceTransformations/DualProblemTransformationWrapper.h"
+
+#include "Code/OptimizationStrategies/Optimization.cpp"
+#include "Code/OptimizationStrategies/AdjointOptimization.cpp"
+#include "Code/OptimizationStrategies/FDOptimization.h"
+
 #include <deal.II/base/parameter_handler.h>
+#include "Code/OptimizationAlgorithm/OptimizationAlgorithm.h"
+#include "Code/OptimizationAlgorithm/OptimizationCG.h"
+#include "Code/OptimizationAlgorithm/OptimizationSteepestDescent.h"
+
 
 using namespace dealii;
 
@@ -50,13 +69,13 @@ int main (int argc, char *argv[])
     if(GlobalParams.Sc_Homogeneity) {
       st = new HomogenousTransformationCircular();
     } else {
-      st = new InhomogenousTransformationCircular();
+      // st = new InhomogenousTransformationRectangular();
     }
 	} else {
 	  if(GlobalParams.Sc_Homogeneity) {
-      st = new HomogenousTransformationRectangular();
+     // st = new HomogenousTransformationRectangular();
     } else {
-      st = new InhomogenousTransformationRectangular();
+     // st = new InhomogenousTransformationRectangular();
     }
 	}
 

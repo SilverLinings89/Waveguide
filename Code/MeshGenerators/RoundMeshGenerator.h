@@ -11,9 +11,22 @@
  * \author Pascal Kraft
  * \date 28.11.2016
  */
-class RoundMeshGenerator : MeshGenerator {
+class RoundMeshGenerator : public MeshGenerator {
 
-  void set_boundary_ids();
+  parallel::distributed::Triangulation<3>::active_cell_iterator cell, endc;
+  SpaceTransformation * ct;
+  unsigned int Layers;
+  Point<3> origin;
+  std_cxx11::array< Tensor< 1, 3 >, 3 > edges;
+  std::vector<unsigned int> subs;
+
+
+  const double MaxDistX;
+  const double MaxDistY;
+
+  RoundMeshGenerator(SpaceTransformation * in_ct);
+
+  void set_boundary_ids(parallel::distributed::Triangulation<3> &tria) const;
 
   /**
    * This function is intended to execute a global refinement of the mesh. This means that every cell will be refined in every direction (effectively multiplying the number of DOFs by 8). This version is the most expensive refinement possible and should be used with caution.
@@ -49,7 +62,7 @@ class RoundMeshGenerator : MeshGenerator {
    * This function is a helper during distributed mesh generation.
    *
    */
-  void set_boundary_ids() ;
+  void set_boundary_ids(parallel::distributed::Triangulation<3> &tria) const;
 
   /**
    * This function takes a triangulation object and prepares it for the further computations. It is intended to encapsulate all related work and is explicitely not const.

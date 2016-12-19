@@ -1,17 +1,17 @@
-#ifndef FDOptimization_CPP_
-#define FDOptimization_CPP_
+#ifndef AdjointOptimization_CPP_
+#define AdjointOptimization_CPP_
 
 using namespace dealii;
 
-FDOptimization::FDOptimization() {
+AdjointOptimization::AdjointOptimization() {
 
 }
 
-virtual void FDOptimization::run() {
+virtual void AdjointOptimization::run() {
 
 
 }
 
-#endif FDOptimization_CPP_
+#endif AdjointOptimization_CPP_
 
 

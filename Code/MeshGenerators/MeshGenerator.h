@@ -32,9 +32,9 @@ public:
 
   double z_min, z_max;
 
-  MeshGenerator(SpaceTransformation & in_ct);
+  virtual MeshGenerator(SpaceTransformation & in_ct) = 0;
 
-  virtual ~MeshGenerator();
+  virtual ~MeshGenerator() =0;
 
   /**
    * This function is intended to execute a global refinement of the mesh. This means that every cell will be refined in every direction (effectively multiplying the number of DOFs by 8). This version is the most expensive refinement possible and should be used with caution.
@@ -65,12 +65,6 @@ public:
    * \params position This value gives us the location to check for.
    */
   virtual bool phys_coordinate_in_waveguide(Point<3> position)=0;
-
-  /**
-   * This function is a helper during distributed mesh generation.
-   *
-   */
-  virtual void set_boundary_ids() =0;
 
   /**
    * This function takes a triangulation object and prepares it for the further computations. It is intended to encapsulate all related work and is explicitely not const.

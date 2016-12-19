@@ -6,56 +6,58 @@
  */
 
 /*
-	Numerical Integration over 2D sphere (disk) by product of
-	Gauss-type Quadratures. High-precision abscissas and weights are used.
+  Numerical Integration over 2D sphere (disk) by product of
+  Gauss-type Quadratures. High-precision abscissas and weights are used.
 
-	Project homepage: http://www.holoborodko.com/pavel/?page_id=1879
-	Contact e-mail:   pavel@holoborodko.com
+  Project homepage: http://www.holoborodko.com/pavel/?page_id=1879
+  Contact e-mail:   pavel@holoborodko.com
 
-	Copyright (c)2007-2010 Pavel Holoborodko
-	All rights reserved.
+  Copyright (c)2007-2010 Pavel Holoborodko
+  All rights reserved.
 
-	Redistribution and use in source and binary forms, with or without
-	modification, are permitted provided that the following conditions
-	are met:
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions
+  are met:
 
-	1. Redistributions of source code must retain the above copyright
-	notice, this list of conditions and the following disclaimer.
+  1. Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
 
-	2. Redistributions in binary form must reproduce the above copyright
-	notice, this list of conditions and the following disclaimer in the
-	documentation and/or other materials provided with the distribution.
+  2. Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
 
-	3. Redistributions of any form whatsoever must retain the following
-	acknowledgment:
-	"
+  3. Redistributions of any form whatsoever must retain the following
+  acknowledgment:
+  "
          This product includes software developed by Pavel Holoborodko
          Web: http://www.holoborodko.com/pavel/
          e-mail: pavel@holoborodko.com
 
-	"
+  "
 
-	4. This software cannot be, by any means, used for any commercial
-	purpose without the prior permission of the copyright holder.
+  4. This software cannot be, by any means, used for any commercial
+  purpose without the prior permission of the copyright holder.
 
-	Any of the above conditions can be waived if you get permission from
-	the copyright holder.
+  Any of the above conditions can be waived if you get permission from
+  the copyright holder.
 
-	THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
-	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-	ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
-	FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-	DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-	OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-	HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-	LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-	OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-	SUCH DAMAGE.
+  THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+  FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+  OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+  SUCH DAMAGE.
 */
 
+#ifndef QuadratureFormulaCircular_CPP
+#define QuadratureFormulaCircular_CPP
+
 #include <stdlib.h>
-#include "QuadratureFormulaCircle.h"
 
 /*
   Nodes for 2D integration over the sphere derived as a product of two Gaussian rules for:
@@ -472,82 +474,82 @@ static double A2048[2048]={0.17675191025456474678239387632E-5, 0.411443189497421
 
 /* Merge all together */
 typedef struct tagGSPHERE{
-	int n;
+  int n;
     double* r;
-	double* t;
-	double* q;
-	double* A;
-	double  B;
+  double* t;
+  double* q;
+  double* A;
+  double  B;
 }GSPHERE;
 
 static GSPHERE gsphere[] = {
-	{   1,	r1,		t1,		q1,		A1,		 3.1415926535897932384626434},
-	{   2,	r2,		t2,		q2,		A2,		 1.5707963267948966192313217},
-	{   3,	r3,		t3,		q3,		A3,		 1.0471975511965977461542145},
-	{   4,	r4,		t4,		q4,		A4,		 0.7853981633974483096156608},
-	{   5,	r5,		t5,		q5,		A5,		 0.6283185307179586476925287},
-	{   6,	r6,		t6,		q6,		A6,		 0.5235987755982988730771072},
-	{   7,	r7,		t7,		q7,		A7,		 0.4487989505128276054946633},
-	{   8,	r8,		t8,		q8,		A8,		 0.3926990816987241548078304},
-	{   9,	r9,		t9,		q9,		A9,		 0.3490658503988659153847382},
-	{  10,	r10,	t10,	q10,	A10,	 0.3141592653589793238462643},
-	{  11,	r11,	t11,	q11,	A11,	 0.2855993321445266580420585},
-	{  12,	r12,	t12,	q12,	A12,	 0.2617993877991494365385536},
-	{  13,	r13,	t13,	q13,	A13,	 0.2416609733530610183432803},
-	{  14,	r14,	t14,	q14,	A14,	 0.2243994752564138027473317},
-	{  15,	r15,	t15,	q15,	A15,	 0.2094395102393195492308429},
-	{  16,	r16,	t16,	q16,	A16,	 0.1963495408493620774039152},
-	{  17,	r17,	t17,	q17,	A17,	 0.1847995678582231316742731},
-	{  18,	r18,	t18,	q18,	A18,	 0.1745329251994329576923691},
-	{  19,	r19,	t19,	q19,	A19,	 0.1653469817678838546559286},
-	{  20,	r20,	t20,	q20,	A20,	 0.1570796326794896619231322},
-	{  21,	r21,	t21,	q21,	A21,	 0.1495996501709425351648878},
-	{  22,	r22,	t22,	q22,	A22,	 0.1427996660722633290210292},
-	{  23,	r23,	t23,	q23,	A23,	 0.1365909849386866625418541},
-	{  24,	r24,	t24,	q24,	A24,	 0.1308996938995747182692768},
-	{  25,	r25,	t25,	q25,	A25,	 0.1256637061435917295385057},
-	{  26,	r26,	t26,	q26,	A26,	 0.1208304866765305091716401},
-	{  27,	r27,	t27,	q27,	A27,	 0.1163552834662886384615794},
-	{  28,	r28,	t28,	q28,	A28,	 0.1121997376282069013736658},
-	{  29,	r29,	t29,	q29,	A29,	 0.1083307811582687323607808},
-	{  30,	r30,	t30,	q30,	A30,	 0.1047197551196597746154214},
-	{  31,	r31,	t31,	q31,	A31,	 0.1013416985028965560794401},
-	{  32,	r32,	t32,	q32,	A32,	 0.0981747704246810387019576},
-	{  33,	r33,	t33,	q33,	A33,	 0.0951997773815088860140195},
-	{  34,	r34,	t34,	q34,	A34,	0.92399783929111565837136570097E-1},
-	{  35,	r35,	t35,	q35,	A35,	0.89759790102565521098932668094E-1},
-	{  36,	r36,	t36,	q36,	A36,	0.87266462599716478846184538426E-1},
-	{  37,	r37,	t37,	q37,	A37,	0.84907909556480898336828199548E-1},
-	{  38,	r38,	t38,	q38,	A38,	0.82673490883941927327964299561E-1},
-	{  39,	r39,	t39,	q39,	A39,	0.80553657784353672781093420085E-1},
-	{  40,	r40,	t40,	q40,	A40,	0.78539816339744830961566084583E-1},
-	{  41,	r41,	t41,	q41,	A41,	0.76624211063165688742991302032E-1},
-	{  42,	r42,	t42,	q42,	A42,	0.74799825085471267582443890079E-1},
-	{  43,	r43,	t43,	q43,	A43,	0.73060294269530075313084729845E-1},
-	{  44,	r44,	t44,	q44,	A44,	0.71399833036131664510514622347E-1},
-	{  45,	r45,	t45,	q45,	A45,	0.69813170079773183076947630740E-1},
-	{  46,	r46,	t46,	q46,	A46,	0.68295492469343331270927030072E-1},
-	{  47,	r47,	t47,	q47,	A47,	0.66842396884889217839630710284E-1},
-	{  48,	r48,	t48,	q48,	A48,	0.65449846949787359134638403819E-1},
-	{  49,	r49,	t49,	q49,	A49,	0.64114135787546800784951905782E-1},
-	{  50,	r50,	t50,	q50,	A50,	0.62831853071795864769252867666E-1},
-	{  64,	r64,	t64,	q64,	A64,	0.49087385212340519350978802864E-1},
-	{ 128,	r128,	t128,	q128,	A128,	0.24543692606170259675489401432E-1},
-	{ 192,	r192,	t192,	q192,	A192,	0.16362461737446839783659600955E-1},
-	{ 256,	r256,	t256,	q256,	A256,	0.12271846303085129837744700716E-1},
-	{ 320,	r320,	t320,	q320,	A320,	0.98174770424681038701957605729E-2},
-	{ 448,	r448,	t448,	q448,	A448,	0.70124836017629313358541146949E-2},
-	{ 512,	r512,	t512,	q512,	A512,	0.61359231515425649188723503580E-2},
-	{ 576,	r576,	t576,	q576,	A576,	0.54541539124822799278865336516E-2},
-	{ 640,	r640,	t640,	q640,	A640,	0.49087385212340519350978802864E-2},
-	{ 704,	r704,	t704,	q704,	A704,	0.44624895647582290319071638967E-2},
-	{ 768,	r768,	t768,	q768,	A768,	0.40906154343617099459149002387E-2},
-	{ 832,	r832,	t832,	q832,	A832,	0.37759527086415784116137540665E-2},
-	{ 896,	r896,	t896,	q896,	A896,	0.35062418008814656679270573474E-2},
-	{ 960,	r960,	t960,	q960,	A960,	0.32724923474893679567319201909E-2},
-	{1024,	r1024,	t1024,	q1024,	A1024,	0.30679615757712824594361751790E-2},
-	{2048,	r2048,	t2048,	q2048,	A2048,	0.15339807878856412297180875895E-2},
-							};
+  {   1,  r1,   t1,   q1,   A1,    3.1415926535897932384626434},
+  {   2,  r2,   t2,   q2,   A2,    1.5707963267948966192313217},
+  {   3,  r3,   t3,   q3,   A3,    1.0471975511965977461542145},
+  {   4,  r4,   t4,   q4,   A4,    0.7853981633974483096156608},
+  {   5,  r5,   t5,   q5,   A5,    0.6283185307179586476925287},
+  {   6,  r6,   t6,   q6,   A6,    0.5235987755982988730771072},
+  {   7,  r7,   t7,   q7,   A7,    0.4487989505128276054946633},
+  {   8,  r8,   t8,   q8,   A8,    0.3926990816987241548078304},
+  {   9,  r9,   t9,   q9,   A9,    0.3490658503988659153847382},
+  {  10,  r10,  t10,  q10,  A10,   0.3141592653589793238462643},
+  {  11,  r11,  t11,  q11,  A11,   0.2855993321445266580420585},
+  {  12,  r12,  t12,  q12,  A12,   0.2617993877991494365385536},
+  {  13,  r13,  t13,  q13,  A13,   0.2416609733530610183432803},
+  {  14,  r14,  t14,  q14,  A14,   0.2243994752564138027473317},
+  {  15,  r15,  t15,  q15,  A15,   0.2094395102393195492308429},
+  {  16,  r16,  t16,  q16,  A16,   0.1963495408493620774039152},
+  {  17,  r17,  t17,  q17,  A17,   0.1847995678582231316742731},
+  {  18,  r18,  t18,  q18,  A18,   0.1745329251994329576923691},
+  {  19,  r19,  t19,  q19,  A19,   0.1653469817678838546559286},
+  {  20,  r20,  t20,  q20,  A20,   0.1570796326794896619231322},
+  {  21,  r21,  t21,  q21,  A21,   0.1495996501709425351648878},
+  {  22,  r22,  t22,  q22,  A22,   0.1427996660722633290210292},
+  {  23,  r23,  t23,  q23,  A23,   0.1365909849386866625418541},
+  {  24,  r24,  t24,  q24,  A24,   0.1308996938995747182692768},
+  {  25,  r25,  t25,  q25,  A25,   0.1256637061435917295385057},
+  {  26,  r26,  t26,  q26,  A26,   0.1208304866765305091716401},
+  {  27,  r27,  t27,  q27,  A27,   0.1163552834662886384615794},
+  {  28,  r28,  t28,  q28,  A28,   0.1121997376282069013736658},
+  {  29,  r29,  t29,  q29,  A29,   0.1083307811582687323607808},
+  {  30,  r30,  t30,  q30,  A30,   0.1047197551196597746154214},
+  {  31,  r31,  t31,  q31,  A31,   0.1013416985028965560794401},
+  {  32,  r32,  t32,  q32,  A32,   0.0981747704246810387019576},
+  {  33,  r33,  t33,  q33,  A33,   0.0951997773815088860140195},
+  {  34,  r34,  t34,  q34,  A34,  0.92399783929111565837136570097E-1},
+  {  35,  r35,  t35,  q35,  A35,  0.89759790102565521098932668094E-1},
+  {  36,  r36,  t36,  q36,  A36,  0.87266462599716478846184538426E-1},
+  {  37,  r37,  t37,  q37,  A37,  0.84907909556480898336828199548E-1},
+  {  38,  r38,  t38,  q38,  A38,  0.82673490883941927327964299561E-1},
+  {  39,  r39,  t39,  q39,  A39,  0.80553657784353672781093420085E-1},
+  {  40,  r40,  t40,  q40,  A40,  0.78539816339744830961566084583E-1},
+  {  41,  r41,  t41,  q41,  A41,  0.76624211063165688742991302032E-1},
+  {  42,  r42,  t42,  q42,  A42,  0.74799825085471267582443890079E-1},
+  {  43,  r43,  t43,  q43,  A43,  0.73060294269530075313084729845E-1},
+  {  44,  r44,  t44,  q44,  A44,  0.71399833036131664510514622347E-1},
+  {  45,  r45,  t45,  q45,  A45,  0.69813170079773183076947630740E-1},
+  {  46,  r46,  t46,  q46,  A46,  0.68295492469343331270927030072E-1},
+  {  47,  r47,  t47,  q47,  A47,  0.66842396884889217839630710284E-1},
+  {  48,  r48,  t48,  q48,  A48,  0.65449846949787359134638403819E-1},
+  {  49,  r49,  t49,  q49,  A49,  0.64114135787546800784951905782E-1},
+  {  50,  r50,  t50,  q50,  A50,  0.62831853071795864769252867666E-1},
+  {  64,  r64,  t64,  q64,  A64,  0.49087385212340519350978802864E-1},
+  { 128,  r128, t128, q128, A128, 0.24543692606170259675489401432E-1},
+  { 192,  r192, t192, q192, A192, 0.16362461737446839783659600955E-1},
+  { 256,  r256, t256, q256, A256, 0.12271846303085129837744700716E-1},
+  { 320,  r320, t320, q320, A320, 0.98174770424681038701957605729E-2},
+  { 448,  r448, t448, q448, A448, 0.70124836017629313358541146949E-2},
+  { 512,  r512, t512, q512, A512, 0.61359231515425649188723503580E-2},
+  { 576,  r576, t576, q576, A576, 0.54541539124822799278865336516E-2},
+  { 640,  r640, t640, q640, A640, 0.49087385212340519350978802864E-2},
+  { 704,  r704, t704, q704, A704, 0.44624895647582290319071638967E-2},
+  { 768,  r768, t768, q768, A768, 0.40906154343617099459149002387E-2},
+  { 832,  r832, t832, q832, A832, 0.37759527086415784116137540665E-2},
+  { 896,  r896, t896, q896, A896, 0.35062418008814656679270573474E-2},
+  { 960,  r960, t960, q960, A960, 0.32724923474893679567319201909E-2},
+  {1024,  r1024,  t1024,  q1024,  A1024,  0.30679615757712824594361751790E-2},
+  {2048,  r2048,  t2048,  q2048,  A2048,  0.15339807878856412297180875895E-2},
+              };
 
 static const int GSPHERESIZE = sizeof(gsphere)/sizeof(gsphere[0]);
 
@@ -555,59 +557,14 @@ static const int GSPHERESIZE = sizeof(gsphere)/sizeof(gsphere[0]);
 /* 2D Numerical computation of int(f(x,y), (x-Xc)^2+(y-Yc)^2<=R^2) by Gauss-type n-th order high precision quadrature
    Cubature uses n^2 points and exact on all x^i*y^j with i+j<=2*n-1
 
-	[in]n       - quadrature order
-	[in]f       - integrand
-	[in]data    - pointer on user-defined data which will
-				  be passed to f every time it called (as third parameter).
-	[in]R       - radius of the sphere
-	[in](Xc,Yc) - center of the sphere. Unit disk is R=1, Xc=Yc=0.
+  [in]n       - quadrature order
+  [in]f       - integrand
+  [in]data    - pointer on user-defined data which will
+          be passed to f every time it called (as third parameter).
+  [in]R       - radius of the sphere
+  [in](Xc,Yc) - center of the sphere. Unit disk is R=1, Xc=Yc=0.
 
 return:
-		-computed integral value or -1.0 if n order quadrature is not supported
+    -computed integral value or -1.0 if n order quadrature is not supported
 */
-std::complex<double> gauss_product_2D_sphere(double z, int n, std::complex<double> (*f)(double,double,double), double R, double Xc, double Yc)
-{
-	double* r = NULL;
-	double* t = NULL;
-	double* q = NULL;
-	double* A = NULL;
-	double  B;
-	double x, y;
-	std::complex<double> s(0.0, 0.0);
-
-	int i,j;
-
-	/* Load appropriate predefined table */
-	for (i = 0; i<GSPHERESIZE;i++)
-	{
-		if(n==gsphere[i].n)
-		{
-			r = gsphere[i].r;
-			t = gsphere[i].t;
-			q = gsphere[i].q;
-			A = gsphere[i].A;
-			B = gsphere[i].B;
-			break;
-		}
-	}
-
-	if (NULL==r) return -1.0;
-
-	for (i=0;i<n;i++)
-	{
-		for (j=0;j<n;j++)
-		{
-			x = r[j]*q[i];
-			y = r[j]*t[i];
-
-			s += A[j]*f(R*x-Xc,R*y-Yc,z);
-		}
-	}
-
-	s *= R*R*B;
-
-	return s;
-}
-
-
-
+#endif

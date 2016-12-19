@@ -7,6 +7,11 @@
 
 #include "../Core/Waveguide.h"
 #include "../Helpers/Parameters.h"
+#include "../SpaceTransformations/SpaceTransformation.h"
+#include "../MeshGenerators/MeshGenerator.h"
+#include "../OptimizationAlgorithm/OptimizationAlgorithm.h"
+#include "../OptimizationAlgorithm/OptimizationCG.h"
+#include "../OptimizationAlgorithm/OptimizationSteepestDescent.h"
 
 using namespace dealii;
 
@@ -33,20 +38,17 @@ class Optimization {
 
 		Waveguide waveguide;
 
-		SpaceTransformation st;
+		SpaceTransformation * st;
 
-		MeshGenerator mg;
+		MeshGenerator * mg;
 
 		OptimizationAlgorithm  * oa;
-
-		virtual Optimization( Parameters , Waveguide  & );
-
-		virtual ~Optimization();
 
 		/**
 		 * This function is the core implementation of an optimization algorithm. Currently it is very fundamental in its technical prowess which can be improved upon in later versions. Essentially, it calculates the signal quality for a configurations and for small steps in every one of the dofs. After that, the optimization-step is estimated based on difference-quotients. Following this step, a large step is computed based upon the approximation of the gradient of the signal-quality functional and the iteration starts anew. If a decrease in quality is detected, the optimization-step is undone and the step-width is reduced.
 		 * This function controls both the Waveguide- and the Waveguide-structure object.
 		 */
+
 		virtual void run() = 0;
 
 };

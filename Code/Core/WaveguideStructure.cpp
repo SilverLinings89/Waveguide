@@ -17,42 +17,42 @@ void WaveguideStructure::estimate_and_initialize() {
 	highest = 1.0;
 	lowest = 1.0;
 	if(sectors == 1) {
-		Sector temp12(true, true, -parameters.PRM_M_R_ZLength/2, parameters.PRM_M_R_ZLength/2 );
+		Sector temp12(true, true, -parameters.M_R_ZLength/2, parameters.M_R_ZLength/2 );
 		case_sectors.reserve(1);
 		case_sectors.push_back(temp12);
 		case_sectors[0].set_properties_force(m_0, m_1, r_0, r_1, v_0, v_1);
 	} else {
 		case_sectors.reserve(sectors);
 		double length = Sector_Length();
-		Sector temp(true, false, -parameters.PRM_M_R_ZLength/(2.0), -parameters.PRM_M_R_ZLength/2.0 + length );
+		Sector temp(true, false, -parameters.M_R_ZLength/(2.0), -parameters.M_R_ZLength/2.0 + length );
 		case_sectors.push_back(temp);
-		for(int  i = 1; i < sectors - GlobalParams.PRM_M_BC_XYout-1; i++) {
-			Sector temp2( false, false, -parameters.PRM_M_R_ZLength/(2.0) + length*(1.0 *i), -parameters.PRM_M_R_ZLength/(2.0) + length*(i + 1.0) );
+		for(int  i = 1; i < sectors - GlobalParams.M_BC_Zplus-1; i++) {
+			Sector temp2( false, false, -parameters.M_R_ZLength/(2.0) + length*(1.0 *i), -parameters.M_R_ZLength/(2.0) + length*(i + 1.0) );
 			case_sectors.push_back(temp2);
 		}
-		int t = sectors - GlobalParams.PRM_M_BC_XYout-1;
-		Sector temp3( false, true, -parameters.PRM_M_R_ZLength/(2.0) + length*(1.0 *t), -parameters.PRM_M_R_ZLength/(2.0) + length*(t + 1.0) );
+		int t = sectors - GlobalParams.M_BC_Zplus-1;
+		Sector temp3( false, true, -parameters.M_R_ZLength/(2.0) + length*(1.0 *t), -parameters.M_R_ZLength/(2.0) + length*(t + 1.0) );
 		case_sectors.push_back(temp3);
-		for(int  i = sectors - GlobalParams.PRM_M_BC_XYout ; i < sectors ; i++) {
-			Sector temp4( true, true, -parameters.PRM_M_R_ZLength/(2.0) + length*i, -parameters.PRM_M_R_ZLength/(2.0) + length*(i + 1.0) );
+		for(int  i = sectors - GlobalParams.M_BC_Zplus ; i < sectors ; i++) {
+			Sector temp4( true, true, -parameters.M_R_ZLength/(2.0) + length*i, -parameters.M_R_ZLength/(2.0) + length*(i + 1.0) );
 			case_sectors.push_back(temp4);
 		}
 
-		double length_rel = 1.0/((double)(sectors-GlobalParams.PRM_M_BC_XYout));
+		double length_rel = 1.0/((double)(sectors-GlobalParams.M_BC_Zplus));
 		case_sectors[0].set_properties_force(m_0, InterpolationPolynomialZeroDerivative(length_rel, m_0, m_1), r_0, InterpolationPolynomialZeroDerivative(length_rel, r_0, r_1) , 0, InterpolationPolynomialDerivative(length_rel, m_0, m_1, 0, 0)) ;
-		for(int  i = 1; i < sectors -GlobalParams.PRM_M_BC_XYout; i++) {
+		for(int  i = 1; i < sectors -GlobalParams.M_BC_Zplus; i++) {
 			double z_l = i*length_rel;
 			double z_r = (i+1)*length_rel;
 			case_sectors[i].set_properties_force(InterpolationPolynomialZeroDerivative(z_l, m_0, m_1), InterpolationPolynomialZeroDerivative(z_r, m_0, m_1), InterpolationPolynomialZeroDerivative(z_l, r_0, r_1), InterpolationPolynomialZeroDerivative(z_r, r_0, r_1) , InterpolationPolynomialDerivative(z_l, m_0, m_1, 0, 0), InterpolationPolynomialDerivative(z_r, m_0, m_1, 0, 0)) ;
 		}
-		for(int  i = sectors -GlobalParams.PRM_M_BC_XYout; i < sectors; i++) {
+		for(int  i = sectors -GlobalParams.M_BC_Zplus; i < sectors; i++) {
 			case_sectors[i].set_properties_force(m_1, m_1, r_1, r_1, 0, 0) ;
 		}
 	}
 
-	for (unsigned int i = 0;  i < NFreeDofs(); ++ i) {
-		InitialDofs[i] = this->get_dof(i, true);
-	}
+	// for (unsigned int i = 0;  i < NFreeDofs(); ++ i) {
+	// 	InitialDofs[i] = this->get_dof(i, true);
+	//}
 
 	Print();
 }
@@ -71,15 +71,6 @@ void WaveguideStructure::Print () {
 			std::cout << "-------------------------------------------" << std::endl;
 		}
 	}
-}
-
-dealii::Vector<double> WaveguideStructure::Dofs() {
-	dealii::Vector<double> ret;
-	ret.reinit(this->NFreeDofs());
-	for (unsigned int i = 0;  i < NFreeDofs(); ++ i) {
-		ret[i] = this->get_dof(i, true);
-	}
-	return ret;
 }
 
 double WaveguideStructure::estimate_m(double z) {
@@ -190,7 +181,7 @@ void WaveguideStructure::set_dof (int i, double val, bool free) {
 				case_sectors[0].v_0	= val;
 			}
 		} else {
-			if(i >= 3*GlobalParams.PRM_M_W_Sectors) {
+			if(i >= 3*GlobalParams.M_W_Sectors) {
 				if(temp == 0) {
 					case_sectors[case_sectors.size() -1 ].m_1	= val;
 				}
@@ -220,33 +211,33 @@ void WaveguideStructure::set_dof (int i, double val, bool free) {
 
 WaveguideStructure::WaveguideStructure(const Parameters &in_params)
 		:
-		epsilon_K(in_params.PRM_M_W_EpsilonIn),
-		epsilon_M(in_params.PRM_M_W_EpsilonOut),
-		sectors(in_params.PRM_M_W_Sectors),
-		deltaY(in_params.PRM_M_W_Delta),
-		r_0(in_params.PRM_M_C_RadiusIn),
-		r_1(in_params.PRM_M_C_RadiusOut),
-		v_0(in_params.PRM_M_C_TiltIn),
-		v_1(in_params.PRM_M_C_TiltOut),
-		m_0(in_params.PRM_M_W_Delta/2.0),
-		m_1(in_params.PRM_M_W_Delta/(-2.0)),
+		epsilon_K(in_params.M_W_epsilonin),
+		epsilon_M(in_params.M_W_epsilonout),
+		sectors(in_params.M_W_Sectors),
+		deltaY(in_params.M_W_Delta),
+		r_0(in_params.M_C_Dim1In),
+		r_1(in_params.M_C_Dim1Out),
+		v_0(0),
+		v_1(0),
+		m_0(in_params.M_W_Delta/2.0),
+		m_1(in_params.M_W_Delta/(-2.0)),
 		parameters(in_params),
 		InitialQuality(0.0)
 {
 	//case_sectors = Sector[sectors];
-	InitialDofs.reinit(3*(sectors-GlobalParams.PRM_M_BC_XYout) -3);
+	InitialDofs.reinit(3*(sectors-GlobalParams.M_BC_Zplus) -3);
 }
 
 double WaveguideStructure::Sector_Length() {
-	return GlobalParams.PRM_M_R_ZLength / (GlobalParams.PRM_M_W_Sectors - GlobalParams.PRM_M_BC_XYout);
+	return GlobalParams.M_R_ZLength / (GlobalParams.M_W_Sectors - GlobalParams.M_BC_Zplus);
 }
 
 double WaveguideStructure::Layer_Length() {
-	return Sector_Length() * ((double)GlobalParams.PRM_M_W_Sectors) / ((double) GlobalParams.MPI_Size);
+	return Sector_Length() * ((double)GlobalParams.M_W_Sectors) / ((double) GlobalParams.NumberProcesses);
 }
 
 double WaveguideStructure::System_Length() {
-	return GlobalParams.PRM_M_R_ZLength + GlobalParams.PRM_M_BC_XYout * Sector_Length();
+	return GlobalParams.M_R_ZLength + GlobalParams.M_BC_Zplus * Sector_Length();
 }
 
 std::pair<int, double> WaveguideStructure::Z_to_Sector_and_local_z(double in_z) {
@@ -254,14 +245,14 @@ std::pair<int, double> WaveguideStructure::Z_to_Sector_and_local_z(double in_z) 
 	double total_length = System_Length();
 	std::pair<int, double> ret;
 
-	ret.first = std::floor((in_z + GlobalParams.PRM_M_R_ZLength/2.0 ) / sector_length);
-	ret.second = (in_z + GlobalParams.PRM_M_R_ZLength/2.0  - (ret.first * sector_length)) / sector_length;
+	ret.first = std::floor((in_z + GlobalParams.M_R_ZLength/2.0 ) / sector_length);
+	ret.second = (in_z + GlobalParams.M_R_ZLength/2.0  - (ret.first * sector_length)) / sector_length;
 
 	if(ret.first == -1) {
 		ret.first = 0;
 		ret.second = 0.0;
 
-		if(abs(( GlobalParams.PRM_M_R_ZLength / 2.0 ) - in_z ) > 0.0001) {
+		if(abs(( GlobalParams.M_R_ZLength / 2.0 ) - in_z ) > 0.0001) {
 			deallog << "Internal Bug in coding. See WaveguideStructure.cpp - Z_to_Sector_and_local_z (Case 1)." << std::endl;
 		}
 	}
@@ -269,7 +260,7 @@ std::pair<int, double> WaveguideStructure::Z_to_Sector_and_local_z(double in_z) 
 	if(ret.first >= sectors) {
 		ret.first = sectors - 1;
 		ret.second = 1.0;
-		if(abs(( GlobalParams.PRM_M_R_ZLength / 2.0 ) + in_z - total_length ) > 0.0001) {
+		if(abs(( GlobalParams.M_R_ZLength / 2.0 ) + in_z - total_length ) > 0.0001) {
 			deallog << "Internal Bug in coding. See WaveguideStructure.cpp - Z_to_Sector_and_local_z (Case 2)." << std::endl;
 		}
 	}
@@ -280,13 +271,13 @@ int WaveguideStructure::Z_to_Layer(double in_z) {
 	double sector_length = Layer_Length();
 	int ret;
 
-	ret = std::floor((in_z + GlobalParams.PRM_M_R_ZLength/2.0 ) / sector_length);
+	ret = std::floor((in_z + GlobalParams.M_R_ZLength/2.0 ) / sector_length);
 	if(ret == -1) {
 		ret = 0;
 	}
 
-	if(ret >= GlobalParams.MPI_Size) {
-		ret = GlobalParams.MPI_Size - 1;
+	if(ret >= GlobalParams.NumberProcesses) {
+		ret = GlobalParams.NumberProcesses - 1;
 	}
 
 	return ret;
@@ -311,18 +302,5 @@ void WaveguideStructure::WriteConfigurationToConsole() {
 
 }
 
-unsigned int WaveguideStructure::NFreeDofs() {
-	return 3*(sectors-GlobalParams.PRM_M_BC_XYout) -3;
-}
 
-unsigned int WaveguideStructure::NDofs() {
-	return 3*sectors + 3;
-}
-
-bool WaveguideStructure::IsDofFree(int in_dof) {
-	bool ret = true;
-	if(in_dof < 3) ret = false;
-	if(in_dof >= 3*(sectors-GlobalParams.PRM_M_BC_XYout) ) ret = false;
-	return ret;
-}
 #endif
