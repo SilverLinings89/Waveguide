@@ -8,12 +8,13 @@ This is a work in progress and not currently ready for general usage. Please ref
 
 # Naming convenctions
 
-| Expression | Meaning                                                                                                     |
-|------------|-------------------------------------------------------------------------------------------------------------|
+| Expression |Meaning     |
+|------------|------------------------------------------------------------------------|
 | Sector     | A sector is an expression used in shape modeling and refers to a subset of the area between the connectors. |
-| Layer      | used in the implementation and represents the part of the triangulation owned by one Process.               |
-| Connector  | The structure in the two halfspaces towards z->\infty and z->-\infty                                        |
-| ...        | ...                                                                                                         |
+| Layer      | used in the implementation and represents the part of the triangulation owned by one Process.  |
+| Connector  | The structure in the two halfspaces towards z->\infty and z->-\infty    |
+| Space Transformation | The space transformation always also includes the computation of PML or other ABCs. it does not however involve the multiplication with the actual material property. This can be done at the point of usage. |
+| ... | ... |
 
 # Thanks
 
