@@ -3,15 +3,17 @@
 
 using namespace dealii;
 
+#include "AdjointOptimization.h"
+
 AdjointOptimization::AdjointOptimization() {
 
 }
 
-virtual void AdjointOptimization::run() {
+void AdjointOptimization::run() {
 
 
 }
 
-#endif AdjointOptimization_CPP_
+#endif
 
 

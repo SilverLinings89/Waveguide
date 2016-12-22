@@ -11,6 +11,8 @@
 #include "../Core/Waveguide.h"
 
 using namespace dealii;
+
+class Waveguide;
 /**
  * \class SpaceTransformation
  * \brief The SpaceTransformation class encapsulates the coordinate transformation used in the simulation.
@@ -233,5 +235,4 @@ public:
 
 };
 
-#endif SPACETRANSFORMATION_H_
- 
+#endif

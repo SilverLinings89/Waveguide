@@ -27,6 +27,8 @@ enum SolverOptions {
     GMRES, MINRES, UMFPACK
 };
 
+const static std::string PrecOptionNames[] = {"Sweeping","Amesos_Lapack","Amesos_Scalapack","Amesos_Klu","Amesos_Umfpack","Amesos_Pardiso","Amesos_Taucs","Amesos_Superlu","Amesos_Superludist","Amesos_Dscpack","Amesos_Mumps"};
+
 enum PreconditionerOptions {
   Sweeping,Amesos_Lapack,Amesos_Scalapack,Amesos_Klu,Amesos_Umfpack,Amesos_Pardiso,Amesos_Taucs,Amesos_Superlu,Amesos_Superludist,Amesos_Dscpack,Amesos_Mumps
 };

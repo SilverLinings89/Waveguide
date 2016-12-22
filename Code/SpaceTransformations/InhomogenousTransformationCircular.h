@@ -15,5 +15,5 @@ class InhomogenousTransformationCircular : public SpaceTransformation {
 
 };
 
-#endif InhomogenousTransformationCircularFlag
+#endif
  

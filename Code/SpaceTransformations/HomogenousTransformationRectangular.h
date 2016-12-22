@@ -15,5 +15,5 @@ class HomogenousTransformationRectangular : public SpaceTransformation {
 
 };
 
-#endif HomogenousTransformationRectangularFlag
+#endif
  

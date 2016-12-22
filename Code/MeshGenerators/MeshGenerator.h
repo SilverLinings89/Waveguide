@@ -32,7 +32,7 @@ public:
 
   double z_min, z_max;
 
-  virtual MeshGenerator(SpaceTransformation & in_ct) = 0;
+  MeshGenerator(SpaceTransformation & in_ct);
 
   virtual ~MeshGenerator() =0;
 
@@ -75,4 +75,4 @@ public:
 };
 
 
-#endif MESHGENERATOR_H_
+#endif

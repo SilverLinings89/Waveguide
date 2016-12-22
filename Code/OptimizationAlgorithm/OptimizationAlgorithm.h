@@ -36,4 +36,4 @@ public:
 
 };
 
-#endif OptimizationAlgorithm_H_
+#endif

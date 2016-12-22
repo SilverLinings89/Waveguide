@@ -23,4 +23,4 @@ class OptimizationCG : public OptimizationAlgorithm {
 
 };
 
-#endif OptimizationCG_H_
+#endif

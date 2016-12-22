@@ -317,7 +317,7 @@ class Waveguide
 		/**
 		 * While the solver runs, this function performs an action on the residual. In the most common use case this action is to print it to the console or to push it to some data stream.
 		 */
-		SolverControl::State residual_tracker(unsigned int Iteration, double resiudal, dealii::TrilinosWrappers::MPI::Vector vec);
+		SolverControl::State residual_tracker(unsigned int Iteration, double resiudal, dealii::TrilinosWrappers::MPI::BlockVector vec);
 
 		/**
 		 * This function encapsulates a library call for 2D numeric integration over a circle with given properties. It is included that this function calls evaluate_for_Position(x,y,z)
@@ -339,7 +339,7 @@ class Waveguide
 
 		parallel::distributed::Triangulation<3>     triangulation;
 
-		dealii::TrilinosWrappers::MPI::Vector                   system_rhs;
+		dealii::TrilinosWrappers::MPI::BlockVector                   system_rhs;
 
 		TrilinosWrappers::BlockSparseMatrix          system_matrix;
 
@@ -371,7 +371,7 @@ class Waveguide
 
 		//, triangulation_real;
 		//, dof_handler_real;
-		dealii::TrilinosWrappers::MPI::Vector										solution, EstimatedSolution, ErrorOfSolution ;
+		dealii::TrilinosWrappers::MPI::BlockVector										solution, EstimatedSolution, ErrorOfSolution ;
 		IndexSet										locally_owned_dofs, locally_relevant_dofs, locally_active_dofs, extended_relevant_dofs;
 		std::vector<IndexSet>							locally_relevant_dofs_per_subdomain;
 
@@ -381,7 +381,7 @@ class Waveguide
 		ConstraintMatrix								hanging_global;
 
 		dealii::TrilinosWrappers::MPI::BlockVector										storage;
-		dealii::TrilinosWrappers::MPI::Vector										temp_storage;
+		dealii::TrilinosWrappers::MPI::BlockVector										temp_storage;
 		bool											is_stored;
 		Vector<double>									preconditioner_rhs;
 

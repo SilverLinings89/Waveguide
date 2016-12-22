@@ -24,9 +24,10 @@ class RoundMeshGenerator : public MeshGenerator {
   const double MaxDistX;
   const double MaxDistY;
 
+public:
   RoundMeshGenerator(SpaceTransformation * in_ct);
 
-  void set_boundary_ids(parallel::distributed::Triangulation<3> &tria) const;
+  void set_boundary_ids(parallel::distributed::Triangulation<3> &tria) ;
 
   /**
    * This function is intended to execute a global refinement of the mesh. This means that every cell will be refined in every direction (effectively multiplying the number of DOFs by 8). This version is the most expensive refinement possible and should be used with caution.
@@ -72,4 +73,4 @@ class RoundMeshGenerator : public MeshGenerator {
 
 };
 
-#endif RoundMeshGenerator_H_
+#endif

@@ -56,28 +56,30 @@ int main (int argc, char *argv[])
 
 	MPI_Comm * mpi_primal, * mpi_dual;
 
-	MeshGenerator * mg;
-	if(GlobalParams.M_C_Shape == ConnectorType::Circle ){
-	  mg = new RoundMeshGenerator();
-	} else {
-	  mg = new SquareMeshGenerator();
-	}
-
 	SpaceTransformation * st;
 
-	if(GlobalParams.M_C_Shape == ConnectorType::Circle){
+  if(GlobalParams.M_C_Shape == ConnectorType::Circle){
     if(GlobalParams.Sc_Homogeneity) {
       st = new HomogenousTransformationCircular();
     } else {
       // st = new InhomogenousTransformationRectangular();
     }
-	} else {
-	  if(GlobalParams.Sc_Homogeneity) {
+  } else {
+    if(GlobalParams.Sc_Homogeneity) {
      // st = new HomogenousTransformationRectangular();
     } else {
      // st = new InhomogenousTransformationRectangular();
     }
+  }
+
+	MeshGenerator * mg;
+	if(GlobalParams.M_C_Shape == ConnectorType::Circle ){
+	  mg = new RoundMeshGenerator(st );
+	} else {
+	  mg = new SquareMeshGenerator(st);
 	}
+
+
 
 	SpaceTransformation * dst;
 

@@ -15,5 +15,5 @@ class InhomogenousTransformationRectangular : public SpaceTransformation {
 
 };
 
-#endif InhomogenousTransformationRectangleFlag
+#endif
  

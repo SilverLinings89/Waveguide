@@ -46,7 +46,7 @@ RoundMeshGenerator::RoundMeshGenerator(SpaceTransformation * in_ct) :
 
 }
 
-void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3> & tria) const {
+void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3> & tria) {
   int counter = 0;
   parallel::distributed::Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
   endc2 = tria.end();
@@ -224,4 +224,4 @@ bool RoundMeshGenerator::phys_coordinate_in_waveguide(Point<3,double> in_positio
   return  this->math_coordinate_in_waveguide(ct->phys_to_math(in_position));
 }
 
-#endif RoundMeshGeneratorCppFlag
+#endif

@@ -23,4 +23,4 @@ class OptimizationSteepestDescent : public OptimizationAlgorithm {
 
 };
 
-#endif OptimizationSD_H_
+#endif

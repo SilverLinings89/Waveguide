@@ -245,7 +245,7 @@ void Waveguide::setup_system ()
 
   i_sys_owned.reserve(Layers);
 
-  for(int i = 0; i < Layers; i++) {
+  for(unsigned int i = 0; i < Layers; i++) {
     int size = Block_Sizes[i];
     bool local = (i == rank);
     IndexSet temp(size);
@@ -263,7 +263,7 @@ void Waveguide::setup_system ()
   i_prec_odd_writable.reserve(Layers);
 
 
-  for(int i = 0; i < Layers; i++) {
+  for(unsigned  int i = 0; i < Layers; i++) {
     int size = Block_Sizes[i];
     bool even_row_owned = false;
     bool even_row_writable = false;
@@ -297,7 +297,7 @@ void Waveguide::setup_system ()
     i_prec_even_writable[i] = erw;
   }
 
-  for(int i = 0; i < Layers; i++) {
+  for(unsigned  int i = 0; i < Layers; i++) {
     int size = Block_Sizes[i];
     bool odd_row_owned = false;
     bool odd_row_writable = false;
@@ -591,16 +591,16 @@ void Waveguide::reinit_systemmatrix() {
 void Waveguide::reinit_rhs () {
 	// std::cout << "Reinit rhs for p " << GlobalParams.MPI_Rank << std::endl;
 
-	system_rhs.reinit(locally_owned_dofs, mpi_comm);
+	system_rhs.reinit(i_sys_owned, mpi_comm);
 
 	preconditioner_rhs.reinit(dof_handler.n_dofs());
 
 }
 
 void Waveguide::reinit_solution() {
-	solution.reinit(locally_owned_dofs, mpi_comm);
-	EstimatedSolution.reinit(locally_owned_dofs, mpi_comm);
-	ErrorOfSolution.reinit(locally_owned_dofs, mpi_comm);
+	solution.reinit(i_sys_owned, mpi_comm);
+	EstimatedSolution.reinit(i_sys_owned, mpi_comm);
+	ErrorOfSolution.reinit(i_sys_owned, mpi_comm);
 }
 
 void Waveguide::reinit_cell_weights() {
@@ -1078,7 +1078,7 @@ void Waveguide::solve () {
 	solver_control.log_frequency(1);
 	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
-	if(GlobalParams.So_Solver == "GMRES") {
+	if(GlobalParams.So_Solver == SolverOptions::GMRES) {
 		int mindof = locally_owned_dofs.nth_index_in_set(0);
 		for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++ ) {
 			solution[mindof + i] = EstimatedSolution[mindof + i];
@@ -1087,7 +1087,7 @@ void Waveguide::solve () {
 
 		// dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData( GlobalParams.PRM_S_GMRESSteps) );
 
-		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData(30) );
+		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData(30) );
 		
 		// std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
 
@@ -1143,9 +1143,9 @@ void Waveguide::solve () {
 		pout << "Norm of the solution: " << solution.l2_norm() << std::endl;
 	}
 
-	if(GlobalParams.So_Solver == "UMFPACK") {
+	if(GlobalParams.So_Solver == SolverOptions::UMFPACK) {
 		SolverControl sc2(2,false,false);
-		TrilinosWrappers::SolverDirect temp_s(sc2, TrilinosWrappers::SolverDirect::AdditionalData(false, GlobalParams.So_Preconditioner));
+		TrilinosWrappers::SolverDirect temp_s(sc2, TrilinosWrappers::SolverDirect::AdditionalData(false, PrecOptionNames[GlobalParams.So_Preconditioner]));
 		// temp_s.solve(system_matrix, solution, system_rhs);
 	}
 
@@ -1176,15 +1176,15 @@ void Waveguide::output_results ( bool details )
 
 	//solution.compress(VectorOperation::unknown);
 
+	//TODO: Here the second arguments need a special vector of index sets because we are no longer just using the locally owned vectors, for whom we already have a block shape, but the locally relevant indices which doesnt exist yet.
 
-
-	TrilinosWrappers::MPI::Vector solution_output(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
+	TrilinosWrappers::MPI::BlockVector solution_output(i_sys_owned, i_sys_owned, mpi_comm);
 	solution_output = solution;
 
-	TrilinosWrappers::MPI::Vector estimate_output(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
+	TrilinosWrappers::MPI::BlockVector estimate_output(i_sys_owned, i_sys_owned, mpi_comm);
 	estimate_output = EstimatedSolution;
 
-	TrilinosWrappers::MPI::Vector error_output(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
+	TrilinosWrappers::MPI::BlockVector error_output(i_sys_owned, i_sys_owned, mpi_comm);
 	error_output = ErrorOfSolution;
 
 
@@ -1334,7 +1334,7 @@ void Waveguide::rerun ()
 }
 
 
-SolverControl::State Waveguide::residual_tracker(unsigned int Iteration, double residual, dealii::TrilinosWrappers::MPI::Vector vec) {
+SolverControl::State Waveguide::residual_tracker(unsigned int Iteration, double residual, dealii::TrilinosWrappers::MPI::BlockVector vec) {
     
     struct timeval tp;
     gettimeofday(&tp, NULL);

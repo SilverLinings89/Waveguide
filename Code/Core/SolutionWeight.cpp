@@ -5,8 +5,8 @@ template <int dim>
 double SolutionWeight<dim>::value (const Point<dim> &p, const unsigned int ) const
 {
 	double value = Distance2D(p);
-	if(value < (GlobalParams.PRM_M_C_RadiusIn + GlobalParams.PRM_M_C_RadiusOut)/2.0){
-		if(p[2] < GlobalParams.PRM_M_R_ZLength/2.0)
+	if(value < (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0){
+		if(p[2] < GlobalParams.M_R_ZLength/2.0)
 		{
 			return 1.0;
 		} else {

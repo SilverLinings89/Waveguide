@@ -29,7 +29,7 @@ PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int
 		others = in_others;
 		IndexSet elements (own+others);
 		elements.add_range(0,own+others);
-		solver = new TrilinosWrappers::SolverDirect(s, TrilinosWrappers::SolverDirect::AdditionalData(false, GlobalParams.So_Preconditioner));
+		solver = new TrilinosWrappers::SolverDirect(s, TrilinosWrappers::SolverDirect::AdditionalData(false, PrecOptionNames[GlobalParams.So_Preconditioner]));
 		indices = new int[in_locally_owned_dofs.n_elements()];
 		sweepable = in_locally_owned_dofs.n_elements();
 		for(unsigned int i = 0; i < sweepable; i++){
@@ -38,7 +38,7 @@ PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int
    }
 
 
-void PreconditionerSweeping::Prepare ( TrilinosWrappers::MPI::Vector & inp) {
+void PreconditionerSweeping::Prepare ( TrilinosWrappers::MPI::BlockVector & inp) {
 	boundary.reinit(own, false);
 	for(int i = 0; i<own; i++) {
 		boundary[i] = inp[locally_owned_dofs.nth_index_in_set(i)];
@@ -46,7 +46,7 @@ void PreconditionerSweeping::Prepare ( TrilinosWrappers::MPI::Vector & inp) {
 	return;
 }
 
-void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::Vector       &dst,
+void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &dst,
 			const TrilinosWrappers::MPI::Vector &src)const
 {
 	// line 1

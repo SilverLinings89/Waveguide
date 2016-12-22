@@ -21,7 +21,7 @@ class SquareMeshGenerator : public MeshGenerator {
 
   const double MaxDistX;
   const double MaxDistY;
-
+public:
   SquareMeshGenerator(SpaceTransformation * st);
 
   /**
@@ -72,5 +72,5 @@ class SquareMeshGenerator : public MeshGenerator {
 
 };
 
-#endif SquareMeshGenerator_h_
+#endif
  

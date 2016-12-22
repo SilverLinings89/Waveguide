@@ -27,4 +27,4 @@ class FDOptimization : public Optimization {
 
 };
 
-#endif FDOptimization_H_
+#endif

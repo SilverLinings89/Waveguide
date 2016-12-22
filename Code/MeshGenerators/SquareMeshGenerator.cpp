@@ -159,4 +159,4 @@ bool SquareMeshGenerator::phys_coordinate_in_waveguide(Point<3,double> in_positi
 }
 
 
-#endif SquareMeshGeneratorCppFlag
+#endif

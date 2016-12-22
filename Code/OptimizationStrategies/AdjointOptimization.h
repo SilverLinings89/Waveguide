@@ -19,8 +19,8 @@ class AdjointOptimization : public Optimization {
 
   ~AdjointOptimization();
 
-  virtual void run();
+  void run();
 
 };
 
-#endif AdjointOptimization_H_
+#endif
