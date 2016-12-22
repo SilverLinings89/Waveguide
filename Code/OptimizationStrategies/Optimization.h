@@ -26,15 +26,19 @@ using namespace dealii;
  */
 
 class Optimization {
+
+
 	public:
+
+    Optimization();
 
     const int type = -1; // This means that this is not actually an Optimization-implementation. 0 = FD, 1 = Adj.
 
 		ConditionalOStream	pout;
 
-		const int dofs;
+		const int dofs =1;
 
-		const int freedofs;
+		const int freedofs = 0;
 
 		Waveguide waveguide;
 

@@ -55,18 +55,12 @@ public:
   bool phys_coordinate_in_waveguide(Point<3> position);
 
   /**
-   * This function is a helper during distributed mesh generation.
-   *
-   */
-  void set_boundary_ids() ;
-
-  /**
    * This function takes a triangulation object and prepares it for the further computations. It is intended to encapsulate all related work and is explicitely not const.
    * \param in_tria The triangulation that is supposed to be prepared. All further information is derived from the parameter file and not given by parameters.
    */
   void prepare_triangulation(parallel::distributed::Triangulation<3> * in_tria)  ;
 
-  void set_boundary_ids(parallel::distributed::Triangulation<3> &tria) const;
+  void set_boundary_ids(parallel::distributed::Triangulation<3> & tria) const ;
 
   parallel::distributed::Triangulation<3>::active_cell_iterator cell, endc;
 

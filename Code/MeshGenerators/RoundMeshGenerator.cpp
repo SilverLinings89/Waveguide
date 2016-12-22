@@ -46,7 +46,7 @@ RoundMeshGenerator::RoundMeshGenerator(SpaceTransformation * in_ct) :
 
 }
 
-void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3> & tria) {
+void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3> & tria) const {
   int counter = 0;
   parallel::distributed::Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
   endc2 = tria.end();
@@ -98,7 +98,7 @@ void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulat
     in_tria->signals.post_refinement.connect
             (std_cxx11::bind (&RoundMeshGenerator::set_boundary_ids,
                               std_cxx11::cref(*this),
-                              std_cxx11::ref(in_tria)));
+                              std_cxx11::ref(*in_tria)));
 
 
     in_tria->set_all_manifold_ids(0);

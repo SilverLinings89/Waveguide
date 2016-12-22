@@ -20,7 +20,8 @@ using namespace dealii;
  */
 class DualProblemTransformationWrapper : public SpaceTransformation {
 
-  DualProblemTransformationWrapper();
+public:
+  DualProblemTransformationWrapper(SpaceTransformation * non_dual_st);
 
   ~DualProblemTransformationWrapper();
 

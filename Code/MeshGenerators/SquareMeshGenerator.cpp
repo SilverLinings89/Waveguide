@@ -46,7 +46,7 @@ SquareMeshGenerator::SquareMeshGenerator(SpaceTransformation * in_ct) :
 
 }
 
-void SquareMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3> &tria) const  {
+void SquareMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3> & tria) const {
   return;
 }
 
@@ -61,9 +61,9 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
     in_tria->refine_global(3);
 
     in_tria->signals.post_refinement.connect
-            (std_cxx11::bind (&SquareMeshGenerator::set_boundary_ids,
+            (std_cxx11::bind (& SquareMeshGenerator::set_boundary_ids,
                               std_cxx11::cref(*this),
-                              std_cxx11::ref(in_tria)));
+                              std_cxx11::ref(*in_tria)));
 
 
     in_tria->set_all_manifold_ids(0);

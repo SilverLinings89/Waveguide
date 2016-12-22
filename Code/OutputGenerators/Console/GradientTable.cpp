@@ -11,7 +11,11 @@
 #include <unistd.h>
 #include <iomanip>
 
-GradientTable::GradientTable(unsigned int in_step , dealii::Vector<double> in_configuration, double in_quality, dealii::Vector<double> in_last_configuration, double in_last_quality):ndofs(structure->NDofs()),nfreedofs(structure->NFreeDofs()),GlobalStep(in_step) {
+GradientTable::GradientTable(unsigned int in_step , dealii::Vector<double> in_configuration, double in_quality, dealii::Vector<double> in_last_configuration, double in_last_quality):
+  ndofs(100),
+  nfreedofs(100),
+  GlobalStep(in_step)
+{
 	final_quality = 0.0;
 	initial_quality = in_quality;
 	last_quality = in_last_quality;

@@ -27,8 +27,6 @@ class RoundMeshGenerator : public MeshGenerator {
 public:
   RoundMeshGenerator(SpaceTransformation * in_ct);
 
-  void set_boundary_ids(parallel::distributed::Triangulation<3> &tria) ;
-
   /**
    * This function is intended to execute a global refinement of the mesh. This means that every cell will be refined in every direction (effectively multiplying the number of DOFs by 8). This version is the most expensive refinement possible and should be used with caution.
    * \param times Number of refinement steps to be performed (gives us a multiplication of the number of degrees of freedom by \f$8^{times}\f$.
@@ -63,7 +61,7 @@ public:
    * This function is a helper during distributed mesh generation.
    *
    */
-  void set_boundary_ids(parallel::distributed::Triangulation<3> &tria) const;
+  void set_boundary_ids(parallel::distributed::Triangulation<3> & tria) const;
 
   /**
    * This function takes a triangulation object and prepares it for the further computations. It is intended to encapsulate all related work and is explicitely not const.

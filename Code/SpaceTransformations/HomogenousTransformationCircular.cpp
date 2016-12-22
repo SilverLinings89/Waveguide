@@ -13,7 +13,11 @@ HomogenousTransformationCircular::HomogenousTransformationCircular ():
   YMinus( -(GlobalParams.M_R_YLength *0.5 - GlobalParams.M_BC_YMinus)),
   YPlus( GlobalParams.M_R_YLength *0.5 - GlobalParams.M_BC_YPlus),
   ZMinus( - GlobalParams.M_R_ZLength *0.5 ),
-  ZPlus( GlobalParams.M_R_ZLength *0.5 )
+  ZPlus( GlobalParams.M_R_ZLength *0.5 ),
+  deltaY(GlobalParams.M_W_Delta),
+  epsilon_K(GlobalParams.M_W_epsilonin),
+  epsilon_M(GlobalParams.M_W_epsilonout),
+  sectors(GlobalParams.M_W_Sectors)
 {
 
 

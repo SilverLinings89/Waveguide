@@ -52,7 +52,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 
     void UpperProduct(const dealii::Vector<double> &src, dealii::Vector<double> &dst) const ;
 
-	virtual void vmult (TrilinosWrappers::MPI::BlockVector       &dst,      const TrilinosWrappers::MPI::Vector &src) const;
+	virtual void vmult (TrilinosWrappers::MPI::BlockVector       &dst,      const TrilinosWrappers::MPI::BlockVector &src) const;
 
 	TrilinosWrappers::SparseMatrix matrix, prec_matrix_lower, prec_matrix_upper;
 

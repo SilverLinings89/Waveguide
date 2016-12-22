@@ -47,7 +47,7 @@ void PreconditionerSweeping::Prepare ( TrilinosWrappers::MPI::BlockVector & inp)
 }
 
 void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &dst,
-			const TrilinosWrappers::MPI::Vector &src)const
+			const TrilinosWrappers::MPI::BlockVector &src)const
 {
 	// line 1
 	dealii::Vector<double> input(own);

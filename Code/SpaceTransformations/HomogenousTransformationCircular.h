@@ -20,9 +20,10 @@ using namespace dealii;
 
 class HomogenousTransformationCircular : public SpaceTransformation {
 
+public:
   HomogenousTransformationCircular();
 
-  ~HomogenousTransformationCircular();
+  virtual ~HomogenousTransformationCircular();
 
   Point<3> math_to_phys(Point<3> coord);
 

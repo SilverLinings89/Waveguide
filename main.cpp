@@ -103,12 +103,12 @@ int main (int argc, char *argv[])
 	// structure = new WaveguideStructure(GlobalParams);
 
 	Waveguide * primal_waveguide;
-	primal_waveguide = new Waveguide(mpi_primal, mg, st);
+	primal_waveguide = new Waveguide(*mpi_primal, mg, st);
 
 	Waveguide * dual_waveguide;
 
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
-	  dual_waveguide = new Waveguide(mpi_dual, mg, dst);
+	  dual_waveguide = new Waveguide(*mpi_dual, mg, dst);
 	}
 
 	Optimization * opt;
