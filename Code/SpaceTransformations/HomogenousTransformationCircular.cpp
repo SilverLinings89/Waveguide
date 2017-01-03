@@ -23,6 +23,38 @@ HomogenousTransformationCircular::HomogenousTransformationCircular ():
 
 }
 
+Point<3> math_to_phys(Point<3> coord) {
+  Point<3> ret;
+  if(coord[2] < GlobalParams.M_R_ZLength/(-2.0)) {
+    ret[0] = (2*GlobalParams.M_C_Dim1In) * coord[0] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
+    ret[1] = (2*GlobalParams.M_C_Dim1In) * coord[1] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
+    ret[2] = coord[2];
+  } else if(coord[2] >= GlobalParams.M_R_ZLength/(-2.0) && coord[2] < GlobalParams.M_R_ZLength/(2.0)) {
+   // TODO: Use sectors here.
+  } else {
+    ret[0] = (2*GlobalParams.M_C_Dim1Out) * coord[0] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
+    ret[1] = (2*GlobalParams.M_C_Dim1Out) * coord[1] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
+    ret[2] = coord[2];
+  }
+  return ret;
+}
+
+Point<3> phys_to_math(Point<3> coord) {
+  Point<3> ret;
+  if(coord[2] < GlobalParams.M_R_ZLength/(-2.0)) {
+    ret[0] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[0] / (2*GlobalParams.M_C_Dim1In);
+    ret[1] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[1] / (2*GlobalParams.M_C_Dim1In);
+    ret[2] = coord[2];
+  } else if(coord[2] >= GlobalParams.M_R_ZLength/(-2.0) && coord[2] < GlobalParams.M_R_ZLength/(2.0)) {
+   // TODO: Use sectors here.
+  } else {
+    ret[0] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[0] / (2*GlobalParams.M_C_Dim1In);
+    ret[1] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[1] / (2*GlobalParams.M_C_Dim1In);
+    ret[2] = coord[2];
+  }
+  return ret;
+}
+
 bool HomogenousTransformationCircular::PML_in_X(Point<3> &p) {
   return p(0) < XMinus ||p(0) > XPlus;
 }
