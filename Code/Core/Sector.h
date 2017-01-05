@@ -45,27 +45,27 @@ class Sector {
 		 * The Sectors play the essential role in the shape-optimization process. For its left and right side it has 3 degrees of freedom. These values are the degrees of freedom for the shape of the Waveguide. They determine the value of the space-transformation in the interior of the Sector. The values of the transformation in the interior are calculated via an interpolation function. The variable m, r and v describe the shift from the central axis, the radius of the Waveguide and its tilt towards the z-axis for the left (0) and right (1) side respectively.
 		 * r_0 is the radius at the left side (z small).
 		 */
-		double r_0;
+		// double r_0;
 		/**
 		 *  r_1 is the radius at the right side ( z large ).
 		 */
-		double r_1;
+		// double r_1;
 		/**
 		 * v_0 is the tilt towards the z-axis at the left side ( z small ).
 		 */
-		double v_0;
+		// double v_0;
 		/**
 		 * v_1 is the tile towards the z-axis at the right side ( z large ).
 		 */
-		double v_1 ;
+		// double v_1 ;
 		/**
 		 * m_0 is the distance to the z-axis at the lef side ( z small ).
 		 */
-		double m_0;
+		// double m_0;
 		/**
 		 * m_1 is the distance to the z-axis at the right side ( z large ).
 		 */
-		double m_1;
+		// double m_1;
 		/**
 		 * The objects created from this class are supposed to hand back the material properties which include the space-transformation Tensors. For this to be possible, the Sector has to be able to transform from global coordinates to coordinates that are scaled inside the Sector. For this purpose, the z_0 and z_1 variables store the z-coordinate of both, the left and right surface.
 		 */
