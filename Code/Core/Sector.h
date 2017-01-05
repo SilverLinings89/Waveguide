@@ -13,6 +13,7 @@ using namespace dealii;
  * \author Pascal Kraft
  * \date 17.12.2015
  */
+template <unsigned int Dofs_Per_Sector>
 class Sector {
 
 	public:
@@ -144,6 +145,8 @@ class Sector {
 		 */
 		void setNActiveCells(unsigned int );
 
+		double get_dof(unsigned int i, double z);
+
 		/**
 		 * Get an interpolation of the radius for a coordinate z
 		 * \param double z is the \f$z \in [0,1]\f$ coordinate for the interpolation.
@@ -165,6 +168,18 @@ class Sector {
 	//private:
 
 		unsigned int LowestDof, NDofs, NInternalBoundaryDofs, NActiveCells;
+
+		// Stores the values of the left degrees of freedom. These are the values of the dofs on the surface of the sector towards z--> -\infty.
+		double * dofs_l;
+
+		// Stores the values of the right degrees of freedom. These are the values of the dofs on the surface of the sector towards z--> \infty.
+		double * dofs_r;
+
+		//  This stores the indices for derivative dpendence. For example: If the third dof is the dof type 'm' (in former nomenclature) and the second is of type 'v' so v should be the derivative of 'm' then the derivative[3]=2. This is used in the function get_dof.
+		unsigned int * derivative;
+
+		// this stores for any dof if it has zero_derivative (at sector interfaces) or not.
+		bool * zero_derivative;
 };
 
 #endif
