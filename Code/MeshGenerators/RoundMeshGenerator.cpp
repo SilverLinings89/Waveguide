@@ -221,7 +221,8 @@ bool RoundMeshGenerator::math_coordinate_in_waveguide(Point<3,double> in_positio
 }
 
 bool RoundMeshGenerator::phys_coordinate_in_waveguide(Point<3,double> in_position) {
-  return  this->math_coordinate_in_waveguide(ct->phys_to_math(in_position));
+  return false;
+  // return  this->math_coordinate_in_waveguide(ct->phys_to_math(in_position));
 }
 
 #endif

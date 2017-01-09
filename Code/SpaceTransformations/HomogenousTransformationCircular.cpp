@@ -8,6 +8,7 @@
 using namespace dealii;
 
 HomogenousTransformationCircular::HomogenousTransformationCircular ():
+    SpaceTransformation(3),
   XMinus( -(GlobalParams.M_R_XLength *0.5 - GlobalParams.M_BC_XMinus)),
   XPlus( GlobalParams.M_R_XLength *0.5 - GlobalParams.M_BC_XPlus),
   YMinus( -(GlobalParams.M_R_YLength *0.5 - GlobalParams.M_BC_YMinus)),
@@ -68,8 +69,7 @@ bool HomogenousTransformationCircular::PML_in_Z(Point<3> &p) {
 }
 
 bool HomogenousTransformationCircular::Preconditioner_PML_in_Z(Point<3> &p, unsigned int block) {
-  double l = structure->Layer_Length();
-  double width = l * 1.0;
+  double width = GlobalParams.LayerThickness * 1.0;
   if( block == GlobalParams.NumberProcesses-2) return false;
   if ( block == GlobalParams.MPI_Rank-1){
     return true;
@@ -79,10 +79,9 @@ bool HomogenousTransformationCircular::Preconditioner_PML_in_Z(Point<3> &p, unsi
 }
 
 double HomogenousTransformationCircular::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ){
-  double l = structure->Layer_Length();
-  double width = l * 1.0;
+  double width = GlobalParams.LayerThickness * 1.0;
 
-  return p(2) +GlobalParams.M_R_ZLength/2.0 - ((double)block +1)*l;
+  return p(2) +GlobalParams.M_R_ZLength/2.0 - ((double)block +1)*width;
 
 }
 
@@ -164,7 +163,10 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Tensor(P
   ret[2][2] = S3;
 
   Tensor<2,3, std::complex<double>> ret2;
-  Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
+
+  std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
+
+  Tensor<2,3, double> transformation = case_sectors[sector_z.first].TransformationTensorInternal(position[0], position[1], sector_z.second);
   double dist = position[0] * position[0] + position[1]*position[1];
   dist = sqrt(dist);
   double v1 = GlobalParams.M_R_XLength/2.0 - std::min(GlobalParams.M_BC_XMinus, GlobalParams.M_BC_XPlus);
@@ -203,7 +205,12 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Precondi
   Tensor<2,3, std::complex<double>> ret;
 
   Tensor<2,3, std::complex<double>> MaterialTensor;
-  Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
+
+  std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
+
+  Tensor<2,3, double> transformation = case_sectors[sector_z.first].TransformationTensorInternal(position[0], position[1], sector_z.second);
+
+  // Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
   double dist = position[0] * position[0] + position[1]*position[1];
   dist = sqrt(dist);
   double v1 = GlobalParams.M_R_XLength/2.0 - std::min(GlobalParams.M_BC_XMinus, GlobalParams.M_BC_XPlus);
@@ -332,5 +339,6 @@ std::complex<double> HomogenousTransformationCircular::evaluate_for_z(double in_
   std::complex<double> res = gauss_product_2D_sphere(in_z,10,r,0,0, in_w);
   return sqrt(std::norm(res));
 }
+
 
 #endif

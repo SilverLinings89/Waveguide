@@ -222,14 +222,18 @@ static Parameters GetParameters() {
 	ret.Head = (ret.MPI_Rank == 0);
 
 	if(ret.MPI_Rank > ret.NumberProcesses - ret.M_BC_Zplus -1 ) {
-	  ret.PMLSector = true;
+	  ret.PMLLayer = true;
 	} else {
-	  ret.PMLSector = false;
+	  ret.PMLLayer = false;
 	}
 
 	ret.LayersPerSector = (ret.NumberProcesses - ret.M_BC_Zplus)/ret.M_W_Sectors;
 
 	ret.LayerThickness = ret.M_R_ZLength / (ret.NumberProcesses - ret.M_BC_Zplus);
+
+	ret.SystemLength = ret.NumberProcesses * ret.LayerThickness;
+
+	ret.Maximum_Z = - (ret.M_R_ZLength/2.0) + ret.SystemLength;
 
 	return ret;
 }
@@ -326,7 +330,7 @@ static Point<3> Triangulation_Stretch_Y (const Point<3> &p)
 static Point<3> Triangulation_Stretch_Z (const Point<3> &p)
 {
   Point<3> q = p;
-  double total_length = structure->System_Length();
+  double total_length = GlobalParams.SystemLength;
   q[2] *= total_length / 2.0;
   return q;
 }
@@ -334,8 +338,7 @@ static Point<3> Triangulation_Stretch_Z (const Point<3> &p)
 static Point<3> Triangulation_Shift_Z (const Point<3> &p)
 {
   Point<3> q = p;
-  double sector_length = structure->Sector_Length();
-  q[2] += (sector_length/2.0) * GlobalParams.M_BC_Zplus;
+  q[2] += (GlobalParams.SystemLength - GlobalParams.M_R_ZLength)/2.0;
   return q;
 }
 

@@ -155,7 +155,8 @@ bool SquareMeshGenerator::math_coordinate_in_waveguide(Point<3,double> in_positi
 }
 
 bool SquareMeshGenerator::phys_coordinate_in_waveguide(Point<3,double> in_position) {
-  return  this->math_coordinate_in_waveguide(ct->phys_to_math(in_position));
+  // return  this->math_coordinate_in_waveguide(ct->phys_to_math(in_position));
+  return false;
 }
 
 

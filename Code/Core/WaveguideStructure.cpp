@@ -14,6 +14,7 @@ WaveguideStructure::~WaveguideStructure() {
 }
 
 void WaveguideStructure::estimate_and_initialize() {
+  /**
 	highest = 1.0;
 	lowest = 1.0;
 	if(sectors == 1) {
@@ -49,7 +50,7 @@ void WaveguideStructure::estimate_and_initialize() {
 			case_sectors[i].set_properties_force(m_1, m_1, r_1, r_1, 0, 0) ;
 		}
 	}
-
+  **/
 	// for (unsigned int i = 0;  i < NFreeDofs(); ++ i) {
 	// 	InitialDofs[i] = this->get_dof(i, true);
 	//}
@@ -64,10 +65,10 @@ void WaveguideStructure::Print () {
 		std::cout << "Sectors: " << sectors << std::endl;
 		for(int i = 0 ; i< sectors; i++) {
 
-			std::cout << "z_0: " << std::setw(13)<< case_sectors[i].z_0 << "\t z_1: "<< std::setw(13)<< case_sectors[i].z_1 << std::endl;
-			std::cout << "m_0: " << std::setw(13)<< case_sectors[i].m_0 << "\t m_1: "<< std::setw(13)<< case_sectors[i].m_1 << std::endl;
-			std::cout << "r_0: " << std::setw(13)<< case_sectors[i].r_0 << "\t r_1: "<< std::setw(13)<< case_sectors[i].r_1 << std::endl;
-			std::cout << "v_0: " << std::setw(13)<< case_sectors[i].v_0 << "\t v_1: "<< std::setw(13)<< case_sectors[i].v_1 << std::endl;
+		//	std::cout << "z_0: " << std::setw(13)<< case_sectors[i].z_0 << "\t z_1: "<< std::setw(13)<< case_sectors[i].z_1 << std::endl;
+		//	std::cout << "m_0: " << std::setw(13)<< case_sectors[i].m_0 << "\t m_1: "<< std::setw(13)<< case_sectors[i].m_1 << std::endl;
+		//	std::cout << "r_0: " << std::setw(13)<< case_sectors[i].r_0 << "\t r_1: "<< std::setw(13)<< case_sectors[i].r_1 << std::endl;
+		//	std::cout << "v_0: " << std::setw(13)<< case_sectors[i].v_0 << "\t v_1: "<< std::setw(13)<< case_sectors[i].v_1 << std::endl;
 			std::cout << "-------------------------------------------" << std::endl;
 		}
 	}
@@ -81,25 +82,28 @@ double WaveguideStructure::estimate_v(double z) {
 	return 3*(v_0 + v_1 + 2*m_0 - 2*m_1)*z*z + 2*(-2.0 * v_0 - v_1 - 3*m_0 + 3*m_1)*z + v_0;
 }
 
+/**
 Tensor<2,3, double> WaveguideStructure::TransformationTensor (double in_x, double in_y, double in_z) {
 	std::pair<int, double> temp = Z_to_Sector_and_local_z(in_z);
 
-	double stretch = case_sectors[temp.first].getQ1(temp.second);
+	// double stretch = case_sectors[temp.first].getQ1(temp.second);
 	if(stretch > highest)highest = stretch;
 	if(stretch < lowest)lowest = stretch;
 
 	return case_sectors[temp.first].TransformationTensorInternal(in_x, in_y, temp.second );
 
-}
+}**/
 
 double WaveguideStructure::getQ1 (double z) {
 	std::pair<int, double> temp = Z_to_Sector_and_local_z(z);
-	return case_sectors[temp.first].getQ1(temp.second);
+	// return case_sectors[temp.first].getQ1(temp.second);
+	return 0.0;
 }
 
 double WaveguideStructure::getQ2 ( double z) {
 	std::pair<int, double> temp = Z_to_Sector_and_local_z(z);
-	return case_sectors[temp.first].getQ2(temp.second);
+	// return case_sectors[temp.first].getQ2(temp.second);
+	return 0.0;
 }
 
 double WaveguideStructure::get_dof (int i, bool free) {
@@ -109,42 +113,42 @@ double WaveguideStructure::get_dof (int i, bool free) {
 	if(free) {
 		if(temp == 0) {
 			// request m
-			return case_sectors[sec].m_1;
+			// return case_sectors[sec].m_1;
 		}
 		if(temp == 1) {
 			// request r
-			return case_sectors[sec].r_1;
+			// return case_sectors[sec].r_1;
 		}
 		if(temp == 2) {
 			// request v
-			return case_sectors[sec].v_1;
+			// return case_sectors[sec].v_1;
 		}
 	} else {
 		if (i < 3) {
 			if(temp == 0) {
 				// request m
-				return case_sectors[0].m_0;
+				// return case_sectors[0].m_0;
 			}
 			if(temp == 1) {
 				// request r
-				return case_sectors[0].r_0;
+				// return case_sectors[0].r_0;
 			}
 			if(temp == 2) {
 				// request v
-				return case_sectors[0].v_0;
+				// return case_sectors[0].v_0;
 			}
 		} else {
 			if(temp == 0) {
 				// request m
-				return case_sectors[sec-1].m_1;
+				// return case_sectors[sec-1].m_1;
 			}
 			if(temp == 1) {
 				// request r
-				return case_sectors[sec-1].r_1;
+				// return case_sectors[sec-1].r_1;
 			}
 			if(temp == 2) {
 				// request v
-				return case_sectors[sec-1].v_1;
+				// return case_sectors[sec-1].v_1;
 			}
 		}
 	}
@@ -154,6 +158,7 @@ double WaveguideStructure::get_dof (int i, bool free) {
 void WaveguideStructure::set_dof (int i, double val, bool free) {
 	int temp = i % 3;
 	int sec = i / 3 ;
+	/**
 	if(free) {
 
 		if(temp == 0) {
@@ -206,7 +211,7 @@ void WaveguideStructure::set_dof (int i, double val, bool free) {
 				}
 			}
 		}
-	}
+	}**/
 }
 
 WaveguideStructure::WaveguideStructure(const Parameters &in_params)
@@ -285,17 +290,20 @@ int WaveguideStructure::Z_to_Layer(double in_z) {
 
 double WaveguideStructure::get_r(double in_z) {
 	std::pair<int, double> temp = Z_to_Sector_and_local_z(in_z);
-	return case_sectors[temp.first].get_r(temp.second);
+	// return case_sectors[temp.first].get_r(temp.second);
+	return 0.0;
 }
 
 double WaveguideStructure::get_m(double in_z) {
 	std::pair<int, double> temp = Z_to_Sector_and_local_z(in_z);
-	return case_sectors[temp.first].get_m(temp.second);
+	// return case_sectors[temp.first].get_m(temp.second);
+	return 0.0;
 }
 
 double WaveguideStructure::get_v(double in_z) {
 	std::pair<int, double> temp = Z_to_Sector_and_local_z(in_z);
-	return case_sectors[temp.first].get_v(temp.second);
+	// return case_sectors[temp.first].get_v(temp.second);
+	return 0.0;
 }
 
 void WaveguideStructure::WriteConfigurationToConsole() {

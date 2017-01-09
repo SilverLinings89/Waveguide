@@ -71,7 +71,6 @@ using namespace dealii;
 
 
 static Parameters GlobalParams;
-static WaveguideStructure * structure = NULL ;
 static const CylindricalManifold<3, 3> round_description (2);
 
 /**

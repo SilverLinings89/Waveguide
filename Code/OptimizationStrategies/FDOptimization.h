@@ -16,9 +16,7 @@ class FDOptimization : public Optimization {
 public:
   const int type = 0; // Allows callers to identify the exact type easily. 0 = FD, 1 = Adj.
 
-  FDOptimization();
-
-  FDOptimization(Waveguide * waveguide_primal, MeshGenerator * mg, SpaceTransformation * st_primal);
+  FDOptimization(Waveguide * waveguide_primal, MeshGenerator * mg, SpaceTransformation * st_primal, OptimizationAlgorithm * oa);
 
   ~FDOptimization();
 
@@ -28,6 +26,7 @@ public:
    */
   virtual void run();
 
+  Waveguide * waveguide;
 };
 
 #endif

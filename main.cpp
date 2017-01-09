@@ -44,6 +44,7 @@
 #include "Code/OptimizationAlgorithm/OptimizationAlgorithm.h"
 #include "Code/OptimizationAlgorithm/OptimizationCG.h"
 #include "Code/OptimizationAlgorithm/OptimizationSteepestDescent.h"
+#include "Code/OptimizationAlgorithm/Optimization1D.h"
 
 
 using namespace dealii;
@@ -112,11 +113,20 @@ int main (int argc, char *argv[])
 	}
 
 	Optimization * opt;
+	OptimizationAlgorithm * Oa;
+
+	if(GlobalParams.Sc_SteppingMethod == SteppingMethod::CG) {
+	  Oa = new OptimizationCG();
+	} else if (GlobalParams.Sc_SteppingMethod == SteppingMethod::Steepest){
+	  Oa = new OptimizationSteepestDescent();
+	} else {
+	  Oa = new Optimization1D();
+	}
 
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
-	  opt = new AdjointOptimization(primal_waveguide, dual_waveguide, mg, st, dst);
+	  opt = new AdjointOptimization(primal_waveguide, dual_waveguide, mg, st, dst, Oa);
 	} else {
-	  opt = new FDOptimization(primal_waveguide, mg, st);
+	  opt = new FDOptimization(primal_waveguide, mg, st, Oa);
 	}
 
 

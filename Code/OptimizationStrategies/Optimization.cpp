@@ -7,5 +7,10 @@
 
 using namespace dealii;
 
+Optimization::Optimization():
+    pout(std::cout, GlobalParams.MPI_Rank==0) {
+
+}
+
 #endif
 

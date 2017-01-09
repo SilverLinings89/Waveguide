@@ -177,7 +177,7 @@ struct Parameters {
 
     MPI_Comm	MPIC_World;
 
-    bool PMLSector;
+    bool PMLLayer;
 
     double LayersPerSector;
 
@@ -185,6 +185,9 @@ struct Parameters {
 
     bool Head = false;
 
+    double SystemLength;
+
+    double Maximum_Z;
     // unsigned int MPI_Size;
 
 };

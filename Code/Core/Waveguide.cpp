@@ -764,7 +764,6 @@ void Waveguide::assemble_system ()
 
 void Waveguide::MakeBoundaryConditions (){
 	DoFHandler<3>::active_cell_iterator cell, endc;
-	double sector_length = structure->Sector_Length();
 
 	cell = dof_handler.begin_active(),
 	endc = dof_handler.end();
@@ -829,7 +828,7 @@ void Waveguide::MakeBoundaryConditions (){
 						}
 					}
 				}
-				if( std::abs(center[2] - GlobalParams.M_R_ZLength/2.0  - GlobalParams.M_BC_Zplus *sector_length) < 0.0001 ){
+				if( std::abs(center[2] - GlobalParams.Maximum_Z) < 0.0001 ){
 					std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
 					for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 						((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -852,8 +851,8 @@ void Waveguide::MakeBoundaryConditions (){
 void Waveguide::MakePreconditionerBoundaryConditions (  ){
 	DoFHandler<3>::active_cell_iterator cell, endc;
 	// cm_prec.clear();
-	double layer_length = structure->Layer_Length();
-	double sector_length = structure->Sector_Length();
+	double layer_length = GlobalParams.LayerThickness;
+	// double sector_length = structure->Sector_Length();
 	cell = dof_handler.begin_active();
 	endc = dof_handler.end();
 	IndexSet own (dof_handler.n_dofs());
@@ -1072,6 +1071,7 @@ SolverControl::State  Waveguide::check_iteration_state (const unsigned int itera
 	iteration_file.flush();
 	return ret;
 }
+
 
 void Waveguide::solve () {
 
@@ -1301,7 +1301,7 @@ void Waveguide::rerun ()
 	timer.leave_subsection();
 
 	timer.enter_subsection ("Setup FEM");
-	structure->Print();
+	// structure->Print();
 
 	timer.leave_subsection();
 	pout << "Reinit for rerun..." ;

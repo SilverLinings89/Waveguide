@@ -11,6 +11,7 @@
  */
 class OptimizationSteepestDescent : public OptimizationAlgorithm {
 
+public:
   OptimizationSteepestDescent();
 
   ~OptimizationSteepestDescent();

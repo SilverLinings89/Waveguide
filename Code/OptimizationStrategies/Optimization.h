@@ -40,7 +40,7 @@ class Optimization {
 
 		const int freedofs = 0;
 
-		Waveguide waveguide;
+		// Waveguide * waveguide;
 
 		SpaceTransformation * st;
 

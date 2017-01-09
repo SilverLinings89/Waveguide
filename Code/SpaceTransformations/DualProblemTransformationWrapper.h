@@ -27,7 +27,7 @@ public:
 
   Point<3> math_to_phys(Point<3> coord);
 
-  Point<3> phys_to_math(Point<3> coord);
+  // Point<3> phys_to_math(Point<3> coord);
 
   bool is_identity(Point<3> coord);
 
@@ -90,7 +90,7 @@ public:
   /**
    * This member contains all the Sectors who, as a sum, form the complete Waveguide. These Sectors are a partition of the simulated domain.
    */
-  std::vector<Sector> case_sectors;
+  std::vector<Sector<3>> case_sectors;
 
   /**
    * The material-property \f$\epsilon_r\f$ has a different value inside and outside of the waveguides core. This variable stores its value inside the core.

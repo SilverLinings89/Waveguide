@@ -18,11 +18,17 @@ public:
 
   AdjointOptimization();
 
-  AdjointOptimization(Waveguide * waveguide_primal, Waveguide * wavegudie_dual, MeshGenerator * mg, SpaceTransformation * st_primal, SpaceTransformation * st_dual);
+  AdjointOptimization(Waveguide * waveguide_primal, Waveguide * wavegudie_dual, MeshGenerator * mg, SpaceTransformation * st_primal, SpaceTransformation * st_dual, OptimizationAlgorithm * Oa);
 
   ~AdjointOptimization();
 
   void run();
+
+  Waveguide * primal_waveguide;
+  Waveguide * dual_waveguide;
+
+  SpaceTransformation * primal_st;
+  SpaceTransformation * dual_st;
 
 };
 
