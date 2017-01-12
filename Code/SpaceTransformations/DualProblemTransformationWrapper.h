@@ -225,7 +225,7 @@ public:
 
   std::complex<double> gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc,  Waveguide * in_w);
 
-
+  SpaceTransformation * st;
 };
 
 #endif

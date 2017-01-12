@@ -34,15 +34,15 @@ public:
 
   SpaceTransformation(int);
 
-  Point<3> math_to_phys(Point<3> coord);
+  virtual Point<3> math_to_phys(Point<3> coord) =0;
 
   // Point<3> phys_to_math(Point<3> coord);
 
-  bool is_identity(Point<3> coord);
+  virtual bool is_identity(Point<3> coord) =0;
 
-  virtual Tensor<2,3, std::complex<double>> get_Tensor(Point<3> coordinate);
+  virtual Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & coordinate) =0;
 
-  virtual Tensor<2,3, std::complex<double>> get_Preconditioner_Tensor(Point<3> coordinate, int block);
+  virtual Tensor<2,3, std::complex<double>> get_Preconditioner_Tensor(Point<3> & coordinate, int block)=0;
   /**
    * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
    * \param position Stores the position in which to test for presence of a PML-Material.
@@ -112,25 +112,25 @@ public:
   /**
    * At the beginning (before the first solution of a system) only the boundary conditions for the shape of the waveguide are known. Therefore the values for the degrees of freedom need to be estimated. This function sets all variables to appropiate values and estimates an appropriate shape based on averages and a polynomial interpolation of the boundary conditions on the shape.
    */
-  void  estimate_and_initialize();
+  virtual void  estimate_and_initialize()=0;
 
   /**
    * This member calculates the value of Q1 for a provided \f$z\f$-coordinate. This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field).
    * \param z The value of Q1 is independent of \f$x\f$ and \f$y\f$. Therefore only a \f$z\f$-coordinate is provided in a call to the function.
    */
-  virtual double  get_Q1 ( double z);
+  virtual double  get_Q1 ( double z)=0;
 
   /**
    * This member calculates the value of Q2 for a provided \f$z\f$-coordinate. This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field).
    * \param z The value of Q2 is independent of \f$x\f$ and \f$y\f$. Therefore only a \f$z\f$-coordinate is provided in a call to the function.
    */
-  virtual double  get_Q2 ( double z);
+  virtual double  get_Q2 ( double z)=0;
 
   /**
    * This member calculates the value of Q3 for a provided \f$z\f$-coordinate. This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field).
    * \param z The value of Q3 is independent of \f$x\f$ and \f$y\f$. Therefore only a \f$z\f$-coordinate is provided in a call to the function.
    */
-  virtual double  get_Q3 ( double z);
+  virtual double  get_Q3 ( double z)=0;
 
 
   /**
@@ -138,20 +138,20 @@ public:
    * \param dof The index of the degree of freedom to be retrieved from the structure of the modelled waveguide.
    * \return This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd.
    */
-  virtual double  get_dof (int dof, bool free);
+  virtual double  get_dof (int dof, bool free)=0;
 
   /**
    * This function sets the value of the dof provided to the given value. It is important to consider, that some dofs are non-writable (i.e. the values of the degrees of freedom on the boundary, like the radius of the input-connector cannot be changed).
    * \param dof The index of the parameter to be changed.
    * \param value The value, the dof should be set to.
    */
-  virtual void  set_dof (int dof , double value, bool free );
+  virtual void  set_dof (int dof , double value, bool free )=0;
 
   /**
    * Using this method unifies the usage of coordinates. This function takes a global \f$z\f$ coordinate (in the computational domain) and returns both a Sector-Index and an internal \f$z\f$ coordinate indicating which sector this coordinate belongs to and how far along in the sector it is located.
    * \param double in_z global system \f$z\f$ coordinate for the transformation.
    */
-  virtual std::pair<int, double> Z_to_Sector_and_local_z(double in_z);
+  virtual std::pair<int, double> Z_to_Sector_and_local_z(double in_z)=0;
 
   /**
    * Returns the length of one sector
@@ -161,22 +161,22 @@ public:
   /**
    * Returns the radius for a system-coordinate;
    */
-  virtual double get_r(double in_z);
+  virtual double get_r(double in_z)=0;
 
   /**
    * Returns the shift for a system-coordinate;
    */
-  virtual  double get_m(double in_z);
+  virtual  double get_m(double in_z)=0;
 
   /**
    * Returns the tilt for a system-coordinate;
    */
-  double get_v(double in_z);
+  virtual double get_v(double in_z)=0;
 
   /**
    * This Method writes a comprehensive description of the current structure to the console.
    */
-  virtual void WriteConfigurationToConsole();
+  virtual void WriteConfigurationToConsole()=0;
 
   virtual int Z_to_Layer(double);
 
@@ -193,27 +193,27 @@ public:
   /**
    * Other objects can use this function to retrieve an array of the current values of the degrees of freedom of the functional we are optimizing. This also includes restrained degrees of freedom and other functions can be used to determine this property. This has to be done because in different cases the number of restrained degrees of freedom can vary and we want no logic about this in other functions.
    */
-  virtual Vector<double> Dofs();
+  virtual Vector<double> Dofs()=0;
 
   /**
    * This function returns the number of unrestrained degrees of freedom of the current optimization run.
    */
-  virtual unsigned int NFreeDofs();
+  virtual unsigned int NFreeDofs()=0;
 
   /**
    * This function returns the total number of DOFs including restrained ones. This is the lenght of the array returned by Dofs().
    */
-  virtual unsigned int NDofs();
+  virtual unsigned int NDofs()=0;
 
   /**
    * Since Dofs() also returns restrained degrees of freedom, this function can be applied to determine if a degree of freedom is indeed free or restrained. "restrained" means that for example the DOF represents the radius at one of the connectors (input or output) and therefore we forbid the optimization scheme to vary this value.
    */
-  virtual bool IsDofFree(int );
+  virtual bool IsDofFree(int )=0;
 
   /**
    * Console output of the current Waveguide Structure.
    */
-  virtual void Print();
+  virtual void Print()=0;
 
   /**
    * Since the Wavegudie itself may be circular or rectangular now, the evaluation routines should be moved to a point in the code where this information is included in the code. Since I dont want to create derived classes from waveguide (which I should do eventually) I will for now include this functionality into the space transformation which is shape-sensitive.

@@ -29,4 +29,13 @@ SpaceTransformation::SpaceTransformation(int in_dofs_per_layer) :
   InitialQuality = 0;
 }
 
+double SpaceTransformation::Sector_Length() {
+  return GlobalParams.M_R_ZLength / (double)GlobalParams.M_W_Sectors;
+}
+
+int SpaceTransformation::Z_to_Layer(double in_z) {
+  int number = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
+  return floor((in_z + (GlobalParams.M_R_ZLength/2.0))/GlobalParams.LayerThickness);
+}
+
 #endif

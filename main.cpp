@@ -25,16 +25,16 @@
 #include "Code/Core/SolutionWeight.cpp"
 #include "Code/OutputGenerators/Console/GradientTable.cpp"
 
-#include "Code/MeshGenerators/MeshGenerator.cpp"
-#include "Code/MeshGenerators/RoundMeshGenerator.cpp"
-#include "Code/MeshGenerators/SquareMeshGenerator.cpp"
-
 #include "Code/SpaceTransformations/SpaceTransformation.cpp"
 #include "Code/SpaceTransformations/InhomogenousTransformationRectangular.h"
 #include "Code/SpaceTransformations/InhomogenousTransformationCircular.h"
 #include "Code/SpaceTransformations/HomogenousTransformationCircular.cpp"
 #include "Code/SpaceTransformations/HomogenousTransformationRectangular.h"
-#include "Code/SpaceTransformations/DualProblemTransformationWrapper.h"
+#include "Code/SpaceTransformations/DualProblemTransformationWrapper.cpp"
+
+#include "Code/MeshGenerators/MeshGenerator.cpp"
+#include "Code/MeshGenerators/RoundMeshGenerator.cpp"
+#include "Code/MeshGenerators/SquareMeshGenerator.cpp"
 
 #include "Code/OptimizationStrategies/Optimization.cpp"
 #include "Code/OptimizationStrategies/AdjointOptimization.cpp"
@@ -83,8 +83,9 @@ int main (int argc, char *argv[])
 
 
 	SpaceTransformation * dst;
-
-	dst = new DualProblemTransformationWrapper(st);
+	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint ) {
+	  dst = new DualProblemTransformationWrapper(st);
+	}
 
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint ) {
 	  // adjoint based
