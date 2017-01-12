@@ -13,6 +13,11 @@
 class OptimizationAlgorithm {
 
 public:
+
+  std::vector<std::vector<double>> states;
+
+  std::vector<double> residuals;
+
   OptimizationAlgorithm();
 
   virtual ~OptimizationAlgorithm();
@@ -21,13 +26,13 @@ public:
    * This function can be used by the optimization strategy to pass a residual into the history of the algorithm. History aware methods such as GMRES profit from its storage.
    * \param in_residual The double valued residual to be stored.
    */
-  virtual void pass_residual(double in_residual) = 0;
+  void pass_residual(double in_residual) ;
 
   /**
    * This function can be used to store a shape gradient inside the algorithm. Outside this object an underlying data-structure might need to be cleared before the next step so storing this makes it persistent. The generated amount of data does not have to be considered for storage constraints since it is minimal even for many (hundreds) dofs.
    * \param in_gradient The gradient vector to be stored. It is the most important functionality of the entire system to estimate this vector accurately in short time.
    */
-  virtual void pass_gradient(std::vector<double> in_gradient) = 0;
+  void pass_gradient(std::vector<double> in_gradient);
 
   /**
    * This function returns the next configuration based on the currently stored values of residual and vectors and the latest shape gradient.

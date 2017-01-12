@@ -32,6 +32,8 @@ class Optimization {
 
     Optimization();
 
+    virtual ~Optimization();
+
     const int type = -1; // This means that this is not actually an Optimization-implementation. 0 = FD, 1 = Adj.
 
 		ConditionalOStream	pout;

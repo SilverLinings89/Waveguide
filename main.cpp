@@ -38,13 +38,13 @@
 
 #include "Code/OptimizationStrategies/Optimization.cpp"
 #include "Code/OptimizationStrategies/AdjointOptimization.cpp"
-#include "Code/OptimizationStrategies/FDOptimization.h"
+#include "Code/OptimizationStrategies/FDOptimization.cpp"
 
 #include <deal.II/base/parameter_handler.h>
-#include "Code/OptimizationAlgorithm/OptimizationAlgorithm.h"
-#include "Code/OptimizationAlgorithm/OptimizationCG.h"
-#include "Code/OptimizationAlgorithm/OptimizationSteepestDescent.h"
-#include "Code/OptimizationAlgorithm/Optimization1D.h"
+#include "Code/OptimizationAlgorithm/OptimizationAlgorithm.cpp"
+#include "Code/OptimizationAlgorithm/OptimizationCG.cpp"
+#include "Code/OptimizationAlgorithm/OptimizationSteepestDescent.cpp"
+#include "Code/OptimizationAlgorithm/Optimization1D.cpp"
 
 
 using namespace dealii;

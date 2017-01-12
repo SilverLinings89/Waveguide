@@ -16,10 +16,6 @@ public:
 
   ~OptimizationCG();
 
-  virtual void pass_residual(double in_residual);
-
-  virtual void pass_gradient(std::vector<double> in_gradient);
-
   virtual std::vector<double> get_configuration();
 
 };

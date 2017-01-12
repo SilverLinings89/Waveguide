@@ -12,7 +12,7 @@
 class Optimization1D : public OptimizationAlgorithm {
 
 public:
-  Optimization1D();
+  Optimization1D( );
 
   ~Optimization1D();
 
