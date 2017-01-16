@@ -14,6 +14,10 @@ AdjointOptimization::AdjointOptimization(Waveguide * in_waveguide_primal, Wavegu
 
 }
 
+AdjointOptimization::~AdjointOptimization() {
+
+}
+
 void AdjointOptimization::run() {
 
 

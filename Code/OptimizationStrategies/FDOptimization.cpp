@@ -14,6 +14,10 @@ FDOptimization::FDOptimization(Waveguide * in_waveguide, MeshGenerator * in_mg, 
 
 }
 
+FDOptimization::~FDOptimization() {
+
+}
+
 void FDOptimization::run() {
 
 

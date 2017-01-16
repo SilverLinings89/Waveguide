@@ -46,6 +46,10 @@ SquareMeshGenerator::SquareMeshGenerator(SpaceTransformation * in_ct) :
 
 }
 
+SquareMeshGenerator::~SquareMeshGenerator() {
+
+}
+
 void SquareMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3> & tria) const {
   return;
 }

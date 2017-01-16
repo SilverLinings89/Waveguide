@@ -24,6 +24,7 @@ class SquareMeshGenerator : public MeshGenerator {
 public:
   SquareMeshGenerator(SpaceTransformation * st);
 
+  ~SquareMeshGenerator();
   /**
    * This function is intended to execute a global refinement of the mesh. This means that every cell will be refined in every direction (effectively multiplying the number of DOFs by 8). This version is the most expensive refinement possible and should be used with caution.
    * \param times Number of refinement steps to be performed (gives us a multiplication of the number of degrees of freedom by \f$8^{times}\f$.

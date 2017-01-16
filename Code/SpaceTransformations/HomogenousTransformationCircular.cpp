@@ -24,7 +24,11 @@ HomogenousTransformationCircular::HomogenousTransformationCircular ():
 
 }
 
-Point<3> math_to_phys(Point<3> coord) {
+HomogenousTransformationCircular::~HomogenousTransformationCircular() {
+
+}
+
+Point<3> HomogenousTransformationCircular::math_to_phys(Point<3> coord) {
   Point<3> ret;
   if(coord[2] < GlobalParams.M_R_ZLength/(-2.0)) {
     ret[0] = (2*GlobalParams.M_C_Dim1In) * coord[0] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
@@ -340,5 +344,21 @@ std::complex<double> HomogenousTransformationCircular::evaluate_for_z(double in_
   return sqrt(std::norm(res));
 }
 
+double HomogenousTransformationCircular::get_dof(int dof, bool free) {
+  int index = dof;
+  if (free){
+    index += 3;
+  }
+  if(index < NDofs()) {
 
+  }
+}
+
+bool HomogenousTransformationCircular::IsDofFree(int index) {
+  if(index < 3 || index > NDofs()-3) {
+    return false;
+  } else {
+    return true;
+  }
+}
 #endif

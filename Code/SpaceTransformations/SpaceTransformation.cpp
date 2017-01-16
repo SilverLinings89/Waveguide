@@ -38,4 +38,13 @@ int SpaceTransformation::Z_to_Layer(double in_z) {
   return floor((in_z + (GlobalParams.M_R_ZLength/2.0))/GlobalParams.LayerThickness);
 }
 
+bool SpaceTransformation::is_identity(Point<3, double> coord) {
+  double sum =0.0;
+  Point<3,double> temp = math_to_phys(coord);
+  for(unsigned int i = 0; i < 3; i++) {
+    sum += std::abs(temp[i] - coord[i]);
+  }
+  return sum < 0.0001;
+}
+
 #endif

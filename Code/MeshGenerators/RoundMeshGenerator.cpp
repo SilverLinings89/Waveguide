@@ -46,6 +46,10 @@ RoundMeshGenerator::RoundMeshGenerator(SpaceTransformation * in_ct) :
 
 }
 
+RoundMeshGenerator::~RoundMeshGenerator() {
+
+}
+
 void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3> & tria) const {
   int counter = 0;
   parallel::distributed::Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),

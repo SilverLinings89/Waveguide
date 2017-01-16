@@ -38,7 +38,7 @@ public:
 
   // Point<3> phys_to_math(Point<3> coord);
 
-  virtual bool is_identity(Point<3> coord) =0;
+  bool is_identity(Point<3> coord);
 
   virtual Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & coordinate) =0;
 
@@ -151,7 +151,7 @@ public:
    * Using this method unifies the usage of coordinates. This function takes a global \f$z\f$ coordinate (in the computational domain) and returns both a Sector-Index and an internal \f$z\f$ coordinate indicating which sector this coordinate belongs to and how far along in the sector it is located.
    * \param double in_z global system \f$z\f$ coordinate for the transformation.
    */
-  virtual std::pair<int, double> Z_to_Sector_and_local_z(double in_z)=0;
+  std::pair<int, double> Z_to_Sector_and_local_z(double in_z);
 
   /**
    * Returns the length of one sector

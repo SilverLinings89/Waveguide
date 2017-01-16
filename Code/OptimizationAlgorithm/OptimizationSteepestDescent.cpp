@@ -9,4 +9,13 @@ std::vector<double> OptimizationSteepestDescent::get_configuration() {
   return ret;
 }
 
+OptimizationSteepestDescent::OptimizationSteepestDescent() {
+
+}
+
+OptimizationSteepestDescent::~OptimizationSteepestDescent() {
+
+}
+
+
 #endif

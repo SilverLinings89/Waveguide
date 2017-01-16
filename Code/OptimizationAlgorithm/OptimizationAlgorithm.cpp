@@ -7,6 +7,10 @@ OptimizationAlgorithm::OptimizationAlgorithm () {
 
 }
 
+OptimizationAlgorithm::~OptimizationAlgorithm() {
+
+}
+
 void OptimizationAlgorithm::pass_gradient(std::vector<double> in_gradient) {
   states.push_back(in_gradient);
   return;

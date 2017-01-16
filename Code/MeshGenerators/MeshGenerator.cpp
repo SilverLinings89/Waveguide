@@ -6,5 +6,8 @@ MeshGenerator::MeshGenerator() {
 
 }
 
+MeshGenerator::~MeshGenerator() {
+
+}
 
 #endif

@@ -12,5 +12,9 @@ Optimization::Optimization():
 
 }
 
+Optimization::~Optimization() {
+
+}
+
 #endif
 

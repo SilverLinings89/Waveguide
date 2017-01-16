@@ -29,7 +29,7 @@ public:
 
   // Point<3> phys_to_math(Point<3> coord);
 
-  bool is_identity(Point<3> coord);
+  // bool is_identity(Point<3> coord);
 
   Tensor<2,3, std::complex<double>> get_epsilon(Point<3> coordinate);
 
@@ -139,20 +139,35 @@ public:
    * \param dof The index of the degree of freedom to be retrieved from the structure of the modelled waveguide.
    * \return This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd.
    */
-  double  get_dof (int dof, bool free);
+  double  get_dof (int dof);
 
   /**
    * This function sets the value of the dof provided to the given value. It is important to consider, that some dofs are non-writable (i.e. the values of the degrees of freedom on the boundary, like the radius of the input-connector cannot be changed).
    * \param dof The index of the parameter to be changed.
    * \param value The value, the dof should be set to.
    */
-  void  set_dof (int dof , double value, bool free );
+  void  set_dof (int dof , double value );
+
+  /**
+   * This is a getter for the values of degrees of freedom. A getter-setter interface was introduced since the values are estimated automatically during the optimization and non-physical systems should be excluded from the domain of possible cases.
+   * \param dof The index of the degree of freedom to be retrieved from the structure of the modelled waveguide.
+   * \return This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd.
+   */
+  double  get_free_dof (int dof);
+
+  /**
+   * This function sets the value of the dof provided to the given value. It is important to consider, that some dofs are non-writable (i.e. the values of the degrees of freedom on the boundary, like the radius of the input-connector cannot be changed).
+   * \param dof The index of the parameter to be changed.
+   * \param value The value, the dof should be set to.
+   */
+  void  set_free_dof (int dof , double value );
+
 
   /**
    * Using this method unifies the usage of coordinates. This function takes a global \f$z\f$ coordinate (in the computational domain) and returns both a Sector-Index and an internal \f$z\f$ coordinate indicating which sector this coordinate belongs to and how far along in the sector it is located.
    * \param double in_z global system \f$z\f$ coordinate for the transformation.
    */
-  std::pair<int, double> Z_to_Sector_and_local_z(double in_z);
+  // std::pair<int, double> Z_to_Sector_and_local_z(double in_z);
 
   /**
    * Returns the complete length of the computational domain.
@@ -162,7 +177,7 @@ public:
   /**
    * Returns the length of one sector
    */
-  double Sector_Length();
+  // double Sector_Length();
 
   /**
    * Returns the length of one layer
@@ -187,9 +202,9 @@ public:
   /**
    * This Method writes a comprehensive description of the current structure to the console.
    */
-  void WriteConfigurationToConsole();
+  // void WriteConfigurationToConsole();
 
-  int Z_to_Layer(double);
+  // int Z_to_Layer(double);
 
   /**
    * This vector of values saves the initial configuration

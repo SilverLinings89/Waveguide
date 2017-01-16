@@ -7,6 +7,10 @@ OptimizationCG::OptimizationCG() {
 
 }
 
+OptimizationCG::~OptimizationCG() {
+
+}
+
 std::vector<double> OptimizationCG::get_configuration() {
   // TODO Implementation of CG step based on states and residuals.
   std::vector<double> ret;

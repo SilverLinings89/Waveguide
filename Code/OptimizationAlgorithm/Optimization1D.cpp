@@ -8,6 +8,10 @@ Optimization1D::Optimization1D( ) {
 
 }
 
+Optimization1D::~Optimization1D(){
+
+}
+
 void Optimization1D::pass_gradient(std::vector<double> in_gradient) {
   states.push_back(in_gradient);
   return;
