@@ -344,13 +344,65 @@ std::complex<double> HomogenousTransformationCircular::evaluate_for_z(double in_
   return sqrt(std::norm(res));
 }
 
-double HomogenousTransformationCircular::get_dof(int dof, bool free) {
-  int index = dof;
-  if (free){
-    index += 3;
+double HomogenousTransformationCircular::get_dof(int dof) {
+  if(dof < NDofs() && dof >= 0) {
+    int sector = floor(dof/3);
+    if(sector == sectors) {
+      return case_sectors[sector-1].dofs_r[dof%3];
+    } else {
+      return case_sectors[sector].dofs_l[dof%3];
+    }
+  } else {
+    std::cout << "Critical: DOF-index out of bounds in HomogenousTransformationCircular::get_dof!" <<std::endl;
+    return 0.0;
   }
-  if(index < NDofs()) {
+}
 
+double HomogenousTransformationCircular::get_free_dof(int in_dof) {
+  int dof = in_dof +3 ;
+  if(dof < NDofs()-3 && dof >= 0) {
+    int sector = floor(dof/3);
+    if(sector == sectors) {
+      return case_sectors[sector-1].dofs_r[dof%3];
+    } else {
+      return case_sectors[sector].dofs_l[dof%3];
+    }
+  } else {
+    std::cout << "Critical: DOF-index out of bounds in HomogenousTransformationCircular::get_free_dof!" <<std::endl;
+    return 0.0;
+  }
+}
+
+void HomogenousTransformationCircular::set_dof(int dof, double in_val) {
+  if(dof < NDofs() && dof >= 0) {
+    int sector = floor(dof/3);
+    if(sector == sectors) {
+      case_sectors[sector-1].dofs_r[dof%3] = in_val;
+    } else if (sector == 0) {
+      case_sectors[0].dofs_l[dof%3] = in_val;
+    } else {
+      case_sectors[sector].dofs_l[dof%3] = in_val;
+      case_sectors[sector-1].dofs_r[dof%3] = in_val;
+    }
+  } else {
+    std::cout << "Critical: DOF-index out of bounds in HomogenousTransformationCircular::set_dof!" <<std::endl;
+  }
+}
+
+void HomogenousTransformationCircular::set_free_dof(int in_dof, double in_val) {
+  int dof = in_dof + 3;
+  if(dof < NDofs() -3 && dof >= 0) {
+    int sector = floor(dof/3);
+    if(sector == sectors) {
+      case_sectors[sector-1].dofs_r[dof%3] = in_val;
+    } else if (sector == 0) {
+      case_sectors[0].dofs_l[dof%3] = in_val;
+    } else {
+      case_sectors[sector].dofs_l[dof%3] = in_val;
+      case_sectors[sector-1].dofs_r[dof%3] = in_val;
+    }
+  } else {
+    std::cout << "Critical: DOF-index out of bounds in HomogenousTransformationCircular::set_free_dof!" <<std::endl;
   }
 }
 

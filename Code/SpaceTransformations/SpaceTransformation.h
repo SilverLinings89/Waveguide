@@ -134,18 +134,31 @@ public:
 
 
   /**
-   * This is a getter for the values of degrees of freedom. A getter-setter interface was introduced since the values are estimated automatically during the optimization and non-physical systems should be excluded from the domain of possible cases.
-   * \param dof The index of the degree of freedom to be retrieved from the structure of the modelled waveguide.
-   * \return This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd.
-   */
-  virtual double  get_dof (int dof, bool free)=0;
+     * This is a getter for the values of degrees of freedom. A getter-setter interface was introduced since the values are estimated automatically during the optimization and non-physical systems should be excluded from the domain of possible cases.
+     * \param dof The index of the degree of freedom to be retrieved from the structure of the modelled waveguide.
+     * \return This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd.
+     */
+    virtual double  get_dof (int dof)=0;
 
-  /**
-   * This function sets the value of the dof provided to the given value. It is important to consider, that some dofs are non-writable (i.e. the values of the degrees of freedom on the boundary, like the radius of the input-connector cannot be changed).
-   * \param dof The index of the parameter to be changed.
-   * \param value The value, the dof should be set to.
-   */
-  virtual void  set_dof (int dof , double value, bool free )=0;
+    /**
+     * This function sets the value of the dof provided to the given value. It is important to consider, that some dofs are non-writable (i.e. the values of the degrees of freedom on the boundary, like the radius of the input-connector cannot be changed).
+     * \param dof The index of the parameter to be changed.
+     * \param value The value, the dof should be set to.
+     */
+    virtual void  set_dof (int dof , double value)=0;
+    /**
+       * This is a getter for the values of degrees of freedom. A getter-setter interface was introduced since the values are estimated automatically during the optimization and non-physical systems should be excluded from the domain of possible cases.
+       * \param dof The index of the degree of freedom to be retrieved from the structure of the modelled waveguide.
+       * \return This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd.
+       */
+      virtual double  get_free_dof (int dof)=0;
+
+      /**
+       * This function sets the value of the dof provided to the given value. It is important to consider, that some dofs are non-writable (i.e. the values of the degrees of freedom on the boundary, like the radius of the input-connector cannot be changed).
+       * \param dof The index of the parameter to be changed.
+       * \param value The value, the dof should be set to.
+       */
+      virtual void  set_free_dof (int dof , double value)=0;
 
   /**
    * Using this method unifies the usage of coordinates. This function takes a global \f$z\f$ coordinate (in the computational domain) and returns both a Sector-Index and an internal \f$z\f$ coordinate indicating which sector this coordinate belongs to and how far along in the sector it is located.
@@ -156,7 +169,7 @@ public:
   /**
    * Returns the length of one sector
    */
-  virtual double Sector_Length();
+  double Sector_Length();
 
   /**
    * Returns the radius for a system-coordinate;
@@ -176,9 +189,9 @@ public:
   /**
    * This Method writes a comprehensive description of the current structure to the console.
    */
-  virtual void WriteConfigurationToConsole()=0;
+  // virtual void WriteConfigurationToConsole()=0;
 
-  virtual int Z_to_Layer(double);
+  int Z_to_Layer(double);
 
   /**
    * This vector of values saves the initial configuration

@@ -105,12 +105,20 @@ double DualProblemTransformationWrapper::get_Q3 (double z) {
   return st->get_Q3(z);
 }
 
-double DualProblemTransformationWrapper::get_dof( int dof, bool free) {
-  return st->get_dof(dof, free);
+double DualProblemTransformationWrapper::get_dof( int dof) {
+  return st->get_dof(dof);
 }
 
-void DualProblemTransformationWrapper::set_dof(int dof, double value, bool free) {
-  return st->set_dof(dof, value, free);
+void DualProblemTransformationWrapper::set_dof(int dof, double value) {
+  return st->set_dof(dof, value);
+}
+
+double DualProblemTransformationWrapper::get_free_dof( int dof) {
+  return st->get_free_dof(dof);
+}
+
+void DualProblemTransformationWrapper::set_free_dof(int dof, double value) {
+  return st->set_free_dof(dof, value);
 }
 
 std::pair<int, double> DualProblemTransformationWrapper::Z_to_Sector_and_local_z(double in_z) {
@@ -131,11 +139,6 @@ double DualProblemTransformationWrapper::get_m(double in_z) {
 
 double DualProblemTransformationWrapper::get_v(double in_z) {
   return st->get_v(in_z);
-}
-
-void DualProblemTransformationWrapper::WriteConfigurationToConsole() {
-  std::cout << "This is a dual waveguide output:" <<std::endl;
-  return st->WriteConfigurationToConsole();
 }
 
 int DualProblemTransformationWrapper::Z_to_Layer( double z) {
