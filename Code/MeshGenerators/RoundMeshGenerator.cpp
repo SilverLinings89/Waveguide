@@ -229,4 +229,15 @@ bool RoundMeshGenerator::phys_coordinate_in_waveguide(Point<3,double> in_positio
   // return  this->math_coordinate_in_waveguide(ct->phys_to_math(in_position));
 }
 
+void RoundMeshGenerator::refine_global(unsigned int times) {
+
+}
+
+void RoundMeshGenerator::refine_proximity(unsigned int times) {
+
+}
+
+void RoundMeshGenerator::refine_internal(unsigned int times) {
+
+}
 #endif

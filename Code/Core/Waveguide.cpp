@@ -165,8 +165,6 @@ void Waveguide::estimate_solution() {
 	EstimatedSolution.compress(VectorOperation::insert);
 }
 
-
-
 Tensor<2,3, std::complex<double>> Waveguide::Conjugate_Tensor(Tensor<2,3, std::complex<double>> input) {
 	Tensor<2,3, std::complex<double>> ret ;
 	for(int i= 0; i< 3; i++){
@@ -1072,7 +1070,6 @@ SolverControl::State  Waveguide::check_iteration_state (const unsigned int itera
 	return ret;
 }
 
-
 void Waveguide::solve () {
 
 	solver_control.log_frequency(1);
@@ -1160,7 +1157,6 @@ void Waveguide::store() {
 	storage = solution;
 	is_stored = true;
 }
-
 
 void Waveguide::output_results ( bool details )
 {
@@ -1263,7 +1259,7 @@ void Waveguide::run ()
 	timer.leave_subsection();
 
 	timer.enter_subsection ("Evaluate");
-	evaluate ();
+	//evaluate ();
 	timer.leave_subsection();
 
 	timer.print_summary();
@@ -1274,14 +1270,12 @@ void Waveguide::run ()
 	run_number++;
 }
 
-
 void Waveguide::print_eigenvalues(const std::vector<std::complex<double>> &input) {
 	for (unsigned int i = 0; i < input.size(); i++){
 		eigenvalue_file << input.at(i).real() << "\t" << input.at(i).imag() << std::endl;
 	}
 	eigenvalue_file << std::endl;
 }
-
 
 void Waveguide::print_condition(double condition) {
 	condition_file << condition << std::endl;
@@ -1323,7 +1317,7 @@ void Waveguide::rerun ()
 
 	pout << "Evaluate for rerun." << std::endl;
 	timer.enter_subsection ("Evaluate");
-	evaluate ();
+	//evaluate ();
 	timer.leave_subsection();
 
 	timer.print_summary();

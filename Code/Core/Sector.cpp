@@ -104,6 +104,10 @@ template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::getQ2 ( d
 	return 1/(dofs_l[0] + z*z*z*(2*dofs_l[0] - 2*dofs_r[0]) - z*z*(3*dofs_l[0] - 3*dofs_r[0]));
 }
 
+template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::getQ3 ( double z) {
+  return 0.0;
+}
+
 template<unsigned int Dofs_Per_Sector> Tensor<2,3, double> Sector<Dofs_Per_Sector>::TransformationTensorInternal (double in_x, double in_y, double z) {
 	if(z<0 || z>1) std::cout << "Falty implementation of internal Tensor calculation: z: " << z << std::endl;
 	double RadiusInMultiplyer = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/(2* dofs_l[0]);

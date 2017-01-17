@@ -177,7 +177,7 @@ public:
   /**
    * Returns the length of one sector
    */
-  // double Sector_Length();
+  double Sector_Length();
 
   /**
    * Returns the length of one layer

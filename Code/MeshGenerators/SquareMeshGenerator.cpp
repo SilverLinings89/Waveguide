@@ -163,5 +163,16 @@ bool SquareMeshGenerator::phys_coordinate_in_waveguide(Point<3,double> in_positi
   return false;
 }
 
+void SquareMeshGenerator::refine_global(unsigned int times) {
+
+}
+
+void SquareMeshGenerator::refine_proximity(unsigned int times) {
+
+}
+
+void SquareMeshGenerator::refine_internal(unsigned int times) {
+
+}
 
 #endif

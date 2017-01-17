@@ -406,11 +406,115 @@ void HomogenousTransformationCircular::set_free_dof(int in_dof, double in_val) {
   }
 }
 
-bool HomogenousTransformationCircular::IsDofFree(int index) {
-  if(index < 3 || index > NDofs()-3) {
-    return false;
-  } else {
-    return true;
+double HomogenousTransformationCircular::Sector_Length() {
+  return GlobalParams.M_R_ZLength / (double)GlobalParams.M_W_Sectors;
+}
+
+void HomogenousTransformationCircular::estimate_and_initialize() {
+    case_sectors.reserve(sectors);
+    double highest = 1.0;
+    double lowest = 1.0;
+    double m_0 = GlobalParams.M_W_Delta/2.0;
+    double m_1 = -GlobalParams.M_W_Delta/2.0;
+    double r_0 = GlobalParams.M_C_Dim1In;
+    double r_1 = GlobalParams.M_C_Dim1Out;
+    double v_0 = 0.0;
+    double v_1 = 0.0;
+    if(sectors == 1) {
+      Sector<3> temp12(true, true, -GlobalParams.M_R_ZLength/2, GlobalParams.M_R_ZLength/2 );
+      case_sectors.push_back(temp12);
+      case_sectors[0].set_properties_force(GlobalParams.M_W_Delta/2.0,-GlobalParams.M_W_Delta/2.0, GlobalParams.M_C_Dim1In, GlobalParams.M_C_Dim1Out, 0, 0);
+    } else {
+      double length = Sector_Length();
+      Sector<3> temp(true, false, -GlobalParams.M_R_ZLength/(2.0), -GlobalParams.M_R_ZLength/2.0 + length );
+      case_sectors.push_back(temp);
+      for(int  i = 1; i < sectors; i++) {
+        Sector<3> temp2( false, false, -GlobalParams.M_R_ZLength/(2.0) + length*(1.0 *i), -GlobalParams.M_R_ZLength/(2.0) + length*(i + 1.0) );
+        case_sectors.push_back(temp2);
+      }
+
+      double length_rel = 1.0/((double)(sectors));
+      case_sectors[0].set_properties_force(
+          m_0,
+          InterpolationPolynomialZeroDerivative(length_rel, m_0, m_1),
+          r_0,
+          InterpolationPolynomialZeroDerivative(length_rel, r_0, r_1),
+          0,
+          InterpolationPolynomialDerivative(length_rel, m_0, m_1, 0, 0)
+      );
+      for(int  i = 1; i < sectors ; i++) {
+        double z_l = i*length_rel;
+        double z_r = (i+1)*length_rel;
+        case_sectors[i].set_properties_force(
+            InterpolationPolynomialZeroDerivative(z_l, m_0, m_1),
+            InterpolationPolynomialZeroDerivative(z_r, m_0, m_1),
+            InterpolationPolynomialZeroDerivative(z_l, r_0, r_1),
+            InterpolationPolynomialZeroDerivative(z_r, r_0, r_1),
+            InterpolationPolynomialDerivative(z_l, m_0, m_1, 0, 0),
+            InterpolationPolynomialDerivative(z_r, m_0, m_1, 0, 0)
+        );
+      }
+    }
+
+    // for (unsigned int i = 0;  i < NFreeDofs(); ++ i) {
+    //  InitialDofs[i] = this->get_dof(i, true);
+    //}
+
+}
+
+double HomogenousTransformationCircular::get_r(double z_in) {
+  std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
+  return case_sectors[two.first].get_r(two.second);
+}
+
+double HomogenousTransformationCircular::get_m(double z_in) {
+  std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
+  return case_sectors[two.first].get_m(two.second);
+}
+
+double HomogenousTransformationCircular::get_v(double z_in) {
+  std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
+  return case_sectors[two.first].get_v(two.second);
+}
+
+double HomogenousTransformationCircular::get_Q1(double z_in) {
+  std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
+  return case_sectors[two.first].getQ1(two.second);
+}
+
+double HomogenousTransformationCircular::get_Q2(double z_in) {
+  std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
+  return case_sectors[two.first].getQ2(two.second);
+}
+
+double HomogenousTransformationCircular::get_Q3(double z_in) {
+  std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
+  return case_sectors[two.first].getQ3(two.second);
+}
+
+Vector<double> HomogenousTransformationCircular::Dofs() {
+  Vector<double> ret;
+  const int total = NDofs();
+  ret.reinit(total);
+  for(unsigned int i= 0; i < total; i++ ){
+    ret[i] = get_dof(i);
   }
+  return ret;
+}
+
+unsigned int HomogenousTransformationCircular::NFreeDofs() {
+  return NDofs() - 6;
+}
+
+bool HomogenousTransformationCircular::IsDofFree(int index) {
+  return index > 2 && index < NDofs()-3;
+}
+
+void HomogenousTransformationCircular::Print () {
+  std::cout << "Printing is not yet implemented." << std::endl;
+}
+
+unsigned int HomogenousTransformationCircular::NDofs() {
+  return sectors * 3 + 3;
 }
 #endif
