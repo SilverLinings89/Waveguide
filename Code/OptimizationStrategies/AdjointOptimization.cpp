@@ -11,7 +11,7 @@ AdjointOptimization::AdjointOptimization(Waveguide * in_waveguide_primal, Wavegu
   dual_waveguide = in_waveguide_dual;
   dual_st = in_st_dual;
   mg = in_mg;
-
+  oa = in_Oa;
 }
 
 AdjointOptimization::~AdjointOptimization() {

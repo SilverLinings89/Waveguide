@@ -60,7 +60,6 @@
 
 #include "../Helpers/Parameters.h"
 #include "../Helpers/ParameterReader.h"
-#include "./WaveguideStructure.h"
 #include "./PreconditionerSweeping.h"
 #include "../Helpers/staticfunctions.h"
 

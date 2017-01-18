@@ -161,8 +161,8 @@ void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulat
 
     cell = in_tria->begin_active();
     for (; cell!=endc; ++cell){
-      unsigned int temp  = (int) std::floor((cell->center(true, false)[2] + 1.0)/len);
-      if( temp >=  Layers || temp < 0) std::cout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
+      int temp  = (int) std::floor((cell->center(true, false)[2] + 1.0)/len);
+      if( temp >=  (int)Layers || temp < 0) std::cout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
     }
 
     GridTools::transform(& Triangulation_Stretch_X, * in_tria);
@@ -220,24 +220,43 @@ void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulat
     endc = in_tria->end();
 }
 
-bool RoundMeshGenerator::math_coordinate_in_waveguide(Point<3,double> in_position) {
-  return Distance2D(cell->center(true, false))< (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0 ;
+bool RoundMeshGenerator::math_coordinate_in_waveguide(Point<3,double> in_position) const {
+  return Distance2D(in_position)< (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0 ;
 }
 
-bool RoundMeshGenerator::phys_coordinate_in_waveguide(Point<3,double> in_position) {
-  return false;
-  // return  this->math_coordinate_in_waveguide(ct->phys_to_math(in_position));
+bool RoundMeshGenerator::phys_coordinate_in_waveguide(Point<3,double> in_position) const {
+  Point<3,double> temp = in_position;
+  temp[1] -= ct->get_m(in_position[2]);
+  double r = ct->get_r(in_position[2]);
+  return (abs(temp[0]) < r && abs(temp[1]) < r );
 }
 
-void RoundMeshGenerator::refine_global(unsigned int times) {
-
+void RoundMeshGenerator::refine_global(parallel::distributed::Triangulation<3> * in_tria, unsigned int times) {
+  in_tria->refine_global(times);
 }
 
-void RoundMeshGenerator::refine_proximity(unsigned int times) {
-
+void RoundMeshGenerator::refine_proximity(parallel::distributed::Triangulation<3> * in_tria, unsigned int times, double factor) {
+  for (unsigned int t = 0; t < times; t++) {
+    double R = (GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In)*(1.0 + factor)/2.0;
+    cell = in_tria->begin_active();
+    for (; cell!=endc; ++cell){
+      if(Distance2D(cell->center(true, false))< R) {
+        cell->set_refine_flag();
+      }
+    }
+    in_tria->execute_coarsening_and_refinement();
+  }
 }
 
-void RoundMeshGenerator::refine_internal(unsigned int times) {
-
+void RoundMeshGenerator::refine_internal(parallel::distributed::Triangulation<3> * in_tria, unsigned int times) {
+  for(unsigned int i = 0; i < times; i++) {
+    cell = in_tria->begin_active();
+    for (; cell!=endc; ++cell){
+      if(math_coordinate_in_waveguide(cell->center())) {
+        cell->set_refine_flag();
+      }
+    }
+    in_tria->execute_coarsening_and_refinement();
+  }
 }
 #endif

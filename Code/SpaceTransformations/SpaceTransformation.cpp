@@ -15,14 +15,15 @@ std::pair<int, double> SpaceTransformation::Z_to_Sector_and_local_z(double in_z)
     ret.first = sectors - 1;
     ret.second = 1.0;
   }
+  return ret;
 }
 
 SpaceTransformation::SpaceTransformation(int in_dofs_per_layer) :
     dofs_per_layer(in_dofs_per_layer),
     boundary_dofs_in(in_dofs_per_layer),
     boundary_dofs_out(in_dofs_per_layer),
-    epsilon_M(GlobalParams.M_W_epsilonout),
     epsilon_K(GlobalParams.M_W_epsilonin),
+    epsilon_M(GlobalParams.M_W_epsilonout),
     sectors(GlobalParams.M_W_Sectors),
     deltaY(GlobalParams.M_W_Delta)
     {
@@ -34,7 +35,6 @@ double SpaceTransformation::Sector_Length() {
 }
 
 int SpaceTransformation::Z_to_Layer(double in_z) {
-  int number = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
   return floor((in_z + (GlobalParams.M_R_ZLength/2.0))/GlobalParams.LayerThickness);
 }
 

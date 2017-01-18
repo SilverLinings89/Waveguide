@@ -11,7 +11,6 @@
 #include <mpi.h>
 
 #include "Code/Core/Waveguide.h"
-#include "Code/Core/WaveguideStructure.h"
 #include "Code/Helpers/Parameters.h"
 #include "Code/Helpers/ParameterReader.cpp"
 #include "Code/Helpers/staticfunctions.cpp"
@@ -20,7 +19,6 @@
 #include "Code/Helpers/Parameters.cpp"
 #include "Code/Core/Sector.cpp"
 #include "Code/Core/Waveguide.cpp"
-#include "Code/Core/WaveguideStructure.cpp"
 #include "Code/Helpers/ExactSolution.cpp"
 #include "Code/Core/SolutionWeight.cpp"
 #include "Code/OutputGenerators/Console/GradientTable.cpp"
@@ -55,7 +53,10 @@ int main (int argc, char *argv[])
 
 	GlobalParams = GetParameters();
 
-	MPI_Comm * mpi_primal, * mpi_dual;
+	MPI_Comm  mpi_primal, mpi_dual;
+
+	mpi_primal = MPI_COMM_WORLD;
+	mpi_dual = MPI_COMM_WORLD;
 
 	SpaceTransformation * st;
 
@@ -94,23 +95,23 @@ int main (int argc, char *argv[])
 	  if(dual_rank < 0) {
 	    dual_rank += GlobalParams.NumberProcesses;
 	  }
-	  MPI_Comm_split(MPI_COMM_WORLD, 1, primal_rank, mpi_primal);
-	  MPI_Comm_split(MPI_COMM_WORLD, 1, dual_rank, mpi_dual);
+	  MPI_Comm_split(MPI_COMM_WORLD, 1, primal_rank, &mpi_primal);
+	  MPI_Comm_split(MPI_COMM_WORLD, 1, dual_rank, &mpi_dual);
 	} else {
 	  // fd based
     int primal_rank = GlobalParams.MPI_Rank;
-	  MPI_Comm_split(MPI_COMM_WORLD, 1, primal_rank, mpi_primal);
+	  MPI_Comm_split(MPI_COMM_WORLD, 1, primal_rank, &mpi_primal);
 	}
 
 	// structure = new WaveguideStructure(GlobalParams);
 
 	Waveguide * primal_waveguide;
-	primal_waveguide = new Waveguide(*mpi_primal, mg, st);
+	primal_waveguide = new Waveguide(mpi_primal, mg, st);
 
 	Waveguide * dual_waveguide;
 
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
-	  dual_waveguide = new Waveguide(*mpi_dual, mg, dst);
+	  dual_waveguide = new Waveguide(mpi_dual, mg, dst);
 	}
 
 	Optimization * opt;
@@ -130,6 +131,7 @@ int main (int argc, char *argv[])
 	  opt = new FDOptimization(primal_waveguide, mg, st, Oa);
 	}
 
+	opt->run();
 
 	return 0;
 }

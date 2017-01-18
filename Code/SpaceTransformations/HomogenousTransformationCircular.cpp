@@ -15,10 +15,10 @@ HomogenousTransformationCircular::HomogenousTransformationCircular ():
   YPlus( GlobalParams.M_R_YLength *0.5 - GlobalParams.M_BC_YPlus),
   ZMinus( - GlobalParams.M_R_ZLength *0.5 ),
   ZPlus( GlobalParams.M_R_ZLength *0.5 ),
-  deltaY(GlobalParams.M_W_Delta),
   epsilon_K(GlobalParams.M_W_epsilonin),
   epsilon_M(GlobalParams.M_W_epsilonout),
-  sectors(GlobalParams.M_W_Sectors)
+  sectors(GlobalParams.M_W_Sectors),
+  deltaY(GlobalParams.M_W_Delta)
 {
 
 
@@ -72,10 +72,9 @@ bool HomogenousTransformationCircular::PML_in_Z(Point<3> &p) {
   return p(2) < ZMinus ||p(2) > ZPlus;
 }
 
-bool HomogenousTransformationCircular::Preconditioner_PML_in_Z(Point<3> &p, unsigned int block) {
-  double width = GlobalParams.LayerThickness * 1.0;
-  if( block == GlobalParams.NumberProcesses-2) return false;
-  if ( block == GlobalParams.MPI_Rank-1){
+bool HomogenousTransformationCircular::Preconditioner_PML_in_Z(Point<3> &, unsigned int block) {
+  if( (int)block == GlobalParams.NumberProcesses-2) return false;
+  if ( (int)block == (int)GlobalParams.MPI_Rank-1){
     return true;
   } else {
     return false;
@@ -345,7 +344,7 @@ std::complex<double> HomogenousTransformationCircular::evaluate_for_z(double in_
 }
 
 double HomogenousTransformationCircular::get_dof(int dof) {
-  if(dof < NDofs() && dof >= 0) {
+  if(dof < (int)NDofs() && dof >= 0) {
     int sector = floor(dof/3);
     if(sector == sectors) {
       return case_sectors[sector-1].dofs_r[dof%3];
@@ -360,7 +359,7 @@ double HomogenousTransformationCircular::get_dof(int dof) {
 
 double HomogenousTransformationCircular::get_free_dof(int in_dof) {
   int dof = in_dof +3 ;
-  if(dof < NDofs()-3 && dof >= 0) {
+  if(dof < (int)NDofs()-3 && dof >= 0) {
     int sector = floor(dof/3);
     if(sector == sectors) {
       return case_sectors[sector-1].dofs_r[dof%3];
@@ -374,7 +373,7 @@ double HomogenousTransformationCircular::get_free_dof(int in_dof) {
 }
 
 void HomogenousTransformationCircular::set_dof(int dof, double in_val) {
-  if(dof < NDofs() && dof >= 0) {
+  if(dof < (int)NDofs() && dof >= 0) {
     int sector = floor(dof/3);
     if(sector == sectors) {
       case_sectors[sector-1].dofs_r[dof%3] = in_val;
@@ -391,7 +390,7 @@ void HomogenousTransformationCircular::set_dof(int dof, double in_val) {
 
 void HomogenousTransformationCircular::set_free_dof(int in_dof, double in_val) {
   int dof = in_dof + 3;
-  if(dof < NDofs() -3 && dof >= 0) {
+  if(dof < (int)NDofs() -3 && dof >= 0) {
     int sector = floor(dof/3);
     if(sector == sectors) {
       case_sectors[sector-1].dofs_r[dof%3] = in_val;
@@ -412,14 +411,10 @@ double HomogenousTransformationCircular::Sector_Length() {
 
 void HomogenousTransformationCircular::estimate_and_initialize() {
     case_sectors.reserve(sectors);
-    double highest = 1.0;
-    double lowest = 1.0;
     double m_0 = GlobalParams.M_W_Delta/2.0;
     double m_1 = -GlobalParams.M_W_Delta/2.0;
     double r_0 = GlobalParams.M_C_Dim1In;
     double r_1 = GlobalParams.M_C_Dim1Out;
-    double v_0 = 0.0;
-    double v_1 = 0.0;
     if(sectors == 1) {
       Sector<3> temp12(true, true, -GlobalParams.M_R_ZLength/2, GlobalParams.M_R_ZLength/2 );
       case_sectors.push_back(temp12);
@@ -496,7 +491,7 @@ Vector<double> HomogenousTransformationCircular::Dofs() {
   Vector<double> ret;
   const int total = NDofs();
   ret.reinit(total);
-  for(unsigned int i= 0; i < total; i++ ){
+  for(int i= 0; i < total; i++ ){
     ret[i] = get_dof(i);
   }
   return ret;
@@ -507,7 +502,7 @@ unsigned int HomogenousTransformationCircular::NFreeDofs() {
 }
 
 bool HomogenousTransformationCircular::IsDofFree(int index) {
-  return index > 2 && index < NDofs()-3;
+  return index > 2 && index < (int)NDofs()-3;
 }
 
 void HomogenousTransformationCircular::Print () {

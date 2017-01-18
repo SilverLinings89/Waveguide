@@ -104,7 +104,7 @@ template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::getQ2 ( d
 	return 1/(dofs_l[0] + z*z*z*(2*dofs_l[0] - 2*dofs_r[0]) - z*z*(3*dofs_l[0] - 3*dofs_r[0]));
 }
 
-template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::getQ3 ( double z) {
+template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::getQ3 ( double ) {
   return 0.0;
 }
 

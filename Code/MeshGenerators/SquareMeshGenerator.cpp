@@ -51,7 +51,31 @@ SquareMeshGenerator::~SquareMeshGenerator() {
 }
 
 void SquareMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3> & tria) const {
-  return;
+  int counter = 0;
+  parallel::distributed::Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
+  endc2 = tria.end();
+  tria.set_all_manifold_ids(0);
+
+  for (; cell2!=endc2; ++cell2){
+    if(cell2->at_boundary()){
+      for(int j = 0; j<6; j++){
+        if(cell2->face(j)->at_boundary()){
+          Point<3,double> ctr =cell2->face(j)->center(true, false);
+          if(math_coordinate_in_waveguide(ctr)){
+            if(ctr(2) < 0) {
+
+              cell2->face(j)->set_all_boundary_ids(11);
+              counter ++;
+            }
+
+            else {
+              cell2->face(j)->set_all_boundary_ids(2);
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangulation<3> * in_tria){
@@ -74,8 +98,6 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
 
     GridTools::transform( &Triangulation_Stretch_to_circle , *in_tria);
 
-    unsigned int man = 1;
-
     in_tria->set_all_manifold_ids(0);
 
     parallel::shared::Triangulation<3>::active_cell_iterator
@@ -95,8 +117,8 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
 
     cell = in_tria->begin_active();
     for (; cell!=endc; ++cell){
-      unsigned int temp  = (int) std::floor((cell->center(true, false)[2] + 1.0)/len);
-      if( temp >=  Layers || temp < 0) std::cout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
+      int temp  = (int) std::floor((cell->center(true, false)[2] + 1.0)/len);
+      if( temp >=  (int)Layers || temp < 0) std::cout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
     }
 
     GridTools::transform(& Triangulation_Stretch_X, * in_tria);
@@ -154,25 +176,47 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
     endc = in_tria->end();
 }
 
-bool SquareMeshGenerator::math_coordinate_in_waveguide(Point<3,double> in_position) {
-  return std::abs(cell->center(true, false)[0])< MaxDistX && std::abs(cell->center(true, false)[1])< MaxDistY ;
+bool SquareMeshGenerator::math_coordinate_in_waveguide(Point<3,double> in_position) const  {
+  return std::abs(in_position[0])< MaxDistX && std::abs(in_position[1])< MaxDistY ;
 }
 
-bool SquareMeshGenerator::phys_coordinate_in_waveguide(Point<3,double> in_position) {
-  // return  this->math_coordinate_in_waveguide(ct->phys_to_math(in_position));
+bool SquareMeshGenerator::phys_coordinate_in_waveguide(Point<3,double> in_position) const {
+  std::cout<< "NOT IMPLEMENTED: SquareMeshGenerator::phys_coordinate_in_waveguide"<<std::endl;
+  Point<3,double> temp = in_position;
+  temp[1] -= ct->get_m(in_position[2]);
+  double r = ct->get_r(in_position[2]);
+  return (abs(temp[0]) < r && abs(temp[1]) < r );
   return false;
 }
 
-void SquareMeshGenerator::refine_global(unsigned int times) {
-
+void SquareMeshGenerator::refine_global(parallel::distributed::Triangulation<3> * in_tria, unsigned int times) {
+  in_tria->refine_global(times);
 }
 
-void SquareMeshGenerator::refine_proximity(unsigned int times) {
-
+void SquareMeshGenerator::refine_proximity(parallel::distributed::Triangulation<3> * in_tria, unsigned int times, double factor) {
+  double X = (GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In)*(1.0 + factor)/2.0;
+  double Y = (GlobalParams.M_C_Dim2Out + GlobalParams.M_C_Dim2In)*(1.0 + factor)/2.0;
+  for(unsigned int i = 0; i < times; i++) {
+    cell = in_tria->begin_active();
+    for (; cell!=endc; ++cell){
+      if(std::abs(cell->center(true, false)[0])< X || std::abs(cell->center(true, false)[1])< Y) {
+        cell->set_refine_flag();
+      }
+    }
+    in_tria->execute_coarsening_and_refinement();
+  }
 }
 
-void SquareMeshGenerator::refine_internal(unsigned int times) {
-
+void SquareMeshGenerator::refine_internal(parallel::distributed::Triangulation<3> * in_tria, unsigned int times) {
+  for(unsigned int i = 0; i < times; i++) {
+    cell = in_tria->begin_active();
+    for (; cell!=endc; ++cell){
+      if(math_coordinate_in_waveguide(cell->center())) {
+        cell->set_refine_flag();
+      }
+    }
+    in_tria->execute_coarsening_and_refinement();
+  }
 }
 
 #endif

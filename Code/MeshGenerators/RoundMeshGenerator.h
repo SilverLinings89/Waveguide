@@ -33,31 +33,31 @@ public:
    * This function is intended to execute a global refinement of the mesh. This means that every cell will be refined in every direction (effectively multiplying the number of DOFs by 8). This version is the most expensive refinement possible and should be used with caution.
    * \param times Number of refinement steps to be performed (gives us a multiplication of the number of degrees of freedom by \f$8^{times}\f$.
    */
-  void refine_global(unsigned int times);
+  void refine_global(parallel::distributed::Triangulation<3> * in_tria, unsigned int times);
 
   /**
    * This function is intended to execute an internal refinement of the mesh. This means that every cell inside the waveguide will be refined in every direction. This method is rather cheap and only refines where the field is strong, however, the mesh outside the waveguide should not be too coarse to reduce numerical errors.
    * \param times Number of refinement steps to be performed.
    */
-  void refine_internal(unsigned int times);
+  void refine_internal(parallel::distributed::Triangulation<3> * in_tria, unsigned int times);
 
   /**
    * This function is intended to execute a refinement inside and near the waveguide boundary.
    * \param times Number of refinement steps to be performed.
    */
-  void refine_proximity(unsigned int times);
+  void refine_proximity(parallel::distributed::Triangulation<3> * in_tria, unsigned int times, double factor);
 
   /**
    * This function checks if the given coordinate is inside the waveguide or not. The naming convention of physical and mathematical system find application. In this version, the waveguide has been transformed and the check for a tubal waveguide for example only checks if the radius of a given vector is below the average of input and output radius.
    * \params position This value gives us the location to check for.
    */
-  bool math_coordinate_in_waveguide(Point<3> position);
+  bool math_coordinate_in_waveguide(Point<3> position) const ;
 
   /**
    * This function checks if the given coordinate is inside the waveguide or not. The naming convention of physical and mathematical system find application. In this version, the waveguide is bent. If we are using a space transformation \f$f\f$ then this function is equal to math_coordinate_in_waveguide(f(x,y,z)).
    * \params position This value gives us the location to check for.
    */
-  bool phys_coordinate_in_waveguide(Point<3> position);
+  bool phys_coordinate_in_waveguide(Point<3> position) const ;
 
   /**
    * This function is a helper during distributed mesh generation.

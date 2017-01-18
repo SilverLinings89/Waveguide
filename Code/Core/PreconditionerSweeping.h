@@ -40,6 +40,7 @@ dealii::TrilinosWrappers::SolverDirect * solver;
 class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
   {
 
+  using dealii::TrilinosWrappers::PreconditionBase::vmult;
 
   public:
 	PreconditionerSweeping ( int in_own, int in_others, int bandwidth, IndexSet locally_owned,  int in_upper, ConstraintMatrix * in_cm);

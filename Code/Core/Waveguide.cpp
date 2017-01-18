@@ -4,7 +4,6 @@
 
 #include <sys/time.h>
 #include "../Core/Waveguide.h"
-#include "WaveguideStructure.h"
 #include "SolutionWeight.h"
 #include "../Helpers/staticfunctions.cpp"
 #include "../Helpers/ExactSolution.h"
@@ -1296,7 +1295,7 @@ void Waveguide::rerun ()
 }
 
 
-SolverControl::State Waveguide::residual_tracker(unsigned int Iteration, double residual, dealii::TrilinosWrappers::MPI::BlockVector vec) {
+SolverControl::State Waveguide::residual_tracker(unsigned int Iteration, double residual, dealii::TrilinosWrappers::MPI::BlockVector) {
     
     struct timeval tp;
     gettimeofday(&tp, NULL);

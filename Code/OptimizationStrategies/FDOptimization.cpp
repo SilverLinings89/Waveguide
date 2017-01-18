@@ -8,6 +8,8 @@ using namespace dealii;
 FDOptimization::FDOptimization(Waveguide * in_waveguide, MeshGenerator * in_mg, SpaceTransformation * in_st, OptimizationAlgorithm * in_Oa) {
   waveguide = in_waveguide;
 
+  st = in_st;
+
   oa = in_Oa;
 
   mg = in_mg;
