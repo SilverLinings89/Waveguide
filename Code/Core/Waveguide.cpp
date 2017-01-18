@@ -29,23 +29,23 @@ using namespace dealii;
 Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st):
     fe(FE_Nedelec<3> (0), 2),
     triangulation (mpi_comm, parallel::distributed::Triangulation<3>::MeshSmoothing(Triangulation<3>::none ), parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning),
+    even(Utilities::MPI::this_mpi_process(in_mpi_comm)%2 == 0),
+    rank(Utilities::MPI::this_mpi_process(in_mpi_comm)),
+    real(0),
+    imag(3),
+    solver_control (GlobalParams.So_TotalSteps, GlobalParams.So_Precision, (GlobalParams.MPI_Rank == 0), true),
     dof_handler (triangulation),
     run_number(0),
     condition_file_counter(0),
     eigenvalue_file_counter(0),
-    Sectors(GlobalParams.M_W_Sectors),
-    Layers(GlobalParams.NumberProcesses),
     Dofs_Below_Subdomain(Layers),
     Block_Sizes(Layers),
-    temporary_pattern_preped(false),
-    real(0),
-    imag(3),
-    solver_control (GlobalParams.So_TotalSteps, GlobalParams.So_Precision, (GlobalParams.MPI_Rank == 0), true),
+
     pout(std::cout, GlobalParams.MPI_Rank==0),
-    timer(mpi_comm, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times),
     is_stored(false),
-    even(Utilities::MPI::this_mpi_process(in_mpi_comm)%2 == 0),
-    rank(Utilities::MPI::this_mpi_process(in_mpi_comm))
+    timer(mpi_comm, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times),
+    Sectors(GlobalParams.M_W_Sectors),
+    Layers(GlobalParams.NumberProcesses)
 {
   mg = in_mg;
   st = in_st;
@@ -92,7 +92,6 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
   deallog.attach( std::cout );
   qualities = new double[number];
   execute_recomputation = false;
-  start_solver_milis = 0;
 
 }
 
@@ -239,7 +238,7 @@ void Waveguide::setup_system ()
     prec_even_block_count++;
   }
 
-  int prec_odd_block_count = Utilities::MPI::n_mpi_processes(mpi_comm) /2 +1;
+  //int prec_odd_block_count = Utilities::MPI::n_mpi_processes(mpi_comm) /2 +1;
 
   i_sys_owned.reserve(Layers);
 
@@ -444,7 +443,6 @@ void Waveguide::setup_system ()
 		bool spec = false ;
 		bool upper = false;
 		bool lower = false;
-		int dofs = 0;
 
 		if ( GlobalParams.MPI_Rank -i == 0 ) {
 			spec = true;
@@ -473,7 +471,6 @@ void Waveguide::setup_system ()
 				owned = UpperDofs;
 				writable = locally_relevant_dofs;
 				writable.add_indices(UpperDofs);
-				dofs =  2* dof_handler.max_couplings_between_dofs();
 				// UpperDofs;
 				// writable.add_indices(locally_relevant_dofs);
 			}
@@ -865,18 +862,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
 	for (; cell!=endc; ++cell)
 	{
 		if(std::abs(cell->subdomain_id() - GlobalParams.MPI_Rank) < 2 ) {
-			Point<3, double> cell_center =cell->center(true, false);
-			/**
-			if( PML_in_X(cell_center) || PML_in_Y(cell_center) || PML_in_Z(cell_center)) {
-				std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_cell);
-				cell->get_dof_indices(local_dof_indices);
-				IndexSet localdofs(dof_handler.n_dofs());
-				for(unsigned int k =0 ; k< local_dof_indices.size(); k++) {
-					localdofs.add_index(local_dof_indices[k]);
-				}
-				sweepable.subtract_set(localdofs);
-			}
-			**/
+
 			for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
 				Point<3, double> center =(cell->face(i))->center(true, false);
 				if( center[0] < 0) center[0] *= (-1.0);
@@ -1054,7 +1040,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
 
 SolverControl::State  Waveguide::check_iteration_state (const unsigned int iteration, const double check_value, const dealii::TrilinosWrappers::MPI::Vector & ){
 	SolverControl::State ret = SolverControl::State::iterate;
-	if(iteration > GlobalParams.So_TotalSteps){
+	if((int)iteration > GlobalParams.So_TotalSteps){
 		// pout << std::endl;
 		return SolverControl::State::failure;
 	}
@@ -1089,23 +1075,16 @@ void Waveguide::solve () {
 		// std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
 
 		int above = 0;
-		if (rank != GlobalParams.NumberProcesses - 1) {
+		if ((int)rank != GlobalParams.NumberProcesses - 1) {
 			above = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank+1].n_elements();
 		}
 
-		int own = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank].n_elements();
-
 		int t_upper = 0;
-		if (rank != GlobalParams.NumberProcesses - 1) {
+		if ((int)rank != GlobalParams.NumberProcesses - 1) {
 			t_upper = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank +1].n_elements();
 		}
 		
-		// PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), below, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, t_upper, & cm);
-		 PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), above, dof_handler.max_couplings_between_dofs(), sweepable, locally_owned_dofs, t_upper, & cm);
-
-
-    unsigned int dofs_below = mindof;
-		unsigned int total_dofs_local = UpperDofs.n_elements();
+		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), above, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, t_upper, & cm);
 
 		if(GlobalParams.MPI_Rank == 0) {
 			sweep.Prepare(solution);
@@ -1116,11 +1095,6 @@ void Waveguide::solve () {
 
 		pout << "All preconditioner matrices built. Solving..." <<std::endl;
         
-        struct timeval tp;
-        gettimeofday(&tp, NULL);
-        long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
-        start_solver_milis = tp.tv_sec * 1000 + tp.tv_usec / 1000;    
-        
 		solver.connect(std_cxx11::bind (&Waveguide::residual_tracker,
                                    this,
                                    std_cxx11::_1,
@@ -1128,12 +1102,6 @@ void Waveguide::solve () {
                                    std_cxx11::_3));
         
 	 solver.solve(system_matrix,solution, system_rhs, sweep);
-
-	 /**
-	 PreconditionJacobi<TrilinosWrappers::SparseMatrix> precondition;
-        precondition.initialize (system_matrix, .6);
-        solver.solve(system_matrix,solution, system_rhs, precondition);
-    **/
 
 	  pout << "Done." << std::endl;
 
@@ -1158,7 +1126,7 @@ void Waveguide::store() {
 	is_stored = true;
 }
 
-void Waveguide::output_results ( bool details )
+void Waveguide::output_results ( bool  )
 {
 
 	for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {

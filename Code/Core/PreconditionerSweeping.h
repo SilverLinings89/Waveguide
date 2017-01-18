@@ -42,7 +42,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 
 
   public:
-	PreconditionerSweeping ( int in_own, int in_others, int bandwidth, IndexSet sweepable, IndexSet locally_owned,  int in_upper, ConstraintMatrix * in_cm);
+	PreconditionerSweeping ( int in_own, int in_others, int bandwidth, IndexSet locally_owned,  int in_upper, ConstraintMatrix * in_cm);
 
     ~PreconditionerSweeping ();
 

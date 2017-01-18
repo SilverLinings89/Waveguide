@@ -221,7 +221,7 @@ static Parameters GetParameters() {
 
 	ret.Head = (ret.MPI_Rank == 0);
 
-	if(ret.MPI_Rank > ret.NumberProcesses - ret.M_BC_Zplus -1 ) {
+	if((int)ret.MPI_Rank > ret.NumberProcesses - ret.M_BC_Zplus -1 ) {
 	  ret.PMLLayer = true;
 	} else {
 	  ret.PMLLayer = false;

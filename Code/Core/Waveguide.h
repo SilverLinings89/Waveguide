@@ -364,50 +364,49 @@ class Waveguide
 	  std::vector<IndexSet> i_prec_odd_writable;
 	  std::vector<IndexSet> i_sys_owned;
 
+    std::string                   solutionpath;
 
-		// HIER BEGINNT DIE ALTE VERSION ...
-		std::string										solutionpath;
-
-		//, triangulation_real;
-		//, dof_handler_real;
-		dealii::TrilinosWrappers::MPI::BlockVector										solution, EstimatedSolution, ErrorOfSolution ;
+    TrilinosWrappers::MPI::BlockVector										solution, EstimatedSolution, ErrorOfSolution ;
 		IndexSet										locally_owned_dofs, locally_relevant_dofs, locally_active_dofs, extended_relevant_dofs;
 		std::vector<IndexSet>							locally_relevant_dofs_per_subdomain;
+
+		Vector<double>                  preconditioner_rhs;
+
+		std::vector<IndexSet>             locally_relevant_dofs_all_processors;
+    IndexSet                    UpperDofs, LowerDofs;
+
+    int                       run_number;
+
+    int                       condition_file_counter, eigenvalue_file_counter;
+    std::vector<int>                Dofs_Below_Subdomain, Block_Sizes;
+    ConditionalOStream                pout;
+    bool                      is_stored;
+    TimerOutput                   timer;
+    const int                     Sectors;
+    const unsigned  int                   Layers;
+
+
+		// HIER BEGINNT DIE ALTE VERSION ...
+
+
 
 
 		ConstraintMatrix 								boundary_value_constraints_imaginary;
 		ConstraintMatrix 								boundary_value_constraints_real;
 		ConstraintMatrix								hanging_global;
 
-		dealii::TrilinosWrappers::MPI::BlockVector										storage;
-		dealii::TrilinosWrappers::MPI::BlockVector										temp_storage;
-		bool											is_stored;
-		Vector<double>									preconditioner_rhs;
-
-		int 											run_number;
-		int												condition_file_counter, eigenvalue_file_counter;
+		TrilinosWrappers::MPI::BlockVector										storage;
+		TrilinosWrappers::MPI::BlockVector										temp_storage;
 		std::ofstream									eigenvalue_file, condition_file, result_file, iteration_file;
-		const int 										Sectors;
-		const unsigned  int										Layers;
-		std::vector<int>								Dofs_Below_Subdomain, Block_Sizes;
-
-		std::vector<dealii::IndexSet> 					set;
-
-		bool											temporary_pattern_preped;
 
 
-		std::vector<IndexSet>							locally_relevant_dofs_all_processors;
-		IndexSet										UpperDofs, LowerDofs;
+		std::vector<IndexSet> 					set;
 
-		ConditionalOStream 								pout;
-
-		TimerOutput 									timer;
 		bool											execute_recomputation;
 		Vector<float>                                   cell_weights;
 		Vector<float>                                   cell_weights_prec_1;
 		Vector<float>                                   cell_weights_prec_2;
-        long int                                    start_solver_milis;
-        IndexSet                                        locally_owned_cells, sweepable;
+    IndexSet                                        locally_owned_cells, sweepable;
 };
 
 

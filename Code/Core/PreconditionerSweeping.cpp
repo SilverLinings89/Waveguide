@@ -16,7 +16,7 @@ using namespace dealii;
 PreconditionerSweeping::~PreconditionerSweeping (){
 	delete solver;
 }
-PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int bandwidth,  IndexSet sweepable_dofs, IndexSet in_locally_owned_dofs, int in_upper, ConstraintMatrix * in_cm):
+PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int bandwidth, IndexSet in_locally_owned_dofs, int in_upper, ConstraintMatrix * in_cm):
 
 		matrix(in_own+in_others, in_own+in_others, bandwidth),
 		prec_matrix_lower(in_own, in_others, bandwidth),
@@ -57,7 +57,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
 
 	// double norm_in = input.l2_norm();
 
-	if (GlobalParams.MPI_Rank == GlobalParams.NumberProcesses -1) {
+	if ((int)GlobalParams.MPI_Rank+1 == GlobalParams.NumberProcesses) {
 
 		dealii::Vector<double> outputb(own);
 
@@ -117,7 +117,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
        **/
     // Line 8
                 
-    if(GlobalParams.MPI_Rank != GlobalParams.NumberProcesses-1) {
+    if((int)GlobalParams.MPI_Rank +1 != GlobalParams.NumberProcesses) {
         dealii::Vector<double> temp (own);
         for(int i =0; i < own; i++) {
             temp[i] = input[i];
@@ -145,7 +145,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
             // std::cout << "F" << GlobalParams.MPI_Rank << " " << back_sweep.l2_norm() << std::endl;
             input -= back_sweep;
                 
-            if(GlobalParams.MPI_Rank < GlobalParams.NumberProcesses-1) {
+            if((int)GlobalParams.MPI_Rank +1< GlobalParams.NumberProcesses) {
                     dealii::Vector<double> back_sweep2 (others);
                     UpperProduct(input, back_sweep2);
                     // std::cout << "G" << GlobalParams.MPI_Rank << " " << back_sweep2.l2_norm() << std::endl;
@@ -179,12 +179,12 @@ void PreconditionerSweeping::Hinv(const dealii::Vector<double> & src, dealii::Ve
 	is.add_range(0, own+others-1);
 
 	// TrilinosWrappers::MPI::Vector inputb(is, MPI_COMM_SELF);
-	TrilinosWrappers::Vector inputb(own + others);
+	dealii::Vector<double> inputb(own + others);
 	for(int i = 0; i < own; i++) {
 		inputb[i ] = src(i);
 	}
 
-	TrilinosWrappers::Vector outputb(own + others);
+	dealii::Vector<double> outputb(own + others);
 	//TrilinosWrappers::MPI::Vector outputb(is, MPI_COMM_SELF);
 
 	solver->solve( matrix , outputb, inputb);
@@ -196,7 +196,7 @@ void PreconditionerSweeping::Hinv(const dealii::Vector<double> & src, dealii::Ve
 
 void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> & src, dealii::Vector<double> & dst) const {
 
-	if(GlobalParams.MPI_Rank == GlobalParams.NumberProcesses -1) {
+	if((int)GlobalParams.MPI_Rank +1 == GlobalParams.NumberProcesses) {
 		std::cout << "ERROR!" <<std::endl;
 	}
 
@@ -207,7 +207,7 @@ void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> & src, de
 void PreconditionerSweeping::UpperProduct(const dealii::Vector<double> & src, dealii::Vector<double> & dst) const {
 
 
-	if(GlobalParams.MPI_Rank == GlobalParams.NumberProcesses -1) {
+	if((int)GlobalParams.MPI_Rank+1 == GlobalParams.NumberProcesses) {
 		std::cout << "ERROR!" <<std::endl;
 	}
 
