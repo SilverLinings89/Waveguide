@@ -218,6 +218,12 @@ void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulat
 
     cell = in_tria->begin_active();
     endc = in_tria->end();
+
+    if(GlobalParams.O_G_Log) {
+      if(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0) {
+        mesh_info(*in_tria);
+      }
+    }
 }
 
 bool RoundMeshGenerator::math_coordinate_in_waveguide(Point<3,double> in_position) const {

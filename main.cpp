@@ -24,10 +24,10 @@
 #include "Code/OutputGenerators/Console/GradientTable.cpp"
 
 #include "Code/SpaceTransformations/SpaceTransformation.cpp"
-#include "Code/SpaceTransformations/InhomogenousTransformationRectangular.h"
-#include "Code/SpaceTransformations/InhomogenousTransformationCircular.h"
+#include "Code/SpaceTransformations/InhomogenousTransformationRectangular.cpp"
+#include "Code/SpaceTransformations/InhomogenousTransformationCircular.cpp"
 #include "Code/SpaceTransformations/HomogenousTransformationCircular.cpp"
-#include "Code/SpaceTransformations/HomogenousTransformationRectangular.h"
+#include "Code/SpaceTransformations/HomogenousTransformationRectangular.cpp"
 #include "Code/SpaceTransformations/DualProblemTransformationWrapper.cpp"
 
 #include "Code/MeshGenerators/MeshGenerator.cpp"
@@ -64,13 +64,13 @@ int main (int argc, char *argv[])
     if(GlobalParams.Sc_Homogeneity) {
       st = new HomogenousTransformationCircular();
     } else {
-      // st = new InhomogenousTransformationRectangular();
+      st = new InhomogenousTransformationCircular();
     }
   } else {
     if(GlobalParams.Sc_Homogeneity) {
-     // st = new HomogenousTransformationRectangular();
+     st = new HomogenousTransformationRectangular();
     } else {
-     // st = new InhomogenousTransformationRectangular();
+     st = new InhomogenousTransformationRectangular();
     }
   }
   std::cout << "Main_Mark_4" << std::endl;

@@ -19,7 +19,8 @@ AdjointOptimization::~AdjointOptimization() {
 }
 
 void AdjointOptimization::run() {
-
+  primal_waveguide->run();
+  dual_waveguide->run();
 
 }
 

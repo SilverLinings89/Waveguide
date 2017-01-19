@@ -31,49 +31,53 @@ DualProblemTransformationWrapper::DualProblemTransformationWrapper (SpaceTransfo
 
 }
 
-Point<3> DualProblemTransformationWrapper::math_to_phys(Point<3> coord) {
+Point<3> DualProblemTransformationWrapper::math_to_phys(Point<3> coord) const {
   return st->math_to_phys(coord);
 }
 
-bool DualProblemTransformationWrapper::PML_in_X(Point<3> &p) {
+Point<3> DualProblemTransformationWrapper::phys_to_math(Point<3> coord) const {
+  return st->phys_to_math(coord);
+}
+
+bool DualProblemTransformationWrapper::PML_in_X(Point<3> &p) const {
   return st->PML_in_X(p);
 }
 
-bool DualProblemTransformationWrapper::PML_in_Y(Point<3> &p) {
+bool DualProblemTransformationWrapper::PML_in_Y(Point<3> &p) const {
   return st->PML_in_Y(p);
 }
 
-bool DualProblemTransformationWrapper::PML_in_Z(Point<3> &p) {
+bool DualProblemTransformationWrapper::PML_in_Z(Point<3> &p) const {
   return st->PML_in_Z(p);
 }
 
-bool DualProblemTransformationWrapper::Preconditioner_PML_in_Z(Point<3> &p, unsigned int block) {
+bool DualProblemTransformationWrapper::Preconditioner_PML_in_Z(Point<3> &p, unsigned int block)  const{
   return st->Preconditioner_PML_in_Z(p, block);
 }
 
-double DualProblemTransformationWrapper::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ){
+double DualProblemTransformationWrapper::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ) const{
   return st->Preconditioner_PML_Z_Distance(p, block);
 }
 
-double DualProblemTransformationWrapper::PML_X_Distance(Point<3> &p){
+double DualProblemTransformationWrapper::PML_X_Distance(Point<3> &p) const{
   return st->PML_X_Distance(p);
 }
 
-double DualProblemTransformationWrapper::PML_Y_Distance(Point<3> &p){
+double DualProblemTransformationWrapper::PML_Y_Distance(Point<3> &p) const{
   return st->PML_Y_Distance(p);
 }
 
-double DualProblemTransformationWrapper::PML_Z_Distance(Point<3> &p){
+double DualProblemTransformationWrapper::PML_Z_Distance(Point<3> &p) const{
   return st->PML_Z_Distance(p);
 }
 
-Tensor<2,3, std::complex<double>> DualProblemTransformationWrapper::get_Tensor(Point<3> & position) {
+Tensor<2,3, std::complex<double>> DualProblemTransformationWrapper::get_Tensor(Point<3> & position) const {
   Point<3> p = position;
   p[2] = (GlobalParams.M_R_ZLength/2.0) - p[2];
   return st->get_Tensor(p);
 }
 
-Tensor<2,3, std::complex<double>> DualProblemTransformationWrapper::get_Preconditioner_Tensor(Point<3> & position, int block) {
+Tensor<2,3, std::complex<double>> DualProblemTransformationWrapper::get_Preconditioner_Tensor(Point<3> & position, int block) const {
   Point<3> p = position;
   p[2] = (GlobalParams.M_R_ZLength/2.0) - p[2];
   return st->get_Preconditioner_Tensor(p,block);
@@ -93,19 +97,19 @@ void DualProblemTransformationWrapper::estimate_and_initialize() {
   return;
 }
 
-double DualProblemTransformationWrapper::get_Q1 (double z) {
+double DualProblemTransformationWrapper::get_Q1 (double z) const {
   return st->get_Q1(z);
 }
 
-double DualProblemTransformationWrapper::get_Q2 (double z) {
+double DualProblemTransformationWrapper::get_Q2 (double z) const {
   return st->get_Q2(z);
 }
 
-double DualProblemTransformationWrapper::get_Q3 (double z) {
+double DualProblemTransformationWrapper::get_Q3 (double z) const {
   return st->get_Q3(z);
 }
 
-double DualProblemTransformationWrapper::get_dof( int dof) {
+double DualProblemTransformationWrapper::get_dof( int dof) const {
   return st->get_dof(dof);
 }
 
@@ -113,7 +117,7 @@ void DualProblemTransformationWrapper::set_dof(int dof, double value) {
   return st->set_dof(dof, value);
 }
 
-double DualProblemTransformationWrapper::get_free_dof( int dof) {
+double DualProblemTransformationWrapper::get_free_dof( int dof) const {
   return st->get_free_dof(dof);
 }
 
@@ -121,47 +125,47 @@ void DualProblemTransformationWrapper::set_free_dof(int dof, double value) {
   return st->set_free_dof(dof, value);
 }
 
-std::pair<int, double> DualProblemTransformationWrapper::Z_to_Sector_and_local_z(double in_z) {
+std::pair<int, double> DualProblemTransformationWrapper::Z_to_Sector_and_local_z(double in_z) const {
   return st->Z_to_Sector_and_local_z(in_z);
 }
 
-double DualProblemTransformationWrapper::Sector_Length() {
+double DualProblemTransformationWrapper::Sector_Length() const {
   return st->Sector_Length();
 }
 
-double DualProblemTransformationWrapper::get_r(double in_z) {
+double DualProblemTransformationWrapper::get_r(double in_z) const {
   return st->get_r(in_z);
 }
 
-double DualProblemTransformationWrapper::get_m(double in_z) {
+double DualProblemTransformationWrapper::get_m(double in_z) const {
   return st->get_m(in_z);
 }
 
-double DualProblemTransformationWrapper::get_v(double in_z) {
+double DualProblemTransformationWrapper::get_v(double in_z) const {
   return st->get_v(in_z);
 }
 
-int DualProblemTransformationWrapper::Z_to_Layer( double z) {
+int DualProblemTransformationWrapper::Z_to_Layer( double z) const {
   return st->Z_to_Layer(z);
 }
 
-Vector<double> DualProblemTransformationWrapper::Dofs() {
+Vector<double> DualProblemTransformationWrapper::Dofs() const {
   return st->Dofs();
 }
 
-unsigned int DualProblemTransformationWrapper::NFreeDofs() {
+unsigned int DualProblemTransformationWrapper::NFreeDofs()  const{
   return st->NFreeDofs();
 }
 
-unsigned int DualProblemTransformationWrapper::NDofs() {
+unsigned int DualProblemTransformationWrapper::NDofs() const {
   return st->NDofs();
 }
 
-bool DualProblemTransformationWrapper::IsDofFree(int input) {
+bool DualProblemTransformationWrapper::IsDofFree(int input) const {
   return st->IsDofFree(input);
 }
 
-void DualProblemTransformationWrapper::Print() {
+void DualProblemTransformationWrapper::Print() const {
   return st->Print();
 }
 

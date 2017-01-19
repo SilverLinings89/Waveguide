@@ -377,12 +377,13 @@ class Waveguide
     int                       run_number;
 
     int                       condition_file_counter, eigenvalue_file_counter;
+    const unsigned  int                   Layers;
     std::vector<int>                Dofs_Below_Subdomain, Block_Sizes;
     ConditionalOStream                pout;
     bool                      is_stored;
     TimerOutput                   timer;
     const int                     Sectors;
-    const unsigned  int                   Layers;
+
 
 
 		// HIER BEGINNT DIE ALTE VERSION ...

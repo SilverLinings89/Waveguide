@@ -82,7 +82,7 @@ class Sector {
 		 * \param in_y y-coordinate of the point, for which the Tensor should be calculated.
 		 * \param in_z z-coordinate of the point, for which the Tensor should be calculated.
 		 */
-		Tensor<2,3, double> TransformationTensorInternal (double in_x, double in_y, double in_z);
+		Tensor<2,3, double> TransformationTensorInternal (double in_x, double in_y, double in_z) const;
 
 		/**
 		 * This function is used during the optimization-operation to update the properties of the space-transformation. However, to ensure, that the boundary-conditions remain intact, this function cannot edit the left defrees of freedom if left is true and it cannot edit the right degrees of freedom if right is true
@@ -95,35 +95,35 @@ class Sector {
 		/**
 		 * The values of Q1, Q2 and Q3 are needed to compute the solution in real coordinates from the one in trnsformed coordinates. This function returnes Q1 for a given position and the current transformation.
 		 */
-		double getQ1( double);
+		double getQ1( double) const;
 		/**
 		 * The values of Q1, Q2 and Q3 are needed to compute the solution in real coordinates from the one in transformed coordinates. This function returnes Q2 for a given position and the current transformation.
 		 */
-		double getQ2( double);
+		double getQ2( double) const;
 		/**
 		 * The values of Q1, Q2 and Q3 are needed to compute the solution in real coordinates from the one in transformed coordinates. This function returnes Q3 for a given position and the current transformation.
 		 */
-		double getQ3( double);
+		double getQ3( double) const;
 
 		/**
 		 * This function returns the number of the lowest degree of freedom associated with this Sector. Keep in mind, that the degrees of freedom associated with edges on the lower (small \f$ z \f$) interface are not included since this functionality is supposed to help in the block-structure generation and those dofs are part of the neighboring block.
 		 */
-		unsigned int getLowestDof();
+		unsigned int getLowestDof() const;
 
 		/**
 		 * This function returns the number of dofs which are part of this sector. The same remarks as for getLowestDof() apply.
 		 */
-		unsigned int getNDofs();
+		unsigned int getNDofs() const;
 
 		/**
 		 * In order to set appropriate boundary conditions it makes sense to determine, which degrees are associated with an edge which is part of an interface to another sector. Due to the reordering of dofs this is especially easy since the dofs on the interface are those in the interval \f[[\,\operatorname{LowestDof} + \operatorname{NDofs} - \operatorname{NInternalBoundaryDofs}\, , \,  \operatorname{LowestDof} + \operatorname{NDofs}\,]\f]
 		 */
-		unsigned int getNInternalBoundaryDofs();
+		unsigned int getNInternalBoundaryDofs() const;
 
 		/**
 		 * This function can be used to query the number of cells in a Sector / subdomain. In this case there are no problems with interface-dofs. Every cell belongs to exactly one sector (the problem arises from the fact, that one edge can (and most of the time will) belong to more then one cell).
 		 */
-		unsigned int getNActiveCells();
+		unsigned int getNActiveCells() const;
 
 		/**
 		 * Setter for the value that the getter should return. Called after Dof-reordering.
@@ -145,25 +145,25 @@ class Sector {
 		 */
 		void setNActiveCells(unsigned int );
 
-		double get_dof(unsigned int i, double z);
+		double get_dof(unsigned int i, double z) const;
 
 		/**
 		 * Get an interpolation of the radius for a coordinate z
 		 * \param double z is the \f$z \in [0,1]\f$ coordinate for the interpolation.
 		 */
-		double get_r(double z);
+		double get_r(double z) const;
 
 		/**
 		 * Get an interpolation of the tilt for a coordinate z
 		 * \param double z is the \f$z \in [0,1]\f$ coordinate for the interpolation.
 		 */
-		double get_v(double z);
+		double get_v(double z) const;
 
 		/**
 		 * Get an interpolation of the shift for a coordinate z
 		 * \param double z is the \f$z \in [0,1]\f$ coordinate for the interpolation.
 		 */
-		double get_m(double z);
+		double get_m(double z) const;
 
 	//private:
 

@@ -1,13 +1,13 @@
-#ifndef HomogenousTransformationCircular_CPP
-#define HomogenousTransformationCircular_CPP
+#ifndef HOMOGENOUS_TRANSFORMATION_RECTANGULAR_CPP
+#define HOMOGENOUS_TRANSFORMATION_RECTANGULAR_CPP
 
-#include "HomogenousTransformationCircular.h"
+#include "HomogenousTransformationRectangular.h"
 #include "../Helpers/staticfunctions.h"
 #include "../Helpers/QuadratureFormulaCircle.cpp"
 
 using namespace dealii;
 
-HomogenousTransformationCircular::HomogenousTransformationCircular ():
+HomogenousTransformationRectangular::HomogenousTransformationRectangular ():
     SpaceTransformation(3),
   XMinus( -(GlobalParams.M_R_XLength *0.5 - GlobalParams.M_BC_XMinus)),
   XPlus( GlobalParams.M_R_XLength *0.5 - GlobalParams.M_BC_XPlus),
@@ -24,11 +24,11 @@ HomogenousTransformationCircular::HomogenousTransformationCircular ():
 
 }
 
-HomogenousTransformationCircular::~HomogenousTransformationCircular() {
+HomogenousTransformationRectangular::~HomogenousTransformationRectangular() {
 
 }
 
-Point<3> HomogenousTransformationCircular::math_to_phys(Point<3> coord) const {
+Point<3> HomogenousTransformationRectangular::math_to_phys(Point<3> coord) const {
   Point<3> ret;
   if(coord[2] < GlobalParams.M_R_ZLength/(-2.0)) {
     ret[0] = (2*GlobalParams.M_C_Dim1In) * coord[0] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
@@ -44,7 +44,7 @@ Point<3> HomogenousTransformationCircular::math_to_phys(Point<3> coord) const {
   return ret;
 }
 
-Point<3> HomogenousTransformationCircular::phys_to_math(Point<3> coord) const {
+Point<3> HomogenousTransformationRectangular::phys_to_math(Point<3> coord) const {
   Point<3> ret;
   if(coord[2] < GlobalParams.M_R_ZLength/(-2.0)) {
     ret[0] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[0] / (2*GlobalParams.M_C_Dim1In);
@@ -60,19 +60,19 @@ Point<3> HomogenousTransformationCircular::phys_to_math(Point<3> coord) const {
   return ret;
 }
 
-bool HomogenousTransformationCircular::PML_in_X(Point<3> &p) const {
+bool HomogenousTransformationRectangular::PML_in_X(Point<3> &p) const {
   return p(0) < XMinus ||p(0) > XPlus;
 }
 
-bool HomogenousTransformationCircular::PML_in_Y(Point<3> &p)  const{
+bool HomogenousTransformationRectangular::PML_in_Y(Point<3> &p) const {
   return p(1) < YMinus ||p(1) > YPlus;
 }
 
-bool HomogenousTransformationCircular::PML_in_Z(Point<3> &p)  const{
+bool HomogenousTransformationRectangular::PML_in_Z(Point<3> &p)  const{
   return p(2) < ZMinus ||p(2) > ZPlus;
 }
 
-bool HomogenousTransformationCircular::Preconditioner_PML_in_Z(Point<3> &, unsigned int block)  const{
+bool HomogenousTransformationRectangular::Preconditioner_PML_in_Z(Point<3> &, unsigned int block) const {
   if( (int)block == GlobalParams.NumberProcesses-2) return false;
   if ( (int)block == (int)GlobalParams.MPI_Rank-1){
     return true;
@@ -81,14 +81,14 @@ bool HomogenousTransformationCircular::Preconditioner_PML_in_Z(Point<3> &, unsig
   }
 }
 
-double HomogenousTransformationCircular::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ) const{
+double HomogenousTransformationRectangular::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ) const{
   double width = GlobalParams.LayerThickness * 1.0;
 
   return p(2) +GlobalParams.M_R_ZLength/2.0 - ((double)block +1)*width;
 
 }
 
-double HomogenousTransformationCircular::PML_X_Distance(Point<3> &p) const{
+double HomogenousTransformationRectangular::PML_X_Distance(Point<3> &p) const{
   if(p(0) >0){
     return p(0) - XPlus ;
   } else {
@@ -96,7 +96,7 @@ double HomogenousTransformationCircular::PML_X_Distance(Point<3> &p) const{
   }
 }
 
-double HomogenousTransformationCircular::PML_Y_Distance(Point<3> &p) const{
+double HomogenousTransformationRectangular::PML_Y_Distance(Point<3> &p) const{
   if(p(1) >0){
     return p(1) - YMinus;
   } else {
@@ -104,7 +104,7 @@ double HomogenousTransformationCircular::PML_Y_Distance(Point<3> &p) const{
   }
 }
 
-double HomogenousTransformationCircular::PML_Z_Distance(Point<3> &p) const{
+double HomogenousTransformationRectangular::PML_Z_Distance(Point<3> &p) const{
   if(p(3) < 0) {
     return - (p(2) + (GlobalParams.M_R_ZLength / 2.0));
   } else {
@@ -112,7 +112,7 @@ double HomogenousTransformationCircular::PML_Z_Distance(Point<3> &p) const{
   }
 }
 
-Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Tensor(Point<3> & position) const {
+Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::get_Tensor(Point<3> & position) const {
   std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
   Tensor<2,3, std::complex<double>> ret;
 
@@ -203,7 +203,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Tensor(P
   return ret3;
 }
 
-Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Preconditioner_Tensor(Point<3> & position, int block) const {
+Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::get_Preconditioner_Tensor(Point<3> & position, int block) const {
   std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
   Tensor<2,3, std::complex<double>> ret;
 
@@ -293,7 +293,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Precondi
   return MaterialTensor;
 }
 
-std::complex<double> HomogenousTransformationCircular::gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc, Waveguide * in_w)
+std::complex<double> HomogenousTransformationRectangular::gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc, Waveguide * in_w)
 {
   double* r = NULL;
   double* t = NULL;
@@ -336,14 +336,14 @@ std::complex<double> HomogenousTransformationCircular::gauss_product_2D_sphere(d
   return s;
 }
 
-std::complex<double> HomogenousTransformationCircular::evaluate_for_z(double in_z, Waveguide * in_w) {
+std::complex<double> HomogenousTransformationRectangular::evaluate_for_z(double in_z, Waveguide * in_w) {
   double r = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
 
   std::complex<double> res = gauss_product_2D_sphere(in_z,10,r,0,0, in_w);
   return sqrt(std::norm(res));
 }
 
-double HomogenousTransformationCircular::get_dof(int dof) const {
+double HomogenousTransformationRectangular::get_dof(int dof) const {
   if(dof < (int)NDofs() && dof >= 0) {
     int sector = floor(dof/3);
     if(sector == sectors) {
@@ -357,7 +357,7 @@ double HomogenousTransformationCircular::get_dof(int dof) const {
   }
 }
 
-double HomogenousTransformationCircular::get_free_dof(int in_dof) const {
+double HomogenousTransformationRectangular::get_free_dof(int in_dof) const {
   int dof = in_dof +3 ;
   if(dof < (int)NDofs()-3 && dof >= 0) {
     int sector = floor(dof/3);
@@ -372,7 +372,7 @@ double HomogenousTransformationCircular::get_free_dof(int in_dof) const {
   }
 }
 
-void HomogenousTransformationCircular::set_dof(int dof, double in_val) {
+void HomogenousTransformationRectangular::set_dof(int dof, double in_val) {
   if(dof < (int)NDofs() && dof >= 0) {
     int sector = floor(dof/3);
     if(sector == sectors) {
@@ -388,7 +388,7 @@ void HomogenousTransformationCircular::set_dof(int dof, double in_val) {
   }
 }
 
-void HomogenousTransformationCircular::set_free_dof(int in_dof, double in_val) {
+void HomogenousTransformationRectangular::set_free_dof(int in_dof, double in_val) {
   int dof = in_dof + 3;
   if(dof < (int)NDofs() -3 && dof >= 0) {
     int sector = floor(dof/3);
@@ -405,26 +405,26 @@ void HomogenousTransformationCircular::set_free_dof(int in_dof, double in_val) {
   }
 }
 
-double HomogenousTransformationCircular::Sector_Length() const {
+double HomogenousTransformationRectangular::Sector_Length()  const{
   return GlobalParams.M_R_ZLength / (double)GlobalParams.M_W_Sectors;
 }
 
-void HomogenousTransformationCircular::estimate_and_initialize() {
+void HomogenousTransformationRectangular::estimate_and_initialize() {
     case_sectors.reserve(sectors);
     double m_0 = GlobalParams.M_W_Delta/2.0;
     double m_1 = -GlobalParams.M_W_Delta/2.0;
     double r_0 = GlobalParams.M_C_Dim1In;
     double r_1 = GlobalParams.M_C_Dim1Out;
     if(sectors == 1) {
-      Sector<3> temp12(true, true, -GlobalParams.M_R_ZLength/2, GlobalParams.M_R_ZLength/2 );
+      Sector<4> temp12(true, true, -GlobalParams.M_R_ZLength/2, GlobalParams.M_R_ZLength/2 );
       case_sectors.push_back(temp12);
       case_sectors[0].set_properties_force(GlobalParams.M_W_Delta/2.0,-GlobalParams.M_W_Delta/2.0, GlobalParams.M_C_Dim1In, GlobalParams.M_C_Dim1Out, 0, 0);
     } else {
       double length = Sector_Length();
-      Sector<3> temp(true, false, -GlobalParams.M_R_ZLength/(2.0), -GlobalParams.M_R_ZLength/2.0 + length );
+      Sector<4> temp(true, false, -GlobalParams.M_R_ZLength/(2.0), -GlobalParams.M_R_ZLength/2.0 + length );
       case_sectors.push_back(temp);
       for(int  i = 1; i < sectors; i++) {
-        Sector<3> temp2( false, false, -GlobalParams.M_R_ZLength/(2.0) + length*(1.0 *i), -GlobalParams.M_R_ZLength/(2.0) + length*(i + 1.0) );
+        Sector<4> temp2( false, false, -GlobalParams.M_R_ZLength/(2.0) + length*(1.0 *i), -GlobalParams.M_R_ZLength/(2.0) + length*(i + 1.0) );
         case_sectors.push_back(temp2);
       }
 
@@ -457,37 +457,37 @@ void HomogenousTransformationCircular::estimate_and_initialize() {
 
 }
 
-double HomogenousTransformationCircular::get_r(double z_in) const {
+double HomogenousTransformationRectangular::get_r(double z_in) const {
   std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
   return case_sectors[two.first].get_r(two.second);
 }
 
-double HomogenousTransformationCircular::get_m(double z_in) const {
+double HomogenousTransformationRectangular::get_m(double z_in) const {
   std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
   return case_sectors[two.first].get_m(two.second);
 }
 
-double HomogenousTransformationCircular::get_v(double z_in) const {
+double HomogenousTransformationRectangular::get_v(double z_in) const {
   std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
   return case_sectors[two.first].get_v(two.second);
 }
 
-double HomogenousTransformationCircular::get_Q1(double z_in) const {
+double HomogenousTransformationRectangular::get_Q1(double z_in) const {
   std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
   return case_sectors[two.first].getQ1(two.second);
 }
 
-double HomogenousTransformationCircular::get_Q2(double z_in) const {
+double HomogenousTransformationRectangular::get_Q2(double z_in) const {
   std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
   return case_sectors[two.first].getQ2(two.second);
 }
 
-double HomogenousTransformationCircular::get_Q3(double z_in) const{
+double HomogenousTransformationRectangular::get_Q3(double z_in) const {
   std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
   return case_sectors[two.first].getQ3(two.second);
 }
 
-Vector<double> HomogenousTransformationCircular::Dofs()  const{
+Vector<double> HomogenousTransformationRectangular::Dofs() const {
   Vector<double> ret;
   const int total = NDofs();
   ret.reinit(total);
@@ -497,19 +497,19 @@ Vector<double> HomogenousTransformationCircular::Dofs()  const{
   return ret;
 }
 
-unsigned int HomogenousTransformationCircular::NFreeDofs() const {
+unsigned int HomogenousTransformationRectangular::NFreeDofs() const {
   return NDofs() - 6;
 }
 
-bool HomogenousTransformationCircular::IsDofFree(int index) const {
+bool HomogenousTransformationRectangular::IsDofFree(int index) const {
   return index > 2 && index < (int)NDofs()-3;
 }
 
-void HomogenousTransformationCircular::Print () const {
+void HomogenousTransformationRectangular::Print ()  const{
   std::cout << "Printing is not yet implemented." << std::endl;
 }
 
-unsigned int HomogenousTransformationCircular::NDofs() const {
+unsigned int HomogenousTransformationRectangular::NDofs()  const{
   return sectors * 3 + 3;
 }
 #endif

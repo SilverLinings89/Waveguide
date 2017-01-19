@@ -3,8 +3,10 @@
 
 #include "SpaceTransformation.h"
 
-std::pair<int, double> SpaceTransformation::Z_to_Sector_and_local_z(double in_z) {
-  std::pair<int, double> ret(0,0.0);
+std::pair<int, double> SpaceTransformation::Z_to_Sector_and_local_z(double in_z) const {
+  std::pair<int, double> ret;
+  ret.first = 0;
+  ret.second = 0.0;
   if(in_z <= -GlobalParams.M_R_ZLength/2.0) {
     ret.first = 0;
     ret.second = 0.0;
@@ -30,15 +32,15 @@ SpaceTransformation::SpaceTransformation(int in_dofs_per_layer) :
   InitialQuality = 0;
 }
 
-double SpaceTransformation::Sector_Length() {
+double SpaceTransformation::Sector_Length() const {
   return GlobalParams.M_R_ZLength / (double)GlobalParams.M_W_Sectors;
 }
 
-int SpaceTransformation::Z_to_Layer(double in_z) {
+int SpaceTransformation::Z_to_Layer(double in_z) const {
   return floor((in_z + (GlobalParams.M_R_ZLength/2.0))/GlobalParams.LayerThickness);
 }
 
-bool SpaceTransformation::is_identity(Point<3, double> coord) {
+bool SpaceTransformation::is_identity(Point<3, double> coord) const {
   double sum =0.0;
   Point<3,double> temp = math_to_phys(coord);
   for(unsigned int i = 0; i < 3; i++) {

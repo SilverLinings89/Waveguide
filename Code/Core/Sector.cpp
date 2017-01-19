@@ -62,7 +62,7 @@ template<unsigned int Dofs_Per_Sector> void Sector<Dofs_Per_Sector>::set_propert
   dofs_r[2] = in_v_1;
 }
 
-template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::get_dof(unsigned int i, double z) {
+template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::get_dof(unsigned int i, double z) const {
   if(i > 0 && i < NDofs) {
     if ( z < 0.0 ) z = 0.0;
     if ( z > 1.0 ) z = 1.0;
@@ -78,37 +78,37 @@ template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::get_dof(u
 
 }
 
-template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::get_r(double z) {
+template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::get_r(double z) const {
 	if ( z < 0.0 ) z = 0.0;
 	if ( z > 1.0 ) z = 1.0;
 	return InterpolationPolynomialZeroDerivative(z, dofs_l[0], dofs_r[0]);
 }
 
-template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::get_m(double z) {
+template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::get_m(double z) const {
 	if ( z < 0.0 ) z = 0.0;
 	if ( z > 1.0 ) z = 1.0;
 	return InterpolationPolynomial(z, dofs_l[1], dofs_r[1], dofs_l[2], dofs_r[2]);
 }
 
-template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::get_v(double z) {
+template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::get_v(double z) const {
 	if ( z < 0.0 ) z = 0.0;
 	if ( z > 1.0 ) z = 1.0;
 	return InterpolationPolynomialZeroDerivative(z, dofs_l[2], dofs_r[2]);
 }
 
-template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::getQ1 ( double z) {
+template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::getQ1 ( double z) const {
 	return 1/(dofs_l[0] + z*z*z*(2*dofs_l[0] - 2*dofs_r[0]) - z*z*(3*dofs_l[0] - 3*dofs_r[0]));
 }
 
-template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::getQ2 ( double z) {
+template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::getQ2 ( double z) const {
 	return 1/(dofs_l[0] + z*z*z*(2*dofs_l[0] - 2*dofs_r[0]) - z*z*(3*dofs_l[0] - 3*dofs_r[0]));
 }
 
-template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::getQ3 ( double ) {
+template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::getQ3 ( double )  const {
   return 0.0;
 }
 
-template<unsigned int Dofs_Per_Sector> Tensor<2,3, double> Sector<Dofs_Per_Sector>::TransformationTensorInternal (double in_x, double in_y, double z) {
+template<unsigned int Dofs_Per_Sector> Tensor<2,3, double> Sector<Dofs_Per_Sector>::TransformationTensorInternal (double in_x, double in_y, double z) const {
 	if(z<0 || z>1) std::cout << "Falty implementation of internal Tensor calculation: z: " << z << std::endl;
 	double RadiusInMultiplyer = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/(2* dofs_l[0]);
 	double RadiusOutMultiplyer = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/(2* dofs_r[0]);
@@ -171,19 +171,19 @@ template<unsigned int Dofs_Per_Sector> Tensor<2,3, double> Sector<Dofs_Per_Secto
 	return g;
 }
 
-template<unsigned int Dofs_Per_Sector> unsigned int Sector<Dofs_Per_Sector>::getLowestDof() {
+template<unsigned int Dofs_Per_Sector> unsigned int Sector<Dofs_Per_Sector>::getLowestDof() const {
 	return LowestDof;
 }
 
-template<unsigned int Dofs_Per_Sector> unsigned int Sector<Dofs_Per_Sector>::getNDofs() {
+template<unsigned int Dofs_Per_Sector> unsigned int Sector<Dofs_Per_Sector>::getNDofs() const {
 	return NDofs;
 }
 
-template<unsigned int Dofs_Per_Sector> unsigned int Sector<Dofs_Per_Sector>::getNInternalBoundaryDofs() {
+template<unsigned int Dofs_Per_Sector> unsigned int Sector<Dofs_Per_Sector>::getNInternalBoundaryDofs() const {
 	return NInternalBoundaryDofs;
 }
 
-template<unsigned int Dofs_Per_Sector> unsigned int Sector<Dofs_Per_Sector>::getNActiveCells() {
+template<unsigned int Dofs_Per_Sector> unsigned int Sector<Dofs_Per_Sector>::getNActiveCells() const {
 	return NActiveCells;
 }
 

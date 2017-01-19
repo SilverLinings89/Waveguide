@@ -14,6 +14,16 @@ std::string total_filename 			= "total.log";
 int 	StepsR 			= 10;
 int 	StepsPhi 		= 10;
 
+static int alert_counter = 0;
+
+void alert() {
+  MPI_Barrier(MPI_COMM_WORLD);
+  if(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0) {
+    std::cout<< "Alert: " << alert_counter << std::endl;
+  }
+  alert_counter++;
+}
+
 static Parameters GetParameters() {
 	ParameterHandler prm;
 	ParameterReader param(prm);
@@ -304,6 +314,34 @@ template<int dim> static void mesh_info(const parallel::distributed::Triangulati
 	grid_out.write_vtk (tria, out);
 	out.close();
 	std::cout << " written to " << filename << std::endl << std::endl;
+}
+
+template<int dim> static void mesh_info(const parallel::distributed::Triangulation<dim> &tria)
+{
+  std::cout << "Mesh info:" << std::endl << " dimension: " << dim << std::endl << " no. of cells: " << tria.n_active_cells() << std::endl;
+  {
+    std::map<unsigned int, unsigned int> boundary_count;
+    typename parallel::distributed::Triangulation<dim>::active_cell_iterator
+    cell = tria.begin_active(),
+    endc = tria.end();
+    for (; cell!=endc; ++cell)
+    {
+      for (unsigned int face=0; face<GeometryInfo<dim>::faces_per_cell; ++face)
+      {
+        if (cell->face(face)->at_boundary())
+          boundary_count[cell->face(face)->boundary_id()]++;
+      }
+    }
+    std::cout << " boundary indicators: ";
+    for (std::map<unsigned int, unsigned int>::iterator it=boundary_count.begin();
+        it!=boundary_count.end();
+        ++it)
+    {
+      std::cout << it->first << "(" << it->second << " times) ";
+    }
+    std::cout << std::endl;
+  }
+
 }
 
 static double sigma (double in_z, double min, double max) {

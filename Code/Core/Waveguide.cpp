@@ -37,13 +37,13 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
     run_number(0),
     condition_file_counter(0),
     eigenvalue_file_counter(0),
+    Layers(GlobalParams.NumberProcesses),
     Dofs_Below_Subdomain(Layers),
     Block_Sizes(Layers),
     pout(std::cout, GlobalParams.MPI_Rank==0),
     is_stored(false),
     timer(in_mpi_comm, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times),
-    Sectors(GlobalParams.M_W_Sectors),
-    Layers(GlobalParams.NumberProcesses)
+    Sectors(GlobalParams.M_W_Sectors)
 {
   mg = in_mg;
   st = in_st;
@@ -193,16 +193,23 @@ void Waveguide::Compute_Dof_Numbers() {
 	std::vector<types::global_dof_index> DofsPerSubdomain(Layers);
 	std::vector<int> InternalBoundaryDofs(Layers);
 
+	alert();
+
 	DofsPerSubdomain = dof_handler.n_locally_owned_dofs_per_processor();
 	for( unsigned int i = 0; i < Layers; i++) {
 		Block_Sizes[i] = DofsPerSubdomain[i];
 	}
+
+	alert();
 
 	Dofs_Below_Subdomain[0] = 0;
 
 	for(unsigned int i = 1; i  < Layers; i++) {
 		Dofs_Below_Subdomain[i] = Dofs_Below_Subdomain[i-1] + Block_Sizes[i-1];
 	}
+
+	alert();
+
 	for(unsigned int i = 0; i < Layers; i++) {
 		IndexSet temp (dof_handler.n_dofs());
 		temp.clear();
