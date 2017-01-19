@@ -21,32 +21,36 @@ static Parameters GetParameters() {
 	struct Parameters ret;
 	prm.enter_subsection("Output");
 	{
-	  prm.enter_subsection("Gnuplot");
+	  prm.enter_subsection("Optimization");
 	  {
-	    ret.O_O_G_HistoryLive = prm.get_bool("Optimization History Live");
-	    ret.O_O_G_HistoryShapes = prm.get_bool("Optimization History Shapes");
-	    ret.O_O_G_History = prm.get_bool("Optimization History");
-	  }
-	  prm.leave_subsection();
-
-	  prm.enter_subsection("VTK");
-	  {
-	    prm.enter_subsection("TransformationWeights");
-	    {
-	        ret.O_O_V_T_TransformationWeightsAll = prm.get_bool("TransformationWeightsAll");
-	        ret.O_O_V_T_TransformationWeightsFirst = prm.get_bool("TransformationWeightsFirst");
-	        ret.O_O_V_T_TransformationWeightsLast = prm.get_bool("TransformationWeightsLast");
+      prm.enter_subsection("Gnuplot");
+      {
+        ret.O_O_G_HistoryLive = prm.get_bool("Optimization History Live");
+        ret.O_O_G_HistoryShapes = prm.get_bool("Optimization History Shapes");
+        ret.O_O_G_History = prm.get_bool("Optimization History");
       }
-	    prm.leave_subsection();
+      prm.leave_subsection();
 
-	    prm.enter_subsection("Solution");
-	    {
-	      ret.O_O_V_S_SolutionAll = prm.get_bool("SolutionAll");
-	      ret.O_O_V_S_SolutionFirst = prm.get_bool("SolutionFirst");
-	      ret.O_O_V_S_SolutionLast = prm.get_bool("SolutionLast");
-	    }
-	    prm.leave_subsection();
+      prm.enter_subsection("VTK");
+      {
+        prm.enter_subsection("TransformationWeights");
+        {
+            ret.O_O_V_T_TransformationWeightsAll = prm.get_bool("TransformationWeightsAll");
+            ret.O_O_V_T_TransformationWeightsFirst = prm.get_bool("TransformationWeightsFirst");
+            ret.O_O_V_T_TransformationWeightsLast = prm.get_bool("TransformationWeightsLast");
+        }
+        prm.leave_subsection();
 
+        prm.enter_subsection("Solution");
+        {
+          ret.O_O_V_S_SolutionAll = prm.get_bool("SolutionAll");
+          ret.O_O_V_S_SolutionFirst = prm.get_bool("SolutionFirst");
+          ret.O_O_V_S_SolutionLast = prm.get_bool("SolutionLast");
+        }
+        prm.leave_subsection();
+
+      }
+      prm.leave_subsection();
 	  }
 	  prm.leave_subsection();
 
