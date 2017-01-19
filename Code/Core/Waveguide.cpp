@@ -27,7 +27,7 @@ using namespace dealii;
 
 Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st):
     fe(FE_Nedelec<3> (0), 2),
-    triangulation (mpi_comm, parallel::distributed::Triangulation<3>::MeshSmoothing(Triangulation<3>::none ), parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning),
+    triangulation (in_mpi_comm, parallel::distributed::Triangulation<3>::MeshSmoothing(Triangulation<3>::none ), parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning),
     even(Utilities::MPI::this_mpi_process(in_mpi_comm)%2 == 0),
     rank(Utilities::MPI::this_mpi_process(in_mpi_comm)),
     real(0),
@@ -39,10 +39,9 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
     eigenvalue_file_counter(0),
     Dofs_Below_Subdomain(Layers),
     Block_Sizes(Layers),
-
     pout(std::cout, GlobalParams.MPI_Rank==0),
     is_stored(false),
-    timer(mpi_comm, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times),
+    timer(in_mpi_comm, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times),
     Sectors(GlobalParams.M_W_Sectors),
     Layers(GlobalParams.NumberProcesses)
 {

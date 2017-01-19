@@ -50,16 +50,16 @@ using namespace dealii;
 int main (int argc, char *argv[])
 {
 	Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
-
+	std::cout << "Main_Mark_1" << std::endl;
 	GlobalParams = GetParameters();
 
 	MPI_Comm  mpi_primal, mpi_dual;
-
+	std::cout << "Main_Mark_2" << std::endl;
 	mpi_primal = MPI_COMM_WORLD;
 	mpi_dual = MPI_COMM_WORLD;
 
 	SpaceTransformation * st;
-
+	std::cout << "Main_Mark_3" << std::endl;
   if(GlobalParams.M_C_Shape == ConnectorType::Circle){
     if(GlobalParams.Sc_Homogeneity) {
       st = new HomogenousTransformationCircular();
@@ -73,7 +73,7 @@ int main (int argc, char *argv[])
      // st = new InhomogenousTransformationRectangular();
     }
   }
-
+  std::cout << "Main_Mark_4" << std::endl;
 	MeshGenerator * mg;
 	if(GlobalParams.M_C_Shape == ConnectorType::Circle ){
 	  mg = new RoundMeshGenerator(st );
@@ -81,7 +81,7 @@ int main (int argc, char *argv[])
 	  mg = new SquareMeshGenerator(st);
 	}
 
-
+	std::cout << "Main_Mark_5" << std::endl;
 
 	SpaceTransformation * dst;
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint ) {
@@ -103,6 +103,8 @@ int main (int argc, char *argv[])
 	  MPI_Comm_split(MPI_COMM_WORLD, 1, primal_rank, &mpi_primal);
 	}
 
+	std::cout << "Main_Mark_6" << std::endl;
+
 	// structure = new WaveguideStructure(GlobalParams);
 
 	Waveguide * primal_waveguide;
@@ -113,6 +115,8 @@ int main (int argc, char *argv[])
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
 	  dual_waveguide = new Waveguide(mpi_dual, mg, dst);
 	}
+
+	std::cout << "Main_Mark_7" << std::endl;
 
 	Optimization * opt;
 	OptimizationAlgorithm * Oa;
@@ -125,13 +129,19 @@ int main (int argc, char *argv[])
 	  Oa = new Optimization1D();
 	}
 
+	std::cout << "Main_Mark_8" << std::endl;
+
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
 	  opt = new AdjointOptimization(primal_waveguide, dual_waveguide, mg, st, dst, Oa);
 	} else {
 	  opt = new FDOptimization(primal_waveguide, mg, st, Oa);
 	}
 
+	std::cout << "Main_Mark_9" << std::endl;
+
 	opt->run();
+
+	std::cout << "Main_Mark_10" << std::endl;
 
 	return 0;
 }
