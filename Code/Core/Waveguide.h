@@ -70,6 +70,7 @@ using namespace dealii;
 
 
 static Parameters GlobalParams;
+
 static const CylindricalManifold<3, 3> round_description (2);
 
 /**
