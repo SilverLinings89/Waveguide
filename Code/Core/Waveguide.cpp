@@ -45,6 +45,7 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
     timer(in_mpi_comm, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times),
     Sectors(GlobalParams.M_W_Sectors)
 {
+  std::cout << "This is global process " << GlobalParams.MPI_Rank << " as " << Utilities::MPI::this_mpi_process(in_mpi_comm) <<std::endl;
   mg = in_mg;
   st = in_st;
   mpi_comm = in_mpi_comm;
@@ -186,6 +187,8 @@ Tensor<1,3, std::complex<double>> Waveguide::Conjugate_Vector(Tensor<1,3, std::c
 void Waveguide::make_grid ()
 {
   mg->prepare_triangulation(& triangulation);
+  dof_handler.distribute_dofs (fe);
+  std::cout << "Waveguide current active cells:" << triangulation.n_active_cells() << std::endl;
 }
 
 void Waveguide::Compute_Dof_Numbers() {
@@ -199,7 +202,10 @@ void Waveguide::Compute_Dof_Numbers() {
 	for( unsigned int i = 0; i < Layers; i++) {
 		Block_Sizes[i] = DofsPerSubdomain[i];
 	}
-
+	pout << "Layers: " << Layers <<std::endl;
+	for (unsigned int i = 0; i < Layers; i++) {
+	  pout << Block_Sizes[i]<< std::endl;
+	}
 	alert();
 
 	Dofs_Below_Subdomain[0] = 0;
@@ -225,7 +231,7 @@ void Waveguide::Compute_Dof_Numbers() {
 void Waveguide::setup_system ()
 {
 
-	dof_handler.distribute_dofs (fe);
+
 
 	locally_owned_dofs = dof_handler.locally_owned_dofs ();
 	DoFTools::extract_locally_active_dofs(dof_handler, locally_active_dofs);

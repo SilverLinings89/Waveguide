@@ -91,19 +91,20 @@ void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3
 
 void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulation<3> * in_tria){
 
+  alert();
     const std_cxx11::array< Tensor< 1, 3 >, 3 > edges2(edges);
 
     GridGenerator::subdivided_parallelepiped<3,3>(* in_tria, origin, edges2, subs, false);
 
     in_tria->repartition();
-    //  parallel::shared::Triangulation<3>::active_cell_iterator cell, endc;
+
     in_tria->refine_global(3);
 
     in_tria->signals.post_refinement.connect
             (std_cxx11::bind (&RoundMeshGenerator::set_boundary_ids,
                               std_cxx11::cref(*this),
                               std_cxx11::ref(*in_tria)));
-
+    alert();
 
     in_tria->set_all_manifold_ids(0);
 
@@ -112,7 +113,7 @@ void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulat
     unsigned int man = 1;
 
     in_tria->set_manifold (man, round_description);
-
+    alert();
     in_tria->set_all_manifold_ids(0);
     cell = in_tria->begin_active();
     endc = in_tria->end();
@@ -127,7 +128,7 @@ void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulat
     in_tria->set_manifold (man, round_description);
 
     //triangulation.refine_global(1);
-
+    alert();
     in_tria->set_all_manifold_ids(0);
     cell = in_tria->begin_active();
     endc = in_tria->end();
@@ -140,14 +141,11 @@ void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulat
 
 
     in_tria->set_manifold (man, round_description);
-
-    parallel::shared::Triangulation<3>::active_cell_iterator
+    alert();
+    parallel::distributed::Triangulation<3>::active_cell_iterator
 
     cell = in_tria->begin_active(),
     endc = in_tria->end();
-    for ( ; cell!=endc; ++cell) {
-      //cell->set_subdomain_id(0);
-    }
 
     int layers_per_sector = 4;
     layers_per_sector /= GlobalParams.R_Global;
@@ -174,6 +172,7 @@ void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulat
       cell = in_tria->begin_active();
       for (; cell!=endc; ++cell){
         if(std::abs(Distance2D(cell->center(true, false)) - (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0 ) < MaxDistFromBoundary) {
+          std::cout << "Block 1 from Processor " << GlobalParams.MPI_Rank <<std::endl;
           cell->set_refine_flag();
         }
       }
@@ -219,8 +218,11 @@ void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulat
     cell = in_tria->begin_active();
     endc = in_tria->end();
 
+
+
     if(GlobalParams.O_G_Log) {
       if(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0) {
+        std::cout << "MeshGenerator current active cells:" << in_tria->n_active_cells() << std::endl;
         mesh_info(*in_tria);
       }
     }
