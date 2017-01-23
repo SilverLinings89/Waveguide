@@ -28,6 +28,8 @@ public:
    */
   void pass_residual(double in_residual) ;
 
+  void pass_full_step(double in_residual, std::vector<double> dofs);
+
   /**
    * This function can be used to store a shape gradient inside the algorithm. Outside this object an underlying data-structure might need to be cleared before the next step so storing this makes it persistent. The generated amount of data does not have to be considered for storage constraints since it is minimal even for many (hundreds) dofs.
    * \param in_gradient The gradient vector to be stored. It is the most important functionality of the entire system to estimate this vector accurately in short time.

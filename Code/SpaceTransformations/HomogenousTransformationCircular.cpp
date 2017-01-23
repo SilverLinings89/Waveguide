@@ -35,7 +35,12 @@ Point<3> HomogenousTransformationCircular::math_to_phys(Point<3> coord) const {
     ret[1] = (2*GlobalParams.M_C_Dim1In) * coord[1] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
     ret[2] = coord[2];
   } else if(coord[2] >= GlobalParams.M_R_ZLength/(-2.0) && coord[2] < GlobalParams.M_R_ZLength/(2.0)) {
-   // TODO: Use sectors here.
+    std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
+    double r = case_sectors[sec.first].get_r(sec.second);
+    double m = case_sectors[sec.first].get_m(sec.second);
+    ret[0] = coord[0] / r;
+    ret[1] = (coord[1] -m) / r;
+    ret[2] = coord[2];
   } else {
     ret[0] = (2*GlobalParams.M_C_Dim1Out) * coord[0] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
     ret[1] = (2*GlobalParams.M_C_Dim1Out) * coord[1] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
@@ -51,7 +56,12 @@ Point<3> HomogenousTransformationCircular::phys_to_math(Point<3> coord) const {
     ret[1] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[1] / (2*GlobalParams.M_C_Dim1In);
     ret[2] = coord[2];
   } else if(coord[2] >= GlobalParams.M_R_ZLength/(-2.0) && coord[2] < GlobalParams.M_R_ZLength/(2.0)) {
-   // TODO: Use sectors here.
+    std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
+    double r = case_sectors[sec.first].get_r(sec.second);
+    double m = case_sectors[sec.first].get_m(sec.second);
+    ret[0] = coord[0] * r;
+    ret[1] = (coord[1] * r) +m;
+    ret[2] = coord[2];
   } else {
     ret[0] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[0] / (2*GlobalParams.M_C_Dim1In);
     ret[1] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[1] / (2*GlobalParams.M_C_Dim1In);

@@ -43,7 +43,9 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
     pout(std::cout, GlobalParams.MPI_Rank==0),
     is_stored(false),
     timer(in_mpi_comm, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times),
-    Sectors(GlobalParams.M_W_Sectors)
+    Sectors(GlobalParams.M_W_Sectors),
+    minimum_local_z(2.0 * GlobalParams.M_R_ZLength),
+    maximum_local_z(- 2.0 * GlobalParams.M_R_ZLength)
 {
   std::cout << "This is global process " << GlobalParams.MPI_Rank << " as " << Utilities::MPI::this_mpi_process(in_mpi_comm) <<std::endl;
   mg = in_mg;
@@ -684,6 +686,14 @@ void Waveguide::assemble_system ()
       cell_matrix_prec_even = 0;
       for (unsigned int q_index=0; q_index<n_q_points; ++q_index)
       {
+        if(!locals_set) {
+          if(quadrature_points[q_index][2] < minimum_local_z) {
+            minimum_local_z =quadrature_points[q_index][2];
+          }
+          if(quadrature_points[q_index][2] > maximum_local_z) {
+            maximum_local_z =quadrature_points[q_index][2];
+          }
+        }
         transformation = st->get_Tensor(quadrature_points[q_index]);
 
         if( mg->math_coordinate_in_waveguide(quadrature_points[q_index])) {
@@ -749,6 +759,7 @@ void Waveguide::assemble_system ()
     }
   }
 
+  locals_set = true;
 
 	MPI_Barrier(mpi_comm);
 	if(!is_stored)  pout<<"Assembling done. L2-Norm of RHS: "<< system_rhs.l2_norm()<<std::endl;
@@ -1260,6 +1271,75 @@ void Waveguide::print_condition(double condition) {
 	condition_file << condition << std::endl;
 }
 
+std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution(Waveguide * other, double stepwidth) {
+  std::vector<std::complex<double>> ret;
+  const int ndofs = st->NDofs();
+  ret.reserve(ndofs);
+  for(unsigned int i = 0; i < ndofs; i++) {
+    ret[i] = 0;
+  }
+  std::vector<bool> local_supported_dof;
+  local_supported_dof.reserve(ndofs);
+  int min = ndofs;
+  int max = -1;
+  for(unsigned int i =0; i < ndofs; i++) {
+    std::pair<double, double> support = st->dof_support(i);
+    if ((support.first >= minimum_local_z && support.first <= maximum_local_z) || (support.second >= minimum_local_z && support.second <= maximum_local_z) ) {
+     if (i > max) {
+       max = i;
+     }
+     if(i < min) {
+       min = i;
+     }
+    }
+  }
+
+  QGauss<3>  quadrature_formula(2);
+  const FEValuesExtractors::Vector real(0);
+  const FEValuesExtractors::Vector imag(3);
+  FEValues<3> fe_values (fe, quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points );
+  std::vector<Point<3> > quadrature_points;
+  const unsigned int   dofs_per_cell  = fe.dofs_per_cell;
+  const unsigned int   n_q_points   = quadrature_formula.size();
+
+  Tensor<2,3, std::complex<double>>     transformation;
+
+  DoFHandler<3>::active_cell_iterator cell, endc;
+  cell = dof_handler.begin_active(),
+  endc = dof_handler.end();
+  for (; cell!=endc; ++cell)
+  {
+    unsigned int subdomain_id = cell->subdomain_id();
+    if( subdomain_id == GlobalParams.MPI_Rank) {
+      fe_values.reinit (cell);
+      quadrature_points = fe_values.get_quadrature_points();
+
+      for (unsigned int q_index=0; q_index<n_q_points; ++q_index)
+      {
+        Tensor<1,3,std::complex<double>> own_solution = solution_evaluation(quadrature_points[q_index]);
+        Tensor<1,3,std::complex<double>> other_solution = other->solution_evaluation(quadrature_points[q_index]);
+        const double JxW = fe_values.JxW(q_index);
+        for (unsigned int j = 0; j < ndofs; j++) {
+          transformation = st->get_Tensor_for_step(quadrature_points[q_index], j, stepwidth);
+          if(st->point_in_dof_support(quadrature_points[q_index], j)) {
+            ret[j] += own_solution * transformation * other_solution * JxW;
+          }
+        }
+      }
+    }
+  }
+  return ret;
+}
+
+Tensor<1,3,std::complex<double>> Waveguide::solution_evaluation(Point<3,double> position) const {
+  Tensor<1,3,std::complex<double>> ret;
+  Vector<double> result(6);
+  VectorTools::point_value(dof_handler, solution, position, result);
+  ret[0] = std::complex<double>(result(0), result(3));
+  ret[1] = std::complex<double>(result(1), result(4));
+  ret[2] = std::complex<double>(result(2), result(5));
+  return ret;
+}
 
 void Waveguide::reset_changes ()
 {

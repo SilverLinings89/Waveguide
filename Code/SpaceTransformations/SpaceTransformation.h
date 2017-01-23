@@ -42,6 +42,8 @@ public:
 
   virtual Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & coordinate)  const =0;
 
+  virtual Tensor<2,3, std::complex<double>> get_Tensor_for_step(Point<3> & coordinate, unsigned int dof, double step);
+
   virtual Tensor<2,3, std::complex<double>> get_Preconditioner_Tensor(Point<3> & coordinate, int block) const=0;
   /**
    * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
@@ -146,6 +148,11 @@ public:
      * \param value The value, the dof should be set to.
      */
     virtual void  set_dof (int dof , double value)=0;
+
+    virtual std::pair<double, double> dof_support(unsigned int index) const ;
+
+    bool point_in_dof_support(Point<3> location, unsigned int dof_index) const;
+
     /**
        * This is a getter for the values of degrees of freedom. A getter-setter interface was introduced since the values are estimated automatically during the optimization and non-physical systems should be excluded from the domain of possible cases.
        * \param dof The index of the degree of freedom to be retrieved from the structure of the modelled waveguide.

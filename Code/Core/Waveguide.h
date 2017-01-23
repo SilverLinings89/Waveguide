@@ -119,22 +119,6 @@ class Waveguide
 		void 		assemble_part ();
 
 		/**
-		 * In order to estimate the quality of the signal transmission, the signal-intensity at the input- and output-side are required. This function along with evaluate_out() are used for that purpose. An L2-type norm is calculated to estimate the intensity of the propagating modes.
-		 */
-		double 		evaluate_in();
-
-		/**
-		 * In order to estimate the quality of the signal transmission, the signal-intensity at the input- and output-side are required. This function along with evaluate_in() are used for that purpose. An L2-type norm is calculated to estimate the intensity of the propagating modes.
-		 */
-
-		double 		evaluate_out();
-
-		/**
-		 * This function calls both evaluate_in() and evalutat_out(). It uses the return-values to generate an estimate for the signal-quality of the simulated system. This function should only be called, once both assemblation and solving of the system matrix are complete.
-		 */
-		double 		evaluate_overall();
-
-		/**
 		 * To compute the output quality of the signal and it's transmition along the waveguid-axis, this function performs a comparison of the fundamental mode of a waveguide and the actual situation. For this purpose we integrate the product of the two functions over a cross-section of the waveguide in transformed coordinates. To perform this action we need to use numeric integration so the integral is decomposed into a sum over local evaluations. For this to be possible this function can be handed x,y and z coordinates and returns the according value.
 		 * \param x gives the x-coordinate.
 		 * \param y gives the y-coordinate.
@@ -323,6 +307,10 @@ class Waveguide
 		 */
 		std::complex<double> gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc);
 
+		Tensor<1,3,std::complex<double>> solution_evaluation(Point<3,double> position) const;
+
+		std::vector<std::complex<double>> assemble_adjoint_local_contribution(Waveguide * other, double stepwidth);
+
 
 		// HIER BEGINNT DIE NEUE VERSION...
 
@@ -385,9 +373,11 @@ class Waveguide
     TimerOutput                   timer;
     const int                     Sectors;
 
+    double minimum_local_z;
+    double maximum_local_z;
+    double locals_set = false;
 
-
-		// HIER BEGINNT DIE ALTE VERSION ...
+    // HIER BEGINNT DIE ALTE VERSION ...
 
 
 

@@ -49,4 +49,32 @@ bool SpaceTransformation::is_identity(Point<3, double> coord) const {
   return sum < 0.0001;
 }
 
+std::pair<double, double> SpaceTransformation::dof_support(unsigned int index) const {
+  std::pair<double, double> ret;
+  ret.first = 0.0;
+  ret.second = 0.0;
+  int boundary = index / dofs_per_layer;
+  ret.first = - GlobalParams.M_R_ZLength/2.0 + (boundary - 1)* Sector_Length();
+  ret.second = ret.first + 2*Sector_Length();
+  return ret;
+}
+
+bool SpaceTransformation::point_in_dof_support(Point<3> location, unsigned int dof_index) const {
+  std::pair<double, double> temp = dof_support(dof_index);
+  if (std::abs(location[2]) > GlobalParams.M_R_ZLength/2.0) {
+    return false;
+  } else {
+    return (temp.first <= location[2] && temp.second >= location[2]);
+  }
+}
+
+Tensor<2,3, std::complex<double>> SpaceTransformation::get_Tensor_for_step(Point<3> & coordinate, unsigned int dof, double step_width) {
+  double old_value = get_dof(dof);
+  Tensor<2,3, std::complex<double>> original = get_Tensor(coordinate);
+  set_dof(dof, old_value + step_width);
+  Tensor<2,3, std::complex<double>> ret = get_Tensor(coordinate);
+  set_dof(dof, old_value);
+  return ret-original;
+}
+
 #endif
