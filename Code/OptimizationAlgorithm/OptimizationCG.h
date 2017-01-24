@@ -9,7 +9,7 @@
  * \author Pascal Kraft
  * \date 29.11.2016
  */
-class OptimizationCG : public OptimizationAlgorithm {
+class OptimizationCG : public OptimizationAlgorithm<double> {
 
 public:
   OptimizationCG();
@@ -17,6 +17,14 @@ public:
   ~OptimizationCG();
 
   virtual std::vector<double> get_configuration();
+
+  bool perform_small_step_next();
+
+  double get_small_step_step_width();
+
+  bool perform_small_big_next();
+
+  std::vector<double> get_big_step_configuration();
 
 };
 

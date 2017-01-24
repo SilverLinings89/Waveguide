@@ -3,27 +3,34 @@
 
 #include "OptimizationAlgorithm.h"
 
-OptimizationAlgorithm::OptimizationAlgorithm () {
+template<typename datatype>
+OptimizationAlgorithm<datatype>::OptimizationAlgorithm (){
 
 }
 
-OptimizationAlgorithm::~OptimizationAlgorithm() {
+template<typename datatype>
+OptimizationAlgorithm<datatype>::~OptimizationAlgorithm() {
 
 }
 
-void OptimizationAlgorithm::pass_gradient(std::vector<double> in_gradient) {
-  states.push_back(in_gradient);
-  return;
+template<typename datatype>
+void OptimizationAlgorithm<datatype>::pass_result_small_step(std::vector<datatype> in_step_result){
+  states.push_back(in_step_result);
 }
 
-void OptimizationAlgorithm::pass_full_step(double in_residual, std::vector<double> in_configuration) {
-  states.push_back(in_configuration);
-  residuals.push_back(in_residual);
+template<typename datatype>
+void OptimizationAlgorithm<datatype>::pass_result_big_step(datatype in_change){
+  residuals.push_back(in_change);
 }
 
-void OptimizationAlgorithm::pass_residual(double in_residual) {
-  residuals.push_back(in_residual);
-  return;
+template<typename datatype>
+void OptimizationAlgorithm<datatype>::increment_small_step_counter() {
+  small_step_counter = small_step_counter +1;
+}
+
+template<typename datatype>
+void OptimizationAlgorithm<datatype>::increment_big_step_counter() {
+  big_step_counter = big_step_counter +1;
 }
 
 #endif

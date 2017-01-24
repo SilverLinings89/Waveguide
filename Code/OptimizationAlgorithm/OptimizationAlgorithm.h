@@ -10,13 +10,15 @@
  * \author Pascal Kraft
  * \date 29.11.2016
  */
+
+template <typename datatype>
 class OptimizationAlgorithm {
 
 public:
 
-  std::vector<std::vector<double>> states;
+  std::vector<std::vector<datatype>> states;
 
-  std::vector<double> residuals;
+  std::vector<datatype> residuals;
 
   OptimizationAlgorithm();
 
@@ -26,20 +28,24 @@ public:
    * This function can be used by the optimization strategy to pass a residual into the history of the algorithm. History aware methods such as GMRES profit from its storage.
    * \param in_residual The double valued residual to be stored.
    */
-  void pass_residual(double in_residual) ;
 
-  void pass_full_step(double in_residual, std::vector<double> dofs);
+  virtual void pass_result_small_step(std::vector<datatype>);
 
-  /**
-   * This function can be used to store a shape gradient inside the algorithm. Outside this object an underlying data-structure might need to be cleared before the next step so storing this makes it persistent. The generated amount of data does not have to be considered for storage constraints since it is minimal even for many (hundreds) dofs.
-   * \param in_gradient The gradient vector to be stored. It is the most important functionality of the entire system to estimate this vector accurately in short time.
-   */
-  void pass_gradient(std::vector<double> in_gradient);
+
+  virtual void pass_result_big_step(datatype);
 
   /**
    * This function returns the next configuration based on the currently stored values of residual and vectors and the latest shape gradient.
    */
   virtual std::vector<double> get_configuration() = 0;
+
+  virtual bool perform_small_step_next( int small_steps_before ) = 0;
+
+  virtual double get_small_step_step_width( int small_steps_before ) = 0;
+
+  virtual bool perform_small_big_next( int small_steps_before ) =0 ;
+
+  virtual std::vector<double> get_big_step_configuration() =0;
 
 };
 

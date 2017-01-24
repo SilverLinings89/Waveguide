@@ -16,9 +16,13 @@ class AdjointOptimization : public Optimization {
 public:
   const int type = 1; // Allows callers to identify the exact type easily. 0 = FD, 1 = Adj.
 
-  AdjointOptimization(Waveguide * waveguide_primal, Waveguide * wavegudie_dual, MeshGenerator * mg, SpaceTransformation * st_primal, SpaceTransformation * st_dual, OptimizationAlgorithm * Oa);
+  AdjointOptimization(Waveguide * waveguide_primal, Waveguide * wavegudie_dual, MeshGenerator * mg, SpaceTransformation * st_primal, SpaceTransformation * st_dual, OptimizationAlgorithm<std::complex<double>> * Oa);
 
   ~AdjointOptimization();
+
+  std::vector<std::complex<double>> compute_small_step(double step);
+
+  void compute_big_step();
 
   void run();
 
@@ -27,6 +31,10 @@ public:
 
   SpaceTransformation * primal_st;
   SpaceTransformation * dual_st;
+
+  MeshGenerator * mg;
+
+  OptimizationAlgorithm<std::complex<double>> * oa;
 
 };
 

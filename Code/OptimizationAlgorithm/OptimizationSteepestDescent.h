@@ -9,7 +9,7 @@
  * \author Pascal Kraft
  * \date 29.11.2016
  */
-class OptimizationSteepestDescent : public OptimizationAlgorithm {
+class OptimizationSteepestDescent : public OptimizationAlgorithm<double> {
 
 public:
   OptimizationSteepestDescent();
