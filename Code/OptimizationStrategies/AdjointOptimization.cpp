@@ -24,7 +24,11 @@ std::vector<std::complex<double>> AdjointOptimization::compute_small_step(double
   return primal_waveguide->assemble_adjoint_local_contribution(dual_waveguide, step);
 }
 
-void AdjointOptimization::compute_big_step() {
+double AdjointOptimization::compute_big_step(std::vector<double> step) {
+	for(unsigned int i = 0; i< step.size(); i++){
+		primal_st->set_dof(i, step[i]);
+		dual_st->set_dof(i, step[i]);
+	}
     MPI_Barrier(MPI_COMM_WORLD);
     primal_waveguide->run();
     MPI_Barrier(MPI_COMM_WORLD);
@@ -37,59 +41,34 @@ void AdjointOptimization::compute_big_step() {
     quality = q_out / q_in;
 
     // HIER GEHTS MORGEN WEITER!!!
-
+    return quality;
 }
 
 void AdjointOptimization::run() {
   bool run = true;
   int counter = 0;
-
-  compute_big_step();
+  double quality =0;
 
   while(run) {
-    compute_big_step();
-    double quality = 0;
-    double q_in = std::abs(primal_st->evaluate_for_z(- GlobalParams.M_R_ZLength/2.0, primal_waveguide));
-    double q_out = std::abs(primal_st->evaluate_for_z(GlobalParams.M_R_ZLength/2.0, primal_waveguide));
-    quality = q_out / q_in;
-    counter++;
-    std::vector<std::complex<double>> qualities;
+	int small_steps = 0;
+	while(oa->perform_small_step_next(small_steps)) {
+		double temp_step_width = oa->get_small_step_step_width(small_steps);
+		oa->pass_result_small_step(compute_small_step(temp_step_width));
+		small_steps++;
+	}
 
-    // At this point both solutions are known and we now deal with the computation of shape gradients based on this knowledge.
+	if(oa->perform_small_big_next(small_steps)) {
+		std::vector<double> step = oa->get_configuration();
+		quality = compute_big_step(step);
+		oa->pass_result_big_step(primal_st->evaluate_for_z(GlobalParams.M_R_ZLength/2.0, primal_waveguide));
+	}
 
+	counter++;
 
-
-    oa->pass_full_step(quality, primal_st->Dofs());
-
-    oa->estimate();
-
-    oa->get_configuration();
-
-
-    qualities.reserve(steps * 2 * primal_st->NFreeDofs());
-
-    for(int i = 0; i < steps; i++) {
-      std::vector<std::complex<double>> temp_results;
-      temp_results.reserve(primal_st->NFreeDofs());
-      temp_results = primal_waveguide->assemble_adjoint_local_contribution(dual_waveguide, steps_widths[i]);
-      for(int j = 0; j < primal_st->NFreeDofs(); j++) {
-        qualities[i*primal_st->NFreeDofs() + j ]= temp_results[j];
-      }
-    }
-
-    for(int i = 0; i < steps; i++) {
-        std::vector<std::complex<double>> temp_results;
-        temp_results.reserve(primal_st->NFreeDofs());
-        temp_results = primal_waveguide->assemble_adjoint_local_contribution(dual_waveguide, -steps_widths[i]);
-        for(int j = 0; j < primal_st->NFreeDofs(); j++) {
-          qualities[(steps + i)*primal_st->NFreeDofs() + j ]= temp_results[j];
-        }
-    }
-
-    if(counter > GlobalParams.Sc_OptimizationSteps || quality > 1.0) {
-      run = false;
-      pout << "The optimization is shutting down after " << counter << " steps. Last quality: " << 100* quality <<"%" <<std::endl;
-    }
+	if(counter > GlobalParams.Sc_OptimizationSteps || quality > 1.0) {
+	  run = false;
+	  pout << "The optimization is shutting down after " << counter << " steps. Last quality: " << 100* quality <<"%" <<std::endl;
+	}
   }
 
 }

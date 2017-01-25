@@ -43,16 +43,44 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
   using dealii::TrilinosWrappers::PreconditionBase::vmult;
 
   public:
-	PreconditionerSweeping ( int in_own, int in_others, int bandwidth, IndexSet locally_owned,  int in_upper, ConstraintMatrix * in_cm);
+
+  /**
+   * This constructor is the only one that should be used at this time.
+   * \param in_own This is the number of degrees of freedom that the current process has to deal with (owned).
+   * \param in_others This is the number of degrees of freedom that the process below has. Every process has to deal with one other process. The other neighbor only contacts it for a multiplication with its own matrix block - in this case, no objects of unknown size are concerned. However: for the one process that does require more contact needs a vector tp be initialized. This vectors size is this int.
+   * \param bandwidth The number of dofs per line on average is required for the construction of matrices.
+   * \param locally_owned The degrees of freedom associated with the current process. Required for vector and matrix construction.
+   */
+	PreconditionerSweeping ( int in_own, int in_others, int bandwidth, IndexSet locally_owned);
 
     ~PreconditionerSweeping ();
 
+    /**
+     * For the application of the preconditioner we require the application of the inverse of \f$H\f$. This is implemented in this function. (The mathematical usage is included in lines 2, 6 and 13 and indirectly in every use of the Operator \f$S\f$.
+     * \param src This is the vector to be multiplied by \f$H_i^{-1}\f$.
+     * \param dst This is the vector to store the result in.
+     */
     void Hinv(const dealii::Vector<double> &src, dealii::Vector<double> &dst) const ;
         
+    /**
+     * Cases in which we require multiplications with \f$A(E_{i+1}, E_i)\f$, are where this function is used. See algorithm lines 2 and 4.
+     * \param src This is the vector to be multiplied by  \f$A(E_{i+1}, E_i)\f$.
+     * \param dst This is the vector to store the result in.
+     */
     void LowerProduct(const dealii::Vector<double> &src, dealii::Vector<double> &dst) const ;
 
-    void UpperProduct(const dealii::Vector<double> &src, dealii::Vector<double> &dst) const ;
+    /**
+	 * Cases in which we require multiplications with \f$A(E_i, E_{i+1})\f$, are where this function is used. See algorithm lines 11 and 13.
+	 * \param src This is the vector to be multiplied by  \f$A(E_i, E_{i+1})\f$.
+	 * \param dst This is the vector to store the result in.
+	 */
+	void UpperProduct(const dealii::Vector<double> &src, dealii::Vector<double> &dst) const ;
 
+	/**
+	 * In order to be called by the iterative solver, this function has to be overloaded. It gets called from GMRES and is the core function which contains the implementation. For a description of the interface, see the implementation in the base class.
+	 * \param dst The vector to store the result in.
+	 * \param src The vector to be multiplied by the approximate inverse.
+	 */
 	virtual void vmult (TrilinosWrappers::MPI::BlockVector       &dst,      const TrilinosWrappers::MPI::BlockVector &src) const;
 
 	TrilinosWrappers::SparseMatrix matrix, prec_matrix_lower, prec_matrix_upper;
@@ -61,9 +89,8 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 
   private:
 	int * indices;
-	int own, others, upper;
+	int own, others;
 	TrilinosWrappers::MPI::Vector itmp, otmp;
-	ConstraintMatrix * cm;
 	Vector<double> boundary;
 	unsigned int sweepable;
 	IndexSet locally_owned_dofs;

@@ -15,7 +15,7 @@ using namespace dealii;
  * \class MeshGenerator
  * \brief This is an interface for all the mesh generators in the project describing its role and functionality.
  *
- * Since different shapes of waveguides (in the xz-plane) are interesting in application settings, we wish to introduce a mechanism to model this fact. Therefore all functionality related to the shape of the waveguide are encapsulated of specific objects which do all the heavy lifting. The problem si the fact that a rectangular geometry has more DOFs then a square or circular one (radius versus width and height). This has implications on the space transformation and the optimization scheme and earlier versions were running the risk of getting too flawed by implementing loads of different case models over and over again. This structure leads to a higher readibility of the code and reduses its error-proneness.
+ * Since different shapes of waveguides (in the \f$xz\f$-plane) are interesting in application settings, we wish to introduce a mechanism to model this fact. Therefore all functionality related to the shape of the waveguide are encapsulated of specific objects which do all the heavy lifting. The problem si the fact that a rectangular geometry has more dofs then a square or circular one (radius versus width and height). This has implications on the space transformation and the optimization scheme and earlier versions were running the risk of getting too flawed by implementing loads of different case models over and over again. This structure leads to a higher readability of the code and reduces its error-proneness.
  * \author Pascal Kraft
  * \date 28.11.2016
  */
@@ -34,6 +34,10 @@ public:
 
   MeshGenerator();
 
+  /**
+   * Since objects of this type mainly depend on the measures and the selected shape, the constructor only requires a space transformation (which determines, which points are to be considered inside the waveguide etc.)
+   * \param in_ct a Space Transformation which whill be stored internally for later use.
+   */
   MeshGenerator(SpaceTransformation & in_ct);
 
 

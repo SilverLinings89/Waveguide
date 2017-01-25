@@ -30,7 +30,7 @@ template<unsigned int Dofs_Per_Sector> Sector<Dofs_Per_Sector>::Sector(bool in_l
 	NInternalBoundaryDofs =0;
 	LowestDof = 0;
 	NActiveCells = 0;
-	NDofs = 0;
+	NDofs = Dofs_Per_Sector;
 }
 
 template<unsigned int Dofs_Per_Sector> void Sector<Dofs_Per_Sector>::set_properties(double in_m_0, double in_m_1, double in_r_0, double in_r_1, double in_v_0, double in_v_1){

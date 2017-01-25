@@ -16,15 +16,13 @@ using namespace dealii;
 PreconditionerSweeping::~PreconditionerSweeping (){
 	delete solver;
 }
-PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int bandwidth, IndexSet in_locally_owned_dofs, int in_upper, ConstraintMatrix * in_cm):
+PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int bandwidth, IndexSet in_locally_owned_dofs):
 
 		matrix(in_own+in_others, in_own+in_others, bandwidth),
 		prec_matrix_lower(in_own, in_others, bandwidth),
 		prec_matrix_upper(in_others, in_own, bandwidth)
 	{
 		locally_owned_dofs = in_locally_owned_dofs;
-		cm = in_cm;
-		upper = in_upper;
 		own = in_own;
 		others = in_others;
 		IndexSet elements (own+others);
@@ -166,11 +164,6 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
 	for(int i = 0; i < own; i++ ){
 		dst[i + locally_owned_dofs.nth_index_in_set(0)] = input[i];
     }
-
-    //cm->distribute(dst);
-
-	// std::cout <<  GlobalParams.MPI_Rank << ": " << norm_in << " --> " << input.l2_norm() << std::endl;
-    
 
 }
 

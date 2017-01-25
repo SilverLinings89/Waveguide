@@ -22,7 +22,7 @@ public:
 
   std::vector<std::complex<double>> compute_small_step(double step);
 
-  void compute_big_step();
+  double compute_big_step(std::vector<double> step);
 
   void run();
 

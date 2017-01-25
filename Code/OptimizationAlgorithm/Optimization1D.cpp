@@ -24,6 +24,9 @@ std::vector<double> Optimization1D::get_configuration() {
 }
 
 bool Optimization1D::perform_small_step_next(int small_steps_before ){
+  if(residuals.size() == 0 && states.size() == 0) {
+	  return false;
+  }
   if (small_steps_before < 5) {
     return true;
   } else {
@@ -41,11 +44,17 @@ double Optimization1D::get_small_step_step_width(int small_steps_before ){
 }
 
 bool Optimization1D::perform_small_big_next(int small_steps_before ) {
-  return (small_steps_before >=5);
+	if(residuals.size() == 0 && states.size() == 0) {
+		  return true;
+	}
+	return (small_steps_before >=5);
 }
 
 std::vector<double> Optimization1D::get_big_step_configuration(){
   std::vector<double> ret;
+  if(residuals.size() == 0 && states.size() == 0) {
+  	  return ret;
+  }
   int small_step_count = states.size() ;
   int big_step_count = residuals.size() ;
   if( big_step_count == 0 || (small_step_count != 5* big_step_count ) ) {

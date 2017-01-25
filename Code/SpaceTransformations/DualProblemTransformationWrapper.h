@@ -12,31 +12,68 @@ using namespace dealii;
 
 /**
  * \class DualProblemTransformationWrapper
- * \brief If we do an adjoint Computation, we need a SpaceTransformation, which has the same properties as the primal one but measures in transformed coordinates. This Wrapper contains the space transformation of the primal version but maps input parameters to their dual equivalent.
+ * \brief If we do an adjoint computation, we need a SpaceTransformation, which has the same properties as the primal one but measures in transformed coordinates. This Wrapper contains the space transformation of the primal version but maps input parameters to their dual equivalent.
  *
- * Essentialy this class enables us to write a waveguide class which is unaware of its being primal or dual. Using this wrapper makes us compute the solution of the inverse order shape parametrization.
+ * Essentially this class enables us to write a waveguide class which is unaware of its being primal or dual. Using this wrapper makes us compute the solution of the inverse order shape parametrization.
  * \author Pascal Kraft
  * \date 1.12.2016
  */
 class DualProblemTransformationWrapper : public SpaceTransformation {
 
 public:
+/**
+ * Since this object encapsulates another Space Transformation, the construction is straight forward.
+ * \param non_dual_st This pointer points to the actual transformation that is being wrapped.
+ */
   DualProblemTransformationWrapper(SpaceTransformation * non_dual_st);
 
   ~DualProblemTransformationWrapper();
 
+  /**
+   * One of the core functionalities of a SpaceTransformation is to map a mathematical coordinate to a physical one (so an transformed to an untransformed coordinate).
+   * \param coord the coordinate to be transformed. In this class we simply pass the
+   */
   Point<3> math_to_phys(Point<3> coord) const;
 
+  /**
+   * This function does the same as math_to_phys only in the opposit direction.
+   * \param coord the coordinate to be transformed.
+   */
   Point<3> phys_to_math(Point<3> coord) const;
 
+
+  /**
+   * In order to test implementation, this function was added to check, if the transformation-tensor at a given coordinate is the identity or not.
+   * \param coord This is the coordinate to test.
+   */
   bool is_identity(Point<3> coord) const;
 
+  /**
+   * As a part of the core functionality of a space transformation in transformation optics we have to compute material properties in transformed coordinates. One of them is the now tensorial value of \f$\epsilon\f$.
+   * \param coordinate The location where the material tensor should be computed.
+   * \return The 3-by-3 matrix representing the value of \f$\epsilon\f$ after the transformation.
+   */
   Tensor<2,3, std::complex<double>> get_epsilon(Point<3> coordinate) const;
 
+  /**
+   * As a part of the core functionality of a space transformation in transformation optics we have to compute material properties in transformed coordinates. One of them is the now tensorial value of \f$\mu\f$.
+   * \param coordinate The location where the material tensor should be computed.
+   * \return The 3-by-3 matrix representing the value of \f$\mu\f$ after the transformation.
+   */
   Tensor<2,3, std::complex<double>> get_mu(Point<3> coordinate) const;
 
+  /**
+   * This computes the transformation part \f$g^{-1}\f$ of either \f$\mu\f$ or \f$\epsilon\f$.
+   * \param coordinate The location where the material tensor should be computed.
+   */
   Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & coordinate) const;
 
+  /**
+   * This computes the transformation part of \f$g^{-1}\f$ similar to get_Tensor but also includes PML-Layers required by the preconditioner.
+   * \param coordinat Location for which the tensor should be computed.
+   * \param block index of the block which the coordinate is supposed to be considered a part of.
+   * \return The complete tensor for the preconditioner.
+   */
   Tensor<2,3, std::complex<double>> get_Preconditioner_Tensor(Point<3> & coordinate, int block) const;
 
   const double XMinus, XPlus, YMinus, YPlus, ZMinus, ZPlus;
