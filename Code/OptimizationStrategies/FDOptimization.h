@@ -22,6 +22,11 @@ public:
 
   ~FDOptimization();
 
+  std::vector<double> compute_small_step(double step);
+
+  double compute_big_step(std::vector<double> step);
+
+  double evaluate();
   /**
    * The advantage of this formulation is the fact, that we don't need to differentiate between a 'normal' forward problem and it's dual which (in a parallel computation) holds some difficulties.
    * We can simply adapt the shape parameters to account for the change in one component and rerun the solver and assembly process.
@@ -29,6 +34,10 @@ public:
   virtual void run();
 
   Waveguide * waveguide;
+
+  MeshGenerator * mg;
+
+  SpaceTransformation * st;
 };
 
 #endif
