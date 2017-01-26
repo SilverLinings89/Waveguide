@@ -17,12 +17,6 @@ Optimization1D::~Optimization1D(){
   delete steps_widths;
 }
 
-std::vector<double> Optimization1D::get_configuration() {
-  std::vector<double> ret(0);
-  // TODO: This requires more complex implementation because it does not depend on old values but only on the current state.
-  return ret;
-}
-
 bool Optimization1D::perform_small_step_next(int small_steps_before ){
   if(residuals.size() == 0 && states.size() == 0) {
 	  return false;
@@ -43,7 +37,7 @@ double Optimization1D::get_small_step_step_width(int small_steps_before ){
   }
 }
 
-bool Optimization1D::perform_small_big_next(int small_steps_before ) {
+bool Optimization1D::perform_big_step_next(int small_steps_before ) {
 	if(residuals.size() == 0 && states.size() == 0) {
 		  return true;
 	}
@@ -60,8 +54,8 @@ std::vector<double> Optimization1D::get_big_step_configuration(){
   if( big_step_count == 0 || (small_step_count != 5* big_step_count ) ) {
     std::cout << "Warning in Optimization1D::get_big_step_configuration()" <<std::endl;
   } else {
-    std::complex<double> residual = residuals[big_step_counter-1];
-    int ndofs = states[small_step_count-1].size();
+    std::complex<double> residual = residuals[big_step_count-1];
+    unsigned int ndofs = states[small_step_count-1].size();
     ret.reserve(ndofs);
     for ( unsigned int i = 0; i < ndofs; i++ ) {
       double max = 0;
@@ -73,7 +67,7 @@ std::vector<double> Optimization1D::get_big_step_configuration(){
           index = j;
         }
       }
-      ret[i] = states[small_step_count - 5 + index][i];
+      ret[i] = steps_widths[i];
     }
   }
   return ret;

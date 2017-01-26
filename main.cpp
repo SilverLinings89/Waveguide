@@ -113,20 +113,22 @@ int main (int argc, char *argv[])
 	}
 
 	Optimization * opt;
-	OptimizationAlgorithm * Oa;
+
+	OptimizationAlgorithm<double> * Oa_d;
+	OptimizationAlgorithm<std::complex<double>> * Oa_c;
 
 	if(GlobalParams.Sc_SteppingMethod == SteppingMethod::CG) {
-	  Oa = new OptimizationCG();
+	  // Oa = new OptimizationCG();
 	} else if (GlobalParams.Sc_SteppingMethod == SteppingMethod::Steepest){
-	  Oa = new OptimizationSteepestDescent();
+	  Oa_d = new OptimizationSteepestDescent();
 	} else {
-	  Oa = new Optimization1D();
+	  Oa_c = new Optimization1D();
 	}
 
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
-	  opt = new AdjointOptimization(primal_waveguide, dual_waveguide, mg, st, dst, Oa);
+	  opt = new AdjointOptimization(primal_waveguide, dual_waveguide, mg, st, dst, Oa_c);
 	} else {
-	  opt = new FDOptimization(primal_waveguide, mg, st, Oa);
+	  opt = new FDOptimization(primal_waveguide, mg, st, Oa_d);
 	}
 
 	opt->run();

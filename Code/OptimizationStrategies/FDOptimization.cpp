@@ -5,7 +5,7 @@ using namespace dealii;
 
 #include "FDOptimization.h"
 
-FDOptimization::FDOptimization(Waveguide * in_waveguide, MeshGenerator * in_mg, SpaceTransformation * in_st, OptimizationAlgorithm * in_Oa) {
+FDOptimization::FDOptimization(Waveguide * in_waveguide, MeshGenerator * in_mg, SpaceTransformation * in_st, OptimizationAlgorithm<double> * in_Oa) {
   waveguide = in_waveguide;
 
   st = in_st;

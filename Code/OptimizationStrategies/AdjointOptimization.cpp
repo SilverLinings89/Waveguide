@@ -25,9 +25,10 @@ std::vector<std::complex<double>> AdjointOptimization::compute_small_step(double
 }
 
 double AdjointOptimization::compute_big_step(std::vector<double> step) {
+  Vector<double> current_config = primal_st->Dofs();
 	for(unsigned int i = 0; i< step.size(); i++){
-		primal_st->set_dof(i, step[i]);
-		dual_st->set_dof(i, step[i]);
+		primal_st->set_dof(i, current_config[i] + step[i]);
+		dual_st->set_dof(i, current_config[i] + step[i]);
 	}
     MPI_Barrier(MPI_COMM_WORLD);
     primal_waveguide->run();
@@ -50,25 +51,25 @@ void AdjointOptimization::run() {
   double quality =0;
 
   while(run) {
-	int small_steps = 0;
-	while(oa->perform_small_step_next(small_steps)) {
-		double temp_step_width = oa->get_small_step_step_width(small_steps);
-		oa->pass_result_small_step(compute_small_step(temp_step_width));
-		small_steps++;
-	}
+    int small_steps = 0;
+    while(oa->perform_small_step_next(small_steps)) {
+      double temp_step_width = oa->get_small_step_step_width(small_steps);
+      oa->pass_result_small_step(compute_small_step(temp_step_width));
+      small_steps++;
+    }
 
-	if(oa->perform_small_big_next(small_steps)) {
-		std::vector<double> step = oa->get_configuration();
-		quality = compute_big_step(step);
-		oa->pass_result_big_step(primal_st->evaluate_for_z(GlobalParams.M_R_ZLength/2.0, primal_waveguide));
-	}
+    if(oa->perform_big_step_next(small_steps)) {
+      std::vector<double> step = oa->get_big_step_configuration();
+      quality = compute_big_step(step);
+      oa->pass_result_big_step(primal_st->evaluate_for_z(GlobalParams.M_R_ZLength/2.0, primal_waveguide));
+    }
 
-	counter++;
+    counter++;
 
-	if(counter > GlobalParams.Sc_OptimizationSteps || quality > 1.0) {
-	  run = false;
-	  pout << "The optimization is shutting down after " << counter << " steps. Last quality: " << 100* quality <<"%" <<std::endl;
-	}
+    if(counter > GlobalParams.Sc_OptimizationSteps || quality > 1.0) {
+      run = false;
+      std::cout << "The optimization is shutting down after " << counter << " steps. Last quality: " << 100* quality <<"%" <<std::endl;
+    }
   }
 
 }

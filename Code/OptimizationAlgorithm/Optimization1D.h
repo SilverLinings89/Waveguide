@@ -16,13 +16,11 @@ public:
 
   ~Optimization1D();
 
-  std::vector<double> get_configuration();
-
   bool perform_small_step_next(int small_steps_before );
 
   double get_small_step_step_width(int small_steps_before );
 
-  bool perform_small_big_next(int small_steps_before );
+  bool perform_big_step_next(int small_steps_before );
 
   std::vector<double> get_big_step_configuration();
 

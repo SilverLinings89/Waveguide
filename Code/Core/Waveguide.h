@@ -152,6 +152,8 @@ class Waveguide
      */
     void  estimate_solution();
 
+    std::vector<std::complex<double>> assemble_adjoint_local_contribution(Waveguide * other, double stepwidth);
+
 	private:
 
 		/**
@@ -309,7 +311,6 @@ class Waveguide
 
 		Tensor<1,3,std::complex<double>> solution_evaluation(Point<3,double> position) const;
 
-		std::vector<std::complex<double>> assemble_adjoint_local_contribution(Waveguide * other, double stepwidth);
 
 
 		// HIER BEGINNT DIE NEUE VERSION...

@@ -1101,12 +1101,7 @@ void Waveguide::solve () {
 			above = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank+1].n_elements();
 		}
 
-		int t_upper = 0;
-		if ((int)rank != GlobalParams.NumberProcesses - 1) {
-			t_upper = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank +1].n_elements();
-		}
-		
-		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), above, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, t_upper, & cm);
+		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), above, dof_handler.max_couplings_between_dofs(), locally_owned_dofs);
 
 		if(GlobalParams.MPI_Rank == 0) {
 			sweep.Prepare(solution);
@@ -1273,7 +1268,7 @@ void Waveguide::print_condition(double condition) {
 
 std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution(Waveguide * other, double stepwidth) {
   std::vector<std::complex<double>> ret;
-  const int ndofs = st->NDofs();
+  const unsigned int ndofs = st->NDofs();
   ret.reserve(ndofs);
   for(unsigned int i = 0; i < ndofs; i++) {
     ret[i] = 0;
@@ -1282,7 +1277,7 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
   local_supported_dof.reserve(ndofs);
   int min = ndofs;
   int max = -1;
-  for(unsigned int i =0; i < ndofs; i++) {
+  for( int i =0; i < ndofs; i++) {
     std::pair<double, double> support = st->dof_support(i);
     if ((support.first >= minimum_local_z && support.first <= maximum_local_z) || (support.second >= minimum_local_z && support.second <= maximum_local_z) ) {
      if (i > max) {
@@ -1299,7 +1294,6 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
   const FEValuesExtractors::Vector imag(3);
   FEValues<3> fe_values (fe, quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points );
   std::vector<Point<3> > quadrature_points;
-  const unsigned int   dofs_per_cell  = fe.dofs_per_cell;
   const unsigned int   n_q_points   = quadrature_formula.size();
 
   Tensor<2,3, std::complex<double>>     transformation;

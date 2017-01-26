@@ -12,7 +12,7 @@
  */
 
 template <typename datatype>
-class OptimizationAlgorithm {
+class OptimizationAlgorithm{
 
 public:
 
@@ -28,11 +28,6 @@ public:
 
 
   virtual void pass_result_big_step(datatype);
-
-  /**
-   * This function returns the next configuration based on the currently stored values of residual and vectors and the latest shape gradient.
-   */
-  virtual std::vector<double> get_configuration() = 0;
 
   /**
    * The optimization is mainly split into two kinds of steps: Full and small steps. For FD based schemes, a small step is a computation of finite differences for all degrees of freedom which entails a lot of computation. Small here refers to the norm of the step width - not necessarily to the amount of computation required.
@@ -54,7 +49,7 @@ public:
    * \param small_steps_before number of small steps performed before this call.
    * \return true, if the next computation should be a big step - otherwise false.
    */
-  virtual bool perform_small_big_next( int small_steps_before ) =0 ;
+  virtual bool perform_big_step_next( int small_steps_before ) =0 ;
 
   /**
    * This function computes the states that should be computed next. If the next step will be a small step the update can be done by simply updating all dofs with a step width (or only one depending on the pattern) so this function is only used when a big step will be computed next and therefore all dofs could change differently.
