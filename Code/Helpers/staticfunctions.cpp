@@ -25,6 +25,7 @@ void alert() {
 }
 
 static void PrepareStreams()  {
+  deallog.depth_console(0);
   int i = 0;
   bool dir_exists = true;
   while(dir_exists) {

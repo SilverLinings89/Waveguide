@@ -50,11 +50,13 @@ using namespace dealii;
 int main (int argc, char *argv[])
 {
 
+  deallog.depth_console(5);
+
 	Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
   PrepareStreams();
 
-  deallog.push("Main ");
+  deallog.push("Main");
 
   deallog << "Streams prepared. Loading Parameters..." <<std::endl;
 
