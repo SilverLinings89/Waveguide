@@ -51,10 +51,10 @@ void ParameterReader::declare_parameters()
   prm.enter_subsection("Measures");
       prm.enter_subsection("Connectors");
           prm.declare_entry("Shape", "Circle", Patterns::Selection("Circle|Rectangle"), "Describes the shape of the input connector.");
-          prm.declare_entry("Dimension1_In", "2.0", Patterns::Double(0), "First dimension of the input connector. For a circular waveguide this is the radius. For a rectangular waveguide this is the width.");
-          prm.declare_entry("Dimension2_In", "2.0", Patterns::Double(0), "Second dimension of the input connector. For a circular waveguide this has no meaning. For a rectangular waveguide this is the height.");
-          prm.declare_entry("Dimension1_Out", "2.0", Patterns::Double(0), "First dimension of the output connector. For a circular waveguide this is the radius. For a rectangular waveguide this is the width.");
-          prm.declare_entry("Dimension2_Out", "2.0", Patterns::Double(0), "Second dimension of the output connector. For a circular waveguide this has no meaning. For a rectangular waveguide this is the height.");
+          prm.declare_entry("Dimension1 In", "2.0", Patterns::Double(0), "First dimension of the input connector. For a circular waveguide this is the radius. For a rectangular waveguide this is the width.");
+          prm.declare_entry("Dimension2 In", "2.0", Patterns::Double(0), "Second dimension of the input connector. For a circular waveguide this has no meaning. For a rectangular waveguide this is the height.");
+          prm.declare_entry("Dimension1 Out", "2.0", Patterns::Double(0), "First dimension of the output connector. For a circular waveguide this is the radius. For a rectangular waveguide this is the width.");
+          prm.declare_entry("Dimension2 Out", "2.0", Patterns::Double(0), "Second dimension of the output connector. For a circular waveguide this has no meaning. For a rectangular waveguide this is the height.");
       prm.leave_subsection();
       prm.enter_subsection("Region");
           prm.declare_entry("XLength", "10.0", Patterns::Double(0), "Length of the system in x-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres");
@@ -88,8 +88,8 @@ void ParameterReader::declare_parameters()
       prm.declare_entry("Homogeneity", "false", Patterns::Bool() , "If this is enabled, a space transformation is used which is equal the identity on the PML-region for the dampening along the x and y axis.");
       prm.declare_entry("Optimization Schema", "Adjoint", Patterns::Selection("Adjoint|FD"), "If this is set to adjoint, the shape gradient will be computed by means of an adjoint based method. If it is set to FD, finite differences are use.");
       prm.declare_entry("Optimization Steps", "10", Patterns::Integer(1), "Number of Optimization steps to be performed.");
-      prm.declare_entry("Stepping Method", "Steepest", Patterns::Selection("Steepest|CG"), "Method of step computation. Steepest uses steepest descent. CG uses a conjugate gradient method to compute the next step.");
-      prm.declare_entry("Step Width", "Adjoint", Patterns::Selection("Adjoint|Experimental"), "This parameter descibes the scheme used to compute the next step width. This can be adjoint (if an adjoint schema is used, which causees the computation of multiple shape hradient with differing step widths in the parameters. This would be too costly for FD and ist therefore not available in that mode. An experimental approach can be used which tries to use information from the gradient and a seperate step width control to compute the step. ");
+      prm.declare_entry("Stepping Method", "Steepest", Patterns::Selection("Steepest|CG|LineSearch"), "Method of step computation. Steepest uses steepest descent. CG uses a conjugate gradient method to compute the next step. Line Search only works based on an adjoint optimization setting, where searches can be performed cheaply.");
+      // prm.declare_entry("Step Width", "Adjoint", Patterns::Selection("Adjoint|Experimental"), "This parameter descibes the scheme used to compute the next step width. This can be adjoint (if an adjoint schema is used, which causees the computation of multiple shape hradient with differing step widths in the parameters. This would be too costly for FD and ist therefore not available in that mode. An experimental approach can be used which tries to use information from the gradient and a seperate step width control to compute the step. ");
   prm.leave_subsection();
   prm.enter_subsection("Solver");
       prm.declare_entry("Solver", "GMRES", Patterns::Selection("GMRES|UMFPACK|MINRES"), "Which Solver to use for the solution of the system matrix");

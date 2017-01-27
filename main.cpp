@@ -49,9 +49,18 @@ using namespace dealii;
 
 int main (int argc, char *argv[])
 {
+
 	Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
+  PrepareStreams();
+
+  deallog.push("Main ");
+
+  deallog << "Streams prepared. Loading Parameters..." <<std::endl;
+
 	GlobalParams = GetParameters();
+
+	deallog << "Parameters loaded. Preparing Space Transformations..." <<std::endl;
 
 	MPI_Comm  mpi_primal, mpi_dual;
 
@@ -73,6 +82,8 @@ int main (int argc, char *argv[])
      st = new InhomogenousTransformationRectangular();
     }
   }
+
+	deallog << "Done. Preparing Mesh Generators..." <<std::endl;
 
 	MeshGenerator * mg;
 	if(GlobalParams.M_C_Shape == ConnectorType::Circle ){
@@ -103,14 +114,24 @@ int main (int argc, char *argv[])
 	  MPI_Comm_split(MPI_COMM_WORLD, 0, primal_rank, &mpi_primal);
 	}
 
+	deallog << "Done. Building Waveguides." <<std::endl;
+
 	Waveguide * primal_waveguide;
-	primal_waveguide = new Waveguide(mpi_primal, mg, st);
+	std::string prefix = "";
+	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
+	  prefix = "primal";
+	} else {
+	  prefix = ".";
+	}
+	primal_waveguide = new Waveguide(mpi_primal, mg, st, "prefix");
 
 	Waveguide * dual_waveguide;
 
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
-	  dual_waveguide = new Waveguide(mpi_dual, mg, dst);
+	  dual_waveguide = new Waveguide(mpi_dual, mg, dst, "dual");
 	}
+
+  deallog << "Done. Loading Schema..." <<std::endl;
 
 	Optimization * opt;
 
@@ -131,8 +152,65 @@ int main (int argc, char *argv[])
 	  opt = new FDOptimization(primal_waveguide, mg, st, Oa_d);
 	}
 
+  deallog << "Done." <<std::endl;
+
+  deallog.push("Configuration");
+	if(GlobalParams.MPI_Rank == 0) {
+	  deallog << "Prepared for the following setup: " <<std::endl;
+	  deallog << "Mesh Generator:";
+	  if(GlobalParams.M_C_Shape == ConnectorType::Circle ){
+	    deallog << "Round Mesh Generator";
+	  } else {
+	    deallog << "Rectangular Mesh Generator";
+	  }
+
+	  deallog << std::endl <<"Space Transformation: ";
+
+	  if(GlobalParams.M_C_Shape == ConnectorType::Circle){
+	      if(GlobalParams.Sc_Homogeneity) {
+	        deallog << "Homogenous Transformation Circular" ;
+	      } else {
+	        deallog << "Inhomogenous Transformation Circular" ;
+	      }
+	    } else {
+	      if(GlobalParams.Sc_Homogeneity) {
+	        deallog << "Homogenous Transformation Rectangular" ;
+	      } else {
+	        deallog << "Inhomogenous Transformation Rectangular" ;
+	      }
+	    }
+
+	  deallog << std::endl << "Optimization Schema:" ;
+
+	  if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
+	    deallog << "Adjoint Schema" ;
+	  } else {
+	    deallog << "Finite Differences" ;
+	  }
+
+	  deallog << std::endl << "Stepping Method:" ;
+
+	  if(GlobalParams.Sc_SteppingMethod == SteppingMethod::CG) {
+	    deallog << "Conjugate  Gradient";
+	  } else if (GlobalParams.Sc_SteppingMethod == SteppingMethod::Steepest){
+	    deallog << "Steepest Descend";
+	  } else {
+	    deallog << "1D search";
+	  }
+	  deallog << std::endl;
+	}
+
+	deallog.pop();
+
+	deallog << "Starting optimization run..." << std::endl;
+
+	deallog.push("Run");
+
 	opt->run();
 
+	deallog.pop();
+
+	deallog.pop();
 	return 0;
 }
 

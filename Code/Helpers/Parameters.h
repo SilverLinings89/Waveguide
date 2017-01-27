@@ -34,11 +34,7 @@ enum PreconditionerOptions {
 };
 
 enum SteppingMethod {
-    Steepest, CG
-};
-
-enum StepWidth {
-  Experimental, LineSearch
+    Steepest, CG, LineSearch
 };
 
 struct Parameters {
@@ -137,7 +133,7 @@ struct Parameters {
     
     SteppingMethod Sc_SteppingMethod;
 
-    StepWidth Sc_StepWidth;
+    // StepWidth Sc_StepWidth;
 
     SolverOptions So_Solver;
     

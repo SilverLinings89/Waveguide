@@ -47,6 +47,7 @@ void GradientTable::AddFullStepResult(dealii::Vector<double> in_step, double in_
 }
 
 void GradientTable::PrintFullLine() {
+
 	struct winsize w;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 	for ( int i = 0; i<w.ws_col; i++) {

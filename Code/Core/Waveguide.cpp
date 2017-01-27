@@ -25,7 +25,7 @@
 
 using namespace dealii;
 
-Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st):
+Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st, std::string path_part):
     fe(FE_Nedelec<3> (0), 2),
     triangulation (in_mpi_comm, parallel::distributed::Triangulation<3>::MeshSmoothing(Triangulation<3>::none ), parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning),
     even(Utilities::MPI::this_mpi_process(in_mpi_comm)%2 == 0),
@@ -51,46 +51,12 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
   mg = in_mg;
   st = in_st;
   mpi_comm = in_mpi_comm;
-  int i = 0;
-  bool dir_exists = true;
-  while(dir_exists) {
-    std::stringstream out;
-    out << "Solutions/run";
-    out << i;
-    solutionpath = out.str();
-    struct stat myStat;
-    const char *myDir = solutionpath.c_str();
-    if ((stat(myDir, &myStat) == 0) && (((myStat.st_mode) & S_IFMT) == S_IFDIR)) {
-      i++;
-    } else {
-      dir_exists = false;
-    }
-  }
-  i = Utilities::MPI::max(i, mpi_comm);
-  std::stringstream out;
-  out << "Solutions/run";
 
-  // TODO check if this directory is really available for all processes and throw an error otherwise.
-
-  out << i;
-  solutionpath = out.str();
-  Dofs_Below_Subdomain[Layers];
-  mkdir(solutionpath.c_str(), ACCESSPERMS);
-  pout << "Will write solutions to " << solutionpath << std::endl;
-
-  // Copy Parameter file to the output directory in processor 0. This should be replaced with an output generator eventually.
-  if(GlobalParams.MPI_Rank == 0) {
-    std::ifstream source("Parameters/Parameters.xml", std::ios::binary);
-    std::ofstream dest(solutionpath +"/Parameters.xml", std::ios::binary);
-    dest << source.rdbuf();
-    source.close();
-    dest.close();
-  }
+  path_prefix = path_part;
 
   is_stored = false;
   solver_control.log_frequency(10);
   const int number = Layers -1;
-  deallog.attach( std::cout );
   qualities = new double[number];
   execute_recomputation = false;
 
@@ -527,7 +493,7 @@ void Waveguide::calculate_cell_weights () {
 
 	data_out_cells.build_patches ();
 
-	std::ofstream outputvtu2 (solutionpath + "/cell-weights" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +"-"+static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str()+".vtu");
+	std::ofstream outputvtu2 (solutionpath + "/" + path_prefix +"/cell-weights" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +"-"+static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str()+".vtu");
 	data_out_cells.write_vtu(outputvtu2);
 }
 
@@ -1081,7 +1047,7 @@ SolverControl::State  Waveguide::check_iteration_state (const unsigned int itera
 void Waveguide::solve () {
 
 	solver_control.log_frequency(1);
-	result_file.open((solutionpath + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
+	result_file.open((solutionpath + "/" + path_prefix + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
 	if(GlobalParams.So_Solver == SolverOptions::GMRES) {
 		int mindof = locally_owned_dofs.nth_index_in_set(0);
@@ -1182,7 +1148,7 @@ void Waveguide::output_results ( bool  )
 
 		data_out.build_patches ();
 
-		std::ofstream outputvtk (solutionpath + "/solution-run" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + "-P" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() +".vtk");
+		std::ofstream outputvtk (solutionpath + "/" + path_prefix+ "/solution-run" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + "-P" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() +".vtk");
 		data_out.write_vtk(outputvtk);
 
         
@@ -1200,9 +1166,9 @@ void Waveguide::output_results ( bool  )
 		data_out_real.write_vtk(outputvtk2);
 		 **/
 		if ( false ) {
-			std::ofstream pattern (solutionpath + "/pattern.gnu");
+			std::ofstream pattern (solutionpath  + "/" + path_prefix +"/pattern.gnu");
 
-			std::ofstream patternscript (solutionpath + "/displaypattern.gnu");
+			std::ofstream patternscript (solutionpath + "/" + path_prefix+ "/displaypattern.gnu");
 			patternscript << "set style line 1000 lw 1 lc \"black\"" <<std::endl;
 			for(int i = 0; i < GlobalParams.M_W_Sectors; i++) {
 				patternscript << "set arrow " << 1000 + 2*i << " from 0,-" << Dofs_Below_Subdomain[i] << " to "<<dof_handler.n_dofs()<<",-"<<Dofs_Below_Subdomain[i]<<" nohead ls 1000 front"<<std::endl;

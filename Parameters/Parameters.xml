@@ -148,34 +148,34 @@
                 <pattern>17</pattern>
                 <pattern_description>[Selection Circle|Rectangle ]</pattern_description>
             </Shape>
-            <Dimension1_In>
-                <value>2.0</value>
+            <Dimension1_20In>
+                <value>2</value>
                 <default_value>2.0</default_value>
                 <documentation>First dimension of the input connector. For a circular waveguide this is the radius. For a rectangular waveguide this is the width.</documentation>
                 <pattern>18</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
-            </Dimension1_In>
-            <Dimension2_In>
-                <value>2.0</value>
+            </Dimension1_20In>
+            <Dimension2_20In>
+                <value>2</value>
                 <default_value>2.0</default_value>
                 <documentation>Second dimension of the input connector. For a circular waveguide this has no meaning. For a rectangular waveguide this is the height.</documentation>
                 <pattern>19</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
-            </Dimension2_In>
-            <Dimension1_Out>
-                <value>2.0</value>
+            </Dimension2_20In>
+            <Dimension1_20Out>
+                <value>2</value>
                 <default_value>2.0</default_value>
                 <documentation>First dimension of the output connector. For a circular waveguide this is the radius. For a rectangular waveguide this is the width.</documentation>
                 <pattern>20</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
-            </Dimension1_Out>
-            <Dimension2_Out>
-                <value>2.0</value>
+            </Dimension1_20Out>
+            <Dimension2_20Out>
+                <value>2</value>
                 <default_value>2.0</default_value>
                 <documentation>Second dimension of the output connector. For a circular waveguide this has no meaning. For a rectangular waveguide this is the height.</documentation>
                 <pattern>21</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
-            </Dimension2_Out>
+            </Dimension2_20Out>
         </Connectors>
         <Region>
             <XLength>
@@ -202,7 +202,7 @@
         </Region>
         <Waveguide>
             <Delta>
-                <value>1.0</value>
+                <value>1</value>
                 <default_value>1.0</default_value>
                 <documentation>Offset between the two connectors measured in micrometres.</documentation>
                 <pattern>25</pattern>
@@ -253,28 +253,28 @@
                 <pattern_description>[Integer 0...2147483647 (inclusive)]</pattern_description>
             </ZPlus>
             <XMinus>
-                <value>1.0</value>
+                <value>1</value>
                 <default_value>1.0</default_value>
                 <documentation>Thickness of the PML on the negative X-axis. Measured in micrometers</documentation>
                 <pattern>20</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XMinus>
             <XPlus>
-                <value>1.0</value>
+                <value>1</value>
                 <default_value>1.0</default_value>
                 <documentation>Thickness of the PML on the positive X-axis. Measured in micrometers</documentation>
                 <pattern>21</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XPlus>
             <YMinus>
-                <value>1.0</value>
+                <value>1</value>
                 <default_value>1.0</default_value>
                 <documentation>Thickness of the PML on the negative Y-axis. Measured in micrometers</documentation>
                 <pattern>22</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </YMinus>
             <YPlus>
-                <value>1.0</value>
+                <value>1</value>
                 <default_value>1.0</default_value>
                 <documentation>Thickness of the PML on the positive Y-axis. Measured in micrometers</documentation>
                 <pattern>23</pattern>
@@ -354,47 +354,40 @@
             <pattern_description>[Integer 1...2147483647 (inclusive)]</pattern_description>
         </Optimization_20Steps>
         <Stepping_20Method>
-            <value>Steepest</value>
+            <value>LineSearch</value>
             <default_value>Steepest</default_value>
             <documentation>Method of step computation. Steepest uses steepest descent. CG uses a conjugate gradient method to compute the next step.</documentation>
             <pattern>34</pattern>
-            <pattern_description>[Selection Steepest|CG]</pattern_description>
+            <pattern_description>[Selection Steepest|CG|LineSearch]</pattern_description>
         </Stepping_20Method>
-        <Step_20Width>
-            <value>LineSearch</value>
-            <default_value>LineSearch</default_value>
-            <documentation>This parameter descibes the scheme used to compute the next step width. This can be adjoint (if an adjoint schema is used, which causees the computation of multiple shape hradient with differing step widths in the parameters. This would be too costly for FD and ist therefore not available in that mode. An experimental approach can be used which tries to use information from the gradient and a seperate step width control to compute the step. </documentation>
-            <pattern>35</pattern>
-            <pattern_description>[Selection LineSearch|Experimental]</pattern_description>
-        </Step_20Width>       
     </Schema>
     <Solver>
         <Solver>
             <value>GMRES</value>
             <default_value>GMRES</default_value>
             <documentation>Which Solver to use for the solution of the system matrix</documentation>
-            <pattern>36</pattern>
+            <pattern>35</pattern>
             <pattern_description>[Selection GMRES|UMFPACK|MINRES ]</pattern_description>
         </Solver>
         <GMRESSteps>
             <value>30</value>
             <default_value>30</default_value>
             <documentation>Steps until restart of Krylow subspace generation</documentation>
-            <pattern>37</pattern>
+            <pattern>36</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </GMRESSteps>
         <Preconditioner>
             <value>Amesos_Klu</value>
             <default_value>Amesos_Lapack</default_value>
             <documentation>Which preconditioner to use</documentation>
-            <pattern>38</pattern>
+            <pattern>37</pattern>
             <pattern_description>[Selection Sweeping|Amesos_Lapack|Amesos_Scalapack|Amesos_Klu|Amesos_Umfpack|Amesos_Pardiso|Amesos_Taucs|Amesos_Superlu|Amesos_Superludist|Amesos_Dscpack|Amesos_Mumps ]</pattern_description>
         </Preconditioner>
         <Steps>
             <value>20</value>
             <default_value>30</default_value>
             <documentation>Number of Steps the Solver is supposed to do.</documentation>
-            <pattern>39</pattern>
+            <pattern>38</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </Steps>
         <Precision>
@@ -410,28 +403,28 @@
             <value>true</value>
             <default_value>true</default_value>
             <documentation>If this is set to true, EpsilonZero and MuZero are set to 1.</documentation>
-            <pattern>41</pattern>
+            <pattern>40</pattern>
             <pattern_description>[Bool]</pattern_description>
         </AllOne>
         <EpsilonZero>
             <value>8.854e-18</value>
             <default_value>8.854e-18</default_value>
             <documentation>Physical constant Epsilon zero. The standard value is measured in micrometers.</documentation>
-            <pattern>42</pattern>
+            <pattern>41</pattern>
             <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
         </EpsilonZero>
         <MuZero>
             <value>1.257e-12</value>
             <default_value>1.257e-12</default_value>
             <documentation>Physical constant Mu zero. The standard value is measured in micrometers.</documentation>
-            <pattern>43</pattern>
+            <pattern>42</pattern>
             <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
         </MuZero>
         <Pi>
             <value>3.14159265</value>
             <default_value>3.14159265</default_value>
             <documentation>Mathematical constant Pi.</documentation>
-            <pattern>44</pattern>
+            <pattern>43</pattern>
             <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
         </Pi>
     </Constants>
@@ -440,21 +433,21 @@
             <value>2</value>
             <default_value>1</default_value>
             <documentation>Global refinement-steps.</documentation>
-            <pattern>45</pattern>
+            <pattern>44</pattern>
             <pattern_description>[Integer range 0...2147483647 (inclusive)]</pattern_description>
         </Global>
         <SemiGlobal>
             <value>1</value>
             <default_value>1</default_value>
             <documentation>Semi-Global refinement-steps (close to the Waveguide-boundary and inside).</documentation>
-            <pattern>46</pattern>
+            <pattern>45</pattern>
             <pattern_description>[Integer range 0...2147483647 (inclusive)]</pattern_description>
         </SemiGlobal>
         <Internal>
             <value>1</value>
             <default_value>1</default_value>
             <documentation>Internal refinement-steps.</documentation>
-            <pattern>47</pattern>
+            <pattern>46</pattern>
             <pattern_description>[Integer range 0...2147483647 (inclusive)]</pattern_description>
         </Internal>
     </Refinement>

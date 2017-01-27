@@ -55,10 +55,13 @@ void AdjointOptimization::run() {
     while(oa->perform_small_step_next(small_steps)) {
       double temp_step_width = oa->get_small_step_step_width(small_steps);
       oa->pass_result_small_step(compute_small_step(temp_step_width));
+      alert();
       small_steps++;
     }
 
+    alert();
     if(oa->perform_big_step_next(small_steps)) {
+      alert();
       std::vector<double> step = oa->get_big_step_configuration();
       quality = compute_big_step(step);
       oa->pass_result_big_step(primal_st->evaluate_for_z(GlobalParams.M_R_ZLength/2.0, primal_waveguide));

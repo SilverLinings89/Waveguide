@@ -93,7 +93,7 @@ class Waveguide
 	 * \param structure This parameter gives a reference to the structure of the real Waveguide. This is necessary since during matrix-assembly it is required to call a function which generates the transformation tensor which is purely structure-dependent.
 	 */
 
-		Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st );
+		Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st , std::string path_part);
 
     ~Waveguide ();
 
@@ -315,6 +315,8 @@ class Waveguide
 
 		// HIER BEGINNT DIE NEUE VERSION...
 
+
+
 		MeshGenerator * mg;
 
 		SpaceTransformation * st;
@@ -353,8 +355,6 @@ class Waveguide
 	  std::vector<IndexSet> i_prec_odd_writable;
 	  std::vector<IndexSet> i_sys_owned;
 
-    std::string                   solutionpath;
-
     TrilinosWrappers::MPI::BlockVector										solution, EstimatedSolution, ErrorOfSolution ;
 		IndexSet										locally_owned_dofs, locally_relevant_dofs, locally_active_dofs, extended_relevant_dofs;
 		std::vector<IndexSet>							locally_relevant_dofs_per_subdomain;
@@ -377,6 +377,8 @@ class Waveguide
     double minimum_local_z;
     double maximum_local_z;
     double locals_set = false;
+
+    std::string path_prefix;
 
     // HIER BEGINNT DIE ALTE VERSION ...
 

@@ -24,6 +24,48 @@ void alert() {
   alert_counter++;
 }
 
+static void PrepareStreams()  {
+  int i = 0;
+  bool dir_exists = true;
+  while(dir_exists) {
+    std::stringstream out;
+    out << "Solutions/run";
+    out << i;
+    solutionpath = out.str();
+    struct stat myStat;
+    const char *myDir = solutionpath.c_str();
+    if ((stat(myDir, &myStat) == 0) && (((myStat.st_mode) & S_IFMT) == S_IFDIR)) {
+      i++;
+    } else {
+      dir_exists = false;
+    }
+  }
+  i = Utilities::MPI::max(i, MPI_COMM_WORLD);
+  std::stringstream out;
+  out << "Solutions/run";
+
+  // TODO check if this directory is really available for all processes and throw an error otherwise.
+
+  out << i;
+  solutionpath = out.str();
+  mkdir(solutionpath.c_str(), ACCESSPERMS);
+
+    // Copy Parameter file to the output directory in processor 0. This should be replaced with an output generator eventually.
+  if(GlobalParams.MPI_Rank == 0) {
+    std::ifstream source("Parameters/Parameters.xml", std::ios::binary);
+    std::ofstream dest(solutionpath +"/Parameters.xml", std::ios::binary);
+    dest << source.rdbuf();
+    source.close();
+    dest.close();
+    log_stream.open(solutionpath + "/main.log", std::ios::binary);
+    deallog.attach(log_stream);
+    deallog.depth_console(10);
+  }
+
+
+}
+
+
 static Parameters GetParameters() {
 	ParameterHandler prm;
 	ParameterReader param(prm);
@@ -105,10 +147,10 @@ static Parameters GetParameters() {
       } else {
         ret.M_C_Shape = ConnectorType::Rectangle;
       }
-      ret.M_C_Dim1In = prm.get_double("Dimension1_In");
-      ret.M_C_Dim2In = prm.get_double("Dimension2_In");
-      ret.M_C_Dim1Out = prm.get_double("Dimension1_Out");
-      ret.M_C_Dim2Out = prm.get_double("Dimension2_Out");
+      ret.M_C_Dim1In = prm.get_double("Dimension1 In");
+      ret.M_C_Dim2In = prm.get_double("Dimension2 In");
+      ret.M_C_Dim1Out = prm.get_double("Dimension1 Out");
+      ret.M_C_Dim2Out = prm.get_double("Dimension2 Out");
     }
     prm.leave_subsection();
 
@@ -171,13 +213,9 @@ static Parameters GetParameters() {
       ret.Sc_SteppingMethod = SteppingMethod::Steepest;
     } else if (temp == "CG") {
       ret.Sc_SteppingMethod = SteppingMethod::CG;
-    };
-    temp = prm.get("Step Width");
-    if( temp == "LineSearch"){
-      ret.Sc_StepWidth = StepWidth::LineSearch;
-    } else if (temp == "Experimental"){
-      ret.Sc_StepWidth = StepWidth::Experimental;
-    };
+    } else if (temp == "LineSearch") {
+      ret.Sc_SteppingMethod = SteppingMethod::LineSearch;
+    }
   }
   prm.leave_subsection();
 
