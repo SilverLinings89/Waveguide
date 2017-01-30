@@ -25,7 +25,11 @@ void alert() {
 }
 
 static void PrepareStreams()  {
-  deallog.depth_console(0);
+  if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0) {
+    deallog.depth_console(10);
+  } else {
+    deallog.depth_console(0);
+  }
   int i = 0;
   bool dir_exists = true;
   while(dir_exists) {
@@ -51,18 +55,17 @@ static void PrepareStreams()  {
   solutionpath = out.str();
   mkdir(solutionpath.c_str(), ACCESSPERMS);
 
-    // Copy Parameter file to the output directory in processor 0. This should be replaced with an output generator eventually.
-  if(GlobalParams.MPI_Rank == 0) {
+  // Copy Parameter file to the output directory in processor 0. This should be replaced with an output generator eventually.
+  if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0) {
     std::ifstream source("Parameters/Parameters.xml", std::ios::binary);
     std::ofstream dest(solutionpath +"/Parameters.xml", std::ios::binary);
     dest << source.rdbuf();
     source.close();
     dest.close();
-    log_stream.open(solutionpath + "/main.log", std::ios::binary);
-    deallog.attach(log_stream);
-    deallog.depth_console(10);
   }
 
+  log_stream.open(solutionpath + "/main"+ std::to_string(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) +".log", std::ios::binary);
+  deallog.attach(log_stream);
 
 }
 

@@ -105,7 +105,7 @@ double InhomogenousTransformationRectangular::PML_Y_Distance(Point<3> &p) const{
 }
 
 double InhomogenousTransformationRectangular::PML_Z_Distance(Point<3> &p) const{
-  if(p(3) < 0) {
+  if(p(2) < 0) {
     return - (p(2) + (GlobalParams.M_R_ZLength / 2.0));
   } else {
     return p(2) - (GlobalParams.M_R_ZLength / 2.0);

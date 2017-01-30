@@ -115,7 +115,7 @@ double HomogenousTransformationCircular::PML_Y_Distance(Point<3> &p) const{
 }
 
 double HomogenousTransformationCircular::PML_Z_Distance(Point<3> &p) const{
-  if(p(3) < 0) {
+  if(p(2) < 0) {
     return - (p(2) + (GlobalParams.M_R_ZLength / 2.0));
   } else {
     return p(2) - (GlobalParams.M_R_ZLength / 2.0);
@@ -460,11 +460,6 @@ void HomogenousTransformationCircular::estimate_and_initialize() {
         );
       }
     }
-
-    // for (unsigned int i = 0;  i < NFreeDofs(); ++ i) {
-    //  InitialDofs[i] = this->get_dof(i, true);
-    //}
-
 }
 
 double HomogenousTransformationCircular::get_r(double z_in) const {

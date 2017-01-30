@@ -38,10 +38,9 @@ RoundMeshGenerator::RoundMeshGenerator(SpaceTransformation * in_ct) :
 
   const std_cxx11::array< Tensor< 1, 3 >, 3 > edges2(edges);
 
-  subs.reserve(3);
-  subs[0] = 1;
-  subs[1] = 1;
-  subs[2] = Layers;
+  subs.push_back(1);
+  subs.push_back(1);
+  subs.push_back(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD));
   ct = in_ct;
 
 }
@@ -52,7 +51,7 @@ RoundMeshGenerator::~RoundMeshGenerator() {
 
 void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3> & tria) const {
   int counter = 0;
-  parallel::distributed::Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
+  parallel::shared::Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
   endc2 = tria.end();
   tria.set_all_manifold_ids(0);
   for (; cell2!=endc2; ++cell2){
@@ -91,94 +90,91 @@ void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3
 
 void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulation<3> * in_tria){
 
-  alert();
-    const std_cxx11::array< Tensor< 1, 3 >, 3 > edges2(edges);
+  deallog.push("RoundMeshGenerator:prepare_triangulation");
+  deallog << "Starting Mesh preparation"<<std::endl;
 
-    GridGenerator::subdivided_parallelepiped<3,3>(* in_tria, origin, edges2, subs, false);
+  const std_cxx11::array< Tensor< 1, 3 >, 3 > edges2(edges);
 
-    in_tria->repartition();
+  GridGenerator::subdivided_parallelepiped<3,3>(* in_tria, origin, edges2, subs, false);
 
-    in_tria->refine_global(3);
+  in_tria->repartition();
 
-    in_tria->signals.post_refinement.connect
+  in_tria->signals.post_refinement.connect
             (std_cxx11::bind (&RoundMeshGenerator::set_boundary_ids,
                               std_cxx11::cref(*this),
                               std_cxx11::ref(*in_tria)));
-    alert();
 
-    in_tria->set_all_manifold_ids(0);
+  in_tria->refine_global(3);
 
-    GridTools::transform( &Triangulation_Stretch_to_circle , *in_tria);
+  in_tria->set_all_manifold_ids(0);
 
-    unsigned int man = 1;
+  GridTools::transform( &Triangulation_Stretch_to_circle , *in_tria);
 
-    in_tria->set_manifold (man, round_description);
-    alert();
-    in_tria->set_all_manifold_ids(0);
+  unsigned int man = 1;
+
+  in_tria->set_manifold (man, round_description);
+
+  in_tria->set_all_manifold_ids(0);
+  cell = in_tria->begin_active();
+
+  endc = in_tria->end();
+  for (; cell!=endc; ++cell){
+    if (Distance2D(cell->center() ) < 0.25 ) {
+      cell->set_all_manifold_ids(1);
+      cell->set_manifold_id(1);
+    }
+  }
+
+
+  in_tria->set_manifold (man, round_description);
+
+  in_tria->set_all_manifold_ids(0);
+  cell = in_tria->begin_active();
+  endc = in_tria->end();
+  for (; cell!=endc; ++cell){
+    if (Distance2D(cell->center() ) < 0.25 ) {
+      cell->set_all_manifold_ids(1);
+      cell->set_manifold_id(1);
+    }
+  }
+
+
+  in_tria->set_manifold (man, round_description);
+  parallel::distributed::Triangulation<3>::active_cell_iterator
+  cell = in_tria->begin_active(),
+  endc = in_tria->end();
+
+  int layers_per_sector = 4;
+  layers_per_sector /= GlobalParams.R_Global;
+  int reps = log2(layers_per_sector);
+  if( layers_per_sector > 0 && pow(2,reps) != layers_per_sector) {
+    std::cout << "The number of layers per sector has to be a power of 2. At least 2 layers are recommended for neccessary sparsity in the pattern for preconditioner to work." << std::endl;
+    exit(0);
+  }
+
+  double len = 2.0 / Layers;
+
+  cell = in_tria->begin_active();
+  for (; cell!=endc; ++cell){
+    int temp  = (int) std::floor((cell->center(true, false)[2] + 1.0)/len);
+    if( temp >=  (int)Layers || temp < 0) std::cout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
+  }
+
+  GridTools::transform(& Triangulation_Stretch_X, * in_tria);
+  GridTools::transform(& Triangulation_Stretch_Y, * in_tria);
+  GridTools::transform(& Triangulation_Stretch_Computational_Radius, * in_tria);
+
+  double MaxDistFromBoundary = (GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In)*1.4/2.0;
+  for(int i = 0; i < GlobalParams.R_Local; i++) {
     cell = in_tria->begin_active();
-    endc = in_tria->end();
     for (; cell!=endc; ++cell){
-      if (Distance2D(cell->center() ) < 0.25 ) {
-        cell->set_all_manifold_ids(1);
-        cell->set_manifold_id(1);
+      if(std::abs(Distance2D(cell->center(true, false)) - (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0 ) < MaxDistFromBoundary) {
+        cell->set_refine_flag();
       }
     }
-
-
-    in_tria->set_manifold (man, round_description);
-
-    //triangulation.refine_global(1);
-    alert();
-    in_tria->set_all_manifold_ids(0);
-    cell = in_tria->begin_active();
-    endc = in_tria->end();
-    for (; cell!=endc; ++cell){
-      if (Distance2D(cell->center() ) < 0.25 ) {
-        cell->set_all_manifold_ids(1);
-        cell->set_manifold_id(1);
-      }
-    }
-
-
-    in_tria->set_manifold (man, round_description);
-    alert();
-    parallel::distributed::Triangulation<3>::active_cell_iterator
-
-    cell = in_tria->begin_active(),
-    endc = in_tria->end();
-
-    int layers_per_sector = 4;
-    layers_per_sector /= GlobalParams.R_Global;
-    int reps = log2(layers_per_sector);
-    if( layers_per_sector > 0 && pow(2,reps) != layers_per_sector) {
-      std::cout << "The number of layers per sector has to be a power of 2. At least 2 layers are recommended for neccessary sparsity in the pattern for preconditioner to work." << std::endl;
-      exit(0);
-    }
-
-    double len = 2.0 / Layers;
-
-    cell = in_tria->begin_active();
-    for (; cell!=endc; ++cell){
-      int temp  = (int) std::floor((cell->center(true, false)[2] + 1.0)/len);
-      if( temp >=  (int)Layers || temp < 0) std::cout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
-    }
-
-    GridTools::transform(& Triangulation_Stretch_X, * in_tria);
-    GridTools::transform(& Triangulation_Stretch_Y, * in_tria);
-    GridTools::transform(& Triangulation_Stretch_Computational_Radius, * in_tria);
-
-    double MaxDistFromBoundary = (GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In)*1.4/2.0;
-    for(int i = 0; i < GlobalParams.R_Local; i++) {
-      cell = in_tria->begin_active();
-      for (; cell!=endc; ++cell){
-        if(std::abs(Distance2D(cell->center(true, false)) - (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0 ) < MaxDistFromBoundary) {
-          std::cout << "Block 1 from Processor " << GlobalParams.MPI_Rank <<std::endl;
-          cell->set_refine_flag();
-        }
-      }
-      in_tria->execute_coarsening_and_refinement();
-      MaxDistFromBoundary = (MaxDistFromBoundary + ((GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In)/2.0))/2.0 ;
-    }
+    in_tria->execute_coarsening_and_refinement();
+    MaxDistFromBoundary = (MaxDistFromBoundary + ((GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In)/2.0))/2.0 ;
+  }
 
     for(int i = 0; i < GlobalParams.R_Interior; i++) {
       cell = in_tria->begin_active();
@@ -212,20 +208,13 @@ void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulat
       }
     }
 
-
-    // mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
-
     cell = in_tria->begin_active();
     endc = in_tria->end();
 
+    mesh_info(*in_tria, "Output"+std::to_string(GlobalParams.MPI_Rank)+".vtk");
 
-
-    if(GlobalParams.O_G_Log) {
-      if(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0) {
-        std::cout << "MeshGenerator current active cells:" << in_tria->n_active_cells() << std::endl;
-        mesh_info(*in_tria);
-      }
-    }
+    deallog << "Done" <<std::endl;
+    deallog.pop();
 }
 
 bool RoundMeshGenerator::math_coordinate_in_waveguide(Point<3,double> in_position) const {

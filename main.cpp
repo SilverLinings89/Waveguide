@@ -85,6 +85,8 @@ int main (int argc, char *argv[])
     }
   }
 
+	st->estimate_and_initialize();
+
 	deallog << "Done. Preparing Mesh Generators..." <<std::endl;
 
 	MeshGenerator * mg;
@@ -97,6 +99,7 @@ int main (int argc, char *argv[])
 	SpaceTransformation * dst;
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint ) {
 	  dst = new DualProblemTransformationWrapper(st);
+	  dst->estimate_and_initialize();
 	}
 
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint ) {
@@ -125,7 +128,8 @@ int main (int argc, char *argv[])
 	} else {
 	  prefix = ".";
 	}
-	primal_waveguide = new Waveguide(mpi_primal, mg, st, "prefix");
+
+	primal_waveguide = new Waveguide(mpi_primal, mg, st, "primal");
 
 	Waveguide * dual_waveguide;
 

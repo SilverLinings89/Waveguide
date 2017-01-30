@@ -41,7 +41,9 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
     double q_out = std::abs(primal_st->evaluate_for_z(GlobalParams.M_R_ZLength/2.0, primal_waveguide));
     quality = q_out / q_in;
 
-    // HIER GEHTS MORGEN WEITER!!!
+    deallog.push("AO::compute_big_step");
+    deallog << "Computed quality " << quality << std::endl;
+    deallog.pop();
     return quality;
 }
 
@@ -53,15 +55,14 @@ void AdjointOptimization::run() {
   while(run) {
     int small_steps = 0;
     while(oa->perform_small_step_next(small_steps)) {
+      deallog << "Performing a small step." << std::endl;
       double temp_step_width = oa->get_small_step_step_width(small_steps);
       oa->pass_result_small_step(compute_small_step(temp_step_width));
-      alert();
       small_steps++;
     }
 
-    alert();
     if(oa->perform_big_step_next(small_steps)) {
-      alert();
+      deallog << "Performing a big step." << std::endl;
       std::vector<double> step = oa->get_big_step_configuration();
       quality = compute_big_step(step);
       oa->pass_result_big_step(primal_st->evaluate_for_z(GlobalParams.M_R_ZLength/2.0, primal_waveguide));
@@ -70,8 +71,8 @@ void AdjointOptimization::run() {
     counter++;
 
     if(counter > GlobalParams.Sc_OptimizationSteps || quality > 1.0) {
+      deallog << "The optimization is shutting down after " << counter << " steps. Last quality: " << 100*quality <<"%." << std::endl;
       run = false;
-      std::cout << "The optimization is shutting down after " << counter << " steps. Last quality: " << 100* quality <<"%" <<std::endl;
     }
   }
 

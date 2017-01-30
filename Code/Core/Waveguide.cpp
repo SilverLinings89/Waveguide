@@ -27,7 +27,7 @@ using namespace dealii;
 
 Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st, std::string path_part):
     fe(FE_Nedelec<3> (0), 2),
-    triangulation (in_mpi_comm, parallel::distributed::Triangulation<3>::MeshSmoothing(Triangulation<3>::none ), parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning),
+    triangulation (in_mpi_comm,parallel::distributed::Triangulation<3>::MeshSmoothing(parallel::distributed::Triangulation<3>::none ), parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning),
     even(Utilities::MPI::this_mpi_process(in_mpi_comm)%2 == 0),
     rank(Utilities::MPI::this_mpi_process(in_mpi_comm)),
     real(0),
@@ -47,7 +47,6 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
     minimum_local_z(2.0 * GlobalParams.M_R_ZLength),
     maximum_local_z(- 2.0 * GlobalParams.M_R_ZLength)
 {
-  std::cout << "This is global process " << GlobalParams.MPI_Rank << " as " << Utilities::MPI::this_mpi_process(in_mpi_comm) <<std::endl;
   mg = in_mg;
   st = in_st;
   mpi_comm = in_mpi_comm;
@@ -59,7 +58,7 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
   const int number = Layers -1;
   qualities = new double[number];
   execute_recomputation = false;
-
+  mkdir((solutionpath + "/" +path_prefix).c_str(), ACCESSPERMS);
 }
 
 Waveguide::~Waveguide() {
@@ -164,17 +163,15 @@ void Waveguide::Compute_Dof_Numbers() {
 	std::vector<types::global_dof_index> DofsPerSubdomain(Layers);
 	std::vector<int> InternalBoundaryDofs(Layers);
 
-	alert();
-
 	DofsPerSubdomain = dof_handler.n_locally_owned_dofs_per_processor();
 	for( unsigned int i = 0; i < Layers; i++) {
 		Block_Sizes[i] = DofsPerSubdomain[i];
 	}
-	pout << "Layers: " << Layers <<std::endl;
+	deallog << "Layers: " << Layers <<std::endl;
 	for (unsigned int i = 0; i < Layers; i++) {
-	  pout << Block_Sizes[i]<< std::endl;
+	  deallog << Block_Sizes[i]<< std::endl;
 	}
-	alert();
+
 
 	Dofs_Below_Subdomain[0] = 0;
 
@@ -182,12 +179,10 @@ void Waveguide::Compute_Dof_Numbers() {
 		Dofs_Below_Subdomain[i] = Dofs_Below_Subdomain[i-1] + Block_Sizes[i-1];
 	}
 
-	alert();
-
 	for(unsigned int i = 0; i < Layers; i++) {
 		IndexSet temp (dof_handler.n_dofs());
 		temp.clear();
-		pout << "Adding Block "<< i +1 << " from " << Dofs_Below_Subdomain[i] << " to " << Dofs_Below_Subdomain[i]+ Block_Sizes[i] -1<<std::endl;
+		deallog << "Adding Block "<< i +1 << " from " << Dofs_Below_Subdomain[i] << " to " << Dofs_Below_Subdomain[i]+ Block_Sizes[i] -1<<std::endl;
 		temp.add_range(Dofs_Below_Subdomain[i],Dofs_Below_Subdomain[i]+Block_Sizes[i] );
 		set.push_back(temp);
 	}
@@ -198,10 +193,9 @@ void Waveguide::Compute_Dof_Numbers() {
 
 void Waveguide::setup_system ()
 {
-
-
-
-	locally_owned_dofs = dof_handler.locally_owned_dofs ();
+  deallog.push("setup_system");
+  deallog << "Assembling IndexSets" <<std::endl;
+  locally_owned_dofs = dof_handler.locally_owned_dofs ();
 	DoFTools::extract_locally_active_dofs(dof_handler, locally_active_dofs);
 	DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
 	std::vector<unsigned int> n_neighboring = dof_handler.n_locally_owned_dofs_per_processor();
@@ -211,6 +205,7 @@ void Waveguide::setup_system ()
 		extended_relevant_dofs.add_range(locally_owned_dofs.nth_index_in_set(0) - n_neighboring[GlobalParams.MPI_Rank-1], locally_owned_dofs.nth_index_in_set(0));
 	}
 
+	deallog << "Computing block counts" <<std::endl;
 	// Here we start computing the distribution of entries (indices thereof) to the specific blocks of the 3 matrices (system matrix and the 2 preconditioner matrices.)
   int prec_even_block_count = Utilities::MPI::n_mpi_processes(mpi_comm) /2;
   if(Utilities::MPI::n_mpi_processes(mpi_comm)%2 == 1) {
@@ -219,7 +214,7 @@ void Waveguide::setup_system ()
 
   //int prec_odd_block_count = Utilities::MPI::n_mpi_processes(mpi_comm) /2 +1;
 
-  i_sys_owned.reserve(Layers);
+  i_sys_owned.resize(Layers);
 
   for(unsigned int i = 0; i < Layers; i++) {
     int size = Block_Sizes[i];
@@ -231,12 +226,14 @@ void Waveguide::setup_system ()
     i_sys_owned[i] = temp;
   }
 
-  i_prec_even_owned_row.reserve(Layers);
-  i_prec_even_owned_col.reserve(Layers);
-  i_prec_even_writable.reserve(Layers);
-  i_prec_odd_owned_row.reserve(Layers);
-  i_prec_odd_owned_col.reserve(Layers);
-  i_prec_odd_writable.reserve(Layers);
+
+
+  i_prec_even_owned_row.resize(Layers);
+  i_prec_even_owned_col.resize(Layers);
+  i_prec_even_writable.resize(Layers);
+  i_prec_odd_owned_row.resize(Layers);
+  i_prec_odd_owned_col.resize(Layers);
+  i_prec_odd_writable.resize(Layers);
 
 
   for(unsigned  int i = 0; i < Layers; i++) {
@@ -249,6 +246,10 @@ void Waveguide::setup_system ()
         even_row_owned = true;
         even_row_writable = true;
         even_col_owned = true;
+      } else {
+        if(i == rank -1) {
+          even_row_writable = true;
+        }
       }
     } else {
       if (i == rank || i == rank -1) {
@@ -284,6 +285,9 @@ void Waveguide::setup_system ()
         odd_row_writable = true;
         odd_col_owned = true;
       }
+      if ( i == rank -1) {
+        odd_row_writable = true;
+      }
     } else {
       if ( i == rank || i == rank -1) {
         odd_row_writable = true;
@@ -302,12 +306,51 @@ void Waveguide::setup_system ()
       oco.add_range(0,size);
     }
 
+    if( rank == 0 && i == 0) {
+      oro.add_range(0,size);
+      orw.add_range(0,size);
+      oco.add_range(0,size);
+    }
+
+    if(rank == Layers-1 && i == Layers-1) {
+      oro.add_range(0,size);
+      orw.add_range(0,size);
+      oco.add_range(0,size);
+    }
+
     i_prec_odd_owned_row[i] = oro;
     i_prec_odd_owned_col[i] = oco;
     i_prec_odd_writable[i] = orw;
   }
 
-	pout << "Constructing Sparsity Patterns and Constrain Matrices ... ";
+  for(unsigned int i = 0; i < Layers; i++) {
+    MPI_Barrier(MPI_COMM_WORLD);
+    if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == i){
+      std::cout << Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) << ":" <<std::endl;
+      for(unsigned int j =0 ; j < Layers; j++) {
+        std::cout << "Odd Preconditioner owned rows for block "<<j<< " : ";
+        i_prec_odd_owned_row[j].print(std::cout);
+        std::cout<<std::endl;
+        std::cout << "Odd Preconditioner owned cols for block "<<j<< " : ";
+        i_prec_odd_owned_col[j].print(std::cout);
+        std::cout<<std::endl;
+        std::cout << "Odd Preconditioner writable for block "<<j<< " : ";
+        i_prec_odd_writable[j].print(std::cout);
+        std::cout<<std::endl;
+        std::cout << "Even Preconditioner owned rows for block "<<j<< " : ";
+        i_prec_even_owned_row[j].print(std::cout);
+        std::cout<<std::endl;
+        std::cout << "Even Preconditioner owned cols for block "<<j<< " : ";
+        i_prec_even_owned_col[j].print(std::cout);
+        std::cout<<std::endl;
+        std::cout << "Even Preconditioner writable for block "<<j<< " : ";
+        i_prec_even_writable[j].print(std::cout);
+        std::cout<<std::endl;
+      }
+    }
+  }
+
+	deallog << "Constructing Sparsity Patterns and Constrain Matrices ... " <<std::endl;
 
 	cm.clear();
 	cm.reinit(locally_relevant_dofs);
@@ -330,7 +373,7 @@ void Waveguide::setup_system ()
 	cm_prec_odd.close();
 
 
-	pout << "Initialization done." << std::endl;
+	deallog << "Initialization done." << std::endl;
 
 
 
@@ -353,7 +396,7 @@ void Waveguide::setup_system ()
 	int * all_lens = new int[mpi_size];
 	int * displs = new int[mpi_size];
 
-	// std::cout << "MaxLength in process " << GlobalParams.MPI_Rank << " before sync is " << text_local_length;
+	deallog << "Communicating the Index Sets via MPI" <<std::endl;
 
 	MPI_Allgather(& text_local_length, 1, MPI_INT, all_lens, 1, MPI_INT, mpi_comm);
 
@@ -368,14 +411,10 @@ void Waveguide::setup_system ()
 
 	MPI_Allgatherv( text_local_set, text_local_length, MPI_CHAR, all_names, all_lens, displs, MPI_CHAR,	mpi_comm );
 
-	pout << "-------------------------------------" << std::endl;
+	deallog << "Updating local structures with information from the other processes" <<std::endl;
 
 	locally_relevant_dofs_all_processors.resize(Layers);
 
-
-	for(unsigned int i= 0; i < Layers; i++ ) {
-		// pout << &all_names[displs[i]]<< std::endl << "++++++++++++++++++++" <<std::endl;
-	}
 
 	for(unsigned int i= 0; i < Layers; i++ ) {
 		std::istringstream ss;
@@ -403,77 +442,24 @@ void Waveguide::setup_system ()
 
 
 
-	// std::cout << "Stage 1 for processor " << GlobalParams.MPI_Rank << std::endl;
-	// MPI_Comm_split(mpi_comm, GlobalParams.MPI_Rank/2, GlobalParams.MPI_Rank, &comm_even );
-	// IndexSet none(dof_handler.n_dofs());
-
-	IndexSet all(dof_handler.n_dofs());
-	all.add_range(0, dof_handler.n_dofs());
-
-	IndexSet owned(dof_handler.n_dofs());
-
-	IndexSet writable(dof_handler.n_dofs());
-
-	IndexSet none(dof_handler.n_dofs());
-
-	for(int i =0; i< mpi_size-1; i++) {
-		owned.clear();
-		writable.clear();
-		bool spec = false ;
-		bool upper = false;
-		bool lower = false;
-
-		if ( GlobalParams.MPI_Rank -i == 0 ) {
-			spec = true;
-			lower = true;
-		}
-
-		if ( GlobalParams.MPI_Rank - i == 1) {
-			upper = true;
-			spec = true;
-		}
-
-
-		if(!spec) {
-			owned.add_indices(locally_owned_dofs);
-			writable.add_indices(locally_relevant_dofs);
-
-			// is2.add_indices(is1);
-		} else {
-			if(upper) {
-				owned = none;
-				// owned = LowerDofs;
-				writable = locally_relevant_dofs;
-			}
-			if(lower) {
-				// owned = none;
-				owned = UpperDofs;
-				writable = locally_relevant_dofs;
-				writable.add_indices(UpperDofs);
-				// UpperDofs;
-				// writable.add_indices(locally_relevant_dofs);
-			}
-		}
-
-		// std::cout << "Stage 4 for processor " << GlobalParams.MPI_Rank << std::endl;
-
-
-		MPI_Barrier(mpi_comm);
-
-	}
+	deallog << "Done computing Index Sets. Calling for reinit now." <<std::endl;
 
 	reinit_all();
+
+	deallog<< "Done" << std::endl;
+	deallog.pop();
 }
 
 void Waveguide::calculate_cell_weights () {
-    cell = triangulation.begin_active();
+  deallog.push("Computing cell weights");
+  deallog << "Iterating cells and computing local norm of material tensor."<<std::endl;
+  cell = triangulation.begin_active();
 	endc = triangulation.end();
 
 	for (; cell!=endc; ++cell){
 		if(cell->is_locally_owned()) {
             Tensor<2,3, std::complex<double>> tens;
             Point<3> pos = cell->center();
-            // tens = get_Tensor(pos, false, true);
             tens = st->get_Tensor(pos);
             cell_weights(cell->active_cell_index()) = tens.norm();
             tens = st->get_Preconditioner_Tensor(pos, GlobalParams.MPI_Rank);
@@ -493,22 +479,35 @@ void Waveguide::calculate_cell_weights () {
 
 	data_out_cells.build_patches ();
 
-	std::ofstream outputvtu2 (solutionpath + "/" + path_prefix +"/cell-weights" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() +"-"+static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str()+".vtu");
+	std::string path = solutionpath + "/" + path_prefix +"/cell-weights" + std::to_string(run_number) +"-" + std::to_string(GlobalParams.MPI_Rank) +".vtu";
+	deallog<<"Writing vtu file: "<< path <<std::endl;
+
+	std::ofstream outputvtu2 (path);
 	data_out_cells.write_vtu(outputvtu2);
+	deallog << "Done." <<std::endl;
+	deallog.pop();
 }
 
 void Waveguide::reinit_all () {
-	// pout << "0-";
+  deallog.push("reinit_all");
+
+  deallog<<"reinitializing right-hand side" <<std::endl;
 	reinit_rhs();
-    
+
+	deallog<<"reinitializing cell weights" <<std::endl;
   reinit_cell_weights();
-	// pout << "1-";
+
+  deallog<<"reinitializing solutiuon" <<std::endl;
 	reinit_solution();
-	// pout << "2-";
+
+	deallog<<"reinitializing preconditioner" <<std::endl;
 	reinit_preconditioner();
-	// pout << "3-";
+
+	deallog<<"reinitializing system matrix" <<std::endl;
 	reinit_systemmatrix();
-	// pout << "4";
+
+	deallog << "Done" <<std::endl;
+	deallog.pop();
 }
 
 void Waveguide::reinit_for_rerun () {
@@ -530,36 +529,48 @@ void Waveguide::reinit_systemmatrix() {
    *
    */
 
+  deallog.push("reinit_systemmatrix");
 
+  deallog << "Generating Block Sparisty patterns ..." <<std::endl;
 
   TrilinosWrappers::BlockSparsityPattern epsp(i_prec_even_owned_row, i_prec_even_owned_col, i_prec_even_writable, mpi_comm);
+
+  deallog << "Even worked. Continuing Odd." <<std::endl;
+
   TrilinosWrappers::BlockSparsityPattern opsp(i_prec_odd_owned_row, i_prec_odd_owned_col, i_prec_odd_writable, mpi_comm);
+
+  deallog << "Odd worked. Continuing System Matrix." <<std::endl;
+
   TrilinosWrappers::BlockSparsityPattern sp(i_sys_owned, mpi_comm);
 
+  deallog << "Collecting sizes ..." <<std::endl;
   epsp.collect_sizes();
   opsp.collect_sizes();
   sp.collect_sizes();
 
+  deallog << "Making Block Sparisty patterns ..." <<std::endl;
+  deallog << "Even Preconditioner Matrices ..." <<std::endl;
   DoFTools::make_sparsity_pattern (dof_handler, epsp,
-	                                   cm, false,
+	                                   cm_prec_even, false,
 									   GlobalParams.MPI_Rank);
 	epsp.compress();
+	deallog << "Odd Preconditioner Matrices ..." <<std::endl;
 	DoFTools::make_sparsity_pattern (dof_handler, opsp,
-	                                     cm, false,
+	                                     cm_prec_odd, false,
 	                     GlobalParams.MPI_Rank);
 	opsp.compress();
-
+	deallog << "Systemmatrix ..." <<std::endl;
   DoFTools::make_sparsity_pattern (dof_handler, sp,
                                        cm, false,
                        GlobalParams.MPI_Rank);
   sp.compress();
 
-  // const TrilinosWrappers::BlockSparsityPattern  cepsp(epsp);
-
-  // const std::vector<IndexSet> ciso(i_sys_owned);
+  deallog << "Initializing matrices ..." <<std::endl;
 	system_matrix.reinit(sp);
 	prec_matrix_even.reinit(epsp);
 	prec_matrix_odd.reinit(opsp);
+	deallog << "Done." <<std::endl;
+	deallog.pop();
 }
 
 void Waveguide::reinit_rhs () {
@@ -1188,23 +1199,30 @@ void Waveguide::output_results ( bool  )
 void Waveguide::run ()
 {
 
+  deallog.push("Waveguide_" + path_prefix + "_run");
+
+  deallog << "Setting up the mesh..."<<std::endl;
 	timer.enter_subsection ("Setup Mesh");
 	make_grid ();
 	timer.leave_subsection();
 
 	Compute_Dof_Numbers();
 
+	deallog << "Setting up FEM..."<<std::endl;
 	timer.enter_subsection ("Setup FEM");
 	setup_system ();
 	timer.leave_subsection();
 
+
 	timer.enter_subsection ("Reset");
 	timer.leave_subsection();
 
+	deallog << "Assembling the system..."<<std::endl;
 	timer.enter_subsection ("Assemble");
 	assemble_system ();
 	timer.leave_subsection();
 
+	deallog << "Solving the system..."<<std::endl;
 	timer.enter_subsection ("Solve");
 	solve ();
 	timer.leave_subsection();
@@ -1214,9 +1232,11 @@ void Waveguide::run ()
 	timer.leave_subsection();
 
 	timer.print_summary();
+
+	deallog << "Writing outputs..."<<std::endl;
 	timer.reset();
     
-    output_results(false);
+  output_results(false);
     
 	run_number++;
 }
@@ -1233,6 +1253,8 @@ void Waveguide::print_condition(double condition) {
 }
 
 std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution(Waveguide * other, double stepwidth) {
+  deallog.push("Waveguide:adj_local");
+  deallog << "Computing adjoint based shape derivative contributions..."<<std::endl;
   std::vector<std::complex<double>> ret;
   const unsigned int ndofs = st->NDofs();
   ret.reserve(ndofs);
@@ -1288,6 +1310,8 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
       }
     }
   }
+  deallog << "Done." << std::endl;
+  deallog.pop();
   return ret;
 }
 
