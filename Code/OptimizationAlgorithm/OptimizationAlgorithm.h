@@ -24,10 +24,20 @@ public:
 
   virtual ~OptimizationAlgorithm();
 
-  virtual void pass_result_small_step(std::vector<datatype>);
+  /**
+   * A function to pass a vector of values, computed by performing a single or multiple steps with short step-width.
+   * "small" in the name references the fact, that the step width is small. In gerneral this is done whenever an accurat approximation of a gradient is saught based on linearization. This computation (especially in finite difference based approaches) can be much more costly than a big step. In a big step, one forward problem has to be solved. A small step computation based on finite differences requires \f$NDofs\f$ forward problems to be solved. This function has the purpose of passing the result of such computations to the optimization algorithm which will store it and use it to compute optimization steps in the future.
+   * \param vec This parameter is a vector of changes of the target functional based on a change in the individual component. The components belonging to restrained degrees of freedom are set to zero.
+   */
+  virtual void pass_result_small_step(std::vector<datatype> vec);
 
 
-  virtual void pass_result_big_step(datatype);
+  /**
+   * Similar to pass_result_small_step but for the results of big steps.
+   * Since for a big step we always only perform the solution of one forward problem we also only get one change of the target functional. Therefore in this case we only pass a value, not a vector of the like.
+   * \param input This is the value describing how much the target functional has changed upon performing the step last computed by this optimization algorithm.
+   */
+  virtual void pass_result_big_step(datatype input);
 
   /**
    * The optimization is mainly split into two kinds of steps: Full and small steps. For FD based schemes, a small step is a computation of finite differences for all degrees of freedom which entails a lot of computation. Small here refers to the norm of the step width - not necessarily to the amount of computation required.

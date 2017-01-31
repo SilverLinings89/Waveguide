@@ -377,7 +377,7 @@
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </GMRESSteps>
         <Preconditioner>
-            <value>Amesos_Klu</value>
+            <value>Amesos_Umfpack</value>
             <default_value>Amesos_Lapack</default_value>
             <documentation>Which preconditioner to use</documentation>
             <pattern>37</pattern>

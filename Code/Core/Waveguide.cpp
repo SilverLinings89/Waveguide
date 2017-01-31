@@ -22,6 +22,7 @@
 #include <deal.II/lac/trilinos_block_sparse_matrix.h>
 #include <deal.II/lac/solver.h>
 #include <deal.II/numerics/data_out_dof_data.h>
+#include <deal.II/lac/block_matrix_array.h>
 
 using namespace dealii;
 
@@ -84,9 +85,10 @@ std::complex<double> Waveguide::evaluate_for_Position(double x, double y, double
 
 void Waveguide::estimate_solution() {
 	MPI_Barrier(mpi_comm);
-	pout << "Starting solution estimation..." << std::endl;
+	deallog.push("estimate_solution");
+	deallog << "Starting solution estimation..." << std::endl;
 	DoFHandler<3>::active_cell_iterator cell, endc;
-	pout << "Lambda: " << GlobalParams.M_W_Lambda << std::endl;
+	deallog << "Lambda: " << GlobalParams.M_W_Lambda << std::endl;
 	unsigned int min_dof = locally_owned_dofs.nth_index_in_set(0);
 	unsigned int max_dof = locally_owned_dofs.nth_index_in_set(locally_owned_dofs.n_elements()-1 );
 
@@ -128,6 +130,8 @@ void Waveguide::estimate_solution() {
 	}
 	MPI_Barrier(mpi_comm);
 	EstimatedSolution.compress(VectorOperation::insert);
+	deallog<<"Done."<<std::endl;
+	deallog.pop();
 }
 
 Tensor<2,3, std::complex<double>> Waveguide::Conjugate_Tensor(Tensor<2,3, std::complex<double>> input) {
@@ -613,7 +617,6 @@ void Waveguide::assemble_system ()
 {
 
 	reinit_rhs();
-	// system_rhs.reinit(dof_handler.n_dofs());
 
 	QGauss<3>  quadrature_formula(2);
 	const FEValuesExtractors::Vector real(0);
@@ -623,7 +626,7 @@ void Waveguide::assemble_system ()
 	const unsigned int   dofs_per_cell	= fe.dofs_per_cell;
 	const unsigned int   n_q_points		= quadrature_formula.size();
 
-	if(!is_stored) pout << "Starting Assemblation process" << std::endl;
+	deallog << "Starting Assemblation process" << std::endl;
 
 	FullMatrix<double>  cell_matrix_real (dofs_per_cell, dofs_per_cell);
   FullMatrix<double>  cell_matrix_prec_odd (dofs_per_cell, dofs_per_cell);
@@ -739,7 +742,7 @@ void Waveguide::assemble_system ()
   locals_set = true;
 
 	MPI_Barrier(mpi_comm);
-	if(!is_stored)  pout<<"Assembling done. L2-Norm of RHS: "<< system_rhs.l2_norm()<<std::endl;
+	if(!is_stored)  deallog<<"Assembling done. L2-Norm of RHS: "<< system_rhs.l2_norm()<<std::endl;
 
 	system_matrix.compress(VectorOperation::add);
 	system_rhs.compress(VectorOperation::add);
@@ -751,7 +754,7 @@ void Waveguide::assemble_system ()
 	cm.distribute(EstimatedSolution);
 	cm.distribute(ErrorOfSolution);
 	MPI_Barrier(mpi_comm);
-	pout << "Distributing solution done." <<std::endl;
+	deallog << "Distributing solution done." <<std::endl;
 	estimate_solution();
 
 }
@@ -1086,6 +1089,35 @@ void Waveguide::solve () {
 
 		MPI_Barrier(mpi_comm);
 
+		int len = 2;
+		if(rank == GlobalParams.NumberProcesses -1) {
+		  len =1;
+		}
+
+		dealii::BlockSparsityPattern prec_pat(len,len);
+		dealii::BlockSparseMatrix<double> * temp_mat = new BlockSparseMatrix<double>(prec_pat);
+
+		if(even) {
+		  temp_mat->block(0,0).copy_from( prec_matrix_even.block(rank, rank));
+      if(len == 2){
+        temp_mat->block(0,1).copy_from( prec_matrix_even.block(rank, rank +1));
+        temp_mat->block(1,0).copy_from( prec_matrix_even.block(rank +1, rank));
+        temp_mat->block(1,1).copy_from( prec_matrix_even.block(rank +1, rank +1));
+      }
+    } else {
+      temp_mat->block(0,0).copy_from( prec_matrix_odd.block(rank, rank));
+      if(len == 2){
+        temp_mat->block(0,1).copy_from( prec_matrix_odd.block(rank, rank +1));
+        temp_mat->block(1,0).copy_from( prec_matrix_odd.block(rank +1, rank));
+        temp_mat->block(1,1).copy_from( prec_matrix_odd.block(rank +1, rank +1));
+      }
+    }
+
+		sweep.matrix = temp_mat;
+
+		sweep.init();
+
+		if(rank > 0) sweep.prec_matrix_lower->copy_from( system_matrix.block(rank, rank-1));
 
 		pout << "All preconditioner matrices built. Solving..." <<std::endl;
         
@@ -1217,15 +1249,19 @@ void Waveguide::run ()
 	timer.enter_subsection ("Reset");
 	timer.leave_subsection();
 
+	deallog.push("Assembly");
 	deallog << "Assembling the system..."<<std::endl;
 	timer.enter_subsection ("Assemble");
 	assemble_system ();
 	timer.leave_subsection();
+	deallog.pop();
 
+	deallog.push("Solving");
 	deallog << "Solving the system..."<<std::endl;
 	timer.enter_subsection ("Solve");
 	solve ();
 	timer.leave_subsection();
+	deallog.pop();
 
 	timer.enter_subsection ("Evaluate");
 	//evaluate ();
