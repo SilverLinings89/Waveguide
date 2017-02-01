@@ -311,6 +311,8 @@ class Waveguide
 
 		Tensor<1,3,std::complex<double>> solution_evaluation(Point<3,double> position) const;
 
+		IndexSet combine_indexes(IndexSet lower, IndexSet upper) const;
+
 
 
 		// HIER BEGINNT DIE NEUE VERSION...
@@ -354,6 +356,7 @@ class Waveguide
 	  std::vector<IndexSet> i_prec_odd_owned_col;
 	  std::vector<IndexSet> i_prec_odd_writable;
 	  std::vector<IndexSet> i_sys_owned;
+
 
     TrilinosWrappers::MPI::BlockVector										solution, EstimatedSolution, ErrorOfSolution ;
 		IndexSet										locally_owned_dofs, locally_relevant_dofs, locally_active_dofs, extended_relevant_dofs;

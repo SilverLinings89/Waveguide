@@ -15,7 +15,7 @@
 using namespace dealii;
 
 PreconditionerSweeping::~PreconditionerSweeping (){
-	delete solver;
+
 }
 PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int bandwidth, IndexSet in_locally_owned_dofs)
 	{
@@ -25,7 +25,7 @@ PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int
 		IndexSet elements (own+others);
 		elements.add_range(0,own+others);
 		//solver = new TrilinosWrappers::SolverDirect(s, TrilinosWrappers::SolverDirect::AdditionalData(false, PrecOptionNames[GlobalParams.So_Preconditioner]));
-		solver = new SparseDirectUMFPACK();
+		// solver = new SparseDirectUMFPACK();
 		indices = new int[in_locally_owned_dofs.n_elements()];
 		sweepable = in_locally_owned_dofs.n_elements();
 		for(unsigned int i = 0; i < sweepable; i++){
@@ -57,16 +57,15 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
 
 		dealii::Vector<double> outputb(own);
 
-		solver->solve(input);
-
+		// solver.solve( input);
+		solver->solve( * matrix, input, outputb );
 		// double *  trans1 = new double[own];
-		/**
+
 		for(int i = 0; i < own; i++) {
 			input[i] = outputb[i];
 			// trans1[i] = outputb[i];
 		}
-    **/
-		MPI_Send(&outputb[0], own, MPI_DOUBLE, GlobalParams.MPI_Rank-1, 0, MPI_COMM_WORLD);
+		MPI_Send(&input[0], own, MPI_DOUBLE, GlobalParams.MPI_Rank-1, 0, MPI_COMM_WORLD);
 
 	} else {
 
@@ -169,19 +168,19 @@ void PreconditionerSweeping::Hinv(const dealii::Vector<double> & src, dealii::Ve
 	IndexSet is (own+others);
 	is.add_range(0, own+others-1);
 
-	// TrilinosWrappers::MPI::Vector inputb(is, MPI_COMM_SELF);
-	dealii::Vector<double> inputb(own + others);
+	// TrilinosWrappers::MPI::Vector inputb(is, MPI_COMM_SELF<dealii::TrilinosWrappers::BlockSparseMatrix>);
+	dealii::TrilinosWrappers::Vector inputb(own + others);
 	for(int i = 0; i < own; i++) {
 		inputb[i ] = src(i);
 	}
 
-	dealii::Vector<double> outputb(own + others);
+	dealii::TrilinosWrappers::Vector  outputb(own + others);
 	//TrilinosWrappers::MPI::Vector outputb(is, MPI_COMM_SELF);
 
-	solver->solve( inputb);
+	solver->solve( * matrix , inputb, outputb);
 
 	for(int i = 0; i < own; i++) {
-		dst[i] = inputb[ i];
+		dst[i] = outputb[ i];
 	}
 }
 
@@ -195,8 +194,10 @@ void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> & src, de
 
 }
 
-void PreconditionerSweeping::init() {
-  solver->initialize(*matrix, dealii::SparseDirectUMFPACK::AdditionalData());
+void PreconditionerSweeping::init(SolverControl solver_control) {
+  //  solver->initialize(*matrix, dealii::SparseDirectUMFPACK::AdditionalData());
+  solver = new TrilinosWrappers::SolverDirect(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true, "Amesos_Umfpack"));
+  // solver = new TrilinosWrappers::SolverDirect(solver_control, TrilinosWrappers::SolverDirect::AdditionalData(true,"Amesos_Umfpack" ));
 }
 
 void PreconditionerSweeping::UpperProduct(const dealii::Vector<double> & src, dealii::Vector<double> & dst) const {

@@ -9,7 +9,7 @@ using namespace dealii;
 #include <deal.II/lac/vector.h>
 
 static SolverControl s(10,1.e-10, false, false);
-dealii::SparseDirectUMFPACK * solver;
+dealii::TrilinosWrappers::SolverDirect * solver;
 // dealii::TrilinosWrappers::SolverDirect * solver;
 
 
@@ -84,12 +84,12 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 	 */
 	virtual void vmult (TrilinosWrappers::MPI::BlockVector       &dst,      const TrilinosWrappers::MPI::BlockVector &src) const;
 
-	dealii::BlockSparseMatrix<double> * matrix;
+	TrilinosWrappers::SparseMatrix * matrix;
 	TrilinosWrappers::SparseMatrix * prec_matrix_lower, * prec_matrix_upper;
 
 	void Prepare(TrilinosWrappers::MPI::BlockVector &src);
 
-	void init();
+	void init(SolverControl in_sc);
 
   private:
 	int * indices;

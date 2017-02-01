@@ -195,6 +195,13 @@ void Waveguide::Compute_Dof_Numbers() {
 
 }
 
+IndexSet Waveguide::combine_indexes(IndexSet lower, IndexSet upper) const {
+  IndexSet ret(lower.size() + upper.size());
+  ret.add_indices(lower);
+  ret.add_indices(upper, lower.size());
+  return ret;
+}
+
 void Waveguide::setup_system ()
 {
   deallog.push("setup_system");
@@ -327,34 +334,81 @@ void Waveguide::setup_system ()
     i_prec_odd_writable[i] = orw;
   }
 
-  for(unsigned int i = 0; i < Layers; i++) {
-    MPI_Barrier(MPI_COMM_WORLD);
-    if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == i){
-      std::cout << Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) << ":" <<std::endl;
-      for(unsigned int j =0 ; j < Layers; j++) {
-        std::cout << "Odd Preconditioner owned rows for block "<<j<< " : ";
-        i_prec_odd_owned_row[j].print(std::cout);
-        std::cout<<std::endl;
-        std::cout << "Odd Preconditioner owned cols for block "<<j<< " : ";
-        i_prec_odd_owned_col[j].print(std::cout);
-        std::cout<<std::endl;
-        std::cout << "Odd Preconditioner writable for block "<<j<< " : ";
-        i_prec_odd_writable[j].print(std::cout);
-        std::cout<<std::endl;
-        std::cout << "Even Preconditioner owned rows for block "<<j<< " : ";
-        i_prec_even_owned_row[j].print(std::cout);
-        std::cout<<std::endl;
-        std::cout << "Even Preconditioner owned cols for block "<<j<< " : ";
-        i_prec_even_owned_col[j].print(std::cout);
-        std::cout<<std::endl;
-        std::cout << "Even Preconditioner writable for block "<<j<< " : ";
-        i_prec_even_writable[j].print(std::cout);
-        std::cout<<std::endl;
-      }
+  deallog.push("IndexSets:");
+  for(unsigned int j =0 ; j < Layers; j++) {
+      deallog << "Odd Preconditioner owned rows for block "<<j<< " : ";
+      i_prec_odd_owned_row[j].print(std::cout);
+      deallog << std::endl;
+      deallog << "Odd Preconditioner owned cols for block "<<j<< " : ";
+      i_prec_odd_owned_col[j].print(std::cout);
+      deallog << std::endl;
+      deallog << "Odd Preconditioner writable for block "<<j<< " : ";
+      i_prec_odd_writable[j].print(std::cout);
+      deallog << std::endl;
+      deallog << "Even Preconditioner owned rows for block "<<j<< " : ";
+      i_prec_even_owned_row[j].print(std::cout);
+      deallog << std::endl;
+      deallog << "Even Preconditioner owned cols for block "<<j<< " : ";
+      i_prec_even_owned_col[j].print(std::cout);
+      deallog << std::endl;
+      deallog << "Even Preconditioner writable for block "<<j<< " : ";
+      i_prec_even_writable[j].print(std::cout);
+      deallog << std::endl;
     }
+  deallog.pop();
+
+  int even_blocks = GlobalParams.NumberProcesses /2;
+  int odd_blocks = GlobalParams.NumberProcesses / 2;
+
+  if (GlobalParams.NumberProcesses % 2 == 1) {
+    even_blocks ++;
+  } else {
+    odd_blocks ++;
   }
 
-	deallog << "Constructing Sparsity Patterns and Constrain Matrices ... " <<std::endl;
+  std::vector<IndexSet> temp0 = i_prec_odd_owned_row;
+  std::vector<IndexSet> temp1 = i_prec_odd_owned_col;
+  std::vector<IndexSet> temp2 = i_prec_odd_writable;
+  i_prec_odd_owned_row.clear();
+  i_prec_odd_owned_col.clear();
+  i_prec_odd_writable.clear();
+  i_prec_odd_owned_row.push_back(temp0[0]);
+  i_prec_odd_owned_col.push_back(temp1[0]);
+  i_prec_odd_writable.push_back(temp2[0]);
+
+  for(int i = 2; i < Layers; i+=2) {
+    i_prec_odd_owned_row.push_back(combine_indexes(temp0[i-1], temp0[i]));
+    i_prec_odd_owned_col.push_back(combine_indexes(temp1[i-1], temp1[i]));
+    i_prec_odd_writable.push_back(combine_indexes(temp2[i-1], temp2[i]));
+  }
+
+  if (GlobalParams.NumberProcesses % 2 == 0) {
+    i_prec_odd_owned_row.push_back(temp0[GlobalParams.NumberProcesses-1]);
+    i_prec_odd_owned_col.push_back(temp1[GlobalParams.NumberProcesses-1]);
+    i_prec_odd_writable.push_back(temp2[GlobalParams.NumberProcesses-1]);
+  }
+
+  temp0 = i_prec_even_owned_row;
+  temp1 = i_prec_even_owned_col;
+  temp2 = i_prec_even_writable;
+
+  i_prec_even_owned_row.clear();
+  i_prec_even_owned_col.clear();
+  i_prec_even_writable.clear();
+
+  for(int i = 1; i < Layers; i+=2) {
+    i_prec_even_owned_row.push_back(combine_indexes(temp0[i-1], temp0[i]));
+    i_prec_even_owned_col.push_back(combine_indexes(temp1[i-1], temp1[i]));
+    i_prec_even_writable.push_back(combine_indexes(temp2[i-1], temp2[i]));
+  }
+
+  if (GlobalParams.NumberProcesses % 2 == 1) {
+    i_prec_even_owned_row.push_back(temp0[GlobalParams.NumberProcesses-1]);
+    i_prec_even_owned_col.push_back(temp1[GlobalParams.NumberProcesses-1]);
+    i_prec_even_writable.push_back(temp2[GlobalParams.NumberProcesses-1]);
+  }
+
+  deallog << "Constructing Sparsity Patterns and Constrain Matrices ... " <<std::endl;
 
 	cm.clear();
 	cm.reinit(locally_relevant_dofs);
@@ -1089,49 +1143,30 @@ void Waveguide::solve () {
 
 		MPI_Barrier(mpi_comm);
 
-		int len = 2;
-		if(rank == GlobalParams.NumberProcesses -1) {
-		  len =1;
+		if(even) {
+		  sweep.matrix = & (prec_matrix_even.block(rank /2, rank/2));
+		} else {
+		  sweep.matrix = & (prec_matrix_odd.block((rank+1) /2, (rank+1)/2));
 		}
 
-		dealii::BlockSparsityPattern prec_pat(len,len);
-		dealii::BlockSparseMatrix<double> * temp_mat = new BlockSparseMatrix<double>(prec_pat);
+		sweep.init(solver_control);
 
-		if(even) {
-		  temp_mat->block(0,0).copy_from( prec_matrix_even.block(rank, rank));
-      if(len == 2){
-        temp_mat->block(0,1).copy_from( prec_matrix_even.block(rank, rank +1));
-        temp_mat->block(1,0).copy_from( prec_matrix_even.block(rank +1, rank));
-        temp_mat->block(1,1).copy_from( prec_matrix_even.block(rank +1, rank +1));
-      }
-    } else {
-      temp_mat->block(0,0).copy_from( prec_matrix_odd.block(rank, rank));
-      if(len == 2){
-        temp_mat->block(0,1).copy_from( prec_matrix_odd.block(rank, rank +1));
-        temp_mat->block(1,0).copy_from( prec_matrix_odd.block(rank +1, rank));
-        temp_mat->block(1,1).copy_from( prec_matrix_odd.block(rank +1, rank +1));
-      }
-    }
+		if(rank > 0) sweep.prec_matrix_lower = & (system_matrix.block(rank, rank-1));
 
-		sweep.matrix = temp_mat;
-
-		sweep.init();
-
-		if(rank > 0) sweep.prec_matrix_lower->copy_from( system_matrix.block(rank, rank-1));
-
-		pout << "All preconditioner matrices built. Solving..." <<std::endl;
+		deallog << "All preconditioner matrices built. Solving..." <<std::endl;
         
 		solver.connect(std_cxx11::bind (&Waveguide::residual_tracker,
                                    this,
                                    std_cxx11::_1,
                                    std_cxx11::_2,
                                    std_cxx11::_3));
-        
-	 solver.solve(system_matrix,solution, system_rhs, sweep);
+		MPI_Barrier(mpi_comm);
 
-	  pout << "Done." << std::endl;
+	  solver.solve(system_matrix,solution, system_rhs, sweep);
 
-		pout << "Norm of the solution: " << solution.l2_norm() << std::endl;
+	  deallog << "Done." << std::endl;
+
+		deallog << "Norm of the solution: " << solution.l2_norm() << std::endl;
 	}
 
 	if(GlobalParams.So_Solver == SolverOptions::UMFPACK) {
