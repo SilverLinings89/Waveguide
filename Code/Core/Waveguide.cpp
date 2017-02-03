@@ -599,6 +599,7 @@ void Waveguide::reinit_systemmatrix() {
 
   deallog << "Odd worked. Continuing System Matrix." <<std::endl;
 
+
   TrilinosWrappers::BlockSparsityPattern sp(i_sys_owned, mpi_comm);
 
   deallog << "Collecting sizes ..." <<std::endl;
@@ -736,13 +737,33 @@ void Waveguide::assemble_system ()
           epsilon = transformation * eps_out;
         }
 
-        mu = invert(transformation) * mu_zero;
+        mu = invert(transformation) / mu_zero;
 
-        epsilon_pre1 = st->get_Preconditioner_Tensor(quadrature_points[q_index], subdomain_id-1);
-        mu_prec1 = st->get_Preconditioner_Tensor(quadrature_points[q_index], subdomain_id-1);
+        int mod = 0;
+        if(even) {
+          mod = 1;
+        } else {
+          mod = 0;
+        }
+        epsilon_pre1 = st->get_Preconditioner_Tensor(quadrature_points[q_index], subdomain_id-mod);
+        mu_prec1 = st->get_Preconditioner_Tensor(quadrature_points[q_index], subdomain_id-mod);
 
-        epsilon_pre2 = st->get_Preconditioner_Tensor(quadrature_points[q_index], subdomain_id);
-        mu_prec2 = st->get_Preconditioner_Tensor(quadrature_points[q_index], subdomain_id);
+        if(even) {
+          mod = 0;
+        } else {
+          mod = 1;
+        }
+
+        epsilon_pre2 = st->get_Preconditioner_Tensor(quadrature_points[q_index], subdomain_id - mod);
+        mu_prec2 = st->get_Preconditioner_Tensor(quadrature_points[q_index], subdomain_id - mod);
+
+        if( mg->math_coordinate_in_waveguide(quadrature_points[q_index])) {
+          epsilon_pre1 *= eps_in;
+          epsilon_pre2 *= eps_in;
+        } else {
+          epsilon_pre1 *= eps_out;
+          epsilon_pre2 *= eps_out;
+        }
 
         const double JxW = fe_values.JxW(q_index);
         for (unsigned int i=0; i<dofs_per_cell; i++){
@@ -1144,12 +1165,20 @@ void Waveguide::solve () {
 		MPI_Barrier(mpi_comm);
 
 		if(even) {
-		  sweep.matrix = & (prec_matrix_even.block(rank /2, rank/2));
+		  sweep.matrix = & prec_matrix_even.block(rank /2, rank/2);
 		} else {
-		  sweep.matrix = & (prec_matrix_odd.block((rank+1) /2, (rank+1)/2));
+		  sweep.matrix = & prec_matrix_odd.block((rank+1) /2, (rank+1)/2);
 		}
 
+
+		if(rank == 3) {
+		//   sweep.matrix = & system_matrix.block(rank, rank);
+		}
+
+		MPI_Barrier(mpi_comm);
+
 		sweep.init(solver_control);
+
 
 		if(rank > 0) sweep.prec_matrix_lower = & (system_matrix.block(rank, rank-1));
 

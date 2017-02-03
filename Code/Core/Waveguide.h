@@ -331,7 +331,7 @@ class Waveguide
 
 		parallel::distributed::Triangulation<3>     triangulation;
 
-		dealii::TrilinosWrappers::MPI::BlockVector                   system_rhs;
+		TrilinosWrappers::MPI::BlockVector                   system_rhs;
 
 		TrilinosWrappers::BlockSparseMatrix          system_matrix;
 

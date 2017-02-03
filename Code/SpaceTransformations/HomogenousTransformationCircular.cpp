@@ -108,9 +108,9 @@ double HomogenousTransformationCircular::PML_X_Distance(Point<3> &p) const{
 
 double HomogenousTransformationCircular::PML_Y_Distance(Point<3> &p) const{
   if(p(1) >0){
-    return p(1) - YMinus;
+    return p(1) - YPlus;
   } else {
-    return -p(1) - YPlus;
+    return -p(1) - YMinus;
   }
 }
 
