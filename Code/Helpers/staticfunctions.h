@@ -28,11 +28,6 @@ static Point<3> Triangulation_Stretch_Z (const Point<3> &p);
 
 static double Solution (Point<3, double> p ,const unsigned int component);
 
-/**
- * The return value lies in [0,1]. \f$sigma(z) = \begin{cases} 0 & : z \leq min \\ 1 & z \geq max \\ \frac{z - min}{ max - min} & else \f$
- */
-static double sigma(double in_z, double min, double max);
-
 inline bool file_exists (const std::string& name);
 
 

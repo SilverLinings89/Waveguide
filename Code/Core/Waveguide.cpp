@@ -741,17 +741,17 @@ void Waveguide::assemble_system ()
 
         int mod = 0;
         if(even) {
-          mod = 1;
-        } else {
           mod = 0;
+        } else {
+          mod = 1;
         }
         epsilon_pre1 = st->get_Preconditioner_Tensor(quadrature_points[q_index], subdomain_id-mod);
         mu_prec1 = st->get_Preconditioner_Tensor(quadrature_points[q_index], subdomain_id-mod);
 
         if(even) {
-          mod = 0;
-        } else {
           mod = 1;
+        } else {
+          mod = 0;
         }
 
         epsilon_pre2 = st->get_Preconditioner_Tensor(quadrature_points[q_index], subdomain_id - mod);
@@ -938,7 +938,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
 	}
 	for (; cell!=endc; ++cell)
 	{
-		if(std::abs(cell->subdomain_id() - GlobalParams.MPI_Rank) < 2 ) {
+		if(std::abs(cell->subdomain_id() - rank) < 2 ) {
 
 			for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
 				Point<3, double> center =(cell->face(i))->center(true, false);
@@ -978,7 +978,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
 				}
 
 				if(even){
-          if ( std::abs( center[2] - GlobalParams.M_R_ZLength/2.0 - (rank * layer_length)) < 0.0001){
+          if ( std::abs( center[2] + GlobalParams.M_R_ZLength/2.0 - (rank * layer_length)) < 0.0001){
             std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
             for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
               ((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -991,7 +991,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
             }
           }
 
-          if ( std::abs( center[2] - GlobalParams.M_R_ZLength/2.0 - ((rank+2) * layer_length)) < 0.0001){
+          if ( std::abs( center[2] + GlobalParams.M_R_ZLength/2.0 - ((rank+2) * layer_length)) < 0.0001){
             std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
             for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
               ((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1004,7 +1004,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
             }
           }
 
-          if ( std::abs( center[2] - GlobalParams.M_R_ZLength/2.0 - ((rank+1) * layer_length)) < 0.0001){
+          if ( std::abs( center[2] + GlobalParams.M_R_ZLength/2.0 - ((rank+1) * layer_length)) < 0.0001){
             std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
             for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
               ((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1017,7 +1017,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
             }
           }
 
-          if ( std::abs( center[2] - GlobalParams.M_R_ZLength/2.0 - ((rank-1) * layer_length)) < 0.0001){
+          if ( std::abs( center[2] + GlobalParams.M_R_ZLength/2.0 - ((rank-1) * layer_length)) < 0.0001){
             std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
             for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
               ((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1030,7 +1030,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
             }
           }
 				} else {
-				  if ( std::abs( center[2] - GlobalParams.M_R_ZLength/2.0 - (rank * layer_length)) < 0.0001){
+				  if ( std::abs( center[2] + GlobalParams.M_R_ZLength/2.0 - (rank * layer_length)) < 0.0001){
             std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
             for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
               ((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1043,7 +1043,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
             }
           }
 
-          if ( std::abs( center[2] - GlobalParams.M_R_ZLength/2.0 - ((rank+2) * layer_length)) < 0.0001){
+          if ( std::abs( center[2] + GlobalParams.M_R_ZLength/2.0 - ((rank+2) * layer_length)) < 0.0001){
             std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
             for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
               ((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1056,7 +1056,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
             }
           }
 
-          if ( std::abs( center[2] - GlobalParams.M_R_ZLength/2.0 - ((rank+1) * layer_length)) < 0.0001){
+          if ( std::abs( center[2] + GlobalParams.M_R_ZLength/2.0 - ((rank+1) * layer_length)) < 0.0001){
             std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
             for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
               ((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1069,7 +1069,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
             }
           }
 
-          if ( std::abs( center[2] - GlobalParams.M_R_ZLength/2.0 - ((rank-1) * layer_length)) < 0.0001){
+          if ( std::abs( center[2] + GlobalParams.M_R_ZLength/2.0 - ((rank-1) * layer_length)) < 0.0001){
             std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
             for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
               ((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
@@ -1084,7 +1084,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
 				}
 
 
-				if( GlobalParams.MPI_Rank == 0 && std::abs(center[2] + GlobalParams.M_R_ZLength/2.0 ) < 0.0001 ){
+				if( rank <= 1 && std::abs(center[2] + GlobalParams.M_R_ZLength/2.0 ) < 0.0001 ){
 					std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
 					for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 						if((cell->face(i))->line(j)->at_boundary()) {
@@ -1172,7 +1172,7 @@ void Waveguide::solve () {
 
 
 		if(rank == 3) {
-		//   sweep.matrix = & system_matrix.block(rank, rank);
+		   sweep.matrix = & system_matrix.block(rank, rank);
 		}
 
 		MPI_Barrier(mpi_comm);
