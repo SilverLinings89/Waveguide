@@ -519,6 +519,7 @@ void Waveguide::calculate_cell_weights () {
             Tensor<2,3, std::complex<double>> tens;
             Point<3> pos = cell->center();
             tens = st->get_Tensor(pos);
+
             cell_weights(cell->active_cell_index()) = tens.norm();
             tens = st->get_Preconditioner_Tensor(pos, GlobalParams.MPI_Rank);
             cell_weights_prec_1(cell->active_cell_index()) = tens.norm();
@@ -579,13 +580,6 @@ void Waveguide::reinit_for_rerun () {
 }
 
 void Waveguide::reinit_systemmatrix() {
-  /**
-   * What has to be done?
-   * 1. Compute which indices should be written (and owned) for the system matrix.
-   * 2. Compute which indices block structures of all 3 matrices.
-   * 3. Compute which indices can be written to in which process.
-   *
-   */
 
   deallog.push("reinit_systemmatrix");
 
@@ -739,23 +733,18 @@ void Waveguide::assemble_system ()
 
         mu = invert(transformation) / mu_zero;
 
-        int mod = 0;
-        if(even) {
-          mod = 0;
-        } else {
-          mod = 1;
-        }
-        epsilon_pre1 = st->get_Preconditioner_Tensor(quadrature_points[q_index], subdomain_id-mod);
-        mu_prec1 = st->get_Preconditioner_Tensor(quadrature_points[q_index], subdomain_id-mod);
 
         if(even) {
-          mod = 1;
+          epsilon_pre2 = st->get_Tensor(quadrature_points[q_index]);
+          mu_prec2 = st->get_Tensor(quadrature_points[q_index]);
+          epsilon_pre1 = st->get_Preconditioner_Tensor(quadrature_points[q_index], rank);
+          mu_prec1 = st->get_Preconditioner_Tensor(quadrature_points[q_index], rank);
         } else {
-          mod = 0;
+          epsilon_pre1 = st->get_Tensor(quadrature_points[q_index]);
+          mu_prec1 = st->get_Tensor(quadrature_points[q_index]);
+          epsilon_pre2 = st->get_Preconditioner_Tensor(quadrature_points[q_index], rank);
+          mu_prec2 = st->get_Preconditioner_Tensor(quadrature_points[q_index], rank);
         }
-
-        epsilon_pre2 = st->get_Preconditioner_Tensor(quadrature_points[q_index], subdomain_id - mod);
-        mu_prec2 = st->get_Preconditioner_Tensor(quadrature_points[q_index], subdomain_id - mod);
 
         if( mg->math_coordinate_in_waveguide(quadrature_points[q_index])) {
           epsilon_pre1 *= eps_in;
@@ -791,10 +780,10 @@ void Waveguide::assemble_system ()
 
 
             std::complex<double> pre1 = (mu_prec1 * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon_pre1 * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.C_omega*GlobalParams.C_omega;
-            cell_matrix_prec_odd[i][j] += pre1.real();
+            cell_matrix_prec_even[i][j] += pre1.real();
 
             std::complex<double> pre2 = (mu_prec2 * I_Curl) * Conjugate_Vector(J_Curl) * JxW - ( ( epsilon_pre2 * I_Val ) * Conjugate_Vector(J_Val))*JxW*GlobalParams.C_omega*GlobalParams.C_omega;
-            cell_matrix_prec_even[i][j] += pre2.real();
+            cell_matrix_prec_odd[i][j] += pre2.real();
 
           }
         }
@@ -804,12 +793,10 @@ void Waveguide::assemble_system ()
       cm.distribute_local_to_global     (cell_matrix_real, cell_rhs, local_dof_indices,system_matrix, system_rhs, true);
       // pout << "P1 done"<<std::endl;
 
-      if(GlobalParams.MPI_Rank != 0 ) {
-        cm_prec_odd.distribute_local_to_global(cell_matrix_prec_odd, cell_rhs, local_dof_indices,prec_matrix_odd, preconditioner_rhs, true);
-      }
-      if(GlobalParams.MPI_Rank != Layers-1) {
-        cm_prec_even.distribute_local_to_global(cell_matrix_prec_even, cell_rhs, local_dof_indices,prec_matrix_even, preconditioner_rhs, true);
-      }
+      cm_prec_odd.distribute_local_to_global(cell_matrix_prec_odd, cell_rhs, local_dof_indices,prec_matrix_odd, preconditioner_rhs, true);
+
+      cm_prec_even.distribute_local_to_global(cell_matrix_prec_even, cell_rhs, local_dof_indices,prec_matrix_even, preconditioner_rhs, true);
+
       // pout << "P2 done"<<std::endl;
     }
   }
@@ -1180,7 +1167,7 @@ void Waveguide::solve () {
 		sweep.init(solver_control);
 
 
-		if(rank > 0) sweep.prec_matrix_lower = & (system_matrix.block(rank, rank-1));
+		if(rank +1 < GlobalParams.NumberProcesses ) sweep.prec_matrix_lower = & (system_matrix.block(rank, rank+1));
 
 		deallog << "All preconditioner matrices built. Solving..." <<std::endl;
         

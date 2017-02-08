@@ -97,11 +97,6 @@ public:
   bool  PML_in_Z(Point<3> & position) const;
 
   /**
-   * Similar to the PML_in_Z only this function is used to generate the artificial PML used in the Preconditioner. These Layers are not only situated at the surface of the computational domain but also inside it at the interfaces of Sectors.
-   */
-  bool Preconditioner_PML_in_Z(Point<3> &p, unsigned int block) const;
-
-  /**
    * This function fulfills the same purpose as those with similar names but it is supposed to be used together with Preconditioner_PML_in_Z instead of the versions without "Preconditioner".
    */
   double Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ) const;

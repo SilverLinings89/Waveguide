@@ -144,14 +144,6 @@ void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulat
   cell = in_tria->begin_active(),
   endc = in_tria->end();
 
-  int layers_per_sector = 4;
-  layers_per_sector /= GlobalParams.R_Global;
-  int reps = log2(layers_per_sector);
-  if( layers_per_sector > 0 && pow(2,reps) != layers_per_sector) {
-    std::cout << "The number of layers per sector has to be a power of 2. At least 2 layers are recommended for neccessary sparsity in the pattern for preconditioner to work." << std::endl;
-    exit(0);
-  }
-
   double len = 2.0 / Layers;
 
   cell = in_tria->begin_active();
@@ -163,6 +155,10 @@ void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulat
   GridTools::transform(& Triangulation_Stretch_X, * in_tria);
   GridTools::transform(& Triangulation_Stretch_Y, * in_tria);
   GridTools::transform(& Triangulation_Stretch_Computational_Radius, * in_tria);
+
+  if(GlobalParams.R_Global > 0) {
+    in_tria->refine_global(GlobalParams.R_Global);
+  }
 
   double MaxDistFromBoundary = (GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In)*1.4/2.0;
   for(int i = 0; i < GlobalParams.R_Local; i++) {
@@ -206,7 +202,10 @@ void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulat
           z_max = std::max(z_max, cell->face(face)->center()[2]);
         }
       }
+
     }
+
+
 
     cell = in_tria->begin_active();
     endc = in_tria->end();

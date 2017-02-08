@@ -82,19 +82,10 @@ bool HomogenousTransformationCircular::PML_in_Z(Point<3> &p)  const{
   return p(2) < ZMinus ||p(2) > ZPlus;
 }
 
-bool HomogenousTransformationCircular::Preconditioner_PML_in_Z(Point<3> &, unsigned int block)  const{
-  if( (int)block == GlobalParams.NumberProcesses-2) return false;
-  if ( (int)block == (int)GlobalParams.MPI_Rank-1){
-    return true;
-  } else {
-    return false;
-  }
-}
-
-double HomogenousTransformationCircular::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ) const{
+double HomogenousTransformationCircular::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int rank ) const{
   double width = GlobalParams.LayerThickness * 1.0;
 
-  return p(2) +GlobalParams.M_R_ZLength/2.0 - ((double)block +1)*width;
+  return p(2) +GlobalParams.M_R_ZLength/2.0 - ((double)rank +1)*width;
 }
 
 double HomogenousTransformationCircular::PML_X_Distance(Point<3> &p) const{
@@ -148,6 +139,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Tensor(P
     }
 
     std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
+
     if(PML_in_X(position)){
       double r,d;
       r = PML_X_Distance(position);
@@ -159,7 +151,9 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Tensor(P
       sx.real( 1 );
       sx.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaXMax );
     }
-    if(PML_in_Y(position)){
+
+    // if(PML_in_Y(position)){
+    if(false){
       double r,d;
       r = PML_Y_Distance(position);
       if(position[1] < 0){
@@ -171,6 +165,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Tensor(P
       sy.real( 1 );
       sy.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax);
     }
+
 
     if(PML_in_Z(position)){
       double r,d;
@@ -195,7 +190,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Tensor(P
     return MaterialTensor;
 }
 
-Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Preconditioner_Tensor(Point<3> & position, int block) const {
+Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Preconditioner_Tensor(Point<3> & position, int rank) const {
   Tensor<2,3, std::complex<double>> MaterialTensor;
 
   std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
@@ -245,13 +240,8 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Precondi
     sy.real( 1 );
     sy.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax);
   }
-  if(Preconditioner_PML_in_Z(position, block)){
-    double r,d;
-    r = Preconditioner_PML_Z_Distance(position, block);
-    d = GlobalParams.LayerThickness;
-    sz_p.real( 0 );
-    sz_p.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax);
-  }
+
+  sz_p.imag( pow(Preconditioner_PML_Z_Distance(position, rank)/GlobalParams.LayerThickness , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax);
 
   if(PML_in_Z(position)){
     double r,d;

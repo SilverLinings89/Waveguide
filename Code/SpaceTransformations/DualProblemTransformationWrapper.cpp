@@ -51,9 +51,6 @@ bool DualProblemTransformationWrapper::PML_in_Z(Point<3> &p) const {
   return st->PML_in_Z(p);
 }
 
-bool DualProblemTransformationWrapper::Preconditioner_PML_in_Z(Point<3> &p, unsigned int block)  const{
-  return st->Preconditioner_PML_in_Z(p, block);
-}
 
 double DualProblemTransformationWrapper::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ) const{
   return st->Preconditioner_PML_Z_Distance(p, block);

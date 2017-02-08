@@ -430,7 +430,7 @@
     </Constants>
     <Refinement>
         <Global>
-            <value>2</value>
+            <value>0</value>
             <default_value>1</default_value>
             <documentation>Global refinement-steps.</documentation>
             <pattern>44</pattern>

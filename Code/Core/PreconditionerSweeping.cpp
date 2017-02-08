@@ -189,7 +189,11 @@ void PreconditionerSweeping::Hinv(const dealii::Vector<double> & src, dealii::Ve
 
 void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> & src, dealii::Vector<double> & dst) const {
 
-	if((int)GlobalParams.MPI_Rank +1 == GlobalParams.NumberProcesses) {
+  std::cout << "Measures: " << dst.size() << " , " << src.size() << std::endl;
+  std::cout << "Measures: " << prec_matrix_lower->m() << " , " << prec_matrix_lower->n() << std::endl;
+  std::cout << "Local Range: " << prec_matrix_lower->local_range().first << "," << prec_matrix_lower->local_range().second <<  std::endl;
+  std::cout << "Local Size: " << prec_matrix_lower->local_size() << std::endl;
+  if((int)GlobalParams.MPI_Rank +1 == GlobalParams.NumberProcesses) {
 		std::cout << "ERROR!" <<std::endl;
 	}
 
