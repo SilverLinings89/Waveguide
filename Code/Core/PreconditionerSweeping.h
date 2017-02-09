@@ -86,14 +86,16 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 	virtual void vmult (TrilinosWrappers::MPI::BlockVector       &dst,      const TrilinosWrappers::MPI::BlockVector &src) const;
 
 	TrilinosWrappers::SparseMatrix * matrix;
-	TrilinosWrappers::SparseMatrix * prec_matrix_lower, * prec_matrix_upper;
+	dealii::SparseMatrix<double> * prec_matrix_upper;
 
-	SparsityPattern sparsity_pattern;
+	dealii::SparseMatrix<double> * prec_matrix_lower;
+
+	SparsityPattern sparsity_pattern, off_diag_block;
 
 
 	void Prepare(TrilinosWrappers::MPI::BlockVector &src);
 
-	void init(SolverControl in_sc);
+	void init(SolverControl in_sc, TrilinosWrappers::SparseMatrix *);
 
   private:
 	int * indices;

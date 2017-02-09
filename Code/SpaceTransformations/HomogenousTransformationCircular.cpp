@@ -85,7 +85,7 @@ bool HomogenousTransformationCircular::PML_in_Z(Point<3> &p)  const{
 double HomogenousTransformationCircular::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int rank ) const{
   double width = GlobalParams.LayerThickness * 1.0;
 
-  return p(2) +GlobalParams.M_R_ZLength/2.0 - ((double)rank +1)*width;
+  return  - (p(2) +GlobalParams.M_R_ZLength/2.0 - ((double)rank +1)*width);
 }
 
 double HomogenousTransformationCircular::PML_X_Distance(Point<3> &p) const{
@@ -152,8 +152,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Tensor(P
       sx.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaXMax );
     }
 
-    // if(PML_in_Y(position)){
-    if(false){
+    if(PML_in_Y(position)){
       double r,d;
       r = PML_Y_Distance(position);
       if(position[1] < 0){

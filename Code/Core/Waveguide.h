@@ -356,6 +356,7 @@ class Waveguide
 	  std::vector<IndexSet> i_prec_odd_owned_col;
 	  std::vector<IndexSet> i_prec_odd_writable;
 	  std::vector<IndexSet> i_sys_owned;
+	  std::vector<IndexSet> i_sys_readable;
 
 
     TrilinosWrappers::MPI::BlockVector										solution, EstimatedSolution, ErrorOfSolution ;

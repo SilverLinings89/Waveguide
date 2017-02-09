@@ -227,15 +227,26 @@ void Waveguide::setup_system ()
 
   i_sys_owned.resize(Layers);
 
+  i_sys_readable.resize(Layers);
+
   for(unsigned int i = 0; i < Layers; i++) {
     int size = Block_Sizes[i];
     bool local = (i == rank);
+    bool readable = (i == rank) || (i == rank+1);
     IndexSet temp(size);
     if(local) {
       temp.add_range(0,size);
     }
+    IndexSet temp2(size);
+    if(readable){
+      temp2.add_range(0,size);
+    }
+
     i_sys_owned[i] = temp;
+    i_sys_readable[i] = temp2;
+
   }
+
 
 
 
@@ -334,6 +345,7 @@ void Waveguide::setup_system ()
     i_prec_odd_writable[i] = orw;
   }
 
+  /**
   deallog.push("IndexSets:");
   for(unsigned int j =0 ; j < Layers; j++) {
       deallog << "Odd Preconditioner owned rows for block "<<j<< " : ";
@@ -356,6 +368,8 @@ void Waveguide::setup_system ()
       deallog << std::endl;
     }
   deallog.pop();
+
+  **/
 
   int even_blocks = GlobalParams.NumberProcesses /2;
   int odd_blocks = GlobalParams.NumberProcesses / 2;
@@ -909,23 +923,22 @@ void Waveguide::MakeBoundaryConditions (){
 
 void Waveguide::MakePreconditionerBoundaryConditions (  ){
 	DoFHandler<3>::active_cell_iterator cell, endc;
-	// cm_prec.clear();
+
 	double layer_length = GlobalParams.LayerThickness;
-	// double sector_length = structure->Sector_Length();
+
 	cell = dof_handler.begin_active();
 	endc = dof_handler.end();
 	IndexSet own (dof_handler.n_dofs());
 	own.add_indices(locally_owned_dofs);
 	sweepable.set_size(dof_handler.n_dofs());
 	sweepable.add_indices(locally_owned_dofs);
-	if(GlobalParams.MPI_Rank == 0 ){
-		// own.add_indices(locally_owned_dofs);
-	} else {
+	if(GlobalParams.MPI_Rank != 0 ){
 		own.add_indices(LowerDofs);
 	}
+
 	for (; cell!=endc; ++cell)
 	{
-		if(std::abs(cell->subdomain_id() - rank) < 2 ) {
+		if(std::abs(cell->subdomain_id() - rank) < 3 ) {
 
 			for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
 				Point<3, double> center =(cell->face(i))->center(true, false);
@@ -965,18 +978,20 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
 				}
 
 				if(even){
-          if ( std::abs( center[2] + GlobalParams.M_R_ZLength/2.0 - (rank * layer_length)) < 0.0001){
-            std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
-            for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
-              ((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
-              for(unsigned int k = 0; k < 2; k++) {
-                if(own.is_element(local_dof_indices[k])) {
-                  cm_prec_even.add_line(local_dof_indices[k]);
-                  cm_prec_even.set_inhomogeneity(local_dof_indices[k], 0.0 );
+				  if(rank != 0){
+            if ( std::abs( center[2] + GlobalParams.M_R_ZLength/2.0 - (rank * layer_length)) < 0.0001){
+              std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
+              for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+                ((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+                for(unsigned int k = 0; k < 2; k++) {
+                  if(own.is_element(local_dof_indices[k])) {
+                    cm_prec_even.add_line(local_dof_indices[k]);
+                    cm_prec_even.set_inhomogeneity(local_dof_indices[k], 0.0 );
+                  }
                 }
               }
             }
-          }
+				  }
 
           if ( std::abs( center[2] + GlobalParams.M_R_ZLength/2.0 - ((rank+2) * layer_length)) < 0.0001){
             std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
@@ -1134,7 +1149,7 @@ void Waveguide::solve () {
 
 		// dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData( GlobalParams.PRM_S_GMRESSteps) );
 
-		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData(30) );
+		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData(GlobalParams.So_RestartSteps) );
 		
 		// std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
 
@@ -1164,10 +1179,15 @@ void Waveguide::solve () {
 
 		MPI_Barrier(mpi_comm);
 
-		sweep.init(solver_control);
 
 
-		if(rank +1 < GlobalParams.NumberProcesses ) sweep.prec_matrix_lower = & (system_matrix.block(rank, rank+1));
+		if(rank < 3){
+		  sweep.init(solver_control, & system_matrix.block(rank,  rank+1 ));
+		} else {
+		  sweep.init(solver_control, & system_matrix.block(rank,  rank));
+		}
+
+  	// if(rank +1 < GlobalParams.NumberProcesses ) sweep.prec_matrix_lower = & (system_matrix.block(rank, rank+1));
 
 		deallog << "All preconditioner matrices built. Solving..." <<std::endl;
         
@@ -1191,9 +1211,6 @@ void Waveguide::solve () {
 		// temp_s.solve(system_matrix, solution, system_rhs);
 	}
 
- 
-	// cm.distribute(solution);
-	// cm.distribute(EstimatedSolution);
 }
 
 void Waveguide::store() {

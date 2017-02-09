@@ -210,7 +210,7 @@ void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulat
     cell = in_tria->begin_active();
     endc = in_tria->end();
 
-    mesh_info(*in_tria, "Output"+std::to_string(GlobalParams.MPI_Rank)+".vtk");
+    /// mesh_info(*in_tria, "Output"+std::to_string(GlobalParams.MPI_Rank)+".vtk");
 
     deallog << "Done" <<std::endl;
     deallog.pop();

@@ -21,7 +21,8 @@ PreconditionerSweeping::~PreconditionerSweeping (){
 }
 PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int in_bandwidth, IndexSet in_locally_owned_dofs)
 :
-    sparsity_pattern(in_own+in_others, in_own+in_others, in_bandwidth)
+    sparsity_pattern(in_own+in_others, in_own+in_others, in_bandwidth),
+    off_diag_block(in_own, in_others, in_bandwidth)
 	{
 		locally_owned_dofs = in_locally_owned_dofs;
 		own = in_own;
@@ -82,7 +83,8 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
 
 		// std::cout << "A" << GlobalParams.MPI_Rank << " " << temp2.l2_norm() <<  std::endl;
 
-		dealii::Vector<double> temp3 (own);
+		dealii::Vector<double> temp3;
+		temp3.reinit(own, false);
 
 		LowerProduct(temp2, temp3);
 
@@ -108,11 +110,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
         
     MPI_Barrier(MPI_COMM_WORLD);
         
-    /**
-    if (GlobalParams.MPI_Rank == 0) {
-        std::cout << "S1 done ..." << std::endl;
-    }
-       **/
+
     // Line 8
                 
     if((int)GlobalParams.MPI_Rank +1 != GlobalParams.NumberProcesses) {
@@ -138,15 +136,13 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
             for (int i = 0; i < own; i++) {
                     temp_calc[i] = trans4[i];
             }
-			// std::cout << "E" << GlobalParams.MPI_Rank << " " << temp_calc.l2_norm() << std::endl;
+
             Hinv(temp_calc, back_sweep);
-            // std::cout << "F" << GlobalParams.MPI_Rank << " " << back_sweep.l2_norm() << std::endl;
             input -= back_sweep;
                 
             if((int)GlobalParams.MPI_Rank +1< GlobalParams.NumberProcesses) {
                     dealii::Vector<double> back_sweep2 (others);
                     UpperProduct(input, back_sweep2);
-                    // std::cout << "G" << GlobalParams.MPI_Rank << " " << back_sweep2.l2_norm() << std::endl;
                     MPI_Send(&back_sweep2[0], others, MPI_DOUBLE, GlobalParams.MPI_Rank + 1, 0, MPI_COMM_WORLD);
             }
     }
@@ -160,7 +156,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
         	}
         }
     }
-    
+    std::cout << "Norm in " << GlobalParams.MPI_Rank << ":" << input.norm_sqr()<<std::endl;
 	for(int i = 0; i < own; i++ ){
 		dst[i + locally_owned_dofs.nth_index_in_set(0)] = input[i];
     }
@@ -189,10 +185,6 @@ void PreconditionerSweeping::Hinv(const dealii::Vector<double> & src, dealii::Ve
 
 void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> & src, dealii::Vector<double> & dst) const {
 
-  std::cout << "Measures: " << dst.size() << " , " << src.size() << std::endl;
-  std::cout << "Measures: " << prec_matrix_lower->m() << " , " << prec_matrix_lower->n() << std::endl;
-  std::cout << "Local Range: " << prec_matrix_lower->local_range().first << "," << prec_matrix_lower->local_range().second <<  std::endl;
-  std::cout << "Local Size: " << prec_matrix_lower->local_size() << std::endl;
   if((int)GlobalParams.MPI_Rank +1 == GlobalParams.NumberProcesses) {
 		std::cout << "ERROR!" <<std::endl;
 	}
@@ -201,7 +193,7 @@ void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> & src, de
 
 }
 
-void PreconditionerSweeping::init(SolverControl solver_control) {
+void PreconditionerSweeping::init(SolverControl solver_control, TrilinosWrappers::SparseMatrix * in_prec) {
   //  solver->initialize(*matrix, dealii::SparseDirectUMFPACK::AdditionalData());
   solver = new SparseDirectUMFPACK();
   IndexSet local (matrix->m());
@@ -216,15 +208,38 @@ void PreconditionerSweeping::init(SolverControl solver_control) {
 
   sparsity_pattern.compress();
 
-  std::ofstream out ("sparsity_pattern"+ std::to_string(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) + ".plot");
-  sparsity_pattern.print_gnuplot (out);
+  if(others != 0){
+    it = in_prec->begin();
+    end = in_prec->end();
+    for(; it != end; it++){
+      off_diag_block.add(it->row(), it->column());
+    }
+  } else {
+    off_diag_block.reinit(own,own, 120);
+    it = in_prec->begin();
+    end = in_prec->end();
+    for(; it != end; it++){
+      off_diag_block.add(it->row(), it->column());
+    }
+  }
+  off_diag_block.compress();
+
+  // std::ofstream out ("sparsity_pattern"+ std::to_string(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) + ".plot");
+  // sparsity_pattern.print_gnuplot (out);
 
   temp = new dealii::SparseMatrix<double>(sparsity_pattern);
 
   temp->copy_from(* matrix);
 
   solver->factorize(*temp);
-  // solver->factorize(matrix);
+  // solver->factorize(*matrix);
+
+  IndexSet ownindeces(own);
+  ownindeces.add_range(0, own);
+
+  prec_matrix_lower = new dealii::SparseMatrix<double>(off_diag_block);
+  prec_matrix_lower->copy_from(*in_prec);
+
 }
 
 void PreconditionerSweeping::UpperProduct(const dealii::Vector<double> & src, dealii::Vector<double> & dst) const {
