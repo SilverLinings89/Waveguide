@@ -19,11 +19,10 @@ PreconditionerSweeping::~PreconditionerSweeping (){
   delete temp;
   delete solver;
 }
-PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int in_bandwidth, IndexSet in_locally_owned_dofs)
-:
-    sparsity_pattern(in_own+in_others, in_own+in_others, in_bandwidth),
-    off_diag_block(in_own, in_others, in_bandwidth)
-	{
+PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int in_bandwidth, IndexSet in_locally_owned_dofs, IndexSet * in_fixed_dofs)
+{
+    sparsity_pattern.reinit(in_own+in_others, in_own+in_others, in_bandwidth);
+    off_diag_block.reinit(in_own, in_others, in_bandwidth);
 		locally_owned_dofs = in_locally_owned_dofs;
 		own = in_own;
 		others = in_others;
@@ -34,14 +33,14 @@ PreconditionerSweeping::PreconditionerSweeping (  int in_own, int in_others, int
 		for(unsigned int i = 0; i < sweepable; i++){
 			indices[i] = in_locally_owned_dofs.nth_index_in_set(i);
 		}
-
-   }
+		fixed_dofs = in_fixed_dofs;
+}
 
 
 void PreconditionerSweeping::Prepare ( TrilinosWrappers::MPI::BlockVector & inp) {
 	boundary.reinit(own, false);
 	for(int i = 0; i<own; i++) {
-		boundary[i] = inp[locally_owned_dofs.nth_index_in_set(i)];
+		boundary[i] = inp[i];
 	}
 	return;
 }
@@ -59,16 +58,8 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
 
 	if ((int)GlobalParams.MPI_Rank+1 == GlobalParams.NumberProcesses) {
 
-		// dealii::Vector<double> outputb(own);
-
-		// solver.solve( input);
 		solver->solve( input);
-		// double *  trans1 = new double[own];
 
-		// for(int i = 0; i < own; i++) {
-			// input[i] = outputb[i];
-
-		// }
 		MPI_Send(&input[0], own, MPI_DOUBLE, GlobalParams.MPI_Rank-1, 0, MPI_COMM_WORLD);
 
 	} else {
@@ -124,42 +115,47 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
     MPI_Barrier(MPI_COMM_WORLD);
     // Line 11
     if ( GlobalParams.MPI_Rank == 0) {
-            dealii::Vector<double> back_sweep (others);
-            UpperProduct(input, back_sweep);
-            MPI_Send(&back_sweep[0], others, MPI_DOUBLE, GlobalParams.MPI_Rank + 1, 0, MPI_COMM_WORLD);
+        dealii::Vector<double> back_sweep (others);
+        UpperProduct(input, back_sweep);
+        MPI_Send(&back_sweep[0], others, MPI_DOUBLE, GlobalParams.MPI_Rank + 1, 0, MPI_COMM_WORLD);
     } else {
-            double * trans4 = new double [own];
-            MPI_Recv(trans4, own, MPI_DOUBLE, GlobalParams.MPI_Rank-1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        double * trans4 = new double [own];
+        MPI_Recv(trans4, own, MPI_DOUBLE, GlobalParams.MPI_Rank-1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        dealii::Vector<double> back_sweep (own);
+        dealii::Vector<double> temp_calc (own);
+        for (int i = 0; i < own; i++) {
+                temp_calc[i] = trans4[i];
+        }
+
+        Hinv(temp_calc, back_sweep);
+        input -= back_sweep;
             
-            dealii::Vector<double> back_sweep (own);
-            dealii::Vector<double> temp_calc (own);
-            for (int i = 0; i < own; i++) {
-                    temp_calc[i] = trans4[i];
-            }
-
-            Hinv(temp_calc, back_sweep);
-            input -= back_sweep;
-                
-            if((int)GlobalParams.MPI_Rank +1< GlobalParams.NumberProcesses) {
-                    dealii::Vector<double> back_sweep2 (others);
-                    UpperProduct(input, back_sweep2);
-                    MPI_Send(&back_sweep2[0], others, MPI_DOUBLE, GlobalParams.MPI_Rank + 1, 0, MPI_COMM_WORLD);
-            }
-    }
-        
-    if (GlobalParams.MPI_Rank == 0) {
-        // std::cout << "S2 done ..." << std::endl;
-
-        for(int i = 0 ; i < own; i++) {
-        	if(boundary[i] != 0.0){
-        		input[i] = boundary[i];
-        	}
+        if((int)GlobalParams.MPI_Rank +1< GlobalParams.NumberProcesses) {
+            dealii::Vector<double> back_sweep2 (others);
+            UpperProduct(input, back_sweep2);
+            MPI_Send(&back_sweep2[0], others, MPI_DOUBLE, GlobalParams.MPI_Rank + 1, 0, MPI_COMM_WORLD);
         }
     }
-    std::cout << "Norm in " << GlobalParams.MPI_Rank << ":" << input.norm_sqr()<<std::endl;
-	for(int i = 0; i < own; i++ ){
-		dst[i + locally_owned_dofs.nth_index_in_set(0)] = input[i];
+        
+  /**
+  if (GlobalParams.MPI_Rank == 0) {
+      // std::cout << "S2 done ..." << std::endl;
+
+      for(int i = 0 ; i < own; i++) {
+        if(boundary[i] != 0.0){
+          input[i] = boundary[i];
+        }
+      }
+  }
+  **/
+  std::cout << "Norm in " << GlobalParams.MPI_Rank << ":" << input.norm_sqr()<<std::endl;
+
+  for(int i = 0; i < own; i++ ){
+    if(! fixed_dofs->is_element(indices[i])){
+      dst[indices[i]] = input[i];
     }
+  }
 
 }
 

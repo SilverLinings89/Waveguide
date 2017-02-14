@@ -479,7 +479,7 @@ static double TEMode00 (Point<3, double> p ,const unsigned int component)
 {
 
 	if(component == 0) {
-		double d2 = (Distance2D(p)) / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) ;
+		double d2 = (2* Distance2D(p)) / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) ;
 		return exp(-d2*d2);
 	}
 	return 0.0;

@@ -384,6 +384,8 @@ class Waveguide
 
     std::string path_prefix;
 
+    IndexSet fixed_dofs;
+
     // HIER BEGINNT DIE ALTE VERSION ...
 
 

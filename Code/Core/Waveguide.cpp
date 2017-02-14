@@ -530,15 +530,24 @@ void Waveguide::calculate_cell_weights () {
 
 	for (; cell!=endc; ++cell){
 		if(cell->is_locally_owned()) {
-            Tensor<2,3, std::complex<double>> tens;
+            Tensor<2,3, std::complex<double>> tens, epsilon_pre2, epsilon_pre1;
             Point<3> pos = cell->center();
+            if(even) {
+              epsilon_pre1 = st->get_Tensor(pos);
+              epsilon_pre2 = st->get_Preconditioner_Tensor(pos, rank);
+
+            } else {
+              epsilon_pre2 = st->get_Tensor(pos);
+              epsilon_pre1 = st->get_Preconditioner_Tensor(pos, rank);
+
+            }
             tens = st->get_Tensor(pos);
 
             cell_weights(cell->active_cell_index()) = tens.norm();
-            tens = st->get_Preconditioner_Tensor(pos, GlobalParams.MPI_Rank);
-            cell_weights_prec_1(cell->active_cell_index()) = tens.norm();
-            tens = st->get_Preconditioner_Tensor(pos, GlobalParams.MPI_Rank+1);
-            cell_weights_prec_2(cell->active_cell_index()) = tens.norm();
+
+            cell_weights_prec_1(cell->active_cell_index()) = epsilon_pre1.norm();
+
+            cell_weights_prec_2(cell->active_cell_index()) = epsilon_pre2.norm();
         }
 	}
 
@@ -749,15 +758,15 @@ void Waveguide::assemble_system ()
 
 
         if(even) {
-          epsilon_pre2 = st->get_Tensor(quadrature_points[q_index]);
-          mu_prec2 = st->get_Tensor(quadrature_points[q_index]);
-          epsilon_pre1 = st->get_Preconditioner_Tensor(quadrature_points[q_index], rank);
-          mu_prec1 = st->get_Preconditioner_Tensor(quadrature_points[q_index], rank);
-        } else {
           epsilon_pre1 = st->get_Tensor(quadrature_points[q_index]);
           mu_prec1 = st->get_Tensor(quadrature_points[q_index]);
           epsilon_pre2 = st->get_Preconditioner_Tensor(quadrature_points[q_index], rank);
           mu_prec2 = st->get_Preconditioner_Tensor(quadrature_points[q_index], rank);
+        } else {
+          epsilon_pre2 = st->get_Tensor(quadrature_points[q_index]);
+          mu_prec2 = st->get_Tensor(quadrature_points[q_index]);
+          epsilon_pre1 = st->get_Preconditioner_Tensor(quadrature_points[q_index], rank);
+          mu_prec1 = st->get_Preconditioner_Tensor(quadrature_points[q_index], rank);
         }
 
         if( mg->math_coordinate_in_waveguide(quadrature_points[q_index])) {
@@ -838,6 +847,8 @@ void Waveguide::assemble_system ()
 void Waveguide::MakeBoundaryConditions (){
 	DoFHandler<3>::active_cell_iterator cell, endc;
 
+	fixed_dofs.set_size(dof_handler.n_dofs());
+
 	cell = dof_handler.begin_active(),
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
@@ -855,10 +866,12 @@ void Waveguide::MakeBoundaryConditions (){
 						if(locally_owned_dofs.is_element(local_dof_indices[0])) {
 							cm.add_line(local_dof_indices[0]);
 							cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
+							fixed_dofs.add_index(local_dof_indices[0]);
 						}
 						if(locally_owned_dofs.is_element(local_dof_indices[1])) {
 							cm.add_line(local_dof_indices[1]);
 							cm.set_inhomogeneity(local_dof_indices[1], 0.0);
+							fixed_dofs.add_index(local_dof_indices[1]);
 						}
 					}
 				}
@@ -869,10 +882,12 @@ void Waveguide::MakeBoundaryConditions (){
 						if(locally_owned_dofs.is_element(local_dof_indices[0])) {
 							cm.add_line(local_dof_indices[0]);
 							cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
+							fixed_dofs.add_index(local_dof_indices[0]);
 						}
 						if(locally_owned_dofs.is_element(local_dof_indices[1])) {
 							cm.add_line(local_dof_indices[1]);
 							cm.set_inhomogeneity(local_dof_indices[1], 0.0);
+							fixed_dofs.add_index(local_dof_indices[1]);
 						}
 					}
 				}
@@ -883,19 +898,21 @@ void Waveguide::MakeBoundaryConditions (){
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
 							Tensor<1,3,double> ptemp = ((cell->face(i))->line(j))->center(true, false);
 							Point<3, double> p (ptemp[0], ptemp[1], ptemp[2]);
-							Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(0) - ((cell->face(i))->line(j))->vertex(1);
-							dtemp = dtemp / dtemp.norm();
-							Point<3, double> direction (dtemp[0], dtemp[1], dtemp[2]);
+							Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(1) - ((cell->face(i))->line(j))->vertex(0);
+							double norm = dtemp.norm();
+							Point<3, double> direction (dtemp[0]/norm, dtemp[1]/norm, dtemp[2]/norm);
 
 							double result = TEMode00(p,0);
 							if(st->PML_in_X(p) || st->PML_in_Y(p)) result = 0.0;
 							if(locally_owned_dofs.is_element(local_dof_indices[0])) {
 								cm.add_line(local_dof_indices[0]);
 								cm.set_inhomogeneity(local_dof_indices[0], direction[0] * result );
+								fixed_dofs.add_index(local_dof_indices[0]);
 							}
 							if(locally_owned_dofs.is_element(local_dof_indices[1])) {
 								cm.add_line(local_dof_indices[1]);
 								cm.set_inhomogeneity(local_dof_indices[1], 0.0);
+								fixed_dofs.add_index(local_dof_indices[1]);
 							}
 
 						}
@@ -908,10 +925,12 @@ void Waveguide::MakeBoundaryConditions (){
 						if(locally_owned_dofs.is_element(local_dof_indices[0])) {
 							cm.add_line(local_dof_indices[0]);
 							cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
+							fixed_dofs.add_index(local_dof_indices[0]);
 						}
 						if(locally_owned_dofs.is_element(local_dof_indices[1])) {
 							cm.add_line(local_dof_indices[1]);
 							cm.set_inhomogeneity(local_dof_indices[1], 0.0);
+							fixed_dofs.add_index(local_dof_indices[1]);
 						}
 
 					}
@@ -1077,8 +1096,8 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
               ((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
               for(unsigned int k = 0; k < 2; k++) {
                 if(own.is_element(local_dof_indices[k])) {
-                  cm_prec_even.add_line(local_dof_indices[k]);
-                  cm_prec_even.set_inhomogeneity(local_dof_indices[k], 0.0 );
+                  // cm_prec_even.add_line(local_dof_indices[k]);
+                  // cm_prec_even.set_inhomogeneity(local_dof_indices[k], 0.0 );
                 }
               }
             }
@@ -1143,7 +1162,7 @@ void Waveguide::solve () {
 	if(GlobalParams.So_Solver == SolverOptions::GMRES) {
 		int mindof = locally_owned_dofs.nth_index_in_set(0);
 		for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++ ) {
-			solution[mindof + i] = EstimatedSolution[mindof + i];
+			// solution[mindof + i] = EstimatedSolution[mindof + i];
 		}
 
 
@@ -1158,7 +1177,7 @@ void Waveguide::solve () {
 			above = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank+1].n_elements();
 		}
 
-		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), above, dof_handler.max_couplings_between_dofs(), locally_owned_dofs);
+		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), above, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, &fixed_dofs);
 
 		if(GlobalParams.MPI_Rank == 0) {
 			sweep.Prepare(solution);
@@ -1198,7 +1217,12 @@ void Waveguide::solve () {
                                    std_cxx11::_3));
 		MPI_Barrier(mpi_comm);
 
-	  solver.solve(system_matrix,solution, system_rhs, sweep);
+		try {
+		  solver.solve(system_matrix,solution, system_rhs, sweep);
+
+		} catch(const dealii::SolverControl::NoConvergence & e) {
+		  deallog << "NO CONVERGENCE!" <<std::endl;
+		}
 
 	  deallog << "Done." << std::endl;
 
@@ -1232,19 +1256,46 @@ void Waveguide::output_results ( bool  )
 
 	// ErrorOfSolution.compress(VectorOperation::insert);
 
+	std::vector<IndexSet> i_sys_relevant;
+	i_sys_relevant.resize(GlobalParams.NumberProcesses);
+	int below = 0;
+	for(int i = 0; i < GlobalParams.NumberProcesses; i++){
+	  IndexSet local(Block_Sizes[i]);
+	  if(i != rank){
+      for(int j = 0; j < locally_relevant_dofs.n_elements(); j++) {
+        int idx = locally_relevant_dofs.nth_index_in_set(j);
+        if( idx >= below && idx < below + Block_Sizes[i]){
+          local.add_index(idx - below);
+        }
+      }
+
+	  }else {
+	    local = i_sys_owned[i];
+	  }
+	  below += Block_Sizes[i];
+	  i_sys_relevant[i] = local;
+	}
+
 	//solution.compress(VectorOperation::unknown);
 
-	//TODO: Here the second arguments need a special vector of index sets because we are no longer just using the locally owned vectors, for whom we already have a block shape, but the locally relevant indices which doesnt exist yet.
-
-	TrilinosWrappers::MPI::BlockVector solution_output(i_sys_owned, i_sys_owned, mpi_comm);
+	TrilinosWrappers::MPI::BlockVector solution_output(i_sys_owned, i_sys_relevant, mpi_comm);
 	solution_output = solution;
 
-	TrilinosWrappers::MPI::BlockVector estimate_output(i_sys_owned, i_sys_owned, mpi_comm);
+	TrilinosWrappers::MPI::BlockVector estimate_output(i_sys_owned, i_sys_relevant, mpi_comm);
 	estimate_output = EstimatedSolution;
 
-	TrilinosWrappers::MPI::BlockVector error_output(i_sys_owned, i_sys_owned, mpi_comm);
+	TrilinosWrappers::MPI::BlockVector error_output(i_sys_owned, i_sys_relevant, mpi_comm);
 	error_output = ErrorOfSolution;
 
+	/**
+	for(int i = 0; i < locally_relevant_dofs.n_elements(); i++){
+	  int idx = locally_relevant_dofs.nth_index_in_set(i);
+	  solution_output[idx] = solution[idx];
+	  estimate_output[idx] = EstimatedSolution[idx];
+	  error_output[idx] = ErrorOfSolution[idx];
+	}**/
+
+  MPI_Barrier(mpi_comm);
 
 	std::cout << GlobalParams.MPI_Rank << ": " <<locally_owned_dofs.n_elements()<< "," <<locally_owned_dofs.nth_index_in_set(0) << "," << locally_owned_dofs.nth_index_in_set(locally_owned_dofs.n_elements()-1) <<std::endl;
 	// evaluate_overall();
@@ -1259,8 +1310,8 @@ void Waveguide::output_results ( bool  )
 
 		data_out.build_patches ();
 
-		std::ofstream outputvtk (solutionpath + "/" + path_prefix+ "/solution-run" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + "-P" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() +".vtk");
-		data_out.write_vtk(outputvtk);
+		std::ofstream outputvtu (solutionpath + "/" + path_prefix+ "/solution-run" + std::to_string( run_number) + "-P" + std::to_string(GlobalParams.MPI_Rank) +".vtu");
+		data_out.write_vtu(outputvtu);
 
         
         
@@ -1342,6 +1393,7 @@ void Waveguide::run ()
     
   output_results(false);
     
+  deallog.pop();
 	run_number++;
 }
 

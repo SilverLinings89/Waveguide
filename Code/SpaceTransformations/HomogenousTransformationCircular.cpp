@@ -85,7 +85,7 @@ bool HomogenousTransformationCircular::PML_in_Z(Point<3> &p)  const{
 double HomogenousTransformationCircular::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int rank ) const{
   double width = GlobalParams.LayerThickness * 1.0;
 
-  return  - (p(2) +GlobalParams.M_R_ZLength/2.0 - ((double)rank +1)*width);
+  return  p(2) +GlobalParams.M_R_ZLength/2.0 - ((double)rank)*width;
 }
 
 double HomogenousTransformationCircular::PML_X_Distance(Point<3> &p) const{
@@ -148,7 +148,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Tensor(P
       } else {
         d = GlobalParams.M_BC_XPlus;
       }
-      sx.real( 1 );
+      sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax );
       sx.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaXMax );
     }
 
@@ -161,7 +161,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Tensor(P
         d = GlobalParams.M_BC_YPlus;
       }
 
-      sy.real( 1 );
+      sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax );
       sy.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax);
     }
 
@@ -170,7 +170,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Tensor(P
       double r,d;
       r = PML_Z_Distance(position);
       d = GlobalParams.M_BC_Zplus * GlobalParams.LayerThickness;
-      sz.real( 1 );
+      sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
       sz.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax );
     }
 
@@ -224,7 +224,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Precondi
     } else {
       d = GlobalParams.M_BC_XPlus;
     }
-    sx.real( 1 );
+    sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax );
     sx.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaXMax );
   }
   if(PML_in_Y(position)){
@@ -236,17 +236,20 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Precondi
       d = GlobalParams.M_BC_YPlus;
     }
 
-    sy.real( 1 );
+    sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax );
     sy.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax);
   }
 
-  sz_p.imag( pow(Preconditioner_PML_Z_Distance(position, rank)/GlobalParams.LayerThickness , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax);
+  double r_temp = Preconditioner_PML_Z_Distance(position, rank);
+  double d_temp = GlobalParams.LayerThickness;
+  sz_p.real( pow(r_temp/d_temp , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
+  sz_p.imag( pow(r_temp/d_temp , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax);
 
   if(PML_in_Z(position)){
     double r,d;
     r = PML_Z_Distance(position);
     d = GlobalParams.M_BC_Zplus * GlobalParams.LayerThickness;
-    sz.real( 1 );
+    sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
     sz.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax );
   }
 
