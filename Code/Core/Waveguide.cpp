@@ -769,6 +769,10 @@ void Waveguide::assemble_system ()
           mu_prec1 = st->get_Preconditioner_Tensor(quadrature_points[q_index], rank);
         }
 
+        mu_prec1 = invert(mu_prec1) / mu_zero;
+        mu_prec2 = invert(mu_prec2) / mu_zero;
+
+
         if( mg->math_coordinate_in_waveguide(quadrature_points[q_index])) {
           epsilon_pre1 *= eps_in;
           epsilon_pre2 *= eps_in;
