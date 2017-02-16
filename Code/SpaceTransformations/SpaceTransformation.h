@@ -26,13 +26,14 @@ class Waveguide;
 class SpaceTransformation {
 
 public:
+
   const unsigned int dofs_per_layer;
 
   const unsigned int boundary_dofs_in;
 
   const unsigned int boundary_dofs_out;
 
-  SpaceTransformation(int);
+  SpaceTransformation(int, int);
 
   virtual Point<3> math_to_phys(Point<3> coord)  const =0;
 
@@ -242,7 +243,7 @@ public:
   virtual std::complex<double> evaluate_for_z(double, Waveguide *) = 0;
 
 
-
+  const int rank;
 
 };
 

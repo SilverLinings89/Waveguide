@@ -169,6 +169,8 @@ struct Parameters {
     
     double LayerThickness;
     
+    double SectorThickness;
+
     unsigned int	MPI_Rank;
 
     MPI_Comm	MPIC_World;

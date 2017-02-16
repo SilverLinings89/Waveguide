@@ -7,8 +7,8 @@
 
 using namespace dealii;
 
-HomogenousTransformationCircular::HomogenousTransformationCircular ():
-    SpaceTransformation(3),
+HomogenousTransformationCircular::HomogenousTransformationCircular (int in_rank):
+    SpaceTransformation(3, in_rank),
   XMinus( -(GlobalParams.M_R_XLength *0.5 - GlobalParams.M_BC_XMinus)),
   XPlus( GlobalParams.M_R_XLength *0.5 - GlobalParams.M_BC_XPlus),
   YMinus( -(GlobalParams.M_R_YLength *0.5 - GlobalParams.M_BC_YMinus)),
@@ -196,7 +196,6 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::get_Precondi
 
   Tensor<2,3, double> transformation = case_sectors[sector_z.first].TransformationTensorInternal(position[0], position[1], sector_z.second);
 
-  // Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
   double dist = position[0] * position[0] + position[1]*position[1];
   dist = sqrt(dist);
   double v1 = GlobalParams.M_R_XLength/2.0 - std::min(GlobalParams.M_BC_XMinus, GlobalParams.M_BC_XPlus);
@@ -316,8 +315,12 @@ std::complex<double> HomogenousTransformationCircular::gauss_product_2D_sphere(d
 std::complex<double> HomogenousTransformationCircular::evaluate_for_z(double in_z, Waveguide * in_w) {
   double r = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
 
-  std::complex<double> res = gauss_product_2D_sphere(in_z,10,r,0,0, in_w);
-  return sqrt(std::norm(res));
+  double ret = 0;
+  if(rank == Z_to_Layer(in_z) ) {
+    ret = sqrt(std::norm(gauss_product_2D_sphere(in_z,10,r,0,0, in_w)));
+  }
+  ret = Utilities::MPI::max(ret, MPI_COMM_WORLD);
+  return ret;
 }
 
 double HomogenousTransformationCircular::get_dof(int dof) const {

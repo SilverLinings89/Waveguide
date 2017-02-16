@@ -287,6 +287,8 @@ static Parameters GetParameters() {
 
 	ret.LayerThickness = ret.M_R_ZLength / (ret.NumberProcesses - ret.M_BC_Zplus);
 
+	ret.SectorThickness = ret.M_R_ZLength / ret.M_W_Sectors;
+
 	ret.SystemLength = ret.NumberProcesses * ret.LayerThickness;
 
 	ret.Maximum_Z = - (ret.M_R_ZLength/2.0) + ret.SystemLength;

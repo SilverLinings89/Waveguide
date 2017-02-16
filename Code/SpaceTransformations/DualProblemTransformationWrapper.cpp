@@ -14,8 +14,8 @@
 
 using namespace dealii;
 
-DualProblemTransformationWrapper::DualProblemTransformationWrapper (SpaceTransformation * in_st):
-    SpaceTransformation(3),
+DualProblemTransformationWrapper::DualProblemTransformationWrapper (SpaceTransformation * in_st, int in_rank, int inner_rank):
+    SpaceTransformation(3, inner_rank),
   XMinus( -(GlobalParams.M_R_XLength *0.5 - GlobalParams.M_BC_XMinus)),
   XPlus( GlobalParams.M_R_XLength *0.5 - GlobalParams.M_BC_XPlus),
   YMinus( -(GlobalParams.M_R_YLength *0.5 - GlobalParams.M_BC_YMinus)),
@@ -69,15 +69,15 @@ double DualProblemTransformationWrapper::PML_Z_Distance(Point<3> &p) const{
 }
 
 Tensor<2,3, std::complex<double>> DualProblemTransformationWrapper::get_Tensor(Point<3> & position) const {
-  Point<3> p = position;
-  p[2] = (GlobalParams.M_R_ZLength/2.0) - p[2];
-  return st->get_Tensor(p);
+  // Point<3> p = position;
+  // p[2] = (GlobalParams.M_R_ZLength/2.0) - p[2];
+  return st->get_Tensor(position);
 }
 
 Tensor<2,3, std::complex<double>> DualProblemTransformationWrapper::get_Preconditioner_Tensor(Point<3> & position, int block) const {
-  Point<3> p = position;
-  p[2] = (GlobalParams.M_R_ZLength/2.0) - p[2];
-  return st->get_Preconditioner_Tensor(p,block);
+  // Point<3> p = position;
+  // p[2] = (GlobalParams.M_R_ZLength/2.0) - p[2];
+  return st->get_Preconditioner_Tensor(position,block);
 }
 
 std::complex<double> DualProblemTransformationWrapper::gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc, Waveguide * in_w)
@@ -123,7 +123,7 @@ void DualProblemTransformationWrapper::set_free_dof(int dof, double value) {
 }
 
 std::pair<int, double> DualProblemTransformationWrapper::Z_to_Sector_and_local_z(double in_z) const {
-  return st->Z_to_Sector_and_local_z(in_z);
+  return st->Z_to_Sector_and_local_z(-in_z);
 }
 
 double DualProblemTransformationWrapper::Sector_Length() const {

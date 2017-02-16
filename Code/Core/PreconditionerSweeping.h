@@ -9,8 +9,8 @@ using namespace dealii;
 #include <deal.II/lac/vector.h>
 
 static SolverControl s(10,1.e-10, false, false);
-SparseDirectUMFPACK * solver;
-SparseMatrix<double> * temp;
+SparseDirectUMFPACK * solver = 0;
+SparseMatrix<double> * temp = 0;
 
 SparsityPattern sparsity_pattern, off_diag_block;
 
@@ -56,7 +56,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
    * \param bandwidth The number of dofs per line on average is required for the construction of matrices.
    * \param locally_owned The degrees of freedom associated with the current process. Required for vector and matrix construction.
    */
-	PreconditionerSweeping ( int in_own, int in_others, int bandwidth, IndexSet locally_owned, IndexSet * in_fixed_dofs);
+	PreconditionerSweeping ( MPI_Comm in_mpi_comm, int in_own, int in_others, int bandwidth, IndexSet locally_owned, IndexSet * in_fixed_dofs, int rank);
 
     ~PreconditionerSweeping ();
 
@@ -105,6 +105,10 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 	unsigned int sweepable;
 	IndexSet locally_owned_dofs;
 	IndexSet * fixed_dofs;
+	int rank;
+	int bandwidth;
+	MPI_Comm mpi_comm;
+
   };
 
 #endif /* PRECONDITIONERSWEEPING_H_ */

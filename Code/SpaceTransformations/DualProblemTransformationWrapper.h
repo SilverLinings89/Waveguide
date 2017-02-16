@@ -25,7 +25,7 @@ public:
  * Since this object encapsulates another Space Transformation, the construction is straight forward.
  * \param non_dual_st This pointer points to the actual transformation that is being wrapped.
  */
-  DualProblemTransformationWrapper(SpaceTransformation * non_dual_st);
+  DualProblemTransformationWrapper(SpaceTransformation * non_dual_st, int rank, int inner_rank);
 
   ~DualProblemTransformationWrapper();
 

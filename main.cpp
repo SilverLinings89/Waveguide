@@ -69,19 +69,22 @@ int main (int argc, char *argv[])
 	mpi_primal = MPI_COMM_WORLD;
 	mpi_dual = MPI_COMM_WORLD;
 
+  int primal_rank = GlobalParams.MPI_Rank;
+  int dual_rank = GlobalParams.NumberProcesses - 1 - GlobalParams.MPI_Rank;
+
 	SpaceTransformation * st;
 
 	if(GlobalParams.M_C_Shape == ConnectorType::Circle){
     if(GlobalParams.Sc_Homogeneity) {
-      st = new HomogenousTransformationCircular();
+      st = new HomogenousTransformationCircular(primal_rank);
     } else {
-      st = new InhomogenousTransformationCircular();
+      st = new InhomogenousTransformationCircular(primal_rank);
     }
   } else {
     if(GlobalParams.Sc_Homogeneity) {
-     st = new HomogenousTransformationRectangular();
+     st = new HomogenousTransformationRectangular(primal_rank);
     } else {
-     st = new InhomogenousTransformationRectangular();
+     st = new InhomogenousTransformationRectangular(primal_rank);
     }
   }
 
@@ -98,14 +101,13 @@ int main (int argc, char *argv[])
 
 	SpaceTransformation * dst;
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint ) {
-	  dst = new DualProblemTransformationWrapper(st);
+	  dst = new DualProblemTransformationWrapper(st, dual_rank, primal_rank);
 	  dst->estimate_and_initialize();
 	}
 
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint ) {
 	  // adjoint based
-	  int primal_rank = GlobalParams.MPI_Rank;
-	  int dual_rank = GlobalParams.NumberProcesses - 1 - GlobalParams.MPI_Rank;
+
 	  if(dual_rank < 0) {
 	    dual_rank += GlobalParams.NumberProcesses;
 	  }

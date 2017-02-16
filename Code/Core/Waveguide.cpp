@@ -33,7 +33,7 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
     rank(Utilities::MPI::this_mpi_process(in_mpi_comm)),
     real(0),
     imag(3),
-    solver_control (GlobalParams.So_TotalSteps, GlobalParams.So_Precision, (GlobalParams.MPI_Rank == 0), true),
+    solver_control (GlobalParams.So_TotalSteps, GlobalParams.So_Precision, (rank == 0), true),
     dof_handler (triangulation),
     run_number(0),
     condition_file_counter(0),
@@ -41,7 +41,7 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
     Layers(GlobalParams.NumberProcesses),
     Dofs_Below_Subdomain(Layers),
     Block_Sizes(Layers),
-    pout(std::cout, GlobalParams.MPI_Rank==0),
+    pout(std::cout, rank==0),
     is_stored(false),
     timer(in_mpi_comm, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times),
     Sectors(GlobalParams.M_W_Sectors),
@@ -159,7 +159,7 @@ void Waveguide::make_grid ()
 {
   mg->prepare_triangulation(& triangulation);
   dof_handler.distribute_dofs (fe);
-  std::cout << "Waveguide current active cells:" << triangulation.n_active_cells() << std::endl;
+  // std::cout << "Waveguide current active cells:" << triangulation.n_active_cells() << std::endl;
 }
 
 void Waveguide::Compute_Dof_Numbers() {
@@ -212,8 +212,8 @@ void Waveguide::setup_system ()
 	std::vector<unsigned int> n_neighboring = dof_handler.n_locally_owned_dofs_per_processor();
 	//locally_relevant_dofs_per_subdomain = DoFTools::locally_relevant_dofs_per_subdomain(dof_handler);
 	extended_relevant_dofs = locally_relevant_dofs;
-	if(GlobalParams.MPI_Rank > 0) {
-		extended_relevant_dofs.add_range(locally_owned_dofs.nth_index_in_set(0) - n_neighboring[GlobalParams.MPI_Rank-1], locally_owned_dofs.nth_index_in_set(0));
+	if(rank > 0) {
+		extended_relevant_dofs.add_range(locally_owned_dofs.nth_index_in_set(0) - n_neighboring[rank-1], locally_owned_dofs.nth_index_in_set(0));
 	}
 
 	deallog << "Computing block counts" <<std::endl;
@@ -459,7 +459,7 @@ void Waveguide::setup_system ()
 
 	char * text_local_set = const_cast<char*> (test);
 
-	// std::cout << "Process " << GlobalParams.MPI_Rank << " has " << text_local_set <<std::endl << " wich has length " << strlen(text_local_set) << std::endl;
+	// std::cout << "Process " << rank << " has " << text_local_set <<std::endl << " wich has length " << strlen(text_local_set) << std::endl;
 
 	unsigned int text_local_length = strlen( text_local_set) ;
 
@@ -497,19 +497,19 @@ void Waveguide::setup_system ()
 		locally_relevant_dofs_all_processors[i].read(ss);
 	}
 
-	// std::cout<< "Reading worked in process number " << GlobalParams.MPI_Rank << std::endl;
+	// std::cout<< "Reading worked in process number " << rank << std::endl;
 
 	UpperDofs = locally_owned_dofs;
 
 	LowerDofs = locally_owned_dofs;
 
 
-	if(GlobalParams.MPI_Rank != 0 ) {
-		LowerDofs.add_indices(locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank-1], 0);
+	if(rank != 0 ) {
+		LowerDofs.add_indices(locally_relevant_dofs_all_processors[rank-1], 0);
 	}
 
-	if(GlobalParams.MPI_Rank != Layers -1 ) {
-		UpperDofs.add_indices(locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank+1], 0);
+	if(rank != Layers -1 ) {
+		UpperDofs.add_indices(locally_relevant_dofs_all_processors[rank+1], 0);
 	}
 
 
@@ -561,7 +561,7 @@ void Waveguide::calculate_cell_weights () {
 
 	data_out_cells.build_patches ();
 
-	std::string path = solutionpath + "/" + path_prefix +"/cell-weights" + std::to_string(run_number) +"-" + std::to_string(GlobalParams.MPI_Rank) +".vtu";
+	std::string path = solutionpath + "/" + path_prefix +"/cell-weights" + std::to_string(run_number) +"-" + std::to_string(rank) +".vtu";
 	deallog<<"Writing vtu file: "<< path <<std::endl;
 
 	std::ofstream outputvtu2 (path);
@@ -606,51 +606,27 @@ void Waveguide::reinit_systemmatrix() {
 
   deallog.push("reinit_systemmatrix");
 
-  deallog << "Generating Block Sparisty patterns ..." <<std::endl;
-
-  TrilinosWrappers::BlockSparsityPattern epsp(i_prec_even_owned_row, i_prec_even_owned_col, i_prec_even_writable, mpi_comm);
-
-  deallog << "Even worked. Continuing Odd." <<std::endl;
-
-  TrilinosWrappers::BlockSparsityPattern opsp(i_prec_odd_owned_row, i_prec_odd_owned_col, i_prec_odd_writable, mpi_comm);
-
-  deallog << "Odd worked. Continuing System Matrix." <<std::endl;
-
+  deallog << "Generating BSP" <<std::endl;
 
   TrilinosWrappers::BlockSparsityPattern sp(i_sys_owned, mpi_comm);
 
   deallog << "Collecting sizes ..." <<std::endl;
-  epsp.collect_sizes();
-  opsp.collect_sizes();
+
   sp.collect_sizes();
 
-  deallog << "Making Block Sparisty patterns ..." <<std::endl;
-  deallog << "Even Preconditioner Matrices ..." <<std::endl;
-  DoFTools::make_sparsity_pattern (dof_handler, epsp,
-	                                   cm_prec_even, false,
-									   GlobalParams.MPI_Rank);
-	epsp.compress();
-	deallog << "Odd Preconditioner Matrices ..." <<std::endl;
-	DoFTools::make_sparsity_pattern (dof_handler, opsp,
-	                                     cm_prec_odd, false,
-	                     GlobalParams.MPI_Rank);
-	opsp.compress();
-	deallog << "Systemmatrix ..." <<std::endl;
+  deallog << "Making BSP ..." <<std::endl;
   DoFTools::make_sparsity_pattern (dof_handler, sp,
                                        cm, false,
-                       GlobalParams.MPI_Rank);
+                       rank);
   sp.compress();
 
-  deallog << "Initializing matrices ..." <<std::endl;
+  deallog << "Initializing system_matrix ..." <<std::endl;
 	system_matrix.reinit(sp);
-	prec_matrix_even.reinit(epsp);
-	prec_matrix_odd.reinit(opsp);
-	deallog << "Done." <<std::endl;
 	deallog.pop();
 }
 
 void Waveguide::reinit_rhs () {
-	// std::cout << "Reinit rhs for p " << GlobalParams.MPI_Rank << std::endl;
+	// std::cout << "Reinit rhs for p " << rank << std::endl;
 
 	system_rhs.reinit(i_sys_owned, mpi_comm);
 
@@ -676,7 +652,51 @@ void Waveguide::reinit_storage() {
 }
 
 void Waveguide::reinit_preconditioner () {
+  deallog.push("reinit_preconditioner");
 
+  deallog.push("Generating BSP");
+
+  deallog << "Started" <<std::endl;
+
+  TrilinosWrappers::BlockSparsityPattern epsp(i_prec_even_owned_row, i_prec_even_owned_col, i_prec_even_writable, mpi_comm);
+
+  deallog << "Even worked. Continuing Odd." <<std::endl;
+
+  TrilinosWrappers::BlockSparsityPattern opsp(i_prec_odd_owned_row, i_prec_odd_owned_col, i_prec_odd_writable, mpi_comm);
+
+  deallog << "Odd worked. Done" <<std::endl;
+
+  deallog.pop();
+
+  deallog << "Collecting sizes ..." <<std::endl;
+  epsp.collect_sizes();
+  opsp.collect_sizes();
+
+  deallog.push("Making BSP");
+
+  deallog << "Even Preconditioner Matrices ..." <<std::endl;
+  DoFTools::make_sparsity_pattern (dof_handler, epsp,
+                                     cm_prec_even, false,
+                     rank);
+  epsp.compress();
+  deallog << "Odd Preconditioner Matrices ..." <<std::endl;
+  DoFTools::make_sparsity_pattern (dof_handler, opsp,
+                                       cm_prec_odd, false,
+                       rank);
+  opsp.compress();
+  deallog << "Done" <<std::endl;
+
+  deallog.pop();
+
+  deallog.push("Initializing matrices");
+  deallog<<"Even ..."<<std::endl;
+  prec_matrix_even.reinit(epsp);
+  deallog<<"Odd ..."<<std::endl;
+  prec_matrix_odd.reinit(opsp);
+  deallog << "Done." <<std::endl;
+  deallog.pop();
+
+  deallog.pop();
 
 }
 
@@ -729,7 +749,7 @@ void Waveguide::assemble_system ()
   for (; cell!=endc; ++cell)
   {
     unsigned int subdomain_id = cell->subdomain_id();
-    if( subdomain_id == GlobalParams.MPI_Rank) {
+    if( subdomain_id == rank) {
       fe_values.reinit (cell);
       quadrature_points = fe_values.get_quadrature_points();
 
@@ -955,7 +975,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
 	own.add_indices(locally_owned_dofs);
 	sweepable.set_size(dof_handler.n_dofs());
 	sweepable.add_indices(locally_owned_dofs);
-	if(GlobalParams.MPI_Rank != 0 ){
+	if(rank != 0 ){
 		own.add_indices(LowerDofs);
 	}
 
@@ -1174,16 +1194,16 @@ void Waveguide::solve () {
 
 		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData(GlobalParams.So_RestartSteps) );
 		
-		// std::cout << GlobalParams.MPI_Rank << " prep dofs." <<std::endl;
+		// std::cout << rank << " prep dofs." <<std::endl;
 
 		int above = 0;
 		if ((int)rank != GlobalParams.NumberProcesses - 1) {
-			above = locally_relevant_dofs_all_processors[GlobalParams.MPI_Rank+1].n_elements();
+			above = locally_relevant_dofs_all_processors[rank+1].n_elements();
 		}
 
-		PreconditionerSweeping sweep( locally_owned_dofs.n_elements(), above, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, &fixed_dofs);
+		PreconditionerSweeping sweep( mpi_comm, locally_owned_dofs.n_elements(), above, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, &fixed_dofs, rank);
 
-		if(GlobalParams.MPI_Rank == 0) {
+		if(rank == 0) {
 			sweep.Prepare(solution);
 		}
 
@@ -1202,7 +1222,7 @@ void Waveguide::solve () {
 
 		MPI_Barrier(mpi_comm);
 
-
+		deallog << "Initializing the Preconditioner..." <<std::endl;
 
 		if(rank < 3){
 		  sweep.init(solver_control, & system_matrix.block(rank,  rank+1 ));
@@ -1212,7 +1232,7 @@ void Waveguide::solve () {
 
   	// if(rank +1 < GlobalParams.NumberProcesses ) sweep.prec_matrix_lower = & (system_matrix.block(rank, rank+1));
 
-		deallog << "All preconditioner matrices built. Solving..." <<std::endl;
+
         
 		solver.connect(std_cxx11::bind (&Waveguide::residual_tracker,
                                    this,
@@ -1220,6 +1240,8 @@ void Waveguide::solve () {
                                    std_cxx11::_2,
                                    std_cxx11::_3));
 		MPI_Barrier(mpi_comm);
+
+		deallog << "Preconditioner Ready. Solving..." <<std::endl;
 
 		try {
 		  solver.solve(system_matrix,solution, system_rhs, sweep);
@@ -1301,7 +1323,7 @@ void Waveguide::output_results ( bool  )
 
   MPI_Barrier(mpi_comm);
 
-	std::cout << GlobalParams.MPI_Rank << ": " <<locally_owned_dofs.n_elements()<< "," <<locally_owned_dofs.nth_index_in_set(0) << "," << locally_owned_dofs.nth_index_in_set(locally_owned_dofs.n_elements()-1) <<std::endl;
+	std::cout << rank << ": " <<locally_owned_dofs.n_elements()<< "," <<locally_owned_dofs.nth_index_in_set(0) << "," << locally_owned_dofs.nth_index_in_set(locally_owned_dofs.n_elements()-1) <<std::endl;
 	// evaluate_overall();
 	if(true) {
 		DataOut<3> data_out;
@@ -1314,7 +1336,7 @@ void Waveguide::output_results ( bool  )
 
 		data_out.build_patches ();
 
-		std::ofstream outputvtu (solutionpath + "/" + path_prefix+ "/solution-run" + std::to_string( run_number) + "-P" + std::to_string(GlobalParams.MPI_Rank) +".vtu");
+		std::ofstream outputvtu (solutionpath + "/" + path_prefix+ "/solution-run" + std::to_string( run_number) + "-P" + std::to_string(rank) +".vtu");
 		data_out.write_vtu(outputvtu);
 
         
@@ -1452,14 +1474,16 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
   for (; cell!=endc; ++cell)
   {
     unsigned int subdomain_id = cell->subdomain_id();
-    if( subdomain_id == GlobalParams.MPI_Rank) {
+    if( subdomain_id == rank && rank != GlobalParams.NumberProcesses -1) {
       fe_values.reinit (cell);
       quadrature_points = fe_values.get_quadrature_points();
 
       for (unsigned int q_index=0; q_index<n_q_points; ++q_index)
       {
         Tensor<1,3,std::complex<double>> own_solution = solution_evaluation(quadrature_points[q_index]);
-        Tensor<1,3,std::complex<double>> other_solution = other->solution_evaluation(quadrature_points[q_index]);
+        Point<3> dual_equivalent = quadrature_points[q_index];
+        dual_equivalent[2] = - dual_equivalent[2];
+        Tensor<1,3,std::complex<double>> other_solution = other->solution_evaluation(dual_equivalent);
         const double JxW = fe_values.JxW(q_index);
         for (unsigned int j = 0; j < ndofs; j++) {
           transformation = st->get_Tensor_for_step(quadrature_points[q_index], j, stepwidth);

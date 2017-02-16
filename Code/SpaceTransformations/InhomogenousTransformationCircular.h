@@ -24,7 +24,7 @@ using namespace dealii;
 class InhomogenousTransformationCircular : public SpaceTransformation {
 
 public:
-  InhomogenousTransformationCircular();
+  InhomogenousTransformationCircular(int);
 
   virtual ~InhomogenousTransformationCircular();
 

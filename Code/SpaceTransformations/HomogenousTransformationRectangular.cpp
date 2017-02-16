@@ -7,8 +7,8 @@
 
 using namespace dealii;
 
-HomogenousTransformationRectangular::HomogenousTransformationRectangular ():
-    SpaceTransformation(3),
+HomogenousTransformationRectangular::HomogenousTransformationRectangular (int in_rank):
+    SpaceTransformation(3, in_rank),
   XMinus( -(GlobalParams.M_R_XLength *0.5 - GlobalParams.M_BC_XMinus)),
   XPlus( GlobalParams.M_R_XLength *0.5 - GlobalParams.M_BC_XPlus),
   YMinus( -(GlobalParams.M_R_YLength *0.5 - GlobalParams.M_BC_YMinus)),
