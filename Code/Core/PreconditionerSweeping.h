@@ -91,7 +91,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 	TrilinosWrappers::SparseMatrix * matrix;
 	dealii::SparseMatrix<double> * prec_matrix_upper;
 
-	dealii::SparseMatrix<double> * prec_matrix_lower;
+	// dealii::SparseMatrix<double> * prec_matrix_lower;
 
 	void Prepare(TrilinosWrappers::MPI::BlockVector &src);
 

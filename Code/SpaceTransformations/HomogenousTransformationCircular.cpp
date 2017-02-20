@@ -315,9 +315,12 @@ std::complex<double> HomogenousTransformationCircular::gauss_product_2D_sphere(d
 std::complex<double> HomogenousTransformationCircular::evaluate_for_z(double in_z, Waveguide * in_w) {
   double r = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
   double ret = 0;
-  if(rank == Z_to_Layer(in_z) ) {
-    std::cout << "Process " << Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) << " computing signal at " << in_z << std::endl;
+  try{
+    // std::cout << "Process " << Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) << " computing signal at " << in_z << std::endl;
     ret = sqrt(std::norm(gauss_product_2D_sphere(in_z,10,r,0,0, in_w)));
+  } catch (VectorTools::ExcPointNotAvailableHere &e) {
+    // std::cout << "Failed for " << in_z << " in " <<rank << std::endl;
+    ret = 0;
   }
   ret = Utilities::MPI::max(ret, MPI_COMM_WORLD);
   return ret;

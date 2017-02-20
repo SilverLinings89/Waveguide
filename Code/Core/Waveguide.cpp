@@ -51,7 +51,7 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
   mg = in_mg;
   st = in_st;
   mpi_comm = in_mpi_comm;
-
+  std::cout << "(" << path_part << "): " << Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) << " as " << rank <<std::endl;
   path_prefix = path_part;
 
   is_stored = false;
@@ -1184,17 +1184,8 @@ void Waveguide::solve () {
 	result_file.open((solutionpath + "/" + path_prefix + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
 
 	if(GlobalParams.So_Solver == SolverOptions::GMRES) {
-		int mindof = locally_owned_dofs.nth_index_in_set(0);
-		for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++ ) {
-			// solution[mindof + i] = EstimatedSolution[mindof + i];
-		}
-
-
-		// dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData( GlobalParams.PRM_S_GMRESSteps) );
-
-		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData(GlobalParams.So_RestartSteps) );
 		
-		// std::cout << rank << " prep dofs." <<std::endl;
+	  dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData(GlobalParams.So_RestartSteps) );
 
 		int above = 0;
 		if ((int)rank != GlobalParams.NumberProcesses - 1) {
@@ -1216,7 +1207,7 @@ void Waveguide::solve () {
 		}
 
 
-		if(rank == 3) {
+		if((int)rank == GlobalParams.NumberProcesses-1) {
 		   sweep.matrix = & system_matrix.block(rank, rank);
 		}
 
@@ -1224,21 +1215,23 @@ void Waveguide::solve () {
 
 		deallog << "Initializing the Preconditioner..." <<std::endl;
 
-		if(rank < 3){
+		if((int)rank < GlobalParams.NumberProcesses-1){
 		  sweep.init(solver_control, & system_matrix.block(rank,  rank+1 ));
 		} else {
 		  sweep.init(solver_control, & system_matrix.block(rank,  rank));
 		}
 
-  	// if(rank +1 < GlobalParams.NumberProcesses ) sweep.prec_matrix_lower = & (system_matrix.block(rank, rank+1));
-
-
-        
-		solver.connect(std_cxx11::bind (&Waveguide::residual_tracker,
+  	solver.connect(std_cxx11::bind (&Waveguide::residual_tracker,
                                    this,
                                    std_cxx11::_1,
                                    std_cxx11::_2,
                                    std_cxx11::_3));
+
+  	bool test = false;
+		if(rank == 0 && Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) != 0) {
+		  deallog.depth_console(0);
+		  test = true;
+		}
 		MPI_Barrier(mpi_comm);
 
 		deallog << "Preconditioner Ready. Solving..." <<std::endl;
@@ -1249,6 +1242,10 @@ void Waveguide::solve () {
 		} catch(const dealii::SolverControl::NoConvergence & e) {
 		  deallog << "NO CONVERGENCE!" <<std::endl;
 		}
+
+		if(test) {
+      deallog.depth_console(10);
+    }
 
 	  deallog << "Done." << std::endl;
 
@@ -1287,8 +1284,8 @@ void Waveguide::output_results ( bool  )
 	int below = 0;
 	for(int i = 0; i < GlobalParams.NumberProcesses; i++){
 	  IndexSet local(Block_Sizes[i]);
-	  if(i != rank){
-      for(int j = 0; j < locally_relevant_dofs.n_elements(); j++) {
+	  if(i != (int)rank){
+      for(unsigned int j = 0; j < locally_relevant_dofs.n_elements(); j++) {
         int idx = locally_relevant_dofs.nth_index_in_set(j);
         if( idx >= below && idx < below + Block_Sizes[i]){
           local.add_index(idx - below);
@@ -1447,7 +1444,7 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
   local_supported_dof.reserve(ndofs);
   int min = ndofs;
   int max = -1;
-  for( int i =0; i < ndofs; i++) {
+  for( int i =0; i < (int)ndofs; i++) {
     std::pair<double, double> support = st->dof_support(i);
     if ((support.first >= minimum_local_z && support.first <= maximum_local_z) || (support.second >= minimum_local_z && support.second <= maximum_local_z) ) {
      if (i > max) {
@@ -1474,7 +1471,7 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
   for (; cell!=endc; ++cell)
   {
     unsigned int subdomain_id = cell->subdomain_id();
-    if( subdomain_id == rank && rank != GlobalParams.NumberProcesses -1) {
+    if( subdomain_id == rank && rank != (unsigned int)GlobalParams.NumberProcesses -1) {
       fe_values.reinit (cell);
       quadrature_points = fe_values.get_quadrature_points();
 
@@ -1502,6 +1499,7 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
 Tensor<1,3,std::complex<double>> Waveguide::solution_evaluation(Point<3,double> position) const {
   Tensor<1,3,std::complex<double>> ret;
   Vector<double> result(6);
+  deallog << "Solution evaluation at" << position[0] << "," << position[1] << "," << position[2]<< " as rank " << rank << std::endl;
   VectorTools::point_value(dof_handler, solution, position, result);
   ret[0] = std::complex<double>(result(0), result(3));
   ret[1] = std::complex<double>(result(1), result(4));

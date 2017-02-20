@@ -140,7 +140,7 @@ void PreconditionerSweeping::Hinv(const dealii::Vector<double> & src, dealii::Ve
 		inputb[i ] = src(i);
 	}
 
-	dealii::TrilinosWrappers::Vector  outputb(own + others);
+	// dealii::TrilinosWrappers::Vector  outputb(own + others);
 
 	solver->solve(  inputb );
 

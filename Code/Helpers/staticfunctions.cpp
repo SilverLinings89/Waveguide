@@ -49,8 +49,6 @@ static void PrepareStreams()  {
   std::stringstream out;
   out << "Solutions/run";
 
-  // TODO check if this directory is really available for all processes and throw an error otherwise.
-
   out << i;
   solutionpath = out.str();
   mkdir(solutionpath.c_str(), ACCESSPERMS);
@@ -68,7 +66,6 @@ static void PrepareStreams()  {
   deallog.attach(log_stream);
 
 }
-
 
 static Parameters GetParameters() {
 	ParameterHandler prm;

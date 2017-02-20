@@ -70,7 +70,16 @@ int main (int argc, char *argv[])
 	mpi_dual = MPI_COMM_WORLD;
 
   int primal_rank = GlobalParams.MPI_Rank;
-  int dual_rank = GlobalParams.NumberProcesses - 1 - GlobalParams.MPI_Rank;
+  int dual_rank = 0;
+  // GlobalParams.NumberProcesses - 1 - GlobalParams.MPI_Rank;
+
+  bool PML_Layer = primal_rank > GlobalParams.NumberProcesses - 1 - GlobalParams.M_BC_Zplus;
+
+  if(PML_Layer) {
+    dual_rank = primal_rank;
+  } else {
+    dual_rank = GlobalParams.NumberProcesses - 1 - primal_rank - GlobalParams.M_BC_Zplus;
+  }
 
 	SpaceTransformation * st;
 
