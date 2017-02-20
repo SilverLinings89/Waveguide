@@ -38,7 +38,17 @@ double SpaceTransformation::Sector_Length() const {
 }
 
 int SpaceTransformation::Z_to_Layer(double in_z) const {
-  return floor((in_z + (GlobalParams.M_R_ZLength/2.0))/GlobalParams.LayerThickness);
+  double temp = (in_z + (GlobalParams.M_R_ZLength/2.0))/GlobalParams.LayerThickness;
+  int flr = floor(temp);
+  if (flr == 0) {
+    return 0;
+  } else {
+    if (temp - flr < 0.000001) {
+      return flr-1;
+    } else {
+      return flr;
+    }
+  }
 }
 
 bool SpaceTransformation::is_identity(Point<3, double> coord) const {

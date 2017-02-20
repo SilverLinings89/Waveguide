@@ -37,8 +37,8 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
     MPI_Barrier(MPI_COMM_WORLD);
 
     double quality = 0;
-    double q_in = std::abs(primal_st->evaluate_for_z(- GlobalParams.M_R_ZLength/2.0, primal_waveguide));
-    double q_out = std::abs(primal_st->evaluate_for_z(GlobalParams.M_R_ZLength/2.0, primal_waveguide));
+    double q_in  = std::abs(primal_st->evaluate_for_z(- GlobalParams.M_R_ZLength/2.0, primal_waveguide));
+    double q_out = std::abs(primal_st->evaluate_for_z(  GlobalParams.M_R_ZLength/2.0, primal_waveguide));
     quality = q_out / q_in;
 
     deallog.push("AO::compute_big_step");
