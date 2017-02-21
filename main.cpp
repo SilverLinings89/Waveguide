@@ -70,9 +70,9 @@ int main (int argc, char *argv[])
 	mpi_dual = MPI_COMM_WORLD;
 
   int primal_rank = GlobalParams.MPI_Rank;
-  int dual_rank = 0;
+  int dual_rank = primal_rank;
   // GlobalParams.NumberProcesses - 1 - GlobalParams.MPI_Rank;
-
+  /**
   bool PML_Layer = primal_rank > GlobalParams.NumberProcesses - 1 - GlobalParams.M_BC_Zplus;
 
   if(PML_Layer) {
@@ -80,6 +80,8 @@ int main (int argc, char *argv[])
   } else {
     dual_rank = GlobalParams.NumberProcesses - 1 - primal_rank - GlobalParams.M_BC_Zplus;
   }
+
+**/
 
 	SpaceTransformation * st;
 
@@ -117,9 +119,6 @@ int main (int argc, char *argv[])
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint ) {
 	  // adjoint based
 
-	  if(dual_rank < 0) {
-	    dual_rank += GlobalParams.NumberProcesses;
-	  }
 	  MPI_Comm_split(MPI_COMM_WORLD, 1, primal_rank, &mpi_primal);
 	  // MPI_Comm_split(MPI_COMM_WORLD, 0, primal_rank, &mpi_primal);
 	  MPI_Comm_split(MPI_COMM_WORLD, 1, dual_rank, &mpi_dual);
@@ -145,7 +144,8 @@ int main (int argc, char *argv[])
 	Waveguide * dual_waveguide;
 
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
-	  dual_waveguide = new Waveguide(mpi_dual, mg, dst, "dual");
+	  // TODO Wieder auf dual setzen.
+	  dual_waveguide = new Waveguide(mpi_primal, mg, st, "dual");
 	}
 
   deallog << "Done. Loading Schema..." <<std::endl;

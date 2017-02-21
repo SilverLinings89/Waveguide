@@ -345,32 +345,6 @@ void Waveguide::setup_system ()
     i_prec_odd_writable[i] = orw;
   }
 
-  /**
-  deallog.push("IndexSets:");
-  for(unsigned int j =0 ; j < Layers; j++) {
-      deallog << "Odd Preconditioner owned rows for block "<<j<< " : ";
-      i_prec_odd_owned_row[j].print(std::cout);
-      deallog << std::endl;
-      deallog << "Odd Preconditioner owned cols for block "<<j<< " : ";
-      i_prec_odd_owned_col[j].print(std::cout);
-      deallog << std::endl;
-      deallog << "Odd Preconditioner writable for block "<<j<< " : ";
-      i_prec_odd_writable[j].print(std::cout);
-      deallog << std::endl;
-      deallog << "Even Preconditioner owned rows for block "<<j<< " : ";
-      i_prec_even_owned_row[j].print(std::cout);
-      deallog << std::endl;
-      deallog << "Even Preconditioner owned cols for block "<<j<< " : ";
-      i_prec_even_owned_col[j].print(std::cout);
-      deallog << std::endl;
-      deallog << "Even Preconditioner writable for block "<<j<< " : ";
-      i_prec_even_writable[j].print(std::cout);
-      deallog << std::endl;
-    }
-  deallog.pop();
-
-  **/
-
   int even_blocks = GlobalParams.NumberProcesses /2;
   int odd_blocks = GlobalParams.NumberProcesses / 2;
 
@@ -390,7 +364,7 @@ void Waveguide::setup_system ()
   i_prec_odd_owned_col.push_back(temp1[0]);
   i_prec_odd_writable.push_back(temp2[0]);
 
-  for(int i = 2; i < Layers; i+=2) {
+  for(unsigned int i = 2; i < (int)Layers; i+=2) {
     i_prec_odd_owned_row.push_back(combine_indexes(temp0[i-1], temp0[i]));
     i_prec_odd_owned_col.push_back(combine_indexes(temp1[i-1], temp1[i]));
     i_prec_odd_writable.push_back(combine_indexes(temp2[i-1], temp2[i]));
@@ -410,7 +384,7 @@ void Waveguide::setup_system ()
   i_prec_even_owned_col.clear();
   i_prec_even_writable.clear();
 
-  for(int i = 1; i < Layers; i+=2) {
+  for(int i = 1; i < (int)Layers; i+=2) {
     i_prec_even_owned_row.push_back(combine_indexes(temp0[i-1], temp0[i]));
     i_prec_even_owned_col.push_back(combine_indexes(temp1[i-1], temp1[i]));
     i_prec_even_writable.push_back(combine_indexes(temp2[i-1], temp2[i]));
@@ -459,8 +433,6 @@ void Waveguide::setup_system ()
 
 	char * text_local_set = const_cast<char*> (test);
 
-	// std::cout << "Process " << rank << " has " << text_local_set <<std::endl << " wich has length " << strlen(text_local_set) << std::endl;
-
 	unsigned int text_local_length = strlen( text_local_set) ;
 
 	const int mpi_size = Layers;
@@ -497,8 +469,6 @@ void Waveguide::setup_system ()
 		locally_relevant_dofs_all_processors[i].read(ss);
 	}
 
-	// std::cout<< "Reading worked in process number " << rank << std::endl;
-
 	UpperDofs = locally_owned_dofs;
 
 	LowerDofs = locally_owned_dofs;
@@ -511,8 +481,6 @@ void Waveguide::setup_system ()
 	if(rank != Layers -1 ) {
 		UpperDofs.add_indices(locally_relevant_dofs_all_processors[rank+1], 0);
 	}
-
-
 
 	deallog << "Done computing Index Sets. Calling for reinit now." <<std::endl;
 
@@ -615,9 +583,7 @@ void Waveguide::reinit_systemmatrix() {
   sp.collect_sizes();
 
   deallog << "Making BSP ..." <<std::endl;
-  DoFTools::make_sparsity_pattern (dof_handler, sp,
-                                       cm, false,
-                       rank);
+  DoFTools::make_sparsity_pattern (dof_handler, sp, cm, false, rank);
   sp.compress();
 
   deallog << "Initializing system_matrix ..." <<std::endl;
@@ -1227,26 +1193,32 @@ void Waveguide::solve () {
                                    std_cxx11::_2,
                                    std_cxx11::_3));
 
+  	/**
   	bool test = false;
-		if(rank == 0 && Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) != 0) {
+
+  	if(rank == 0 && Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) != 0) {
 		  deallog.depth_console(0);
 		  test = true;
 		}
-		MPI_Barrier(mpi_comm);
+    **/
+  	MPI_Barrier(mpi_comm);
 
 		deallog << "Preconditioner Ready. Solving..." <<std::endl;
 
 		try {
+		  std::cout << "Rank " << rank << " ready to solve!" << std::endl;
 		  solver.solve(system_matrix,solution, system_rhs, sweep);
 
 		} catch(const dealii::SolverControl::NoConvergence & e) {
 		  deallog << "NO CONVERGENCE!" <<std::endl;
 		}
 
+		/**
 		if(test) {
       deallog.depth_console(10);
     }
 
+    **/
 	  deallog << "Done." << std::endl;
 
 		deallog << "Norm of the solution: " << solution.l2_norm() << std::endl;
@@ -1512,7 +1484,6 @@ void Waveguide::reset_changes ()
 	reinit_all();
 }
 
-
 void Waveguide::rerun ()
 {
 	timer.enter_subsection ("Setup Mesh");
@@ -1551,7 +1522,6 @@ void Waveguide::rerun ()
 	run_number++;
 
 }
-
 
 SolverControl::State Waveguide::residual_tracker(unsigned int Iteration, double residual, dealii::TrilinosWrappers::MPI::BlockVector) {
     

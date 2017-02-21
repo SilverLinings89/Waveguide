@@ -91,7 +91,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 	TrilinosWrappers::SparseMatrix * matrix;
 	dealii::SparseMatrix<double> * prec_matrix_upper;
 
-	// dealii::SparseMatrix<double> * prec_matrix_lower;
+	dealii::SparseMatrix<double> * prec_matrix_lower;
 
 	void Prepare(TrilinosWrappers::MPI::BlockVector &src);
 
@@ -108,6 +108,8 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 	int rank;
 	int bandwidth;
 	MPI_Comm mpi_comm;
+
+
 
   };
 
