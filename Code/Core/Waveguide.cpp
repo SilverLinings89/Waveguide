@@ -1240,9 +1240,7 @@ void Waveguide::solve () {
 		}
 
 		try {
-		  std::cout << "Rank " << rank << " ready to solve!" << std::endl;
 		  solver.solve(system_matrix,solution, system_rhs, sweep);
-
 		} catch(const dealii::SolverControl::NoConvergence & e) {
 		  deallog << "NO CONVERGENCE!" <<std::endl;
 		}
