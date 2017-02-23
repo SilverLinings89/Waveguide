@@ -65,7 +65,7 @@ void AdjointOptimization::run() {
       deallog << "Performing a big step." << std::endl;
       std::vector<double> step = oa->get_big_step_configuration();
       quality = compute_big_step(step);
-      oa->pass_result_big_step(primal_st->evaluate_for_z(GlobalParams.M_R_ZLength/2.0 - 0.0001, primal_waveguide));
+      oa->pass_result_big_step(primal_st->evaluate_for_z(GlobalParams.M_R_ZLength/2.0 -0.0001 , primal_waveguide));
     }
 
     counter++;
