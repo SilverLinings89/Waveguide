@@ -371,6 +371,8 @@ class Waveguide
 
 		Vector<double>                  preconditioner_rhs;
 
+		parallel::distributed::Vector<double> solution_for_computations;
+
 		std::vector<IndexSet>             locally_relevant_dofs_all_processors;
     IndexSet                    UpperDofs, LowerDofs;
 
