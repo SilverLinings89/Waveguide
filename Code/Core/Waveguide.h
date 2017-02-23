@@ -99,7 +99,7 @@ class Waveguide
 
 		/**
 		 * This method as well as the rerun() method, are used by the optimization-algorithm to use and reuse the Waveguide-object. Since the system-matrix consumes a lot of memory it makes sense to reuse it, rather then creating a new one for every optimization step.
-		 * All properties of the object have to be created properly for this function to work.
+		 * All properties of position[2]the object have to be created properly for this function to work.
 		 */
 		void 		run ();
 
@@ -310,6 +310,12 @@ class Waveguide
 		std::complex<double> gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc);
 
 		Tensor<1,3,std::complex<double>> solution_evaluation(Point<3,double> position) const;
+
+		void solution_evaluation(Point<3,double> position, double * solution) const;
+
+		Tensor<1,3,std::complex<double>> adjoint_solution_evaluation(Point<3,double> position) const;
+
+		void adjoint_solution_evaluation(Point<3,double> position, double * solution) const;
 
 		IndexSet combine_indexes(IndexSet lower, IndexSet upper) const;
 
