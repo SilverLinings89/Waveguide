@@ -1441,12 +1441,12 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
 
   std::vector<std::complex<double>> ret;
   const unsigned int ndofs = st->NDofs();
-  ret.reserve(ndofs);
+  ret.resize(ndofs);
   for(unsigned int i = 0; i < ndofs; i++) {
     ret[i] = 0;
   }
   std::vector<bool> local_supported_dof;
-  local_supported_dof.reserve(ndofs);
+  local_supported_dof.resize(ndofs);
   int min = ndofs;
   int max = -1;
   for( int i =0; i < (int)ndofs; i++) {

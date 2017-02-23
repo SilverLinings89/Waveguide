@@ -7,17 +7,6 @@ const int STEPS_PER_DOFS = 5;
 
 Optimization1D::Optimization1D( ) {
   steps_widths = new double[STEPS_PER_DOFS];
-  steps_widths[0] = 0.00001;
-  steps_widths[1] = 0.0001;
-  steps_widths[2] = 0.001;
-  steps_widths[3] = 0.01;
-  steps_widths[4] = 0.1;
-}
-
-
-
-Optimization1D::Optimization1D( ) {
-  steps_widths = new double[STEPS_PER_DOFS];
   double start = 0.1;
   for(int i = 0; i < STEPS_PER_DOFS; i++){
     steps_widths[i] = start * pow(10, -i);
