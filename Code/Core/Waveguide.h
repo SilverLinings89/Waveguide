@@ -66,12 +66,21 @@
 #include "../MeshGenerators/MeshGenerator.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
 
+#include <deal.II/base/convergence_table.h>
+#include <deal.II/base/table_handler.h>
+
 using namespace dealii;
 
 
 static Parameters GlobalParams;
+static dealii::ConvergenceTable Convergence_Table;
+static dealii::TableHandler Optimization_Steps;
 
 static const CylindricalManifold<3, 3> round_description (2);
+
+const int STEPS_PER_DOFS = 5;
+
+static double * steps_widths;
 
 /**
  * \class Waveguide
@@ -393,6 +402,8 @@ class Waveguide
     std::string path_prefix;
 
     IndexSet fixed_dofs;
+
+    long int solver_start_milis =0;
 
     // HIER BEGINNT DIE ALTE VERSION ...
 

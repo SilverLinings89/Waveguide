@@ -30,24 +30,25 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
 		primal_st->set_dof(i, current_config[i] + step[i]);
 		dual_st->set_dof(i, current_config[i] + step[i]);
 	}
-    MPI_Barrier(MPI_COMM_WORLD);
-    primal_waveguide->run();
-    MPI_Barrier(MPI_COMM_WORLD);
-    dual_waveguide->run();
-    MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD);
+  primal_waveguide->run();
+  MPI_Barrier(MPI_COMM_WORLD);
+  dual_waveguide->run();
+  MPI_Barrier(MPI_COMM_WORLD);
 
-    double quality = 0;
-    double q_in  = std::abs(primal_st->evaluate_for_z(- GlobalParams.M_R_ZLength/2.0, primal_waveguide));
-    double q_out = std::abs(primal_st->evaluate_for_z(  GlobalParams.M_R_ZLength/2.0 -0.0001 , primal_waveguide));
-    quality = q_out / q_in;
+  double quality = 0;
+  double q_in  = std::abs(primal_st->evaluate_for_z(- GlobalParams.M_R_ZLength/2.0, primal_waveguide));
+  double q_out = std::abs(primal_st->evaluate_for_z(  GlobalParams.M_R_ZLength/2.0 -0.0001 , primal_waveguide));
+  quality = q_out / q_in;
 
-    deallog.push("AO::compute_big_step");
-    deallog << "Computed quality " << quality << std::endl;
-    deallog.pop();
-    return quality;
+  deallog.push("AO::compute_big_step");
+  deallog << "Computed quality " << quality << std::endl;
+  deallog.pop();
+  return quality;
 }
 
 void AdjointOptimization::run() {
+  Convergence_Table.set_auto_fill_mode(true);
   bool run = true;
   int counter = 0;
   double quality =0;
@@ -65,8 +66,8 @@ void AdjointOptimization::run() {
       deallog << "Performing a big step." << std::endl;
       std::vector<double> step = oa->get_big_step_configuration();
       deallog << "Got the following big step configuration: ";
-      for(int i = 0; i < step.size(); i++) {
-        deallog << step[i];
+      for(unsigned int i = 0; i < step.size(); i++) {
+        deallog << step[i] << " , ";
       }
       deallog << std::endl;
       quality = compute_big_step(step);
@@ -79,6 +80,24 @@ void AdjointOptimization::run() {
       deallog << "The optimization is shutting down after " << counter << " steps. Last quality: " << 100*quality <<"%." << std::endl;
       run = false;
     }
+
+    if((GlobalParams.O_C_D_ConvergenceFirst || GlobalParams.O_C_D_ConvergenceAll)&& (GlobalParams.MPI_Rank==0)) {
+      std::ofstream result_file;
+      result_file.open((solutionpath + "/convergence_rates.dat").c_str(),std::ios_base::openmode::_S_trunc);
+
+      Convergence_Table.write_text(result_file, dealii::TableHandler::TextOutputFormat::table_with_headers);
+      result_file.close();
+      result_file.open((solutionpath + "/convergence_rates.tex").c_str(),std::ios_base::openmode::_S_trunc);
+      Convergence_Table.write_tex(result_file);
+      result_file.close();
+
+      result_file.open((solutionpath + "/steps.dat").c_str(),std::ios_base::openmode::_S_trunc);
+      oa->WriteStepsOut(result_file);
+      result_file.close();
+    }
+
+
+
   }
 
 }

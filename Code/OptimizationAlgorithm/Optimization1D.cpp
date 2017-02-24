@@ -3,7 +3,7 @@
 
 #include "Optimization1D.h"
 
-const int STEPS_PER_DOFS = 5;
+
 
 Optimization1D::Optimization1D( ) {
   steps_widths = new double[STEPS_PER_DOFS];
@@ -60,7 +60,7 @@ std::vector<double> Optimization1D::get_big_step_configuration(){
   } else {
     std::complex<double> residual = residuals[big_step_count-1];
     unsigned int ndofs = states[small_step_count-1].size();
-    ret.reserve(ndofs);
+    ret.resize(ndofs);
     for ( unsigned int i = 0; i < ndofs; i++ ) {
       double max = 0;
       int index =-1;

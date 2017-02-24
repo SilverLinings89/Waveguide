@@ -68,6 +68,8 @@ public:
    */
   virtual std::vector<double> get_big_step_configuration() =0;
 
+  void WriteStepsOut(std::ofstream &);
+
 };
 
 #endif

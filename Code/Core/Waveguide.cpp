@@ -27,9 +27,8 @@
 using namespace dealii;
 
 inline bool PML_blocked_self() {
-  return GlobalParams.MPI_Rank >= GlobalParams.NumberProcesses - GlobalParams.M_BC_Zplus;
+  return (int)GlobalParams.MPI_Rank >= GlobalParams.NumberProcesses - GlobalParams.M_BC_Zplus;
 }
-
 
 Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st, std::string path_part):
     fe(FE_Nedelec<3> (0), 2),
@@ -387,7 +386,7 @@ void Waveguide::setup_system ()
   i_prec_odd_owned_col.push_back(temp1[0]);
   i_prec_odd_writable.push_back(temp2[0]);
 
-  for(unsigned int i = 2; i < (int)Layers; i+=2) {
+  for( int i = 2; i < (int)Layers; i+=2) {
     i_prec_odd_owned_row.push_back(combine_indexes(temp0[i-1], temp0[i]));
     i_prec_odd_owned_col.push_back(combine_indexes(temp1[i-1], temp1[i]));
     i_prec_odd_writable.push_back(combine_indexes(temp2[i-1], temp2[i]));
@@ -428,7 +427,6 @@ void Waveguide::setup_system ()
 	cm_prec_odd.clear();
 	cm_prec_even.reinit(locally_relevant_dofs);
 	cm_prec_odd.reinit(locally_relevant_dofs);
-
 
 	DoFTools::make_hanging_node_constraints(dof_handler, cm);
 	DoFTools::make_hanging_node_constraints(dof_handler, cm_prec_even);
@@ -567,8 +565,14 @@ void Waveguide::reinit_all () {
   deallog<<"reinitializing right-hand side" <<std::endl;
 	reinit_rhs();
 
-	deallog<<"reinitializing cell weights" <<std::endl;
-  reinit_cell_weights();
+	if(GlobalParams.O_O_V_T_TransformationWeightsAll) {
+	  deallog<<"reinitializing cell weights" <<std::endl;
+	  reinit_cell_weights();
+	}
+	if(GlobalParams.O_O_V_T_TransformationWeightsFirst && run_number == 0) {
+	    deallog<<"reinitializing cell weights" <<std::endl;
+	    reinit_cell_weights();
+	  }
 
   deallog<<"reinitializing solutiuon" <<std::endl;
 	reinit_solution();
@@ -1168,12 +1172,17 @@ SolverControl::State  Waveguide::check_iteration_state (const unsigned int itera
 void Waveguide::solve () {
 
 	solver_control.log_frequency(1);
-	result_file.open((solutionpath + "/" + path_prefix + "/solution_of_run_" + static_cast<std::ostringstream*>( &(std::ostringstream() << run_number) )->str() + ".dat").c_str());
+
+	if(run_number != 0) {
+	  result_file.close();
+	}
+
+	result_file.open((solutionpath + "/" + path_prefix + "/solution_of_run_" + std::to_string(run_number)  + ".dat").c_str());
 
 	if(GlobalParams.So_Solver == SolverOptions::GMRES) {
 
 	  if(run_number > 0) {
-      for(int i = 0; i < locally_owned_dofs.n_elements(); i++) {
+      for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {
         int index = locally_owned_dofs.nth_index_in_set(i);
         solution[index] = solution_for_computations[index];
       }
@@ -1220,14 +1229,6 @@ void Waveguide::solve () {
                                    std_cxx11::_2,
                                    std_cxx11::_3));
 
-  	/**
-  	bool test = false;
-
-  	if(rank == 0 && Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) != 0) {
-		  deallog.depth_console(0);
-		  test = true;
-		}
-    **/
   	MPI_Barrier(mpi_comm);
 
 		deallog << "Preconditioner Ready. Solving..." <<std::endl;
@@ -1239,13 +1240,25 @@ void Waveguide::solve () {
 		  changed_console = true;
 		}
 
+		struct timeval tp;
+		gettimeofday(&tp, NULL);
+		solver_start_milis = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+
 		try {
 		  solver.solve(system_matrix,solution, system_rhs, sweep);
 		} catch(const dealii::SolverControl::NoConvergence & e) {
 		  deallog << "NO CONVERGENCE!" <<std::endl;
 		}
 
+		if((GlobalParams.O_C_D_ConvergenceFirst && run_number==0) || GlobalParams.O_C_D_ConvergenceAll) {
+      Convergence_Table.add_column_to_supercolumn(path_prefix + std::to_string(run_number) + "Iteration", "Run " + std::to_string(run_number));
+      Convergence_Table.add_column_to_supercolumn(path_prefix + std::to_string(run_number) + "Residual", "Run " + std::to_string(run_number));
+      Convergence_Table.add_column_to_supercolumn(path_prefix + std::to_string(run_number) + "Time", "Run " + std::to_string(run_number));
 
+      // Convergence_Table.omit_column_from_convergence_rate_evaluation(path_prefix + std::to_string(run_number) + "Iteration");
+      // Convergence_Table.omit_column_from_convergence_rate_evaluation(path_prefix + std::to_string(run_number) + "Time");
+      Convergence_Table.evaluate_convergence_rates(path_prefix + std::to_string(run_number) + "Residual",path_prefix + std::to_string(run_number) + "Iteration",ConvergenceTable::RateMode::reduction_rate);
+		}
 		if(changed_console) {
 		  deallog.depth_console(0);
 		}
@@ -1450,10 +1463,10 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
   for( int i =0; i < (int)ndofs; i++) {
     std::pair<double, double> support = st->dof_support(i);
     if ((support.first >= minimum_local_z && support.first <= maximum_local_z) || (support.second >= minimum_local_z && support.second <= maximum_local_z) ) {
-     if (i > max) {
+     if (i > max && st->IsDofFree(i)) {
        max = i;
      }
-     if(i < min) {
+     if(i < min && st->IsDofFree(i)) {
        min = i;
      }
     }
@@ -1471,9 +1484,9 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
   int total = triangulation.n_active_cells() * quadrature_formula.size();
   int counter =0;
   double * returned_vector = new double[6];
-  for(int temp_counter = 0; temp_counter < 2; temp_counter++ ){
+  for(unsigned int temp_counter = 0; temp_counter < 2; temp_counter++ ){
     if( rank%2 == temp_counter%2  ) {
-      if( rank != GlobalParams.NumberProcesses -1){
+      if( (int)rank != GlobalParams.NumberProcesses -1){
         deallog.push("local cell phase");
         deallog << "This process is now computing its own contributions to the shape gradient together with "<< other_proc<<"."  << std::endl;
 
@@ -1504,7 +1517,7 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
               other_solution[2].imag(returned_vector[5]);
 
               const double JxW = fe_values.JxW(q_index);
-              for (unsigned int j = 0; j < ndofs; j++) {
+              for ( int j = min; j <= max; j++) {
                 transformation = st->get_Tensor_for_step(quadrature_points[q_index], j, stepwidth);
                 if(st->point_in_dof_support(quadrature_points[q_index], j)) {
                   ret[j] += own_solution * transformation * other_solution * JxW;
@@ -1542,7 +1555,7 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
               normal = true;
             }
           }
-          deallog << "Received request for (" << position_array[0] << ", "<< position_array[1] << ", "<<position_array[2]<<")"<<std::endl;
+          // deallog << "Received request for (" << position_array[0] << ", "<< position_array[1] << ", "<<position_array[2]<<")"<<std::endl;
           if(normal) {
             double * result = new double[6];
             Point<3, double> position;
@@ -1552,7 +1565,7 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
             other->adjoint_solution_evaluation(position, result);
             MPI_Send(&result[0], 6, MPI_DOUBLE, rank-1, 0, mpi_comm);
           }
-          deallog << "Sent a solution."<<std::endl;
+          // deallog << "Sent a solution."<<std::endl;
         }
         deallog << "Done." << std::endl;
       } else {
@@ -1663,13 +1676,19 @@ void Waveguide::rerun ()
 }
 
 SolverControl::State Waveguide::residual_tracker(unsigned int Iteration, double residual, dealii::TrilinosWrappers::MPI::BlockVector) {
+  if((GlobalParams.O_C_D_ConvergenceFirst && run_number==0) || GlobalParams.O_C_D_ConvergenceAll) {
     
     struct timeval tp;
     gettimeofday(&tp, NULL);
-    long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+    long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000 - solver_start_milis;
         
-    result_file << "" << Iteration << "\t" << residual << "\t" << ms <<std::endl;
-    return SolverControl::success;
+    // result_file << "" << Iteration << "\t" << residual << "\t" << ms <<std::endl;
+
+    Convergence_Table.add_value(path_prefix + std::to_string(run_number) + "Iteration", Iteration);
+    Convergence_Table.add_value(path_prefix + std::to_string(run_number) + "Residual", residual);
+    Convergence_Table.add_value(path_prefix + std::to_string(run_number) + "Time", std::to_string(ms));
+  }
+  return SolverControl::success;
 }
 
 #endif

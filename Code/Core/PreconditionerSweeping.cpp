@@ -52,10 +52,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
 			const TrilinosWrappers::MPI::BlockVector &src)const
 {
 
-  int r = Utilities::MPI::this_mpi_process(mpi_comm);
-
-
-	dealii::Vector<double> input(own);
+  dealii::Vector<double> input(own);
 	for (unsigned int i = 0; i < sweepable; i++) {
 		input[i] = src[indices[i]];
 	}
@@ -168,7 +165,7 @@ void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> & src, de
 
 }
 
-void PreconditionerSweeping::init(SolverControl solver_control, TrilinosWrappers::SparseMatrix * in_prec) {
+void PreconditionerSweeping::init(SolverControl , TrilinosWrappers::SparseMatrix * in_prec) {
 
   solver = new SparseDirectUMFPACK();
   IndexSet local (matrix->m());

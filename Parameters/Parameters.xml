@@ -91,7 +91,7 @@
                     <pattern_description>[Bool]</pattern_description>
                 </ConvergenceLast>
                 <ConvergenceAll>
-                    <value>false</value>
+                    <value>true</value>
                     <default_value>false</default_value>
                     <documentation>This causes the code to generate a datafile with the data of the system matrix solution process of all steps.</documentation>
                     <pattern>11</pattern>

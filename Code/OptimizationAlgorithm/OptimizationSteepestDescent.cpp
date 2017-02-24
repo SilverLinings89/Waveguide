@@ -22,17 +22,17 @@ void OptimizationSteepestDescent::pass_result_big_step(double) {
 }
 
 
-bool OptimizationSteepestDescent::perform_small_step_next( int small_steps_before ) {
+bool OptimizationSteepestDescent::perform_small_step_next( int  ) {
   // TODO: implement this function as core functionality of CG-based stepping scheme.
   return false;
 }
 
-double OptimizationSteepestDescent::get_small_step_step_width( int small_steps_before ) {
+double OptimizationSteepestDescent::get_small_step_step_width( int  ) {
   // TODO: implement this function as core functionality of CG-based stepping scheme.
   return 0.0;
 }
 
-bool OptimizationSteepestDescent::perform_big_step_next( int small_steps_before )  {
+bool OptimizationSteepestDescent::perform_big_step_next( int  )  {
   // TODO: implement this function as core functionality of CG-based stepping scheme.
   return false;
 }

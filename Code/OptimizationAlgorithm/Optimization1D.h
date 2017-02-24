@@ -24,7 +24,7 @@ public:
 
   std::vector<double> get_big_step_configuration();
 
-  double * steps_widths;
+  //double * steps_widths;
 
 };
 

@@ -28,7 +28,6 @@ DualProblemTransformationWrapper::DualProblemTransformationWrapper (SpaceTransfo
   deltaY(GlobalParams.M_W_Delta)
 {
   st = in_st;
-
 }
 
 Point<3> DualProblemTransformationWrapper::math_to_phys(Point<3> coord) const {
