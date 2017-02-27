@@ -26,6 +26,8 @@
 
 using namespace dealii;
 
+int steps = 0;
+
 inline bool PML_blocked_self() {
   return (int)GlobalParams.MPI_Rank >= GlobalParams.NumberProcesses - GlobalParams.M_BC_Zplus;
 }
@@ -1173,6 +1175,8 @@ void Waveguide::solve () {
 
 	solver_control.log_frequency(1);
 
+	Convergence_Table.set_auto_fill_mode(true);
+
 	if(run_number != 0) {
 	  result_file.close();
 	}
@@ -1248,6 +1252,19 @@ void Waveguide::solve () {
 		  solver.solve(system_matrix,solution, system_rhs, sweep);
 		} catch(const dealii::SolverControl::NoConvergence & e) {
 		  deallog << "NO CONVERGENCE!" <<std::endl;
+		}
+
+		while( steps < 40) {
+		  struct timeval tp;
+      gettimeofday(&tp, NULL);
+      long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000 - solver_start_milis;
+
+      // result_file << "" << Iteration << "\t" << residual << "\t" << ms <<std::endl;
+
+      Convergence_Table.add_value(path_prefix + std::to_string(run_number) + "Iteration", steps +1);
+      Convergence_Table.add_value(path_prefix + std::to_string(run_number) + "Residual", 0.0);
+      Convergence_Table.add_value(path_prefix + std::to_string(run_number) + "Time", std::to_string(ms));
+		  steps++;
 		}
 
 		if((GlobalParams.O_C_D_ConvergenceFirst && run_number==0) || GlobalParams.O_C_D_ConvergenceAll) {
@@ -1688,6 +1705,7 @@ SolverControl::State Waveguide::residual_tracker(unsigned int Iteration, double 
     Convergence_Table.add_value(path_prefix + std::to_string(run_number) + "Residual", residual);
     Convergence_Table.add_value(path_prefix + std::to_string(run_number) + "Time", std::to_string(ms));
   }
+  steps = Iteration;
   return SolverControl::success;
 }
 
