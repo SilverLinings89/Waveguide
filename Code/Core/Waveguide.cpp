@@ -6,7 +6,7 @@
 #include "../Core/Waveguide.h"
 #include "SolutionWeight.h"
 #include "../Helpers/staticfunctions.cpp"
-#include "../Helpers/ExactSolution.h"
+#include "../Helpers/ExactSolution.cpp"
 #include "../Helpers/QuadratureFormulaCircle.cpp"
 #include "PreconditionerSweeping.cpp"
 #include <deal.II/base/timer.h>
@@ -864,6 +864,13 @@ void Waveguide::assemble_system ()
 void Waveguide::MakeBoundaryConditions (){
 	DoFHandler<3>::active_cell_iterator cell, endc;
 
+	DoFTools::make_zero_boundary_constraints(dof_handler,cm, ComponentMask(imag) );
+	DoFTools::make_zero_boundary_constraints(dof_handler,cm, ComponentMask(real) );
+
+	ExactSolution<6> es;
+
+	VectorTools::project_boundary_values_curl_conforming_l2( dof_handler, 0, es, 0, cm);
+
 	fixed_dofs.set_size(dof_handler.n_dofs());
 
 	cell = dof_handler.begin_active(),
@@ -885,11 +892,13 @@ void Waveguide::MakeBoundaryConditions (){
 							cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
 							fixed_dofs.add_index(local_dof_indices[0]);
 						}
+						/**
 						if(locally_owned_dofs.is_element(local_dof_indices[1])) {
 							cm.add_line(local_dof_indices[1]);
 							cm.set_inhomogeneity(local_dof_indices[1], 0.0);
 							fixed_dofs.add_index(local_dof_indices[1]);
 						}
+						**/
 					}
 				}
 				if ( std::abs( center[1] - GlobalParams.M_R_YLength/2.0) < 0.0001 ){
@@ -901,11 +910,13 @@ void Waveguide::MakeBoundaryConditions (){
 							cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
 							fixed_dofs.add_index(local_dof_indices[0]);
 						}
+						/**
 						if(locally_owned_dofs.is_element(local_dof_indices[1])) {
 							cm.add_line(local_dof_indices[1]);
 							cm.set_inhomogeneity(local_dof_indices[1], 0.0);
 							fixed_dofs.add_index(local_dof_indices[1]);
 						}
+						**/
 					}
 				}
 				if( std::abs(center[2] + GlobalParams.M_R_ZLength/2.0 ) < 0.0001 ){
@@ -926,12 +937,13 @@ void Waveguide::MakeBoundaryConditions (){
 								cm.set_inhomogeneity(local_dof_indices[0], direction[0] * result );
 								fixed_dofs.add_index(local_dof_indices[0]);
 							}
+							/**
 							if(locally_owned_dofs.is_element(local_dof_indices[1])) {
 								cm.add_line(local_dof_indices[1]);
 								cm.set_inhomogeneity(local_dof_indices[1], 0.0);
 								fixed_dofs.add_index(local_dof_indices[1]);
 							}
-
+							**/
 						}
 					}
 				}
@@ -944,12 +956,13 @@ void Waveguide::MakeBoundaryConditions (){
 							cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
 							fixed_dofs.add_index(local_dof_indices[0]);
 						}
+						/**
 						if(locally_owned_dofs.is_element(local_dof_indices[1])) {
 							cm.add_line(local_dof_indices[1]);
 							cm.set_inhomogeneity(local_dof_indices[1], 0.0);
 							fixed_dofs.add_index(local_dof_indices[1]);
 						}
-
+						 **/
 					}
 				}
 			}
@@ -1175,7 +1188,7 @@ void Waveguide::solve () {
 
 	solver_control.log_frequency(1);
 
-	Convergence_Table.set_auto_fill_mode(true);
+	// Convergence_Table.set_auto_fill_mode(true);
 
 	if(run_number != 0) {
 	  result_file.close();

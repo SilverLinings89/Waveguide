@@ -71,16 +71,15 @@ void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3
       for(int j = 0; j<6; j++){
         if(cell2->face(j)->at_boundary()){
           Point<3> ctr =cell2->face(j)->center(true, false);
-          if(System_Coordinate_in_Waveguide(ctr)){
-            if(ctr(2) < 0) {
+          // if(System_Coordinate_in_Waveguide(ctr)){
 
-              cell2->face(j)->set_all_boundary_ids(11);
-              counter ++;
-            }
+          cell2->face(j)->set_all_boundary_ids(2);
 
-            else {
-              cell2->face(j)->set_all_boundary_ids(2);
-            }
+          if(std::abs(ctr(2) - GlobalParams.M_R_ZLength/2.0) < 0.00001) {
+            cell2->face(j)->set_all_boundary_ids(1);
+          }
+          if(std::abs(ctr(2) + GlobalParams.M_R_ZLength/2.0) < 0.00001) {
+            cell2->face(j)->set_all_boundary_ids(0);
           }
         }
       }
