@@ -864,8 +864,12 @@ void Waveguide::assemble_system ()
 void Waveguide::MakeBoundaryConditions (){
 	DoFHandler<3>::active_cell_iterator cell, endc;
 
-	DoFTools::make_zero_boundary_constraints(dof_handler,cm, ComponentMask(imag) );
-	DoFTools::make_zero_boundary_constraints(dof_handler,cm, ComponentMask(real) );
+	ComponentMask comp_mask_real = fe.component_mask(real);
+	ComponentMask comp_mask_imag = fe.component_mask(imag);
+
+
+	DoFTools::make_zero_boundary_constraints(dof_handler,cm, comp_mask_imag );
+	DoFTools::make_zero_boundary_constraints(dof_handler,cm, comp_mask_real );
 
 	ExactSolution es;
 

@@ -1,3 +1,7 @@
+
+#ifndef ExactSolutionFlag_CPP
+#define ExactSolutionFlag_CPP
+
 #include "ExactSolution.h"
 
 
@@ -17,3 +21,4 @@ ExactSolution::ExactSolution(): Function<3>(6) {
 
 }
 
+#endif
