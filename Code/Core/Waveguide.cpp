@@ -867,7 +867,7 @@ void Waveguide::MakeBoundaryConditions (){
 	DoFTools::make_zero_boundary_constraints(dof_handler,cm, ComponentMask(imag) );
 	DoFTools::make_zero_boundary_constraints(dof_handler,cm, ComponentMask(real) );
 
-	ExactSolution<6> es;
+	ExactSolution es;
 
 	VectorTools::project_boundary_values_curl_conforming_l2( dof_handler, 0, es, 0, cm);
 

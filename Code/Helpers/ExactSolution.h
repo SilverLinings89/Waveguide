@@ -17,8 +17,8 @@ using namespace dealii;
  * \author Pascal Kraft
  * \date 23.11.2015
  */
-template <int dim>
-class ExactSolution : public Function<dim, double>
+
+class ExactSolution : public Function<3, double>
 {
 	public:
 		ExactSolution ();
@@ -31,7 +31,7 @@ class ExactSolution : public Function<dim, double>
 		 * \param p This value contains the position for which we want to calculate the exact solution.
 		 * \param component This integer holds the index of the component we want to compute. Keep in mind that these are not coordinates in the physical sense. The components 0 to 2 are the real parts of the solution-vector and the components 3-5 are the imaginary parts.
 		 */
-		virtual double value (const Point<dim> &p, const unsigned int component ) const;
+		virtual double value (const Point<3> &p, const unsigned int component ) const;
 
 		/**
 		 * This function is the one that gets called from external contexts and calls the value-function to calculate the individual components. The real solution looks as follows:
@@ -39,7 +39,7 @@ class ExactSolution : public Function<dim, double>
 		 */
 
 
-		virtual void vector_value (const Point<dim> &p,	Vector<double> &value) const;
+		virtual void vector_value (const Point<3> &p,	Vector<double> &value) const;
 
 };
 
