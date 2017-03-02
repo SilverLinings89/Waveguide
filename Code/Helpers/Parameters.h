@@ -188,6 +188,9 @@ struct Parameters {
     double Maximum_Z;
     // unsigned int MPI_Size;
 
+    double Phys_V;
+    double Phys_SpotRadius;
+
 };
 
 #endif

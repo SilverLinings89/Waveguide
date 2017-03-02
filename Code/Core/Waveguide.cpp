@@ -39,7 +39,7 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
     rank(Utilities::MPI::this_mpi_process(in_mpi_comm)),
     real(0),
     imag(3),
-    solver_control (GlobalParams.So_TotalSteps, GlobalParams.So_Precision, (rank == 0), true),
+    solver_control (GlobalParams.So_TotalSteps, GlobalParams.So_Precision, false, true),
     dof_handler (triangulation),
     run_number(0),
     condition_file_counter(0),
@@ -119,7 +119,7 @@ void Waveguide::estimate_solution() {
 
 						//double phi = (ptemp[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) *2 * GlobalParams.PRM_C_PI / (GlobalParams.PRM_M_W_Lambda / GlobalParams.PRM_M_W_EpsilonIn);
 						double phi = (ptemp[2] + GlobalParams.M_R_ZLength/2.0 ) * 2* GlobalParams.C_Pi / (GlobalParams.M_W_Lambda / std::sqrt(GlobalParams.M_W_epsilonin));
-						double result_real = TEMode00(p,0) * std::cos(phi) ;
+						double result_real = -TEMode00(p,0) * std::cos(phi) ;
 						double result_imag = - TEMode00(p,0) * std::sin(phi) ;
 						if(st->PML_in_X(p) || st->PML_in_Y(p)) result_real = 0.0;
 						if(st->PML_in_X(p) || st->PML_in_Y(p)) result_imag = 0.0;
@@ -1723,7 +1723,16 @@ SolverControl::State Waveguide::residual_tracker(unsigned int Iteration, double 
     Convergence_Table.add_value(path_prefix + std::to_string(run_number) + "Time", std::to_string(ms));
   }
   steps = Iteration;
-  return SolverControl::success;
+  SolverControl::State ret = SolverControl::State::iterate;
+  if((int)Iteration > GlobalParams.So_TotalSteps){
+    // pout << std::endl;
+    return SolverControl::State::failure;
+  }
+  if(residual < GlobalParams.So_Precision){
+    // pout << std::endl;
+    return SolverControl::State::success;
+  }
+  return ret;
 }
 
 #endif
