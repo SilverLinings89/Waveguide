@@ -310,6 +310,7 @@ static Parameters GetParameters() {
 
 	deallog << "Spot Radius omega: " << ret.Phys_SpotRadius <<std::endl;
 
+	deallog.pop();
 	return ret;
 }
 
@@ -500,7 +501,9 @@ static double TEMode00 (Point<3, double> p ,const unsigned int component)
 	if(component == 0) {
 		// double d2 = (2* Distance2D(p)) / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) ;
 	  double d2 = Distance2D(p);
-		return exp(-d2*d2 / (GlobalParams.Phys_SpotRadius * GlobalParams.Phys_SpotRadius));
+		// return exp(-d2*d2 / (GlobalParams.Phys_SpotRadius * GlobalParams.Phys_SpotRadius));
+	  return exp(-d2*d2 / 2.25);
+	  //return 1.0;
 	}
 	return 0.0;
 }

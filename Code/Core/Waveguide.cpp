@@ -23,6 +23,7 @@
 #include <deal.II/lac/solver.h>
 #include <deal.II/numerics/data_out_dof_data.h>
 #include <deal.II/lac/block_matrix_array.h>
+#include <deal.II/lac/solver_qmrs.h>
 
 using namespace dealii;
 
@@ -39,7 +40,7 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
     rank(Utilities::MPI::this_mpi_process(in_mpi_comm)),
     real(0),
     imag(3),
-    solver_control (GlobalParams.So_TotalSteps, GlobalParams.So_Precision, false, true),
+    solver_control (GlobalParams.So_TotalSteps, GlobalParams.So_Precision, true, true),
     dof_handler (triangulation),
     run_number(0),
     condition_file_counter(0),
@@ -1190,7 +1191,9 @@ SolverControl::State  Waveguide::check_iteration_state (const unsigned int itera
 
 void Waveguide::solve () {
 
-	solver_control.log_frequency(1);
+  SolverControl lsc = SolverControl(100, 1.e-5, true, true);
+
+	lsc.log_frequency(1);
 
 	// Convergence_Table.set_auto_fill_mode(true);
 
@@ -1209,9 +1212,9 @@ void Waveguide::solve () {
       }
 	  }
 
-		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(solver_control , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData(GlobalParams.So_RestartSteps) );
-		
-		int above = 0;
+		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(lsc , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData(GlobalParams.So_RestartSteps,true, true, true) );
+
+	  int above = 0;
 		if ((int)rank != GlobalParams.NumberProcesses - 1) {
 			above = locally_relevant_dofs_all_processors[rank+1].n_elements();
 		}
@@ -1254,13 +1257,6 @@ void Waveguide::solve () {
 
 		deallog << "Preconditioner Ready. Solving..." <<std::endl;
 
-		bool changed_console = false;
-
-		if(rank == 0 && GlobalParams.MPI_Rank != 0) {
-		  deallog.depth_console(10);
-		  changed_console = true;
-		}
-
 		struct timeval tp;
 		gettimeofday(&tp, NULL);
 		solver_start_milis = tp.tv_sec * 1000 + tp.tv_usec / 1000;
@@ -1292,9 +1288,6 @@ void Waveguide::solve () {
       // Convergence_Table.omit_column_from_convergence_rate_evaluation(path_prefix + std::to_string(run_number) + "Iteration");
       // Convergence_Table.omit_column_from_convergence_rate_evaluation(path_prefix + std::to_string(run_number) + "Time");
       Convergence_Table.evaluate_convergence_rates(path_prefix + std::to_string(run_number) + "Residual",path_prefix + std::to_string(run_number) + "Iteration",ConvergenceTable::RateMode::reduction_rate);
-		}
-		if(changed_console) {
-		  deallog.depth_console(0);
 		}
 
 	  deallog << "Done." << std::endl;

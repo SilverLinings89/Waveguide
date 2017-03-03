@@ -70,7 +70,7 @@ void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3
     if(cell2->at_boundary()){
       for(int j = 0; j<6; j++){
         if(cell2->face(j)->at_boundary()){
-          Point<3> ctr =cell2->face(j)->center(true, false);
+          Point<3> ctr =cell2->face(j)->center(false, false);
           // if(System_Coordinate_in_Waveguide(ctr)){
 
           cell2->face(j)->set_all_boundary_ids(2);

@@ -8,8 +8,11 @@
 Optimization1D::Optimization1D( ) {
   steps_widths = new double[STEPS_PER_DOFS];
   double start = 0.1;
-  for(int i = 0; i < STEPS_PER_DOFS; i++){
+  for(int i = 0; i < STEPS_PER_DOFS/2; i++){
     steps_widths[i] = start * pow(10, -i);
+  }
+  for(int i = 0; i < STEPS_PER_DOFS/2; i++){
+      steps_widths[STEPS_PER_DOFS/2 + i] = -steps_widths[i];
   }
 }
 
@@ -59,6 +62,7 @@ std::vector<double> Optimization1D::get_big_step_configuration(){
     std::cout << "Warning in Optimization1D::get_big_step_configuration()" <<std::endl;
   } else {
     std::complex<double> residual = residuals[big_step_count-1];
+    double state_red = std::abs(residual);
     unsigned int ndofs = states[small_step_count-1].size();
     ret.resize(ndofs);
     for ( unsigned int i = 0; i < ndofs; i++ ) {
@@ -66,12 +70,17 @@ std::vector<double> Optimization1D::get_big_step_configuration(){
       int index =-1;
       for(unsigned int j = 0; j<STEPS_PER_DOFS; j++) {
         double magn = std::abs(residual + states[small_step_count - STEPS_PER_DOFS + j][i]);
-        if(magn > max ){
+        if(magn > max && magn > state_red){
           max = magn;
           index = j;
         }
       }
-      ret[i] = steps_widths[index];
+      if(index != -1) {
+        ret[i] = steps_widths[index];
+      } else {
+        ret[i] = 0.0;
+      }
+
     }
   }
   return ret;
