@@ -193,7 +193,7 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </YLength>
             <ZLength>
-                <value>10</value>
+                <value>200</value>
                 <default_value>2.0</default_value>
                 <documentation>Length of the system in z-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
                 <pattern>24</pattern>
@@ -202,7 +202,7 @@
         </Region>
         <Waveguide>
             <Delta>
-                <value>0</value>
+                <value>5</value>
                 <default_value>1.0</default_value>
                 <documentation>Offset between the two connectors measured in micrometres.</documentation>
                 <pattern>25</pattern>
@@ -223,7 +223,7 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </epsilon_20out>
             <Lambda>
-                <value>5.6328</value>
+                <value>1.5</value>
                 <default_value>5.6328</default_value>
                 <documentation>Vacuum-wavelength of the incoming wave.</documentation>
                 <pattern>28</pattern>
