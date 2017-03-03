@@ -255,7 +255,7 @@ static Parameters GetParameters() {
     ret.C_c = 1.0 / sqrt(ret.C_Epsilon * ret.C_Mu);
     ret.C_f0 = ret.C_c/ret.M_W_Lambda;
     ret.C_Pi = prm.get_double("Pi");
-    ret.C_k0 = 2.0 * ret.C_Pi * ret.M_W_Lambda;
+    ret.C_k0 = 2.0 * ret.C_Pi / ret.M_W_Lambda;
     ret.C_omega = 2.0 * ret.C_Pi * ret.C_f0;
   }
   prm.leave_subsection();
@@ -289,6 +289,26 @@ static Parameters GetParameters() {
 	ret.SystemLength = ret.NumberProcesses * ret.LayerThickness;
 
 	ret.Maximum_Z = - (ret.M_R_ZLength/2.0) + ret.SystemLength;
+
+	deallog.push("Checking Waveguide Properties");
+
+	ret.Phys_V = 2 * ret.C_Pi * ret.M_C_Dim1In / ret.M_W_Lambda *std::sqrt(ret.M_W_epsilonin * ret.M_W_epsilonin - ret.M_W_epsilonout * ret.M_W_epsilonout);
+
+	deallog << "Normalized Frequency V: " << ret.Phys_V <<std::endl;
+
+	if(ret.Phys_V> 1.5 && ret.Phys_V < 2.405){
+	  deallog << "This Waveguide is Single Moded" <<std::endl;
+	} else {
+	  deallog << "This Waveguide is not Single Moded" <<std::endl;
+	  double temp = ret.Phys_V * ret.M_W_Lambda;
+	  deallog << "Minimum Lambda: " << temp/1.5 <<std::endl;
+	  deallog << "Maximum Lambda: " << temp/2.405 <<std::endl;
+	  deallog << "Current Lambda: " << ret.M_W_Lambda <<std::endl;
+	}
+
+	ret.Phys_SpotRadius = (0.65 + 1.619/(std::pow(ret.Phys_V, 1.5)) + 2.879/(std::pow(ret.Phys_V, 6))) * ret.M_C_Dim1In;
+
+	deallog << "Spot Radius omega: " << ret.Phys_SpotRadius <<std::endl;
 
 	return ret;
 }
@@ -478,8 +498,9 @@ static double TEMode00 (Point<3, double> p ,const unsigned int component)
 {
 
 	if(component == 0) {
-		double d2 = (2* Distance2D(p)) / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) ;
-		return exp(-d2*d2);
+		// double d2 = (2* Distance2D(p)) / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) ;
+	  double d2 = Distance2D(p);
+		return exp(-d2*d2 / (GlobalParams.Phys_SpotRadius * GlobalParams.Phys_SpotRadius));
 	}
 	return 0.0;
 }
