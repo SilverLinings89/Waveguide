@@ -1710,6 +1710,7 @@ void Waveguide::rerun ()
 }
 
 SolverControl::State Waveguide::residual_tracker(unsigned int Iteration, double residual, dealii::TrilinosWrappers::MPI::BlockVector) {
+
   if((GlobalParams.O_C_D_ConvergenceFirst && run_number==0) || GlobalParams.O_C_D_ConvergenceAll) {
     
     struct timeval tp;
@@ -1723,16 +1724,7 @@ SolverControl::State Waveguide::residual_tracker(unsigned int Iteration, double 
     Convergence_Table.add_value(path_prefix + std::to_string(run_number) + "Time", std::to_string(ms));
   }
   steps = Iteration;
-  SolverControl::State ret = SolverControl::State::iterate;
-  if((int)Iteration > GlobalParams.So_TotalSteps){
-    // pout << std::endl;
-    return SolverControl::State::failure;
-  }
-  if(residual < GlobalParams.So_Precision){
-    // pout << std::endl;
-    return SolverControl::State::success;
-  }
-  return ret;
+  return SolverControl::success;;
 }
 
 #endif
