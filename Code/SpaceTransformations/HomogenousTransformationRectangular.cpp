@@ -20,7 +20,7 @@ HomogenousTransformationRectangular::HomogenousTransformationRectangular (int in
   sectors(GlobalParams.M_W_Sectors),
   deltaY(GlobalParams.M_W_Delta)
 {
-
+  homogenized = true;
 
 }
 
@@ -112,12 +112,52 @@ double HomogenousTransformationRectangular::PML_Z_Distance(Point<3> &p) const{
   }
 }
 
-Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::get_Tensor(Point<3> & position) const {
+Tensor<2,3,std::complex<double>> HomogenousTransformationRectangular::get_Tensor(Point<3> & position) const {
+  Tensor<2,3,double> transform = get_Space_Transformation_Tensor_Homogenized(position);
+  return Apply_PML_To_Tensor(position, transform);
+}
+
+Tensor<2,3,std::complex<double>> HomogenousTransformationRectangular::get_Preconditioner_Tensor(Point<3> & position, int block) const {
+  Tensor<2,3,double> transform = get_Space_Transformation_Tensor_Homogenized(position);
+  return Apply_PML_To_Tensor_For_Preconditioner(position, transform, block);
+}
+
+Tensor<2,3,double> HomogenousTransformationRectangular::get_Space_Transformation_Tensor_Homogenized(Point<3> & position) const {
+  std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
+
+  Tensor<2,3, double> transformation = case_sectors[sector_z.first].TransformationTensorInternal(position[0], position[1], sector_z.second);
+
+  double dist = position[0] * position[0] + position[1]*position[1];
+
+  dist = sqrt(dist);
+  double v1 = GlobalParams.M_R_XLength/2.0 - std::min(GlobalParams.M_BC_XMinus, GlobalParams.M_BC_XPlus);
+  double v2 = GlobalParams.M_R_YLength/2.0 - std::min(GlobalParams.M_BC_YMinus, GlobalParams.M_BC_YPlus);
+  double maxdist = std::min(v1, v2);
+  double mindist = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
+  double sig = sigma(dist, mindist, maxdist);
+  double factor = InterpolationPolynomialZeroDerivative(sig, 1,0);
+  transformation *= factor;
+  for(int i = 0; i < 3; i++) {
+    transformation[i][i] += 1-factor;
+  }
+
+  return transformation;
+}
+
+Tensor<2,3,double> HomogenousTransformationRectangular::get_Space_Transformation_Tensor(Point<3> & position) const {
+  std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
+
+  Tensor<2,3, double> transformation = case_sectors[sector_z.first].TransformationTensorInternal(position[0], position[1], sector_z.second);
+
+  return transformation;
+}
+
+Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML_To_Tensor(Point<3> & position, Tensor<2,3,double> transformation) const {
   std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
   Tensor<2,3, std::complex<double>> ret;
 
   double omegaepsilon0 = GlobalParams.C_omega;
-  // * ((System_Coordinate_in_Waveguide(position))?GlobalParams.M_W_epsilonin : GlobalParams.M_W_epsilonout);
+
   std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
   if(PML_in_X(position)){
     double r,d, sigmax;
@@ -167,21 +207,6 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::get_Tenso
 
   Tensor<2,3, std::complex<double>> ret2;
 
-  std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
-
-  Tensor<2,3, double> transformation = case_sectors[sector_z.first].TransformationTensorInternal(position[0], position[1], sector_z.second);
-  double dist = position[0] * position[0] + position[1]*position[1];
-  dist = sqrt(dist);
-  double v1 = GlobalParams.M_R_XLength/2.0 - std::min(GlobalParams.M_BC_XMinus, GlobalParams.M_BC_XPlus);
-  double v2 = GlobalParams.M_R_YLength/2.0 - std::min(GlobalParams.M_BC_YMinus, GlobalParams.M_BC_YPlus);
-  double maxdist = std::min(v1, v2);
-  double mindist = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
-  double sig = sigma(dist, mindist, maxdist);
-  double factor = InterpolationPolynomialZeroDerivative(sig, 1,0);
-  transformation *= factor;
-  for(int i = 0; i < 3; i++) {
-    transformation[i][i] += 1-factor;
-  }
   for(int i = 0; i < 3; i++) {
     for(int j = 0; j < 3; j++) {
       ret2[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
@@ -203,29 +228,12 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::get_Tenso
   return ret3;
 }
 
-Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::get_Preconditioner_Tensor(Point<3> & position, int block) const {
+Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML_To_Tensor_For_Preconditioner(Point<3> & position, Tensor<2,3,double> transformation, int block) const {
   std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
   Tensor<2,3, std::complex<double>> ret;
 
   Tensor<2,3, std::complex<double>> MaterialTensor;
 
-  std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
-
-  Tensor<2,3, double> transformation = case_sectors[sector_z.first].TransformationTensorInternal(position[0], position[1], sector_z.second);
-
-  // Tensor<2,3, double> transformation = structure->TransformationTensor(position[0], position[1], position[2]);
-  double dist = position[0] * position[0] + position[1]*position[1];
-  dist = sqrt(dist);
-  double v1 = GlobalParams.M_R_XLength/2.0 - std::min(GlobalParams.M_BC_XMinus, GlobalParams.M_BC_XPlus);
-  double v2 = GlobalParams.M_R_YLength/2.0 - std::min(GlobalParams.M_BC_YMinus, GlobalParams.M_BC_YPlus);
-  double maxdist = std::min(v1, v2);
-  double mindist = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
-  double sig = sigma(dist, mindist, maxdist);
-  double factor = InterpolationPolynomialZeroDerivative(sig, 1,0);
-  transformation *= factor;
-  for(int i = 0; i < 3; i++) {
-    transformation[i][i] += 1-factor;
-  }
   for(int i = 0; i < 3; i++) {
     for(int j = 0; j < 3; j++) {
       MaterialTensor[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);

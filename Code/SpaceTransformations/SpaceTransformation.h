@@ -27,6 +27,8 @@ class SpaceTransformation {
 
 public:
 
+  bool homogenized = false;
+
   const unsigned int dofs_per_layer;
 
   const unsigned int boundary_dofs_in;
@@ -41,11 +43,20 @@ public:
 
   bool is_identity(Point<3> coord) const;
 
-  virtual Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & coordinate)  const =0;
+  virtual Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & coordinate) const = 0;
 
-  virtual Tensor<2,3, std::complex<double>> get_Tensor_for_step(Point<3> & coordinate, unsigned int dof, double step);
+  virtual Tensor<2,3, std::complex<double>> get_Preconditioner_Tensor(Point<3> & coordinate, int block) const = 0;
 
-  virtual Tensor<2,3, std::complex<double>> get_Preconditioner_Tensor(Point<3> & coordinate, int block) const=0;
+  virtual Tensor<2,3,double> get_Space_Transformation_Tensor (Point<3> & coordinate) const =0;
+
+  virtual Tensor<2,3,double> get_Space_Transformation_Tensor_Homogenized (Point<3> & coordinate) const =0 ;
+
+  virtual Tensor<2,3,std::complex<double>> Apply_PML_To_Tensor (Point<3> & coordinate, Tensor<2,3,double> Tensor_input) const = 0;
+
+  virtual Tensor<2,3,std::complex<double>> Apply_PML_To_Tensor_For_Preconditioner (Point<3> & coordinate, Tensor<2,3,double> Tensor_input, int block) const = 0;
+
+  virtual Tensor<2,3, std::complex<double>> get_Tensor_for_step(Point<3> & coordinate, unsigned int dof, double step_width);
+
   /**
    * This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis. Since there are 3 blocks of PML-type material, there are 3 functions.
    * \param position Stores the position in which to test for presence of a PML-Material.

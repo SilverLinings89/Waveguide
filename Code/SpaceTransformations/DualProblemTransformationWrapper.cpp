@@ -14,7 +14,7 @@
 
 using namespace dealii;
 
-DualProblemTransformationWrapper::DualProblemTransformationWrapper (SpaceTransformation * in_st, int in_rank, int inner_rank):
+DualProblemTransformationWrapper::DualProblemTransformationWrapper (SpaceTransformation * in_st, int inner_rank):
     SpaceTransformation(3, inner_rank),
   XMinus( -(GlobalParams.M_R_XLength *0.5 - GlobalParams.M_BC_XMinus)),
   XPlus( GlobalParams.M_R_XLength *0.5 - GlobalParams.M_BC_XPlus),
@@ -28,6 +28,7 @@ DualProblemTransformationWrapper::DualProblemTransformationWrapper (SpaceTransfo
   deltaY(GlobalParams.M_W_Delta)
 {
   st = in_st;
+  homogenized = st->homogenized;
 }
 
 Point<3> DualProblemTransformationWrapper::math_to_phys(Point<3> coord) const {
@@ -50,7 +51,6 @@ bool DualProblemTransformationWrapper::PML_in_Z(Point<3> &p) const {
   return st->PML_in_Z(p);
 }
 
-
 double DualProblemTransformationWrapper::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ) const{
   return st->Preconditioner_PML_Z_Distance(p, block);
 }
@@ -67,16 +67,84 @@ double DualProblemTransformationWrapper::PML_Z_Distance(Point<3> &p) const{
   return st->PML_Z_Distance(p);
 }
 
+dealii::Point<3,double> transform_position( Point<3> in_position) {
+  Point<3> ret = in_position;
+  ret[2] = - ret[2];
+  // ret[2] += GlobalParams.M_BC_Zplus*GlobalParams.SectorThickness;
+  return ret;
+}
+
+Tensor<2,3,double> DualProblemTransformationWrapper::get_Space_Transformation_Tensor_Homogenized(Point<3> & position) const {
+  std::cout << "This should never be called: DualProblemTransformationWrapper::get_Space_Transformation_Tensor_Homogenized" <<std::endl;
+  return st->get_Space_Transformation_Tensor_Homogenized(position);
+}
+
+Tensor<2,3,double> DualProblemTransformationWrapper::get_Space_Transformation_Tensor(Point<3> & position) const {
+  std::cout << "This should never be called: DualProblemTransformationWrapper::get_Space_Transformation_Tensor" <<std::endl;
+  return st->get_Space_Transformation_Tensor(position);
+}
+
+
+Tensor<2,3, std::complex<double>> DualProblemTransformationWrapper::Apply_PML_To_Tensor(Point<3> & , Tensor<2,3,double> transformation) const {
+
+  std::cout << "This function should never be called: DualProblemTransformationWrapper::Apply_PML_To_Tensor" <<std::endl;
+
+  Tensor<2,3, std::complex<double>> ret2;
+
+  for(int i = 0; i < 3; i++) {
+    for(int j = 0; j < 3; j++) {
+      ret2[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
+    }
+  }
+
+  return ret2;
+}
+
+Tensor<2,3, std::complex<double>> DualProblemTransformationWrapper::Apply_PML_To_Tensor_For_Preconditioner(Point<3> & , Tensor<2,3,double> transformation, int ) const {
+  std::cout << "This function should never be called: DualProblemTransformationWrapper::Apply_PML_To_Tensor_For_Preconditioner" <<std::endl;
+
+    Tensor<2,3, std::complex<double>> ret2;
+
+    for(int i = 0; i < 3; i++) {
+      for(int j = 0; j < 3; j++) {
+        ret2[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
+      }
+    }
+
+    return ret2;
+}
+
+
 Tensor<2,3, std::complex<double>> DualProblemTransformationWrapper::get_Tensor(Point<3> & position) const {
-  // Point<3> p = position;
-  // p[2] = (GlobalParams.M_R_ZLength/2.0) - p[2];
-  return st->get_Tensor(position);
+  Point<3> p = transform_position(position);
+
+  Tensor<2,3,double> transformation;
+
+  if(homogenized) {
+    transformation = st->get_Space_Transformation_Tensor_Homogenized(p);
+  } else {
+    transformation = st->get_Space_Transformation_Tensor(p);
+  }
+
+  Tensor<2,3, std::complex<double>> ret = st->Apply_PML_To_Tensor(position, transformation);
+
+  return ret;
 }
 
 Tensor<2,3, std::complex<double>> DualProblemTransformationWrapper::get_Preconditioner_Tensor(Point<3> & position, int block) const {
-  // Point<3> p = position;
-  // p[2] = (GlobalParams.M_R_ZLength/2.0) - p[2];
-  return st->get_Preconditioner_Tensor(position,block);
+  Point<3> p = transform_position(position);
+
+  Tensor<2,3,double> transformation;
+
+  if(homogenized) {
+    transformation = st->get_Space_Transformation_Tensor_Homogenized(p);
+  } else {
+    transformation = st->get_Space_Transformation_Tensor(p);
+  }
+
+  Tensor<2,3, std::complex<double>> ret = st->Apply_PML_To_Tensor_For_Preconditioner(position, transformation, block);
+
+  return ret;
 }
 
 std::complex<double> DualProblemTransformationWrapper::gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc, Waveguide * in_w)
@@ -122,7 +190,7 @@ void DualProblemTransformationWrapper::set_free_dof(int dof, double value) {
 }
 
 std::pair<int, double> DualProblemTransformationWrapper::Z_to_Sector_and_local_z(double in_z) const {
-  return st->Z_to_Sector_and_local_z(-in_z);
+  return st->Z_to_Sector_and_local_z(in_z);
 }
 
 double DualProblemTransformationWrapper::Sector_Length() const {

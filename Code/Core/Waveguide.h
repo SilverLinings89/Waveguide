@@ -104,7 +104,7 @@ class Waveguide
 	 * \param structure This parameter gives a reference to the structure of the real Waveguide. This is necessary since during matrix-assembly it is required to call a function which generates the transformation tensor which is purely structure-dependent.
 	 */
 
-		Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st , std::string path_part);
+		Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st );
 
     ~Waveguide ();
 
@@ -113,13 +113,6 @@ class Waveguide
 		 * All properties of position[2]the object have to be created properly for this function to work.
 		 */
 		void 		run ();
-
-		/**
-		 * This method as well as the run() method, are used by the optimization-algorithm to use and reuse the Waveguide-object. Since the system-matrix consumes a lot of memory it makes sense to reuse it, rather then creating a new one for every optimization step.
-		 * All properties of thenon intersecting planes bent object have to be created properly for this function to work.
-		 */
-
-		void 		rerun ();
 
 		/**
 		 * The assemble_part(unsigned int in_part) function is a part of the assemble_system() functionality. It builds a part of the system-matrix. assemble_system() creates the global system matrix. After splitting the degrees of freedom into several block, this method takes one block (identified by the integer passed as an argument) and calculates all matrix-entries that reference it.
@@ -163,7 +156,11 @@ class Waveguide
      */
     void  estimate_solution();
 
-    std::vector<std::complex<double>> assemble_adjoint_local_contribution(Waveguide * other, double stepwidth);
+    std::vector<std::complex<double>> assemble_adjoint_local_contribution( double stepwidth);
+
+    void switch_to_primal (SpaceTransformation * primal_st);
+
+    void switch_to_dual (SpaceTransformation * dual_st);
 
 	private:
 
@@ -375,14 +372,18 @@ class Waveguide
 	  std::vector<IndexSet> i_sys_owned;
 	  std::vector<IndexSet> i_sys_readable;
 
+	  TrilinosWrappers::MPI::BlockVector primal_solution, dual_solution;
 
-    TrilinosWrappers::MPI::BlockVector										solution, EstimatedSolution, ErrorOfSolution ;
+	  TrilinosWrappers::MPI::BlockVector * solution;
+
+    TrilinosWrappers::MPI::BlockVector										EstimatedSolution, ErrorOfSolution ;
 		IndexSet										locally_owned_dofs, locally_relevant_dofs, locally_active_dofs, extended_relevant_dofs;
 		std::vector<IndexSet>							locally_relevant_dofs_per_subdomain;
 
 		Vector<double>                  preconditioner_rhs;
 
-		parallel::distributed::Vector<double> solution_for_computations;
+		parallel::distributed::Vector<double> primal_with_relevant;
+		parallel::distributed::Vector<double> dual_with_relevant;
 
 		std::vector<IndexSet>             locally_relevant_dofs_all_processors;
     IndexSet                    UpperDofs, LowerDofs;
@@ -392,9 +393,8 @@ class Waveguide
     int                       condition_file_counter, eigenvalue_file_counter;
     const unsigned  int                   Layers;
     std::vector<int>                Dofs_Below_Subdomain, Block_Sizes;
-    ConditionalOStream                pout;
     bool                      is_stored;
-    TimerOutput                   timer;
+
     const int                     Sectors;
 
     double minimum_local_z;
@@ -407,6 +407,10 @@ class Waveguide
 
     long int solver_start_milis =0;
 
+    bool primal = true;
+
+    ConditionalOStream pout;
+    TimerOutput                   timer;
     // HIER BEGINNT DIE ALTE VERSION ...
 
 

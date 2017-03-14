@@ -50,7 +50,7 @@ RoundMeshGenerator::~RoundMeshGenerator() {
 }
 
 void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3> & tria) const {
-  int counter = 0;
+
   parallel::shared::Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
   endc2 = tria.end();
   tria.set_all_manifold_ids(0);
@@ -73,13 +73,13 @@ void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3
           Point<3> ctr =cell2->face(j)->center(false, false);
           // if(System_Coordinate_in_Waveguide(ctr)){
 
-          cell2->face(j)->set_all_boundary_ids(2);
+          cell2->face(j)->set_all_boundary_ids(1);
 
-          if(std::abs(ctr(2) - GlobalParams.M_R_ZLength/2.0) < 0.00001) {
-            cell2->face(j)->set_all_boundary_ids(1);
+          if(std::abs(ctr(2) - GlobalParams.M_R_ZLength/2.0 - GlobalParams.M_BC_Zplus*GlobalParams.SectorThickness) < 0.00001) {
+            cell2->face(j)->set_all_boundary_ids(2);
           }
           if(std::abs(ctr(2) + GlobalParams.M_R_ZLength/2.0) < 0.00001) {
-            cell2->face(j)->set_all_boundary_ids(0);
+            cell2->face(j)->set_all_boundary_ids(3);
           }
         }
       }
@@ -210,6 +210,8 @@ void RoundMeshGenerator::prepare_triangulation(parallel::distributed::Triangulat
     endc = in_tria->end();
 
     /// mesh_info(*in_tria, "Output"+std::to_string(GlobalParams.MPI_Rank)+".vtk");
+
+    set_boundary_ids(*in_tria);
 
     deallog << "Done" <<std::endl;
     deallog.pop();

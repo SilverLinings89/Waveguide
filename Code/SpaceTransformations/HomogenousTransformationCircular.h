@@ -34,13 +34,19 @@ public:
 
   bool is_identity(Point<3> coord) const;
 
-  Tensor<2,3, std::complex<double>> get_epsilon(Point<3> coordinate) const;
-
-  Tensor<2,3, std::complex<double>> get_mu(Point<3> coordinate) const;
-
-  Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & coordinate) const;
+  Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & coordinate) const ;
 
   Tensor<2,3, std::complex<double>> get_Preconditioner_Tensor(Point<3> & coordinate, int block) const;
+
+  Tensor<2,3,std::complex<double>> Apply_PML_To_Tensor (Point<3> & coordinate, Tensor<2,3,double> Tensor_input) const;
+
+  Tensor<2,3,std::complex<double>> Apply_PML_To_Tensor_For_Preconditioner (Point<3> & coordinate, Tensor<2,3,double> Tensor_input, int block) const;
+
+
+  Tensor<2,3,double> get_Space_Transformation_Tensor (Point<3> & coordinate) const;
+
+  Tensor<2,3,double> get_Space_Transformation_Tensor_Homogenized (Point<3> & coordinate) const ;
+
 
   const double XMinus, XPlus, YMinus, YPlus, ZMinus, ZPlus;
 

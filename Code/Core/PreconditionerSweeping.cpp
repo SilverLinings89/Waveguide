@@ -51,8 +51,6 @@ void PreconditionerSweeping::Prepare ( TrilinosWrappers::MPI::BlockVector & inp)
 void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &dst,
 			const TrilinosWrappers::MPI::BlockVector &src)const
 {
-  std::cout << rank << ": preconditioner starting..." <<std::endl;
-
   dealii::Vector<double> input(own);
 	for (unsigned int i = 0; i < sweepable; i++) {
 		input[i] = src[indices[i]];
@@ -135,8 +133,6 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
       dst[indices[i]] = input[i];
     }
   }
-
-  std::cout << rank << ": preconditioner done" <<std::endl;
 
 }
 

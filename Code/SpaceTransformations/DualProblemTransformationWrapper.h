@@ -25,7 +25,7 @@ public:
  * Since this object encapsulates another Space Transformation, the construction is straight forward.
  * \param non_dual_st This pointer points to the actual transformation that is being wrapped.
  */
-  DualProblemTransformationWrapper(SpaceTransformation * non_dual_st, int rank, int inner_rank);
+  DualProblemTransformationWrapper(SpaceTransformation * non_dual_st, int rank);
 
   ~DualProblemTransformationWrapper();
 
@@ -48,33 +48,18 @@ public:
    */
   bool is_identity(Point<3> coord) const;
 
-  /**
-   * As a part of the core functionality of a space transformation in transformation optics we have to compute material properties in transformed coordinates. One of them is the now tensorial value of \f$\epsilon\f$.
-   * \param coordinate The location where the material tensor should be computed.
-   * \return The 3-by-3 matrix representing the value of \f$\epsilon\f$ after the transformation.
-   */
-  Tensor<2,3, std::complex<double>> get_epsilon(Point<3> coordinate) const;
+  Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & coordinate) const ;
 
-  /**
-   * As a part of the core functionality of a space transformation in transformation optics we have to compute material properties in transformed coordinates. One of them is the now tensorial value of \f$\mu\f$.
-   * \param coordinate The location where the material tensor should be computed.
-   * \return The 3-by-3 matrix representing the value of \f$\mu\f$ after the transformation.
-   */
-  Tensor<2,3, std::complex<double>> get_mu(Point<3> coordinate) const;
-
-  /**
-   * This computes the transformation part \f$g^{-1}\f$ of either \f$\mu\f$ or \f$\epsilon\f$.
-   * \param coordinate The location where the material tensor should be computed.
-   */
-  Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & coordinate) const;
-
-  /**
-   * This computes the transformation part of \f$g^{-1}\f$ similar to get_Tensor but also includes PML-Layers required by the preconditioner.
-   * \param coordinat Location for which the tensor should be computed.
-   * \param block index of the block which the coordinate is supposed to be considered a part of.
-   * \return The complete tensor for the preconditioner.
-   */
   Tensor<2,3, std::complex<double>> get_Preconditioner_Tensor(Point<3> & coordinate, int block) const;
+
+  Tensor<2,3,std::complex<double>> Apply_PML_To_Tensor (Point<3> & coordinate, Tensor<2,3,double> Tensor_input) const;
+
+  Tensor<2,3,std::complex<double>> Apply_PML_To_Tensor_For_Preconditioner (Point<3> & coordinate, Tensor<2,3,double> Tensor_input, int block) const;
+
+  Tensor<2,3,double> get_Space_Transformation_Tensor (Point<3> & coordinate) const;
+
+  Tensor<2,3,double> get_Space_Transformation_Tensor_Homogenized (Point<3> & coordinate) const ;
+
 
   const double XMinus, XPlus, YMinus, YPlus, ZMinus, ZPlus;
 

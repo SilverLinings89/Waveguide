@@ -37,7 +37,7 @@ std::vector<double> FDOptimization::compute_small_step(double step) {
     double old_dof_value = st->get_dof(i);
     if(st->IsDofFree(i)) {
       st->set_dof(i, old_dof_value + step);
-      waveguide->rerun();
+      waveguide->run();
       ret[i] = evaluate() - q_old;
     } else {
       ret[i] = 0.0;

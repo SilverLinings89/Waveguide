@@ -33,7 +33,7 @@ inline bool PML_blocked_self() {
   return (int)GlobalParams.MPI_Rank >= GlobalParams.NumberProcesses - GlobalParams.M_BC_Zplus;
 }
 
-Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st, std::string path_part):
+Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransformation * in_st):
     fe(FE_Nedelec<3> (0), 2),
     triangulation (in_mpi_comm,parallel::distributed::Triangulation<3>::MeshSmoothing(parallel::distributed::Triangulation<3>::none ), parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning),
     even(Utilities::MPI::this_mpi_process(in_mpi_comm)%2 == 0),
@@ -48,26 +48,25 @@ Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator * in_mg, SpaceTransfor
     Layers(GlobalParams.NumberProcesses),
     Dofs_Below_Subdomain(Layers),
     Block_Sizes(Layers),
-    pout(std::cout, rank==0),
     is_stored(false),
-    timer(in_mpi_comm, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times),
     Sectors(GlobalParams.M_W_Sectors),
     minimum_local_z(2.0 * GlobalParams.M_R_ZLength),
-    maximum_local_z(- 2.0 * GlobalParams.M_R_ZLength)
+    maximum_local_z(- 2.0 * GlobalParams.M_R_ZLength),
+    pout( std::cout, rank==0),
+    timer(in_mpi_comm, pout, TimerOutput::OutputFrequency::summary, TimerOutput::wall_times)
 {
   mg = in_mg;
   st = in_st;
   mpi_comm = in_mpi_comm;
-  std::cout << "(" << path_part << "): " << Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) << " as " << rank <<std::endl;
-  path_prefix = path_part;
-
+  solution = NULL;
   is_stored = false;
   solver_control.log_frequency(10);
   const int number = Layers -1;
   qualities = new double[number];
   execute_recomputation = false;
-  mkdir((solutionpath + "/" +path_prefix).c_str(), ACCESSPERMS);
-  deallog << "This is process " << GlobalParams.MPI_Rank << " as " << rank <<std::endl;
+  mkdir((solutionpath + "/" +"primal").c_str(), ACCESSPERMS);
+  mkdir((solutionpath + "/" +"dual").c_str(), ACCESSPERMS);
+
 }
 
 Waveguide::~Waveguide() {
@@ -82,7 +81,12 @@ std::complex<double> Waveguide::evaluate_for_Position(double x, double y, double
 	mode(1) = TEMode00( position , 1);
 	mode(2) = 0;
 
-	VectorTools::point_value(dof_handler, solution, position, result);
+	if(primal){
+	  VectorTools::point_value(dof_handler, primal_solution, position, result);
+	} else{
+	  VectorTools::point_value(dof_handler, dual_solution, position, result);
+	}
+
 	std::complex<double> c1(result(0), - result(3));
 	std::complex<double> c2(result(1), - result(4));
 	std::complex<double> c3(result(2), - result(5));
@@ -225,6 +229,20 @@ IndexSet Waveguide::combine_indexes(IndexSet lower, IndexSet upper) const {
   ret.add_indices(lower);
   ret.add_indices(upper, lower.size());
   return ret;
+}
+
+void Waveguide::switch_to_primal(SpaceTransformation * primal_st) {
+  st = primal_st;
+  solution = & primal_solution;
+  primal = true;
+  path_prefix = "primal";
+}
+
+void Waveguide::switch_to_dual(SpaceTransformation * dual_st) {
+  st = dual_st;
+  solution = & dual_solution;
+  primal = false;
+  path_prefix = "dual";
 }
 
 void Waveguide::setup_system ()
@@ -628,7 +646,7 @@ void Waveguide::reinit_rhs () {
 }
 
 void Waveguide::reinit_solution() {
-	solution.reinit(i_sys_owned,i_sys_readable, mpi_comm, true);
+	solution->reinit(i_sys_owned,i_sys_readable, mpi_comm, true);
 	EstimatedSolution.reinit(i_sys_owned, mpi_comm);
 	ErrorOfSolution.reinit(i_sys_owned, mpi_comm);
 
@@ -853,7 +871,11 @@ void Waveguide::assemble_system ()
 	prec_matrix_even.compress(VectorOperation::add);
 	prec_matrix_odd.compress(VectorOperation::add);
 
-	cm.distribute(solution);
+	if(primal){
+	  cm.distribute(primal_solution);
+	} else {
+	  cm.distribute(dual_solution);
+	}
 	cm.distribute(EstimatedSolution);
 	cm.distribute(ErrorOfSolution);
 	MPI_Barrier(mpi_comm);
@@ -869,12 +891,12 @@ void Waveguide::MakeBoundaryConditions (){
 	ComponentMask comp_mask_imag = fe.component_mask(imag);
 
 
-	DoFTools::make_zero_boundary_constraints(dof_handler,cm, comp_mask_imag );
-	DoFTools::make_zero_boundary_constraints(dof_handler,cm, comp_mask_real );
+	// DoFTools::make_zero_boundary_constraints(dof_handler,cm, comp_mask_imag );
+	// DoFTools::make_zero_boundary_constraints(dof_handler,cm, comp_mask_real );
 
 	ExactSolution es;
 
-	VectorTools::project_boundary_values_curl_conforming_l2( dof_handler, 0, es, 0, cm);
+	VectorTools::project_boundary_values_curl_conforming_l2( dof_handler, 0, es, 3, cm);
 
 	fixed_dofs.set_size(dof_handler.n_dofs());
 
@@ -897,13 +919,13 @@ void Waveguide::MakeBoundaryConditions (){
 							cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
 							fixed_dofs.add_index(local_dof_indices[0]);
 						}
-						/**
+
 						if(locally_owned_dofs.is_element(local_dof_indices[1])) {
 							cm.add_line(local_dof_indices[1]);
 							cm.set_inhomogeneity(local_dof_indices[1], 0.0);
 							fixed_dofs.add_index(local_dof_indices[1]);
 						}
-						**/
+
 					}
 				}
 				if ( std::abs( center[1] - GlobalParams.M_R_YLength/2.0) < 0.0001 ){
@@ -915,13 +937,13 @@ void Waveguide::MakeBoundaryConditions (){
 							cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
 							fixed_dofs.add_index(local_dof_indices[0]);
 						}
-						/**
+
 						if(locally_owned_dofs.is_element(local_dof_indices[1])) {
 							cm.add_line(local_dof_indices[1]);
 							cm.set_inhomogeneity(local_dof_indices[1], 0.0);
 							fixed_dofs.add_index(local_dof_indices[1]);
 						}
-						**/
+
 					}
 				}
 				if( std::abs(center[2] + GlobalParams.M_R_ZLength/2.0 ) < 0.0001 ){
@@ -929,26 +951,18 @@ void Waveguide::MakeBoundaryConditions (){
 					for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 						if((cell->face(i))->line(j)->at_boundary()) {
 							((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
-							Tensor<1,3,double> ptemp = ((cell->face(i))->line(j))->center(true, false);
-							Point<3, double> p (ptemp[0], ptemp[1], ptemp[2]);
-							Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(1) - ((cell->face(i))->line(j))->vertex(0);
-							double norm = dtemp.norm();
-							Point<3, double> direction (dtemp[0]/norm, dtemp[1]/norm, dtemp[2]/norm);
 
-							double result = TEMode00(p,0);
-							if(st->PML_in_X(p) || st->PML_in_Y(p)) result = 0.0;
 							if(locally_owned_dofs.is_element(local_dof_indices[0])) {
-								cm.add_line(local_dof_indices[0]);
-								cm.set_inhomogeneity(local_dof_indices[0], direction[0] * result );
+								// cm.add_line(local_dof_indices[0]);
+								// cm.set_inhomogeneity(local_dof_indices[0], direction[0] * result );
 								fixed_dofs.add_index(local_dof_indices[0]);
 							}
-							/**
+
 							if(locally_owned_dofs.is_element(local_dof_indices[1])) {
-								cm.add_line(local_dof_indices[1]);
+							  cm.add_line(local_dof_indices[1]);
 								cm.set_inhomogeneity(local_dof_indices[1], 0.0);
 								fixed_dofs.add_index(local_dof_indices[1]);
 							}
-							**/
 						}
 					}
 				}
@@ -961,13 +975,13 @@ void Waveguide::MakeBoundaryConditions (){
 							cm.set_inhomogeneity(local_dof_indices[0], 0.0 );
 							fixed_dofs.add_index(local_dof_indices[0]);
 						}
-						/**
+
 						if(locally_owned_dofs.is_element(local_dof_indices[1])) {
 							cm.add_line(local_dof_indices[1]);
 							cm.set_inhomogeneity(local_dof_indices[1], 0.0);
 							fixed_dofs.add_index(local_dof_indices[1]);
 						}
-						 **/
+
 					}
 				}
 			}
@@ -1171,24 +1185,6 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
 	}
 }
 
-SolverControl::State  Waveguide::check_iteration_state (const unsigned int iteration, const double check_value, const dealii::TrilinosWrappers::MPI::Vector & ){
-	SolverControl::State ret = SolverControl::State::iterate;
-	if((int)iteration > GlobalParams.So_TotalSteps){
-		// pout << std::endl;
-		return SolverControl::State::failure;
-	}
-	if(check_value < GlobalParams.So_Precision){
-		// pout << std::endl;
-		return SolverControl::State::success;
-	}
-	pout << '\r';
-	pout << "Iteration: " << iteration << "\t Precision: " << check_value;
-
-	iteration_file << iteration << "\t" << check_value << "    " << std::endl;
-	iteration_file.flush();
-	return ret;
-}
-
 void Waveguide::solve () {
 
   SolverControl lsc = SolverControl(100, 1.e-5, true, true);
@@ -1205,14 +1201,23 @@ void Waveguide::solve () {
 
 	if(GlobalParams.So_Solver == SolverOptions::GMRES) {
 
-	  if(run_number > 0) {
-      for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {
-        int index = locally_owned_dofs.nth_index_in_set(i);
-        solution[index] = solution_for_computations[index];
+	  if(primal){
+      if(run_number > 0) {
+        for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {
+          int index = locally_owned_dofs.nth_index_in_set(i);
+          solution[index] = primal_with_relevant[index];
+        }
+      }
+	  } else {
+	    if(run_number > 1) {
+        for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {
+          int index = locally_owned_dofs.nth_index_in_set(i);
+          solution[index] = dual_with_relevant[index];
+        }
       }
 	  }
 
-		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(lsc , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData(GlobalParams.So_RestartSteps,true, true, true) );
+		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(lsc , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData(GlobalParams.So_RestartSteps) );
 
 	  int above = 0;
 		if ((int)rank != GlobalParams.NumberProcesses - 1) {
@@ -1222,7 +1227,7 @@ void Waveguide::solve () {
 		PreconditionerSweeping sweep( mpi_comm, locally_owned_dofs.n_elements(), above, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, &fixed_dofs, rank);
 
 		if(rank == 0) {
-			sweep.Prepare(solution);
+			sweep.Prepare(*solution);
 		}
 
 		MPI_Barrier(mpi_comm);
@@ -1262,7 +1267,11 @@ void Waveguide::solve () {
 		solver_start_milis = tp.tv_sec * 1000 + tp.tv_usec / 1000;
 
 		try {
-		  solver.solve(system_matrix,solution, system_rhs, sweep);
+		  if(primal){
+		    solver.solve(system_matrix,primal_solution, system_rhs, sweep);
+		  }else {
+		    solver.solve(system_matrix,dual_solution, system_rhs, sweep);
+		  }
 		} catch(const dealii::SolverControl::NoConvergence & e) {
 		  deallog << "NO CONVERGENCE!" <<std::endl;
 		}
@@ -1292,10 +1301,14 @@ void Waveguide::solve () {
 
 	  deallog << "Done." << std::endl;
 
-		deallog << "Norm of the solution: " << solution.l2_norm() << std::endl;
+		deallog << "Norm of the solution: " << solution->l2_norm() << std::endl;
 	}
 
-	cm.distribute(solution);
+	if(primal){
+	  cm.distribute(primal_solution);
+	} else {
+	  cm.distribute(dual_solution);
+	}
 
 	if(GlobalParams.So_Solver == SolverOptions::UMFPACK) {
 		SolverControl sc2(2,false,false);
@@ -1303,21 +1316,34 @@ void Waveguide::solve () {
 		// temp_s.solve(system_matrix, solution, system_rhs);
 	}
 
-	solution_for_computations.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
-
-	for(unsigned int i= 0; i< locally_owned_dofs.n_elements(); i++){
-	  int index = locally_owned_dofs.nth_index_in_set(i);
-	  solution_for_computations[index] = solution[index];
+	if(primal){
+	  primal_with_relevant.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
+	  for(unsigned int i= 0; i< locally_owned_dofs.n_elements(); i++){
+      int index = locally_owned_dofs.nth_index_in_set(i);
+      primal_with_relevant[index] = primal_solution[index];
+    }
+	  primal_with_relevant.update_ghost_values();
+	} else {
+	  dual_with_relevant.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
+	  for(unsigned int i= 0; i< locally_owned_dofs.n_elements(); i++){
+      int index = locally_owned_dofs.nth_index_in_set(i);
+      dual_with_relevant[index] = dual_solution[index];
+    }
+	  dual_with_relevant.update_ghost_values();
 	}
 
-	solution_for_computations.update_ghost_values();
+
 
 }
 
 void Waveguide::store() {
 	reinit_storage();
 	// storage.reinit(dof_handler.n_dofs());
-	storage = solution;
+	if(primal){
+	  storage = primal_solution;
+	} else {
+	  storage = dual_solution;
+	}
 	is_stored = true;
 }
 
@@ -1326,7 +1352,7 @@ void Waveguide::output_results ( bool  )
 
 	for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {
 		unsigned int index = locally_owned_dofs.nth_index_in_set(i);
-		ErrorOfSolution[index] = solution[index] - EstimatedSolution[index];
+		ErrorOfSolution[index] = (*solution)[index] - EstimatedSolution[index];
 	}
 
 	MPI_Barrier(mpi_comm);
@@ -1352,7 +1378,7 @@ void Waveguide::output_results ( bool  )
 	}
 
 	TrilinosWrappers::MPI::BlockVector solution_output(i_sys_owned, i_sys_relevant, mpi_comm);
-	solution_output = solution;
+	solution_output = *solution;
 
 	TrilinosWrappers::MPI::BlockVector estimate_output(i_sys_owned, i_sys_relevant, mpi_comm);
 	estimate_output = EstimatedSolution;
@@ -1470,7 +1496,7 @@ void Waveguide::print_condition(double condition) {
 	condition_file << condition << std::endl;
 }
 
-std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution(Waveguide * other, double stepwidth) {
+std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution( double stepwidth) {
   deallog.push("Waveguide:adj_local");
 
   deallog << "Computing adjoint based shape derivative contributions..."<<std::endl;
@@ -1589,7 +1615,7 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
             for(int i = 0; i < 3; i++) {
               position[i] = position_array[i];
             }
-            other->adjoint_solution_evaluation(position, result);
+            adjoint_solution_evaluation(position, result);
             MPI_Send(&result[0], 6, MPI_DOUBLE, rank-1, 0, mpi_comm);
           }
           // deallog << "Sent a solution."<<std::endl;
@@ -1614,7 +1640,7 @@ Tensor<1,3,std::complex<double>> Waveguide::solution_evaluation(Point<3,double> 
   Tensor<1,3,std::complex<double>> ret;
   Vector<double> result(6);
 
-  VectorTools::point_value(dof_handler, solution_for_computations, position, result);
+  VectorTools::point_value(dof_handler, primal_with_relevant, position, result);
 
   ret[0] = std::complex<double>(result(0), result(3));
   ret[1] = std::complex<double>(result(1), result(4));
@@ -1626,7 +1652,7 @@ void Waveguide::solution_evaluation(Point<3,double> position, double * sol) cons
   // deallog << "Process " << GlobalParams.MPI_Rank << " as " << rank << " evaluating at (" << position[0] << "," << position[1] << "," << position[2] << "). The local range is ["<< minimum_local_z<<","<<maximum_local_z<<"]"<< std::endl;
   Tensor<1,3,std::complex<double>> ret;
   Vector<double> result(6);
-  VectorTools::point_value(dof_handler, solution_for_computations, position, result);
+  VectorTools::point_value(dof_handler, primal_with_relevant, position, result);
   for(int i = 0; i < 6; i++){
     sol[i] = result(i);
   }
@@ -1637,9 +1663,9 @@ Tensor<1,3,std::complex<double>> Waveguide::adjoint_solution_evaluation(Point<3,
   Tensor<1,3,std::complex<double>> ret;
   Vector<double> result(6);
   position[2] = - position[2];
-  VectorTools::point_value(dof_handler, solution_for_computations, position, result);
+  VectorTools::point_value(dof_handler, dual_with_relevant, position, result);
   ret[0] = std::complex<double>(result(0), result(3));
-  ret[1] = std::complex<double>(result(1), result(4));
+  ret[1] = std::complex<double>(- result(1), - result(4));
   ret[2] = std::complex<double>(- result(2), - result(5));
   return ret;
 }
@@ -1650,56 +1676,17 @@ void Waveguide::adjoint_solution_evaluation(Point<3,double> position, double * s
   Tensor<1,3,std::complex<double>> ret;
   Vector<double> result(6);
   position[2] = - position[2];
-  VectorTools::point_value(dof_handler, solution_for_computations, position, result);
+  VectorTools::point_value(dof_handler, dual_with_relevant, position, result);
   for(int i = 0; i < 6; i++) {
-    sol[i] = result(i);
+    sol[i] = -result(i);
   }
-  sol[5] *= -1;
-  sol[6] *= -1;
+  sol[0] *= -1;
+  sol[1] *= -1;
 }
 
 void Waveguide::reset_changes ()
 {
 	reinit_all();
-}
-
-void Waveguide::rerun ()
-{
-	timer.enter_subsection ("Setup Mesh");
-
-	timer.leave_subsection();
-
-	timer.enter_subsection ("Setup FEM");
-	// structure->Print();
-
-	timer.leave_subsection();
-	pout << "Reinit for rerun..." ;
-	pout.get_stream().flush();
-	timer.enter_subsection ("Reset");
-	reinit_for_rerun();
-	timer.leave_subsection();
-
-	pout << " Assemble for rerun... " ;
-	pout.get_stream().flush();
-	timer.enter_subsection ("Assemble");
-	assemble_system ();
-	timer.leave_subsection();
-
-	pout << " Solve for rerun..." << std::endl;
-	timer.enter_subsection ("Solve");
-	solve ();
-	timer.leave_subsection();
-
-	pout << "Evaluate for rerun." << std::endl;
-	timer.enter_subsection ("Evaluate");
-	//evaluate ();
-	timer.leave_subsection();
-
-	timer.print_summary();
-	timer.reset();
-
-	run_number++;
-
 }
 
 SolverControl::State Waveguide::residual_tracker(unsigned int Iteration, double residual, dealii::TrilinosWrappers::MPI::BlockVector) {
@@ -1709,8 +1696,6 @@ SolverControl::State Waveguide::residual_tracker(unsigned int Iteration, double 
     struct timeval tp;
     gettimeofday(&tp, NULL);
     long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000 - solver_start_milis;
-        
-    // result_file << "" << Iteration << "\t" << residual << "\t" << ms <<std::endl;
 
     Convergence_Table.add_value(path_prefix + std::to_string(run_number) + "Iteration", Iteration);
     Convergence_Table.add_value(path_prefix + std::to_string(run_number) + "Residual", residual);

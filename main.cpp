@@ -65,27 +65,21 @@ int main (int argc, char *argv[])
 
 	deallog << "Parameters loaded. Preparing Space Transformations..." <<std::endl;
 
-	MPI_Comm  mpi_primal, mpi_dual;
 
-	mpi_primal = MPI_COMM_WORLD;
-	mpi_dual = MPI_COMM_WORLD;
-
-  int primal_rank = GlobalParams.MPI_Rank;
-  int dual_rank = GlobalParams.NumberProcesses - 1 - GlobalParams.MPI_Rank;
 
 	SpaceTransformation * st;
 
 	if(GlobalParams.M_C_Shape == ConnectorType::Circle){
     if(GlobalParams.Sc_Homogeneity) {
-      st = new HomogenousTransformationCircular(primal_rank);
+      st = new HomogenousTransformationCircular(GlobalParams.MPI_Rank);
     } else {
-      st = new InhomogenousTransformationCircular(primal_rank);
+      st = new InhomogenousTransformationCircular(GlobalParams.MPI_Rank);
     }
   } else {
     if(GlobalParams.Sc_Homogeneity) {
-     st = new HomogenousTransformationRectangular(primal_rank);
+     st = new HomogenousTransformationRectangular(GlobalParams.MPI_Rank);
     } else {
-     st = new InhomogenousTransformationRectangular(primal_rank);
+     st = new InhomogenousTransformationRectangular(GlobalParams.MPI_Rank);
     }
   }
 
@@ -102,25 +96,13 @@ int main (int argc, char *argv[])
 
 	SpaceTransformation * dst;
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint ) {
-	  dst = new DualProblemTransformationWrapper(st, dual_rank, primal_rank);
+	  dst = new DualProblemTransformationWrapper(st,  GlobalParams.MPI_Rank);
 	  dst->estimate_and_initialize();
-	}
-
-	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint ) {
-	  // adjoint based
-
-	  MPI_Comm_split(MPI_COMM_WORLD, 1, primal_rank, &mpi_primal);
-	  // MPI_Comm_split(MPI_COMM_WORLD, 0, primal_rank, &mpi_primal);
-	  MPI_Comm_split(MPI_COMM_WORLD, 1, dual_rank, &mpi_dual);
-	  //MPI_Comm_split(MPI_COMM_WORLD, 0, dual_rank, &mpi_dual);
-	} else {
-	  // fd based
-    MPI_Comm_split(MPI_COMM_WORLD, 0, primal_rank, &mpi_primal);
 	}
 
 	deallog << "Done. Building Waveguides." <<std::endl;
 
-	Waveguide * primal_waveguide;
+	Waveguide * waveguide;
 	std::string prefix = "";
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
 	  prefix = "primal";
@@ -128,16 +110,9 @@ int main (int argc, char *argv[])
 	  prefix = ".";
 	}
 
-	primal_waveguide = new Waveguide(mpi_primal, mg, st, "primal");
+	waveguide = new Waveguide(MPI_COMM_WORLD, mg, st);
 
-	Waveguide * dual_waveguide;
-
-	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
-	  // TODO Wieder auf dual setzen.
-	  dual_waveguide = new Waveguide(mpi_dual, mg, st, "dual");
-	}
-
-  deallog << "Done. Loading Schema..." <<std::endl;
+	deallog << "Done. Loading Schema..." <<std::endl;
 
 	Optimization * opt;
 
@@ -153,9 +128,9 @@ int main (int argc, char *argv[])
 	}
 
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
-	  opt = new AdjointOptimization(primal_waveguide, dual_waveguide, mg, st, dst, Oa_c);
+	  opt = new AdjointOptimization(waveguide, mg, st, dst, Oa_c);
 	} else {
-	  opt = new FDOptimization(primal_waveguide, mg, st, Oa_d);
+	  opt = new FDOptimization(waveguide, mg, st, Oa_d);
 	}
 
   deallog << "Done." <<std::endl;

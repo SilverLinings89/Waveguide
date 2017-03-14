@@ -81,11 +81,15 @@ bool SpaceTransformation::point_in_dof_support(Point<3> location, unsigned int d
 
 Tensor<2,3, std::complex<double>> SpaceTransformation::get_Tensor_for_step(Point<3> & coordinate, unsigned int dof, double step_width) {
   double old_value = get_dof(dof);
-  Tensor<2,3, std::complex<double>> original = get_Tensor(coordinate);
+  Tensor<2,3,double> trafo = get_Space_Transformation_Tensor(coordinate);
+
+  Tensor<2,3, std::complex<double>> original = Apply_PML_To_Tensor(coordinate, trafo);
   set_dof(dof, old_value + step_width);
-  Tensor<2,3, std::complex<double>> ret = get_Tensor(coordinate);
+  trafo = get_Space_Transformation_Tensor(coordinate);
+  Tensor<2,3, std::complex<double>> ret = Apply_PML_To_Tensor(coordinate, trafo);
   set_dof(dof, old_value);
   return ret-original;
 }
+
 
 #endif
