@@ -241,6 +241,8 @@ class Waveguide
 		void 	Compute_Dof_Numbers();
 
 
+		void Prepare_Boundary_Constraints();
+
 		/**
 		 * DEPRECATED. SCHEDULED FOR REMOVAL.
 		 */

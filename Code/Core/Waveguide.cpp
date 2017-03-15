@@ -441,29 +441,9 @@ void Waveguide::setup_system ()
 
   deallog << "Constructing Sparsity Patterns and Constrain Matrices ... " <<std::endl;
 
-	cm.clear();
-	cm.reinit(locally_relevant_dofs);
-
-	cm_prec_even.clear();
-	cm_prec_odd.clear();
-	cm_prec_even.reinit(locally_relevant_dofs);
-	cm_prec_odd.reinit(locally_relevant_dofs);
-
-	DoFTools::make_hanging_node_constraints(dof_handler, cm);
-	DoFTools::make_hanging_node_constraints(dof_handler, cm_prec_even);
-	DoFTools::make_hanging_node_constraints(dof_handler, cm_prec_odd);
-
-	MakeBoundaryConditions();
-	MakePreconditionerBoundaryConditions();
-
-	cm.close();
-	cm_prec_even.close();
-	cm_prec_odd.close();
-
-
 	deallog << "Initialization done." << std::endl;
 
-
+	Prepare_Boundary_Constraints();
 
 	std::ostringstream set_string;
 
@@ -515,7 +495,6 @@ void Waveguide::setup_system ()
 
 	LowerDofs = locally_owned_dofs;
 
-
 	if(rank != 0 ) {
 		LowerDofs.add_indices(locally_relevant_dofs_all_processors[rank-1], 0);
 	}
@@ -530,6 +509,30 @@ void Waveguide::setup_system ()
 
 	deallog<< "Done" << std::endl;
 	deallog.pop();
+
+
+}
+
+void Waveguide::Prepare_Boundary_Constraints() {
+  cm.clear();
+  cm.reinit(locally_relevant_dofs);
+
+  cm_prec_even.clear();
+  cm_prec_odd.clear();
+  cm_prec_even.reinit(locally_relevant_dofs);
+  cm_prec_odd.reinit(locally_relevant_dofs);
+
+  DoFTools::make_hanging_node_constraints(dof_handler, cm);
+  DoFTools::make_hanging_node_constraints(dof_handler, cm_prec_even);
+  DoFTools::make_hanging_node_constraints(dof_handler, cm_prec_odd);
+
+  MakeBoundaryConditions();
+  MakePreconditionerBoundaryConditions();
+
+  cm.close();
+  cm_prec_even.close();
+  cm_prec_odd.close();
+
 }
 
 void Waveguide::calculate_cell_weights () {
@@ -621,7 +624,7 @@ void Waveguide::reinit_systemmatrix() {
 
   deallog << "Generating BSP" <<std::endl;
 
-  TrilinosWrappers::BlockSparsityPattern sp(i_sys_owned, mpi_comm);
+  TrilinosWrappers::BlockSparsityPattern sp(i_sys_owned, MPI_COMM_WORLD);
 
   deallog << "Collecting sizes ..." <<std::endl;
 
@@ -639,7 +642,7 @@ void Waveguide::reinit_systemmatrix() {
 void Waveguide::reinit_rhs () {
 	// std::cout << "Reinit rhs for p " << rank << std::endl;
 
-	system_rhs.reinit(i_sys_owned, mpi_comm);
+	system_rhs.reinit(i_sys_owned, MPI_COMM_WORLD);
 
 	preconditioner_rhs.reinit(dof_handler.n_dofs());
 
@@ -898,8 +901,9 @@ void Waveguide::MakeBoundaryConditions (){
 
 	VectorTools::project_boundary_values_curl_conforming_l2( dof_handler, 0, es, 3, cm);
 
-	fixed_dofs.set_size(dof_handler.n_dofs());
-
+	if(run_number ==0){
+	  fixed_dofs.set_size(dof_handler.n_dofs());
+	}
 	cell = dof_handler.begin_active(),
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
@@ -998,8 +1002,10 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
 	endc = dof_handler.end();
 	IndexSet own (dof_handler.n_dofs());
 	own.add_indices(locally_owned_dofs);
-	sweepable.set_size(dof_handler.n_dofs());
-	sweepable.add_indices(locally_owned_dofs);
+	if(run_number == 0) {
+	  sweepable.set_size(dof_handler.n_dofs());
+	  sweepable.add_indices(locally_owned_dofs);
+	}
 	if(rank != 0 ){
 		own.add_indices(LowerDofs);
 	}
@@ -1201,6 +1207,7 @@ void Waveguide::solve () {
 
 	if(GlobalParams.So_Solver == SolverOptions::GMRES) {
 
+	  /**
 	  if(primal){
       if(run_number > 0) {
         for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {
@@ -1216,6 +1223,7 @@ void Waveguide::solve () {
         }
       }
 	  }
+	  **/
 
 		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(lsc , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData(GlobalParams.So_RestartSteps) );
 
@@ -1450,6 +1458,9 @@ void Waveguide::run ()
 	timer.leave_subsection();
 
   } else {
+
+    Prepare_Boundary_Constraints();
+
     timer.enter_subsection ("Reset");
     reinit_all();
     timer.leave_subsection();
@@ -1501,7 +1512,7 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
 
   deallog << "Computing adjoint based shape derivative contributions..."<<std::endl;
 
-  int other_proc = rank + 1;
+  int other_proc = GlobalParams.NumberProcesses- rank - 1 - GlobalParams.M_BC_Zplus;
 
   std::vector<std::complex<double>> ret;
   const unsigned int ndofs = st->NDofs();
@@ -1538,10 +1549,13 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
   int counter =0;
   double * returned_vector = new double[6];
   for(unsigned int temp_counter = 0; temp_counter < 2; temp_counter++ ){
-    if( rank%2 == temp_counter%2  ) {
-      if( (int)rank != GlobalParams.NumberProcesses -1){
-        deallog.push("local cell phase");
-        deallog << "This process is now computing its own contributions to the shape gradient together with "<< other_proc<<"."  << std::endl;
+    if((rank >= GlobalParams.NumberProcesses-GlobalParams.M_BC_Zplus ) || (((GlobalParams.NumberProcesses-GlobalParams.M_BC_Zplus)%2 ==1) && (rank == GlobalParams.NumberProcesses/2 -GlobalParams.M_BC_Zplus/2 -1) && temp_counter==1) ){
+      deallog << "This process is dormant."<<std::endl;
+    } else {
+      if ( (((GlobalParams.NumberProcesses-GlobalParams.M_BC_Zplus)%2 ==1) && (rank == GlobalParams.NumberProcesses/2 -GlobalParams.M_BC_Zplus/2 -1) && temp_counter==0) ) {
+
+        deallog.push("middle phase");
+        deallog << "This process is now computing its own contributions to the shape gradient."  << std::endl;
 
         DoFHandler<3>::active_cell_iterator cell, endc;
         cell = dof_handler.begin_active(),
@@ -1551,23 +1565,9 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
           if( cell->is_locally_owned()) {
             fe_values.reinit (cell);
             quadrature_points = fe_values.get_quadrature_points();
-
-            for (unsigned int q_index=0; q_index<n_q_points; ++q_index)
-            {
+            for (unsigned int q_index=0; q_index<n_q_points; ++q_index) {
               Tensor<1,3,std::complex<double>> own_solution = solution_evaluation(quadrature_points[q_index]);
-
-              MPI_Send(&quadrature_points[q_index][0], 3, MPI_DOUBLE, rank+1, 0, mpi_comm);
-
-              MPI_Recv(&returned_vector[0], 6, MPI_DOUBLE, rank+1, 0, mpi_comm, MPI_STATUS_IGNORE);
-
-              Tensor<1,3,std::complex<double>> other_solution;
-
-              other_solution[0].real(returned_vector[0]);
-              other_solution[0].imag(returned_vector[1]);
-              other_solution[1].real(returned_vector[2]);
-              other_solution[1].imag(returned_vector[3]);
-              other_solution[2].real(returned_vector[4]);
-              other_solution[2].imag(returned_vector[5]);
+              Tensor<1,3,std::complex<double>> other_solution = adjoint_solution_evaluation(quadrature_points[q_index]);
 
               const double JxW = fe_values.JxW(q_index);
               for ( int j = min; j <= max; j++) {
@@ -1584,47 +1584,90 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
           }
         }
 
-
-        double  * end_signal = new double[3];
-        end_signal[0] = -GlobalParams.M_R_ZLength;
-        end_signal[1] = -GlobalParams.M_R_ZLength;
-        end_signal[2] = -GlobalParams.M_R_ZLength;
-
-        MPI_Send(&end_signal[0], 3, MPI_DOUBLE, rank+1, 0, mpi_comm);
         deallog << "Done." << std::endl;
         deallog.pop();
-      }
-    } else {
-      deallog.push("non-local cell phase");
-      if(rank != 0){
-        deallog << "This process is now adjoint based contributions for process "<< rank -1<<"." << std::endl;
-        bool normal = true;
-        while(normal) {
-          double * position_array = new double[3];
-          MPI_Recv(&position_array[0], 3, MPI_DOUBLE, rank -1 , 0, mpi_comm, MPI_STATUS_IGNORE);
-          normal = false;
-          for(int i = 0; i < 3; i++) {
-            if(position_array[i] != -GlobalParams.M_R_ZLength){
-              normal = true;
-            }
-          }
-          // deallog << "Received request for (" << position_array[0] << ", "<< position_array[1] << ", "<<position_array[2]<<")"<<std::endl;
-          if(normal) {
-            double * result = new double[6];
-            Point<3, double> position;
-            for(int i = 0; i < 3; i++) {
-              position[i] = position_array[i];
-            }
-            adjoint_solution_evaluation(position, result);
-            MPI_Send(&result[0], 6, MPI_DOUBLE, rank-1, 0, mpi_comm);
-          }
-          // deallog << "Sent a solution."<<std::endl;
-        }
-        deallog << "Done." << std::endl;
+
       } else {
-        deallog << "This process skips phase two of adjoint gradient computation because it is PML blocked." << std::endl;
+        if( rank >= temp_counter * (GlobalParams.NumberProcesses - GlobalParams.M_BC_Zplus)/2 && rank < (1+temp_counter)*(GlobalParams.NumberProcesses - GlobalParams.M_BC_Zplus)/2 ) {
+          deallog.push("local cell phase");
+          deallog << "This process is now computing its own contributions to the shape gradient together with "<< other_proc<<"."  << std::endl;
+
+          DoFHandler<3>::active_cell_iterator cell, endc;
+          cell = dof_handler.begin_active(),
+          endc = dof_handler.end();
+          for (; cell!=endc; ++cell)
+          {
+            if( cell->is_locally_owned()) {
+              fe_values.reinit (cell);
+              quadrature_points = fe_values.get_quadrature_points();
+              for (unsigned int q_index=0; q_index<n_q_points; ++q_index) {
+                Tensor<1,3,std::complex<double>> own_solution = solution_evaluation(quadrature_points[q_index]);
+                MPI_Send(&quadrature_points[q_index][0], 3, MPI_DOUBLE, other_proc, 0, mpi_comm);
+                MPI_Recv(&returned_vector[0], 6, MPI_DOUBLE, other_proc, 0, mpi_comm, MPI_STATUS_IGNORE);
+                Tensor<1,3,std::complex<double>> other_solution;
+
+                other_solution[0].real(returned_vector[0]);
+                other_solution[0].imag(returned_vector[1]);
+                other_solution[1].real(returned_vector[2]);
+                other_solution[1].imag(returned_vector[3]);
+                other_solution[2].real(returned_vector[4]);
+                other_solution[2].imag(returned_vector[5]);
+
+                const double JxW = fe_values.JxW(q_index);
+                for ( int j = min; j <= max; j++) {
+                  transformation = st->get_Tensor_for_step(quadrature_points[q_index], j, stepwidth);
+                  if(st->point_in_dof_support(quadrature_points[q_index], j)) {
+                    ret[j] += own_solution * transformation * other_solution * JxW;
+                  }
+                }
+                counter ++;
+                if((counter-1)/(total/10) != (counter)/(total/10)) {
+                  deallog << (int) (100 * (counter)/(total)) << "%"<<std::endl ;
+               }
+              }
+            }
+          }
+
+
+          double  * end_signal = new double[3];
+          end_signal[0] = -GlobalParams.M_R_ZLength;
+          end_signal[1] = -GlobalParams.M_R_ZLength;
+          end_signal[2] = -GlobalParams.M_R_ZLength;
+
+          MPI_Send(&end_signal[0], 3, MPI_DOUBLE, other_proc, 0, mpi_comm);
+          deallog << "Done." << std::endl;
+          deallog.pop();
+
+        } else {
+          deallog.push("non-local cell phase");
+
+          deallog << "This process is now adjoint based contributions for process "<< other_proc<<"." << std::endl;
+          bool normal = true;
+          while(normal) {
+            double * position_array = new double[3];
+            MPI_Recv(&position_array[0], 3, MPI_DOUBLE, other_proc , 0, mpi_comm, MPI_STATUS_IGNORE);
+            normal = false;
+            for(int i = 0; i < 3; i++) {
+              if(position_array[i] != -GlobalParams.M_R_ZLength){
+                normal = true;
+              }
+            }
+            // deallog << "Received request for (" << position_array[0] << ", "<< position_array[1] << ", "<<position_array[2]<<")"<<std::endl;
+            if(normal) {
+              double * result = new double[6];
+              Point<3, double> position;
+              for(int i = 0; i < 3; i++) {
+                position[i] = position_array[i];
+              }
+              adjoint_solution_evaluation(position, result);
+              MPI_Send(&result[0], 6, MPI_DOUBLE, other_proc, 0, mpi_comm);
+            }
+            // deallog << "Sent a solution."<<std::endl;
+          }
+          deallog << "Done." << std::endl;
+          deallog.pop();
+        }
       }
-      deallog.pop();
     }
     MPI_Barrier(mpi_comm);
   }

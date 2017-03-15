@@ -20,6 +20,7 @@ AdjointOptimization::~AdjointOptimization() {
 }
 
 std::vector<std::complex<double>> AdjointOptimization::compute_small_step(double step) {
+  waveguide->switch_to_primal(primal_st);
   return waveguide->assemble_adjoint_local_contribution(step);
 }
 
