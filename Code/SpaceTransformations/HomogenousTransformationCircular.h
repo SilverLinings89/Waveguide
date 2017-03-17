@@ -247,7 +247,8 @@ public:
 
   std::complex<double> evaluate_for_z(double z_in, Waveguide *);
 
-  std::complex<double> gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc,  Waveguide * in_w);
+  std::complex<double> gauss_product_2D_sphere_primal(double z, int n, double R, double Xc, double Yc,  Waveguide * in_w);
+
 };
 
 #endif

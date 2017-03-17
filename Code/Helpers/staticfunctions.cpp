@@ -15,6 +15,7 @@ int 	StepsR 			= 10;
 int 	StepsPhi 		= 10;
 
 static int alert_counter = 0;
+static std::string input_file_name = "";
 
 void alert() {
   MPI_Barrier(MPI_COMM_WORLD);
@@ -54,6 +55,7 @@ static void PrepareStreams()  {
   mkdir(solutionpath.c_str(), ACCESSPERMS);
 
   // Copy Parameter file to the output directory in processor 0. This should be replaced with an output generator eventually.
+  /**
   if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0) {
     std::ifstream source("Parameters/Parameters.xml", std::ios::binary);
     std::ofstream dest(solutionpath +"/Parameters.xml", std::ios::binary);
@@ -61,7 +63,7 @@ static void PrepareStreams()  {
     source.close();
     dest.close();
   }
-
+**/
   log_stream.open(solutionpath + "/main"+ std::to_string(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) +".log", std::ios::binary);
   deallog.attach(log_stream);
 
@@ -70,7 +72,8 @@ static void PrepareStreams()  {
 static Parameters GetParameters() {
 	ParameterHandler prm;
 	ParameterReader param(prm);
-	param.read_parameters("./Parameters/Parameters.xml");
+	// input_file_name = "/home/pascal/workspace/waveguideproblem/Parameters/Parameters.xml";
+	param.read_parameters(input_file_name);
 	struct Parameters ret;
 	prm.enter_subsection("Output");
 	{

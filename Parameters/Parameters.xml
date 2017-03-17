@@ -179,21 +179,21 @@
         </Connectors>
         <Region>
             <XLength>
-                <value>20</value>
+                <value>10</value>
                 <default_value>10.0</default_value>
                 <documentation>Length of the system in x-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
                 <pattern>22</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XLength>
             <YLength>
-                <value>20</value>
+                <value>10</value>
                 <default_value>10.0</default_value>
                 <documentation>Length of the system in y-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
                 <pattern>23</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </YLength>
             <ZLength>
-                <value>4</value>
+                <value>12</value>
                 <default_value>2.0</default_value>
                 <documentation>Length of the system in z-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
                 <pattern>24</pattern>
@@ -202,7 +202,7 @@
         </Region>
         <Waveguide>
             <Delta>
-                <value>0</value>
+                <value>1</value>
                 <default_value>1.0</default_value>
                 <documentation>Offset between the two connectors measured in micrometres.</documentation>
                 <pattern>25</pattern>
@@ -347,7 +347,7 @@
             <pattern_description>[Selection Adjoint|FD ]</pattern_description>
         </Optimization_20Schema>
         <Optimization_20Steps>
-            <value>10</value>
+            <value>50</value>
             <default_value>10</default_value>
             <documentation>Number of Optimization steps to be performed.</documentation>
             <pattern>33</pattern>
@@ -370,7 +370,7 @@
             <pattern_description>[Selection GMRES|UMFPACK|MINRES ]</pattern_description>
         </Solver>
         <GMRESSteps>
-            <value>50</value>
+            <value>200</value>
             <default_value>30</default_value>
             <documentation>Steps until restart of Krylow subspace generation</documentation>
             <pattern>36</pattern>
@@ -384,7 +384,7 @@
             <pattern_description>[Selection Sweeping|Amesos_Lapack|Amesos_Scalapack|Amesos_Klu|Amesos_Umfpack|Amesos_Pardiso|Amesos_Taucs|Amesos_Superlu|Amesos_Superludist|Amesos_Dscpack|Amesos_Mumps ]</pattern_description>
         </Preconditioner>
         <Steps>
-            <value>50</value>
+            <value>200</value>
             <default_value>30</default_value>
             <documentation>Number of Steps the Solver is supposed to do.</documentation>
             <pattern>38</pattern>

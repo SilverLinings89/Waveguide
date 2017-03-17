@@ -51,6 +51,12 @@ using namespace dealii;
 int main (int argc, char *argv[])
 {
 
+  if(argc > 1) {
+    input_file_name = argv[1];
+  } else {
+    input_file_name = "./Parameters/Parameters.xml";
+  }
+
   deallog.depth_console(5);
 
 	Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);

@@ -152,7 +152,6 @@ Tensor<2,3,double> HomogenousTransformationCircular::get_Space_Transformation_Te
   return transformation;
 }
 
-
 Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::Apply_PML_To_Tensor(Point<3> & position, Tensor<2,3,double> transformation) const {
     Tensor<2,3, std::complex<double>> MaterialTensor;
 
@@ -277,7 +276,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::Apply_PML_To
   return MaterialTensor;
 }
 
-std::complex<double> HomogenousTransformationCircular::gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc, Waveguide * in_w)
+std::complex<double> HomogenousTransformationCircular::gauss_product_2D_sphere_primal(double z, int n, double R, double Xc, double Yc, Waveguide * in_w)
 {
   double* r = NULL;
   double* t = NULL;
@@ -322,15 +321,16 @@ std::complex<double> HomogenousTransformationCircular::gauss_product_2D_sphere(d
 
 std::complex<double> HomogenousTransformationCircular::evaluate_for_z(double in_z, Waveguide * in_w) {
   double r = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
-  double ret = 0;
+  std::complex<double> ret = 0;
   try{
     // std::cout << "Process " << Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) << " computing signal at " << in_z << std::endl;
-    ret = sqrt(std::norm(gauss_product_2D_sphere(in_z,10,r,0,0, in_w)));
+    ret = gauss_product_2D_sphere_primal(in_z,10,r,0,0, in_w);
   } catch (VectorTools::ExcPointNotAvailableHere &e) {
     // std::cout << "Failed for " << in_z << " in " <<rank << std::endl;
     ret = 0;
   }
-  ret = Utilities::MPI::max(ret, MPI_COMM_WORLD);
+  ret.real( Utilities::MPI::sum(ret.real(), MPI_COMM_WORLD));
+  ret.imag( Utilities::MPI::sum(ret.imag(), MPI_COMM_WORLD));
   return ret;
 }
 

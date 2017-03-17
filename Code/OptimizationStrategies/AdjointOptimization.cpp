@@ -26,26 +26,44 @@ std::vector<std::complex<double>> AdjointOptimization::compute_small_step(double
 
 double AdjointOptimization::compute_big_step(std::vector<double> step) {
   Vector<double> current_config = primal_st->Dofs();
+
 	for(unsigned int i = 0; i< step.size(); i++){
 		primal_st->set_dof(i, current_config[i] + step[i]);
 		dual_st->set_dof(i, current_config[i] + step[i]);
 	}
+
+	deallog.push("Config");
+	Vector<double> for_output = primal_st->Dofs();
+	for(unsigned int i = 0; i< step.size(); i++){
+    deallog << for_output[i] << " , ";
+  }
+	deallog<<std::endl;
+	deallog.pop();
+
   MPI_Barrier(MPI_COMM_WORLD);
   waveguide->switch_to_primal(primal_st);
   waveguide->run();
   MPI_Barrier(MPI_COMM_WORLD);
+  double quality = 0;
+  std::complex<double> a_in = primal_st->evaluate_for_z(- GlobalParams.M_R_ZLength/2.0, waveguide);
+  std::complex<double> a_out= primal_st->evaluate_for_z(  GlobalParams.M_R_ZLength/2.0 -0.0001 , waveguide);
+  deallog<< "Phase in: " << a_in << std::endl;
+  deallog<< "Phase out: " << a_out << std::endl;
+  quality = std::abs(a_out) / std::abs(a_in);
+  deallog << "Computed primal quality " << quality << std::endl;
+  MPI_Barrier(MPI_COMM_WORLD);
   waveguide->switch_to_dual(dual_st);
   waveguide->run();
   MPI_Barrier(MPI_COMM_WORLD);
+  double dual_quality = 0;
+  std::complex<double> d_a_in = primal_st->evaluate_for_z(- GlobalParams.M_R_ZLength/2.0, waveguide);
+  std::complex<double> d_a_out= primal_st->evaluate_for_z(  GlobalParams.M_R_ZLength/2.0 -0.0001 , waveguide);
+  dual_quality = std::abs(d_a_out) / std::abs(d_a_in);
+  deallog<< "Phase in: " << d_a_in << std::endl;
+  deallog<< "Phase out: " << d_a_out << std::endl;
 
-  double quality = 0;
-  double q_in  = std::abs(primal_st->evaluate_for_z(- GlobalParams.M_R_ZLength/2.0, waveguide));
-  double q_out = std::abs(primal_st->evaluate_for_z(  GlobalParams.M_R_ZLength/2.0 -0.0001 , waveguide));
-  quality = q_out / q_in;
-
-  deallog.push("AO::compute_big_step");
-  deallog << "Computed quality " << quality << std::endl;
-  deallog.pop();
+  deallog << "Computed dual quality " << dual_quality << std::endl;
+  waveguide->switch_to_primal(primal_st);
   return quality;
 }
 

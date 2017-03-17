@@ -1,4 +1,0 @@
-./main running on 64 cores with 64 MPI-tasks 
-mpirun -n 64 --bind-by core --map-by core -report-bindings ./main
-mpirun: Error: unknown option "--bind-by"
-Type 'mpirun --help' for usage.

@@ -1207,23 +1207,23 @@ void Waveguide::solve () {
 
 	if(GlobalParams.So_Solver == SolverOptions::GMRES) {
 
-	  /**
+
 	  if(primal){
       if(run_number > 0) {
         for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {
           int index = locally_owned_dofs.nth_index_in_set(i);
-          solution[index] = primal_with_relevant[index];
+          primal_solution[index] = primal_with_relevant[index];
         }
       }
 	  } else {
 	    if(run_number > 1) {
         for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {
           int index = locally_owned_dofs.nth_index_in_set(i);
-          solution[index] = dual_with_relevant[index];
+          dual_solution[index] = dual_with_relevant[index];
         }
       }
 	  }
-	  **/
+
 
 		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(lsc , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData(GlobalParams.So_RestartSteps) );
 
@@ -1340,7 +1340,7 @@ void Waveguide::solve () {
 	  dual_with_relevant.update_ghost_values();
 	}
 
-
+	GrowingVectorMemory<TrilinosWrappers::MPI::BlockVector>::release_unused_memory();
 
 }
 
@@ -1549,10 +1549,10 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
   int counter =0;
   double * returned_vector = new double[6];
   for(unsigned int temp_counter = 0; temp_counter < 2; temp_counter++ ){
-    if((rank >= GlobalParams.NumberProcesses-GlobalParams.M_BC_Zplus ) || (((GlobalParams.NumberProcesses-GlobalParams.M_BC_Zplus)%2 ==1) && (rank == GlobalParams.NumberProcesses/2 -GlobalParams.M_BC_Zplus/2 -1) && temp_counter==1) ){
+    if(((int)rank >= GlobalParams.NumberProcesses-GlobalParams.M_BC_Zplus ) || (((GlobalParams.NumberProcesses-GlobalParams.M_BC_Zplus)%2 ==1) && (rank == GlobalParams.NumberProcesses/2 -GlobalParams.M_BC_Zplus/2 -1) && temp_counter==1) ){
       deallog << "This process is dormant."<<std::endl;
     } else {
-      if ( (((GlobalParams.NumberProcesses-GlobalParams.M_BC_Zplus)%2 ==1) && (rank == GlobalParams.NumberProcesses/2 -GlobalParams.M_BC_Zplus/2 -1) && temp_counter==0) ) {
+      if ( (((GlobalParams.NumberProcesses-GlobalParams.M_BC_Zplus)%2 ==1) && ((int)rank == GlobalParams.NumberProcesses/2 -GlobalParams.M_BC_Zplus/2 -1) && temp_counter==0) ) {
 
         deallog.push("middle phase");
         deallog << "This process is now computing its own contributions to the shape gradient."  << std::endl;
@@ -1607,11 +1607,11 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
                 Tensor<1,3,std::complex<double>> other_solution;
 
                 other_solution[0].real(returned_vector[0]);
-                other_solution[0].imag(returned_vector[1]);
+                other_solution[0].imag(- returned_vector[1]);
                 other_solution[1].real(returned_vector[2]);
-                other_solution[1].imag(returned_vector[3]);
+                other_solution[1].imag(- returned_vector[3]);
                 other_solution[2].real(returned_vector[4]);
-                other_solution[2].imag(returned_vector[5]);
+                other_solution[2].imag(- returned_vector[5]);
 
                 const double JxW = fe_values.JxW(q_index);
                 for ( int j = min; j <= max; j++) {

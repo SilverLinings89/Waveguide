@@ -122,14 +122,16 @@ class Waveguide
 		 */
 		void 		assemble_part ();
 
+
 		/**
-		 * To compute the output quality of the signal and it's transmition along the waveguid-axis, this function performs a comparison of the fundamental mode of a waveguide and the actual situation. For this purpose we integrate the product of the two functions over a cross-section of the waveguide in transformed coordinates. To perform this action we need to use numeric integration so the integral is decomposed into a sum over local evaluations. For this to be possible this function can be handed x,y and z coordinates and returns the according value.
-		 * \param x gives the x-coordinate.
-		 * \param y gives the y-coordinate.
-		 * \param z gives the z-coordinate.
-		 */
-		std::complex<double> evaluate_for_Position(double x, double y, double z);
-		/**
+     * To compute the output quality of the signal and it's transmition along the waveguid-axis, this function performs a comparison of the fundamental mode of a waveguide and the actual situation. For this purpose we integrate the product of the two functions over a cross-section of the waveguide in transformed coordinates. To perform this action we need to use numeric integration so the integral is decomposed into a sum over local evaluations. For this to be possible this function can be handed x,y and z coordinates and returns the according value.
+     * \param x gives the x-coordinate.
+     * \param y gives the y-coordinate.
+     * \param z gives the z-coordinate.
+     */
+    std::complex<double> evaluate_for_Position(double x, double y, double z);
+
+    /**
 		 * To compute the output quality of the signal and it's transmition along the waveguid-axis, this function performs a comparison of the fundamental mode of a waveguide and the actual situation. For this purpose we integrate the product of the two functions over a cross-section of the waveguide in transformed coordinates. To perform this action we need to use numeric integration so the integral is decomposed into a sum over local evaluations. For this to be possible this function can be handed x,y and z coordinates and returns the according value.
 		 * \param x gives the x-coordinate.
 		 * \param y gives the y-coordinate.
@@ -222,8 +224,6 @@ class Waveguide
 		 * This function occupies one slot of the Solver and will generate formatted output on the console and write the convergence history to a file.
 		 */
 		SolverControl::State check_iteration_state(const unsigned int, const double, const dealii::TrilinosWrappers::MPI::Vector &);
-
-
 
 		/**
 		 * This function fills the ConstraintMatrix-object of the Waveguide-object with all constraints needed for condensation into the szstem-matrix. It's properties are derived from the Waveguide itself and the Waveguide-Structure-object available to it, therefore there are no parameters but those members need to be prepared accordingly..
