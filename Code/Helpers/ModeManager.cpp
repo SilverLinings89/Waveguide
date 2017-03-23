@@ -23,8 +23,8 @@ ModeManager::ModeManager(){
 void ModeManager::load() {
 	in_circular = GlobalParams.M_C_Shape == ConnectorType::Circle;
 	out_circular = GlobalParams.M_C_Shape == ConnectorType::Circle;
-	v_in = GlobalParams.Phys_V;
-	v_out = GlobalParams.Phys_V;
+	v_in = 2 * GlobalParams.Phys_V;
+	v_out = 2 * GlobalParams.Phys_V;
 	return;
 }
 
