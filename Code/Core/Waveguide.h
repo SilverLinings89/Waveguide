@@ -58,11 +58,12 @@
 #include <sstream>
 #include <mpi.h>
 
+
 #include "../Helpers/Parameters.h"
 #include "../Helpers/ParameterReader.h"
 #include "./PreconditionerSweeping.h"
 #include "../Helpers/staticfunctions.h"
-
+#include "../Helpers/ModeManager.h"
 #include "../MeshGenerators/MeshGenerator.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
 
@@ -75,6 +76,7 @@ using namespace dealii;
 
 
 static Parameters GlobalParams;
+static ModeManager ModeMan;
 static dealii::ConvergenceTable Convergence_Table;
 static dealii::TableHandler Optimization_Steps;
 

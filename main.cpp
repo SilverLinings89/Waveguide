@@ -17,6 +17,7 @@
 #include "Code/OptimizationStrategies/Optimization.cpp"
 #include "Code/Helpers/ParameterReader.cpp"
 #include "Code/Helpers/Parameters.cpp"
+#include "Code/Helpers/ModeManager.cpp"
 #include "Code/Core/Sector.cpp"
 #include "Code/Core/Waveguide.cpp"
 #include "Code/Helpers/ExactSolution.cpp"
@@ -68,6 +69,8 @@ int main (int argc, char *argv[])
   deallog << "Streams prepared. Loading Parameters..." <<std::endl;
 
 	GlobalParams = GetParameters();
+
+	ModeMan.load();
 
 	deallog << "Parameters loaded. Preparing Space Transformations..." <<std::endl;
 
