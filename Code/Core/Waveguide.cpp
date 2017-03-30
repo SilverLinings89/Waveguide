@@ -23,7 +23,8 @@
 #include <deal.II/lac/solver.h>
 #include <deal.II/numerics/data_out_dof_data.h>
 #include <deal.II/lac/block_matrix_array.h>
-#include <deal.II/lac/solver_qmrs.h>
+#include <deal.II/lac/solver_bicgstab.h>
+
 
 using namespace dealii;
 
@@ -1224,8 +1225,8 @@ void Waveguide::solve () {
       }
 	  }
 
-
-		dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(lsc , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData(GlobalParams.So_RestartSteps) );
+dealii::SolverBicgstab<dealii::TrilinosWrappers::MPI::BlockVector> solver(lsc , dealii::SolverBicgstab<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData() );
+//	dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(lsc , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData(GlobalParams.So_RestartSteps) );
 
 	  int above = 0;
 		if ((int)rank != GlobalParams.NumberProcesses - 1) {
