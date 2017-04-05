@@ -12,7 +12,7 @@ static SolverControl s(10,1.e-10, false, false);
 SparseDirectUMFPACK * solver = 0;
 SparseMatrix<double> * temp = 0;
 
-SparsityPattern sparsity_pattern, off_diag_block;
+SparsityPattern sparsity_pattern, off_diag_block_lower, off_diag_block_upper;
 
 // dealii::TrilinosWrappers::SolverDirect * solver;
 
@@ -56,7 +56,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
    * \param bandwidth The number of dofs per line on average is required for the construction of matrices.
    * \param locally_owned The degrees of freedom associated with the current process. Required for vector and matrix construction.
    */
-	PreconditionerSweeping ( MPI_Comm in_mpi_comm, int in_own, int in_others, int bandwidth, IndexSet locally_owned, IndexSet * in_fixed_dofs, int rank);
+	PreconditionerSweeping ( MPI_Comm in_mpi_comm, int in_own, int in_others, int in_above, int bandwidth, IndexSet locally_owned, IndexSet * in_fixed_dofs, int rank);
 
     ~PreconditionerSweeping ();
 
@@ -95,7 +95,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 
 	void Prepare(TrilinosWrappers::MPI::BlockVector &src);
 
-	void init(SolverControl in_sc, TrilinosWrappers::SparseMatrix *);
+	void init(SolverControl in_sc, TrilinosWrappers::SparseMatrix *, TrilinosWrappers::SparseMatrix *);
 
   private:
 	int * indices;
@@ -108,7 +108,7 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
 	int rank;
 	int bandwidth;
 	MPI_Comm mpi_comm;
-
+	int above;
 
 
   };

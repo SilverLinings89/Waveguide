@@ -1225,15 +1225,19 @@ void Waveguide::solve () {
       }
 	  }
 
-dealii::SolverBicgstab<dealii::TrilinosWrappers::MPI::BlockVector> solver(lsc , dealii::SolverBicgstab<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData() );
-//	dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(lsc , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData(GlobalParams.So_RestartSteps) );
+  	dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(lsc , dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::AdditionalData(GlobalParams.So_RestartSteps) );
 
 	  int above = 0;
 		if ((int)rank != GlobalParams.NumberProcesses - 1) {
 			above = locally_relevant_dofs_all_processors[rank+1].n_elements();
 		}
 
-		PreconditionerSweeping sweep( mpi_comm, locally_owned_dofs.n_elements(), above, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, &fixed_dofs, rank);
+		int below = 0;
+		    if ((int)rank != 0) {
+		      below = locally_relevant_dofs_all_processors[rank-1].n_elements();
+		    }
+
+		PreconditionerSweeping sweep( mpi_comm, locally_owned_dofs.n_elements(), above, below, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, &fixed_dofs, rank);
 
 		if(rank == 0) {
 			sweep.Prepare(*solution);
@@ -1255,10 +1259,14 @@ dealii::SolverBicgstab<dealii::TrilinosWrappers::MPI::BlockVector> solver(lsc , 
 
 		deallog << "Initializing the Preconditioner..." <<std::endl;
 
-		if((int)rank < GlobalParams.NumberProcesses-1){
-		  sweep.init(solver_control, & system_matrix.block(rank,  rank+1 ));
+		if((int)rank < GlobalParams.NumberProcesses-1 &&(int)rank >0 ){
+		  sweep.init(solver_control, & system_matrix.block(rank,  rank+1 ), & system_matrix.block(rank, rank-1));
 		} else {
-		  sweep.init(solver_control, & system_matrix.block(rank,  rank));
+		  if((int)rank == GlobalParams.NumberProcesses-1) {
+		    sweep.init(solver_control, & system_matrix.block(rank,  rank), & system_matrix.block(rank, rank-1));
+		  } else {
+		    sweep.init(solver_control, & system_matrix.block(rank,  rank+1), & system_matrix.block(rank, rank));
+		  }
 		}
 
 		solver.connect(std_cxx11::bind (&Waveguide::residual_tracker,
