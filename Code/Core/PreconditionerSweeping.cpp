@@ -37,6 +37,9 @@ PreconditionerSweeping::PreconditionerSweeping (  MPI_Comm in_mpi_comm, int in_o
 		bandwidth = in_bandwidth;
 		mpi_comm = in_mpi_comm;
 		above = in_above;
+		prec_matrix_lower = 0;
+		prec_matrix_upper = 0;
+		matrix = 0;
 }
 
 
@@ -51,8 +54,14 @@ void PreconditionerSweeping::Prepare ( TrilinosWrappers::MPI::BlockVector & inp)
 void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &dst,
 			const TrilinosWrappers::MPI::BlockVector &src)const
 {
+  dealii::Vector<double> recv_buffer_above (above);
+  dealii::Vector<double> recv_buffer_below (others);
+  dealii::Vector<double> temp_own (own);
+  dealii::Vector<double> temp_own_2 (own);
   dealii::Vector<double> input(own);
-	for (unsigned int i = 0; i < sweepable; i++) {
+  MPI_Request forward_req, backward_req;
+
+  for (unsigned int i = 0; i < sweepable; i++) {
 		input[i] = src[indices[i]];
 	}
 
@@ -60,52 +69,32 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
 	  solver->solve( input);
 		MPI_Send(&input[0], own, MPI_DOUBLE, rank-1, 0, mpi_comm);
 	} else {
-	  double * trans2 = new double[others];
-		MPI_Recv(trans2, others, MPI_DOUBLE, rank+1, 0, mpi_comm, MPI_STATUS_IGNORE);
-		dealii::Vector<double> temp2 (others);
-		for (int i = 0; i < others; i++) {
-			temp2[i] = trans2[i];
-		}
-		dealii::Vector<double> temp3 (own);
-		UpperProduct(temp2, temp3);
-		input -= temp3;
+	  MPI_Recv(& recv_buffer_below[0], others, MPI_DOUBLE, rank+1, 0, mpi_comm, MPI_STATUS_IGNORE);
+		UpperProduct(recv_buffer_below, temp_own);
+		input -= temp_own;
 		if(rank != 0) {
-			dealii::Vector<double> temp4 (own);
-			Hinv(input, temp4);
-			MPI_Send(&temp4[0], own, MPI_DOUBLE, rank - 1, 0, mpi_comm);
+			Hinv(input, temp_own);
+			MPI_Isend(&temp_own[0], own, MPI_DOUBLE, rank - 1, 0, mpi_comm, &forward_req);
 		}
 
 	}
         
-  MPI_Barrier(mpi_comm);
   if((int)rank +1 != GlobalParams.NumberProcesses) {
-      dealii::Vector<double> temp (own);
       for(int i =0; i < own; i++) {
-          temp[i] = input[i];
+          temp_own[i] = input[i];
       }
-      Hinv(temp, input);
+      Hinv(temp_own, input);
   }
 
-  MPI_Barrier(mpi_comm);
   if ( rank == 0) {
-      MPI_Send(&input[0], own, MPI_DOUBLE, rank + 1, 0, mpi_comm);
+      MPI_Isend(&input[0], own, MPI_DOUBLE, rank + 1, 0, mpi_comm, &backward_req);
   } else {
-      double * trans4 = new double [above];
-      MPI_Recv(trans4, above, MPI_DOUBLE, rank-1, 0, mpi_comm, MPI_STATUS_IGNORE);
-      dealii::Vector<double> back_sweep (own);
-      dealii::Vector<double> back_sweep2 (own);
-      dealii::Vector<double> temp_calc (above);
-      for (int i = 0; i < own; i++) {
-              temp_calc[i] = trans4[i];
-      }
-      LowerProduct(temp_calc, back_sweep);
-      Hinv(back_sweep, back_sweep2);
-      input -= back_sweep2;
-
+      MPI_Recv(& recv_buffer_above[0], above, MPI_DOUBLE, rank-1, 0, mpi_comm, MPI_STATUS_IGNORE);
+      LowerProduct(recv_buffer_above, temp_own);
+      Hinv(temp_own, temp_own_2);
+      input -= temp_own_2;
       if((int)rank +1< GlobalParams.NumberProcesses) {
-
-          MPI_Send(&input[0], own, MPI_DOUBLE, rank + 1, 0, mpi_comm);
-
+          MPI_Isend(&input[0], own, MPI_DOUBLE, rank + 1, 0, mpi_comm, &backward_req);
       }
   }
 
@@ -119,15 +108,11 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
 }
 
 void PreconditionerSweeping::Hinv(const dealii::Vector<double> & src, dealii::Vector<double> & dst) const {
-	IndexSet is (own+others);
-	is.add_range(0, own+others-1);
 
-	dealii::Vector<double> inputb(own + others);
+  dealii::Vector<double> inputb(own + others);
 	for(int i = 0; i < own; i++) {
 		inputb[i ] = src(i);
 	}
-
-	// dealii::TrilinosWrappers::Vector  outputb(own + others);
 
 	solver->solve(  inputb );
 
