@@ -852,15 +852,9 @@ void Waveguide::assemble_system ()
         }
       }
       cell->get_dof_indices (local_dof_indices);
-      // pout << "Starting distribution"<<std::endl;
       cm.distribute_local_to_global     (cell_matrix_real, cell_rhs, local_dof_indices,system_matrix, system_rhs, true);
-      // pout << "P1 done"<<std::endl;
-
       cm_prec_odd.distribute_local_to_global(cell_matrix_prec_odd, cell_rhs, local_dof_indices,prec_matrix_odd, preconditioner_rhs, true);
-
       cm_prec_even.distribute_local_to_global(cell_matrix_prec_even, cell_rhs, local_dof_indices,prec_matrix_even, preconditioner_rhs, true);
-
-      // pout << "P2 done"<<std::endl;
     }
   }
 
@@ -1255,10 +1249,9 @@ void Waveguide::solve () {
 		   sweep.matrix = & system_matrix.block(rank, rank);
 		}
 
-		MPI_Barrier(mpi_comm);
-
 		deallog << "Initializing the Preconditioner..." <<std::endl;
 
+		timer.enter_subsection ("Preconditioner Initialization");
 		if((int)rank < GlobalParams.NumberProcesses-1 &&(int)rank >0 ){
 		  sweep.init(solver_control, & system_matrix.block(rank,  rank+1 ), & system_matrix.block(rank, rank-1));
 		} else {
@@ -1274,15 +1267,14 @@ void Waveguide::solve () {
                                    std_cxx11::_1,
                                    std_cxx11::_2,
                                    std_cxx11::_3));
-
-  	MPI_Barrier(mpi_comm);
-
+		timer.leave_subsection ();
+  	
 		deallog << "Preconditioner Ready. Solving..." <<std::endl;
 
 		struct timeval tp;
 		gettimeofday(&tp, NULL);
 		solver_start_milis = tp.tv_sec * 1000 + tp.tv_usec / 1000;
-
+		timer.enter_subsection ("GMRES run");
 		try {
 		  if(primal){
 		    solver.solve(system_matrix,primal_solution, system_rhs, sweep);
@@ -1292,6 +1284,7 @@ void Waveguide::solve () {
 		} catch(const dealii::SolverControl::NoConvergence & e) {
 		  deallog << "NO CONVERGENCE!" <<std::endl;
 		}
+		timer.leave_subsection ();
 
 		while( steps < 40) {
 		  struct timeval tp;

@@ -70,6 +70,61 @@ Point<3> HomogenousTransformationCircular::phys_to_math(Point<3> coord) const {
   return ret;
 }
 
+Point<3> HomogenousTransformationCircular::math_to_phys_hom(Point<3> coord) const {
+  Point<3> ret;
+	double alpha = 0.0 ;
+	
+	double dist = coord[0] * coord[0] + coord[1]*coord[1];
+
+  dist = sqrt(dist);
+  double v1 = GlobalParams.M_R_XLength/2.0 - std::max(GlobalParams.M_BC_XMinus, GlobalParams.M_BC_XPlus);
+  double v2 = GlobalParams.M_R_YLength/2.0 - std::max(GlobalParams.M_BC_YMinus, GlobalParams.M_BC_YPlus);
+  double maxdist = std::min(v1, v2);
+  double mindist = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
+  double sig = sigma(dist, mindist, maxdist);
+  alpha = InterpolationPolynomialZeroDerivative(sig, 1,0);
+		
+  if(coord[2] < GlobalParams.M_R_ZLength/(-2.0)) {
+    ret[0] = (2*GlobalParams.M_C_Dim1In) * coord[0] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
+    ret[1] = (2*GlobalParams.M_C_Dim1In) * coord[1] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
+    ret[2] = coord[2];
+  } else if(coord[2] >= GlobalParams.M_R_ZLength/(-2.0) && coord[2] < GlobalParams.M_R_ZLength/(2.0)) {
+    std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
+    double r = case_sectors[sec.first].get_r(sec.second);
+    double m = case_sectors[sec.first].get_m(sec.second);
+    ret[0] = coord[0] / r;
+    ret[1] = (coord[1] -m) / r;
+    ret[2] = coord[2];
+  } else {
+    ret[0] = (2*GlobalParams.M_C_Dim1Out) * coord[0] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
+    ret[1] = (2*GlobalParams.M_C_Dim1Out) * coord[1] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
+    ret[2] = coord[2];
+  }
+  return ret*alpha + (1-alpha)*coord;
+}
+
+Point<3> HomogenousTransformationCircular::phys_to_math_hom(Point<3> coord) const {
+  Point<3> ret;
+  if(coord[2] < GlobalParams.M_R_ZLength/(-2.0)) {
+    ret[0] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[0] / (2*GlobalParams.M_C_Dim1In);
+    ret[1] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[1] / (2*GlobalParams.M_C_Dim1In);
+    ret[2] = coord[2];
+  } else if(coord[2] >= GlobalParams.M_R_ZLength/(-2.0) && coord[2] < GlobalParams.M_R_ZLength/(2.0)) {
+    std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
+    double r = case_sectors[sec.first].get_r(sec.second);
+    double m = case_sectors[sec.first].get_m(sec.second);
+    ret[0] = coord[0] * r;
+    ret[1] = (coord[1] * r) +m;
+    ret[2] = coord[2];
+  } else {
+    ret[0] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[0] / (2*GlobalParams.M_C_Dim1In);
+    ret[1] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[1] / (2*GlobalParams.M_C_Dim1In);
+    ret[2] = coord[2];
+  }
+  return ret;
+}
+
+
 bool HomogenousTransformationCircular::PML_in_X(Point<3> &p) const {
   return p(0) < XMinus ||p(0) > XPlus;
 }
