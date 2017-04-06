@@ -340,21 +340,21 @@
             <pattern_description>[Bool]</pattern_description>
         </Homogeneity>
         <Optimization_20Schema>
-            <value>Adjoint</value>
+            <value>FD</value>
             <default_value>Adjoint</default_value>
             <documentation>If this is set to adjoint, the shape gradient will be computed by means of an adjoint based method. If it is set to FD, finite differences are use.</documentation>
             <pattern>32</pattern>
             <pattern_description>[Selection Adjoint|FD ]</pattern_description>
         </Optimization_20Schema>
         <Optimization_20Steps>
-            <value>50</value>
+            <value>5</value>
             <default_value>10</default_value>
             <documentation>Number of Optimization steps to be performed.</documentation>
             <pattern>33</pattern>
             <pattern_description>[Integer 1...2147483647 (inclusive)]</pattern_description>
         </Optimization_20Steps>
         <Stepping_20Method>
-            <value>LineSearch</value>
+            <value>Steepest</value>
             <default_value>Steepest</default_value>
             <documentation>Method of step computation. Steepest uses steepest descent. CG uses a conjugate gradient method to compute the next step.</documentation>
             <pattern>34</pattern>

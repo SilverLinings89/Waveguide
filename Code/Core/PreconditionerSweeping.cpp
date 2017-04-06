@@ -74,7 +74,7 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
 		input -= temp_own;
 		if(rank != 0) {
 			Hinv(input, temp_own);
-			MPI_Isend(&temp_own[0], own, MPI_DOUBLE, rank - 1, 0, mpi_comm, &forward_req);
+			MPI_Send(&temp_own[0], own, MPI_DOUBLE, rank - 1, 0, mpi_comm);
 		}
 
 	}
@@ -87,14 +87,14 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
   }
 
   if ( rank == 0) {
-      MPI_Isend(&input[0], own, MPI_DOUBLE, rank + 1, 0, mpi_comm, &backward_req);
+      MPI_Send(&input[0], own, MPI_DOUBLE, rank + 1, 0, mpi_comm);
   } else {
       MPI_Recv(& recv_buffer_above[0], above, MPI_DOUBLE, rank-1, 0, mpi_comm, MPI_STATUS_IGNORE);
       LowerProduct(recv_buffer_above, temp_own);
       Hinv(temp_own, temp_own_2);
       input -= temp_own_2;
       if((int)rank +1< GlobalParams.NumberProcesses) {
-          MPI_Isend(&input[0], own, MPI_DOUBLE, rank + 1, 0, mpi_comm, &backward_req);
+          MPI_Send(&input[0], own, MPI_DOUBLE, rank + 1, 0, mpi_comm);
       }
   }
 

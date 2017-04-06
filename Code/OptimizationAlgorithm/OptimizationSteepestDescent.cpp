@@ -11,35 +11,30 @@ OptimizationSteepestDescent::~OptimizationSteepestDescent() {
 
 }
 
-void OptimizationSteepestDescent::pass_result_small_step(std::vector<double>) {
-  // TODO: This implementation is still missing - uncertain and unimportant.
-  return;
-}
-
-void OptimizationSteepestDescent::pass_result_big_step(double) {
-  // TODO: implement this function as core functionality of CG-based stepping scheme.
-  return;
-}
-
-
-bool OptimizationSteepestDescent::perform_small_step_next( int  ) {
-  // TODO: implement this function as core functionality of CG-based stepping scheme.
-  return false;
+bool OptimizationSteepestDescent::perform_big_step_next( int  ) {
+  int full_steps = residuals.size();
+  int small_steps = states.size();
+  return (full_steps <= small_steps);
 }
 
 double OptimizationSteepestDescent::get_small_step_step_width( int  ) {
-  // TODO: implement this function as core functionality of CG-based stepping scheme.
-  return 0.0;
+  return 0.0001;
 }
 
-bool OptimizationSteepestDescent::perform_big_step_next( int  )  {
-  // TODO: implement this function as core functionality of CG-based stepping scheme.
-  return false;
+bool OptimizationSteepestDescent::perform_small_step_next( int  )  {
+  return !perform_big_step_next(0);
 }
 
 std::vector<double> OptimizationSteepestDescent::get_big_step_configuration() {
   std::vector<double> ret;
-  // TODO: implement this function as core functionality of CG-based stepping scheme.
+  if(residuals.size() == 0 && states.size() == 0) {
+      return ret;
+  }
+  int idx = states.size()-1;
+  ret.resize(states[0].size());
+  for (int i =0; i < states[0].size(); i++) {
+    ret[i] = -0.0001 * states[idx][i] ;
+  }
   return ret;
 }
 #endif
