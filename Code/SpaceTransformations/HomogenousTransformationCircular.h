@@ -32,6 +32,10 @@ public:
 
   Point<3> phys_to_math(Point<3> coord) const;
 
+	Point<3> math_to_phys_hom(Point<3> coord) const;
+
+  Point<3> phys_to_math_hom(Point<3> coord) const;
+	
   bool is_identity(Point<3> coord) const;
 
   Tensor<2,3, std::complex<double>> get_Tensor(Point<3> & coordinate) const ;
