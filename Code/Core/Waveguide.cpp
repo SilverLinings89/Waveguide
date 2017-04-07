@@ -1515,9 +1515,8 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
   deallog << "Computing adjoint based shape derivative contributions..."<<std::endl;
 
   int other_proc = GlobalParams.NumberProcesses- rank - 1 - GlobalParams.M_BC_Zplus;
-
-  std::vector<std::complex<double>> ret;
   const unsigned int ndofs = st->NDofs();
+  std::vector<std::complex<double>> ret ;
   ret.resize(ndofs);
   for(unsigned int i = 0; i < ndofs; i++) {
     ret[i] = 0;
@@ -1527,16 +1526,19 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
   int min = ndofs;
   int max = -1;
   for( int i =0; i < (int)ndofs; i++) {
-    std::pair<double, double> support = st->dof_support(i);
-    if ((support.first >= minimum_local_z && support.first <= maximum_local_z) || (support.second >= minimum_local_z && support.second <= maximum_local_z) ) {
-     if (i > max && st->IsDofFree(i)) {
-       max = i;
-     }
-     if(i < min && st->IsDofFree(i)) {
-       min = i;
-     }
+    if(st->IsDofFree(i)) {
+      std::pair<double, double> support = st->dof_support(i);
+      if ((support.first <= minimum_local_z && support.second >= maximum_local_z) || (support.first >= minimum_local_z && support.second <= maximum_local_z) || (support.first <= maximum_local_z && support.second >= minimum_local_z) ) {
+         if (i > max ) {
+           max = i;
+         }
+         if(i < min ) {
+             min = i;
+         }
+      }
     }
   }
+
 
   QGauss<3>  quadrature_formula(1);
   const FEValuesExtractors::Vector real(0);
@@ -1675,7 +1677,24 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
   }
 
 
-  deallog << "Done." << std::endl;
+  deallog << "Done. Communicating: " << std::endl;
+
+  double * input = new double[2*ndofs];
+  double * output = new double[2*ndofs];
+
+  for(int i= 0; i < ndofs; i++) {
+    input[2*i] = ret[i].real();
+    input[2*i +1] = ret[i].imag();
+  }
+
+  MPI_Allreduce(input,output, 2 *ndofs, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+  for(int i =0; i < ndofs; i++) {
+    ret[i] = std::complex<double>(output[2*i], output[2*i +1]);
+  }
+
+  delete input, output;
+
   deallog.pop();
   return ret;
 }

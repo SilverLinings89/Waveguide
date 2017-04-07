@@ -8,11 +8,15 @@
 Optimization1D::Optimization1D( ) {
   steps_widths = new double[STEPS_PER_DOFS];
   double start = 0.1;
-  for(int i = 0; i < STEPS_PER_DOFS/2; i++){
-    steps_widths[i] = start * pow(10, -i);
-  }
-  for(int i = 0; i < STEPS_PER_DOFS/2; i++){
-      steps_widths[STEPS_PER_DOFS/2 + i] = -steps_widths[i];
+  if(STEPS_PER_DOFS == 1) {
+    steps_widths[0] = start;
+  } else {
+    for(int i = 0; i < STEPS_PER_DOFS/2; i++){
+      steps_widths[i] = start * pow(10, -i);
+    }
+    for(int i = 0; i < STEPS_PER_DOFS/2; i++){
+        steps_widths[STEPS_PER_DOFS/2 + i] = -steps_widths[i];
+    }
   }
 }
 

@@ -82,7 +82,7 @@ static dealii::TableHandler Optimization_Steps;
 
 static const CylindricalManifold<3, 3> round_description (2);
 
-const int STEPS_PER_DOFS = 6;
+const int STEPS_PER_DOFS = 1;
 
 static double * steps_widths;
 

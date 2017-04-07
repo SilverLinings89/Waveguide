@@ -30,6 +30,7 @@ double FDOptimization::evaluate() {
 
 std::vector<double> FDOptimization::compute_small_step(double step) {
   unsigned int ndofs = st->NDofs();
+  std::complex<double> global_a_out= st->evaluate_for_z(  GlobalParams.M_R_ZLength/2.0 -0.0001 , waveguide);
   std::vector<double> ret;
   ret.resize(ndofs);
   double q_old = evaluate();
@@ -38,7 +39,16 @@ std::vector<double> FDOptimization::compute_small_step(double step) {
     if(st->IsDofFree(i)) {
       st->set_dof(i, old_dof_value + step);
       waveguide->run();
-      ret[i] = evaluate() - q_old;
+      ret[i] = (evaluate() - q_old)/step;
+
+      std::complex<double> a_in = st->evaluate_for_z(- GlobalParams.M_R_ZLength/2.0, waveguide);
+      std::complex<double> a_out= st->evaluate_for_z(  GlobalParams.M_R_ZLength/2.0 -0.0001 , waveguide);
+      deallog<< "Phase in: " << a_in ;
+      deallog<< " Phase out: " << a_out ;
+      deallog << " Quality derivative: " << ret[i];
+      deallog << " Step: " << step;
+      deallog << " Phase derivative: " << (a_out - global_a_out)/step <<std::endl;
+      st->set_dof(i, old_dof_value);
     } else {
       ret[i] = 0.0;
     }
