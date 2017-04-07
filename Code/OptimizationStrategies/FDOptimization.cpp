@@ -31,7 +31,7 @@ double FDOptimization::evaluate() {
 std::vector<double> FDOptimization::compute_small_step(double step) {
   unsigned int ndofs = st->NDofs();
   std::vector<double> ret;
-  ret.reserve(ndofs);
+  ret.resize(ndofs);
   double q_old = evaluate();
   for (unsigned int i =0; i < ndofs; i++) {
     double old_dof_value = st->get_dof(i);
