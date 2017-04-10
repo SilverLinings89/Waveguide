@@ -70,6 +70,10 @@ int main (int argc, char *argv[])
 
 	GlobalParams = GetParameters();
 
+	if(argc ==3) {
+	  GlobalParams.StepWidth = std::atof(argv[2]);
+	}
+
 	ModeMan.load();
 
 	deallog << "Parameters loaded. Preparing Space Transformations..." <<std::endl;
@@ -187,7 +191,7 @@ int main (int argc, char *argv[])
 	  } else {
 	    deallog << "1D search";
 	  }
-	  deallog << std::endl;
+	  deallog << " with step width " << GlobalParams.StepWidth << std::endl;
 	}
 
 	deallog.pop();

@@ -7,7 +7,7 @@
 
 Optimization1D::Optimization1D( ) {
   steps_widths = new double[STEPS_PER_DOFS];
-  double start = 0.1;
+  double start = GlobalParams.StepWidth;
   if(STEPS_PER_DOFS == 1) {
     steps_widths[0] = start;
   } else {

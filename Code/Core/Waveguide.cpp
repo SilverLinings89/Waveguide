@@ -1690,7 +1690,7 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
   MPI_Allreduce(input,output, 2 *ndofs, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
   for(int i =0; i < ndofs; i++) {
-    ret[i] = std::complex<double>(output[2*i], output[2*i +1]);
+    ret[i] = -1.0 * std::complex<double>(output[2*i +1], output[2*i]) / stepwidth;
   }
 
   delete input, output;

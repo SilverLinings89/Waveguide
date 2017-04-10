@@ -191,6 +191,8 @@ struct Parameters {
     double Phys_V;
     double Phys_SpotRadius;
 
+    double StepWidth;
+
 };
 
 #endif

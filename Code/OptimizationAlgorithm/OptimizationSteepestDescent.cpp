@@ -18,7 +18,7 @@ bool OptimizationSteepestDescent::perform_big_step_next( int  ) {
 }
 
 double OptimizationSteepestDescent::get_small_step_step_width( int  ) {
-  return 0.1;
+  return GlobalParams.StepWidth;;
 }
 
 bool OptimizationSteepestDescent::perform_small_step_next( int  )  {
