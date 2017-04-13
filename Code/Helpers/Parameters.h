@@ -139,6 +139,8 @@ struct Parameters {
     
     PreconditionerOptions So_Preconditioner;
 
+    int So_ElementOrder;
+
     int So_RestartSteps;
     
     int So_TotalSteps;

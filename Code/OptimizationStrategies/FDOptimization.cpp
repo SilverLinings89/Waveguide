@@ -101,7 +101,7 @@ void FDOptimization::run() {
 
     counter++;
 
-    if(counter > GlobalParams.Sc_OptimizationSteps || quality > 1.0) {
+    if(counter >= GlobalParams.Sc_OptimizationSteps || quality > 1.0) {
       run = false;
       std::cout << "The optimization is shutting down after " << counter << " steps. Last quality: " << 100* quality <<"%" <<std::endl;
     }

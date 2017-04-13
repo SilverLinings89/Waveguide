@@ -297,6 +297,8 @@ static Parameters GetParameters() {
 
 	ret.Phys_V = 2 * ret.C_Pi * ret.M_C_Dim1In / ret.M_W_Lambda *std::sqrt(ret.M_W_epsilonin * ret.M_W_epsilonin - ret.M_W_epsilonout * ret.M_W_epsilonout);
 
+	ret.So_ElementOrder = 0;
+
 	deallog << "Normalized Frequency V: " << ret.Phys_V <<std::endl;
 
 	if(ret.Phys_V> 1.5 && ret.Phys_V < 2.405){

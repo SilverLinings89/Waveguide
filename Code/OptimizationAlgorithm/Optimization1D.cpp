@@ -6,18 +6,18 @@
 
 
 Optimization1D::Optimization1D( ) {
-  steps_widths = new double[STEPS_PER_DOFS];
-  double start = GlobalParams.StepWidth;
-  if(STEPS_PER_DOFS == 1) {
-    steps_widths[0] = start;
-  } else {
-    for(int i = 0; i < STEPS_PER_DOFS/2; i++){
-      steps_widths[i] = start * pow(10, -i);
+  steps_widths = new double[11];
+  double start = 0.0001;
+  //if(STEPS_PER_DOFS == 1) {
+  //  steps_widths[0] = start;
+  //} else {
+    for(int i = 0; i < STEPS_PER_DOFS; i++){
+      steps_widths[i] = start * pow(2, i);
     }
-    for(int i = 0; i < STEPS_PER_DOFS/2; i++){
-        steps_widths[STEPS_PER_DOFS/2 + i] = -steps_widths[i];
-    }
-  }
+   // for(int i = 0; i < STEPS_PER_DOFS/2; i++){
+   //     steps_widths[STEPS_PER_DOFS/2 + i] = -steps_widths[i];
+   // }
+  //}
 }
 
 Optimization1D::~Optimization1D(){
