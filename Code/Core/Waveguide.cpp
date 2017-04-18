@@ -973,6 +973,10 @@ void Waveguide::MakeBoundaryConditions (){
                   fixed_dofs.add_index(local_line_dofs[k]);
                 }
 							}
+							if(fe.dofs_per_line >= 2) {
+							  cm.add_line(local_line_dofs[1]);
+							  cm.set_inhomogeneity(local_line_dofs[1], 0.0 );
+							}
 						}
 					}
 					if(face_own_count > 0) {
@@ -980,7 +984,7 @@ void Waveguide::MakeBoundaryConditions (){
             for(int j = GeometryInfo<3>::faces_per_cell*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
               if(locally_owned_dofs.is_element(local_face_dofs[j])) {
                 // cm.add_line(local_face_dofs[j]);
-                //cm.set_inhomogeneity(local_face_dofs[j], 0.0 );
+                // cm.set_inhomogeneity(local_face_dofs[j], 0.0 );
                 fixed_dofs.add_index(local_face_dofs[j]);
               }
             }
@@ -1032,8 +1036,6 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
 	}
 
 	const int face_own_count = fe.dofs_per_face - GeometryInfo<3>::lines_per_face*fe.dofs_per_line;
-
-	std::cout << "LOCAL FACE OWN COUNT: " << face_own_count <<std::endl;
 
 	std::vector<types::global_dof_index> local_face_dofs (fe.dofs_per_face);
 
@@ -1268,7 +1270,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
           }
 				}
 
-				/**
+
 				if( rank <= 1 && std::abs(center[2] + GlobalParams.M_R_ZLength/2.0 ) < 0.0001 ){
 					for(unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 						if((cell->face(i))->line(j)->at_boundary()) {
@@ -1282,8 +1284,8 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
 							double result = TEMode00(p,0);
 							if(st->PML_in_X(p) || st->PML_in_Y(p)) result = 0.0;
 							if(locally_owned_dofs.is_element(local_dof_indices[0])) {
-								cm_prec_even.add_line(local_dof_indices[0]);
-								cm_prec_even.set_inhomogeneity(local_dof_indices[0], direction[0] * result );
+//								cm_prec_even.add_line(local_dof_indices[0]);
+//								cm_prec_even.set_inhomogeneity(local_dof_indices[0], direction[0] * result );
 							}
 							if(locally_owned_dofs.is_element(local_dof_indices[1])) {
 								cm_prec_even.add_line(local_dof_indices[1]);
@@ -1293,7 +1295,6 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
 						}
 					}
 				}
-				**/
 
 			}
 		}
