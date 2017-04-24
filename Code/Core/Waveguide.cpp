@@ -928,7 +928,7 @@ void Waveguide::MakeBoundaryConditions (){
 					}
 					if(face_own_count > 0) {
 					  cell->face(i)->get_dof_indices(local_face_dofs);
-					  for(int j = GeometryInfo<3>::faces_per_cell*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
+					  for(int j = GeometryInfo<3>::lines_per_face*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
 					    if(locally_owned_dofs.is_element(local_face_dofs[j])) {
 					      cm.add_line(local_face_dofs[j]);
                 cm.set_inhomogeneity(local_face_dofs[j], 0.0 );
@@ -951,7 +951,7 @@ void Waveguide::MakeBoundaryConditions (){
 					}
 					if(face_own_count > 0) {
             cell->face(i)->get_dof_indices(local_face_dofs);
-            for(int j = GeometryInfo<3>::faces_per_cell*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
+            for(int j = GeometryInfo<3>::lines_per_face*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
               if(locally_owned_dofs.is_element(local_face_dofs[j])) {
                 cm.add_line(local_face_dofs[j]);
                 cm.set_inhomogeneity(local_face_dofs[j], 0.0 );
@@ -981,7 +981,7 @@ void Waveguide::MakeBoundaryConditions (){
 					}
 					if(face_own_count > 0) {
             cell->face(i)->get_dof_indices(local_face_dofs);
-            for(int j = GeometryInfo<3>::faces_per_cell*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
+            for(int j = GeometryInfo<3>::lines_per_face*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
               if(locally_owned_dofs.is_element(local_face_dofs[j])) {
                 // cm.add_line(local_face_dofs[j]);
                 // cm.set_inhomogeneity(local_face_dofs[j], 0.0 );
@@ -1004,7 +1004,7 @@ void Waveguide::MakeBoundaryConditions (){
 					}
 					if(face_own_count > 0) {
             cell->face(i)->get_dof_indices(local_face_dofs);
-            for(int j = GeometryInfo<3>::faces_per_cell*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
+            for(int j = GeometryInfo<3>::lines_per_face*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
               if(locally_owned_dofs.is_element(local_face_dofs[j])) {
                 cm.add_line(local_face_dofs[j]);
                 cm.set_inhomogeneity(local_face_dofs[j], 0.0 );
@@ -1070,7 +1070,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
 					}
 					if(face_own_count > 0) {
             cell->face(i)->get_dof_indices(local_face_dofs);
-            for(int j = GeometryInfo<3>::faces_per_cell*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
+            for(int j = GeometryInfo<3>::lines_per_face*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
               if(locally_owned_dofs.is_element(local_face_dofs[j])) {
                 cm_prec_odd.add_line(local_face_dofs[j]);
                 cm_prec_odd.set_inhomogeneity(local_face_dofs[j], 0.0 );
@@ -1096,7 +1096,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
 					}
 					if(face_own_count > 0) {
             cell->face(i)->get_dof_indices(local_face_dofs);
-            for(int j = GeometryInfo<3>::faces_per_cell*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
+            for(int j = GeometryInfo<3>::lines_per_face*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
               if(locally_owned_dofs.is_element(local_face_dofs[j])) {
                 cm_prec_odd.add_line(local_face_dofs[j]);
                 cm_prec_odd.set_inhomogeneity(local_face_dofs[j], 0.0 );
@@ -1122,7 +1122,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
             }
             if(face_own_count > 0) {
               cell->face(i)->get_dof_indices(local_face_dofs);
-              for(int j = GeometryInfo<3>::faces_per_cell*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
+              for(int j = GeometryInfo<3>::lines_per_face*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
                 if(locally_owned_dofs.is_element(local_face_dofs[j])) {
                   cm_prec_even.add_line(local_face_dofs[j]);
                   cm_prec_even.set_inhomogeneity(local_face_dofs[j], 0.0 );
@@ -1143,7 +1143,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
             }
             if(face_own_count > 0) {
               cell->face(i)->get_dof_indices(local_face_dofs);
-              for(int j = GeometryInfo<3>::faces_per_cell*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
+              for(int j = GeometryInfo<3>::lines_per_face*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
                 if(locally_owned_dofs.is_element(local_face_dofs[j])) {
                   cm_prec_even.add_line(local_face_dofs[j]);
                   cm_prec_even.set_inhomogeneity(local_face_dofs[j], 0.0 );
@@ -1164,7 +1164,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
             }
             if(face_own_count > 0) {
               cell->face(i)->get_dof_indices(local_face_dofs);
-              for(int j = GeometryInfo<3>::faces_per_cell*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
+              for(int j = GeometryInfo<3>::lines_per_face*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
                 if(locally_owned_dofs.is_element(local_face_dofs[j])) {
                   cm_prec_odd.add_line(local_face_dofs[j]);
                   cm_prec_odd.set_inhomogeneity(local_face_dofs[j], 0.0 );
@@ -1185,7 +1185,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
             }
             if(face_own_count > 0) {
               cell->face(i)->get_dof_indices(local_face_dofs);
-              for(int j = GeometryInfo<3>::faces_per_cell*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
+              for(int j = GeometryInfo<3>::lines_per_face*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
                 if(locally_owned_dofs.is_element(local_face_dofs[j])) {
                   cm_prec_odd.add_line(local_face_dofs[j]);
                   cm_prec_odd.set_inhomogeneity(local_face_dofs[j], 0.0 );
@@ -1206,7 +1206,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
             }
             if(face_own_count > 0) {
               cell->face(i)->get_dof_indices(local_face_dofs);
-              for(int j = GeometryInfo<3>::faces_per_cell*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
+              for(int j = GeometryInfo<3>::lines_per_face*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
                 if(locally_owned_dofs.is_element(local_face_dofs[j])) {
                   cm_prec_odd.add_line(local_face_dofs[j]);
                   cm_prec_odd.set_inhomogeneity(local_face_dofs[j], 0.0 );
@@ -1227,7 +1227,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
             }
             if(face_own_count > 0) {
               cell->face(i)->get_dof_indices(local_face_dofs);
-              for(int j = GeometryInfo<3>::faces_per_cell*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
+              for(int j = GeometryInfo<3>::lines_per_face*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
                 if(locally_owned_dofs.is_element(local_face_dofs[j])) {
                   cm_prec_odd.add_line(local_face_dofs[j]);
                   cm_prec_odd.set_inhomogeneity(local_face_dofs[j], 0.0 );
@@ -1248,7 +1248,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
             }
             if(face_own_count > 0) {
               cell->face(i)->get_dof_indices(local_face_dofs);
-              for(int j = GeometryInfo<3>::faces_per_cell*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
+              for(int j = GeometryInfo<3>::lines_per_face*fe.dofs_per_line; j <fe.dofs_per_face; j++ ){
                 if(locally_owned_dofs.is_element(local_face_dofs[j])) {
                   cm_prec_even.add_line(local_face_dofs[j]);
                   cm_prec_even.set_inhomogeneity(local_face_dofs[j], 0.0 );
@@ -1475,9 +1475,23 @@ void Waveguide::store() {
 void Waveguide::output_results ( bool  )
 {
 
+  double * local_norm = new double[3];
+
 	for(unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {
 		unsigned int index = locally_owned_dofs.nth_index_in_set(i);
 		ErrorOfSolution[index] = (*solution)[index] - EstimatedSolution[index];
+	}
+
+	double sol_real, sol_imag;
+	for(unsigned int i =0; i < locally_owned_dofs.n_elements(); i+=2) {
+	  unsigned int index = locally_owned_dofs.nth_index_in_set(i);
+	  unsigned int index2 = locally_owned_dofs.nth_index_in_set(i+1);
+	  if(index != index2 -1) std::cout << "WEIRD EVENT IN OUTPUT RESULTS" << std::endl;
+	  sol_real = (*solution)[index];
+    sol_real = sol_real*sol_real;
+    sol_imag = (*solution)[index2];
+    sol_imag = sol_imag*sol_imag;
+    ErrorOfSolution[index] = std::sqrt(sol_real + sol_imag);
 	}
 
 	MPI_Barrier(mpi_comm);

@@ -36,7 +36,7 @@ RoundMeshGenerator::RoundMeshGenerator(SpaceTransformation * in_ct) :
   edges[2][1] = 0;
   edges[2][2] = 2;
 
-  const std_cxx11::array< Tensor< 1, 3 >, 3 > edges2(edges);
+  // const std_cxx11::array< Tensor< 1, 3 >, 3 > edges2(edges);
 
   subs.push_back(1);
   subs.push_back(1);

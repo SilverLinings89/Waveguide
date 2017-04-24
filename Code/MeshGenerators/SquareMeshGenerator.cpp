@@ -26,7 +26,6 @@ SquareMeshGenerator::SquareMeshGenerator(SpaceTransformation * in_ct) :
   ct = in_ct;
   Layers = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
   origin = Point<3>(-1,-1,-1);
-  std_cxx11::array< Tensor< 1, 3 >, 3 > edges;
   edges[0][0] = 2;
   edges[0][1] = 0;
   edges[0][2] = 0;
@@ -39,11 +38,9 @@ SquareMeshGenerator::SquareMeshGenerator(SpaceTransformation * in_ct) :
   edges[2][1] = 0;
   edges[2][2] = 2;
 
-  subs.resize(3);
-  subs[0] = 1;
-  subs[1] = 1;
-  subs[2] = Layers;
-
+  subs.push_back(1);
+  subs.push_back(1);
+  subs.push_back(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD));
 }
 
 SquareMeshGenerator::~SquareMeshGenerator() {
@@ -51,34 +48,44 @@ SquareMeshGenerator::~SquareMeshGenerator() {
 }
 
 void SquareMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3> & tria) const {
-  int counter = 0;
-  parallel::distributed::Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
-  endc2 = tria.end();
-  tria.set_all_manifold_ids(0);
+  parallel::shared::Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
+   endc2 = tria.end();
+   tria.set_all_manifold_ids(0);
+   for (; cell2!=endc2; ++cell2){
+     if (Distance2D(cell2->center() ) < 0.25 ) {
+       cell2->set_all_manifold_ids(1);
+       cell2->set_manifold_id(1);
+     }
+   }
+   unsigned int man = 1;
 
-  for (; cell2!=endc2; ++cell2){
-    if(cell2->at_boundary()){
-      for(int j = 0; j<6; j++){
-        if(cell2->face(j)->at_boundary()){
-          Point<3,double> ctr =cell2->face(j)->center(true, false);
-          if(math_coordinate_in_waveguide(ctr)){
-            if(ctr(2) < 0) {
+   cell2 = tria.begin_active();
 
-              cell2->face(j)->set_all_boundary_ids(11);
-              counter ++;
-            }
+   for (; cell2!=endc2; ++cell2){
+     if(cell2->at_boundary()){
+       for(int j = 0; j<6; j++){
+         if(cell2->face(j)->at_boundary()){
+           Point<3> ctr =cell2->face(j)->center(false, false);
+           // if(System_Coordinate_in_Waveguide(ctr)){
 
-            else {
-              cell2->face(j)->set_all_boundary_ids(2);
-            }
-          }
-        }
-      }
-    }
-  }
+           cell2->face(j)->set_all_boundary_ids(1);
+
+           if(std::abs(ctr(2) - GlobalParams.M_R_ZLength/2.0 - GlobalParams.M_BC_Zplus*GlobalParams.SectorThickness) < 0.00001) {
+             cell2->face(j)->set_all_boundary_ids(2);
+           }
+           if(std::abs(ctr(2) + GlobalParams.M_R_ZLength/2.0) < 0.00001) {
+             cell2->face(j)->set_all_boundary_ids(3);
+           }
+         }
+       }
+     }
+   }
 }
 
 void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangulation<3> * in_tria){
+
+  deallog.push("SquareMeshGenerator:prepare_triangulation");
+   deallog << "Starting Mesh preparation"<<std::endl;
 
   const std_cxx11::array< Tensor< 1, 3 >, 3 > edges2(edges);
 
@@ -94,24 +101,10 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
                               std_cxx11::ref(*in_tria)));
 
 
-    in_tria->set_all_manifold_ids(0);
-
-    GridTools::transform( &Triangulation_Stretch_to_circle , *in_tria);
-
-    in_tria->set_all_manifold_ids(0);
-
     parallel::shared::Triangulation<3>::active_cell_iterator
 
     cell = in_tria->begin_active(),
     endc = in_tria->end();
-
-    int layers_per_sector = 4;
-    layers_per_sector /= GlobalParams.R_Global;
-    int reps = log2(layers_per_sector);
-    if( layers_per_sector > 0 && pow(2,reps) != layers_per_sector) {
-      std::cout << "The number of layers per sector has to be a power of 2. At least 2 layers are recommended for neccessary sparsity in the pattern for preconditioner to work." << std::endl;
-      exit(0);
-    }
 
     double len = 2.0 / Layers;
 
@@ -140,7 +133,7 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
     for(int i = 0; i < GlobalParams.R_Interior; i++) {
       cell = in_tria->begin_active();
       for (; cell!=endc; ++cell){
-        if( Distance2D(cell->center(true, false))< (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0)  {
+        if( cell->center(true, false)[0] < (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0 && cell->center(true, false)[1] < (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out)/2.0)  {
           cell->set_refine_flag();
         }
       }
@@ -169,11 +162,16 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
       }
     }
 
-
+    std::cout << GlobalParams.MPI_Rank << ": "<< z_min << " , " <<z_max <<std::endl;
     // mesh_info(triangulation, solutionpath + "/grid" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
 
     cell = in_tria->begin_active();
     endc = in_tria->end();
+
+    set_boundary_ids(*in_tria);
+
+    deallog << "Done" <<std::endl;
+    deallog.pop();
 }
 
 bool SquareMeshGenerator::math_coordinate_in_waveguide(Point<3,double> in_position) const  {

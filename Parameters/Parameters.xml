@@ -193,7 +193,7 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </YLength>
             <ZLength>
-                <value>6</value>
+                <value>10</value>
                 <default_value>2.0</default_value>
                 <documentation>Length of the system in z-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
                 <pattern>24</pattern>
@@ -281,42 +281,42 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </YPlus>
             <KappaXMax>
-                <value>10</value>
+                <value>5</value>
                 <default_value>10.0</default_value>
                 <documentation>PML Tuning Parameter</documentation>
                 <pattern>24</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </KappaXMax>
             <KappaYMax>
-                <value>10</value>
+                <value>5</value>
                 <default_value>10.0</default_value>
                 <documentation>PML Tuning Parameter</documentation>
                 <pattern>25</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </KappaYMax>
             <KappaZMax>
-                <value>10</value>
+                <value>5</value>
                 <default_value>10.0</default_value>
                 <documentation>PML Tuning Parameter</documentation>
                 <pattern>26</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </KappaZMax>
             <SigmaXMax>
-                <value>10</value>
+                <value>5</value>
                 <default_value>10.0</default_value>
                 <documentation>PML Tuning Parameter</documentation>
                 <pattern>27</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </SigmaXMax>
             <SigmaYMax>
-                <value>10</value>
+                <value>5</value>
                 <default_value>10.0</default_value>
                 <documentation>PML Tuning Parameter</documentation>
                 <pattern>28</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </SigmaYMax>
             <SigmaZMax>
-                <value>10</value>
+                <value>5</value>
                 <default_value>10.0</default_value>
                 <documentation>PML Tuning Parameter</documentation>
                 <pattern>29</pattern>
@@ -437,7 +437,7 @@
             <pattern_description>[Integer range 0...2147483647 (inclusive)]</pattern_description>
         </Global>
         <SemiGlobal>
-            <value>0</value>
+            <value>1</value>
             <default_value>1</default_value>
             <documentation>Semi-Global refinement-steps (close to the Waveguide-boundary and inside).</documentation>
             <pattern>45</pattern>
