@@ -146,9 +146,10 @@ template<unsigned int Dofs_Per_Sector> Tensor<2,3, double> Sector<Dofs_Per_Secto
 		}
 	}
 
-	double det = ginv[0][0]*( ginv[2][2]*ginv[1][1] - ginv[2][1]*ginv[1][2]) - ginv[1][0]*(ginv[2][2]*ginv[0][1] - ginv[2][1]*ginv[0][2]) + ginv[2][0]*(ginv[1][2]*ginv[0][1] - ginv[1][1]*ginv[0][2]);
+	// double det = ginv[0][0]*( ginv[2][2]*ginv[1][1] - ginv[2][1]*ginv[1][2]) - ginv[1][0]*(ginv[2][2]*ginv[0][1] - ginv[2][1]*ginv[0][2]) + ginv[2][0]*(ginv[1][2]*ginv[0][1] - ginv[1][1]*ginv[0][2]);
 
 	Tensor<2,3,double> g;
+/**
 	g[0][0] = (ginv[2][2] * ginv[1][1] - ginv[2][1]*ginv[1][2]);
 	g[0][1] = - (ginv[2][2] * ginv[0][1] - ginv[2][1]*ginv[0][2]);
 	g[0][2] = (ginv[1][2] * ginv[0][1] - ginv[1][1]*ginv[0][2]);
@@ -158,8 +159,10 @@ template<unsigned int Dofs_Per_Sector> Tensor<2,3, double> Sector<Dofs_Per_Secto
 	g[2][0] = (ginv[2][1] * ginv[1][0] - ginv[2][0]*ginv[1][1]);
 	g[2][1] =  -(ginv[2][1] * ginv[0][0] - ginv[2][0]*ginv[0][1]);
 	g[2][2] = (ginv[1][1] * ginv[0][0] - ginv[1][0]*ginv[0][1]);
-
 	g *= 1/det;
+**/
+	g = invert(ginv);
+
 	double sp = dotproduct(u[0], crossproduct(u[1], u[2]));
 	if(sp < 0) sp *= -1.0;
 	for(int i = 0; i< 3; i++) {
