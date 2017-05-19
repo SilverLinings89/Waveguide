@@ -25,9 +25,6 @@ static Point<3> Triangulation_Stretch_Y (const Point<3> &p);
 
 static Point<3> Triangulation_Stretch_Z (const Point<3> &p);
 
-
-static double Solution (Point<3, double> p ,const unsigned int component);
-
 inline bool file_exists (const std::string& name);
 
 

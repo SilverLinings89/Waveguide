@@ -394,15 +394,15 @@ void InhomogenousTransformationRectangular::estimate_and_initialize() {
     double r_0 = GlobalParams.M_C_Dim1In;
     double r_1 = GlobalParams.M_C_Dim1Out;
     if(sectors == 1) {
-      Sector<4> temp12(true, true, -GlobalParams.M_R_ZLength/2, GlobalParams.M_R_ZLength/2 );
+      Sector<2> temp12(true, true, -GlobalParams.M_R_ZLength/2, GlobalParams.M_R_ZLength/2 );
       case_sectors.push_back(temp12);
       case_sectors[0].set_properties_force(GlobalParams.M_W_Delta/2.0,-GlobalParams.M_W_Delta/2.0, GlobalParams.M_C_Dim1In, GlobalParams.M_C_Dim1Out, 0, 0);
     } else {
       double length = Sector_Length();
-      Sector<4> temp(true, false, -GlobalParams.M_R_ZLength/(2.0), -GlobalParams.M_R_ZLength/2.0 + length );
+      Sector<2> temp(true, false, -GlobalParams.M_R_ZLength/(2.0), -GlobalParams.M_R_ZLength/2.0 + length );
       case_sectors.push_back(temp);
       for(int  i = 1; i < sectors; i++) {
-        Sector<4> temp2( false, false, -GlobalParams.M_R_ZLength/(2.0) + length*(1.0 *i), -GlobalParams.M_R_ZLength/(2.0) + length*(i + 1.0) );
+        Sector<2> temp2( false, false, -GlobalParams.M_R_ZLength/(2.0) + length*(1.0 *i), -GlobalParams.M_R_ZLength/(2.0) + length*(i + 1.0) );
         case_sectors.push_back(temp2);
       }
 

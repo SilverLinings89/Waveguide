@@ -451,24 +451,6 @@ static Point<3> Triangulation_Shift_Z (const Point<3> &p)
   return q;
 }
 
-/**
-static Point<3> Triangulation_Stretch_Real_Radius (const Point<3> &p)
-{
-	double r_goal = structure->get_r(structure->Z_to_Sector_and_local_z(p[2]).second);
-	double shift = structure->get_m(structure->Z_to_Sector_and_local_z(p[2]).second);
-	double r_current = (GlobalParams.PRM_M_R_XLength / 2.0 ) / 7.12644;
-	double r_max = (GlobalParams.PRM_M_R_XLength / 2.0 ) * (1.0 - GlobalParams.PRM_M_BC_Mantle);
-	double r_point = sqrt(p[0]*p[0] + p[1]*p[1]);
-	double stretch = sigma(r_point, r_current, r_max);
-	double factor = stretch * r_goal/r_current + (1-stretch);
-	Point<3> q = p;
-	q[0] *= factor;
-	q[1] *= factor;
-	q[1] += factor * shift;
-	return p;
-}
-**/
-
 static Point<3> Triangulation_Stretch_to_circle (const Point<3> &p)
 {
 	Point<3> q = p;
@@ -495,6 +477,24 @@ static Point<3> Triangulation_Stretch_Computational_Radius (const Point<3> &p)
 	return q;
 }
 
+static Point<3> Triangulation_Stretch_Computational_Rectangle (const Point<3> &p)
+{
+  double x_goal = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
+  double x_current = (GlobalParams.M_R_XLength ) / 6;
+  double x_max = GlobalParams.M_R_XLength / 2.0  - GlobalParams.M_BC_XMinus ;
+  double x_point = abs(p[0]);
+  double factor = InterpolationPolynomialZeroDerivative(sigma(x_point, x_current, x_max), x_goal/x_current , 1.0);
+  Point<3> q = p;
+  q[0] *= factor;
+  double y_goal = (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out)/2.0;
+  double y_current = (GlobalParams.M_R_YLength ) / 6;
+  double y_max = GlobalParams.M_R_YLength / 2.0 - GlobalParams.M_BC_YMinus;
+  double y_point = abs(p[1]);
+  factor = InterpolationPolynomialZeroDerivative(sigma(y_point, y_current, y_max), y_goal/y_current , 1.0);
+  q[1] *= factor;
+  return q;
+}
+
 static bool System_Coordinate_in_Waveguide(Point<3> p){
 	double value = Distance2D(p);
 	return ( value < (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0);
@@ -510,24 +510,6 @@ static double TEMode00 (Point<3, double> p ,const unsigned int component)
 	  return exp(-d2*d2 / 2.25);
 	  //return 1.0;
 	}
-	return 0.0;
-}
-
-static double Solution (Point<3, double> p ,const unsigned int component)
-{
-	if(component == 0) {
-		double res =TEMode00(p,0);
-		std::complex<double> i (0,1);
-		std::complex<double> ret = -1.0 * res * std::exp(-i*(GlobalParams.C_Pi/2) *(p[2]+GlobalParams.M_R_ZLength/2.0 ));
-		return ret.real();
-	}
-	if(component == 3) {
-		double res =TEMode00(p,0);
-		std::complex<double> i (0,1);
-		std::complex<double> ret = -1.0 * res * std::exp(-i*(GlobalParams.C_Pi/2) *(p[2]+GlobalParams.M_R_ZLength/2.0 ));
-		return ret.imag();
-	}
-
 	return 0.0;
 }
 

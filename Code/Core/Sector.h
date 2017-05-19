@@ -1,5 +1,5 @@
-#ifndef SectorFlag
-#define SectorFlag
+#ifndef SectorFlagH
+#define SectorFlagH
 
 #include <deal.II/base/tensor.h>
 
@@ -59,11 +59,14 @@ class Sector {
 		/**
 		 * This function is used during the optimization-operation to update the properties of the space-transformation. However, to ensure, that the boundary-conditions remain intact, this function cannot edit the left defrees of freedom if left is true and it cannot edit the right degrees of freedom if right is true
 		 */
-		void set_properties(double , double , double , double, double, double);
+		void set_properties(double, double, double, double);
+		void set_properties(double, double, double, double, double, double);
+
 		/**
 		 * This function is the same as set_properties with the difference of being able to change the values of the input- and output boundary.
 		 */
-		void set_properties_force(double , double , double , double, double, double);
+		void set_properties_force(double, double, double, double);
+		void set_properties_force(double, double, double, double, double, double);
 		/**
 		 * The values of Q1, Q2 and Q3 are needed to compute the solution in real coordinates from the one in trnsformed coordinates. This function returnes Q1 for a given position and the current transformation.
 		 */

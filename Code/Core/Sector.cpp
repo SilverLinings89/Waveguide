@@ -1,7 +1,11 @@
+#ifndef SectorFlagCPP
+#define SectorFlagCPP
+
 #include "Sector.h"
 #include <deal.II/base/tensor.h>
 #include "../Helpers/staticfunctions.cpp"
 using namespace dealii;
+
 
 template<unsigned int Dofs_Per_Sector> Sector<Dofs_Per_Sector>::~Sector() {
 
@@ -20,46 +24,101 @@ template<unsigned int Dofs_Per_Sector> Sector<Dofs_Per_Sector>::Sector(bool in_l
     derivative[1] = 2;
     derivative[2] = 0;
   }
+  if(Dofs_Per_Sector == 2) {
+    zero_derivative[0] = false;
+    zero_derivative[1] = true;
+    derivative[0] = 1;
+    derivative[1] = 0;
+  }
 
-	dofs_l[0] = 0;
-	dofs_r[0] = 0;
-	dofs_l[1] = 0;
-	dofs_r[1] = 0;
-	dofs_l[2] = 0;
-	dofs_r[2] = 0;
+  for(unsigned int i = 0; i < Dofs_Per_Sector; i++) {
+    dofs_l[i] = 0;
+    dofs_r[i] = 0;
+
+  }
 	NInternalBoundaryDofs =0;
 	LowestDof = 0;
 	NActiveCells = 0;
 	NDofs = Dofs_Per_Sector;
 }
 
-template<unsigned int Dofs_Per_Sector> void Sector<Dofs_Per_Sector>::set_properties(double in_m_0, double in_m_1, double in_r_0, double in_r_1, double in_v_0, double in_v_1){
-	if(!left) {
-		// r_0 = in_r_0;
-		// m_0 = in_m_0;
-		// v_0 = in_v_0;
-		dofs_l[0] = in_r_0;
-		dofs_l[1] = in_m_0;
-		dofs_l[2] = in_v_0;
-	}
-	if(!right) {
-		// r_1 = in_r_1;
-		// m_1 = in_m_1;
-		// v_1 = in_v_1;
-	  dofs_r[0] = in_r_1;
-	  dofs_r[1] = in_m_1;
-	  dofs_r[2] = in_v_1;
-	}
+
+
+template<> void Sector<2>::set_properties(double , double, double, double, double, double) {
+  std::cout << "Wrong call in Sector." << std::endl;
 }
 
-template<unsigned int Dofs_Per_Sector> void Sector<Dofs_Per_Sector>::set_properties_force(double in_m_0, double in_m_1, double in_r_0, double in_r_1, double in_v_0, double in_v_1){
-	// r_0 = in_r_0;	m_0 = in_m_0;	v_0 = in_v_0;	r_1 = in_r_1;	m_1 = in_m_1;	v_1 = in_v_1;
-  dofs_l[0] = in_r_0;
-  dofs_l[1] = in_m_0;
-  dofs_l[2] = in_v_0;
-  dofs_r[0] = in_r_1;
-  dofs_r[1] = in_m_1;
-  dofs_r[2] = in_v_1;
+template<> void Sector<3>::set_properties(double , double , double, double) {
+  std::cout << "Wrong call in Sector." << std::endl;
+}
+
+template<> void Sector<2>::set_properties(double in_m_0, double in_m_1, double in_v_0, double in_v_1) {
+  if(!left) {
+    dofs_l[0] = in_m_0;
+    dofs_l[1] = in_v_0;
+  }
+  if(!right) {
+    dofs_r[0] = in_m_1;
+    dofs_r[1] = in_v_1;
+  }
+
+}
+
+template<> void Sector<3>::set_properties(double in_m_0, double in_m_1, double in_r_0, double in_r_1, double in_v_0, double in_v_1) {
+  if(!left) {
+    dofs_l[0] = in_r_0;
+    dofs_l[1] = in_m_0;
+    dofs_l[2] = in_v_0;
+  }
+  if(!right) {
+    dofs_r[0] = in_r_1;
+    dofs_r[1] = in_m_1;
+    dofs_r[2] = in_v_1;
+  }
+}
+
+template<> void Sector<2>::set_properties_force(double , double, double, double, double, double) {
+  std::cout << "Wrong call in Sector." << std::endl;
+}
+
+template<> void Sector<3>::set_properties_force(double , double , double, double) {
+  std::cout << "Wrong call in Sector." << std::endl;
+}
+
+template<> void Sector<2>::set_properties_force(double in_m_0, double in_m_1, double in_v_0, double in_v_1) {
+    dofs_l[0] = in_m_0;
+    dofs_l[1] = in_v_0;
+    dofs_r[0] = in_m_1;
+    dofs_r[1] = in_v_1;
+}
+
+template<> void Sector<3>::set_properties_force(double in_m_0, double in_m_1, double in_r_0, double in_r_1, double in_v_0, double in_v_1) {
+    dofs_l[0] = in_r_0;
+    dofs_l[1] = in_m_0;
+    dofs_l[2] = in_v_0;
+    dofs_r[0] = in_r_1;
+    dofs_r[1] = in_m_1;
+    dofs_r[2] = in_v_1;
+}
+
+template<unsigned int Dofs_Per_Sector> void Sector<Dofs_Per_Sector>::set_properties( double , double , double, double ) {
+  std::cout << "The code does not work for this number of dofs per Sector." << std::endl;
+  return;
+}
+
+template<unsigned int Dofs_Per_Sector> void Sector<Dofs_Per_Sector>::set_properties(double , double, double, double, double, double) {
+  std::cout << "The code does not work for this number of dofs per Sector." << std::endl;
+  return;
+}
+
+template<unsigned int Dofs_Per_Sector> void Sector<Dofs_Per_Sector>::set_properties_force( double , double , double, double ) {
+  std::cout << "The code does not work for this number of dofs per Sector." << std::endl;
+  return;
+}
+
+template<unsigned int Dofs_Per_Sector> void Sector<Dofs_Per_Sector>::set_properties_force(double , double, double, double, double, double) {
+  std::cout << "The code does not work for this number of dofs per Sector." << std::endl;
+  return;
 }
 
 template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::get_dof(unsigned int i, double z) const {
@@ -81,19 +140,32 @@ template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::get_dof(u
 template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::get_r(double z) const {
 	if ( z < 0.0 ) z = 0.0;
 	if ( z > 1.0 ) z = 1.0;
+	if(Dofs_Per_Sector < 3){
+	  deallog << "Error in Sector: Acces to radius dof without existence." << std::endl;
+	  return 0;
+	}
 	return InterpolationPolynomialZeroDerivative(z, dofs_l[0], dofs_r[0]);
 }
 
 template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::get_m(double z) const {
 	if ( z < 0.0 ) z = 0.0;
 	if ( z > 1.0 ) z = 1.0;
-	return InterpolationPolynomial(z, dofs_l[1], dofs_r[1], dofs_l[2], dofs_r[2]);
+	if(Dofs_Per_Sector==2) {
+	  return InterpolationPolynomial(z, dofs_l[0], dofs_r[0], dofs_l[1], dofs_r[1]);
+	} else {
+	  return InterpolationPolynomial(z, dofs_l[1], dofs_r[1], dofs_l[2], dofs_r[2]);
+	}
+
 }
 
 template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::get_v(double z) const {
 	if ( z < 0.0 ) z = 0.0;
 	if ( z > 1.0 ) z = 1.0;
-	return InterpolationPolynomialZeroDerivative(z, dofs_l[2], dofs_r[2]);
+	if(Dofs_Per_Sector==2) {
+    return InterpolationPolynomialZeroDerivative(z, dofs_l[1], dofs_r[1]);
+  } else {
+    return InterpolationPolynomialZeroDerivative(z, dofs_l[2], dofs_r[2]);
+  }
 }
 
 template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::getQ1 ( double z) const {
@@ -108,7 +180,7 @@ template<unsigned int Dofs_Per_Sector> double Sector<Dofs_Per_Sector>::getQ3 ( d
   return 0.0;
 }
 
-template<unsigned int Dofs_Per_Sector> Tensor<2,3, double> Sector<Dofs_Per_Sector>::TransformationTensorInternal (double in_x, double in_y, double z) const {
+template<> Tensor<2,3, double> Sector<3>::TransformationTensorInternal (double in_x, double in_y, double z) const {
 	if(z<0 || z>1) std::cout << "Falty implementation of internal Tensor calculation: z: " << z << std::endl;
 	double RadiusInMultiplyer = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/(2* dofs_l[0]);
 	double RadiusOutMultiplyer = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/(2* dofs_r[0]);
@@ -146,21 +218,8 @@ template<unsigned int Dofs_Per_Sector> Tensor<2,3, double> Sector<Dofs_Per_Secto
 		}
 	}
 
-	// double det = ginv[0][0]*( ginv[2][2]*ginv[1][1] - ginv[2][1]*ginv[1][2]) - ginv[1][0]*(ginv[2][2]*ginv[0][1] - ginv[2][1]*ginv[0][2]) + ginv[2][0]*(ginv[1][2]*ginv[0][1] - ginv[1][1]*ginv[0][2]);
-
 	Tensor<2,3,double> g;
-/**
-	g[0][0] = (ginv[2][2] * ginv[1][1] - ginv[2][1]*ginv[1][2]);
-	g[0][1] = - (ginv[2][2] * ginv[0][1] - ginv[2][1]*ginv[0][2]);
-	g[0][2] = (ginv[1][2] * ginv[0][1] - ginv[1][1]*ginv[0][2]);
-	g[1][0] = - (ginv[2][2] * ginv[1][0] - ginv[2][0]*ginv[1][2]);
-	g[1][1] = (ginv[2][2] * ginv[0][0] - ginv[2][0]*ginv[0][2]);
-	g[1][2] = - (ginv[1][2] * ginv[0][0] - ginv[1][0]*ginv[0][2]);
-	g[2][0] = (ginv[2][1] * ginv[1][0] - ginv[2][0]*ginv[1][1]);
-	g[2][1] =  -(ginv[2][1] * ginv[0][0] - ginv[2][0]*ginv[0][1]);
-	g[2][2] = (ginv[1][1] * ginv[0][0] - ginv[1][0]*ginv[0][1]);
-	g *= 1/det;
-**/
+
 	g = invert(ginv);
 
 	double sp = dotproduct(u[0], crossproduct(u[1], u[2]));
@@ -173,6 +232,56 @@ template<unsigned int Dofs_Per_Sector> Tensor<2,3, double> Sector<Dofs_Per_Secto
 
 	return g;
 }
+
+template<> Tensor<2,3, double> Sector<2>::TransformationTensorInternal (double , double , double z) const {
+   if(z<0 || z>1) std::cout << "Falty implementation of internal Tensor calculation: z: " << z << std::endl;
+
+   double zz = z*z;
+
+   Tensor<2,3, double> u;
+   u[0][0]= 1;
+   u[0][1]= 0.0;
+   u[0][2]= 0.0;
+   u[1][0]= 0.0;
+   u[1][1]= 1;
+   u[1][2]= 0.0;
+   u[2][0]= 0.0;
+   u[2][1]= 6*dofs_l[0]*z - dofs_l[1] - 6*dofs_r[0]*z + 4*dofs_l[1]*z + 2*dofs_r[1]*z - 6*dofs_l[0]*zz + 6*dofs_r[0]*zz - 3*dofs_l[1]*zz - 3*dofs_r[1]*zz;
+   u[2][2]= 1.0;
+   double Q [3];
+   Q[0] = 1;
+   Q[1] = 1;
+   Q[2] = std::sqrt((dofs_l[1] - 2*z*(3*dofs_l[0] - 3*dofs_r[0] + 2*dofs_l[1] + dofs_r[1]) + 3*zz*std::pow(2*dofs_l[0] - 2*dofs_r[0] + dofs_l[1] + dofs_r[1], 2)) + 1);
+
+   Tensor<2,3,double> ginv;
+   for(int i = 0; i<3; i++) {
+     for(int j = 0; j<3; j++) {
+       for(int k = 0; k< 3; k++) ginv[i][j] += u[i][k] * u[j][k];
+     }
+   }
+
+   Tensor<2,3,double> g;
+
+   g = invert(ginv);
+
+   double sp = dotproduct(u[0], crossproduct(u[1], u[2]));
+   if(sp < 0) sp *= -1.0;
+   for(int i = 0; i< 3; i++) {
+     for(int j = 0; j<3; j++) {
+       g[i][j] *= sp * Q[0]*Q[1]*Q[2] / (Q[i] * Q[j]);
+     }
+   }
+
+   return g;
+ }
+
+template<unsigned int Dimension> Tensor<2,3,double> Sector<Dimension>::TransformationTensorInternal(double , double , double ) const {
+  Tensor<2,3,double> ret;
+  std::cout << "The code does not work for you Sector specification." << Dimension << std::endl;
+  return ret;
+}
+
+
 
 template<unsigned int Dofs_Per_Sector> unsigned int Sector<Dofs_Per_Sector>::getLowestDof() const {
 	return LowestDof;
@@ -205,3 +314,5 @@ template<unsigned int Dofs_Per_Sector> void Sector<Dofs_Per_Sector>::setNInterna
 template<unsigned int Dofs_Per_Sector> void Sector<Dofs_Per_Sector>::setNActiveCells( unsigned int in_nactivecells) {
 	NActiveCells = in_nactivecells;
 }
+
+#endif

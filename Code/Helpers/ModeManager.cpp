@@ -21,10 +21,13 @@ ModeManager::ModeManager(){
 }
 
 void ModeManager::load() {
-	in_circular = GlobalParams.M_C_Shape == ConnectorType::Circle;
-	out_circular = GlobalParams.M_C_Shape == ConnectorType::Circle;
-	v_in = 2 * GlobalParams.Phys_V;
-	v_out = 2 * GlobalParams.Phys_V;
+	// in_circular = GlobalParams.M_C_Shape == ConnectorType::Circle;
+	in_circular = true;
+
+	// out_circular = GlobalParams.M_C_Shape == ConnectorType::Circle;
+	out_circular = true;
+	v_in =  2* GlobalParams.Phys_V;
+	v_out = 2* GlobalParams.Phys_V;
 	return;
 }
 
@@ -366,13 +369,11 @@ std::vector<double> ModeManager::get_us(double v) {
     }
 
     std::vector<double> us;
-    for(int i = 0; i < locations.size(); i++) {
+    for(unsigned int i = 0; i < locations.size(); i++) {
         double u_left = locations[i]-0.1;
         double u_right = locations[i];
         double l_lhs = get_lhs(u_left);
         double l_rhs = get_rhs(u_left,v);
-        double r_lhs = get_lhs(u_right);
-        double r_rhs = get_rhs(u_right,v);
 
         double j = 0;
         while (j<10) {
@@ -380,8 +381,6 @@ std::vector<double> ModeManager::get_us(double v) {
             double update_rhs = get_rhs((u_left+u_right)/2.0,v);
             if((update_lhs - update_rhs) * (l_lhs-l_rhs) < 0 ) {
                 u_right = (u_left+u_right)/2.0;
-                r_lhs = update_lhs;
-                r_rhs = update_rhs;
             } else {
                 u_left = (u_left+u_right)/2.0;
                 l_lhs = update_lhs;
@@ -418,18 +417,16 @@ double ModeManager::get_u0(double v) {
         rhs = n_rhs;
     }
 
-    for(int i = 0; i < locations.size(); i++) {
+    for(unsigned int i = 0; i < locations.size(); i++) {
         std::cout << "sign change near "<< locations[i] << std::endl;
     }
 
     std::vector<double> us;
-    for(int i = 0; i < locations.size(); i++) {
+    for(unsigned int i = 0; i < locations.size(); i++) {
         double u_left = locations[i]-0.1;
         double u_right = locations[i];
         double l_lhs = get_lhs(u_left);
         double l_rhs = get_rhs(u_left,v);
-        double r_lhs = get_lhs(u_right);
-        double r_rhs = get_rhs(u_right,v);
 
         double j = 0;
         while (j<10) {
@@ -437,8 +434,6 @@ double ModeManager::get_u0(double v) {
             double update_rhs = get_rhs((u_left+u_right)/2.0,v);
             if((update_lhs - update_rhs) * (l_lhs-l_rhs) < 0 ) {
                 u_right = (u_left+u_right)/2.0;
-                r_lhs = update_lhs;
-                r_rhs = update_rhs;
             } else {
                 u_left = (u_left+u_right)/2.0;
                 l_lhs = update_lhs;
@@ -452,7 +447,7 @@ double ModeManager::get_u0(double v) {
 
     }
 
-    for(int i = 0; i < us.size(); i++) {
+    for(unsigned int i = 0; i < us.size(); i++) {
         std::cout << "intersection at " << us[i] << std::endl;
     }
 

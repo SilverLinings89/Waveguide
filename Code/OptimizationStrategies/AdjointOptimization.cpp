@@ -23,7 +23,7 @@ std::vector<std::complex<double>> AdjointOptimization::compute_small_step(double
   waveguide->switch_to_primal(primal_st);
   std::complex<double> global_a_out= primal_st->evaluate_for_z(  GlobalParams.M_R_ZLength/2.0 -0.0001 , waveguide);
   std::vector<std::complex<double>> grad = waveguide->assemble_adjoint_local_contribution(step);
-  for(int i = 0; i < grad.size(); i++) {
+  for(unsigned int i = 0; i < grad.size(); i++) {
     deallog << "Phase Derivative: " << grad[i]/step << " Step: " << step << "Quality derivative: " << std::abs(global_a_out + grad[i]) - std::abs(global_a_out)<< std::endl;
   }
   return grad;

@@ -57,7 +57,6 @@ void SquareMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<
        cell2->set_manifold_id(1);
      }
    }
-   unsigned int man = 1;
 
    cell2 = tria.begin_active();
 
@@ -116,7 +115,12 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
 
     GridTools::transform(& Triangulation_Stretch_X, * in_tria);
     GridTools::transform(& Triangulation_Stretch_Y, * in_tria);
-    GridTools::transform(& Triangulation_Stretch_Computational_Radius, * in_tria);
+
+    if(GlobalParams.R_Global > 0) {
+        in_tria->refine_global(GlobalParams.R_Global);
+    }
+
+    GridTools::transform(& Triangulation_Stretch_Computational_Rectangle, * in_tria);
 
     double MaxDistX = (GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In)*1.4/2.0;
     double MaxDistY = (GlobalParams.M_C_Dim2Out + GlobalParams.M_C_Dim2In)*1.4/2.0;
@@ -133,7 +137,7 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
     for(int i = 0; i < GlobalParams.R_Interior; i++) {
       cell = in_tria->begin_active();
       for (; cell!=endc; ++cell){
-        if( cell->center(true, false)[0] < (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0 && cell->center(true, false)[1] < (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out)/2.0)  {
+        if( std::abs(cell->center(true, false)[0]) < (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0 && std::abs(cell->center(true, false)[1]) < (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out)/2.0)  {
           cell->set_refine_flag();
         }
       }

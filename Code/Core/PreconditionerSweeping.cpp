@@ -59,7 +59,6 @@ void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &ds
   dealii::Vector<double> temp_own (own);
   dealii::Vector<double> temp_own_2 (own);
   dealii::Vector<double> input(own);
-  MPI_Request forward_req, backward_req;
 
   for (unsigned int i = 0; i < sweepable; i++) {
 		input[i] = src[indices[i]];

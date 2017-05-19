@@ -32,7 +32,7 @@ std::vector<double> OptimizationSteepestDescent::get_big_step_configuration() {
   }
   int idx = states.size()-1;
   ret.resize(states[0].size());
-  for (int i =0; i < states[0].size(); i++) {
+  for (unsigned int i =0; i < states[0].size(); i++) {
     ret[i] = -0.0001 * states[idx][i] ;
   }
   return ret;

@@ -8,7 +8,7 @@
 using namespace dealii;
 
 HomogenousTransformationRectangular::HomogenousTransformationRectangular (int in_rank):
-    SpaceTransformation(3, in_rank),
+    SpaceTransformation(2, in_rank),
   XMinus( -(GlobalParams.M_R_XLength *0.5 - GlobalParams.M_BC_XMinus)),
   XPlus( GlobalParams.M_R_XLength *0.5 - GlobalParams.M_BC_XPlus),
   YMinus( -(GlobalParams.M_R_YLength *0.5 - GlobalParams.M_BC_YMinus)),
@@ -353,11 +353,11 @@ std::complex<double> HomogenousTransformationRectangular::evaluate_for_z(double 
 
 double HomogenousTransformationRectangular::get_dof(int dof) const {
   if(dof < (int)NDofs() && dof >= 0) {
-    int sector = floor(dof/3);
+    int sector = floor(dof/2);
     if(sector == sectors) {
-      return case_sectors[sector-1].dofs_r[dof%3];
+      return case_sectors[sector-1].dofs_r[dof%2];
     } else {
-      return case_sectors[sector].dofs_l[dof%3];
+      return case_sectors[sector].dofs_l[dof%2];
     }
   } else {
     std::cout << "Critical: DOF-index out of bounds in HomogenousTransformationCircular::get_dof!" <<std::endl;
@@ -366,13 +366,13 @@ double HomogenousTransformationRectangular::get_dof(int dof) const {
 }
 
 double HomogenousTransformationRectangular::get_free_dof(int in_dof) const {
-  int dof = in_dof +3 ;
-  if(dof < (int)NDofs()-3 && dof >= 0) {
-    int sector = floor(dof/3);
+  int dof = in_dof + 2 ;
+  if(dof < (int)NDofs()-2 && dof >= 0) {
+    int sector = floor(dof/2);
     if(sector == sectors) {
-      return case_sectors[sector-1].dofs_r[dof%3];
+      return case_sectors[sector-1].dofs_r[dof%2];
     } else {
-      return case_sectors[sector].dofs_l[dof%3];
+      return case_sectors[sector].dofs_l[dof%2];
     }
   } else {
     std::cout << "Critical: DOF-index out of bounds in HomogenousTransformationCircular::get_free_dof!" <<std::endl;
@@ -382,14 +382,14 @@ double HomogenousTransformationRectangular::get_free_dof(int in_dof) const {
 
 void HomogenousTransformationRectangular::set_dof(int dof, double in_val) {
   if(dof < (int)NDofs() && dof >= 0) {
-    int sector = floor(dof/3);
+    int sector = floor(dof/2);
     if(sector == sectors) {
-      case_sectors[sector-1].dofs_r[dof%3] = in_val;
+      case_sectors[sector-1].dofs_r[dof%2] = in_val;
     } else if (sector == 0) {
-      case_sectors[0].dofs_l[dof%3] = in_val;
+      case_sectors[0].dofs_l[dof%2] = in_val;
     } else {
-      case_sectors[sector].dofs_l[dof%3] = in_val;
-      case_sectors[sector-1].dofs_r[dof%3] = in_val;
+      case_sectors[sector].dofs_l[dof%2] = in_val;
+      case_sectors[sector-1].dofs_r[dof%2] = in_val;
     }
   } else {
     std::cout << "Critical: DOF-index out of bounds in HomogenousTransformationCircular::set_dof!" <<std::endl;
@@ -397,16 +397,16 @@ void HomogenousTransformationRectangular::set_dof(int dof, double in_val) {
 }
 
 void HomogenousTransformationRectangular::set_free_dof(int in_dof, double in_val) {
-  int dof = in_dof + 3;
-  if(dof < (int)NDofs() -3 && dof >= 0) {
-    int sector = floor(dof/3);
+  int dof = in_dof + 2;
+  if(dof < (int)NDofs() -2 && dof >= 0) {
+    int sector = floor(dof/2);
     if(sector == sectors) {
-      case_sectors[sector-1].dofs_r[dof%3] = in_val;
+      case_sectors[sector-1].dofs_r[dof%2] = in_val;
     } else if (sector == 0) {
-      case_sectors[0].dofs_l[dof%3] = in_val;
+      case_sectors[0].dofs_l[dof%2] = in_val;
     } else {
-      case_sectors[sector].dofs_l[dof%3] = in_val;
-      case_sectors[sector-1].dofs_r[dof%3] = in_val;
+      case_sectors[sector].dofs_l[dof%2] = in_val;
+      case_sectors[sector-1].dofs_r[dof%2] = in_val;
     }
   } else {
     std::cout << "Critical: DOF-index out of bounds in HomogenousTransformationCircular::set_free_dof!" <<std::endl;
@@ -421,18 +421,16 @@ void HomogenousTransformationRectangular::estimate_and_initialize() {
     case_sectors.reserve(sectors);
     double m_0 = GlobalParams.M_W_Delta/2.0;
     double m_1 = -GlobalParams.M_W_Delta/2.0;
-    double r_0 = GlobalParams.M_C_Dim1In;
-    double r_1 = GlobalParams.M_C_Dim1Out;
     if(sectors == 1) {
-      Sector<4> temp12(true, true, -GlobalParams.M_R_ZLength/2, GlobalParams.M_R_ZLength/2 );
+      Sector<2> temp12(true, true, -GlobalParams.M_R_ZLength/2, GlobalParams.M_R_ZLength/2 );
       case_sectors.push_back(temp12);
       case_sectors[0].set_properties_force(GlobalParams.M_W_Delta/2.0,-GlobalParams.M_W_Delta/2.0, GlobalParams.M_C_Dim1In, GlobalParams.M_C_Dim1Out, 0, 0);
     } else {
       double length = Sector_Length();
-      Sector<4> temp(true, false, -GlobalParams.M_R_ZLength/(2.0), -GlobalParams.M_R_ZLength/2.0 + length );
+      Sector<2> temp(true, false, -GlobalParams.M_R_ZLength/(2.0), -GlobalParams.M_R_ZLength/2.0 + length );
       case_sectors.push_back(temp);
       for(int  i = 1; i < sectors; i++) {
-        Sector<4> temp2( false, false, -GlobalParams.M_R_ZLength/(2.0) + length*(1.0 *i), -GlobalParams.M_R_ZLength/(2.0) + length*(i + 1.0) );
+        Sector<2> temp2( false, false, -GlobalParams.M_R_ZLength/(2.0) + length*(1.0 *i), -GlobalParams.M_R_ZLength/(2.0) + length*(i + 1.0) );
         case_sectors.push_back(temp2);
       }
 
@@ -440,8 +438,6 @@ void HomogenousTransformationRectangular::estimate_and_initialize() {
       case_sectors[0].set_properties_force(
           m_0,
           InterpolationPolynomialZeroDerivative(length_rel, m_0, m_1),
-          r_0,
-          InterpolationPolynomialZeroDerivative(length_rel, r_0, r_1),
           0,
           InterpolationPolynomialDerivative(length_rel, m_0, m_1, 0, 0)
       );
@@ -451,8 +447,6 @@ void HomogenousTransformationRectangular::estimate_and_initialize() {
         case_sectors[i].set_properties_force(
             InterpolationPolynomialZeroDerivative(z_l, m_0, m_1),
             InterpolationPolynomialZeroDerivative(z_r, m_0, m_1),
-            InterpolationPolynomialZeroDerivative(z_l, r_0, r_1),
-            InterpolationPolynomialZeroDerivative(z_r, r_0, r_1),
             InterpolationPolynomialDerivative(z_l, m_0, m_1, 0, 0),
             InterpolationPolynomialDerivative(z_r, m_0, m_1, 0, 0)
         );
@@ -467,7 +461,8 @@ void HomogenousTransformationRectangular::estimate_and_initialize() {
 
 double HomogenousTransformationRectangular::get_r(double z_in) const {
   std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
-  return case_sectors[two.first].get_r(two.second);
+  std::cout << "Asking for Radius of rectangular Waveguide." << std::endl;
+  return 0;
 }
 
 double HomogenousTransformationRectangular::get_m(double z_in) const {
@@ -510,7 +505,7 @@ unsigned int HomogenousTransformationRectangular::NFreeDofs() const {
 }
 
 bool HomogenousTransformationRectangular::IsDofFree(int index) const {
-  return index > 2 && index < (int)NDofs()-3;
+  return index > 2 && index < (int)NDofs()-2;
 }
 
 void HomogenousTransformationRectangular::Print ()  const{
@@ -518,6 +513,6 @@ void HomogenousTransformationRectangular::Print ()  const{
 }
 
 unsigned int HomogenousTransformationRectangular::NDofs()  const{
-  return sectors * 3 + 3;
+  return sectors * 2 + 2;
 }
 #endif
