@@ -393,7 +393,9 @@ std::vector<double> ModeManager::get_us(double v) {
         }
 
     }
-
+    for(unsigned int i =0; i < us.size(); i++){
+      deallog << "u_" << i+1 << ": " << us[i] <<std::endl;
+    }
     return us;
 }
 
