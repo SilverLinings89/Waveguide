@@ -114,7 +114,7 @@ void ParameterReader::declare_parameters()
 void ParameterReader::read_parameters(const std::string inputfile) {
 	declare_parameters();
 	std::ifstream ifile (inputfile, std::ifstream::in);
-	prm.read_input_from_xml(ifile);
+	prm.parse_input_from_xml(ifile);
 }
 
 #endif

@@ -460,7 +460,7 @@ void HomogenousTransformationRectangular::estimate_and_initialize() {
 }
 
 double HomogenousTransformationRectangular::get_r(double z_in) const {
-  std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
+  //std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
   std::cout << "Asking for Radius of rectangular Waveguide." << std::endl;
   return 0;
 }

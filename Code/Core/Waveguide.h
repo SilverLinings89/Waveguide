@@ -49,7 +49,7 @@
 // #include <deal.II/lac/trilinos_parallel_block_vector.h>
 #include <deal.II/lac/trilinos_sparsity_pattern.h>
 #include <deal.II/lac/trilinos_block_sparse_matrix.h>
-
+#include <deal.II/lac/la_parallel_vector.h>
 
 #include <fstream>
 #include <iostream>
@@ -386,8 +386,8 @@ class Waveguide
 
 		Vector<double>                  preconditioner_rhs;
 
-		parallel::distributed::Vector<double> primal_with_relevant;
-		parallel::distributed::Vector<double> dual_with_relevant;
+		LinearAlgebra::distributed::Vector<double> primal_with_relevant;
+		LinearAlgebra::distributed::Vector<double> dual_with_relevant;
 
 		std::vector<IndexSet>             locally_relevant_dofs_all_processors;
     IndexSet                    UpperDofs, LowerDofs;

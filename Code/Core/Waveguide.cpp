@@ -1048,7 +1048,7 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
 
 	for (; cell!=endc; ++cell)
 	{
-		if(std::abs(cell->subdomain_id() - rank) < 3 ) {
+		if(std::abs((int)(cell->subdomain_id() - rank)) < 3 ) {
 
 			for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
 				Point<3, double> center =(cell->face(i))->center(true, false);
