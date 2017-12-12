@@ -1,0 +1,16 @@
+#ifndef PointValHeaderFlag
+#define PointValHeaderFlag
+
+using namespace dealii;
+#include <complex.h>
+
+class PointVal {
+public:
+  std::complex<double> Ex,Ey,Ez;
+
+  PointVal();
+  PointVal(double, double, double, double, double, double);
+  void set(double, double, double, double, double, double);
+};
+
+#endif

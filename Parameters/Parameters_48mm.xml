@@ -347,7 +347,7 @@
             <pattern_description>[Selection Adjoint|FD ]</pattern_description>
         </Optimization_20Schema>
         <Optimization_20Steps>
-            <value>5</value>
+            <value>1</value>
             <default_value>10</default_value>
             <documentation>Number of Optimization steps to be performed.</documentation>
             <pattern>33</pattern>

@@ -20,6 +20,7 @@
 #include "Code/Helpers/ModeManager.cpp"
 #include "Code/Core/Sector.cpp"
 #include "Code/Core/Waveguide.cpp"
+#include "Code/Helpers/PointVal.cpp"
 #include "Code/Helpers/ExactSolution.cpp"
 #include "Code/Core/SolutionWeight.cpp"
 #include "Code/OutputGenerators/Console/GradientTable.cpp"
@@ -44,6 +45,7 @@
 #include "Code/OptimizationAlgorithm/OptimizationCG.cpp"
 #include "Code/OptimizationAlgorithm/OptimizationSteepestDescent.cpp"
 #include "Code/OptimizationAlgorithm/Optimization1D.cpp"
+
 
 
 

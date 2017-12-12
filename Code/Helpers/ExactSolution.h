@@ -20,8 +20,10 @@ using namespace dealii;
 
 class ExactSolution : public Function<3, double>
 {
+    bool is_rectangular;
+    std::vector<float> mesh_points;
 	public:
-		ExactSolution ();
+		ExactSolution (bool in_rectangular = false);
 
 		/**
 		 * This function calculates one single component of the solution vector. To calculate this, we do the following: We know the input on the boundary of the computational domain for \f$z = z_{in}\f$. So for a given position \f$ p = (x,y,z)\f$ we calculate \f[ f_c(x,y,z) = \sum_{j=0}^N \left( a_j \, \boldsymbol{\phi_j}(x,y,z_{in}) \right) \cdot \boldsymbol{e_c} \, \mathrm{e}^{i \omega (z-z_{in})}.\f]
@@ -38,7 +40,7 @@ class ExactSolution : public Function<3, double>
 
 
 		void vector_value (const Point<3> &p,	Vector<double> &value) const;
-
+		std::vector<std::string> split(std::string ,std::string) const;
 };
 
 #endif
