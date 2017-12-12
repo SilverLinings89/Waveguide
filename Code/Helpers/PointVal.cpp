@@ -26,5 +26,11 @@ void PointVal::set(double rx, double ry, double rz, double ix, double iy, double
   Ez.real(rz);
   Ez.imag(iz);
 }
+
+void PointVal::rescale(double inp) {
+  Ex = Ex*inp;
+  Ey = Ey*inp;
+  Ez = Ez*inp;
+}
 #endif
 

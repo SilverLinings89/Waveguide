@@ -171,13 +171,33 @@ ExactSolution::ExactSolution(bool in_rectangular): Function<3>(6) {
     deallog << cnt << std::endl;
     std::ifstream input2( "Modes/mode_1550nm.dat" );
     std::string line2;
+    double max = 0.0;
     for (int i = 0; i < cnt ; ++ i) {
       for (int j = 0; j < cnt ; ++ j) {
         getline( input2, line2 );
         std::vector<std::string> ls = split(line2);
-        vals[j][i].set(scientific_string_to_double(ls[5]),scientific_string_to_double(ls[4]),scientific_string_to_double(ls[3]),scientific_string_to_double(ls[8]),scientific_string_to_double(ls[7]),scientific_string_to_double(ls[6]));
+        double d1, d2, d3, d4, d5, d6;
+        d1 = scientific_string_to_double(ls[4]);
+        d2 = scientific_string_to_double(ls[5]);
+        d3 = scientific_string_to_double(ls[3]);
+        d4 = scientific_string_to_double(ls[7]);
+        d5 = scientific_string_to_double(ls[8]);
+        d6 = scientific_string_to_double(ls[6]);
+        if(d1 > max) max=d1;
+        if(d2 > max) max=d2;
+        if(d3 > max) max=d3;
+        if(d4 > max) max=d4;
+        if(d5 > max) max=d5;
+        if(d6 > max) max=d6;
+        vals[i][j].set(d1,d2,d3,d4,d5,d6);
       }
     }
+    for (int i = 0; i < cnt ; ++ i) {
+      for (int j = 0; j < cnt ; ++ j) {
+        vals[j][i].rescale(1.0/max);
+      }
+    }
+
     deallog << " MEsh constant: " << abs(mesh_points[0] - mesh_points[1]) << std::endl;
   }
   deallog << "Done Preparing exact solution." << std::endl;

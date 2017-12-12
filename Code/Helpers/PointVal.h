@@ -11,6 +11,7 @@ public:
   PointVal();
   PointVal(double, double, double, double, double, double);
   void set(double, double, double, double, double, double);
+  void rescale (double);
 };
 
 #endif
