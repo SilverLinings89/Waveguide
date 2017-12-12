@@ -9,7 +9,7 @@
 #define PointValSourceFlag
 
 #include "PointVal.h"
-#include <complex.h>
+
 PointVal::PointVal():Ex(0.0,0.0),Ey(0.0,0.0),Ez(0.0,0.0) {
 
 }

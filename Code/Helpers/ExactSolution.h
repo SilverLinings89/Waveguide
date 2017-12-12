@@ -1,8 +1,10 @@
 
 #ifndef ExactSolutionFlag
 #define ExactSolutionFlag
-
+#include <vector>
+#include <string>
 #include <deal.II/base/function.h>
+#include "PointVal.cpp"
 
 using namespace dealii;
 
@@ -22,6 +24,7 @@ class ExactSolution : public Function<3, double>
 {
     bool is_rectangular;
     std::vector<float> mesh_points;
+    PointVal** vals;
 	public:
 		ExactSolution (bool in_rectangular = false);
 
