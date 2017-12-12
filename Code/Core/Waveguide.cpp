@@ -440,11 +440,9 @@ void Waveguide::setup_system ()
     i_prec_even_writable.push_back(temp2[GlobalParams.NumberProcesses-1]);
   }
 
-  deallog << "Constructing Sparsity Patterns and Constrain Matrices ... " <<std::endl;
-
-	deallog << "Initialization done." << std::endl;
-
 	Prepare_Boundary_Constraints();
+
+	deallog << "Boundaryconditions prepared." << std::endl;
 
 	std::ostringstream set_string;
 
@@ -892,7 +890,8 @@ void Waveguide::MakeBoundaryConditions (){
 	// DoFTools::make_zero_boundary_constraints(dof_handler,cm, comp_mask_imag );
 	// DoFTools::make_zero_boundary_constraints(dof_handler,cm, comp_mask_real );
 
-	ExactSolution es;
+	bool is_rectangular = (GlobalParams.M_C_Shape == ConnectorType::Rectangle) ;
+	ExactSolution es(is_rectangular);
 
 	VectorTools::project_boundary_values_curl_conforming_l2( dof_handler, 0, es, 3, cm);
 

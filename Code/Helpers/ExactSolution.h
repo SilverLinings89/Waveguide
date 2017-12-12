@@ -43,7 +43,7 @@ class ExactSolution : public Function<3, double>
 
 
 		void vector_value (const Point<3> &p,	Vector<double> &value) const;
-		std::vector<std::string> split(std::string ,std::string) const;
+		std::vector<std::string> split(std::string) const;
 };
 
 #endif

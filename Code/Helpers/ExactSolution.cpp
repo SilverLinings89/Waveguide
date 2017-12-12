@@ -15,7 +15,7 @@ double ExactSolution::value (const Point<3> &p , const unsigned int component) c
         int ix = 0;
         int iy = 0;
         while(mesh_points[ix] > p(0)) ix++;
-        while(mesh_points[ix] > p(1)) iy++;
+        while(mesh_points[iy] > p(1)) iy++;
         if(ix == 0 || iy == 0) {
           return 0.0;
         } else {
@@ -74,12 +74,13 @@ void ExactSolution::vector_value (const Point<3> &p,	Vector<double> &values) con
 {
   if(is_rectangular){
     const double delta = abs(mesh_points[0] -mesh_points[1]);
-    if(abs(p(1))>mesh_points[0] || abs(p(0))>mesh_points[0]) {
+    const int mesh_number = mesh_points.size();
+    if(abs(p(1))>=mesh_points[0] || abs(p(0))>=mesh_points[0]) {
       int ix = 0;
       int iy = 0;
-      while(mesh_points[ix] > p(0)) ix++;
-      while(mesh_points[ix] > p(1)) iy++;
-      if(ix == 0 || iy == 0) {
+      while(mesh_points[ix] > p(0) && ix < mesh_number) ix++;
+      while(mesh_points[iy] > p(1 )&& iy < mesh_number) iy++;
+      if(ix == 0 || iy == 0 || ix==mesh_number||iy==mesh_number) {
         for(int i = 0; i < values.size(); i++) {
           values[i] = 0.0;
         }
@@ -90,7 +91,6 @@ void ExactSolution::vector_value (const Point<3> &p,	Vector<double> &values) con
         double m1p1 = dx*(1.0-dy);
         double p1p1 = (1.0-dx)*(1.0-dy);
         double p1m1 = (1.0-dx)*dy;
-
         values[0] = p1p1*vals[ix][iy].Ex.real() + p1m1*vals[ix][iy-1].Ex.real() + m1m1*vals[ix-1][iy-1].Ex.real() + m1p1*vals[ix-1][iy].Ex.real();
         values[1] = p1p1*vals[ix][iy].Ex.imag() + p1m1*vals[ix][iy-1].Ex.imag() + m1m1*vals[ix-1][iy-1].Ex.imag() + m1p1*vals[ix-1][iy].Ex.imag();
         values[2] = p1p1*vals[ix][iy].Ey.real() + p1m1*vals[ix][iy-1].Ey.real() + m1m1*vals[ix-1][iy-1].Ey.real() + m1p1*vals[ix-1][iy].Ey.real();
@@ -118,16 +118,12 @@ void ExactSolution::vector_value (const Point<3> &p,	Vector<double> &values) con
   }
 }
 
-std::vector<std::string> ExactSolution::split(std::string str,std::string sep) const{
-    char* cstr=const_cast<char*>(str.c_str());
-    char* current;
-    std::vector<std::string> arr;
-    current=strtok(cstr,sep.c_str());
-    while(current!=NULL){
-        arr.push_back(current);
-        current=strtok(NULL,sep.c_str());
-    }
-    return arr;
+std::vector<std::string> ExactSolution::split(std::string str) const{
+  std::vector<std::string> ret;
+  std::istringstream iss(str);
+  std::string token;
+  while(std::getline(iss, token, '\t')) ret.push_back(token);
+  return ret;
 }
 
 double scientific_string_to_double(std::string inp) {
@@ -140,40 +136,40 @@ double scientific_string_to_double(std::string inp) {
 ExactSolution::ExactSolution(bool in_rectangular): Function<3>(6) {
   is_rectangular = in_rectangular;
   if(is_rectangular) {
-    std::ifstream input( "filename.ext" );
+    std::ifstream input( "Modes/mode_1550nm.dat" );
     std::string line;
-    getline( input, line );
-    getline( input, line );
-    float l_val =  3.0;
-    for( ; getline( input, line ); )
+    double l_val =  3.0;
+    int cnt_a = 0;
+    while (std::getline( input, line ))
     {
-      std::vector<std::string> ls = split(line, "\t");
-      float x = std::stof(ls[2]);
+      std::vector<std::string> ls = split(line);
+      std::istringstream iss(ls[2]);
+      double x;
+      iss >> x;
       if(x < l_val) {
         mesh_points.push_back(x);
         l_val = x;
       }
+      cnt_a ++;
     }
-    mesh_points.shrink_to_fit();
+    deallog << cnt_a << " - " << mesh_points.size() << std::endl;
     unsigned int cnt  = mesh_points.size();
      vals = new PointVal*[cnt];
     for(int i = 0; i < cnt; i++) {
       vals[i] = new PointVal[cnt];
     }
-
-    std::ifstream input2( "filename.ext" );
+    deallog << cnt << std::endl;
+    std::ifstream input2( "Modes/mode_1550nm.dat" );
     std::string line2;
-    getline( input2, line2 );
-    getline( input2, line2 );
     for (int i = 0; i < cnt ; ++ i) {
       for (int j = 0; j < cnt ; ++ j) {
         getline( input2, line2 );
-        std::vector<std::string> ls = split(line, "\t");
+        std::vector<std::string> ls = split(line2);
         vals[j][i].set(scientific_string_to_double(ls[5]),scientific_string_to_double(ls[4]),scientific_string_to_double(ls[3]),scientific_string_to_double(ls[8]),scientific_string_to_double(ls[7]),scientific_string_to_double(ls[6]));
       }
     }
-
   }
+  MPI_Barrier(MPI_COMM_WORLD);
 }
 
 #endif
