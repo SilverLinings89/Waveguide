@@ -891,6 +891,11 @@ void Waveguide::MakeBoundaryConditions (){
 	// DoFTools::make_zero_boundary_constraints(dof_handler,cm, comp_mask_real );
 
 	bool is_rectangular = (GlobalParams.M_C_Shape == ConnectorType::Rectangle) ;
+	if(is_rectangular) {
+	  deallog << "RECTANGULAR" <<std::endl;
+	} else {
+	  deallog << "CIRCULAR" <<std::endl;
+	}
 	ExactSolution es(is_rectangular);
 
 	VectorTools::project_boundary_values_curl_conforming_l2( dof_handler, 0, es, 3, cm);
@@ -1040,7 +1045,13 @@ void Waveguide::MakePreconditionerBoundaryConditions (  ){
 
 	std::vector<types::global_dof_index> local_dof_indices (fe.dofs_per_line);
 
-	ExactSolution es;
+	bool is_rectangular = (GlobalParams.M_C_Shape == ConnectorType::Rectangle) ;
+	  if(is_rectangular) {
+	    deallog << "RECTANGULAR" <<std::endl;
+	  } else {
+	    deallog << "CIRCULAR" <<std::endl;
+	  }
+	  ExactSolution es(is_rectangular);
 
 	VectorTools::project_boundary_values_curl_conforming_l2( dof_handler, 0, es, 3, cm_prec_even);
 

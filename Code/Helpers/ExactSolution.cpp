@@ -9,81 +9,94 @@
 
 double ExactSolution::value (const Point<3> &p , const unsigned int component) const
 {
-  if(is_rectangular){
-      const double delta = abs(mesh_points[0] -mesh_points[1]);
-      if(abs(p(1))>mesh_points[0] || abs(p(0))>mesh_points[0]) {
-        int ix = 0;
-        int iy = 0;
-        while(mesh_points[ix] > p(0)) ix++;
-        while(mesh_points[iy] > p(1)) iy++;
-        if(ix == 0 || iy == 0) {
-          return 0.0;
-        } else {
-          double dx = (p(0) - mesh_points[ix])/delta;
-          double dy = (p(1) - mesh_points[iy])/delta;
-          double m1m1 = dx*dy;
-          double m1p1 = dx*(1.0-dy);
-          double p1p1 = (1.0-dx)*(1.0-dy);
-          double p1m1 = (1.0-dx)*dy;
-
-          switch (component) {
-            case 0:
-              return p1p1*vals[ix][iy].Ex.real() + p1m1*vals[ix][iy-1].Ex.real() + m1m1*vals[ix-1][iy-1].Ex.real() + m1p1*vals[ix-1][iy].Ex.real();
-              break;
-            case 1:
-              return p1p1*vals[ix][iy].Ex.imag() + p1m1*vals[ix][iy-1].Ex.imag() + m1m1*vals[ix-1][iy-1].Ex.imag() + m1p1*vals[ix-1][iy].Ex.imag();
-              break;
-            case 2:
-              return p1p1*vals[ix][iy].Ey.real() + p1m1*vals[ix][iy-1].Ey.real() + m1m1*vals[ix-1][iy-1].Ey.real() + m1p1*vals[ix-1][iy].Ey.real();
-              break;
-            case 3:
-              return p1p1*vals[ix][iy].Ey.imag() + p1m1*vals[ix][iy-1].Ey.imag() + m1m1*vals[ix-1][iy-1].Ey.imag() + m1p1*vals[ix-1][iy].Ey.imag();
-              break;
-            case 4:
-              return p1p1*vals[ix][iy].Ez.real() + p1m1*vals[ix][iy-1].Ez.real() + m1m1*vals[ix-1][iy-1].Ez.real() + m1p1*vals[ix-1][iy].Ez.real();
-              break;
-            case 5:
-              return p1p1*vals[ix][iy].Ez.imag() + p1m1*vals[ix][iy-1].Ez.imag() + m1m1*vals[ix-1][iy-1].Ez.imag() + m1p1*vals[ix-1][iy].Ez.imag();
-              break;
-            default:
-              return 0.0;
-              break;
-          }
-        }
-      } else {
-        return 0.0;
-      }
-    }else {
-    bool zero = false;
-    if(p[0] > GlobalParams.M_R_XLength/2.0 - GlobalParams.M_BC_XPlus) zero = true;
-    if(p[0] < -GlobalParams.M_R_XLength/2.0 + GlobalParams.M_BC_XMinus) zero = true;
-    if(p[1] > GlobalParams.M_R_YLength/2.0 - GlobalParams.M_BC_YPlus) zero = true;
-    if(p[1] < -GlobalParams.M_R_YLength/2.0 + GlobalParams.M_BC_YMinus) zero = true;
-    if(p[2] > GlobalParams.M_R_ZLength/2.0) zero = true;
-    if(zero){
-      return 0;
-    } else {
-      return ModeMan.get_input_component( component, p, 0);
-    }
+  bool zero = false;
+  if(p[0] > GlobalParams.M_R_XLength/2.0 - GlobalParams.M_BC_XPlus) zero = true;
+  if(p[0] < -GlobalParams.M_R_XLength/2.0 + GlobalParams.M_BC_XMinus) zero = true;
+  if(p[1] > GlobalParams.M_R_YLength/2.0 - GlobalParams.M_BC_YPlus) zero = true;
+  if(p[1] < -GlobalParams.M_R_YLength/2.0 + GlobalParams.M_BC_YMinus) zero = true;
+  if(p[2] > GlobalParams.M_R_ZLength/2.0) zero = true;
+  if(zero){
+    return 0.0;
   }
+
+    if(is_rectangular){
+      const double delta = abs(mesh_points[0] -mesh_points[1]);
+          const int mesh_number = mesh_points.size();
+          if(! (abs(p(1))>=mesh_points[0] || abs(p(0))>=mesh_points[0])) {
+            int ix = 0;
+            int iy = 0;
+            while(mesh_points[ix] > p(0) && ix < mesh_number) ix++;
+            while(mesh_points[iy] > p(1 )&& iy < mesh_number) iy++;
+            if(ix == 0 || iy == 0 || ix==mesh_number||iy==mesh_number) {
+              return 0.0;
+            } else {
+              double dx = (p(0) - mesh_points[ix])/delta;
+              double dy = (p(1) - mesh_points[iy])/delta;
+              double m1m1 = dx*dy;
+              double m1p1 = dx*(1.0-dy);
+              double p1p1 = (1.0-dx)*(1.0-dy);
+              double p1m1 = (1.0-dx)*dy;
+              switch (component) {
+              case 0:
+                return p1p1*vals[ix][iy].Ex.real() + p1m1*vals[ix][iy-1].Ex.real() + m1m1*vals[ix-1][iy-1].Ex.real() + m1p1*vals[ix-1][iy].Ex.real();
+                break;
+              case 1:
+                return p1p1*vals[ix][iy].Ex.imag() + p1m1*vals[ix][iy-1].Ex.imag() + m1m1*vals[ix-1][iy-1].Ex.imag() + m1p1*vals[ix-1][iy].Ex.imag();
+                break;
+              case 2:
+                return p1p1*vals[ix][iy].Ey.real() + p1m1*vals[ix][iy-1].Ey.real() + m1m1*vals[ix-1][iy-1].Ey.real() + m1p1*vals[ix-1][iy].Ey.real();
+                break;
+              case 3:
+                return p1p1*vals[ix][iy].Ey.imag() + p1m1*vals[ix][iy-1].Ey.imag() + m1m1*vals[ix-1][iy-1].Ey.imag() + m1p1*vals[ix-1][iy].Ey.imag();
+                break;
+              case 4:
+                return p1p1*vals[ix][iy].Ez.real() + p1m1*vals[ix][iy-1].Ez.real() + m1m1*vals[ix-1][iy-1].Ez.real() + m1p1*vals[ix-1][iy].Ez.real();;
+                break;
+              case 5:
+                return p1p1*vals[ix][iy].Ez.imag() + p1m1*vals[ix][iy-1].Ez.imag() + m1m1*vals[ix-1][iy-1].Ez.imag() + m1p1*vals[ix-1][iy].Ez.imag();
+                break;
+              default:
+                return 0.0;
+                break;
+              }
+            }
+          } else {
+            return 0.0;
+          }
+    }else {
+        return ModeMan.get_input_component( component, p, 0);
+    }
 
 }
 
 
 void ExactSolution::vector_value (const Point<3> &p,	Vector<double> &values) const
 {
+  bool zero = false;
+  if(p[0] > GlobalParams.M_R_XLength/2.0 - GlobalParams.M_BC_XPlus) zero = true;
+  if(p[0] < -GlobalParams.M_R_XLength/2.0 + GlobalParams.M_BC_XMinus) zero = true;
+  if(p[1] > GlobalParams.M_R_YLength/2.0 - GlobalParams.M_BC_YPlus) zero = true;
+  if(p[1] < -GlobalParams.M_R_YLength/2.0 + GlobalParams.M_BC_YMinus) zero = true;
+  if(p[2] > GlobalParams.M_R_ZLength/2.0) zero = true;
+  if(zero){
+    for(unsigned int i = 0; i < values.size(); i++) {
+      values[i] = 0.0;
+    }
+    return;
+  }
   if(is_rectangular){
     const double delta = abs(mesh_points[0] -mesh_points[1]);
     const int mesh_number = mesh_points.size();
-    if(abs(p(1))>=mesh_points[0] || abs(p(0))>=mesh_points[0]) {
+    if(!(abs(p(1))>=mesh_points[0] || abs(p(0))>=mesh_points[0])) {
       int ix = 0;
       int iy = 0;
       while(mesh_points[ix] > p(0) && ix < mesh_number) ix++;
       while(mesh_points[iy] > p(1 )&& iy < mesh_number) iy++;
       if(ix == 0 || iy == 0 || ix==mesh_number||iy==mesh_number) {
-        for(int i = 0; i < values.size(); i++) {
+        for(unsigned int i = 0; i < values.size(); i++) {
           values[i] = 0.0;
         }
+        return;
       } else {
         double dx = (p(0) - mesh_points[ix])/delta;
         double dy = (p(1) - mesh_points[iy])/delta;
@@ -97,24 +110,16 @@ void ExactSolution::vector_value (const Point<3> &p,	Vector<double> &values) con
         values[3] = p1p1*vals[ix][iy].Ey.imag() + p1m1*vals[ix][iy-1].Ey.imag() + m1m1*vals[ix-1][iy-1].Ey.imag() + m1p1*vals[ix-1][iy].Ey.imag();
         values[4] = p1p1*vals[ix][iy].Ez.real() + p1m1*vals[ix][iy-1].Ez.real() + m1m1*vals[ix-1][iy-1].Ez.real() + m1p1*vals[ix-1][iy].Ez.real();
         values[5] = p1p1*vals[ix][iy].Ez.imag() + p1m1*vals[ix][iy-1].Ez.imag() + m1m1*vals[ix-1][iy-1].Ez.imag() + m1p1*vals[ix-1][iy].Ez.imag();
+        return;
       }
     } else {
-      for(int i = 0; i < values.size(); i++) {
+      for(unsigned int i = 0; i < values.size(); i++) {
         values[i] = 0.0;
       }
+      return;
     }
   } else {
-    bool zero = false;
-    if(p[0] > GlobalParams.M_R_XLength/2.0 - GlobalParams.M_BC_XPlus) zero = true;
-    if(p[0] < -GlobalParams.M_R_XLength/2.0 + GlobalParams.M_BC_XMinus) zero = true;
-    if(p[1] > GlobalParams.M_R_YLength/2.0 - GlobalParams.M_BC_YPlus) zero = true;
-    if(p[1] < -GlobalParams.M_R_YLength/2.0 + GlobalParams.M_BC_YMinus) zero = true;
-    if(p[2] > GlobalParams.M_R_ZLength/2.0) zero = true;
-    if(zero) {
-      for (unsigned int c=0; c<6; ++c) values[c] = 0.0;
-    } else {
       for (unsigned int c=0; c<6; ++c) values[c] = ModeMan.get_input_component( c, p, 0);
-    }
   }
 }
 
@@ -135,6 +140,11 @@ double scientific_string_to_double(std::string inp) {
 
 ExactSolution::ExactSolution(bool in_rectangular): Function<3>(6) {
   is_rectangular = in_rectangular;
+  if(is_rectangular) {
+    deallog << "Preparing exact solution for rectangular waveguide." << std::endl;
+  } else {
+    deallog << "Preparing exact solution for circular waveguide." << std::endl;
+  }
   if(is_rectangular) {
     std::ifstream input( "Modes/mode_1550nm.dat" );
     std::string line;
@@ -168,8 +178,9 @@ ExactSolution::ExactSolution(bool in_rectangular): Function<3>(6) {
         vals[j][i].set(scientific_string_to_double(ls[5]),scientific_string_to_double(ls[4]),scientific_string_to_double(ls[3]),scientific_string_to_double(ls[8]),scientific_string_to_double(ls[7]),scientific_string_to_double(ls[6]));
       }
     }
+    deallog << " MEsh constant: " << abs(mesh_points[0] - mesh_points[1]) << std::endl;
   }
-  MPI_Barrier(MPI_COMM_WORLD);
+  deallog << "Done Preparing exact solution." << std::endl;
 }
 
 #endif
