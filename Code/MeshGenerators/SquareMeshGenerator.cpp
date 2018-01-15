@@ -1,4 +1,3 @@
- 
 #ifndef SquareMeshGeneratorCppFlag
 #define SquareMeshGeneratorCppFlag
 
@@ -48,37 +47,38 @@ SquareMeshGenerator::~SquareMeshGenerator() {
 }
 
 void SquareMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3> & tria) const {
-  parallel::shared::Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
-   endc2 = tria.end();
-   tria.set_all_manifold_ids(0);
-   for (; cell2!=endc2; ++cell2){
-     if (Distance2D(cell2->center() ) < 0.25 ) {
-       cell2->set_all_manifold_ids(1);
-       cell2->set_manifold_id(1);
-     }
-   }
 
-   cell2 = tria.begin_active();
+	parallel::shared::Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
+	endc2 = tria.end();
+	tria.set_all_manifold_ids(0);
+	for (; cell2!=endc2; ++cell2){
+	 if (Distance2D(cell2->center() ) < 0.25 ) {
+		 cell2->set_all_manifold_ids(1);
+		 cell2->set_manifold_id(1);
+	 }
+	}
 
-   for (; cell2!=endc2; ++cell2){
-     if(cell2->at_boundary()){
-       for(int j = 0; j<6; j++){
-         if(cell2->face(j)->at_boundary()){
-           Point<3> ctr =cell2->face(j)->center(false, false);
-           // if(System_Coordinate_in_Waveguide(ctr)){
+	cell2 = tria.begin_active();
 
-           cell2->face(j)->set_all_boundary_ids(1);
+	for (; cell2!=endc2; ++cell2){
+	 if(cell2->at_boundary()){
+		 for(int j = 0; j<6; j++){
+			 if(cell2->face(j)->at_boundary()){
+				 Point<3> ctr =cell2->face(j)->center(false, false);
+				 // if(System_Coordinate_in_Waveguide(ctr)){
 
-           if(std::abs(ctr(2) - GlobalParams.M_R_ZLength/2.0 - GlobalParams.M_BC_Zplus*GlobalParams.SectorThickness) < 0.00001) {
-             cell2->face(j)->set_all_boundary_ids(2);
-           }
-           if(std::abs(ctr(2) + GlobalParams.M_R_ZLength/2.0) < 0.00001) {
-             cell2->face(j)->set_all_boundary_ids(3);
-           }
-         }
-       }
-     }
-   }
+				 cell2->face(j)->set_all_boundary_ids(1);
+
+				 if(std::abs(ctr(2) - GlobalParams.M_R_ZLength/2.0 - GlobalParams.M_BC_Zplus*GlobalParams.SectorThickness) < 0.00001) {
+					 cell2->face(j)->set_all_boundary_ids(2);
+				 }
+				 if(std::abs(ctr(2) + GlobalParams.M_R_ZLength/2.0) < 0.00001) {
+					 cell2->face(j)->set_all_boundary_ids(3);
+				 }
+			 }
+		 }
+	 }
+	}
 }
 
 void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangulation<3> * in_tria){

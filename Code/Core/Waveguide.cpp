@@ -104,7 +104,8 @@ void Waveguide::estimate_solution() {
 	deallog << "Lambda: " << GlobalParams.M_W_Lambda << std::endl;
 	unsigned int min_dof = locally_owned_dofs.nth_index_in_set(0);
 	unsigned int max_dof = locally_owned_dofs.nth_index_in_set(locally_owned_dofs.n_elements()-1 );
-
+	bool is_rectangular = (GlobalParams.M_C_Shape == ConnectorType::Rectangle) ;
+	ExactSolution es(is_rectangular);
 	cell = dof_handler.begin_active(),
 	endc = dof_handler.end();
 	for (; cell!=endc; ++cell)
@@ -121,8 +122,10 @@ void Waveguide::estimate_solution() {
 						Tensor<1,3,double> dtemp = ((cell->face(i))->line(j))->vertex(0) - ((cell->face(i))->line(j))->vertex(1);
 						dtemp = dtemp / dtemp.norm();
 						Point<3, double> direction (dtemp[0], dtemp[1], dtemp[2]);
-
-
+						Vector<double> val(6);
+						es.vector_value(p,val);
+						double a = direction(0) * val(0) + direction(1)* val(1) + direction(2)*val(2);
+						double b = direction(0) * val(3) + direction(1)* val(4) + direction(2)*val(5);
 						//double phi = (ptemp[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) *2 * GlobalParams.PRM_C_PI / (GlobalParams.PRM_M_W_Lambda / GlobalParams.PRM_M_W_EpsilonIn);
 						double phi = (ptemp[2] + GlobalParams.M_R_ZLength/2.0 ) * 2* GlobalParams.C_Pi / (GlobalParams.M_W_Lambda / std::sqrt(GlobalParams.M_W_epsilonin));
 						double result_real = -TEMode00(p,0) * std::cos(phi) ;
@@ -131,10 +134,10 @@ void Waveguide::estimate_solution() {
 						if(st->PML_in_X(p) || st->PML_in_Y(p)) result_imag = 0.0;
 
 						if(local_dof_indices[0] >= min_dof && local_dof_indices[0] < max_dof) {
-							EstimatedSolution[local_dof_indices[0]] = direction[0] * result_real ;
+							EstimatedSolution[local_dof_indices[0]] = a ;
 						}
 						if(local_dof_indices[1] >= min_dof && local_dof_indices[1] < max_dof) {
-							EstimatedSolution[local_dof_indices[1]] = direction[0] * result_imag ;
+							EstimatedSolution[local_dof_indices[1]] = b ;
 						}
 					}
 				}
@@ -914,6 +917,30 @@ void Waveguide::MakeBoundaryConditions (){
 	for (; cell!=endc; ++cell)
 	{
 		if(cell->is_locally_owned()) {
+			if(cell->at_boundary(3)) {
+				for(unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+					for(unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
+						Tensor<1,3, double> dir = (cell->face(i)->line(j))->vertex(0) - (cell->face(i)->line(j))->vertex(1);
+						if(abs(dir[2]) > abs(dir[0]) && abs(dir[2]) > abs(dir[1])) {
+							cell->face(i)->line(j)->get_dof_indices(local_line_dofs);
+							for(unsigned int k =0; k < fe.dofs_per_line; k++) {
+								if(! cm.is_inhomogeneously_constrained(local_line_dofs[k])){
+									cm.add_line(local_line_dofs[k]);
+									if(k == 0){
+										cm.set_inhomogeneity(local_line_dofs[k], es.value(cell->face(i)->line(j)->center(), 2));
+									} else {
+										if(k == 1){
+											cm.set_inhomogeneity(local_line_dofs[k], es.value(cell->face(i)->line(j)->center(), 5));
+										} else {
+											deallog << "The boundary value computation is not prepared for this case (in MakeBoundaryConditions)." << std::endl;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		  for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
 				Point<3, double> center =(cell->face(i))->center(true, false);
 				if( center[0] < 0) center[0] *= (-1.0);

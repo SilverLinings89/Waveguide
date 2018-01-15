@@ -2,6 +2,7 @@
 #define StaticFunctionsFlag
 
 #include "ParameterReader.h"
+#include <string>
 
 using namespace dealii;
 
@@ -495,12 +496,7 @@ static Point<3> Triangulation_Stretch_Computational_Rectangle (const Point<3> &p
   return q;
 }
 
-static bool System_Coordinate_in_Waveguide(Point<3> p){
-	double value = Distance2D(p);
-	return ( value < (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0);
-}
-
-static double TEMode00 (Point<3, double> p ,const unsigned int component)
+static double TEMode00 (Point<3, double> p , int component)
 {
 
 	if(component == 0) {

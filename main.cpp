@@ -113,6 +113,10 @@ int main (int argc, char *argv[])
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint ) {
 	  dst = new DualProblemTransformationWrapper(st,  GlobalParams.MPI_Rank);
 	  dst->estimate_and_initialize();
+	} else {
+		// should be different? not sure.
+		dst = new DualProblemTransformationWrapper(st,  GlobalParams.MPI_Rank);
+		dst->estimate_and_initialize();
 	}
 
 	deallog << "Done. Building Waveguides." <<std::endl;
@@ -131,21 +135,14 @@ int main (int argc, char *argv[])
 
 	Optimization * opt;
 
-	OptimizationAlgorithm<double> * Oa_d;
-	OptimizationAlgorithm<std::complex<double>> * Oa_c;
-
-	if(GlobalParams.Sc_SteppingMethod == SteppingMethod::CG) {
-	  // Oa = new OptimizationCG();
-	} else if (GlobalParams.Sc_SteppingMethod == SteppingMethod::Steepest){
-	  Oa_d = new OptimizationSteepestDescent();
-	} else {
-	  Oa_c = new Optimization1D();
-	}
-
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
-	  opt = new AdjointOptimization(waveguide, mg, st, dst, Oa_c);
+		OptimizationAlgorithm<std::complex<double>> * Oa_c ;
+		Oa_c = new Optimization1D();
+		opt = new AdjointOptimization(waveguide, mg, st, dst, Oa_c);
 	} else {
-	  opt = new FDOptimization(waveguide, mg, st, Oa_d);
+		OptimizationAlgorithm<double> * Oa_d;
+		Oa_d = new OptimizationSteepestDescent();
+		opt = new FDOptimization(waveguide, mg, st, Oa_d);
 	}
 
   deallog << "Done." <<std::endl;
