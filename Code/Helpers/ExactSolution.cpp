@@ -128,6 +128,7 @@ void ExactSolution::vector_value (const Point<3> &p,	Vector<double> &values) con
 				}
 				double k = n *2* GlobalParams.C_Pi / GlobalParams.M_W_Lambda;
 				std::complex<double> phase(0.0,(p(2) + GlobalParams.M_R_ZLength/2.0)*k);
+				phase = std::exp(phase);
 				for(unsigned int komp = 0; komp <3; komp++ ) {
 					std::complex<double> entr (values[0+komp],values[3+komp]);
 					entr *= phase;

@@ -919,16 +919,14 @@ void Waveguide::MakeBoundaryConditions (){
 						if(abs(dir[2]) > abs(dir[0]) && abs(dir[2]) > abs(dir[1])) {
 							cell->face(i)->line(j)->get_dof_indices(local_line_dofs);
 							for(unsigned int k =0; k < fe.dofs_per_line; k++) {
-								if(! cm.is_inhomogeneously_constrained(local_line_dofs[k])){
-									cm.add_line(local_line_dofs[k]);
-									if(k == 0){
-										cm.set_inhomogeneity(local_line_dofs[k], es.value(cell->face(i)->line(j)->center(), 2));
+								cm.add_line(local_line_dofs[k]);
+								if(k == 0){
+									cm.set_inhomogeneity(local_line_dofs[k], dir[2] * es.value(cell->face(i)->line(j)->center(), 2));
+								} else {
+									if(k == 1){
+										cm.set_inhomogeneity(local_line_dofs[k], dir[2] * es.value(cell->face(i)->line(j)->center(), 5));
 									} else {
-										if(k == 1){
-											cm.set_inhomogeneity(local_line_dofs[k], es.value(cell->face(i)->line(j)->center(), 5));
-										} else {
-											deallog << "The boundary value computation is not prepared for this case (in MakeBoundaryConditions)." << std::endl;
-										}
+										deallog << "The boundary value computation is not prepared for this case (in MakeBoundaryConditions)." << std::endl;
 									}
 								}
 							}
