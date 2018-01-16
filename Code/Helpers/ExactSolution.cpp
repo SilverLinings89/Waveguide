@@ -62,13 +62,13 @@ double ExactSolution::value (const Point<3> &p , const unsigned int component) c
 			} else {
 				n = std::sqrt(GlobalParams.M_W_epsilonout);
 			}
-			double k = 2* GlobalParams.C_Pi / GlobalParams.M_W_Lambda;
+			double k = n*2* GlobalParams.C_Pi / GlobalParams.M_W_Lambda;
 			std::complex<double> phase(0.0,(p(2) + GlobalParams.M_R_ZLength/2.0)*k);
 			ret_val *= std::exp(phase);
 			if(component>2) {
-				return ret_val.real();
-			} else {
 				return ret_val.imag();
+			} else {
+				return ret_val.real();
 			}
 		} else {
 			return 0.0;
@@ -120,7 +120,21 @@ void ExactSolution::vector_value (const Point<3> &p,	Vector<double> &values) con
         values[3] = p1p1*vals[ix][iy].Ey.imag() + p1m1*vals[ix][iy-1].Ey.imag() + m1m1*vals[ix-1][iy-1].Ey.imag() + m1p1*vals[ix-1][iy].Ey.imag();
         values[4] = p1p1*vals[ix][iy].Ez.real() + p1m1*vals[ix][iy-1].Ez.real() + m1m1*vals[ix-1][iy-1].Ez.real() + m1p1*vals[ix-1][iy].Ez.real();
         values[5] = p1p1*vals[ix][iy].Ez.imag() + p1m1*vals[ix][iy-1].Ez.imag() + m1m1*vals[ix-1][iy-1].Ez.imag() + m1p1*vals[ix-1][iy].Ez.imag();
-        return;
+        double n;
+				if(abs(p(0)) <= GlobalParams.M_C_Dim1In/2.0 && abs(p(1)) <= GlobalParams.M_C_Dim2In/2.0) {
+					n = std::sqrt(GlobalParams.M_W_epsilonin);
+				} else {
+					n = std::sqrt(GlobalParams.M_W_epsilonout);
+				}
+				double k = n *2* GlobalParams.C_Pi / GlobalParams.M_W_Lambda;
+				std::complex<double> phase(0.0,(p(2) + GlobalParams.M_R_ZLength/2.0)*k);
+				for(unsigned int komp = 0; komp <3; komp++ ) {
+					std::complex<double> entr (values[0+komp],values[3+komp]);
+					entr *= phase;
+					values[0+komp] = entr.real();
+					values[3+komp] = entr.imag();
+				}
+				return;
       }
     } else {
       for(unsigned int i = 0; i < values.size(); i++) {
@@ -208,7 +222,7 @@ ExactSolution::ExactSolution(bool in_rectangular): Function<3>(6) {
       }
     }
 
-    deallog << " MEsh constant: " << abs(mesh_points[0] - mesh_points[1]) << std::endl;
+    deallog << " Mesh constant: " << abs(mesh_points[0] - mesh_points[1]) << std::endl;
   }
   deallog << "Done Preparing exact solution." << std::endl;
 }

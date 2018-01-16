@@ -127,11 +127,6 @@ void Waveguide::estimate_solution() {
 						double a = direction(0) * val(0) + direction(1)* val(1) + direction(2)*val(2);
 						double b = direction(0) * val(3) + direction(1)* val(4) + direction(2)*val(5);
 						//double phi = (ptemp[2] + GlobalParams.PRM_M_R_ZLength/2.0 ) *2 * GlobalParams.PRM_C_PI / (GlobalParams.PRM_M_W_Lambda / GlobalParams.PRM_M_W_EpsilonIn);
-						double phi = (ptemp[2] + GlobalParams.M_R_ZLength/2.0 ) * 2* GlobalParams.C_Pi / (GlobalParams.M_W_Lambda / std::sqrt(GlobalParams.M_W_epsilonin));
-						double result_real = -TEMode00(p,0) * std::cos(phi) ;
-						double result_imag = - TEMode00(p,0) * std::sin(phi) ;
-						if(st->PML_in_X(p) || st->PML_in_Y(p)) result_real = 0.0;
-						if(st->PML_in_X(p) || st->PML_in_Y(p)) result_imag = 0.0;
 
 						if(local_dof_indices[0] >= min_dof && local_dof_indices[0] < max_dof) {
 							EstimatedSolution[local_dof_indices[0]] = a ;

@@ -29,7 +29,7 @@ void alert() {
 static void PrepareStreams()  {
 
 	char* pPath;
-	pPath = getenv ("PATH");
+	pPath = getenv ("WORK");
 	bool seperate_solutions = (pPath!=NULL);
   if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0) {
     deallog.depth_console(10);
@@ -83,7 +83,6 @@ static void PrepareStreams()  {
 static Parameters GetParameters() {
 	ParameterHandler prm;
 	ParameterReader param(prm);
-	// input_file_name = "/home/pascal/workspace/waveguideproblem/Parameters/Parameters.xml";
 	param.read_parameters(input_file_name);
 	struct Parameters ret;
 	prm.enter_subsection("Output");
