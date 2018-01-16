@@ -27,6 +27,10 @@ void alert() {
 }
 
 static void PrepareStreams()  {
+
+	char* pPath;
+	pPath = getenv ("PATH");
+	bool seperate_solutions = (pPath!=NULL);
   if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0) {
     deallog.depth_console(10);
   } else {
@@ -36,6 +40,9 @@ static void PrepareStreams()  {
   bool dir_exists = true;
   while(dir_exists) {
     std::stringstream out;
+    if(seperate_solutions) {
+      	out << pPath << "/" ;
+      }
     out << "Solutions/run";
     out << i;
     solutionpath = out.str();
@@ -49,6 +56,9 @@ static void PrepareStreams()  {
   }
   i = Utilities::MPI::max(i, MPI_COMM_WORLD);
   std::stringstream out;
+  if(seperate_solutions) {
+  	out << pPath << "/" ;
+  }
   out << "Solutions/run";
 
   out << i;

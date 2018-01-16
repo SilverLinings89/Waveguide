@@ -5,7 +5,6 @@ titles= ["Realteil: E_z","Realteil: E_x","Realteil: E_y","Imaginaerteil: E_z","I
 for i=1:6
     dat = xyz2grid(M(:,2),M(:,3),M(:,i+3));
     openfigure(i);
-    
     surf(dat,'EdgeColor','none','LineStyle','none','FaceLighting','phong');
     title(titles(i));
 end

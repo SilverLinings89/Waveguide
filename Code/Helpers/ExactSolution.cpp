@@ -40,14 +40,14 @@ double ExactSolution::value (const Point<3> &p , const unsigned int component) c
 				switch (component%3) {
 					case 0:
 						ret_val.real(p1p1*vals[ix][iy].Ex.real() + p1m1*vals[ix][iy-1].Ex.real() + m1m1*vals[ix-1][iy-1].Ex.real() + m1p1*vals[ix-1][iy].Ex.real());
-						ret_val.imag(p1p1*vals[ix][iy].Ey.imag() + p1m1*vals[ix][iy-1].Ey.imag() + m1m1*vals[ix-1][iy-1].Ey.imag() + m1p1*vals[ix-1][iy].Ey.imag());
+						ret_val.imag(p1p1*vals[ix][iy].Ex.imag() + p1m1*vals[ix][iy-1].Ex.imag() + m1m1*vals[ix-1][iy-1].Ex.imag() + m1p1*vals[ix-1][iy].Ex.imag());
 						break;
 					case 1:
-						ret_val.real(p1p1*vals[ix][iy].Ex.imag() + p1m1*vals[ix][iy-1].Ex.imag() + m1m1*vals[ix-1][iy-1].Ex.imag() + m1p1*vals[ix-1][iy].Ex.imag());
-						ret_val.imag(p1p1*vals[ix][iy].Ez.real() + p1m1*vals[ix][iy-1].Ez.real() + m1m1*vals[ix-1][iy-1].Ez.real() + m1p1*vals[ix-1][iy].Ez.real());
+						ret_val.real(p1p1*vals[ix][iy].Ey.real() + p1m1*vals[ix][iy-1].Ey.real() + m1m1*vals[ix-1][iy-1].Ey.real() + m1p1*vals[ix-1][iy].Ey.real());
+						ret_val.imag(p1p1*vals[ix][iy].Ey.imag() + p1m1*vals[ix][iy-1].Ey.imag() + m1m1*vals[ix-1][iy-1].Ey.imag() + m1p1*vals[ix-1][iy].Ey.imag());
 						break;
 					case 2:
-						ret_val.real(p1p1*vals[ix][iy].Ey.real() + p1m1*vals[ix][iy-1].Ey.real() + m1m1*vals[ix-1][iy-1].Ey.real() + m1p1*vals[ix-1][iy].Ey.real());
+						ret_val.real(p1p1*vals[ix][iy].Ez.real() + p1m1*vals[ix][iy-1].Ez.real() + m1m1*vals[ix-1][iy-1].Ez.real() + m1p1*vals[ix-1][iy].Ez.real());
 						ret_val.imag(p1p1*vals[ix][iy].Ez.imag() + p1m1*vals[ix][iy-1].Ez.imag() + m1m1*vals[ix-1][iy-1].Ez.imag() + m1p1*vals[ix-1][iy].Ez.imag());
 						break;
 					default:
