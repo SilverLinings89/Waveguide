@@ -74,7 +74,7 @@ Waveguide::~Waveguide() {
 }
 
 std::complex<double> Waveguide::evaluate_for_Position(double x, double y, double z ) {
-	Point<3, double> position(x, y, z);
+	dealii::Point<3, double> position(x, y, z);
 	Vector<double> result(6);
 	Vector<double> mode(3);
 
@@ -919,6 +919,7 @@ void Waveguide::MakeBoundaryConditions (){
 						if(abs(dir[2]) > abs(dir[0]) && abs(dir[2]) > abs(dir[1])) {
 							cell->face(i)->line(j)->get_dof_indices(local_line_dofs);
 							for(unsigned int k =0; k < fe.dofs_per_line; k++) {
+								/**
 								cm.add_line(local_line_dofs[k]);
 								if(k == 0){
 									cm.set_inhomogeneity(local_line_dofs[k], dir[2] * es.value(cell->face(i)->line(j)->center(), 2));
@@ -929,6 +930,7 @@ void Waveguide::MakeBoundaryConditions (){
 										deallog << "The boundary value computation is not prepared for this case (in MakeBoundaryConditions)." << std::endl;
 									}
 								}
+								**/
 							}
 						}
 					}

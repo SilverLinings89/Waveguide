@@ -26,7 +26,7 @@ public:
   parallel::distributed::Triangulation<3>::active_cell_iterator cell, endc;
   SpaceTransformation * ct;
   unsigned int Layers;
-  Point<3> origin;
+  Point<3> origin, p1, p2;
   std_cxx11::array< Tensor< 1, 3 >, 3 > edges;
   std::vector<unsigned int> subs;
 

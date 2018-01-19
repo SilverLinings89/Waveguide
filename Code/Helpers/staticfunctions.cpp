@@ -487,25 +487,35 @@ static Point<3> Triangulation_Stretch_Computational_Radius (const Point<3> &p)
 	return q;
 }
 
+static double my_inter (double x, double l, double w) {
+	double a = 0.25 * (l+3.0*w);
+	double b = -(3.0/2.0) * (l-w);
+	double c = (9.0/4.0) * (l-w);
+	return a + b*x + c*x*x;
+}
+
 static Point<3> Triangulation_Stretch_Computational_Rectangle (const Point<3> &p)
 {
-  double x_goal = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
-  double x_current = (GlobalParams.M_R_XLength ) / 6;
-  double x_max = GlobalParams.M_R_XLength / 2.0  - GlobalParams.M_BC_XMinus ;
-  double x_point = abs(p[0]);
-  double factor = InterpolationPolynomialZeroDerivative(sigma(x_point, x_current, x_max), x_goal/x_current , 1.0);
-  Point<3> q = p;
-  q[0] *= factor;
-  double y_goal = (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out)/2.0;
-  double y_current = (GlobalParams.M_R_YLength ) / 6;
-  double y_max = GlobalParams.M_R_YLength / 2.0 - GlobalParams.M_BC_YMinus;
-  double y_point = abs(p[1]);
-  factor = InterpolationPolynomialZeroDerivative(sigma(y_point, y_current, y_max), y_goal/y_current , 1.0);
-  q[1] *= factor;
+	double d1_goal = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/4.0;
+	double d2_goal = (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out)/4.0;
+
+	Point<3> q = p;
+  if(abs(p[0]) <= 1./3.){
+		q[0] = q[0] * 3.0 * d1_goal;
+	} else {
+		double f = my_inter(std::abs(p[0]), GlobalParams.M_R_XLength / 2.0, d1_goal);
+		q[0] = q[0] * f;
+	}
+  if(abs(p[1]) <= 1./3.){
+		q[1] = q[1] * 3.0 * d2_goal;
+	} else {
+		double f = my_inter(std::abs(p[1]), GlobalParams.M_R_YLength / 2.0, d2_goal);
+		q[1] = q[1] * f;
+	}
   return q;
 }
 
-static double TEMode00 (Point<3, double> p , int component)
+static double TEMode00 ( dealii::Point<3, double> p , int component)
 {
 
 	if(component == 0) {
