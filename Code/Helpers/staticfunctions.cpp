@@ -488,29 +488,29 @@ static Point<3> Triangulation_Stretch_Computational_Radius (const Point<3> &p)
 }
 
 static double my_inter (double x, double l, double w) {
-	double a = 0.25 * (l+3.0*w);
-	double b = -(3.0/2.0) * (l-w);
-	double c = (9.0/4.0) * (l-w);
+	double a = 1.0/9.0 * (l+8.0*w);
+	double c = (16.0/9.0) * (l-w);
+	double b = -(8.0/9.0) * (l-w);
 	return a + b*x + c*x*x;
 }
 
 static Point<3> Triangulation_Stretch_Computational_Rectangle (const Point<3> &p)
 {
-	double d1_goal = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/4.0;
-	double d2_goal = (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out)/4.0;
+	double d1_goal = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
+	double d2_goal = (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out)/2.0;
 
 	Point<3> q = p;
-  if(abs(p[0]) <= 1./3.){
+  if(abs(p[0]) <= 0.25){
 		q[0] = q[0] * 3.0 * d1_goal;
 	} else {
-		double f = my_inter(std::abs(p[0]), GlobalParams.M_R_XLength / 2.0, d1_goal);
-		q[0] = q[0] * f;
+		q[0] =  my_inter(std::abs(p[0]), GlobalParams.M_R_XLength / 2.0, d1_goal);
+		if(p[0] <0.0) q[0] *= -1.0;
 	}
-  if(abs(p[1]) <= 1./3.){
+  if(abs(p[1]) <= 0.25){
 		q[1] = q[1] * 3.0 * d2_goal;
 	} else {
-		double f = my_inter(std::abs(p[1]), GlobalParams.M_R_YLength / 2.0, d2_goal);
-		q[1] = q[1] * f;
+		q[1] = my_inter(std::abs(p[1]), GlobalParams.M_R_YLength / 2.0, d2_goal);
+		if(p[1] <0) q[1]*= -1.0;
 	}
   return q;
 }

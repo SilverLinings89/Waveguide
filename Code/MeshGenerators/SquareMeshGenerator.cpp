@@ -39,8 +39,8 @@ SquareMeshGenerator::SquareMeshGenerator(SpaceTransformation * in_ct) :
   edges[2][1] = 0;
   edges[2][2] = 2;
 
-  subs.push_back(3);
-  subs.push_back(3);
+  subs.push_back(1);
+  subs.push_back(1);
   subs.push_back(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD));
 }
 
@@ -86,22 +86,16 @@ void SquareMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<
 void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangulation<3> * in_tria){
 
   deallog.push("SquareMeshGenerator:prepare_triangulation");
-   deallog << "Starting Mesh preparation"<<std::endl;
+  deallog << "Starting Mesh preparation"<<std::endl;
 
   const std_cxx11::array< Tensor< 1, 3 >, 3 > edges2(edges);
 
-    GridGenerator::subdivided_hyper_rectangle<3,3>(* in_tria, subs,  p1, p2, false);
-    mesh_info(* in_tria, solutionpath + "/grida" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
+  GridGenerator::subdivided_parallelepiped<3,3>(* in_tria, origin, edges2, subs, false);
 
+  in_tria->repartition();
+    in_tria->refine_global(3);
     GridTools::transform(& Triangulation_Stretch_Computational_Rectangle, * in_tria);
 
-    mesh_info(* in_tria, solutionpath + "/gridb" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
-    //GridTools::transform(& Triangulation_Stretch_X, * in_tria);
-    //GridTools::transform(& Triangulation_Stretch_Y, * in_tria);
-
-
-    in_tria->repartition();
-    //  parallel::shared::Triangulation<3>::active_cell_iterator cell, endc;
 
     in_tria->signals.post_refinement.connect
             (std_cxx11::bind (& SquareMeshGenerator::set_boundary_ids,
@@ -122,7 +116,6 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
       if( temp >=  (int)Layers || temp < 0) std::cout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
     }
 
-    mesh_info(* in_tria, solutionpath + "/gridc" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
     if(GlobalParams.R_Global > 0) {
         in_tria->refine_global(GlobalParams.R_Global);
     }
@@ -150,11 +143,7 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
       in_tria->execute_coarsening_and_refinement();
     }
 
-
-    mesh_info(* in_tria, solutionpath + "/gridd" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
-
     GridTools::transform(& Triangulation_Stretch_Z, * in_tria);
-
 
     GridTools::transform(& Triangulation_Shift_Z , * in_tria);
 
@@ -173,7 +162,6 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
     }
 
     std::cout << GlobalParams.MPI_Rank << ": "<< z_min << " , " <<z_max <<std::endl;
-    mesh_info(* in_tria, solutionpath + "/gride" + static_cast<std::ostringstream*>( &(std::ostringstream() << GlobalParams.MPI_Rank) )->str() + ".vtk");
 
     cell = in_tria->begin_active();
     endc = in_tria->end();
@@ -185,7 +173,7 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
 }
 
 bool SquareMeshGenerator::math_coordinate_in_waveguide(Point<3,double> in_position) const  {
-  return std::abs(in_position[0])< MaxDistX && std::abs(in_position[1])< MaxDistY ;
+  return std::abs(in_position[0])< (GlobalParams.M_C_Dim1In+GlobalParams.M_C_Dim1Out)/2.0 && std::abs(in_position[1])< (GlobalParams.M_C_Dim2In+GlobalParams.M_C_Dim2Out)/2.0;
 }
 
 bool SquareMeshGenerator::phys_coordinate_in_waveguide(Point<3,double> in_position) const {

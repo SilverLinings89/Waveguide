@@ -41,7 +41,7 @@ double ExactSolution::value (const Point<3> &p , const unsigned int component) c
 					case 0:
 						ret_val.real(p1p1*vals[ix][iy].Ex.real() + p1m1*vals[ix][iy-1].Ex.real() + m1m1*vals[ix-1][iy-1].Ex.real() + m1p1*vals[ix-1][iy].Ex.real());
 						ret_val.imag(p1p1*vals[ix][iy].Ex.imag() + p1m1*vals[ix][iy-1].Ex.imag() + m1m1*vals[ix-1][iy-1].Ex.imag() + m1p1*vals[ix-1][iy].Ex.imag());
-						ret_val *= -1.0;
+						// ret_val *= -1.0;
 						break;
 					case 1:
 						ret_val.real(p1p1*vals[ix][iy].Ey.real() + p1m1*vals[ix][iy-1].Ey.real() + m1m1*vals[ix-1][iy-1].Ey.real() + m1p1*vals[ix-1][iy].Ey.real());
@@ -136,8 +136,8 @@ void ExactSolution::vector_value (const Point<3> &p,	Vector<double> &values) con
 					values[0+komp] = entr.real();
 					values[3+komp] = entr.imag();
 				}
-				values[0] *= -1.0;
-				values[0] *= -3.0;
+				// values[0] *= -1.0;
+				// values[3] *= -1.0;
 				return;
       }
     } else {
