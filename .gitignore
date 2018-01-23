@@ -47,6 +47,16 @@ Makefile
 main
 CMakeFiles/
 CMakeCache.txt
+Code/CMakeCache.txt
+Code/CMakeFiles/
+Code/libCode.a
+Code/Makefile
+Code/cmake_install.cmake
+Main/main
+Main/CMakeFiles/
+Main/CMakeCache.txt
+Main/cmake_install.cmake
+Main/Makefile
 Waveguide
 .cproject
 temp

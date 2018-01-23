@@ -2,6 +2,9 @@
 #ifndef ParametersFlag
 #define ParametersFlag
 
+#include <string>
+#include <mpi.h>
+
 /**
  * \class Parameters
  * \brief This structure contains all information contained in the input file and some values that can simply be computed from it.

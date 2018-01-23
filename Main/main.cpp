@@ -1,55 +1,45 @@
 #ifndef MainCppFlag
 #define MainCppFlag
 
-#include <iostream>
-#include <fstream>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <deal.II/base/parameter_handler.h>
+#include <mpi.h>
+#include <iostream>
+#include <fstream>
 #include <string>
 #include <sstream>
 
-#include <mpi.h>
+#include "../Code/Core/Waveguide.h"
+#include "../Code/Helpers/Parameters.h"
+#include "../Code/Helpers/ParameterReader.h"
+#include "../Code/Helpers/staticfunctions.h"
+#include "../Code/OptimizationStrategies/Optimization.h"
+#include "../Code/Helpers/ModeManager.h"
+#include "../Code/Core/Sector.h"
+#include "../Code/Helpers/PointVal.h"
+#include "../Code/Helpers/ExactSolution.h"
+#include "../Code/Core/SolutionWeight.h"
+#include "../Code/OutputGenerators/Console/GradientTable.h"
 
-#include "Code/Core/Waveguide.h"
-#include "Code/Helpers/Parameters.h"
-#include "Code/Helpers/ParameterReader.cpp"
-#include "Code/Helpers/staticfunctions.cpp"
-#include "Code/OptimizationStrategies/Optimization.cpp"
-#include "Code/Helpers/ParameterReader.cpp"
-#include "Code/Helpers/Parameters.cpp"
-#include "Code/Helpers/ModeManager.cpp"
-#include "Code/Core/Sector.cpp"
-#include "Code/Core/Waveguide.cpp"
-#include "Code/Helpers/PointVal.cpp"
-#include "Code/Helpers/ExactSolution.cpp"
-#include "Code/Core/SolutionWeight.cpp"
-#include "Code/OutputGenerators/Console/GradientTable.cpp"
+#include "../Code/SpaceTransformations/SpaceTransformation.h"
+#include "../Code/SpaceTransformations/InhomogenousTransformationRectangular.h"
+#include "../Code/SpaceTransformations/InhomogenousTransformationCircular.h"
+#include "../Code/SpaceTransformations/HomogenousTransformationCircular.h"
+#include "../Code/SpaceTransformations/HomogenousTransformationRectangular.h"
+#include "../Code/SpaceTransformations/DualProblemTransformationWrapper.h"
 
-#include "Code/SpaceTransformations/SpaceTransformation.cpp"
-#include "Code/SpaceTransformations/InhomogenousTransformationRectangular.cpp"
-#include "Code/SpaceTransformations/InhomogenousTransformationCircular.cpp"
-#include "Code/SpaceTransformations/HomogenousTransformationCircular.cpp"
-#include "Code/SpaceTransformations/HomogenousTransformationRectangular.cpp"
-#include "Code/SpaceTransformations/DualProblemTransformationWrapper.cpp"
+#include "../Code/MeshGenerators/MeshGenerator.h"
+#include "../Code/MeshGenerators/RoundMeshGenerator.h"
+#include "../Code/MeshGenerators/SquareMeshGenerator.h"
 
-#include "Code/MeshGenerators/MeshGenerator.cpp"
-#include "Code/MeshGenerators/RoundMeshGenerator.cpp"
-#include "Code/MeshGenerators/SquareMeshGenerator.cpp"
+#include "../Code/OptimizationStrategies/AdjointOptimization.h"
+#include "../Code/OptimizationStrategies/FDOptimization.h"
 
-#include "Code/OptimizationStrategies/Optimization.cpp"
-#include "Code/OptimizationStrategies/AdjointOptimization.cpp"
-#include "Code/OptimizationStrategies/FDOptimization.cpp"
-
-#include <deal.II/base/parameter_handler.h>
-#include "Code/OptimizationAlgorithm/OptimizationAlgorithm.cpp"
-#include "Code/OptimizationAlgorithm/OptimizationCG.cpp"
-#include "Code/OptimizationAlgorithm/OptimizationSteepestDescent.cpp"
-#include "Code/OptimizationAlgorithm/Optimization1D.cpp"
-
-
-
-
-using namespace dealii;
+#include "../Code/OptimizationAlgorithm/OptimizationAlgorithm.h"
+#include "../Code/OptimizationAlgorithm/OptimizationCG.h"
+#include "../Code/OptimizationAlgorithm/OptimizationSteepestDescent.h"
+#include "../Code/OptimizationAlgorithm/Optimization1D.h"
 
 int main (int argc, char *argv[])
 {

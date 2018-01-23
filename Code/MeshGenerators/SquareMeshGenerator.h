@@ -1,8 +1,13 @@
 #ifndef SquareMeshGenerator_h_
 #define SquareMeshGenerator_h_
 
+#include "./SquareMeshGenerator.h"
+#include <vector>
+#include <array>
+#include <deal.II/base/point.h>
+#include <deal.II/distributed/tria.h>
 #include "./MeshGenerator.h"
-
+#include "../SpaceTransformations/SpaceTransformation.h"
 /**
  * \class SquareMeshGenerator
  * \brief This class generates meshes, that are used to discretize a rectangular Waveguide. It is derived from MeshGenerator.
@@ -21,7 +26,7 @@ class SquareMeshGenerator : public MeshGenerator {
 
   const double MaxDistX;
   const double MaxDistY;
-public:
+ public:
   SquareMeshGenerator(SpaceTransformation * st);
 
   ~SquareMeshGenerator();

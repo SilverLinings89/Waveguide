@@ -3,7 +3,7 @@
 ##
 
 # Set the name of the project and target:
-SET(TARGET "main")
+SET(TARGET "WaveguideProblem")
 
 # Declare all source files the target consists of. Here, this is only
 # the one step-X.cc file, but as you expand your project you may wish
@@ -15,9 +15,9 @@ SET(TARGET "main")
 # or switch altogether to the large project CMakeLists.txt file discussed
 # in the "CMake in user projects" page accessible from the "User info"
 # page of the documentation.
-SET(TARGET_SRC
-  ${TARGET}.cpp
-  )
+# SET(TARGET_SRC
+#   main.cpp
+#  )
 
 # Usually, you will not need to modify anything beyond this point...
 
@@ -36,4 +36,7 @@ ENDIF()
 
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
 PROJECT(${TARGET})
-DEAL_II_INVOKE_AUTOPILOT()
+
+ADD_SUBDIRECTORY(Code)
+ADD_SUBDIRECTORY(Main)
+

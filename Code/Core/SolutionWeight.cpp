@@ -1,5 +1,8 @@
+#ifndef CODE_CORE_SOLUTIONWEIGHT_CPP_
+#define CODE_CORE_SOLUTIONWEIGHT_CPP_
 
 #include "SolutionWeight.h"
+#include "../Core/Waveguide.h"
 
 template <int dim>
 double SolutionWeight<dim>::value (const Point<dim> &p, const unsigned int ) const
@@ -26,3 +29,5 @@ template <int dim>
 SolutionWeight<dim>::SolutionWeight(): Function<dim>(6) {
 
 }
+
+#endif

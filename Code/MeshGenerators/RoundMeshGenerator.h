@@ -1,8 +1,13 @@
 #ifndef RoundMeshGenerator_H_
 #define RoundMeshGenerator_H_
 
-#include "./MeshGenerator.h"
-
+#include "./RoundMeshGenerator.h"
+#include <vector>
+#include <array>
+#include <deal.II/base/point.h>
+#include <deal.II/distributed/tria.h>
+#include "MeshGenerator.h"
+#include "../SpaceTransformations/SpaceTransformation.h"
 /**
  * \class RoundMeshGenerator
  * \brief This class generates meshes, that are used to discretize a rectangular Waveguide. It is derived from MeshGenerator.
@@ -24,7 +29,7 @@ class RoundMeshGenerator : public MeshGenerator {
   const double MaxDistX;
   const double MaxDistY;
 
-public:
+ public:
   RoundMeshGenerator(SpaceTransformation * in_ct);
 
   ~RoundMeshGenerator();

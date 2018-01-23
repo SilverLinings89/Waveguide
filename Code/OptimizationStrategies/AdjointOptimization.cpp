@@ -1,10 +1,18 @@
 #ifndef AdjointOptimization_CPP_
 #define AdjointOptimization_CPP_
 
-using namespace dealii;
 
-#include "../Core/Waveguide.h"
+
 #include "AdjointOptimization.h"
+#include <complex>
+#include <vector>
+#include <deal.II/base/point.h>
+#include "../Core/Waveguide.h"
+#include "../MeshGenerators/MeshGenerator.h"
+#include "../SpaceTransformations/SpaceTransformation.h"
+#include "../OptimizationAlgorithm/OptimizationAlgorithm.h"
+
+using namespace dealii;
 
 AdjointOptimization::AdjointOptimization(Waveguide * in_waveguide_primal, MeshGenerator * in_mg, SpaceTransformation * in_st_primal, SpaceTransformation * in_st_dual, OptimizationAlgorithm<std::complex<double>> * in_Oa) {
   waveguide = in_waveguide_primal;

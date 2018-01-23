@@ -1,6 +1,10 @@
 #ifndef FDOptimization_H_
 #define FDOptimization_H_
 
+#include "Optimization.h"
+#include "../Core/Waveguide.h"
+#include "../OptimizationAlgorithm/OptimizationAlgorithm.h"
+
 using namespace dealii;
 
 /**
@@ -13,7 +17,7 @@ using namespace dealii;
  */
 class FDOptimization : public Optimization {
 
-public:
+ public:
   const int type = 0; // Allows callers to identify the exact type easily. 0 = FD, 1 = Adj.
 
   OptimizationAlgorithm<double> * oa;

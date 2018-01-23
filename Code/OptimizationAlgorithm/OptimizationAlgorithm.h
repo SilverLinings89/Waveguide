@@ -1,6 +1,8 @@
 #ifndef OptimizationAlgorithm_H_
 #define OptimizationAlgorithm_H_
 
+#include "../Core/Waveguide.h"
+
 /**
  * \class OptimizationAlgorithm
  * \brief This class is an interface for Optimization algorithms such as CG or steepest descent.
@@ -14,7 +16,7 @@
 template <typename datatype>
 class OptimizationAlgorithm{
 
-public:
+ public:
 
   std::vector<std::vector<datatype>> states;
 
@@ -22,7 +24,7 @@ public:
 
   OptimizationAlgorithm();
 
-  virtual ~OptimizationAlgorithm();
+  ~OptimizationAlgorithm();
 
   /**
    * A function to pass a vector of values, computed by performing a single or multiple steps with short step-width.

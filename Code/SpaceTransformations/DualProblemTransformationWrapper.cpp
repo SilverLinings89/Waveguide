@@ -8,9 +8,14 @@
 #ifndef DualTransformationWrapper_CPP
 #define DualTransformationWrapper_CPP
 
-#include "../Helpers/staticfunctions.h"
 #include "../Helpers/QuadratureFormulaCircle.cpp"
 #include "DualProblemTransformationWrapper.h"
+#include <deal.II/base/tensor.h>
+#include <deal.II/lac/vector.h>
+#include <deal.II/base/point.h>
+#include "../Core/Sector.h"
+#include "SpaceTransformation.h"
+#include "../Helpers/staticfunctions.h"
 
 using namespace dealii;
 

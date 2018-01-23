@@ -1,22 +1,33 @@
 #ifndef StaticFunctionsFlag
 #define StaticFunctionsFlag
 
-#include "ParameterReader.h"
+#include "staticfunctions.h"
+#include <sys/stat.h>
+#include <mpi.h>
 #include <string>
+#include <deal.II/base/point.h>
+
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/mpi.h>
+#include <deal.II/base/logstream.h>
+#include <deal.II/distributed/tria.h>
+#include "Parameters.h"
+#include "ParameterReader.h"
+
 
 using namespace dealii;
 
+std::string solutionpath = "";
+std::ofstream log_stream;
 std::string constraints_filename 	= "constraints.log";
 std::string assemble_filename 		= "assemble.log";
 std::string precondition_filename 	= "precondition.log";
 std::string solver_filename 		= "solver.log";
 std::string total_filename 			= "total.log";
-
 int 	StepsR 			= 10;
 int 	StepsPhi 		= 10;
-
-static int alert_counter = 0;
-static std::string input_file_name = "";
+int alert_counter = 0;
+std::string input_file_name = "";
 
 void alert() {
   MPI_Barrier(MPI_COMM_WORLD);
@@ -26,7 +37,7 @@ void alert() {
   alert_counter++;
 }
 
-static void PrepareStreams()  {
+void PrepareStreams()  {
 
 	char* pPath;
 	pPath = getenv ("WORK");
@@ -65,22 +76,12 @@ static void PrepareStreams()  {
   solutionpath = out.str();
   mkdir(solutionpath.c_str(), ACCESSPERMS);
 
-  // Copy Parameter file to the output directory in processor 0. This should be replaced with an output generator eventually.
-  /**
-  if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0) {
-    std::ifstream source("Parameters/Parameters.xml", std::ios::binary);
-    std::ofstream dest(solutionpath +"/Parameters.xml", std::ios::binary);
-    dest << source.rdbuf();
-    source.close();
-    dest.close();
-  }
-**/
   log_stream.open(solutionpath + "/main"+ std::to_string(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) +".log", std::ios::binary);
   deallog.attach(log_stream);
 
 }
 
-static Parameters GetParameters() {
+Parameters GetParameters() {
 	ParameterHandler prm;
 	ParameterReader param(prm);
 	param.read_parameters(input_file_name);
@@ -329,27 +330,27 @@ static Parameters GetParameters() {
 	return ret;
 }
 
-inline double InterpolationPolynomial(double in_z, double in_val_zero, double in_val_one, double in_derivative_zero, double in_derivative_one) {
+double InterpolationPolynomial(double in_z, double in_val_zero, double in_val_one, double in_derivative_zero, double in_derivative_one) {
 	if (in_z < 0.0) return in_val_zero;
 	if (in_z > 1.0) return in_val_one;
 	return (2*(in_val_zero - in_val_one) + in_derivative_zero + in_derivative_one) * pow(in_z,3) + (3*(in_val_one - in_val_zero) - (2*in_derivative_zero) - in_derivative_one)*pow(in_z,2) + in_derivative_zero*in_z + in_val_zero;
 }
 
-inline double InterpolationPolynomialDerivative(double in_z, double in_val_zero, double in_val_one, double in_derivative_zero, double in_derivative_one) {
+double InterpolationPolynomialDerivative(double in_z, double in_val_zero, double in_val_one, double in_derivative_zero, double in_derivative_one) {
 	if (in_z < 0.0) return in_derivative_zero;
 	if (in_z > 1.0) return in_derivative_one;
 	return 3* (2*(in_val_zero - in_val_one) + in_derivative_zero + in_derivative_one) * pow(in_z,2) + 2*(3*(in_val_one - in_val_zero) - (2*in_derivative_zero) - in_derivative_one)*in_z + in_derivative_zero;
 }
 
-inline double InterpolationPolynomialZeroDerivative(double in_z , double in_val_zero, double in_val_one) {
+double InterpolationPolynomialZeroDerivative(double in_z , double in_val_zero, double in_val_one) {
 	return InterpolationPolynomial(in_z, in_val_zero, in_val_one, 0.0, 0.0);
 }
 
-static double Distance2D (Point<3, double> position, Point<3, double> to = Point<3, double>()) {
+double Distance2D (Point<3, double> position, Point<3, double> to ) {
 		return sqrt((position(0)-to(0))*(position(0)-to(0)) + (position(1)-to(1))*(position(1)-to(1)));
 }
 
-inline Tensor<1, 3 , double> crossproduct(Tensor<1, 3, double> a, Tensor<1, 3, double> b) {
+Tensor<1, 3 , double> crossproduct(Tensor<1, 3, double> a, Tensor<1, 3, double> b) {
 	Tensor<1,3,double> ret;
 	ret[0] = a[1] * b[2] - a[2] * b[1];
 	ret[1] = a[2] * b[0] - a[0] * b[2];
@@ -357,11 +358,11 @@ inline Tensor<1, 3 , double> crossproduct(Tensor<1, 3, double> a, Tensor<1, 3, d
 	return ret;
 }
 
-inline double dotproduct(Tensor<1, 3, double> a, Tensor<1, 3, double> b) {
+double dotproduct(Tensor<1, 3, double> a, Tensor<1, 3, double> b) {
 	return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
-template<int dim> static void mesh_info(const parallel::distributed::Triangulation<dim> &tria, const std::string &filename)
+template<int dim> void mesh_info(const parallel::distributed::Triangulation<dim> &tria, const std::string &filename)
 {
 	std::cout << "Mesh info:" << std::endl << " dimension: " << dim << std::endl << " no. of cells: " << tria.n_active_cells() << std::endl;
 	{
@@ -393,7 +394,7 @@ template<int dim> static void mesh_info(const parallel::distributed::Triangulati
 	std::cout << " written to " << filename << std::endl << std::endl;
 }
 
-template<int dim> static void mesh_info(const parallel::distributed::Triangulation<dim> &tria)
+template<int dim> void mesh_info(const parallel::distributed::Triangulation<dim> &tria)
 {
   std::cout << "Mesh info:" << std::endl << " dimension: " << dim << std::endl << " no. of cells: " << tria.n_active_cells() << std::endl;
   {
@@ -421,7 +422,7 @@ template<int dim> static void mesh_info(const parallel::distributed::Triangulati
 
 }
 
-static double sigma (double in_z, double min, double max) {
+double sigma (double in_z, double min, double max) {
 	if( min == max ) return (in_z < min )? 0.0 : 1.0;
 	if(in_z < min) return 0.0;
 	if(in_z > max) return 1.0;
@@ -432,38 +433,38 @@ static double sigma (double in_z, double min, double max) {
 	return ret;
 }
 
-static Point<3> Triangulation_Stretch_X (const Point<3> &p)
+Point<3, double> Triangulation_Stretch_X (const Point<3, double> &p)
 {
-  Point<3> q = p;
+  Point<3, double> q = p;
   q[0] *= GlobalParams.M_R_XLength / 2.0 ;
   return q;
 }
 
-static Point<3> Triangulation_Stretch_Y (const Point<3> &p)
+Point<3, double> Triangulation_Stretch_Y (const Point<3, double> &p)
 {
-  Point<3> q = p;
+  Point<3, double> q = p;
   q[1] *= GlobalParams.M_R_YLength / 2.0 ;
   return q;
 }
 
-static Point<3> Triangulation_Stretch_Z (const Point<3> &p)
+Point<3, double> Triangulation_Stretch_Z (const Point<3, double> &p)
 {
-  Point<3> q = p;
+  Point<3, double> q = p;
   double total_length = GlobalParams.SystemLength;
   q[2] *= total_length / 2.0;
   return q;
 }
 
-static Point<3> Triangulation_Shift_Z (const Point<3> &p)
+Point<3, double> Triangulation_Shift_Z (const Point<3, double> &p)
 {
-  Point<3> q = p;
+  Point<3, double> q = p;
   q[2] += (GlobalParams.SystemLength - GlobalParams.M_R_ZLength)/2.0;
   return q;
 }
 
-static Point<3> Triangulation_Stretch_to_circle (const Point<3> &p)
+Point<3, double> Triangulation_Stretch_to_circle (const Point<3, double> &p)
 {
-	Point<3> q = p;
+	Point<3, double> q = p;
 	if(abs(q[0]) < 0.01 && abs(q[1]) - 0.25 < 0.01 ) {
 		q[1] *= sqrt(2);
 	}
@@ -473,7 +474,7 @@ static Point<3> Triangulation_Stretch_to_circle (const Point<3> &p)
 	return q;
 }
 
-static Point<3> Triangulation_Stretch_Computational_Radius (const Point<3> &p)
+Point<3, double> Triangulation_Stretch_Computational_Radius (const Point<3, double> &p)
 {
 	double r_goal = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
 	//double r_current = (GlobalParams.PRM_M_R_XLength ) / 7.12644;
@@ -481,25 +482,25 @@ static Point<3> Triangulation_Stretch_Computational_Radius (const Point<3> &p)
 	double r_max = (GlobalParams.M_R_XLength / 2.0 ) * (1.0 - (2.0*GlobalParams.M_BC_XMinus));
 	double r_point = sqrt(p[0]*p[0] + p[1]*p[1]);
 	double factor = InterpolationPolynomialZeroDerivative(sigma(r_point, r_current, r_max), r_goal/r_current , 1.0);
-	Point<3> q = p;
+	Point<3, double> q = p;
 	q[0] *= factor;
 	q[1] *= factor;
 	return q;
 }
 
-static double my_inter (double x, double l, double w) {
+double my_inter (double x, double l, double w) {
 	double a = 1.0/9.0 * (l+8.0*w);
 	double c = (16.0/9.0) * (l-w);
 	double b = -(8.0/9.0) * (l-w);
 	return a + b*x + c*x*x;
 }
 
-static Point<3> Triangulation_Stretch_Computational_Rectangle (const Point<3> &p)
+Point<3, double> Triangulation_Stretch_Computational_Rectangle (const Point<3, double> &p)
 {
 	double d1_goal = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
 	double d2_goal = (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out)/2.0;
 
-	Point<3> q = p;
+	Point<3, double> q = p;
   if(abs(p[0]) <= 0.25){
 		q[0] = q[0] * 3.0 * d1_goal;
 	} else {
@@ -515,7 +516,7 @@ static Point<3> Triangulation_Stretch_Computational_Rectangle (const Point<3> &p
   return q;
 }
 
-static double TEMode00 ( dealii::Point<3, double> p , int component)
+double TEMode00 ( dealii::Point<3, double> p , int component)
 {
 
 	if(component == 0) {

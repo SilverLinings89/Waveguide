@@ -2,12 +2,22 @@
 #define SectorFlagCPP
 
 #include "Sector.h"
+
 #include <deal.II/base/tensor.h>
-#include "../Helpers/staticfunctions.cpp"
+#include "../Helpers/staticfunctions.h"
+#include <deal.II/base/tensor.h>
 using namespace dealii;
 
 
 template<unsigned int Dofs_Per_Sector> Sector<Dofs_Per_Sector>::~Sector() {
+
+}
+
+template<> Sector<3>::~Sector() {
+
+}
+
+template<> Sector<2>::~Sector() {
 
 }
 
@@ -314,5 +324,8 @@ template<unsigned int Dofs_Per_Sector> void Sector<Dofs_Per_Sector>::setNInterna
 template<unsigned int Dofs_Per_Sector> void Sector<Dofs_Per_Sector>::setNActiveCells( unsigned int in_nactivecells) {
 	NActiveCells = in_nactivecells;
 }
+
+template class Sector<2>;
+template class Sector<3>;
 
 #endif

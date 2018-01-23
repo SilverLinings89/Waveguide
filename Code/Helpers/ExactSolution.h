@@ -1,10 +1,11 @@
 
-#ifndef ExactSolutionFlag
-#define ExactSolutionFlag
+#ifndef ExactSolutionFlag_H_
+#define ExactSolutionFlag_H_
 #include <vector>
 #include <string>
 #include <deal.II/base/function.h>
-#include "PointVal.cpp"
+#include "../Core/Waveguide.h"
+#include "PointVal.h"
 
 using namespace dealii;
 

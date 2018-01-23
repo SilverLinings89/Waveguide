@@ -1,6 +1,13 @@
-#ifndef WaveguideFlag
-#define WaveguideFlag
-
+// Copyright 2018 Pascal Kraft
+#ifndef CODE_CORE_WAVEGUIDE_H_
+#define CODE_CORE_WAVEGUIDE_H_
+#include <sys/stat.h>
+#include <mpi.h>
+#include <math.h>
+#include <fstream>
+#include <iostream>
+#include <cmath>
+#include <sstream>
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/grid/grid_generator.h>
@@ -41,23 +48,15 @@
 #include <deal.II/base/index_set.h>
 #include <deal.II/distributed/tria.h>
 #include <deal.II/distributed/grid_refinement.h>
+#include <deal.II/base/point.h>
 
 // Trilinos Headers
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_solver.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
-// #include <deal.II/lac/trilinos_parallel_block_vector.h>
 #include <deal.II/lac/trilinos_sparsity_pattern.h>
 #include <deal.II/lac/trilinos_block_sparse_matrix.h>
 #include <deal.II/lac/la_parallel_vector.h>
-
-#include <fstream>
-#include <iostream>
-#include <cmath>
-#include <math.h>
-#include <sstream>
-#include <mpi.h>
-
 
 #include "../Helpers/Parameters.h"
 #include "../Helpers/ParameterReader.h"
@@ -66,8 +65,6 @@
 #include "../Helpers/ModeManager.h"
 #include "../MeshGenerators/MeshGenerator.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
-
-
 
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/table_handler.h>

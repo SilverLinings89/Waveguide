@@ -1,6 +1,8 @@
 #ifndef OptimizationSD_H_
 #define OptimizationSD_H_
 
+#include "OptimizationAlgorithm.h"
+#include "../Core/Waveguide.h"
 /**
  * \class OptimizationSteepestDescent
  * \brief This class implements the computation of an optimization step via a Steepest-Descent-method.
@@ -11,7 +13,7 @@
  */
 class OptimizationSteepestDescent : public OptimizationAlgorithm<double> {
 
-public:
+ public:
 
 
   OptimizationSteepestDescent();

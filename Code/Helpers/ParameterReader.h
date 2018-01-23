@@ -2,7 +2,7 @@
 #define ParameterReaderFlag
 
 #include <deal.II/base/parameter_handler.h>
-
+#include "../Core/Waveguide.h"
 using namespace dealii;
 
 /**

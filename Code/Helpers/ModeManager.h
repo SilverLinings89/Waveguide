@@ -8,6 +8,8 @@
 #ifndef CODE_HELPERS_MODEMANAGER_H_
 #define CODE_HELPERS_MODEMANAGER_H_
 
+#include <deal.II/base/point.h>
+
 class ModeManager {
 public:
 	ModeManager();

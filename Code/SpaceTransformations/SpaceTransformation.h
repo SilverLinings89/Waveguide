@@ -8,8 +8,6 @@
 #include <deal.II/lac/vector.h>
 #include <deal.II/base/point.h>
 
-#include "../Core/Waveguide.h"
-
 using namespace dealii;
 
 class Waveguide;

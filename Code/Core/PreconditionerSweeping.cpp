@@ -1,4 +1,6 @@
-
+// Copyright 2018 Pascal Kraft
+#ifndef CODE_CORE_PRECONDITIONERSWEEPING_CPP_
+#define CODE_CORE_PRECONDITIONERSWEEPING_CPP_
 
 #include <cmath>
 #include <deal.II/base/utilities.h>
@@ -14,6 +16,12 @@
 #include "PreconditionerSweeping.h"
 
 using namespace dealii;
+
+dealii::SolverControl s(10, 1.e-10, false, false);
+dealii::SparseDirectUMFPACK * solver = 0;
+dealii::SparseMatrix<double> * temp = 0;
+
+dealii::SparsityPattern sparsity_pattern, off_diag_block_lower, off_diag_block_upper;
 
 PreconditionerSweeping::~PreconditionerSweeping (){
   delete temp;
@@ -217,4 +225,4 @@ void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> & src, de
 
 }
 
-
+#endif

@@ -1,6 +1,9 @@
 #ifndef OptimizationCG_H_
 #define OptimizationCG_H_
 
+#include "OptimizationAlgorithm.h"
+#include "../Core/Waveguide.h"
+
 /**
  * \class OptimizationCG
  * \brief This class implements the computation of an optimization step via a CG-method.
@@ -11,7 +14,7 @@
  */
 class OptimizationCG : public OptimizationAlgorithm<double> {
 
-public:
+ public:
   OptimizationCG();
 
   ~OptimizationCG();

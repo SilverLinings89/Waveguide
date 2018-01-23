@@ -1,6 +1,8 @@
 #ifndef Optimization1D_H_
 #define Optimization1D_H_
 
+#include "OptimizationAlgorithm.h"
+#include "../Core/Waveguide.h"
 /**
  * \class Optimization1D
  * \brief This class implements the computation of an optimization step by doing 1D optimization based on an adjoint scheme.
@@ -11,7 +13,7 @@
  */
 class Optimization1D : public OptimizationAlgorithm<std::complex<double>> {
 
-public:
+ public:
   Optimization1D( );
 
   ~Optimization1D();

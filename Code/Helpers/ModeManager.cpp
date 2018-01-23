@@ -14,6 +14,8 @@
 #include <vector>
 
 #include "ModeManager.h"
+#include "../Core/Waveguide.h"
+#include <deal.II/base/logstream.h>
 
 ModeManager::ModeManager(){
 	in_prepared = false;

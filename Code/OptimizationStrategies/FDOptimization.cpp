@@ -1,9 +1,18 @@
 #ifndef FDOptimization_CPP_
 #define FDOptimization_CPP_
 
-using namespace dealii;
+
 
 #include "FDOptimization.h"
+#include <complex>
+#include <vector>
+#include <deal.II/base/point.h>
+#include "../Core/Waveguide.h"
+#include "../MeshGenerators/MeshGenerator.h"
+#include "../SpaceTransformations/SpaceTransformation.h"
+#include "../OptimizationAlgorithm/OptimizationAlgorithm.h"
+
+using namespace dealii;
 
 FDOptimization::FDOptimization(Waveguide * in_waveguide, MeshGenerator * in_mg, SpaceTransformation * in_st, OptimizationAlgorithm<double> * in_Oa) {
   waveguide = in_waveguide;

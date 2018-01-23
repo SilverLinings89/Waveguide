@@ -6,8 +6,11 @@
 #include <deal.II/grid/tria_boundary_lib.h>
 #include "../SpaceTransformations/SpaceTransformation.h"
 #include <deal.II/base/tensor.h>
+#include <deal.II/base/point.h>
 
 #include <deal.II/base/std_cxx11/array.h>
+
+
 using namespace dealii;
 
 
@@ -21,7 +24,7 @@ using namespace dealii;
  */
 class MeshGenerator {
 
-public:
+ public:
 
   parallel::distributed::Triangulation<3>::active_cell_iterator cell, endc;
   SpaceTransformation * ct;

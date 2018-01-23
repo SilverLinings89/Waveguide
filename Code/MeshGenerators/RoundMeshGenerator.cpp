@@ -1,8 +1,7 @@
 #ifndef RoundMeshGeneratorCppFlag
 #define RoundMeshGeneratorCppFlag
 
-#include "../Helpers/staticfunctions.cpp"
-
+#include "RoundMeshGenerator.h"
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/std_cxx11/bind.h>
 #include <deal.II/base/std_cxx11/array.h>
@@ -13,8 +12,8 @@
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
 #include <deal.II/grid/grid_tools.h>
-
-#include "RoundMeshGenerator.h"
+#include <deal.II/distributed/tria.h>
+#include "../Helpers/staticfunctions.h"
 
 using namespace dealii;
 
@@ -51,7 +50,7 @@ RoundMeshGenerator::~RoundMeshGenerator() {
 
 void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3> & tria) const {
 
-  parallel::shared::Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
+  parallel::distributed::Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
   endc2 = tria.end();
   tria.set_all_manifold_ids(0);
   for (; cell2!=endc2; ++cell2){

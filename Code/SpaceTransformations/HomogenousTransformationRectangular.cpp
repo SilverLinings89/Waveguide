@@ -2,9 +2,13 @@
 #define HOMOGENOUS_TRANSFORMATION_RECTANGULAR_CPP
 
 #include "HomogenousTransformationRectangular.h"
-#include "../Helpers/staticfunctions.h"
+#include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/lac/vector.h>
+#include "SpaceTransformation.h"
 #include "../Helpers/QuadratureFormulaCircle.cpp"
-
+#include "../Helpers/staticfunctions.h"
+#include "../Core/Sector.h"
 using namespace dealii;
 
 HomogenousTransformationRectangular::HomogenousTransformationRectangular (int in_rank):
@@ -28,8 +32,8 @@ HomogenousTransformationRectangular::~HomogenousTransformationRectangular() {
 
 }
 
-Point<3> HomogenousTransformationRectangular::math_to_phys(Point<3> coord) const {
-  Point<3> ret;
+Point<3, double> HomogenousTransformationRectangular::math_to_phys(Point<3, double> coord) const {
+  Point<3, double> ret;
   if(coord[2] < GlobalParams.M_R_ZLength/(-2.0)) {
     ret[0] = (2*GlobalParams.M_C_Dim1In) * coord[0] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
     ret[1] = (2*GlobalParams.M_C_Dim1In) * coord[1] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
@@ -44,8 +48,8 @@ Point<3> HomogenousTransformationRectangular::math_to_phys(Point<3> coord) const
   return ret;
 }
 
-Point<3> HomogenousTransformationRectangular::phys_to_math(Point<3> coord) const {
-  Point<3> ret;
+Point<3, double> HomogenousTransformationRectangular::phys_to_math(Point<3, double> coord) const {
+  Point<3, double> ret;
   if(coord[2] < GlobalParams.M_R_ZLength/(-2.0)) {
     ret[0] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[0] / (2*GlobalParams.M_C_Dim1In);
     ret[1] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[1] / (2*GlobalParams.M_C_Dim1In);
@@ -60,19 +64,19 @@ Point<3> HomogenousTransformationRectangular::phys_to_math(Point<3> coord) const
   return ret;
 }
 
-bool HomogenousTransformationRectangular::PML_in_X(Point<3> &p) const {
+bool HomogenousTransformationRectangular::PML_in_X(Point<3, double> &p) const {
   return p(0) < XMinus ||p(0) > XPlus;
 }
 
-bool HomogenousTransformationRectangular::PML_in_Y(Point<3> &p) const {
+bool HomogenousTransformationRectangular::PML_in_Y(Point<3, double> &p) const {
   return p(1) < YMinus ||p(1) > YPlus;
 }
 
-bool HomogenousTransformationRectangular::PML_in_Z(Point<3> &p)  const{
+bool HomogenousTransformationRectangular::PML_in_Z(Point<3, double> &p)  const{
   return p(2) < ZMinus ||p(2) > ZPlus;
 }
 
-bool HomogenousTransformationRectangular::Preconditioner_PML_in_Z(Point<3> &, unsigned int block) const {
+bool HomogenousTransformationRectangular::Preconditioner_PML_in_Z(Point<3, double> &, unsigned int block) const {
   if( (int)block == GlobalParams.NumberProcesses-2) return false;
   if ( (int)block == (int)GlobalParams.MPI_Rank-1){
     return true;
@@ -81,14 +85,14 @@ bool HomogenousTransformationRectangular::Preconditioner_PML_in_Z(Point<3> &, un
   }
 }
 
-double HomogenousTransformationRectangular::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ) const{
+double HomogenousTransformationRectangular::Preconditioner_PML_Z_Distance(Point<3, double> &p, unsigned int block ) const{
   double width = GlobalParams.LayerThickness * 1.0;
 
   return p(2) +GlobalParams.M_R_ZLength/2.0 - ((double)block +1)*width;
 
 }
 
-double HomogenousTransformationRectangular::PML_X_Distance(Point<3> &p) const{
+double HomogenousTransformationRectangular::PML_X_Distance(Point<3, double> &p) const{
   if(p(0) >0){
     return p(0) - XPlus ;
   } else {
@@ -96,7 +100,7 @@ double HomogenousTransformationRectangular::PML_X_Distance(Point<3> &p) const{
   }
 }
 
-double HomogenousTransformationRectangular::PML_Y_Distance(Point<3> &p) const{
+double HomogenousTransformationRectangular::PML_Y_Distance(Point<3, double> &p) const{
   if(p(1) >0){
     return p(1) - YMinus;
   } else {
@@ -104,7 +108,7 @@ double HomogenousTransformationRectangular::PML_Y_Distance(Point<3> &p) const{
   }
 }
 
-double HomogenousTransformationRectangular::PML_Z_Distance(Point<3> &p) const{
+double HomogenousTransformationRectangular::PML_Z_Distance(Point<3, double> &p) const{
   if(p(2) < 0) {
     return - (p(2) + (GlobalParams.M_R_ZLength / 2.0));
   } else {
@@ -112,17 +116,17 @@ double HomogenousTransformationRectangular::PML_Z_Distance(Point<3> &p) const{
   }
 }
 
-Tensor<2,3,std::complex<double>> HomogenousTransformationRectangular::get_Tensor(Point<3> & position) const {
+Tensor<2,3,std::complex<double>> HomogenousTransformationRectangular::get_Tensor(Point<3, double> & position) const {
   Tensor<2,3,double> transform = get_Space_Transformation_Tensor_Homogenized(position);
   return Apply_PML_To_Tensor(position, transform);
 }
 
-Tensor<2,3,std::complex<double>> HomogenousTransformationRectangular::get_Preconditioner_Tensor(Point<3> & position, int block) const {
+Tensor<2,3,std::complex<double>> HomogenousTransformationRectangular::get_Preconditioner_Tensor(Point<3, double> & position, int block) const {
   Tensor<2,3,double> transform = get_Space_Transformation_Tensor_Homogenized(position);
   return Apply_PML_To_Tensor_For_Preconditioner(position, transform, block);
 }
 
-Tensor<2,3,double> HomogenousTransformationRectangular::get_Space_Transformation_Tensor_Homogenized(Point<3> & position) const {
+Tensor<2,3,double> HomogenousTransformationRectangular::get_Space_Transformation_Tensor_Homogenized(Point<3, double> & position) const {
   std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
 
   Tensor<2,3, double> transformation = case_sectors[sector_z.first].TransformationTensorInternal(position[0], position[1], sector_z.second);
@@ -144,7 +148,7 @@ Tensor<2,3,double> HomogenousTransformationRectangular::get_Space_Transformation
   return transformation;
 }
 
-Tensor<2,3,double> HomogenousTransformationRectangular::get_Space_Transformation_Tensor(Point<3> & position) const {
+Tensor<2,3,double> HomogenousTransformationRectangular::get_Space_Transformation_Tensor(Point<3, double> & position) const {
   std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
 
   Tensor<2,3, double> transformation = case_sectors[sector_z.first].TransformationTensorInternal(position[0], position[1], sector_z.second);
@@ -152,7 +156,7 @@ Tensor<2,3,double> HomogenousTransformationRectangular::get_Space_Transformation
   return transformation;
 }
 
-Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML_To_Tensor(Point<3> & position, Tensor<2,3,double> transformation) const {
+Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML_To_Tensor(Point<3, double> & position, Tensor<2,3,double> transformation) const {
   std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
   Tensor<2,3, std::complex<double>> ret;
 
@@ -228,7 +232,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML
   return ret3;
 }
 
-Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML_To_Tensor_For_Preconditioner(Point<3> & position, Tensor<2,3,double> transformation, int block) const {
+Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML_To_Tensor_For_Preconditioner(Point<3, double> & position, Tensor<2,3,double> transformation, int block) const {
   std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
   Tensor<2,3, std::complex<double>> ret;
 

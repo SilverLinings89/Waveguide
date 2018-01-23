@@ -2,9 +2,13 @@
 #define INHOMOGENOUS_TRANSFORMATION_CIRCULAR_CPP
 
 #include "InhomogenousTransformationCircular.h"
-#include "../Helpers/staticfunctions.h"
+#include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/lac/vector.h>
+#include "SpaceTransformation.h"
 #include "../Helpers/QuadratureFormulaCircle.cpp"
-
+#include "../Helpers/staticfunctions.h"
+#include "../Core/Sector.h"
 using namespace dealii;
 
 InhomogenousTransformationCircular::InhomogenousTransformationCircular (int in_rank):

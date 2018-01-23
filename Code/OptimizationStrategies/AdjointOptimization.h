@@ -1,6 +1,10 @@
 #ifndef AdjointOptimization_H_
 #define AdjointOptimization_H_
 
+#include "Optimization.h"
+#include "../Core/Waveguide.h"
+#include "../OptimizationAlgorithm/OptimizationAlgorithm.h"
+
 using namespace dealii;
 
 /**
@@ -13,7 +17,7 @@ using namespace dealii;
  */
 class AdjointOptimization : public Optimization {
 
-public:
+ public:
   const int type = 1; // Allows callers to identify the exact type easily. 0 = FD, 1 = Adj.
 
   AdjointOptimization(Waveguide * waveguide_primal, MeshGenerator * mg, SpaceTransformation * st_primal, SpaceTransformation * st_dual, OptimizationAlgorithm<std::complex<double>> * Oa);

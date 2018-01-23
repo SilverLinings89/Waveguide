@@ -1,18 +1,20 @@
-#ifndef PRECONDITIONERSWEEPING_H_
-#define PRECONDITIONERSWEEPING_H_
+// Copyright 2018 Pascal Kraft
+#ifndef CODE_CORE_PRECONDITIONERSWEEPING_H_
+#define CODE_CORE_PRECONDITIONERSWEEPING_H_
 
-using namespace dealii;
 #include <deal.II/base/config.h>
 #include <deal.II/lac/exceptions.h>
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_parallel_block_vector.h>
 #include <deal.II/lac/vector.h>
+#include <deal.II/base/index_set.h>
+#include "Waveguide.h"
 
-static SolverControl s(10,1.e-10, false, false);
-SparseDirectUMFPACK * solver = 0;
-SparseMatrix<double> * temp = 0;
+extern dealii::SolverControl s;
+extern dealii::SparseDirectUMFPACK * solver;
+extern dealii::SparseMatrix<double> * temp;
 
-SparsityPattern sparsity_pattern, off_diag_block_lower, off_diag_block_upper;
+extern dealii::SparsityPattern sparsity_pattern, off_diag_block_lower, off_diag_block_upper;
 
 // dealii::TrilinosWrappers::SolverDirect * solver;
 
@@ -42,13 +44,10 @@ SparsityPattern sparsity_pattern, off_diag_block_lower, off_diag_block_upper;
  *  \date 28.11.2016
  *  \author Pascal Kraft
  **/
-class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
-  {
-
+class PreconditionerSweeping : dealii::TrilinosWrappers::PreconditionBase {
   using dealii::TrilinosWrappers::PreconditionBase::vmult;
 
-  public:
-
+ public:
   /**
    * This constructor is the only one that should be used at this time.
    * \param in_own This is the number of degrees of freedom that the current process has to deal with (owned).
@@ -56,61 +55,58 @@ class PreconditionerSweeping : TrilinosWrappers::PreconditionBase
    * \param bandwidth The number of dofs per line on average is required for the construction of matrices.
    * \param locally_owned The degrees of freedom associated with the current process. Required for vector and matrix construction.
    */
-	PreconditionerSweeping ( MPI_Comm in_mpi_comm, int in_own, int in_others, int in_above, int bandwidth, IndexSet locally_owned, IndexSet * in_fixed_dofs, int rank);
+  PreconditionerSweeping(MPI_Comm in_mpi_comm, int in_own, int in_others, int in_above, int bandwidth, dealii::IndexSet locally_owned, dealii::IndexSet * in_fixed_dofs, int rank);
 
-    ~PreconditionerSweeping ();
+    ~PreconditionerSweeping();
 
     /**
      * For the application of the preconditioner we require the application of the inverse of \f$H\f$. This is implemented in this function. (The mathematical usage is included in lines 2, 6 and 13 and indirectly in every use of the Operator \f$S\f$.
      * \param src This is the vector to be multiplied by \f$H_i^{-1}\f$.
      * \param dst This is the vector to store the result in.
      */
-    void Hinv(const dealii::Vector<double> &src, dealii::Vector<double> &dst) const ;
-        
+    void Hinv(const dealii::Vector<double> &src, dealii::Vector<double> &dst) const;
     /**
      * Cases in which we require multiplications with \f$A(E_{i+1}, E_i)\f$, are where this function is used. See algorithm lines 2 and 4.
      * \param src This is the vector to be multiplied by  \f$A(E_{i+1}, E_i)\f$.
      * \param dst This is the vector to store the result in.
      */
-    void LowerProduct(const dealii::Vector<double> &src, dealii::Vector<double> &dst) const ;
+    void LowerProduct(const dealii::Vector<double> &src, dealii::Vector<double> &dst) const;
 
     /**
-	 * Cases in which we require multiplications with \f$A(E_i, E_{i+1})\f$, are where this function is used. See algorithm lines 11 and 13.
-	 * \param src This is the vector to be multiplied by  \f$A(E_i, E_{i+1})\f$.
-	 * \param dst This is the vector to store the result in.
-	 */
-	void UpperProduct(const dealii::Vector<double> &src, dealii::Vector<double> &dst) const ;
+   * Cases in which we require multiplications with \f$A(E_i, E_{i+1})\f$, are where this function is used. See algorithm lines 11 and 13.
+   * \param src This is the vector to be multiplied by  \f$A(E_i, E_{i+1})\f$.
+   * \param dst This is the vector to store the result in.
+   */
+  void UpperProduct(const dealii::Vector<double> &src, dealii::Vector<double> &dst) const;
 
-	/**
-	 * In order to be called by the iterative solver, this function has to be overloaded. It gets called from GMRES and is the core function which contains the implementation. For a description of the interface, see the implementation in the base class.
-	 * \param dst The vector to store the result in.
-	 * \param src The vector to be multiplied by the approximate inverse.
-	 */
-	virtual void vmult (TrilinosWrappers::MPI::BlockVector       &dst,      const TrilinosWrappers::MPI::BlockVector &src) const;
+  /**
+   * In order to be called by the iterative solver, this function has to be overloaded. It gets called from GMRES and is the core function which contains the implementation. For a description of the interface, see the implementation in the base class.
+   * \param dst The vector to store the result in.
+   * \param src The vector to be multiplied by the approximate inverse.
+   */
+  virtual void vmult(dealii::TrilinosWrappers::MPI::BlockVector &dst, const dealii::TrilinosWrappers::MPI::BlockVector &src) const;
 
-	TrilinosWrappers::SparseMatrix * matrix;
-	dealii::SparseMatrix<double> * prec_matrix_upper;
+  dealii::TrilinosWrappers::SparseMatrix * matrix;
+  dealii::SparseMatrix<double> * prec_matrix_upper;
 
-	dealii::SparseMatrix<double> * prec_matrix_lower;
+  dealii::SparseMatrix<double> * prec_matrix_lower;
 
-	void Prepare(TrilinosWrappers::MPI::BlockVector &src);
+  void Prepare(dealii::TrilinosWrappers::MPI::BlockVector &src);
 
-	void init(SolverControl in_sc, TrilinosWrappers::SparseMatrix *, TrilinosWrappers::SparseMatrix *);
+  void init(dealii::SolverControl in_sc, dealii::TrilinosWrappers::SparseMatrix *, dealii::TrilinosWrappers::SparseMatrix *);
 
-  private:
-	int * indices;
-	int own, others;
-	TrilinosWrappers::MPI::Vector itmp, otmp;
-	Vector<double> boundary;
-	unsigned int sweepable;
-	IndexSet locally_owned_dofs;
-	IndexSet * fixed_dofs;
-	int rank;
-	int bandwidth;
-	MPI_Comm mpi_comm;
-	int above;
+ private:
+  int * indices;
+  int own, others;
+  dealii::TrilinosWrappers::MPI::Vector itmp, otmp;
+  dealii::Vector<double> boundary;
+  unsigned int sweepable;
+  dealii::IndexSet locally_owned_dofs;
+  dealii::IndexSet * fixed_dofs;
+  int rank;
+  int bandwidth;
+  MPI_Comm mpi_comm;
+  int above;
+};
 
-
-  };
-
-#endif /* PRECONDITIONERSWEEPING_H_ */
+#endif  //  CODE_CORE_PRECONDITIONERSWEEPING_H_

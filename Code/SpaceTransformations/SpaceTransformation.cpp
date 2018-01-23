@@ -2,6 +2,12 @@
 #define SpaceTransformation_CPP
 
 #include "SpaceTransformation.h"
+#include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/lac/vector.h>
+#include "../Helpers/QuadratureFormulaCircle.cpp"
+#include "../Helpers/staticfunctions.h"
+#include "../Core/Sector.h"
 
 std::pair<int, double> SpaceTransformation::Z_to_Sector_and_local_z(double in_z) const {
   std::pair<int, double> ret;

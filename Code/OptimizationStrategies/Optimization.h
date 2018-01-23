@@ -28,7 +28,7 @@ using namespace dealii;
 class Optimization {
 
 
-	public:
+ public:
 
     Optimization();
 

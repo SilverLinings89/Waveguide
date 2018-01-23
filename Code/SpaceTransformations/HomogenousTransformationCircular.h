@@ -9,6 +9,11 @@
 
 #include "../Core/Waveguide.h"
 #include "../Core/Sector.h"
+#include <deal.II/base/tensor.h>
+#include <deal.II/lac/vector.h>
+#include <deal.II/base/point.h>
+#include "SpaceTransformation.h"
+#include "../Helpers/staticfunctions.h"
 
 using namespace dealii;
 

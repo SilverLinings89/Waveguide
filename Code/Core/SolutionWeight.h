@@ -8,10 +8,11 @@
  */
 
 
-#ifndef SolutionWeightFlag
-#define SolutionWeightFlag
+#ifndef CODE_CORE_SOLUTIONWEIGHT_H_
+#define CODE_CORE_SOLUTIONWEIGHT_H_
 
 #include <deal.II/base/function.h>
+
 
 using namespace dealii;
 

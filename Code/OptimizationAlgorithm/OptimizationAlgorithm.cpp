@@ -94,4 +94,7 @@ void OptimizationAlgorithm<datatype>::WriteStepsOut(std::ofstream & result_file 
   Optimization_Steps.write_tex(result_file);
   deallog.pop();
 }
+
+template class OptimizationAlgorithm<std::complex<double>>;
+template class OptimizationAlgorithm<double>;
 #endif
