@@ -179,14 +179,14 @@
         </Connectors>
         <Region>
             <XLength>
-                <value>10</value>
+                <value>15</value>
                 <default_value>10.0</default_value>
                 <documentation>Length of the system in x-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
                 <pattern>22</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XLength>
             <YLength>
-                <value>10</value>
+                <value>15</value>
                 <default_value>10.0</default_value>
                 <documentation>Length of the system in y-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
                 <pattern>23</pattern>
@@ -253,28 +253,28 @@
                 <pattern_description>[Integer 0...2147483647 (inclusive)]</pattern_description>
             </ZPlus>
             <XMinus>
-                <value>2</value>
+                <value>1</value>
                 <default_value>1.0</default_value>
                 <documentation>Thickness of the PML on the negative X-axis. Measured in micrometers</documentation>
                 <pattern>20</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XMinus>
             <XPlus>
-                <value>2</value>
+                <value>1</value>
                 <default_value>1.0</default_value>
                 <documentation>Thickness of the PML on the positive X-axis. Measured in micrometers</documentation>
                 <pattern>21</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XPlus>
             <YMinus>
-                <value>2</value>
+                <value>1</value>
                 <default_value>1.0</default_value>
                 <documentation>Thickness of the PML on the negative Y-axis. Measured in micrometers</documentation>
                 <pattern>22</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </YMinus>
             <YPlus>
-                <value>2</value>
+                <value>1</value>
                 <default_value>1.0</default_value>
                 <documentation>Thickness of the PML on the positive Y-axis. Measured in micrometers</documentation>
                 <pattern>23</pattern>

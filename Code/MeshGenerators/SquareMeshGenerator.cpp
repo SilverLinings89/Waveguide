@@ -56,15 +56,17 @@ void SquareMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<
 	for (; cell2!=endc2; ++cell2){
 	 if(cell2->at_boundary()){
 		 for(int j = 0; j<6; j++){
+			 Point<3> ctr =cell2->face(j)->center(false, false);
 			 if(cell2->face(j)->at_boundary()){
-				 Point<3> ctr =cell2->face(j)->center(false, false);
 				 cell2->face(j)->set_all_boundary_ids(1);
+
 				 if(std::abs(ctr(2) - GlobalParams.M_R_ZLength/2.0 - GlobalParams.M_BC_Zplus*GlobalParams.SectorThickness) < 0.00001) {
 					 cell2->face(j)->set_all_boundary_ids(2);
 				 }
 				 if(std::abs(ctr(2) + GlobalParams.M_R_ZLength/2.0) < 0.00001) {
 					 cell2->face(j)->set_all_boundary_ids(3);
 				 }
+
 			 }
 		 }
 	 }

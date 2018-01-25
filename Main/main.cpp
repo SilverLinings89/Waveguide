@@ -47,7 +47,7 @@ int main (int argc, char *argv[])
   if(argc > 1) {
     input_file_name = argv[1];
   } else {
-    input_file_name = "./Parameters/Parameters.xml";
+    input_file_name = "../Parameters/Parameters.xml";
   }
 
   deallog.depth_console(5);
@@ -69,8 +69,6 @@ int main (int argc, char *argv[])
 	ModeMan.load();
 
 	deallog << "Parameters loaded. Preparing Space Transformations..." <<std::endl;
-
-
 
 	SpaceTransformation * st;
 
@@ -94,7 +92,7 @@ int main (int argc, char *argv[])
 
 	MeshGenerator * mg;
 	if(GlobalParams.M_C_Shape == ConnectorType::Circle ){
-	  mg = new RoundMeshGenerator(st );
+	  mg = new RoundMeshGenerator(st);
 	} else {
 	  mg = new SquareMeshGenerator(st);
 	}

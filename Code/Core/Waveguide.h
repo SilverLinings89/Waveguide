@@ -72,16 +72,16 @@
 using namespace dealii;
 
 
-static Parameters GlobalParams;
-static ModeManager ModeMan;
-static dealii::ConvergenceTable Convergence_Table;
-static dealii::TableHandler Optimization_Steps;
+extern Parameters GlobalParams;
+extern ModeManager ModeMan;
+extern dealii::ConvergenceTable Convergence_Table;
+extern dealii::TableHandler Optimization_Steps;
 
 static const CylindricalManifold<3, 3> round_description (2);
 
 const int STEPS_PER_DOFS = 11;
 
-static double * steps_widths;
+extern double * steps_widths;
 
 /**
  * \class Waveguide

@@ -19,6 +19,7 @@ using namespace dealii;
 
 dealii::SolverControl s(10, 1.e-10, false, false);
 dealii::SparseDirectUMFPACK * solver = 0;
+dealii::TrilinosWrappers::SolverDirect * solver2 = 0;
 dealii::SparseMatrix<double> * temp = 0;
 
 dealii::SparsityPattern sparsity_pattern, off_diag_block_lower, off_diag_block_upper;
@@ -155,7 +156,7 @@ void PreconditionerSweeping::init(SolverControl , TrilinosWrappers::SparseMatrix
   temp->copy_from(* matrix);
   deallog << "Factorize Matrix" <<std::endl;
   solver->factorize(*temp);
-
+  std::cout << this->rank << " is done." << std::endl;
   // Prec Matrix lower Preparation
   deallog << "Prepare Lower Block" <<std::endl;
   off_diag_block_lower.reinit(own, above, bandwidth);

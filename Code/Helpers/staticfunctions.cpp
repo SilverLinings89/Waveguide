@@ -2,6 +2,7 @@
 #define StaticFunctionsFlag
 
 #include "staticfunctions.h"
+#include <unistd.h>
 #include <sys/stat.h>
 #include <mpi.h>
 #include <string>
@@ -77,6 +78,9 @@ void PrepareStreams()  {
   mkdir(solutionpath.c_str(), ACCESSPERMS);
 
   log_stream.open(solutionpath + "/main"+ std::to_string(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) +".log", std::ios::binary);
+
+  symlink(solutionpath.c_str(), "./latest");
+
   deallog.attach(log_stream);
 
 }
@@ -532,6 +536,62 @@ double TEMode00 ( dealii::Point<3, double> p , int component)
 inline bool file_exists (const std::string& name) {
   struct stat buffer;
   return (stat (name.c_str(), &buffer) == 0);
+}
+
+std::vector<types::global_dof_index> Add_Zero_Restraint_test(dealii::ConstraintMatrix * in_cm, DoFHandler<3>::active_cell_iterator in_cell , unsigned int in_face, unsigned int DofsPerLine, unsigned int DofsPerFace, bool in_non_face_dofs, IndexSet * locally_owned_dofs) {
+	std::vector<types::global_dof_index> local_line_dofs(DofsPerLine);
+	std::vector<types::global_dof_index> local_face_dofs(DofsPerFace);
+	std::vector<types::global_dof_index> ret;
+	for (unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+	 ((in_cell->face(in_face))->line(j))->get_dof_indices(local_line_dofs);
+		for (unsigned int k =0; k < DofsPerLine; k++) {
+			if (locally_owned_dofs->is_element(local_line_dofs[k])) {
+				// in_cm->add_line(local_line_dofs[k]);
+				ret.push_back(local_line_dofs[k]);
+			}
+		}
+	}
+	if (in_non_face_dofs) {
+		in_cell->face(in_face)->get_dof_indices(local_face_dofs);
+		for (unsigned int j = GeometryInfo<3>::lines_per_face*DofsPerLine; j < DofsPerFace; j++) {
+			if (locally_owned_dofs->is_element(local_face_dofs[j])) {
+				// in_cm->add_line(local_face_dofs[j]);
+				ret.push_back(local_face_dofs[j]);
+			}
+		}
+	}
+	return ret;
+}
+
+std::vector<types::global_dof_index> Add_Zero_Restraint(dealii::ConstraintMatrix * in_cm, DoFHandler<3>::active_cell_iterator in_cell , unsigned int in_face, unsigned int DofsPerLine, unsigned int DofsPerFace, bool in_non_face_dofs, IndexSet * locally_owned_dofs) {
+	std::vector<types::global_dof_index> local_line_dofs(DofsPerLine);
+	std::vector<types::global_dof_index> local_face_dofs(DofsPerFace);
+	std::vector<types::global_dof_index> ret;
+	for (unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
+	 ((in_cell->face(in_face))->line(j))->get_dof_indices(local_line_dofs);
+		for (unsigned int k =0; k < DofsPerLine; k++) {
+			if (locally_owned_dofs->is_element(local_line_dofs[k])) {
+				in_cm->add_line(local_line_dofs[k]);
+				ret.push_back(local_line_dofs[k]);
+			}
+		}
+	}
+	if (in_non_face_dofs) {
+		in_cell->face(in_face)->get_dof_indices(local_face_dofs);
+		for (unsigned int j = GeometryInfo<3>::lines_per_face*DofsPerLine; j < DofsPerFace; j++) {
+			if (locally_owned_dofs->is_element(local_face_dofs[j])) {
+				in_cm->add_line(local_face_dofs[j]);
+				ret.push_back(local_face_dofs[j]);
+			}
+		}
+	}
+	return ret;
+}
+
+void add_vector_of_indices(dealii::IndexSet * in_index_set, std::vector<types::global_dof_index> in_indices) {
+	for(unsigned int i = 0; i < in_indices.size(); i++) {
+		in_index_set->add_index(in_indices[i]);
+	}
 }
 
 #endif
