@@ -857,6 +857,9 @@ void Waveguide::MakeBoundaryConditions() {
   bool is_rectangular =(GlobalParams.M_C_Shape == ConnectorType::Rectangle);
   ExactSolution es(is_rectangular);
   VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 3, cm);
+
+  std::cout << "Restraint count before: " << cm.n_constraints() << std::endl;
+
   // VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 1, cm);
   // VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 2, cm);
   const int DofsPerLine = fe.dofs_per_line;
@@ -868,7 +871,7 @@ void Waveguide::MakeBoundaryConditions() {
 
   if (run_number == 0) {
     fixed_dofs.set_size(dof_handler.n_dofs());
-    fixed_dofs.add_indices(cm.get_local_lines(), 0);
+    // fixed_dofs.add_indices(cm.get_local_lines(), 0);
   }
   
 
@@ -881,7 +884,7 @@ void Waveguide::MakeBoundaryConditions() {
               if (abs(dir[2]) > abs(dir[0]) && abs(dir[2]) > abs(dir[1])) {
                 cell->face(i)->line(j)->get_dof_indices(local_line_dofs);
                 for (unsigned int k =0; k < fe.dofs_per_line; k++) {
-                  /**
+
                   cm.add_line(local_line_dofs[k]);
                   if (k == 0) {
                     cm.set_inhomogeneity(local_line_dofs[k], dir[2] * es.value(cell->face(i)->line(j)->center(), 2));
@@ -892,7 +895,7 @@ void Waveguide::MakeBoundaryConditions() {
                       deallog << "The boundary value computation is not prepared for this case(in MakeBoundaryConditions)." << std::endl;
                     }
                   }
-                  **/
+
                 }
               }
             }
@@ -999,6 +1002,7 @@ void Waveguide::MakeBoundaryConditions() {
         }
       }
     }
+  std::cout << "Restraint count after: " << cm.n_constraints() << std::endl;
   }
 
 void Waveguide::MakePreconditionerBoundaryConditions() {
