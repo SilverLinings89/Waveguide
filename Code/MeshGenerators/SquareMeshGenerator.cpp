@@ -13,6 +13,7 @@
 #include <deal.II/grid/tria_iterator.h>
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/distributed/tria.h>
+#include <deal.II/grid/grid_out.h>
 #include "../Helpers/staticfunctions.h"
 
 using namespace dealii;
@@ -56,7 +57,7 @@ void SquareMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<
 	for (; cell2!=endc2; ++cell2){
 	 if(cell2->at_boundary()){
 		 for(int j = 0; j<6; j++){
-			 Point<3> ctr =cell2->face(j)->center(false, false);
+			 Point<3> ctr =cell2->face(j)->center();
 			 if(cell2->face(j)->at_boundary()){
 				 cell2->face(j)->set_all_boundary_ids(1);
 
@@ -102,7 +103,7 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
 
     cell = in_tria->begin_active();
     for (; cell!=endc; ++cell){
-      int temp  = (int) std::floor((cell->center(true, false)[2] + 1.0)/len);
+      int temp  = (int) std::floor((cell->center()[2] + 1.0)/len);
       if( temp >=  (int)Layers || temp < 0) std::cout << "Critical Error in Mesh partitioning. See make_grid! Solvers might not work." << std::endl;
     }
 
@@ -116,7 +117,7 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
     for(int i = 0; i < GlobalParams.R_Local; i++) {
       cell = in_tria->begin_active();
       for (; cell!=endc; ++cell){
-        if(std::abs(cell->center(true, false)[0])< MaxDistX && std::abs(cell->center(true, false)[1])< MaxDistY ){
+        if(std::abs(cell->center()[0])< MaxDistX && std::abs(cell->center()[1])< MaxDistY ){
           cell->set_refine_flag();
         }
       }
@@ -129,7 +130,7 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
     for(int i = 0; i < GlobalParams.R_Interior; i++) {
       cell = in_tria->begin_active();
       for (; cell!=endc; ++cell){
-        if( std::abs(cell->center(true, false)[0]) < (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0 && std::abs(cell->center(true, false)[1]) < (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out)/2.0)  {
+        if( std::abs(cell->center()[0]) < (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0 && std::abs(cell->center()[1]) < (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out)/2.0)  {
           cell->set_refine_flag();
         }
       }
@@ -161,6 +162,16 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
 
     deallog << "Done" <<std::endl;
     deallog.pop();
+
+    std::string * ss = new std::string[4];
+    ss[0] = "1";
+    ss[1] = "2";
+    ss[2] = "3";
+    ss[3] = "4";
+    std::string filename = solutionpath + "/grid-" + ss[GlobalParams.MPI_Rank] + ".msh";
+    std::ofstream out (filename.c_str());
+    GridOut grid_out;
+    grid_out.write_msh (*in_tria, out);
 }
 
 bool SquareMeshGenerator::math_coordinate_in_waveguide(Point<3,double> in_position) const  {
@@ -186,7 +197,7 @@ void SquareMeshGenerator::refine_proximity(parallel::distributed::Triangulation<
   for(unsigned int i = 0; i < times; i++) {
     cell = in_tria->begin_active();
     for (; cell!=endc; ++cell){
-      if(std::abs(cell->center(true, false)[0])< X && std::abs(cell->center(true, false)[1])< Y) {
+      if(std::abs(cell->center()[0])< X && std::abs(cell->center()[1])< Y) {
         cell->set_refine_flag();
       }
     }

@@ -456,6 +456,8 @@ Point<3, double> Triangulation_Stretch_Z (const Point<3, double> &p)
   Point<3, double> q = p;
   double total_length = GlobalParams.SystemLength;
   q[2] *= total_length / 2.0;
+  q[1] = p[1];
+  q[0] = p[0];
   return q;
 }
 
@@ -463,6 +465,8 @@ Point<3, double> Triangulation_Shift_Z (const Point<3, double> &p)
 {
   Point<3, double> q = p;
   q[2] += (GlobalParams.SystemLength - GlobalParams.M_R_ZLength)/2.0;
+  q[1] = p[1];
+  q[0] = p[0];
   return q;
 }
 
@@ -505,18 +509,19 @@ Point<3, double> Triangulation_Stretch_Computational_Rectangle (const Point<3, d
 	double d2_goal = (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out)/2.0;
 
 	Point<3, double> q = p;
-  if(abs(p[0]) <= 0.25){
+  if(abs(p[0]) <= 0.2501){
 		q[0] = q[0] * 3.0 * d1_goal;
 	} else {
 		q[0] =  my_inter(std::abs(p[0]), GlobalParams.M_R_XLength / 2.0, d1_goal);
 		if(p[0] <0.0) q[0] *= -1.0;
 	}
-  if(abs(p[1]) <= 0.25){
+  if(abs(p[1]) <= 0.2501){
 		q[1] = q[1] * 3.0 * d2_goal;
 	} else {
 		q[1] = my_inter(std::abs(p[1]), GlobalParams.M_R_YLength / 2.0, d2_goal);
 		if(p[1] <0) q[1]*= -1.0;
 	}
+  q[2] = p[2];
   return q;
 }
 
