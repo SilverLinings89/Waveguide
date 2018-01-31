@@ -437,14 +437,14 @@
             <pattern_description>[Integer range 0...2147483647 (inclusive)]</pattern_description>
         </Global>
         <SemiGlobal>
-            <value>0</value>
+            <value>1</value>
             <default_value>1</default_value>
             <documentation>Semi-Global refinement-steps (close to the Waveguide-boundary and inside).</documentation>
             <pattern>45</pattern>
             <pattern_description>[Integer range 0...2147483647 (inclusive)]</pattern_description>
         </SemiGlobal>
         <Internal>
-            <value>1</value>
+            <value>0</value>
             <default_value>1</default_value>
             <documentation>Internal refinement-steps.</documentation>
             <pattern>46</pattern>

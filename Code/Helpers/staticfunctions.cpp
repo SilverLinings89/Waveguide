@@ -572,6 +572,7 @@ std::vector<types::global_dof_index> Add_Zero_Restraint(dealii::ConstraintMatrix
 		for (unsigned int k =0; k < DofsPerLine; k++) {
 			if (locally_owned_dofs->is_element(local_line_dofs[k])) {
 				in_cm->add_line(local_line_dofs[k]);
+				in_cm->set_inhomogeneity(local_line_dofs[k], 0.0);
 				ret.push_back(local_line_dofs[k]);
 			}
 		}
@@ -581,6 +582,7 @@ std::vector<types::global_dof_index> Add_Zero_Restraint(dealii::ConstraintMatrix
 		for (unsigned int j = GeometryInfo<3>::lines_per_face*DofsPerLine; j < DofsPerFace; j++) {
 			if (locally_owned_dofs->is_element(local_face_dofs[j])) {
 				in_cm->add_line(local_face_dofs[j]);
+				in_cm->set_inhomogeneity(local_face_dofs[j], 0.0);
 				ret.push_back(local_face_dofs[j]);
 			}
 		}

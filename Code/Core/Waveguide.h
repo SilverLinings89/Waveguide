@@ -412,6 +412,8 @@ class Waveguide
 
     ConditionalOStream pout;
     TimerOutput                   timer;
+
+    std::map< types::global_dof_index, double > dirichlet_data, preconditioner_dirichlet_data_even, preconditioner_dirichlet_data_odd;
     // HIER BEGINNT DIE ALTE VERSION ...
 
 
