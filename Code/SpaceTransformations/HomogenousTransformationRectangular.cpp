@@ -72,6 +72,7 @@ Point<3, double> HomogenousTransformationRectangular::phys_to_math(Point<3, doub
   return ret;
 }
 
+
 bool HomogenousTransformationRectangular::PML_in_X(Point<3, double> &p) const {
   return p(0) < XMinus ||p(0) > XPlus;
 }
@@ -83,16 +84,6 @@ bool HomogenousTransformationRectangular::PML_in_Y(Point<3, double> &p) const {
 bool HomogenousTransformationRectangular::PML_in_Z(Point<3, double> &p)  const{
   return p(2) < ZMinus ||p(2) > ZPlus;
 }
-/**
-bool HomogenousTransformationRectangular::Preconditioner_PML_in_Z(Point<3, double> &, unsigned int block) const {
-  if( (int)block == GlobalParams.NumberProcesses-2) return false;
-  if ( (int)block == (int)GlobalParams.MPI_Rank-1){
-    return true;
-  } else {
-    return false;
-  }
-}
-**/
 
 double HomogenousTransformationRectangular::Preconditioner_PML_Z_Distance(Point<3, double> &p, unsigned int rank ) const{
   double width = GlobalParams.LayerThickness * 1.0;
@@ -223,81 +214,6 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML
 	    MaterialTensor[2][2] *= sx*sy/sz;
 
 	    return MaterialTensor;
-	    /**
-  std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
-  Tensor<2,3, std::complex<double>> ret;
-
-  double omegaepsilon0 = GlobalParams.C_omega;
-
-  std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
-  if(PML_in_X(position)){
-    double r,d, sigmax;
-    r = PML_X_Distance(position);
-    if(position[0] < 0){
-      d = GlobalParams.M_BC_XMinus;
-    } else {
-      d = GlobalParams.M_BC_XPlus;
-    }
-    sigmax = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaXMax;
-    sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax);
-    sx.imag( sigmax / ( omegaepsilon0));
-    S1 /= sx;
-    S2 *= sx;
-    S3 *= sx;
-  }
-  if(PML_in_Y(position)){
-    double r,d, sigmay;
-    r = PML_Y_Distance(position);
-    if(position[1] < 0){
-      d = GlobalParams.M_BC_YMinus;
-    } else {
-      d = GlobalParams.M_BC_YPlus;
-    }
-    sigmay = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax;
-    sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax);
-    sy.imag( sigmay / ( omegaepsilon0));
-    S1 *= sy;
-    S2 /= sy;
-    S3 *= sy;
-  }
-  if(PML_in_Z(position)){
-    double r,d, sigmaz;
-    r = PML_Z_Distance(position);
-    d = (GlobalParams.M_R_ZLength / (GlobalParams.NumberProcesses - GlobalParams.M_BC_Zplus)) * GlobalParams.M_BC_Zplus ;
-    sigmaz = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax;
-    sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax);
-    sz.imag( sigmaz / omegaepsilon0 );
-    S1 *= sz;
-    S2 *= sz;
-    S3 /= sz;
-  }
-
-  ret[0][0] = S1;
-  ret[1][1] = S2;
-  ret[2][2] = S3;
-
-  Tensor<2,3, std::complex<double>> ret2;
-
-  for(int i = 0; i < 3; i++) {
-    for(int j = 0; j < 3; j++) {
-      ret2[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
-    }
-  }
-
-  Tensor<2,3, std::complex<double>> ret3;
-
-  for(int i = 0; i < 3; i++) {
-    for(int j = 0; j < 3; j++) {
-      ret3[i][j] = std::complex<double>(0.0, 0.0);
-      for(int k = 0; k < 3; k++) {
-        ret3[i][j] += ret[i][k] * ret2[k][j];
-      }
-    }
-  }
-
-
-  return ret3;
-  **/
 }
 
 Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML_To_Tensor_For_Preconditioner(Point<3, double> & position, Tensor<2,3,double> transformation, int block) const {
@@ -365,77 +281,6 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML
 	  MaterialTensor[2][2] *= sx*sy/sz;
 
 	  return MaterialTensor;
-  /** std::complex<double> S1(1.0, 0.0),S2(1.0,0.0), S3(1.0,0.0);
-  Tensor<2,3, std::complex<double>> ret;
-
-  Tensor<2,3, std::complex<double>> MaterialTensor;
-
-  for(int i = 0; i < 3; i++) {
-    for(int j = 0; j < 3; j++) {
-      MaterialTensor[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
-    }
-  }
-
-  double omegaepsilon0 = GlobalParams.C_omega;
-  std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0),sz_p(0.0,0.0);
-  if(PML_in_X(position)){
-    double r,d, sigmax;
-    r = PML_X_Distance(position);
-    if(position[0] < 0){
-      d = GlobalParams.M_BC_XMinus;
-    } else {
-      d = GlobalParams.M_BC_XPlus;
-    }
-    sigmax = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaXMax;
-    sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax);
-    sx.imag( sigmax / ( omegaepsilon0));
-  }
-  if(PML_in_Y(position)){
-    double r,d, sigmay;
-    r = PML_Y_Distance(position);
-    if(position[1] < 0){
-      d = GlobalParams.M_BC_YMinus;
-    } else {
-      d = GlobalParams.M_BC_YPlus;
-    }
-    sigmay = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax;
-    sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax);
-    sy.imag( sigmay / ( omegaepsilon0));
-  }
-  if(Preconditioner_PML_in_Z(position, block)){
-    double r,d, sigmaz;
-    r = Preconditioner_PML_Z_Distance(position, block);
-    d = GlobalParams.LayerThickness;
-    sigmaz = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax;
-    sz_p.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax);
-    sz_p.imag( sigmaz / omegaepsilon0 );
-  }
-
-  if(PML_in_Z(position)){
-    double r,d, sigmaz;
-    r = PML_Z_Distance(position);
-    d = GlobalParams.M_BC_Zplus * GlobalParams.LayerThickness;
-    sigmaz = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax;
-    sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax);
-    sz.imag( sigmaz / omegaepsilon0 );
-  }
-
-  sz += sz_p;
-
-  MaterialTensor[0][0] *= sy*sz/sx;
-  MaterialTensor[0][1] *= sz;
-  MaterialTensor[0][2] *= sy;
-
-  MaterialTensor[1][0] *= sz;
-  MaterialTensor[1][1] *= sx*sz/sy;
-  MaterialTensor[1][2] *= sx;
-
-  MaterialTensor[2][0] *= sy;
-  MaterialTensor[2][1] *= sx;
-  MaterialTensor[2][2] *= sx*sy/sz;
-
-  return MaterialTensor;
-  **/
 }
 
 std::complex<double> HomogenousTransformationRectangular::gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc, Waveguide * in_w)
@@ -564,6 +409,19 @@ double HomogenousTransformationRectangular::Sector_Length()  const{
 }
 
 void HomogenousTransformationRectangular::estimate_and_initialize() {
+  if(GlobalParams.M_PC_Use) {
+    Sector<2> the_first(true, false, GlobalParams.sd.z[0], GlobalParams.sd.z[1]);
+    the_first.set_properties_force(GlobalParams.sd.m[0],GlobalParams.sd.m[1],GlobalParams.sd.v[0],GlobalParams.sd.v[1]);
+    case_sectors.push_back(the_first);
+    for(int i = 1; i < GlobalParams.sd.Sectors-2; i++) {
+      Sector<2> intermediate(false, false, GlobalParams.sd.z[i], GlobalParams.sd.z[i+1] );
+      intermediate.set_properties_force(GlobalParams.sd.m[i],GlobalParams.sd.m[i+1],GlobalParams.sd.v[i],GlobalParams.sd.v[i+1]);
+      case_sectors.push_back(intermediate);
+    }
+    Sector<2> the_last(false, true, GlobalParams.sd.z[GlobalParams.sd.Sectors-1], GlobalParams.sd.z[GlobalParams.sd.Sectors]);
+    the_last.set_properties_force(GlobalParams.sd.m[GlobalParams.sd.Sectors-1],GlobalParams.sd.m[GlobalParams.sd.Sectors],GlobalParams.sd.v[GlobalParams.sd.Sectors-1],GlobalParams.sd.v[GlobalParams.sd.Sectors]);
+    case_sectors.push_back(the_first);
+  } else {
     case_sectors.reserve(sectors);
     double m_0 = GlobalParams.M_W_Delta/2.0;
     double m_1 = -GlobalParams.M_W_Delta/2.0;
@@ -598,7 +456,7 @@ void HomogenousTransformationRectangular::estimate_and_initialize() {
         );
       }
     }
-
+  }
     // for (unsigned int i = 0;  i < NFreeDofs(); ++ i) {
     //  InitialDofs[i] = this->get_dof(i, true);
     //}

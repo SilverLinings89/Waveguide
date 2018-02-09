@@ -12,6 +12,7 @@ ADD_LIBRARY(Code
 	Helpers/PointVal.cpp
 	Helpers/QuadratureFormulaCircle.cpp
 	Helpers/staticfunctions.cpp
+	Helpers/ShapeDescription.cpp
 	MeshGenerators/MeshGenerator.cpp
 	MeshGenerators/RoundMeshGenerator.cpp
 	MeshGenerators/SquareMeshGenerator.cpp

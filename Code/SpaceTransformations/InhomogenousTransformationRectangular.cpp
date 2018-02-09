@@ -32,6 +32,31 @@ InhomogenousTransformationRectangular::~InhomogenousTransformationRectangular() 
 
 }
 
+std::pair<int, double> InhomogenousTransformationRectangular::Z_to_Sector_and_local_z(double in_z) const {
+  std::pair<int, double> ret;
+  for(int i = 0; i < case_sectors.size(); i++) {
+    if(this->case_sectors[i].z_0 <= in_z && this->case_sectors[i].z_1 >= in_z){
+      ret.first=i;
+      ret.second = (in_z -case_sectors[i].z_0)/(case_sectors[i].z_1-case_sectors[i].z_0);
+      return ret;
+    }
+  }
+  if(in_z < this->case_sectors[0].z_0) {
+    ret.first = 0;
+    ret.second = 0.0;
+    return ret;
+  }
+  if(in_z > this->case_sectors[this->case_sectors.size()-1].z_1) {
+      ret.first = this->case_sectors.size()-1;
+      ret.second = 1.0;
+      return ret;
+  }
+  deallog << "There was a severe error in Z_to_Sector_and_local_z." << std::endl;
+  ret.first = 0;
+  ret.second = 0.0;
+  return ret;
+}
+
 Point<3> InhomogenousTransformationRectangular::math_to_phys(Point<3> coord) const {
   Point<3> ret;
   if(coord[2] < GlobalParams.M_R_ZLength/(-2.0)) {
@@ -39,7 +64,11 @@ Point<3> InhomogenousTransformationRectangular::math_to_phys(Point<3> coord) con
     ret[1] = (2*GlobalParams.M_C_Dim1In) * coord[1] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
     ret[2] = coord[2];
   } else if(coord[2] >= GlobalParams.M_R_ZLength/(-2.0) && coord[2] < GlobalParams.M_R_ZLength/(2.0)) {
-   // TODO: Use sectors here.
+    std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
+    double m = case_sectors[sec.first].get_m(sec.second);
+    ret[0] = coord[0] ;
+    ret[1] = (coord[1] -m) ;
+    ret[2] = coord[2];
   } else {
     ret[0] = (2*GlobalParams.M_C_Dim1Out) * coord[0] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
     ret[1] = (2*GlobalParams.M_C_Dim1Out) * coord[1] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
@@ -55,7 +84,11 @@ Point<3> InhomogenousTransformationRectangular::phys_to_math(Point<3> coord) con
     ret[1] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[1] / (2*GlobalParams.M_C_Dim1In);
     ret[2] = coord[2];
   } else if(coord[2] >= GlobalParams.M_R_ZLength/(-2.0) && coord[2] < GlobalParams.M_R_ZLength/(2.0)) {
-   // TODO: Use sectors here.
+    std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
+    double m = case_sectors[sec.first].get_m(sec.second);
+    ret[0] = coord[0] ;
+    ret[1] = (coord[1] ) +m;
+    ret[2] = coord[2];
   } else {
     ret[0] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[0] / (2*GlobalParams.M_C_Dim1In);
     ret[1] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[1] / (2*GlobalParams.M_C_Dim1In);
@@ -142,7 +175,7 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationRectangular::Apply_P
       d = GlobalParams.M_BC_XPlus;
     }
     sigmax = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaXMax;
-    sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax);
+    // sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax);
     sx.imag( sigmax / ( omegaepsilon0));
     S1 /= sx;
     S2 *= sx;
@@ -157,7 +190,7 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationRectangular::Apply_P
       d = GlobalParams.M_BC_YPlus;
     }
     sigmay = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax;
-    sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax);
+    // sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax);
     sy.imag( sigmay / ( omegaepsilon0));
     S1 *= sy;
     S2 /= sy;
@@ -168,7 +201,7 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationRectangular::Apply_P
     r = PML_Z_Distance(position);
     d = (GlobalParams.M_R_ZLength / (GlobalParams.NumberProcesses - GlobalParams.M_BC_Zplus)) * GlobalParams.M_BC_Zplus ;
     sigmaz = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax;
-    sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax);
+    // sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax);
     sz.imag( sigmaz / omegaepsilon0 );
     S1 *= sz;
     S2 *= sz;
@@ -225,7 +258,7 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationRectangular::Apply_P
       d = GlobalParams.M_BC_XPlus;
     }
     sigmax = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaXMax;
-    sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax);
+    // sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax);
     sx.imag( sigmax / ( omegaepsilon0));
   }
   if(PML_in_Y(position)){
@@ -237,7 +270,7 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationRectangular::Apply_P
       d = GlobalParams.M_BC_YPlus;
     }
     sigmay = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax;
-    sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax);
+    //  sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax);
     sy.imag( sigmay / ( omegaepsilon0));
   }
   if(Preconditioner_PML_in_Z(position, block)){
@@ -245,7 +278,7 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationRectangular::Apply_P
     r = Preconditioner_PML_Z_Distance(position, block);
     d = GlobalParams.LayerThickness;
     sigmaz = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax;
-    sz_p.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax);
+    // sz_p.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax);
     sz_p.imag( sigmaz / omegaepsilon0 );
   }
 
@@ -254,7 +287,7 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationRectangular::Apply_P
     r = PML_Z_Distance(position);
     d = GlobalParams.M_BC_Zplus * GlobalParams.LayerThickness;
     sigmaz = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax;
-    sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax);
+    // sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax);
     sz.imag( sigmaz / omegaepsilon0 );
   }
 
@@ -392,6 +425,19 @@ double InhomogenousTransformationRectangular::Sector_Length() const {
 }
 
 void InhomogenousTransformationRectangular::estimate_and_initialize() {
+  if(GlobalParams.M_PC_Use) {
+    Sector<2> the_first(true, false, GlobalParams.sd.z[0], GlobalParams.sd.z[1]);
+    the_first.set_properties_force(GlobalParams.sd.m[0],GlobalParams.sd.m[1],GlobalParams.sd.v[0],GlobalParams.sd.v[1]);
+    case_sectors.push_back(the_first);
+    for(int i = 1; i < GlobalParams.sd.Sectors-2; i++) {
+      Sector<2> intermediate(false, false, GlobalParams.sd.z[i], GlobalParams.sd.z[i+1] );
+      intermediate.set_properties_force(GlobalParams.sd.m[i],GlobalParams.sd.m[i+1],GlobalParams.sd.v[i],GlobalParams.sd.v[i+1]);
+      case_sectors.push_back(intermediate);
+    }
+    Sector<2> the_last(false, true, GlobalParams.sd.z[GlobalParams.sd.Sectors-1], GlobalParams.sd.z[GlobalParams.sd.Sectors]);
+    the_last.set_properties_force(GlobalParams.sd.m[GlobalParams.sd.Sectors-1],GlobalParams.sd.m[GlobalParams.sd.Sectors],GlobalParams.sd.v[GlobalParams.sd.Sectors-1],GlobalParams.sd.v[GlobalParams.sd.Sectors]);
+    case_sectors.push_back(the_first);
+  } else {
     case_sectors.reserve(sectors);
     double m_0 = GlobalParams.M_W_Delta/2.0;
     double m_1 = -GlobalParams.M_W_Delta/2.0;
@@ -432,11 +478,7 @@ void InhomogenousTransformationRectangular::estimate_and_initialize() {
         );
       }
     }
-
-    // for (unsigned int i = 0;  i < NFreeDofs(); ++ i) {
-    //  InitialDofs[i] = this->get_dof(i, true);
-    //}
-
+  }
 }
 
 double InhomogenousTransformationRectangular::get_r(double z_in) const {

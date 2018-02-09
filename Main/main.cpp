@@ -41,6 +41,8 @@
 #include "../Code/OptimizationAlgorithm/OptimizationSteepestDescent.h"
 #include "../Code/OptimizationAlgorithm/Optimization1D.h"
 
+#include "../Code/Helpers/ShapeDescription.h"
+
 int main (int argc, char *argv[])
 {
 

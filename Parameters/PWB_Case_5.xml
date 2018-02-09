@@ -140,8 +140,7 @@
         </General>
     </Output>
     <Measures>
-        <Connectors>
-            <PredefinedCases>
+        <PredefinedCases>
                 <ComputeCase>
                     <value>true</value>
                     <default_value>false</default_value>
@@ -150,14 +149,15 @@
                     <pattern_description>[Bool]</pattern_description>
                 </ComputeCase>
                 <SelectCase>
-                    <value>0</value>
+                    <value>5</value>
                     <default_value>0</default_value>
                     <documentation>Which Case to compute (see numbers in hdf5 files).</documentation>
                     <pattern>18</pattern>
                     <pattern_description>[Integer range 0...72 (inclusive)]</pattern_description>
                 </SelectCase>
-            </PredefinedCases>
-            <Shape>
+        </PredefinedCases>
+        <Connectors>
+           <Shape>
                 <value>Rectangle</value>
                 <default_value>Circle</default_value>
                 <documentation>Describes the shape of the input connector.</documentation>
@@ -165,7 +165,7 @@
                 <pattern_description>[Selection Circle|Rectangle ]</pattern_description>
             </Shape>
             <Dimension1_20In>
-                <value>1.4</value>
+                <value>0.9</value>
                 <default_value>2.0</default_value>
                 <documentation>First dimension of the input connector. For a circular waveguide this is the radius. For a rectangular waveguide this is the width.</documentation>
                 <pattern>20</pattern>
@@ -179,7 +179,7 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </Dimension2_20In>
             <Dimension1_20Out>
-                <value>1.4</value>
+                <value>0.9</value>
                 <default_value>2.0</default_value>
                 <documentation>First dimension of the output connector. For a circular waveguide this is the radius. For a rectangular waveguide this is the width.</documentation>
                 <pattern>22</pattern>
@@ -209,7 +209,7 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </YLength>
             <ZLength>
-                <value>10</value>
+                <value>100</value>
                 <default_value>2.0</default_value>
                 <documentation>Length of the system in z-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
                 <pattern>26</pattern>
@@ -225,21 +225,21 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </Delta>
             <epsilon_20in>
-                <value>1.57</value>
+                <value>1.56</value>
                 <default_value>2.2</default_value>
                 <documentation>Material-Property of the optical fiber (optical thickness).</documentation>
                 <pattern>28</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </epsilon_20in>
             <epsilon_20out>
-                <value>1.34</value>
+                <value>1.35</value>
                 <default_value>1.0</default_value>
                 <documentation>Material-Property of environment of the fiber (optical thickness).</documentation>
                 <pattern>29</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </epsilon_20out>
             <Lambda>
-                <value>1.073</value>
+                <value>1.555</value>
                 <default_value>5.6328</default_value>
                 <documentation>Vacuum-wavelength of the incoming wave.</documentation>
                 <pattern>30</pattern>
@@ -269,28 +269,28 @@
                 <pattern_description>[Integer 0...2147483647 (inclusive)]</pattern_description>
             </ZPlus>
             <XMinus>
-                <value>4</value>
+                <value>2</value>
                 <default_value>1.0</default_value>
                 <documentation>Thickness of the PML on the negative X-axis. Measured in micrometers</documentation>
                 <pattern>34</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XMinus>
             <XPlus>
-                <value>4</value>
+                <value>2</value>
                 <default_value>1.0</default_value>
                 <documentation>Thickness of the PML on the positive X-axis. Measured in micrometers</documentation>
                 <pattern>35</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XPlus>
             <YMinus>
-                <value>4</value>
+                <value>2</value>
                 <default_value>1.0</default_value>
                 <documentation>Thickness of the PML on the negative Y-axis. Measured in micrometers</documentation>
                 <pattern>36</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </YMinus>
             <YPlus>
-                <value>4</value>
+                <value>2</value>
                 <default_value>1.0</default_value>
                 <documentation>Thickness of the PML on the positive Y-axis. Measured in micrometers</documentation>
                 <pattern>37</pattern>
@@ -339,7 +339,7 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </SigmaZMax>
             <DampeningExponentM>
-                <value>4</value>
+                <value>3</value>
                 <default_value>3</default_value>
                 <documentation>Dampening Exponent M for the intensety of dampening in the PML region.</documentation>
                 <pattern>44</pattern>
@@ -363,7 +363,7 @@
             <pattern_description>[Selection Adjoint|FD ]</pattern_description>
         </Optimization_20Schema>
         <Optimization_20Steps>
-            <value>2</value>
+            <value>1</value>
             <default_value>10</default_value>
             <documentation>Number of Optimization steps to be performed.</documentation>
             <pattern>47</pattern>

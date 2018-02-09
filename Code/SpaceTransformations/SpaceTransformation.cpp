@@ -10,20 +10,20 @@
 #include "../Core/Sector.h"
 
 std::pair<int, double> SpaceTransformation::Z_to_Sector_and_local_z(double in_z) const {
-  std::pair<int, double> ret;
-  ret.first = 0;
-  ret.second = 0.0;
-  if(in_z <= -GlobalParams.M_R_ZLength/2.0) {
+   std::pair<int, double> ret;
     ret.first = 0;
     ret.second = 0.0;
-  } else if(abs(in_z) < GlobalParams.M_R_ZLength/2.0) {
-    ret.first = floor((in_z + GlobalParams.M_R_ZLength/2.0)/ (GlobalParams.SectorThickness));
-    ret.second = (in_z + GlobalParams.M_R_ZLength/2.0 - (ret.first*GlobalParams.SectorThickness))/ (GlobalParams.SectorThickness);
-  } else {
-    ret.first = sectors - 1;
-    ret.second = 1.0;
-  }
-  return ret;
+    if(in_z <= -GlobalParams.M_R_ZLength/2.0) {
+      ret.first = 0;
+      ret.second = 0.0;
+    } else if(abs(in_z) < GlobalParams.M_R_ZLength/2.0) {
+      ret.first = floor((in_z + GlobalParams.M_R_ZLength/2.0)/ (GlobalParams.SectorThickness));
+      ret.second = (in_z + GlobalParams.M_R_ZLength/2.0 - (ret.first*GlobalParams.SectorThickness))/ (GlobalParams.SectorThickness);
+    } else {
+      ret.first = sectors - 1;
+      ret.second = 1.0;
+    }
+    return ret;
 }
 
 SpaceTransformation::SpaceTransformation(int in_dofs_per_layer, int in_rank) :

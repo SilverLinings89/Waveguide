@@ -49,6 +49,10 @@ void ParameterReader::declare_parameters()
       prm.leave_subsection();
   prm.leave_subsection();
   prm.enter_subsection("Measures");
+  	  prm.enter_subsection("PredefinedCases");
+  	  	  prm.declare_entry("ComputeCase", "false", Patterns::Bool(), "Do you want to compute a predefined case?");
+  	  	  prm.declare_entry("SelectCase", "0", Patterns::Integer(0,72), "Which Case to compute (see numbers in hdf5 files).");
+  	  prm.leave_subsection();
       prm.enter_subsection("Connectors");
           prm.declare_entry("Shape", "Circle", Patterns::Selection("Circle|Rectangle"), "Describes the shape of the input connector.");
           prm.declare_entry("Dimension1 In", "2.0", Patterns::Double(0), "First dimension of the input connector. For a circular waveguide this is the radius. For a rectangular waveguide this is the width.");

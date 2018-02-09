@@ -14,6 +14,7 @@
 #include <deal.II/distributed/tria.h>
 #include "Parameters.h"
 #include "ParameterReader.h"
+#include "ShapeDescription.h"
 
 
 using namespace dealii;
@@ -158,6 +159,12 @@ Parameters GetParameters() {
 
   prm.enter_subsection("Measures");
   {
+    prm.enter_subsection("PredefinedCases");
+    {
+      ret.M_PC_Use = prm.get_bool("ComputeCase");
+      ret.M_PC_Case = prm.get_integer("SelectCase");
+    }
+    prm.leave_subsection();
     prm.enter_subsection("Connectors");
     {
       std::string temp = prm.get("Shape");
@@ -330,7 +337,32 @@ Parameters GetParameters() {
 
 	deallog << "Spot Radius omega: " << ret.Phys_SpotRadius <<std::endl;
 
+	deallog << "Case Detection: " ;
+	if(ret.M_PC_Use) {
+	  deallog << "Using case " << ret.M_PC_Case << std::endl;
+	  std::ifstream input( "Modes/test.csv" );
+	  std::string line;
+	  int counter = 0;
+	  bool case_found = false;
+	  if(ret.M_PC_Case >= 0 && ret.M_PC_Case < 36){
+        while(std::getline( input, line ) && counter < 36){
+          if(counter == ret.M_PC_Case) {
+            ret.sd.SetByString(line);
+            case_found = true;
+          }
+          counter++;
+        }
+        if(!case_found) {
+          deallog << "There was a severe error. The case was not found therefore not initialized." << std::endl;
+        } else {
+          ret.M_W_Sectors = ret.sd.Sectors;
+        }
+	  }
+	} else {
+	  deallog << "Not using case." << std::endl;
+	}
 	deallog.pop();
+
 	return ret;
 }
 
