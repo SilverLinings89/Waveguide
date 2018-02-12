@@ -163,15 +163,6 @@ void SquareMeshGenerator::prepare_triangulation(parallel::distributed::Triangula
     deallog << "Done" <<std::endl;
     deallog.pop();
 
-    std::string * ss = new std::string[4];
-    ss[0] = "1";
-    ss[1] = "2";
-    ss[2] = "3";
-    ss[3] = "4";
-    std::string filename = solutionpath + "/grid-" + ss[GlobalParams.MPI_Rank] + ".msh";
-    std::ofstream out (filename.c_str());
-    GridOut grid_out;
-    grid_out.write_msh (*in_tria, out);
 }
 
 bool SquareMeshGenerator::math_coordinate_in_waveguide(Point<3,double> in_position) const  {
