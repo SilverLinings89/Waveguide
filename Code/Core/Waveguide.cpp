@@ -862,8 +862,8 @@ void Waveguide::MakeBoundaryConditions() {
   VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, es, 2, cm);
   std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
 
-  const unsigned int face_own_count = std::max(0,fe.dofs_per_face - GeometryInfo<3>::lines_per_face*fe.dofs_per_line);
-  const unsigned int cell_own_count = std::max(0,fe.dofs_per_cell - GeometryInfo<3>::faces_per_cell*fe.dofs_per_face + GeometryInfo<3>::lines_per_cell*fe.dofs_per_line);
+  const unsigned int face_own_count = std::max(static_cast<unsigned int>(0),fe.dofs_per_face - GeometryInfo<3>::lines_per_face*fe.dofs_per_line);
+  const unsigned int cell_own_count = std::max(static_cast<unsigned int>(0),fe.dofs_per_cell - GeometryInfo<3>::faces_per_cell*fe.dofs_per_face + GeometryInfo<3>::lines_per_cell*fe.dofs_per_line);
   std::vector<types::global_dof_index> local_face_dofs(fe.dofs_per_face);
   deallog << "Dofs per line: " << fe.dofs_per_line << "." << std::endl;
   deallog << "Dofs per face: " << fe.dofs_per_face << ". Own: " << face_own_count << "." << std::endl;
@@ -884,8 +884,8 @@ void Waveguide::MakeBoundaryConditions() {
 					 ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
 						for (unsigned int k =0; k < fe.dofs_per_line; k++) {
 							if (locally_owned_dofs.is_element(local_line_dofs[k])) {
-								  cm.add_line(local_line_dofs[k]);
-								  cm.set_inhomogeneity(local_line_dofs[k], 0.0);
+								cm.add_line(local_line_dofs[k]);
+								cm.set_inhomogeneity(local_line_dofs[k], 0.0);
 								fixed_dofs.add_index(local_line_dofs[k]);
 							}
 						}
@@ -894,8 +894,8 @@ void Waveguide::MakeBoundaryConditions() {
 						cell->face(i)->get_dof_indices(local_face_dofs);
 						for (unsigned int j = GeometryInfo<3>::lines_per_face*fe.dofs_per_line; j < fe.dofs_per_face; j++) {
 							if (locally_owned_dofs.is_element(local_face_dofs[j])) {
-								  cm.add_line(local_face_dofs[j]);
-								  cm.set_inhomogeneity(local_face_dofs[j], 0.0);
+								cm.add_line(local_face_dofs[j]);
+								cm.set_inhomogeneity(local_face_dofs[j], 0.0);
 								fixed_dofs.add_index(local_face_dofs[j]);
 							}
 						}
