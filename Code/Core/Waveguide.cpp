@@ -19,6 +19,7 @@
 #include <deal.II/numerics/data_out_dof_data.h>
 #include <deal.II/lac/block_matrix_array.h>
 #include <deal.II/lac/solver_bicgstab.h>
+#include <algorithm>
 #include <string>
 #include <vector>
 #include <utility>
@@ -856,53 +857,23 @@ void Waveguide::MakeBoundaryConditions() {
   endc = dof_handler.end();
   bool is_rectangular =(GlobalParams.M_C_Shape == ConnectorType::Rectangle);
   ExactSolution es(is_rectangular);
-  VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 3, cm);
-
-  std::cout << "Restraint count before: " << cm.n_constraints() << std::endl;
-
-  VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 1, cm);
-  VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 2, cm);
-  const int DofsPerLine = fe.dofs_per_line;
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, es, 3, cm);
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, es, 1, cm);
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, es, 2, cm);
   std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
 
-  const int face_own_count = fe.dofs_per_face - GeometryInfo<3>::lines_per_face*fe.dofs_per_line;
-  const bool has_non_edge_dofs = (face_own_count > 0);
+  const unsigned int face_own_count = std::max(0,fe.dofs_per_face - GeometryInfo<3>::lines_per_face*fe.dofs_per_line);
+  const unsigned int cell_own_count = std::max(0,fe.dofs_per_cell - GeometryInfo<3>::faces_per_cell*fe.dofs_per_face + GeometryInfo<3>::lines_per_cell*fe.dofs_per_line);
   std::vector<types::global_dof_index> local_face_dofs(fe.dofs_per_face);
-
+  deallog << "Dofs per line: " << fe.dofs_per_line << "." << std::endl;
+  deallog << "Dofs per face: " << fe.dofs_per_face << ". Own: " << face_own_count << "." << std::endl;
+  deallog << "Dofs per cell: " << fe.dofs_per_cell << ". Own: " << cell_own_count << "." << std::endl;
   if (run_number == 0) {
     fixed_dofs.set_size(dof_handler.n_dofs());
   }
-  
 
   for (; cell != endc; ++cell) {
 		if (cell->is_locally_owned()) {
-			if (cell->at_boundary(3)) {
-				for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
-					for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
-						Tensor<1, 3, double> dir =(cell->face(i)->line(j))->vertex(0) -(cell->face(i)->line(j))->vertex(1);
-						if (abs(dir[2]) > abs(dir[0]) && abs(dir[2]) > abs(dir[1])) {
-							cell->face(i)->line(j)->get_dof_indices(local_line_dofs);
-							for (unsigned int k =0; k < fe.dofs_per_line; k++) {
-
-								cm.add_line(local_line_dofs[k]);
-								if (k == 0) {
-									// dirichlet_data.insert( std::pair<types::global_dof_index, double>(local_line_dofs[k], dir[2] * es.value(cell->face(i)->line(j)->center(), 2)) );
-									cm.set_inhomogeneity(local_line_dofs[k], dir[2] * es.value(cell->face(i)->line(j)->center(), 2));
-								} else {
-									if (k == 1) {
-									//	dirichlet_data.insert( std::pair<types::global_dof_index, double>(local_line_dofs[k], dir[2] * es.value(cell->face(i)->line(j)->center(), 5)) );
-									cm.set_inhomogeneity(local_line_dofs[k], dir[2] * es.value(cell->face(i)->line(j)->center(), 5));
-									} else {
-										deallog << "The boundary value computation is not prepared for this case(in MakeBoundaryConditions)." << std::endl;
-									}
-								}
-
-							}
-						}
-					}
-				}
-			}
-
 			for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
 				Point<3, double> center =(cell->face(i))->center(true, false);
 				if (center[0] < 0) center[0] *=(-1.0);

@@ -34,7 +34,7 @@ InhomogenousTransformationRectangular::~InhomogenousTransformationRectangular() 
 
 std::pair<int, double> InhomogenousTransformationRectangular::Z_to_Sector_and_local_z(double in_z) const {
   std::pair<int, double> ret;
-  for(int i = 0; i < case_sectors.size(); i++) {
+  for(unsigned int i = 0; i < case_sectors.size(); i++) {
     if(this->case_sectors[i].z_0 <= in_z && this->case_sectors[i].z_1 >= in_z){
       ret.first=i;
       ret.second = (in_z -case_sectors[i].z_0)/(case_sectors[i].z_1-case_sectors[i].z_0);

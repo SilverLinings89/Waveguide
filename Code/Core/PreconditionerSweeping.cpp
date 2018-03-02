@@ -8,10 +8,10 @@
 #include <deal.II/lac/vector.h>
 
 #include <deal.II/lac/trilinos_vector.h>
-#include <deal.II/lac/trilinos_vector_base.h>
 #include <deal.II/lac/solver.h>
 #include <deal.II/lac/sparse_direct.h>
 #include <deal.II/lac/sparse_matrix.h>
+#include <deal.II/lac/trilinos_sparse_matrix.h>
 
 #include "PreconditionerSweeping.h"
 
@@ -19,13 +19,10 @@ using namespace dealii;
 
 dealii::SolverControl s(10, 1.e-10, false, false);
 dealii::SparseDirectUMFPACK * solver = 0;
-dealii::TrilinosWrappers::SolverDirect * solver2 = 0;
-dealii::SparseMatrix<double> * temp = 0;
 
-dealii::SparsityPattern sparsity_pattern, off_diag_block_lower, off_diag_block_upper;
+dealii::SparsityPattern off_diag_block_lower, off_diag_block_upper;
 
 PreconditionerSweeping::~PreconditionerSweeping (){
-  delete temp;
   delete solver;
 }
 
@@ -50,7 +47,6 @@ PreconditionerSweeping::PreconditionerSweeping (  MPI_Comm in_mpi_comm, int in_o
 		prec_matrix_upper = 0;
 		matrix = 0;
 }
-
 
 void PreconditionerSweeping::Prepare ( TrilinosWrappers::MPI::BlockVector & inp) {
 	boundary.reinit(own, false);
@@ -129,7 +125,6 @@ void PreconditionerSweeping::Hinv(const dealii::Vector<double> & src, dealii::Ve
 	}
 }
 
-
 void PreconditionerSweeping::init(SolverControl , TrilinosWrappers::SparseMatrix * in_prec_upper, TrilinosWrappers::SparseMatrix * in_prec_lower) {
 
   deallog.push("Init Preconditioner");
@@ -137,18 +132,16 @@ void PreconditionerSweeping::init(SolverControl , TrilinosWrappers::SparseMatrix
   solver = new SparseDirectUMFPACK();
   IndexSet local (matrix->m());
   local.add_range(0, matrix->m());
-
+  dealii::SparsityPattern sparsity_pattern;
+  dealii::SparseMatrix<double> * temp;
   // Main Matrix Preparation
 
   sparsity_pattern.reinit(own+ others, own+others, bandwidth);
-
   TrilinosWrappers::SparseMatrix::iterator it = matrix->begin();
   TrilinosWrappers::SparseMatrix::iterator end = matrix->end();
   for(; it != end; it++){
     sparsity_pattern.add(it->row(), it->column());
   }
-
-
   sparsity_pattern.compress();
 
   temp = new dealii::SparseMatrix<double>(sparsity_pattern);
@@ -157,6 +150,8 @@ void PreconditionerSweeping::init(SolverControl , TrilinosWrappers::SparseMatrix
   deallog << "Factorize Matrix" <<std::endl;
   solver->factorize(*temp);
   std::cout << this->rank << " is done." << std::endl;
+  temp->clear();
+  temp = 0;
   // Prec Matrix lower Preparation
   deallog << "Prepare Lower Block" <<std::endl;
   off_diag_block_lower.reinit(own, above, bandwidth);

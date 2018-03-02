@@ -80,7 +80,12 @@ void PrepareStreams()  {
 
   log_stream.open(solutionpath + "/main"+ std::to_string(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) +".log", std::ios::binary);
 
-  symlink(solutionpath.c_str(), "./latest");
+  int create_link = symlink(solutionpath.c_str(), "./latest");
+  if(create_link == 0) {
+    deallog << "Symlink latest created." <<std::endl;
+  } else {
+    deallog << "Symlink latest creation failed." <<std::endl;
+  }
 
   deallog.attach(log_stream);
 
@@ -319,7 +324,7 @@ Parameters GetParameters() {
 
 	ret.Phys_V = 2 * ret.C_Pi * ret.M_C_Dim1In / ret.M_W_Lambda *std::sqrt(ret.M_W_epsilonin * ret.M_W_epsilonin - ret.M_W_epsilonout * ret.M_W_epsilonout);
 
-	ret.So_ElementOrder = 0;
+	ret.So_ElementOrder = 1;
 
 	deallog << "Normalized Frequency V: " << ret.Phys_V <<std::endl;
 
@@ -575,7 +580,7 @@ inline bool file_exists (const std::string& name) {
   return (stat (name.c_str(), &buffer) == 0);
 }
 
-std::vector<types::global_dof_index> Add_Zero_Restraint_test(dealii::ConstraintMatrix * in_cm, DoFHandler<3>::active_cell_iterator in_cell , unsigned int in_face, unsigned int DofsPerLine, unsigned int DofsPerFace, bool in_non_face_dofs, IndexSet * locally_owned_dofs) {
+std::vector<types::global_dof_index> Add_Zero_Restraint_test(dealii::ConstraintMatrix * , DoFHandler<3>::active_cell_iterator in_cell , unsigned int in_face, unsigned int DofsPerLine, unsigned int DofsPerFace, bool in_non_face_dofs, IndexSet * locally_owned_dofs) {
 	std::vector<types::global_dof_index> local_line_dofs(DofsPerLine);
 	std::vector<types::global_dof_index> local_face_dofs(DofsPerFace);
 	std::vector<types::global_dof_index> ret;

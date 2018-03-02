@@ -12,7 +12,6 @@
 
 extern dealii::SolverControl s;
 extern dealii::SparseDirectUMFPACK * solver;
-extern dealii::SparseMatrix<double> * temp;
 
 extern dealii::SparsityPattern sparsity_pattern, off_diag_block_lower, off_diag_block_upper;
 

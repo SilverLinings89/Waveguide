@@ -216,7 +216,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML
 	    return MaterialTensor;
 }
 
-Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML_To_Tensor_For_Preconditioner(Point<3, double> & position, Tensor<2,3,double> transformation, int block) const {
+Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML_To_Tensor_For_Preconditioner(Point<3, double> & position, Tensor<2,3,double> transformation, int) const {
 	Tensor<2,3, std::complex<double>> MaterialTensor;
 
 	  for(int i = 0; i < 3; i++) {
@@ -463,7 +463,7 @@ void HomogenousTransformationRectangular::estimate_and_initialize() {
 
 }
 
-double HomogenousTransformationRectangular::get_r(double z_in) const {
+double HomogenousTransformationRectangular::get_r(double ) const {
   //std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
   std::cout << "Asking for Radius of rectangular Waveguide." << std::endl;
   return 0;

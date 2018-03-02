@@ -156,7 +156,7 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </Dimension1_20In>
             <Dimension2_20In>
-                <value>1.0</value>
+                <value>1</value>
                 <default_value>2.0</default_value>
                 <documentation>Second dimension of the input connector. For a circular waveguide this has no meaning. For a rectangular waveguide this is the height.</documentation>
                 <pattern>19</pattern>
@@ -170,7 +170,7 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </Dimension1_20Out>
             <Dimension2_20Out>
-                <value>1.0</value>
+                <value>1</value>
                 <default_value>2.0</default_value>
                 <documentation>Second dimension of the output connector. For a circular waveguide this has no meaning. For a rectangular waveguide this is the height.</documentation>
                 <pattern>21</pattern>
