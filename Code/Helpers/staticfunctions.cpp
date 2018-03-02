@@ -8,6 +8,7 @@
 #include <string>
 #include <deal.II/base/point.h>
 
+#include <deal.II/dofs/dof_handler.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/logstream.h>

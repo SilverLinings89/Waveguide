@@ -1284,7 +1284,7 @@ void Waveguide::output_results(bool) {
 
   MPI_Barrier(mpi_comm);
 
-  std::cout << rank << ": " <<locally_owned_dofs.n_elements()<< "," <<locally_owned_dofs.nth_index_in_set(0) << "," << locally_owned_dofs.nth_index_in_set(locally_owned_dofs.n_elements()-1) <<std::endl;
+  // std::cout << rank << ": " <<locally_owned_dofs.n_elements()<< "," <<locally_owned_dofs.nth_index_in_set(0) << "," << locally_owned_dofs.nth_index_in_set(locally_owned_dofs.n_elements()-1) <<std::endl;
   // evaluate_overall();
   if (true) {
     DataOut<3> data_out;

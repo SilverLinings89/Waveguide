@@ -421,6 +421,10 @@ void HomogenousTransformationRectangular::estimate_and_initialize() {
     Sector<2> the_last(false, true, GlobalParams.sd.z[GlobalParams.sd.Sectors-1], GlobalParams.sd.z[GlobalParams.sd.Sectors]);
     the_last.set_properties_force(GlobalParams.sd.m[GlobalParams.sd.Sectors-1],GlobalParams.sd.m[GlobalParams.sd.Sectors],GlobalParams.sd.v[GlobalParams.sd.Sectors-1],GlobalParams.sd.v[GlobalParams.sd.Sectors]);
     case_sectors.push_back(the_first);
+    for(unsigned int i = 0; i < case_sectors.size(); i++) {
+      deallog << "From m: " << case_sectors[i].get_m(0.0) << " r: " << case_sectors[i].get_r(0.0) << std::endl;
+      deallog << "  To m: " << case_sectors[i].get_m(1.0) << " r: " << case_sectors[i].get_r(1.0) << std::endl;
+    }
   } else {
     case_sectors.reserve(sectors);
     double m_0 = GlobalParams.M_W_Delta/2.0;
