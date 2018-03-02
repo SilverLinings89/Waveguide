@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <deal.II/base/function.h>
-#include "../Core/Waveguide.h"
+#include <deal.II/base/point.h>
 #include "PointVal.h"
 
 using namespace dealii;

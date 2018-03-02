@@ -66,12 +66,12 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   deallog << "Computed primal quality " << quality << std::endl;
   std::ofstream result_file;
   result_file.open((solutionpath + "/complex qualities.dat").c_str(),std::ios_base::openmode::_S_trunc);
-  double z = -GlobalParams.M_R_ZLength/2.0;
+  double z = -GlobalParams.M_R_ZLength/2.0 +0.00001;
   result_file << "z \t re(f) \t im(f) \t |f|" <<std::endl;
   while(z < -GlobalParams.M_R_ZLength/2.0+ GlobalParams.SystemLength){
     std::complex<double> f = primal_st->evaluate_for_z(z, waveguide);
     result_file << z << "\t" << f.real() << "\t" << f.imag() << "\t" << sqrt(f.real()*f.real() + f.imag()*f.imag()) << std::endl;
-    z+= 0.02;
+    z+= 0.2;
   }
   result_file.close();
   MPI_Barrier(MPI_COMM_WORLD);

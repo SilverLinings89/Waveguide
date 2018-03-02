@@ -3,9 +3,11 @@
 #define ExactSolutionFlag_CPP
 #include <vector>
 #include <string>
+#include <complex>
+#include <deal.II/base/point.h>
 #include "ExactSolution.h"
-#include "PointVal.cpp"
-
+#include "PointVal.h"
+#include "../Core/Waveguide.h"
 
 double ExactSolution::value (const Point<3> &p , const unsigned int component) const
 {

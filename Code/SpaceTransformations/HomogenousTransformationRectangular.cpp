@@ -25,7 +25,6 @@ HomogenousTransformationRectangular::HomogenousTransformationRectangular (int in
   deltaY(GlobalParams.M_W_Delta)
 {
   homogenized = true;
-
 }
 
 HomogenousTransformationRectangular::~HomogenousTransformationRectangular() {
@@ -176,7 +175,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML
 	        d = GlobalParams.M_BC_XPlus;
 	      }
 	      // sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax );
-	      sx.imag( ((r*r)/(d*d))*GlobalParams.M_BC_SigmaXMax );
+	      sx.imag( pow(r/d, GlobalParams.M_BC_DampeningExponent)*GlobalParams.M_BC_SigmaXMax );
 	    }
 
 	    if(PML_in_Y(position)){
@@ -189,7 +188,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML
 	      }
 
 	      // sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax );
-	      sy.imag( pow(r/d , 2) * GlobalParams.M_BC_SigmaYMax);
+	      sy.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax);
 	    }
 
 
@@ -198,7 +197,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML
 	      r = PML_Z_Distance(position);
 	      d = GlobalParams.M_BC_Zplus * GlobalParams.LayerThickness;
 	      // sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
-	      sz.imag( pow(r/d ,2) * GlobalParams.M_BC_SigmaZMax );
+	      sz.imag( pow(r/d ,GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax );
 	    }
 
 	    MaterialTensor[0][0] *= sy*sz/sx;
@@ -235,7 +234,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML
 	      d = GlobalParams.M_BC_XPlus;
 	    }
 	    // sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax );
-	    sx.imag( pow(r/d , 2) * GlobalParams.M_BC_SigmaXMax );
+	    sx.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaXMax );
 	  }
 	  if(PML_in_Y(position)){
 	    double r,d;
@@ -247,15 +246,15 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML
 	    }
 
 	    // sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax );
-	    sy.imag( pow(r/d , 2) * GlobalParams.M_BC_SigmaYMax);
+	    sy.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax);
 	  }
 
 	  if(Preconditioner_PML_Z_Distance(position, rank) > 0){
 	  	double r_temp = Preconditioner_PML_Z_Distance(position, rank);
 	  	double d_temp = GlobalParams.LayerThickness;
-	  // sz_p.real( pow(r_temp/d_temp , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
 
-	  	sz.imag( pow(r_temp/d_temp , 2) * GlobalParams.M_BC_SigmaZMax);
+	  	// sz_p.real( pow(r_temp/d_temp , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
+	  	sz.imag( pow(r_temp/d_temp , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax);
 	  }
 
 	  if(PML_in_Z(position)){
@@ -263,10 +262,8 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML
 	    r = PML_Z_Distance(position);
 	    d = GlobalParams.M_BC_Zplus * GlobalParams.LayerThickness;
 	    // sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
-	    sz.imag( pow(r/d , 2) * GlobalParams.M_BC_SigmaZMax );
+	    sz.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax );
 	  }
-
-	  // sz += sz_p;
 
 	  MaterialTensor[0][0] *= sy*sz/sx;
 	  MaterialTensor[0][1] *= sz;
@@ -330,15 +327,15 @@ std::complex<double> HomogenousTransformationRectangular::evaluate_for_z(double 
   double r = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
 
   std::complex<double> ret = 0;
-	try{
-		// std::cout << "Process " << Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) << " computing signal at " << in_z << std::endl;
-		ret = gauss_product_2D_sphere(in_z,10,r,0,0, in_w);
-	} catch (VectorTools::ExcPointNotAvailableHere &e) {
-		// std::cout << "Failed for " << in_z << " in " <<rank << std::endl;
-		ret = 0;
-	}
-	ret.real( Utilities::MPI::sum(ret.real(), MPI_COMM_WORLD));
-	ret.imag( Utilities::MPI::sum(ret.imag(), MPI_COMM_WORLD));
+  try{
+      // std::cout << "Process " << Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) << " computing signal at " << in_z << std::endl;
+      ret = gauss_product_2D_sphere(in_z,10,r,0,0, in_w);
+  } catch (VectorTools::ExcPointNotAvailableHere &e) {
+      // std::cout << "Failed for " << in_z << " in " <<rank << std::endl;
+      ret = 0;
+  }
+  ret.real( Utilities::MPI::sum(ret.real(), MPI_COMM_WORLD));
+  ret.imag( Utilities::MPI::sum(ret.imag(), MPI_COMM_WORLD));
   return ret;
 }
 

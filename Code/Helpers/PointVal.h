@@ -1,7 +1,7 @@
 #ifndef PointValHeaderFlag
 #define PointValHeaderFlag
 
-#include <complex.h>
+#include <complex>
 
 class PointVal {
  public:

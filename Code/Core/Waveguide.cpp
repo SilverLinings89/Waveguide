@@ -72,8 +72,9 @@ Waveguide::Waveguide(MPI_Comm in_mpi_comm, MeshGenerator * in_mg,
     timer(in_mpi_comm,
       pout,
       TimerOutput::OutputFrequency::summary,
-      TimerOutput::wall_times) {
-	mg = in_mg;
+      TimerOutput::wall_times),
+    es(GlobalParams.M_C_Shape == ConnectorType::Rectangle){
+  mg = in_mg;
   st = in_st;
   mpi_comm = in_mpi_comm;
   solution = NULL;
@@ -84,6 +85,7 @@ Waveguide::Waveguide(MPI_Comm in_mpi_comm, MeshGenerator * in_mg,
   execute_recomputation = false;
   mkdir((solutionpath + "/" +"primal").c_str(), ACCESSPERMS);
   mkdir((solutionpath + "/" +"dual").c_str(), ACCESSPERMS);
+
 }
 
 Waveguide::~Waveguide() {
@@ -95,23 +97,23 @@ std::complex<double> Waveguide::evaluate_for_Position(
   double z) {
   dealii::Point<3, double> position(x, y, z);
   Vector<double> result(6);
-  Vector<double> mode(3);
-
-  mode(0) = TEMode00(position , 0);
-  mode(1) = TEMode00(position , 1);
-  mode(2) = 0;
-
+  Vector<double> mode(6);
   if (primal) {
     VectorTools::point_value(dof_handler, primal_solution, position, result);
   } else {
     VectorTools::point_value(dof_handler, dual_solution, position, result);
   }
+  position[2] = -GlobalParams.M_R_ZLength/2.0;
+  this->es.vector_value(position, mode);
 
-  std::complex<double> c1(result(0), - result(3));
-  std::complex<double> c2(result(1), - result(4));
-  std::complex<double> c3(result(2), - result(5));
+  std::complex<double> c1(result(0), result(3));
+  std::complex<double> c2(result(1), result(4));
+  std::complex<double> c3(result(2), result(5));
+  std::complex<double> m1(mode(0), mode(3));
+  std::complex<double> m2(mode(1), mode(4));
+  std::complex<double> m3(mode(2), mode(5));
 
-  return mode(0) * c1 + mode(1)*c2 + mode(2)*c3;
+  return m1 * c1 + m2*c2 + m3*c3;
 }
 
 void Waveguide::estimate_solution() {
@@ -123,8 +125,6 @@ void Waveguide::estimate_solution() {
   unsigned int min_dof = locally_owned_dofs.nth_index_in_set(0);
   unsigned int max_dof = locally_owned_dofs.nth_index_in_set(
     locally_owned_dofs.n_elements()-1);
-  bool is_rectangular =(GlobalParams.M_C_Shape == ConnectorType::Rectangle);
-  ExactSolution es(is_rectangular);
   cell = dof_handler.begin_active(),
   endc = dof_handler.end();
   for (; cell != endc; ++cell) {
@@ -981,8 +981,7 @@ void Waveguide::MakePreconditionerBoundaryConditions() {
   DoFHandler<3>::active_cell_iterator cell, endc;
   cell = dof_handler.begin_active();
   endc = dof_handler.end();
-  bool is_rectangular =(GlobalParams.M_C_Shape == ConnectorType::Rectangle);
-  ExactSolution es(is_rectangular);
+
   // VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 3, cm_prec_even);
   // VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 3, cm_prec_even);
   VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 1, cm_prec_even);
