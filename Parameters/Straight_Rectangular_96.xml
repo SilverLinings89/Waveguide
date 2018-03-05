@@ -140,6 +140,22 @@
         </General>
     </Output>
     <Measures>
+	<PredefinedCases>
+                <ComputeCase>
+                    <value>false</value>
+                    <default_value>false</default_value>
+                    <documentation>Do you want to compute a predefined case?</documentation>
+                    <pattern>17</pattern>
+                    <pattern_description>[Bool]</pattern_description>
+                </ComputeCase>
+                <SelectCase>
+                    <value>5</value>
+                    <default_value>0</default_value>
+                    <documentation>Which Case to compute (see numbers in hdf5 files).</documentation>
+                    <pattern>18</pattern>
+                    <pattern_description>[Integer range 0...72 (inclusive)]</pattern_description>
+                </SelectCase>
+        </PredefinedCases>
         <Connectors>
             <Shape>
                 <value>Rectangle</value>
