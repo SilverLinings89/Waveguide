@@ -65,8 +65,8 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   deallog<< "Phase out: " << a_out << std::endl;
   quality = std::abs(a_out) / std::abs(a_in);
   deallog << "Computed primal quality " << quality << std::endl;
+  std::ofstream result_file;
   if(GlobalParams.MPI_Rank == 0){
-    std::ofstream result_file;
     result_file.open((solutionpath + "/complex qualities.dat").c_str(),std::ios_base::openmode::_S_trunc);
   }
   double z = -GlobalParams.M_R_ZLength/2.0 +0.00001;
