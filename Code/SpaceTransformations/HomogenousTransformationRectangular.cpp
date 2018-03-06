@@ -330,7 +330,7 @@ std::complex<double> HomogenousTransformationRectangular::evaluate_for_z(double 
   try{
       // std::cout << "Process " << Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) << " computing signal at " << in_z << std::endl;
       ret = gauss_product_2D_sphere(in_z,10,r,0,0, in_w);
-  } catch (VectorTools::ExcPointNotAvailableHere &e) {
+  } catch (...) {
       // std::cout << "Failed for " << in_z << " in " <<rank << std::endl;
       ret = 0;
   }
