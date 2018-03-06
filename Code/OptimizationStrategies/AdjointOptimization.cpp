@@ -70,7 +70,9 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
     result_file.open((solutionpath + "/complex qualities.dat").c_str(),std::ios_base::openmode::_S_trunc);
   }
   double z = -GlobalParams.M_R_ZLength/2.0 +0.00001;
-  result_file << "z \t re(f) \t im(f) \t |f|" <<std::endl;
+  if(GlobalParams.MPI_Rank == 0){
+    result_file << "z \t re(f) \t im(f) \t |f|" <<std::endl;
+  }
   while(z < -GlobalParams.M_R_ZLength/2.0+ GlobalParams.SystemLength){
     std::complex<double> f = primal_st->evaluate_for_z(z, waveguide);
     if(GlobalParams.MPI_Rank == 0){
@@ -78,7 +80,9 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
     }
     z+= 0.2;
   }
-  result_file.close();
+  if(GlobalParams.MPI_Rank == 0){
+    result_file.close();
+  }
   MPI_Barrier(MPI_COMM_WORLD);
   waveguide->switch_to_dual(dual_st);
   waveguide->run();
