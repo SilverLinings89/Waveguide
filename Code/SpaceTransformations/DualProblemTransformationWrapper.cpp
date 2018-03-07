@@ -154,7 +154,7 @@ Tensor<2,3, std::complex<double>> DualProblemTransformationWrapper::get_Precondi
 
 std::complex<double> DualProblemTransformationWrapper::gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc, Waveguide * in_w)
 {
-  return gauss_product_2D_sphere(z,n,R, Xc, Yc, in_w);
+  return st->gauss_product_2D_sphere(z,n,R, Xc, Yc, in_w);
 }
 
 std::complex<double> DualProblemTransformationWrapper::evaluate_for_z(double in_z, Waveguide * in_w) {

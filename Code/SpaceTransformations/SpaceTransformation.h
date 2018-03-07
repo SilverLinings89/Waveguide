@@ -251,6 +251,7 @@ public:
    */
   virtual std::complex<double> evaluate_for_z(double, Waveguide *) = 0;
 
+  std::complex<double> gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc,  Waveguide * in_w);
 
   const int rank;
 

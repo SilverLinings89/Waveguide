@@ -41,18 +41,18 @@ std::vector<std::complex<double>> AdjointOptimization::compute_small_step(double
 double AdjointOptimization::compute_big_step(std::vector<double> step) {
   Vector<double> current_config = primal_st->Dofs();
 
-	for(unsigned int i = 0; i< step.size(); i++){
-		primal_st->set_dof(i, current_config[i] + step[i]);
-		dual_st->set_dof(i, current_config[i] + step[i]);
-	}
+  for(unsigned int i = 0; i< step.size(); i++){
+      primal_st->set_dof(i, current_config[i] + step[i]);
+      dual_st->set_dof(i, current_config[i] + step[i]);
+  }
 
-	deallog.push("Config");
-	Vector<double> for_output = primal_st->Dofs();
-	for(unsigned int i = 0; i< step.size(); i++){
+  deallog.push("Config");
+  Vector<double> for_output = primal_st->Dofs();
+  for(unsigned int i = 0; i< step.size(); i++){
     deallog << for_output[i] << " , ";
   }
-	deallog<<std::endl;
-	deallog.pop();
+  deallog<<std::endl;
+  deallog.pop();
 
   MPI_Barrier(MPI_COMM_WORLD);
   waveguide->switch_to_primal(primal_st);
@@ -65,24 +65,94 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   deallog<< "Phase out: " << a_out << std::endl;
   quality = std::abs(a_out) / std::abs(a_in);
   deallog << "Computed primal quality " << quality << std::endl;
-  std::ofstream result_file;
-  if(GlobalParams.MPI_Rank == 0){
-    result_file.open((solutionpath + "/complex qualities.dat").c_str(),std::ios_base::openmode::_S_trunc);
+  // New starts here
+  const double step_width = 0.05;
+  unsigned int cnt_steps = 0;
+  double z_temp = -GlobalParams.M_R_ZLength/2.0 +0.00001;
+  while ( z_temp < -GlobalParams.M_R_ZLength/2.0+ GlobalParams.SystemLength){
+    cnt_steps ++;
+    z_temp += step_width;
   }
-  double z = -GlobalParams.M_R_ZLength/2.0 +0.00001;
-  if(GlobalParams.MPI_Rank == 0){
-    result_file << "z \t re(f) \t im(f) \t |f|" <<std::endl;
-  }
-  while(z < -GlobalParams.M_R_ZLength/2.0+ GlobalParams.SystemLength){
-    std::complex<double> f = primal_st->evaluate_for_z(z, waveguide);
-    if(GlobalParams.MPI_Rank == 0){
-      result_file << z << "\t" << f.real() << "\t" << f.imag() << "\t" << sqrt(f.real()*f.real() + f.imag()*f.imag()) << std::endl;
+  deallog << "Start" << std::endl;
+  bool* mine = new bool[cnt_steps];
+  z_temp = -GlobalParams.M_R_ZLength/2.0 +0.00001;
+  unsigned int own_cnt = 0;
+  double lowest_own = -GlobalParams.SystemLength;
+  int lowest_idx = 0;
+  for(unsigned int i=0; i< cnt_steps; i++) {
+    if(z_temp > this->waveguide->mg->z_min && z_temp < this->waveguide->mg->z_max) {
+      mine[i] = true;
+      if(own_cnt == 0) {
+        lowest_own = z_temp;
+        lowest_idx = i;
+      }
+      own_cnt ++;
+    } else {
+      mine[i] = false;
     }
-    z+= 0.2;
+    z_temp += step_width;
   }
+  int * displs;
+  if(GlobalParams.MPI_Rank == 0) {
+    displs = new int[GlobalParams.NumberProcesses];
+  }
+  std::cout << "I am " << GlobalParams.MPI_Rank << ". I have lowest own " << lowest_own << " and own_cnt " << own_cnt << std::endl;
+  MPI_Gather(&lowest_idx, 1, MPI_INTEGER, displs, 1, MPI_INTEGER, 0, MPI_COMM_WORLD);
+  double* a_reals = new double[own_cnt];
+  double* a_imags = new double[own_cnt];
+  double* a_abolutes = new double[own_cnt];
+  z_temp = lowest_own;
+  for(unsigned int i = 0; i < own_cnt; i++) {
+    std::complex<double> l_val = primal_st->gauss_product_2D_sphere(z_temp,10,(GlobalParams.M_C_Dim1In+GlobalParams.M_C_Dim1Out),0,0, waveguide);
+    a_reals[i] = l_val.real();
+    a_imags[i] = l_val.imag();
+    a_abolutes[i] = std::sqrt(a_reals[i]*a_reals[i] + a_imags[i]*a_imags[i]);
+    z_temp += step_width;
+  }
+  std::cout << "I am " << GlobalParams.MPI_Rank << ". My dofs are ";
+  for (int i = 0;i < cnt_steps ; i++) {
+    if(mine[i]) {
+      std::cout << i << " ";
+    }
+  }
+  std::cout << std::endl;
+
+  MPI_Barrier(MPI_COMM_WORLD);
+  double* all_reals;
+  double* all_imags;
+  double* all_absolutes;
+  int * cnt_recv;
+  if(GlobalParams.MPI_Rank == 0) {
+    all_reals = new double[cnt_steps];
+    all_imags = new double[cnt_steps];
+    all_absolutes = new double[cnt_steps];
+    cnt_recv = new int[GlobalParams.NumberProcesses];
+    cnt_recv[0] = own_cnt;
+    for(unsigned int i =1; i < GlobalParams.NumberProcesses-1; i++) {
+      cnt_recv[i] = displs[i+1]-displs[i];
+    }
+    cnt_recv[GlobalParams.NumberProcesses-1] = cnt_steps - displs[GlobalParams.NumberProcesses-1];
+  }
+  deallog << "Output proc " << GlobalParams.MPI_Rank << "." <<std::endl;
+  for(unsigned int i = 0; i < own_cnt; i++) {
+    deallog << a_reals[i] << " " << a_imags[i] << " " << a_abolutes[i] << std::endl;
+  }
+  std::cout << "Ready proc " << GlobalParams.MPI_Rank << "." <<std::endl;
+  MPI_Gatherv(a_reals, own_cnt, MPI_DOUBLE, all_reals, cnt_recv, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Gatherv(a_imags, own_cnt, MPI_DOUBLE, all_imags, cnt_recv, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Gatherv(a_abolutes, own_cnt, MPI_DOUBLE, all_absolutes, cnt_recv, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   if(GlobalParams.MPI_Rank == 0){
+    std::ofstream result_file;
+    result_file.open((solutionpath + "/complex qualities.dat").c_str(),std::ios_base::openmode::_S_trunc);
+    result_file << "z \t re(f) \t im(f) \t |f|" <<std::endl;
+    z_temp = -GlobalParams.M_R_ZLength/2.0;
+    for(unsigned int i = 0; i < cnt_steps; i++) {
+      result_file << z_temp<< "\t" << all_reals[i] << "\t" << all_imags[i] << "\t" << all_absolutes[i] << std::endl;
+      z_temp += step_width;
+    }
     result_file.close();
   }
+
   MPI_Barrier(MPI_COMM_WORLD);
   waveguide->switch_to_dual(dual_st);
   waveguide->run();

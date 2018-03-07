@@ -163,6 +163,8 @@ class Waveguide
 
     void switch_to_dual (SpaceTransformation * dual_st);
 
+    MeshGenerator * mg;
+
 	private:
 
 		/**
@@ -334,7 +336,7 @@ class Waveguide
 
 
 
-		MeshGenerator * mg;
+
 
 		SpaceTransformation * st;
 

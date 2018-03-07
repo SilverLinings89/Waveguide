@@ -280,49 +280,6 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML
 	  return MaterialTensor;
 }
 
-std::complex<double> HomogenousTransformationRectangular::gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc, Waveguide * in_w)
-{
-  double* r = NULL;
-  double* t = NULL;
-  double* q = NULL;
-  double* A = NULL;
-  double  B;
-  double x, y;
-  std::complex<double> s(0.0, 0.0);
-
-  int i,j;
-
-  /* Load appropriate predefined table */
-  for (i = 0; i<GSPHERESIZE;i++)
-  {
-    if(n==gsphere[i].n)
-    {
-      r = gsphere[i].r;
-      t = gsphere[i].t;
-      q = gsphere[i].q;
-      A = gsphere[i].A;
-      B = gsphere[i].B;
-      break;
-    }
-  }
-
-  if (NULL==r) return -1.0;
-
-  for (i=0;i<n;i++)
-  {
-    for (j=0;j<n;j++)
-    {
-      x = r[j]*q[i];
-      y = r[j]*t[i];
-      s += A[j]*in_w->evaluate_for_Position(R*x-Xc,R*y-Yc,z);
-    }
-  }
-
-  s *= R*R*B;
-
-  return s;
-}
-
 std::complex<double> HomogenousTransformationRectangular::evaluate_for_z(double in_z, Waveguide * in_w) {
   double r = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
 
