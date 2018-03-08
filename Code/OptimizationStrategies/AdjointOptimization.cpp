@@ -103,7 +103,12 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   double* a_abolutes = new double[own_cnt];
   z_temp = lowest_own;
   for(unsigned int i = 0; i < own_cnt; i++) {
-    std::complex<double> l_val = primal_st->gauss_product_2D_sphere(z_temp,10,(GlobalParams.M_C_Dim1In+GlobalParams.M_C_Dim1Out),0,0, waveguide);
+    std::complex<double> l_val(0,0);
+    try {
+      l_val = primal_st->gauss_product_2D_sphere(z_temp,10,(GlobalParams.M_C_Dim1In+GlobalParams.M_C_Dim1Out),0,0, waveguide);
+    } catch(...) {
+      std::cout << "In Process " << GlobalParams.MPI_Rank << ": Broke for " << z_temp << std::endl;
+    }
     a_reals[i] = l_val.real();
     a_imags[i] = l_val.imag();
     a_abolutes[i] = std::sqrt(a_reals[i]*a_reals[i] + a_imags[i]*a_imags[i]);
