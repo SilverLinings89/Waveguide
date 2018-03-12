@@ -102,7 +102,7 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   double* a_imags = new double[own_cnt];
   double* a_abolutes = new double[own_cnt];
   z_temp = lowest_own;
-  for(unsigned int i = 0; i < own_cnt; i++) {
+  for(unsigned int i = 1; i < own_cnt-1; i++) {
     std::complex<double> l_val(0,0);
     try {
       deallog << "Executing for " << z_temp << std::endl;
