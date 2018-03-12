@@ -79,7 +79,7 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   double* a_absolutes = new double[cnt_steps];
   z_temp = -GlobalParams.M_R_ZLength/2.0 +0.0001;
   int curr = 0;
-  while ( z_temp < -GlobalParams.M_R_ZLength/2.0 + 0.0001){
+  while ( z_temp < GlobalParams.M_R_ZLength/2.0 + 0.0001){
     std::complex<double> l_val(0,0);
     l_val = primal_st->evaluate_for_z(z_temp, waveguide);
     a_reals[curr] = l_val.real();
