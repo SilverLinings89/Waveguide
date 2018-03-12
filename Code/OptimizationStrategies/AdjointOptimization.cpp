@@ -106,7 +106,7 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
     std::complex<double> l_val(0,0);
     try {
       deallog << "Executing for " << z_temp << std::endl;
-      l_val = primal_st->gauss_product_2D_sphere(z_temp,10,(GlobalParams.M_C_Dim1In+GlobalParams.M_C_Dim1Out),0,0, waveguide);
+      l_val = primal_st->evaluate_for_z(z_temp, waveguide);
     } catch(...) {
       std::cout << "In Process " << GlobalParams.MPI_Rank << ": Broke for " << z_temp << std::endl;
     }
