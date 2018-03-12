@@ -59,17 +59,17 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   waveguide->run();
   MPI_Barrier(MPI_COMM_WORLD);
   double quality = 0;
-  std::complex<double> a_in = primal_st->evaluate_for_z(- GlobalParams.M_R_ZLength/2.0, waveguide);
-  std::complex<double> a_out= primal_st->evaluate_for_z(  GlobalParams.M_R_ZLength/2.0 -0.0001 , waveguide);
+  std::complex<double> a_in = primal_st->evaluate_for_z(- GlobalParams.M_R_ZLength/2.0 + 0.0001 , waveguide);
+  std::complex<double> a_out= primal_st->evaluate_for_z(  GlobalParams.M_R_ZLength/2.0 - 0.0001 , waveguide);
   deallog<< "Phase in: " << a_in << std::endl;
   deallog<< "Phase out: " << a_out << std::endl;
   quality = std::abs(a_out) / std::abs(a_in);
   deallog << "Computed primal quality " << quality << std::endl;
   // New starts here
-  const double step_width = 0.05;
+  const double step_width = 0.2;
   unsigned int cnt_steps = 0;
-  double z_temp = -GlobalParams.M_R_ZLength/2.0 +0.00001;
-  while ( z_temp < -GlobalParams.M_R_ZLength/2.0+ GlobalParams.SystemLength){
+  double z_temp = -GlobalParams.M_R_ZLength/2.0 + 0.0001;
+  while ( z_temp < GlobalParams.M_R_ZLength/2.0 + 0.0001 ){
     cnt_steps ++;
     z_temp += step_width;
   }
@@ -77,9 +77,9 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   double* a_reals = new double[cnt_steps];
   double* a_imags = new double[cnt_steps];
   double* a_absolutes = new double[cnt_steps];
-  z_temp = -GlobalParams.M_R_ZLength/2.0 +0.00001;
+  z_temp = -GlobalParams.M_R_ZLength/2.0 +0.0001;
   int curr = 0;
-  while ( z_temp < -GlobalParams.M_R_ZLength/2.0+ GlobalParams.SystemLength){
+  while ( z_temp < -GlobalParams.M_R_ZLength/2.0 + 0.0001){
     std::complex<double> l_val(0,0);
     l_val = primal_st->evaluate_for_z(z_temp, waveguide);
     a_reals[curr] = l_val.real();
@@ -90,7 +90,7 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   }
 
   MPI_Barrier(MPI_COMM_WORLD);
-  
+  deallog << "Mid" << std::endl;
   for(unsigned int i = 0; i < cnt_steps; i++){
     double t1 = Utilities::MPI::sum(a_reals[i], MPI_COMM_WORLD);
     double t2 = Utilities::MPI::sum(a_imags[i], MPI_COMM_WORLD);
@@ -113,7 +113,7 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
     }
     result_file.close();
   }
-
+  deallog << "Done" << std::endl;
   MPI_Barrier(MPI_COMM_WORLD);
   waveguide->switch_to_dual(dual_st);
   waveguide->run();
