@@ -74,86 +74,41 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
     z_temp += step_width;
   }
   deallog << "Start" << std::endl;
-  bool* mine = new bool[cnt_steps];
-  z_temp = -GlobalParams.M_R_ZLength/2.0 +0.00001;
-  unsigned int own_cnt = 0;
-  double lowest_own = -GlobalParams.SystemLength;
-  int lowest_idx = 0;
-  for(unsigned int i=0; i< cnt_steps; i++) {
-    if(z_temp > this->waveguide->mg->z_min && z_temp < this->waveguide->mg->z_max) {
-      mine[i] = true;
-      if(own_cnt == 0) {
-        lowest_own = z_temp;
-        lowest_idx = i;
-      }
-      own_cnt ++;
-    } else {
-      mine[i] = false;
-    }
-    z_temp += step_width;
-  }
-  int * displs;
-  if(GlobalParams.MPI_Rank == 0) {
-    displs = new int[GlobalParams.NumberProcesses];
-  }
-  std::cout << "I am " << GlobalParams.MPI_Rank << ". I have lowest own " << lowest_own << " and own_cnt " << own_cnt << std::endl;
-  MPI_Gather(&lowest_idx, 1, MPI_INTEGER, displs, 1, MPI_INTEGER, 0, MPI_COMM_WORLD);
-  double* a_reals = new double[own_cnt];
-  double* a_imags = new double[own_cnt];
-  double* a_abolutes = new double[own_cnt];
-  z_temp = lowest_own + step_width;
-  for(unsigned int i = 0; i < own_cnt-1; i++) {
+  double* a_reals = new double[cnt_steps];
+  double* a_imags = new double[cnt_steps];
+  double* a_abolutes = new double[cnt_steps];
+  double z_temp = -GlobalParams.M_R_ZLength/2.0 +0.00001;
+  int curr = 0;
+  while ( z_temp < -GlobalParams.M_R_ZLength/2.0+ GlobalParams.SystemLength){
     std::complex<double> l_val(0,0);
-    try {
-      deallog << "Executing for " << z_temp << std::endl;
-      l_val = primal_st->evaluate_for_z(z_temp, waveguide);
-    } catch(...) {
-      std::cout << "In Process " << GlobalParams.MPI_Rank << ": Broke for " << z_temp << std::endl;
-    }
-    a_reals[i] = l_val.real();
-    a_imags[i] = l_val.imag();
-    a_abolutes[i] = std::sqrt(a_reals[i]*a_reals[i] + a_imags[i]*a_imags[i]);
+    l_val = primal_st->evaluate_for_z(z_temp, waveguide);
+    a_reals[curr] = l_val.real();
+    a_imags[curr] = l_val.imag();
+    a_abolutes[curr] = std::sqrt(a_reals[curr]*a_reals[curr] + a_imags[curr]*a_imags[curr]);
     z_temp += step_width;
+    curr++;
   }
-  std::cout << "I am " << GlobalParams.MPI_Rank << ". My dofs are ";
-  for (int i = 0;i < cnt_steps ; i++) {
-    if(mine[i]) {
-      std::cout << i << " ";
-    }
-  }
-  std::cout << std::endl;
 
   MPI_Barrier(MPI_COMM_WORLD);
-  double* all_reals;
-  double* all_imags;
-  double* all_absolutes;
-  int * cnt_recv;
-  if(GlobalParams.MPI_Rank == 0) {
-    all_reals = new double[cnt_steps];
-    all_imags = new double[cnt_steps];
-    all_absolutes = new double[cnt_steps];
-    cnt_recv = new int[GlobalParams.NumberProcesses];
-    cnt_recv[0] = own_cnt;
-    for(unsigned int i =1; i < GlobalParams.NumberProcesses-1; i++) {
-      cnt_recv[i] = displs[i+1]-displs[i];
-    }
-    cnt_recv[GlobalParams.NumberProcesses-1] = cnt_steps - displs[GlobalParams.NumberProcesses-1];
+  
+  for(unsigned int i = 0; i < cnt_steps; i++){
+    double t1 = Utilities::MPI::sum(a_reals[i], MPI_COMM_WORLD);
+    double t2 = Utilities::MPI::sum(a_imags[i], MPI_COMM_WORLD);
+    double t3 = Utilities::MPI::sum(a_absolutes[i], MPI_COMM_WORLD);
+    a_reals[i] = t1;
+    a_imags[i] = t2;
+    a_absolutes[i] = t3;
   }
-  deallog << "Output proc " << GlobalParams.MPI_Rank << "." <<std::endl;
-  for(unsigned int i = 0; i < own_cnt; i++) {
-    deallog << a_reals[i] << " " << a_imags[i] << " " << a_abolutes[i] << std::endl;
-  }
-  std::cout << "Ready proc " << GlobalParams.MPI_Rank << "." <<std::endl;
-  MPI_Gatherv(a_reals, own_cnt, MPI_DOUBLE, all_reals, cnt_recv, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Gatherv(a_imags, own_cnt, MPI_DOUBLE, all_imags, cnt_recv, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Gatherv(a_abolutes, own_cnt, MPI_DOUBLE, all_absolutes, cnt_recv, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+  MPI_Barrier(MPI_COMM_WORLD);
+  
   if(GlobalParams.MPI_Rank == 0){
     std::ofstream result_file;
-    result_file.open((solutionpath + "/complex qualities.dat").c_str(),std::ios_base::openmode::_S_trunc);
+    result_file.open((solutionpath + "/complex_qualities.dat").c_str(),std::ios_base::openmode::_S_trunc);
     result_file << "z \t re(f) \t im(f) \t |f|" <<std::endl;
     z_temp = -GlobalParams.M_R_ZLength/2.0;
     for(unsigned int i = 0; i < cnt_steps; i++) {
-      result_file << z_temp<< "\t" << all_reals[i] << "\t" << all_imags[i] << "\t" << all_absolutes[i] << std::endl;
+      result_file << z_temp<< "\t" << a_reals[i] << "\t" << a_imags[i] << "\t" << a_absolutes[i] << std::endl;
       z_temp += step_width;
     }
     result_file.close();
