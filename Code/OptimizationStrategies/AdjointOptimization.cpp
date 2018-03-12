@@ -76,7 +76,7 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   deallog << "Start" << std::endl;
   double* a_reals = new double[cnt_steps];
   double* a_imags = new double[cnt_steps];
-  double* a_abolutes = new double[cnt_steps];
+  double* a_absolutes = new double[cnt_steps];
   z_temp = -GlobalParams.M_R_ZLength/2.0 +0.00001;
   int curr = 0;
   while ( z_temp < -GlobalParams.M_R_ZLength/2.0+ GlobalParams.SystemLength){
@@ -84,7 +84,7 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
     l_val = primal_st->evaluate_for_z(z_temp, waveguide);
     a_reals[curr] = l_val.real();
     a_imags[curr] = l_val.imag();
-    a_abolutes[curr] = std::sqrt(a_reals[curr]*a_reals[curr] + a_imags[curr]*a_imags[curr]);
+    a_absolutes[curr] = std::sqrt(a_reals[curr]*a_reals[curr] + a_imags[curr]*a_imags[curr]);
     z_temp += step_width;
     curr++;
   }
