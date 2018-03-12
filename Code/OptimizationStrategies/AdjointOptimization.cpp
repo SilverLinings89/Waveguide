@@ -77,7 +77,7 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   double* a_reals = new double[cnt_steps];
   double* a_imags = new double[cnt_steps];
   double* a_abolutes = new double[cnt_steps];
-  double z_temp = -GlobalParams.M_R_ZLength/2.0 +0.00001;
+  z_temp = -GlobalParams.M_R_ZLength/2.0 +0.00001;
   int curr = 0;
   while ( z_temp < -GlobalParams.M_R_ZLength/2.0+ GlobalParams.SystemLength){
     std::complex<double> l_val(0,0);
