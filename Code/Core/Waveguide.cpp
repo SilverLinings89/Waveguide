@@ -99,7 +99,7 @@ std::complex<double> Waveguide::evaluate_for_Position(
   Vector<double> result(6);
   Vector<double> mode(6);
   if (primal) {
-    VectorTools::point_value(dof_handler, primal_solution, position, result);
+    VectorTools::point_value(dof_handler, primal_with_relevant, position, result);
   } else {
     VectorTools::point_value(dof_handler, dual_solution, position, result);
   }
