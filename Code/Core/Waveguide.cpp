@@ -101,7 +101,7 @@ std::complex<double> Waveguide::evaluate_for_Position(
   if (primal) {
     VectorTools::point_value(dof_handler, primal_with_relevant, position, result);
   } else {
-    VectorTools::point_value(dof_handler, dual_solution, position, result);
+    VectorTools::point_value(dof_handler, primal_solution, position, result);
   }
   position[2] = -GlobalParams.M_R_ZLength/2.0;
   this->es.vector_value(position, mode);
