@@ -291,8 +291,8 @@ std::complex<double> HomogenousTransformationRectangular::evaluate_for_z(double 
       // std::cout << "Failed for " << in_z << " in " <<rank << std::endl;
       ret = 0;
   }
-  ret.real( Utilities::MPI::sum(ret.real(), MPI_COMM_WORLD));
-  ret.imag( Utilities::MPI::sum(ret.imag(), MPI_COMM_WORLD));
+  // ret.real( Utilities::MPI::sum(ret.real(), MPI_COMM_WORLD));
+  // ret.imag( Utilities::MPI::sum(ret.imag(), MPI_COMM_WORLD));
   return ret;
 }
 
