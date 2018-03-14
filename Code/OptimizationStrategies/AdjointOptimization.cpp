@@ -149,7 +149,7 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   MPI_Gatherv(a_abolutes, own_cnt, MPI_DOUBLE, all_absolutes, cnt_recv, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   if(GlobalParams.MPI_Rank == 0){
     std::ofstream result_file;
-    result_file.open((solutionpath + "/complex qualities.dat").c_str(),std::ios_base::openmode::_S_trunc);
+    result_file.open((solutionpath + "/ComplexQualities.dat").c_str(),std::ios_base::openmode::_S_trunc);
     result_file << "z \t re(f) \t im(f) \t |f|" <<std::endl;
     z_temp = -GlobalParams.M_R_ZLength/2.0;
     for(unsigned int i = 0; i < cnt_steps; i++) {
