@@ -144,7 +144,9 @@ struct Parameters {
     
     BoundaryConditionType M_BC_Type;
     
-    int M_BC_Zplus;
+    double M_BC_Zminus;
+    
+    double M_BC_Zplus;
     
     double M_BC_XMinus;
     
@@ -231,6 +233,7 @@ struct Parameters {
     double SystemLength;
 
     double Maximum_Z;
+    double Minimum_Z;
     // unsigned int MPI_Size;
 
     double Phys_V;

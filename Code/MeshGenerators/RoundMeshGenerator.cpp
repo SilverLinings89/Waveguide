@@ -74,10 +74,10 @@ void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3
 
           cell2->face(j)->set_all_boundary_ids(1);
 
-          if(std::abs(ctr(2) - GlobalParams.M_R_ZLength/2.0 - GlobalParams.M_BC_Zplus*GlobalParams.SectorThickness) < 0.00001) {
+          if(std::abs(ctr(2) - GlobalParams.Maximum_Z) < 0.00001) {
             cell2->face(j)->set_all_boundary_ids(2);
           }
-          if(std::abs(ctr(2) + GlobalParams.M_R_ZLength/2.0) < 0.00001) {
+          if(std::abs(ctr(2) - GlobalParams.Minimum_Z) < 0.00001) {
             cell2->face(j)->set_all_boundary_ids(3);
           }
         }

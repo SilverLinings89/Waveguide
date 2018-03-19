@@ -84,10 +84,7 @@ bool InhomogenousTransformationRectangular::PML_in_Z(Point<3> &p) const {
 }
 
 double InhomogenousTransformationRectangular::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int rank ) const{
-  double width = GlobalParams.LayerThickness * 1.0;
-
-  return p(2) +GlobalParams.M_R_ZLength/2.0 - ((double)rank)*width;
-
+  return p(2) - GlobalParams.Minimum_Z - ((double)rank)*GlobalParams.LayerThickness;
 }
 
 double InhomogenousTransformationRectangular::PML_X_Distance(Point<3> &p) const{
@@ -108,7 +105,7 @@ double InhomogenousTransformationRectangular::PML_Y_Distance(Point<3> &p) const{
 
 double InhomogenousTransformationRectangular::PML_Z_Distance(Point<3> &p) const{
   if(p(2) < 0) {
-    return - (p(2) + (GlobalParams.M_R_ZLength / 2.0));
+    return 0;
   } else {
     return p(2) - (GlobalParams.M_R_ZLength / 2.0);
   }
@@ -324,7 +321,7 @@ void InhomogenousTransformationRectangular::set_free_dof(int in_dof, double in_v
 }
 
 double InhomogenousTransformationRectangular::Sector_Length() const {
-  return GlobalParams.M_R_ZLength / (double)GlobalParams.M_W_Sectors;
+  return GlobalParams.SectorThickness;
 }
 
 void InhomogenousTransformationRectangular::estimate_and_initialize() {
@@ -349,7 +346,7 @@ void InhomogenousTransformationRectangular::estimate_and_initialize() {
     double m_0 = GlobalParams.M_W_Delta/2.0;
     double m_1 = -GlobalParams.M_W_Delta/2.0;
     if(sectors == 1) {
-      Sector<2> temp12(true, true, -GlobalParams.M_R_ZLength/2, GlobalParams.M_R_ZLength/2 );
+      Sector<2> temp12(true, true, -GlobalParams.M_R_ZLength/2.0, GlobalParams.M_R_ZLength/2.0 );
       case_sectors.push_back(temp12);
       case_sectors[0].set_properties_force(GlobalParams.M_W_Delta/2.0,-GlobalParams.M_W_Delta/2.0, GlobalParams.M_C_Dim1In, GlobalParams.M_C_Dim1Out, 0, 0);
     } else {

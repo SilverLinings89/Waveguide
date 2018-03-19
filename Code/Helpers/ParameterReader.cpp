@@ -74,7 +74,8 @@ void ParameterReader::declare_parameters()
       prm.leave_subsection();
       prm.enter_subsection("Boundary Conditions");
           prm.declare_entry("Type", "PML", Patterns::Selection("PML|HSIE"), "The way the output-connector is modeled. HSIE uses the Hardy-space infinite element for setting boundary conditions but isn't implemented yet.");
-          prm.declare_entry("ZPlus", "1", Patterns::Integer(0), "Thickness of the PML area on the side of the output connector. Measused in sectors of normal size of a sector.");
+          prm.declare_entry("ZMinus", "5", Patterns::Double(0), "Thickness of the additional range on the negative z axis for better wave coupling");
+          prm.declare_entry("ZPlus", "1", Patterns::Double(0), "Thickness of the PML area on the side of the output connector.");
           prm.declare_entry("XMinus", "1.0", Patterns::Double(0), "Thickness of the PML on the negative X-axis. Measured in micrometers");
           prm.declare_entry("XPlus", "1.0", Patterns::Double(0), "Thickness of the PML on the positive X-axis. Measured in micrometers");
           prm.declare_entry("YMinus", "1.0", Patterns::Double(0), "Thickness of the PML on the negative Y-axis. Measured in micrometers");

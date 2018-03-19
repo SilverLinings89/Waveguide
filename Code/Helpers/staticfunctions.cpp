@@ -212,7 +212,8 @@ Parameters GetParameters() {
       } else {
         ret.M_BC_Type= BoundaryConditionType::HSIE;
       }
-      ret.M_BC_Zplus = prm.get_integer("ZPlus");
+      ret.M_BC_Zminus = prm.get_double("ZMinus");
+      ret.M_BC_Zplus = prm.get_double("ZPlus");
       ret.M_BC_XMinus = prm.get_double("XMinus");
       ret.M_BC_XPlus = prm.get_double("XPlus");
       ret.M_BC_YMinus = prm.get_double("YMinus");
@@ -311,15 +312,16 @@ Parameters GetParameters() {
 	  ret.PMLLayer = false;
 	}
 
-	ret.LayersPerSector = (ret.NumberProcesses - ret.M_BC_Zplus)/ret.M_W_Sectors;
+  ret.System_Length = ret.M_R_ZLength + ret.M_BC_Zplus + ret.M_BC_Zminus;
 
-	ret.LayerThickness = ret.M_R_ZLength / (ret.NumberProcesses - ret.M_BC_Zplus);
+  ret.LayerThickness = ret.System_Length / (double)ret.NumberProcesses;
 
 	ret.SectorThickness = ret.M_R_ZLength / ret.M_W_Sectors;
 
-	ret.SystemLength = ret.NumberProcesses * ret.LayerThickness;
+	ret.LayersPerSector = ret.SectorThickness/ret.LayerThickness;
 
-	ret.Maximum_Z = - (ret.M_R_ZLength/2.0) + ret.SystemLength;
+	ret.Maximum_Z = (ret.M_R_ZLength/2.0) + ret.M_BC_Zplus;
+  ret.Minimum_Z = -(ret.M_R_ZLength/2.0) - ret.M_BC_Zminus;
 
 	deallog.push("Checking Waveguide Properties");
 
@@ -502,7 +504,7 @@ Point<3, double> Triangulation_Stretch_Z (const Point<3, double> &p)
 Point<3, double> Triangulation_Shift_Z (const Point<3, double> &p)
 {
   Point<3, double> q = p;
-  q[2] += (GlobalParams.SystemLength - GlobalParams.M_R_ZLength)/2.0;
+  q[2] += GlobalParams.M_BC_Zplus - GlobalParams.M_BC_Zminus;
   q[1] = p[1];
   q[0] = p[0];
   return q;

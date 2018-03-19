@@ -103,7 +103,7 @@ std::complex<double> Waveguide::evaluate_for_Position(
   } else {
     VectorTools::point_value(dof_handler, primal_solution, position, result);
   }
-  position[2] = -GlobalParams.M_R_ZLength/2.0;
+  position[2] = GlobalParams.Minimum_Z;
   this->es.vector_value(position, mode);
 
   std::complex<double> c1(result(0), result(3));
@@ -134,7 +134,7 @@ void Waveguide::estimate_solution() {
         for (unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
          ((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
           Tensor<1, 3, double> ptemp =((cell->face(i))->line(j))->center(true, false);
-          if (std::abs(ptemp[2] + GlobalParams.M_R_ZLength/2.0) > 0.0001) {
+          if (std::abs(ptemp[2] - GlobalParams.Minimum_Z) > 0.0001) {
             Point<3, double> p(ptemp[0], ptemp[1], ptemp[2]);
             Tensor<1, 3, double> dtemp =((cell->face(i))->line(j))->vertex(0) -((cell->face(i))->line(j))->vertex(1);
             dtemp = dtemp / dtemp.norm();
@@ -188,8 +188,8 @@ void Waveguide::make_grid() {
   parallel::distributed::Triangulation<3>::active_cell_iterator
     cell = triangulation.begin_active(),
     endc = triangulation.end();
-  minimum_local_z = GlobalParams.M_R_ZLength;
-  maximum_local_z = - GlobalParams.M_R_ZLength;
+  minimum_local_z = 2.0 * GlobalParams.M_R_ZLength;
+  maximum_local_z = - 2.0 * GlobalParams.M_R_ZLength;
   for (; cell!= endc; ++cell) {
     if (cell->is_locally_owned()) {
         for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
@@ -925,7 +925,7 @@ void Waveguide::MakeBoundaryConditions() {
 					}
 				}
 
-				if (std::abs(center[2] + GlobalParams.M_R_ZLength/2.0) < 0.0001) {
+				if (std::abs(center[2] - GlobalParams.Minimum_Z) < 0.0001) {
 					for (unsigned int j = 0; j< GeometryInfo<3>::lines_per_face; j++) {
 						if ((cell->face(i))->line(j)->at_boundary()) {
 						 ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
@@ -1033,32 +1033,32 @@ void Waveguide::MakePreconditionerBoundaryConditions() {
 
         if (even) {
           if (rank != 0) {
-            if (std::abs(center[2] + GlobalParams.M_R_ZLength/2.0 -(rank * layer_length)) < 0.0001) {
+            if (std::abs(center[2] - GlobalParams.Minimum_Z -(rank * layer_length)) < 0.0001) {
             	Add_Zero_Restraint(& cm_prec_even , cell, i, fe.dofs_per_line, fe.dofs_per_face, has_non_edge_dofs, & locally_owned_dofs);
             }
           }
 
-          if (std::abs(center[2] + GlobalParams.M_R_ZLength/2.0 -((rank+2) * layer_length)) < 0.0001) {
+          if (std::abs(center[2] - GlobalParams.Minimum_Z -((rank+2) * layer_length)) < 0.0001) {
           	Add_Zero_Restraint(& cm_prec_even , cell, i, fe.dofs_per_line, fe.dofs_per_face, has_non_edge_dofs, & locally_owned_dofs);
           }
 
-          if (std::abs(center[2] + GlobalParams.M_R_ZLength/2.0 -((rank+1) * layer_length)) < 0.0001) {
+          if (std::abs(center[2] - GlobalParams.Minimum_Z -((rank+1) * layer_length)) < 0.0001) {
           	Add_Zero_Restraint(& cm_prec_odd , cell, i, fe.dofs_per_line, fe.dofs_per_face, has_non_edge_dofs, & locally_owned_dofs);
           }
 
-          if (std::abs(center[2] + GlobalParams.M_R_ZLength/2.0 -((rank-1) * layer_length)) < 0.0001) {
+          if (std::abs(center[2] - GlobalParams.Minimum_Z -((rank-1) * layer_length)) < 0.0001) {
           	Add_Zero_Restraint(& cm_prec_odd , cell, i, fe.dofs_per_line, fe.dofs_per_face, has_non_edge_dofs, & locally_owned_dofs);
           }
         } else {
-          if (std::abs(center[2] + GlobalParams.M_R_ZLength/2.0 -(rank * layer_length)) < 0.0001) {
+          if (std::abs(center[2] - GlobalParams.Minimum_Z -(rank * layer_length)) < 0.0001) {
           	Add_Zero_Restraint(& cm_prec_odd , cell, i, fe.dofs_per_line, fe.dofs_per_face, has_non_edge_dofs, & locally_owned_dofs);
           }
 
-          if (std::abs(center[2] + GlobalParams.M_R_ZLength/2.0 -((rank+2) * layer_length)) < 0.0001) {
+          if (std::abs(center[2] - GlobalParams.Minimum_Z -((rank+2) * layer_length)) < 0.0001) {
           	Add_Zero_Restraint(& cm_prec_odd , cell, i, fe.dofs_per_line, fe.dofs_per_face, has_non_edge_dofs, & locally_owned_dofs);
           }
 
-          if (std::abs(center[2] + GlobalParams.M_R_ZLength/2.0 -((rank+1) * layer_length)) < 0.0001) {
+          if (std::abs(center[2] - GlobalParams.Minimum_Z -((rank+1) * layer_length)) < 0.0001) {
           	Add_Zero_Restraint(& cm_prec_even , cell, i, fe.dofs_per_line, fe.dofs_per_face, has_non_edge_dofs, & locally_owned_dofs);
           }
         }
@@ -1506,9 +1506,9 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
 
 
           double  * end_signal = new double[3];
-          end_signal[0] = -GlobalParams.M_R_ZLength;
-          end_signal[1] = -GlobalParams.M_R_ZLength;
-          end_signal[2] = -GlobalParams.M_R_ZLength;
+          end_signal[0] = GlobalParams.Minimum_Z - 10.0;
+          end_signal[1] = GlobalParams.Minimum_Z - 10.0;
+          end_signal[2] = GlobalParams.Minimum_Z - 10.0;
 
           MPI_Send(&end_signal[0], 3, MPI_DOUBLE, other_proc, 0, mpi_comm);
           deallog << "Done." << std::endl;
@@ -1524,7 +1524,7 @@ std::vector<std::complex<double>> Waveguide::assemble_adjoint_local_contribution
             MPI_Recv(&position_array[0], 3, MPI_DOUBLE, other_proc , 0, mpi_comm, MPI_STATUS_IGNORE);
             normal = false;
             for (int i = 0; i < 3; i++) {
-              if (position_array[i] != -GlobalParams.M_R_ZLength) {
+              if (position_array[i] != GlobalParams.Minimum_Z - 10.0) {
                 normal = true;
               }
             }

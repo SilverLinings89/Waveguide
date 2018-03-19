@@ -138,7 +138,7 @@ bool HomogenousTransformationCircular::PML_in_Y(Point<3> &p)  const{
 }
 
 bool HomogenousTransformationCircular::PML_in_Z(Point<3> &p)  const{
-  return p(2) < ZMinus ||p(2) > ZPlus;
+  return p(2) > ZPlus;
 }
 
 double HomogenousTransformationCircular::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int rank ) const{
