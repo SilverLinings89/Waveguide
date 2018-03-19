@@ -143,39 +143,32 @@ public:
 
 
   /**
-     * This is a getter for the values of degrees of freedom. A getter-setter interface was introduced since the values are estimated automatically during the optimization and non-physical systems should be excluded from the domain of possible cases.
-     * \param dof The index of the degree of freedom to be retrieved from the structure of the modelled waveguide.
-     * \return This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd.
-     */
-    double  get_dof (int dof) const;
-
-    /**
-     * This function sets the value of the dof provided to the given value. It is important to consider, that some dofs are non-writable (i.e. the values of the degrees of freedom on the boundary, like the radius of the input-connector cannot be changed).
-     * \param dof The index of the parameter to be changed.
-     * \param value The value, the dof should be set to.
-     */
-    void  set_dof (int dof , double value );
-
-    /**
-     * This is a getter for the values of degrees of freedom. A getter-setter interface was introduced since the values are estimated automatically during the optimization and non-physical systems should be excluded from the domain of possible cases.
-     * \param dof The index of the degree of freedom to be retrieved from the structure of the modelled waveguide.
-     * \return This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd.
-     */
-    double  get_free_dof (int dof) const;
-
-    /**
-     * This function sets the value of the dof provided to the given value. It is important to consider, that some dofs are non-writable (i.e. the values of the degrees of freedom on the boundary, like the radius of the input-connector cannot be changed).
-     * \param dof The index of the parameter to be changed.
-     * \param value The value, the dof should be set to.
-     */
-    void  set_free_dof (int dof , double value );
-
+   * This is a getter for the values of degrees of freedom. A getter-setter interface was introduced since the values are estimated automatically during the optimization and non-physical systems should be excluded from the domain of possible cases.
+   * \param dof The index of the degree of freedom to be retrieved from the structure of the modelled waveguide.
+   * \return This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd.
+   */
+  double  get_dof (int dof) const;
 
   /**
-   * Using this method unifies the usage of coordinates. This function takes a global \f$z\f$ coordinate (in the computational domain) and returns both a Sector-Index and an internal \f$z\f$ coordinate indicating which sector this coordinate belongs to and how far along in the sector it is located.
-   * \param double in_z global system \f$z\f$ coordinate for the transformation.
+   * This function sets the value of the dof provided to the given value. It is important to consider, that some dofs are non-writable (i.e. the values of the degrees of freedom on the boundary, like the radius of the input-connector cannot be changed).
+   * \param dof The index of the parameter to be changed.
+   * \param value The value, the dof should be set to.
    */
-  // std::pair<int, double> Z_to_Sector_and_local_z(double in_z) const;
+  void  set_dof (int dof , double value );
+
+  /**
+   * This is a getter for the values of degrees of freedom. A getter-setter interface was introduced since the values are estimated automatically during the optimization and non-physical systems should be excluded from the domain of possible cases.
+   * \param dof The index of the degree of freedom to be retrieved from the structure of the modelled waveguide.
+   * \return This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd.
+   */
+  double  get_free_dof (int dof) const;
+
+  /**
+   * This function sets the value of the dof provided to the given value. It is important to consider, that some dofs are non-writable (i.e. the values of the degrees of freedom on the boundary, like the radius of the input-connector cannot be changed).
+   * \param dof The index of the parameter to be changed.
+   * \param value The value, the dof should be set to.
+   */
+  void  set_free_dof (int dof , double value );
 
   /**
    * Returns the complete length of the computational domain.
@@ -240,8 +233,6 @@ public:
   void Print() const;
 
   std::complex<double> evaluate_for_z(double z_in, Waveguide *);
-
-  // std::complex<double> gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc,  Waveguide * in_w);
 
 };
 

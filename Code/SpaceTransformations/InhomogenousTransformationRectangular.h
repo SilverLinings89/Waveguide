@@ -235,10 +235,6 @@ public:
 
   std::complex<double> evaluate_for_z(double z_in, Waveguide *);
 
-  std::complex<double> gauss_product_2D_sphere(double z, int n, double R, double Xc, double Yc,  Waveguide * in_w);
-
-  std::pair<int, double> Z_to_Sector_and_local_z(double in_z) const;
-
 };
 
 #endif
