@@ -71,7 +71,6 @@ Point<3, double> HomogenousTransformationRectangular::phys_to_math(Point<3, doub
   return ret;
 }
 
-
 bool HomogenousTransformationRectangular::PML_in_X(Point<3, double> &p) const {
   return p(0) < XMinus ||p(0) > XPlus;
 }
@@ -156,128 +155,128 @@ Tensor<2,3,double> HomogenousTransformationRectangular::get_Space_Transformation
 }
 
 Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML_To_Tensor(Point<3, double> & position, Tensor<2,3,double> transformation) const {
-	 Tensor<2,3, std::complex<double>> MaterialTensor;
+	Tensor<2,3, std::complex<double>> MaterialTensor;
 
-	    for(int i = 0; i < 3; i++) {
-	      for(int j = 0; j < 3; j++) {
-	        MaterialTensor[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
-	      }
-	    }
+  for(int i = 0; i < 3; i++) {
+    for(int j = 0; j < 3; j++) {
+      MaterialTensor[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
+    }
+  }
 
-	    std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
+  std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0);
 
-	    if(PML_in_X(position)){
-	      double r,d;
-	      r = PML_X_Distance(position);
-	      if(position[0] < 0){
-	        d = GlobalParams.M_BC_XMinus;
-	      } else {
-	        d = GlobalParams.M_BC_XPlus;
-	      }
-	      // sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax );
-	      sx.imag( pow(r/d, GlobalParams.M_BC_DampeningExponent)*GlobalParams.M_BC_SigmaXMax );
-	    }
+  if(PML_in_X(position)){
+    double r,d;
+    r = PML_X_Distance(position);
+    if(position[0] < 0){
+      d = GlobalParams.M_BC_XMinus;
+    } else {
+      d = GlobalParams.M_BC_XPlus;
+    }
+    // sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax );
+    sx.imag( pow(r/d, GlobalParams.M_BC_DampeningExponent)*GlobalParams.M_BC_SigmaXMax );
+  }
 
-	    if(PML_in_Y(position)){
-	      double r,d;
-	      r = PML_Y_Distance(position);
-	      if(position[1] < 0){
-	        d = GlobalParams.M_BC_YMinus;
-	      } else {
-	        d = GlobalParams.M_BC_YPlus;
-	      }
+  if(PML_in_Y(position)){
+    double r,d;
+    r = PML_Y_Distance(position);
+    if(position[1] < 0){
+      d = GlobalParams.M_BC_YMinus;
+    } else {
+      d = GlobalParams.M_BC_YPlus;
+    }
 
-	      // sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax );
-	      sy.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax);
-	    }
+    // sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax );
+    sy.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax);
+  }
 
 
-	    if(PML_in_Z(position)){
-	      double r,d;
-	      r = PML_Z_Distance(position);
-	      d = GlobalParams.M_BC_Zplus * GlobalParams.LayerThickness;
-	      // sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
-	      sz.imag( pow(r/d ,GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax );
-	    }
+  if(PML_in_Z(position)){
+    double r,d;
+    r = PML_Z_Distance(position);
+    d = GlobalParams.M_BC_Zplus * GlobalParams.LayerThickness;
+    // sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
+    sz.imag( pow(r/d ,GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax );
+  }
 
-	    MaterialTensor[0][0] *= sy*sz/sx;
-	    MaterialTensor[0][1] *= sz;
-	    MaterialTensor[0][2] *= sy;
+  MaterialTensor[0][0] *= sy*sz/sx;
+  MaterialTensor[0][1] *= sz;
+  MaterialTensor[0][2] *= sy;
 
-	    MaterialTensor[1][0] *= sz;
-	    MaterialTensor[1][1] *= sx*sz/sy;
-	    MaterialTensor[1][2] *= sx;
+  MaterialTensor[1][0] *= sz;
+  MaterialTensor[1][1] *= sx*sz/sy;
+  MaterialTensor[1][2] *= sx;
 
-	    MaterialTensor[2][0] *= sy;
-	    MaterialTensor[2][1] *= sx;
-	    MaterialTensor[2][2] *= sx*sy/sz;
+  MaterialTensor[2][0] *= sy;
+  MaterialTensor[2][1] *= sx;
+  MaterialTensor[2][2] *= sx*sy/sz;
 
-	    return MaterialTensor;
+  return MaterialTensor;
 }
 
 Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML_To_Tensor_For_Preconditioner(Point<3, double> & position, Tensor<2,3,double> transformation, int) const {
 	Tensor<2,3, std::complex<double>> MaterialTensor;
 
-	  for(int i = 0; i < 3; i++) {
-	    for(int j = 0; j < 3; j++) {
-	      MaterialTensor[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
-	    }
-	  }
+  for(int i = 0; i < 3; i++) {
+    for(int j = 0; j < 3; j++) {
+      MaterialTensor[i][j] = transformation[i][j]* std::complex<double>(1.0, 0.0);
+    }
+  }
 
-	  std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0),sz_p(0.0,0.0);
-	  if(PML_in_X(position)){
-	    double r,d;
-	    r = PML_X_Distance(position);
-	    if(position[0] < 0){
-	      d = GlobalParams.M_BC_XMinus;
-	    } else {
-	      d = GlobalParams.M_BC_XPlus;
-	    }
-	    // sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax );
-	    sx.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaXMax );
-	  }
-	  if(PML_in_Y(position)){
-	    double r,d;
-	    r = PML_Y_Distance(position);
-	    if(position[1] < 0){
-	      d = GlobalParams.M_BC_YMinus;
-	    } else {
-	      d = GlobalParams.M_BC_YPlus;
-	    }
+  std::complex<double> sx(1.0, 0.0),sy(1.0,0.0), sz(1.0,0.0),sz_p(0.0,0.0);
+  if(PML_in_X(position)){
+    double r,d;
+    r = PML_X_Distance(position);
+    if(position[0] < 0){
+      d = GlobalParams.M_BC_XMinus;
+    } else {
+      d = GlobalParams.M_BC_XPlus;
+    }
+    // sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax );
+    sx.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaXMax );
+  }
+  if(PML_in_Y(position)){
+    double r,d;
+    r = PML_Y_Distance(position);
+    if(position[1] < 0){
+      d = GlobalParams.M_BC_YMinus;
+    } else {
+      d = GlobalParams.M_BC_YPlus;
+    }
 
-	    // sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax );
-	    sy.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax);
-	  }
+    // sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax );
+    sy.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax);
+  }
 
-	  if(Preconditioner_PML_Z_Distance(position, rank) > 0){
-	  	double r_temp = Preconditioner_PML_Z_Distance(position, rank);
-	  	double d_temp = GlobalParams.LayerThickness;
+  if(Preconditioner_PML_Z_Distance(position, rank) > 0){
+    double r_temp = Preconditioner_PML_Z_Distance(position, rank);
+    double d_temp = GlobalParams.LayerThickness;
 
-	  	// sz_p.real( pow(r_temp/d_temp , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
-	  	sz.imag( pow(r_temp/d_temp , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax);
-	  }
+    // sz_p.real( pow(r_temp/d_temp , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
+    sz.imag( pow(r_temp/d_temp , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax);
+  }
 
-	  if(PML_in_Z(position)){
-	    double r,d;
-	    r = PML_Z_Distance(position);
-	    d = GlobalParams.M_BC_Zplus * GlobalParams.LayerThickness;
-	    // sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
-	    sz.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax );
-	  }
+  if(PML_in_Z(position)){
+    double r,d;
+    r = PML_Z_Distance(position);
+    d = GlobalParams.M_BC_Zplus * GlobalParams.LayerThickness;
+    // sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
+    sz.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax );
+  }
 
-	  MaterialTensor[0][0] *= sy*sz/sx;
-	  MaterialTensor[0][1] *= sz;
-	  MaterialTensor[0][2] *= sy;
+  MaterialTensor[0][0] *= sy*sz/sx;
+  MaterialTensor[0][1] *= sz;
+  MaterialTensor[0][2] *= sy;
 
-	  MaterialTensor[1][0] *= sz;
-	  MaterialTensor[1][1] *= sx*sz/sy;
-	  MaterialTensor[1][2] *= sx;
+  MaterialTensor[1][0] *= sz;
+  MaterialTensor[1][1] *= sx*sz/sy;
+  MaterialTensor[1][2] *= sx;
 
-	  MaterialTensor[2][0] *= sy;
-	  MaterialTensor[2][1] *= sx;
-	  MaterialTensor[2][2] *= sx*sy/sz;
+  MaterialTensor[2][0] *= sy;
+  MaterialTensor[2][1] *= sx;
+  MaterialTensor[2][2] *= sx*sy/sz;
 
-	  return MaterialTensor;
+  return MaterialTensor;
 }
 
 std::complex<double> HomogenousTransformationRectangular::evaluate_for_z(double in_z, Waveguide * in_w) {
@@ -285,14 +284,10 @@ std::complex<double> HomogenousTransformationRectangular::evaluate_for_z(double 
 
   std::complex<double> ret = 0;
   try{
-      // std::cout << "Process " << Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) << " computing signal at " << in_z << std::endl;
       ret = gauss_product_2D_sphere(in_z,10,r,0,0, in_w);
   } catch (...) {
-      // std::cout << "Failed for " << in_z << " in " <<rank << std::endl;
       ret = 0;
   }
-  // ret.real( Utilities::MPI::sum(ret.real(), MPI_COMM_WORLD));
-  // ret.imag( Utilities::MPI::sum(ret.imag(), MPI_COMM_WORLD));
   return ret;
 }
 
@@ -376,8 +371,8 @@ void HomogenousTransformationRectangular::estimate_and_initialize() {
     the_last.set_properties_force(GlobalParams.sd.m[GlobalParams.sd.Sectors-1],GlobalParams.sd.m[GlobalParams.sd.Sectors],GlobalParams.sd.v[GlobalParams.sd.Sectors-1],GlobalParams.sd.v[GlobalParams.sd.Sectors]);
     case_sectors.push_back(the_first);
     for(unsigned int i = 0; i < case_sectors.size(); i++) {
-      deallog << "From m: " << case_sectors[i].get_m(0.0) << " r: " << case_sectors[i].get_r(0.0) << std::endl;
-      deallog << "  To m: " << case_sectors[i].get_m(1.0) << " r: " << case_sectors[i].get_r(1.0) << std::endl;
+      deallog << "From m: " << case_sectors[i].get_m(0.0) << " v: " << case_sectors[i].get_v(0.0) << std::endl;
+      deallog << "  To m: " << case_sectors[i].get_m(1.0) << " v: " << case_sectors[i].get_v(1.0) << std::endl;
     }
   } else {
     case_sectors.reserve(sectors);
@@ -415,10 +410,6 @@ void HomogenousTransformationRectangular::estimate_and_initialize() {
       }
     }
   }
-    // for (unsigned int i = 0;  i < NFreeDofs(); ++ i) {
-    //  InitialDofs[i] = this->get_dof(i, true);
-    //}
-
 }
 
 double HomogenousTransformationRectangular::get_r(double ) const {

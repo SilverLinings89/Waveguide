@@ -1069,7 +1069,7 @@ void Waveguide::MakePreconditionerBoundaryConditions() {
 }
 
 void Waveguide::solve() {
-  SolverControl lsc = SolverControl(100, 1.e-5, true, true);
+  SolverControl lsc = SolverControl(GlobalParams.So_TotalSteps, 1.e-5, true, true);
 
   lsc.log_frequency(1);
 
