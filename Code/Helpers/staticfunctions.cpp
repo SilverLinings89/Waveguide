@@ -312,9 +312,9 @@ Parameters GetParameters() {
 	  ret.PMLLayer = false;
 	}
 
-  ret.System_Length = ret.M_R_ZLength + ret.M_BC_Zplus + ret.M_BC_Zminus;
+  ret.SystemLength = ret.M_R_ZLength + ret.M_BC_Zplus + ret.M_BC_Zminus;
 
-  ret.LayerThickness = ret.System_Length / (double)ret.NumberProcesses;
+  ret.LayerThickness = ret.SystemLength / (double)ret.NumberProcesses;
 
 	ret.SectorThickness = ret.M_R_ZLength / ret.M_W_Sectors;
 
