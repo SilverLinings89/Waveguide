@@ -456,7 +456,7 @@ void HomogenousTransformationCircular::set_free_dof(int in_dof, double in_val) {
 }
 
 double HomogenousTransformationCircular::Sector_Length() const {
-  return GlobalParams.M_R_ZLength / (double)GlobalParams.M_W_Sectors;
+  return GlobalParams.SectorThickness;
 }
 
 void HomogenousTransformationCircular::estimate_and_initialize() {

@@ -59,25 +59,25 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   waveguide->run();
   MPI_Barrier(MPI_COMM_WORLD);
   double quality = 0;
-  std::complex<double> a_in = primal_st->evaluate_for_z(- GlobalParams.M_R_ZLength/2.0 + 0.0001 , waveguide);
-  std::complex<double> a_out= primal_st->evaluate_for_z(  GlobalParams.M_R_ZLength/2.0 - 0.0001 , waveguide);
+  std::complex<double> a_in = primal_st->evaluate_for_z(- GlobalParams.M_R_ZLength/2.0 , waveguide);
+  std::complex<double> a_out= primal_st->evaluate_for_z(  GlobalParams.M_R_ZLength/2.0 , waveguide);
   deallog<< "Phase in: " << a_in << std::endl;
   deallog<< "Phase out: " << a_out << std::endl;
-  quality = std::abs(a_out) / std::abs(a_in);
+  quality = std::abs(a_out / a_in);
   deallog << "Computed primal quality " << quality << std::endl;
   // New starts here
   const double step_width = 0.05;
   unsigned int cnt_steps = 0;
-  double z_temp = -GlobalParams.M_R_ZLength/2.0 +0.00001;
-  while ( z_temp < -GlobalParams.M_R_ZLength/2.0+ GlobalParams.SystemLength){
+  double z_temp = GlobalParams.Minimum_Z;
+  while ( z_temp < GlobalParams.Maximum_Z){
     cnt_steps ++;
     z_temp += step_width;
   }
   deallog << "Start" << std::endl;
   bool* mine = new bool[cnt_steps];
-  z_temp = -GlobalParams.M_R_ZLength/2.0 +0.00001;
+  z_temp = GlobalParams.Minimum_Z;
   unsigned int own_cnt = 0;
-  double lowest_own = -GlobalParams.SystemLength;
+  double lowest_own = GlobalParams.Minimum_Z -10.0;
   int lowest_idx = 0;
   for(unsigned int i=0; i< cnt_steps; i++) {
     if(z_temp > this->waveguide->mg->z_min && z_temp < this->waveguide->mg->z_max) {
@@ -151,7 +151,7 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
     std::ofstream result_file;
     result_file.open((solutionpath + "/ComplexQualities.dat").c_str(),std::ios_base::openmode::_S_trunc);
     result_file << "z \t re(f) \t im(f) \t |f|" <<std::endl;
-    z_temp = -GlobalParams.M_R_ZLength/2.0;
+    z_temp = GlobalParams.Minimum_Z;
     for(unsigned int i = 0; i < cnt_steps; i++) {
       result_file << z_temp<< "\t" << all_reals[i] << "\t" << all_imags[i] << "\t" << all_absolutes[i] << std::endl;
       z_temp += step_width;
@@ -165,8 +165,8 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   MPI_Barrier(MPI_COMM_WORLD);
   double dual_quality = 0;
   std::complex<double> d_a_in = primal_st->evaluate_for_z(- GlobalParams.M_R_ZLength/2.0, waveguide);
-  std::complex<double> d_a_out= primal_st->evaluate_for_z(  GlobalParams.M_R_ZLength/2.0 -0.0001 , waveguide);
-  dual_quality = std::abs(d_a_out) / std::abs(d_a_in);
+  std::complex<double> d_a_out= primal_st->evaluate_for_z(  GlobalParams.M_R_ZLength/2.0, waveguide);
+  dual_quality = std::abs(d_a_out/d_a_in);
   deallog<< "Phase in: " << d_a_in << std::endl;
   deallog<< "Phase out: " << d_a_out << std::endl;
 
@@ -199,7 +199,7 @@ void AdjointOptimization::run() {
       }
       deallog << std::endl;
       quality = compute_big_step(step);
-      oa->pass_result_big_step(primal_st->evaluate_for_z(GlobalParams.M_R_ZLength/2.0 -0.0001 , waveguide));
+      oa->pass_result_big_step(primal_st->evaluate_for_z(GlobalParams.M_R_ZLength/2.0 , waveguide));
     }
 
     counter++;
@@ -223,11 +223,7 @@ void AdjointOptimization::run() {
       oa->WriteStepsOut(result_file);
       result_file.close();
     }
-
-
-
   }
-
 }
 
 #endif
