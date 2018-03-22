@@ -226,7 +226,7 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationRectangular::Apply_P
   if(PML_in_Z(position)){
     double r,d;
     r = PML_Z_Distance(position);
-    d = GlobalParams.M_BC_Zplus * GlobalParams.LayerThickness;
+    d = GlobalParams.M_BC_Zplus;
     // sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
     sz.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax );
   }

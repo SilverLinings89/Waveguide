@@ -165,7 +165,7 @@ double HomogenousTransformationCircular::PML_Y_Distance(Point<3> &p) const{
 
 double HomogenousTransformationCircular::PML_Z_Distance(Point<3> &p) const{
   if(p(2) < 0) {
-    return - (p(2) + (GlobalParams.M_R_ZLength / 2.0));
+    return 0;
   } else {
     return p(2) - (GlobalParams.M_R_ZLength / 2.0);
   }
@@ -251,7 +251,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::Apply_PML_To
     if(PML_in_Z(position)){
       double r,d;
       r = PML_Z_Distance(position);
-      d = GlobalParams.M_BC_Zplus * GlobalParams.LayerThickness;
+      d = GlobalParams.M_BC_Zplus;
       sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
       sz.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax );
     }

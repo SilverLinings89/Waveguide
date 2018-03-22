@@ -73,7 +73,7 @@ bool InhomogenousTransformationCircular::PML_in_Y(Point<3> &p) const {
 }
 
 bool InhomogenousTransformationCircular::PML_in_Z(Point<3> &p) const {
-  return p(2) < ZMinus ||p(2) > ZPlus;
+  return p(2) > ZPlus;
 }
 
 bool InhomogenousTransformationCircular::Preconditioner_PML_in_Z(Point<3> &, unsigned int block) const {
@@ -87,7 +87,7 @@ bool InhomogenousTransformationCircular::Preconditioner_PML_in_Z(Point<3> &, uns
 
 double InhomogenousTransformationCircular::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ) const{
   double width = GlobalParams.LayerThickness * 1.0;
-
+// TODO fix this.
   return p(2) +GlobalParams.M_R_ZLength/2.0 - ((double)block +1)*width;
 
 }
@@ -110,7 +110,7 @@ double InhomogenousTransformationCircular::PML_Y_Distance(Point<3> &p) const{
 
 double InhomogenousTransformationCircular::PML_Z_Distance(Point<3> &p) const{
   if(p(2) < 0) {
-    return - (p(2) + (GlobalParams.M_R_ZLength / 2.0));
+    return 0;
   } else {
     return p(2) - (GlobalParams.M_R_ZLength / 2.0);
   }
@@ -196,7 +196,7 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationCircular::Apply_PML_
   if(PML_in_Z(position)){
     double r,d, sigmaz;
     r = PML_Z_Distance(position);
-    d = (GlobalParams.M_R_ZLength / (GlobalParams.NumberProcesses - GlobalParams.M_BC_Zplus)) * GlobalParams.M_BC_Zplus ;
+    d = GlobalParams.M_BC_Zplus ;
     sigmaz = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax;
     sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax);
     sz.imag( sigmaz / omegaepsilon0 );
@@ -282,7 +282,7 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationCircular::Apply_PML_
   if(PML_in_Z(position)){
     double r,d, sigmaz;
     r = PML_Z_Distance(position);
-    d = GlobalParams.M_BC_Zplus * GlobalParams.LayerThickness;
+    d = GlobalParams.M_BC_Zplus ;
     sigmaz = pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax;
     sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax);
     sz.imag( sigmaz / omegaepsilon0 );
