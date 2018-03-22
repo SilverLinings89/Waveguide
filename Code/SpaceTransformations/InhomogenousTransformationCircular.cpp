@@ -86,10 +86,9 @@ bool InhomogenousTransformationCircular::Preconditioner_PML_in_Z(Point<3> &, uns
 }
 
 double InhomogenousTransformationCircular::Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block ) const{
-  double width = GlobalParams.LayerThickness * 1.0;
+  double width = GlobalParams.LayerThickness;
 // TODO fix this.
   return p(2) +GlobalParams.M_R_ZLength/2.0 - ((double)block +1)*width;
-
 }
 
 double InhomogenousTransformationCircular::PML_X_Distance(Point<3> &p) const{
@@ -349,10 +348,8 @@ std::complex<double> InhomogenousTransformationCircular::gauss_product_2D_sphere
 }
 
 std::complex<double> InhomogenousTransformationCircular::evaluate_for_z(double in_z, Waveguide * in_w) {
-  double r = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
-
-  std::complex<double> res = gauss_product_2D_sphere(in_z,10,r,0,0, in_w);
-  return sqrt(std::norm(res));
+  double r = GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out;
+  return gauss_product_2D_sphere(in_z,10,r,0,0, in_w);
 }
 
 double InhomogenousTransformationCircular::get_dof(int dof)  const{

@@ -191,7 +191,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML
   if(PML_in_Z(position)){
     double r,d;
     r = PML_Z_Distance(position);
-    d = GlobalParams.M_BC_Zplus * GlobalParams.LayerThickness;
+    d = GlobalParams.M_BC_Zplus;
     // sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
     sz.imag( pow(r/d ,GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax );
   }
@@ -277,15 +277,8 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationRectangular::Apply_PML
 }
 
 std::complex<double> HomogenousTransformationRectangular::evaluate_for_z(double in_z, Waveguide * in_w) {
-  double r = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
-
-  std::complex<double> ret = 0;
-  try{
-      ret = gauss_product_2D_sphere(in_z,10,r,0,0, in_w);
-  } catch (...) {
-      ret = 0;
-  }
-  return ret;
+  double r = GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out;
+  return gauss_product_2D_sphere(in_z,10,r,0,0, in_w);
 }
 
 double HomogenousTransformationRectangular::get_dof(int dof) const {

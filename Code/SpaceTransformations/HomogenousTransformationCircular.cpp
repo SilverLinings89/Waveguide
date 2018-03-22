@@ -128,7 +128,6 @@ Point<3> HomogenousTransformationCircular::phys_to_math_hom(Point<3> coord) cons
   return ret;
 }
 
-
 bool HomogenousTransformationCircular::PML_in_X(Point<3> &p) const {
   return p(0) < XMinus ||p(0) > XPlus;
 }
@@ -313,7 +312,7 @@ Tensor<2,3, std::complex<double>> HomogenousTransformationCircular::Apply_PML_To
   if(PML_in_Z(position)){
     double r,d;
     r = PML_Z_Distance(position);
-    d = GlobalParams.M_BC_Zplus * GlobalParams.LayerThickness;
+    d = GlobalParams.M_BC_Zplus;
     sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
     sz.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax );
   }
@@ -379,18 +378,8 @@ std::complex<double> HomogenousTransformationCircular::gauss_product_2D_sphere_p
 }
 
 std::complex<double> HomogenousTransformationCircular::evaluate_for_z(double in_z, Waveguide * in_w) {
-  double r = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out)/2.0;
-  std::complex<double> ret = 0;
-  try{
-    // std::cout << "Process " << Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) << " computing signal at " << in_z << std::endl;
-    ret = gauss_product_2D_sphere_primal(in_z,10,r,0,0, in_w);
-  } catch (VectorTools::ExcPointNotAvailableHere &e) {
-    // std::cout << "Failed for " << in_z << " in " <<rank << std::endl;
-    ret = 0;
-  }
-  ret.real( Utilities::MPI::sum(ret.real(), MPI_COMM_WORLD));
-  ret.imag( Utilities::MPI::sum(ret.imag(), MPI_COMM_WORLD));
-  return ret;
+  double r = GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out;
+  return gauss_product_2D_sphere(in_z,10,r,0,0, in_w);
 }
 
 double HomogenousTransformationCircular::get_dof(int dof) const {
