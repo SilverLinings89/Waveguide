@@ -233,6 +233,8 @@ public:
    */
   void Print() const;
 
+  std::complex<double> evaluate_for_z_with_sum(double, double, Waveguide *);
+
   std::complex<double> evaluate_for_z(double z_in, Waveguide *);
 
 };

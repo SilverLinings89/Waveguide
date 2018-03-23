@@ -2,6 +2,7 @@
 #define SpaceTransformation_CPP
 
 #include "SpaceTransformation.h"
+#include <complex>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/lac/vector.h>
@@ -138,6 +139,19 @@ std::complex<double> SpaceTransformation::gauss_product_2D_sphere(double z, int 
   s *= R*R*B;
 
   return s;
+}
+
+std::complex<double> SpaceTransformation::evaluate_for_z_with_sum(double in_z, double in_r, Waveguide * in_w) {
+  std::complex<double> ret= 0;
+  try {
+    gauss_product_2D_sphere(in_z,10,in_r,0,0, in_w);
+  } catch (...) {
+    ret = 0;
+  }
+  std::complex<double> b;
+  b.real(dealii::Utilities::MPI::sum(ret.real(), MPI_COMM_WORLD));
+  b.imag(dealii::Utilities::MPI::sum(ret.imag(), MPI_COMM_WORLD));
+  return b;
 }
 
 #endif
