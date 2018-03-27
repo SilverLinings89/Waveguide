@@ -28,7 +28,7 @@ void ShapeDescription::SetByString(std::string str) {
   std::istringstream iss(str);
   std::string token;
   std::getline(iss, token, ',');
-  Sectors = std::stoi(token) -1;
+  Sectors = std::stoi(token);
   int i = 0;
   for(i = 0; i < Sectors; i++) {
     std::getline(iss, token, ',');

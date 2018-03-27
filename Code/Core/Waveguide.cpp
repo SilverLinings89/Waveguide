@@ -25,6 +25,11 @@
 #include <utility>
 #include "SolutionWeight.h"
 #include "../Helpers/staticfunctions.h"
+#include "../SpaceTransformations/SpaceTransformation.h"
+#include "../SpaceTransformations/HomogenousTransformationCircular.h"
+#include "../SpaceTransformations/HomogenousTransformationRectangular.h"
+#include "../SpaceTransformations/InhomogenousTransformationCircular.h"
+#include "../SpaceTransformations/InhomogenousTransformationRectangular.h"
 #include "../Helpers/ExactSolution.h"
 #include "PreconditionerSweeping.h"
 
@@ -1310,6 +1315,48 @@ void Waveguide::output_results(bool) {
       patternscript.flush();
     }
   }
+  MPI_Barrier(mpi_comm);
+  if(GlobalParams.O_O_V_S_SolutionFirst) {
+    // parallel::distributed::Triangulation<3> temp_for_transformation(MPI_COMM_WORLD, parallel::distributed::Triangulation<3>::MeshSmoothing(parallel::distributed::Triangulation<3>::none), parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning);
+    // temp_for_transformation.copy_triangulation(triangulation);
+
+    set_the_st(this->st);
+
+    GridTools::transform(&Triangulation_Transform_to_physical, triangulation);
+
+    /**
+    if(GlobalParams.M_C_Shape == ConnectorType::Rectangle) {
+      if(GlobalParams.Sc_Homogeneity){
+        GridTools::transform(&(st->math_to_phys), triangulation);
+      } else {
+        GridTools::transform(InhomogenousTransformationRectangular::math_to_phys, triangulation);
+      }
+    } else {
+      if(GlobalParams.Sc_Homogeneity){
+              GridTools::transform(&(HomogenousTransformationCircular::math_to_phys), triangulation);
+            } else {
+              GridTools::transform(&(InhomogenousTransformationCircular::math_to_phys), triangulation);
+            }
+    }
+    **/
+
+    DataOut<3> data_out;
+
+    data_out.attach_dof_handler(dof_handler);
+    data_out.add_data_vector(solution_output, "Solution", dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3, 3>::DataVectorType::type_dof_data);
+
+    data_out.build_patches();
+
+    std::ofstream outputvtu(solutionpath + "/" + path_prefix+ "/solution-transformed-run" + std::to_string(run_number) + "-P" + std::to_string(rank) +".vtu");
+    data_out.write_vtu(outputvtu);
+    MPI_Barrier(mpi_comm);
+    // triangulation.copy_triangulation(temp_for_transformation);
+  }
+
+}
+
+Point<3, double> Waveguide::transform_coordinate(const Point<3, double> in_p) {
+  return st->math_to_phys(in_p);
 }
 
 void Waveguide::run() {

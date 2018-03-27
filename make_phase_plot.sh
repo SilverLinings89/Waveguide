@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo 'set terminal pngcairo
+echo 'set terminal pngcairo size 1920,1080
 filter(x)=(x<=1000.0)?(x):(0)
 set output '\''powerplot.png'\''
 set key autotitle columnheader

@@ -61,6 +61,23 @@ void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3
   }
   unsigned int man = 1;
 
+  double min_z = 100000.0;
+  double max_z = -100000.0;
+  parallel::distributed::Triangulation<3>::cell_iterator boundary_searcher_begin = tria.begin();
+  parallel::distributed::Triangulation<3>::cell_iterator boundary_searcher_end = tria.end();
+  for (; boundary_searcher_begin != boundary_searcher_end; boundary_searcher_begin ++) {
+    for (unsigned int i=0; i<GeometryInfo<3>::vertices_per_cell; ++i)
+    {
+      Point<3> &v = boundary_searcher_begin->vertex(i);
+      if( v(2) < min_z) {
+        min_z = v(2);
+      }
+      if( v(2) > max_z) {
+        max_z = v(2);
+      }
+    }
+  }
+
   tria.set_manifold (man, round_description);
 
   cell2 = tria.begin_active();
@@ -74,10 +91,10 @@ void RoundMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation<3
 
           cell2->face(j)->set_all_boundary_ids(1);
 
-          if(std::abs(ctr(2) - GlobalParams.Maximum_Z) < 0.00001) {
+          if(std::abs(ctr(2) - max_z) < 0.00001) {
             cell2->face(j)->set_all_boundary_ids(2);
           }
-          if(std::abs(ctr(2) - GlobalParams.Minimum_Z) < 0.00001) {
+          if(std::abs(ctr(2) - min_z) < 0.00001) {
             cell2->face(j)->set_all_boundary_ids(3);
           }
         }

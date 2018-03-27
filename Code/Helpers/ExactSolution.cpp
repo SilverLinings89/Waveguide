@@ -9,8 +9,10 @@
 #include "PointVal.h"
 #include "../Core/Waveguide.h"
 
-double ExactSolution::value (const Point<3> &p , const unsigned int component) const
+double ExactSolution::value (const Point<3> &in_p , const unsigned int component) const
 {
+  Point<3,double> p = in_p;
+  if(is_dual) p[2] = -in_p[2];
   bool zero = false;
   if(p[0] > GlobalParams.M_R_XLength/2.0 - GlobalParams.M_BC_XPlus) zero = true;
   if(p[0] < -GlobalParams.M_R_XLength/2.0 + GlobalParams.M_BC_XMinus) zero = true;
@@ -66,7 +68,7 @@ double ExactSolution::value (const Point<3> &p , const unsigned int component) c
 				n = std::sqrt(GlobalParams.M_W_epsilonout);
 			}
 			double k = n*2* GlobalParams.C_Pi / GlobalParams.M_W_Lambda;
-			std::complex<double> phase(0.0,(p(2) + GlobalParams.M_R_ZLength/2.0)*k);
+			std::complex<double> phase(0.0,(p(2) - GlobalParams.Minimum_Z)*k);
 			ret_val *= std::exp(phase);
 			if(component>2) {
 				return ret_val.imag();
@@ -83,8 +85,10 @@ double ExactSolution::value (const Point<3> &p , const unsigned int component) c
 }
 
 
-void ExactSolution::vector_value (const Point<3> &p,	Vector<double> &values) const
+void ExactSolution::vector_value (const Point<3> &in_p,	Vector<double> &values) const
 {
+  Point<3,double> p = in_p;
+  if(is_dual) p[2] = -in_p[2];
   bool zero = false;
   if(p[0] > GlobalParams.M_R_XLength/2.0 - GlobalParams.M_BC_XPlus) zero = true;
   if(p[0] < -GlobalParams.M_R_XLength/2.0 + GlobalParams.M_BC_XMinus) zero = true;
@@ -168,7 +172,8 @@ double scientific_string_to_double(std::string inp) {
   return d;
 }
 
-ExactSolution::ExactSolution(bool in_rectangular): Function<3>(6) {
+ExactSolution::ExactSolution(bool in_rectangular, bool in_dual): Function<3>(6) {
+  is_dual = in_dual;
   is_rectangular = in_rectangular;
   if(is_rectangular) {
     deallog << "Preparing exact solution for rectangular waveguide." << std::endl;

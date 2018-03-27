@@ -163,6 +163,8 @@ class Waveguide
 
     void switch_to_dual (SpaceTransformation * dual_st);
 
+    Point<3, double> transform_coordinate(const Point<3, double>);
+
     MeshGenerator * mg;
 
 	private:

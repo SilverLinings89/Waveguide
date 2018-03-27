@@ -31,6 +31,11 @@ int 	StepsR 			= 10;
 int 	StepsPhi 		= 10;
 int alert_counter = 0;
 std::string input_file_name = "";
+SpaceTransformation* the_st  = 0;
+
+void set_the_st(SpaceTransformation* in_st) {
+  the_st = in_st;
+}
 
 void alert() {
   MPI_Barrier(MPI_COMM_WORLD);
@@ -504,7 +509,7 @@ Point<3, double> Triangulation_Stretch_Z (const Point<3, double> &p)
 Point<3, double> Triangulation_Shift_Z (const Point<3, double> &p)
 {
   Point<3, double> q = p;
-  q[2] += GlobalParams.M_BC_Zplus - GlobalParams.M_BC_Zminus;
+  q[2] += (GlobalParams.M_BC_Zplus - GlobalParams.M_BC_Zminus)/2.0;
   q[1] = p[1];
   q[0] = p[0];
   return q;
@@ -520,6 +525,15 @@ Point<3, double> Triangulation_Stretch_to_circle (const Point<3, double> &p)
 			q[0] *= sqrt(2);
 	}
 	return q;
+}
+
+Point<3, double> Triangulation_Transform_to_physical (const Point<3, double> &p)
+{
+  if(the_st != 0) {
+    return the_st->math_to_phys(p);
+  } else {
+    return Point<3, double>(0,0,0);
+  }
 }
 
 Point<3, double> Triangulation_Stretch_Computational_Radius (const Point<3, double> &p)

@@ -9,6 +9,7 @@
 #include <deal.II/lac/constraint_matrix.h>
 #include <deal.II/dofs/dof_handler.h>
 #include "../Core/Waveguide.h"
+#include "../SpaceTransformations/SpaceTransformation.h"
 using namespace dealii;
 
 extern std::string solutionpath;
@@ -22,11 +23,15 @@ extern int 	StepsR;
 extern int 	StepsPhi;
 extern int alert_counter;
 extern std::string input_file_name;
+extern SpaceTransformation* the_st;
 /**
  * For given vectors \f$\boldsymbol{a},\boldsymbol{b} \in \mathbb{R}^3\f$, this function calculates the following crossproduct:
  * \f[\boldsymbol{a} \ times \boldsymbol{b} = \begin{pmatrix} a_2 b_3 - a_3b_2 \\ a_3b_1 - a_1b_3 \\ a_1b_2 - a_2b_1\end{pmatrix}\f]
  */
 Tensor<1, 3 , double> crossproduct(Tensor<1, 3, double> , Tensor<1, 3, double> );
+
+void set_the_st(SpaceTransformation* );
+
 double dotproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 
 template<int dim> void mesh_info(const parallel::distributed::Triangulation<dim> , const std::string );
@@ -66,6 +71,8 @@ Point<3, double> Triangulation_Shift_Z (const Point<3, double> &);
 Point<3, double> Triangulation_Stretch_Computational_Radius (const Point<3, double> &);
 
 Point<3, double> Triangulation_Stretch_Computational_Rectangle (const Point<3, double> &);
+
+Point<3, double> Triangulation_Transform_to_physical (const Point<3, double> &);
 
 std::vector<types::global_dof_index> Add_Zero_Restraint(dealii::ConstraintMatrix *, DoFHandler<3>::active_cell_iterator, unsigned int, unsigned int, unsigned int, bool , dealii::IndexSet * );
 

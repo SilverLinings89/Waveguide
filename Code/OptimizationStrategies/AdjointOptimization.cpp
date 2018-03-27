@@ -75,7 +75,7 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   }
   deallog << "Start" << std::endl;
   bool* mine = new bool[cnt_steps];
-  z_temp = GlobalParams.Minimum_Z;
+  z_temp = GlobalParams.Minimum_Z + 0.0001;
   unsigned int own_cnt = 0;
   double lowest_own = GlobalParams.Minimum_Z -10.0;
   int lowest_idx = 0;
@@ -101,7 +101,7 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   double* a_reals = new double[own_cnt];
   double* a_imags = new double[own_cnt];
   double* a_abolutes = new double[own_cnt];
-  z_temp = lowest_own + step_width;
+  z_temp = lowest_own;
   for(unsigned int i = 0; i < own_cnt-1; i++) {
     std::complex<double> l_val(0,0);
     try {
