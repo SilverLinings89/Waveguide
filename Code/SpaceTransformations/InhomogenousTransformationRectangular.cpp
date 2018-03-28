@@ -36,7 +36,7 @@ Point<3> InhomogenousTransformationRectangular::math_to_phys(Point<3> coord) con
   std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
   double m = case_sectors[sec.first].get_m(sec.second);
   ret[0] = coord[0] ;
-  ret[1] = coord[1] - m;
+  ret[1] = coord[1] + m;
   ret[2] = coord[2];
   return ret;
 }
@@ -46,7 +46,7 @@ Point<3> InhomogenousTransformationRectangular::phys_to_math(Point<3> coord) con
   std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
   double m = case_sectors[sec.first].get_m(sec.second);
   ret[0] = coord[0] ;
-  ret[1] = coord[1] + m;
+  ret[1] = coord[1] - m;
   ret[2] = coord[2];
   return ret;
 }

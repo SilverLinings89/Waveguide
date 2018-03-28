@@ -41,7 +41,7 @@ Point<3, double> HomogenousTransformationRectangular::math_to_phys(Point<3, doub
   	std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
 		double m = case_sectors[sec.first].get_m(sec.second);
 		ret[0] = coord[0] ;
-		ret[1] = (coord[1] -m) ;
+		ret[1] = coord[1] + m;
 		ret[2] = coord[2];
   } else {
     ret[0] = (2*GlobalParams.M_C_Dim1Out) * coord[0] / (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
@@ -61,7 +61,7 @@ Point<3, double> HomogenousTransformationRectangular::phys_to_math(Point<3, doub
   	std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
 		double m = case_sectors[sec.first].get_m(sec.second);
 		ret[0] = coord[0] ;
-		ret[1] = (coord[1] ) +m;
+		ret[1] = coord[1] -m;
 		ret[2] = coord[2];
   } else {
     ret[0] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[0] / (2*GlobalParams.M_C_Dim1In);
