@@ -61,8 +61,8 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   double quality = 0;
   std::complex<double> a_in = primal_st->evaluate_for_z_with_sum(- GlobalParams.M_R_ZLength/2.0 , 2.0* GlobalParams.M_C_Dim1In, waveguide);
   std::complex<double> a_out= primal_st->evaluate_for_z_with_sum(  GlobalParams.M_R_ZLength/2.0 , 2.0* GlobalParams.M_C_Dim1In, waveguide);
-  deallog<< "Phase in: " << a_in << std::endl;
-  deallog<< "Phase out: " << a_out << std::endl;
+  deallog<< "Phase in (@ "<<-GlobalParams.M_R_ZLength/2.0<<": " << a_in << std::endl;
+  deallog<< "Phase out(@ "<< GlobalParams.M_R_ZLength/2.0<<": " << a_out << std::endl;
   quality = std::abs(a_out / a_in);
   deallog << "Computed primal quality " << quality << std::endl;
   // New starts here

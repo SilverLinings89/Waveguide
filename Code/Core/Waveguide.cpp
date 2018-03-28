@@ -1168,8 +1168,6 @@ void Waveguide::solve() {
       gettimeofday(&tp, NULL);
       int64_t ms = tp.tv_sec * 1000 + tp.tv_usec / 1000 - solver_start_milis;
 
-      // result_file << "" << Iteration << "  " << residual << "  " << ms <<std::endl;
-
       Convergence_Table.add_value(path_prefix + std::to_string(run_number) + "Iteration", steps +1);
       Convergence_Table.add_value(path_prefix + std::to_string(run_number) + "Residual", 0.0);
       Convergence_Table.add_value(path_prefix + std::to_string(run_number) + "Time", std::to_string(ms));
@@ -1180,9 +1178,6 @@ void Waveguide::solve() {
       Convergence_Table.add_column_to_supercolumn(path_prefix + std::to_string(run_number) + "Iteration", "Run " + std::to_string(run_number));
       Convergence_Table.add_column_to_supercolumn(path_prefix + std::to_string(run_number) + "Residual", "Run " + std::to_string(run_number));
       Convergence_Table.add_column_to_supercolumn(path_prefix + std::to_string(run_number) + "Time", "Run " + std::to_string(run_number));
-
-      // Convergence_Table.omit_column_from_convergence_rate_evaluation(path_prefix + std::to_string(run_number) + "Iteration");
-      // Convergence_Table.omit_column_from_convergence_rate_evaluation(path_prefix + std::to_string(run_number) + "Time");
       Convergence_Table.evaluate_convergence_rates(path_prefix + std::to_string(run_number) + "Residual", path_prefix + std::to_string(run_number) + "Iteration", ConvergenceTable::RateMode::reduction_rate);
     }
 
@@ -1324,21 +1319,7 @@ void Waveguide::output_results(bool) {
 
     GridTools::transform(&Triangulation_Transform_to_physical, triangulation);
 
-    /**
-    if(GlobalParams.M_C_Shape == ConnectorType::Rectangle) {
-      if(GlobalParams.Sc_Homogeneity){
-        GridTools::transform(&(st->math_to_phys), triangulation);
-      } else {
-        GridTools::transform(InhomogenousTransformationRectangular::math_to_phys, triangulation);
-      }
-    } else {
-      if(GlobalParams.Sc_Homogeneity){
-              GridTools::transform(&(HomogenousTransformationCircular::math_to_phys), triangulation);
-            } else {
-              GridTools::transform(&(InhomogenousTransformationCircular::math_to_phys), triangulation);
-            }
-    }
-    **/
+    MPI_Barrier(mpi_comm);
 
     DataOut<3> data_out;
 

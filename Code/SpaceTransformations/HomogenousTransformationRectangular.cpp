@@ -357,12 +357,12 @@ void HomogenousTransformationRectangular::estimate_and_initialize() {
       intermediate.set_properties_force(GlobalParams.sd.m[i],GlobalParams.sd.m[i+1],GlobalParams.sd.v[i],GlobalParams.sd.v[i+1]);
       case_sectors.push_back(intermediate);
     }
-    Sector<2> the_last(false, true, GlobalParams.sd.z[GlobalParams.sd.Sectors-1], GlobalParams.sd.z[GlobalParams.sd.Sectors]);
-    the_last.set_properties_force(GlobalParams.sd.m[GlobalParams.sd.Sectors-1],GlobalParams.sd.m[GlobalParams.sd.Sectors],GlobalParams.sd.v[GlobalParams.sd.Sectors-1],GlobalParams.sd.v[GlobalParams.sd.Sectors]);
-    case_sectors.push_back(the_first);
+    Sector<2> the_last(false, true, GlobalParams.sd.z[GlobalParams.sd.Sectors-2], GlobalParams.sd.z[GlobalParams.sd.Sectors-1]);
+    the_last.set_properties_force(GlobalParams.sd.m[GlobalParams.sd.Sectors-2],GlobalParams.sd.m[GlobalParams.sd.Sectors-1],GlobalParams.sd.v[GlobalParams.sd.Sectors-2],GlobalParams.sd.v[GlobalParams.sd.Sectors-1]);
+    case_sectors.push_back(the_last);
     for(unsigned int i = 0; i < case_sectors.size(); i++) {
-      deallog << "From m: " << case_sectors[i].get_m(0.0) << " v: " << case_sectors[i].get_v(0.0) << std::endl;
-      deallog << "  To m: " << case_sectors[i].get_m(1.0) << " v: " << case_sectors[i].get_v(1.0) << std::endl;
+      deallog << "From z: " << case_sectors[i].z_0 << "(m: " << case_sectors[i].get_m(0.0) << " v: " << case_sectors[i].get_v(0.0) << ")" << std::endl;
+      deallog << "  To z: " << case_sectors[i].z_1 << "(m: " << case_sectors[i].get_m(1.0) << " v: " << case_sectors[i].get_v(1.0) << ")" << std::endl;
     }
   } else {
     case_sectors.reserve(sectors);

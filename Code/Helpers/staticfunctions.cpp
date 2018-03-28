@@ -305,78 +305,83 @@ Parameters GetParameters() {
   }
   prm.leave_subsection();
 
-	ret.MPIC_World = MPI_COMM_WORLD;
-	ret.MPI_Rank = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
-	ret.NumberProcesses = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
+  ret.MPIC_World = MPI_COMM_WORLD;
+  ret.MPI_Rank = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
+  ret.NumberProcesses = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
 
-	ret.Head = (ret.MPI_Rank == 0);
+  ret.Head = (ret.MPI_Rank == 0);
 
-	if((int)ret.MPI_Rank > ret.NumberProcesses - ret.M_BC_Zplus -1 ) {
-	  ret.PMLLayer = true;
-	} else {
-	  ret.PMLLayer = false;
-	}
+  if((int)ret.MPI_Rank > ret.NumberProcesses - ret.M_BC_Zplus -1 ) {
+    ret.PMLLayer = true;
+  } else {
+    ret.PMLLayer = false;
+  }
 
   ret.SystemLength = ret.M_R_ZLength + ret.M_BC_Zplus + ret.M_BC_Zminus;
 
   ret.LayerThickness = ret.SystemLength / (double)ret.NumberProcesses;
 
-	ret.SectorThickness = ret.M_R_ZLength / ret.M_W_Sectors;
+  deallog << "Case Detection: " ;
+  if(ret.M_PC_Use) {
+    deallog << "Using case " << ret.M_PC_Case << std::endl;
+    std::ifstream input( "Modes/test.csv" );
+    std::string line;
+    int counter = 0;
+    bool case_found = false;
+    if(ret.M_PC_Case >= 0 && ret.M_PC_Case < 36){
+      while(std::getline( input, line ) && counter < 36){
+        if(counter == ret.M_PC_Case) {
+          ret.sd.SetByString(line);
+          case_found = true;
+        }
+        counter++;
+      }
+      if(!case_found) {
+        deallog << "There was a severe error. The case was not found therefore not initialized." << std::endl;
+      } else {
+        ret.M_W_Sectors = ret.sd.Sectors;
+        ret.M_R_ZLength = ret.sd.z[ret.sd.Sectors-1] - ret.sd.z[0];
+        ret.SystemLength = ret.M_R_ZLength + ret.M_BC_Zplus + ret.M_BC_Zminus;
+        ret.LayerThickness = ret.SystemLength / (double)ret.NumberProcesses;
+      }
+    }
+  } else {
+    deallog << "Not using case." << std::endl;
+  }
 
-	ret.LayersPerSector = ret.SectorThickness/ret.LayerThickness;
+  ret.SectorThickness = ret.M_R_ZLength / ret.M_W_Sectors;
 
-	ret.Maximum_Z = (ret.M_R_ZLength/2.0) + ret.M_BC_Zplus;
+  ret.LayersPerSector = ret.SectorThickness/ret.LayerThickness;
+
+  ret.Maximum_Z = (ret.M_R_ZLength/2.0) + ret.M_BC_Zplus;
   ret.Minimum_Z = -(ret.M_R_ZLength/2.0) - ret.M_BC_Zminus;
 
-	deallog.push("Checking Waveguide Properties");
+  deallog.push("Checking Waveguide Properties");
 
-	ret.Phys_V = 2 * ret.C_Pi * ret.M_C_Dim1In / ret.M_W_Lambda *std::sqrt(ret.M_W_epsilonin * ret.M_W_epsilonin - ret.M_W_epsilonout * ret.M_W_epsilonout);
+  ret.Phys_V = 2 * ret.C_Pi * ret.M_C_Dim1In / ret.M_W_Lambda *std::sqrt(ret.M_W_epsilonin * ret.M_W_epsilonin - ret.M_W_epsilonout * ret.M_W_epsilonout);
 
-	ret.So_ElementOrder = 0;
+  ret.So_ElementOrder = 0;
 
-	deallog << "Normalized Frequency V: " << ret.Phys_V <<std::endl;
+  deallog << "Normalized Frequency V: " << ret.Phys_V <<std::endl;
 
-	if(ret.Phys_V> 1.5 && ret.Phys_V < 2.405){
-	  deallog << "This Waveguide is Single Moded" <<std::endl;
-	} else {
-	  deallog << "This Waveguide is not Single Moded" <<std::endl;
-	  double temp = ret.Phys_V * ret.M_W_Lambda;
-	  deallog << "Minimum Lambda: " << temp/1.5 <<std::endl;
-	  deallog << "Maximum Lambda: " << temp/2.405 <<std::endl;
-	  deallog << "Current Lambda: " << ret.M_W_Lambda <<std::endl;
-	}
+  if(ret.Phys_V> 1.5 && ret.Phys_V < 2.405){
+    deallog << "This Waveguide is Single Moded" <<std::endl;
+  } else {
+    deallog << "This Waveguide is not Single Moded" <<std::endl;
+    double temp = ret.Phys_V * ret.M_W_Lambda;
+    deallog << "Minimum Lambda: " << temp/1.5 <<std::endl;
+    deallog << "Maximum Lambda: " << temp/2.405 <<std::endl;
+    deallog << "Current Lambda: " << ret.M_W_Lambda <<std::endl;
+  }
 
-	ret.Phys_SpotRadius = (0.65 + 1.619/(std::pow(ret.Phys_V, 1.5)) + 2.879/(std::pow(ret.Phys_V, 6))) * ret.M_C_Dim1In;
+  ret.Phys_SpotRadius = (0.65 + 1.619/(std::pow(ret.Phys_V, 1.5)) + 2.879/(std::pow(ret.Phys_V, 6))) * ret.M_C_Dim1In;
 
-	deallog << "Spot Radius omega: " << ret.Phys_SpotRadius <<std::endl;
+  deallog << "Spot Radius omega: " << ret.Phys_SpotRadius <<std::endl;
 
-	deallog << "Case Detection: " ;
-	if(ret.M_PC_Use) {
-	  deallog << "Using case " << ret.M_PC_Case << std::endl;
-	  std::ifstream input( "Modes/test.csv" );
-	  std::string line;
-	  int counter = 0;
-	  bool case_found = false;
-	  if(ret.M_PC_Case >= 0 && ret.M_PC_Case < 36){
-        while(std::getline( input, line ) && counter < 36){
-          if(counter == ret.M_PC_Case) {
-            ret.sd.SetByString(line);
-            case_found = true;
-          }
-          counter++;
-        }
-        if(!case_found) {
-          deallog << "There was a severe error. The case was not found therefore not initialized." << std::endl;
-        } else {
-          ret.M_W_Sectors = ret.sd.Sectors;
-        }
-	  }
-	} else {
-	  deallog << "Not using case." << std::endl;
-	}
-	deallog.pop();
 
-	return ret;
+  deallog.pop();
+
+  return ret;
 }
 
 double InterpolationPolynomial(double in_z, double in_val_zero, double in_val_one, double in_derivative_zero, double in_derivative_one) {
