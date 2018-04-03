@@ -225,14 +225,14 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </Delta>
             <epsilon_20in>
-                <value>1.56</value>
+                <value>1.53</value>
                 <default_value>2.2</default_value>
                 <documentation>Material-Property of the optical fiber (optical thickness).</documentation>
                 <pattern>28</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </epsilon_20in>
             <epsilon_20out>
-                <value>1.35</value>
+                <value>1.36</value>
                 <default_value>1.0</default_value>
                 <documentation>Material-Property of environment of the fiber (optical thickness).</documentation>
                 <pattern>29</pattern>
