@@ -738,9 +738,16 @@ void Waveguide::assemble_system() {
   for (; cell != endc; ++cell) {
     unsigned int subdomain_id = cell->subdomain_id();
     if (subdomain_id == rank) {
+      cell_rhs.reinit(dofs_per_cell, false);
       fe_values.reinit(cell);
       quadrature_points = fe_values.get_quadrature_points();
-
+      bool has_left = false;
+      bool has_right = false;
+      for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+        if(cell->face(i)->center(true, false)[2] <= -GlobalParams.M_R_ZLength/2.0) has_left = true;
+        if(cell->face(i)->center(true, false)[2] >= -GlobalParams.M_R_ZLength/2.0) has_right = true;
+      }
+      bool compute_rhs = has_left && has_right;
       cell_matrix_real = 0;
       cell_matrix_prec_odd = 0;
       cell_matrix_prec_even = 0;
@@ -818,16 +825,23 @@ void Waveguide::assemble_system() {
 
             std::complex<double> pre2 =(mu_prec2 * I_Curl) * Conjugate_Vector(J_Curl) * JxW -((epsilon_pre2 * I_Val) * Conjugate_Vector(J_Val))*JxW*GlobalParams.C_omega*GlobalParams.C_omega;
             cell_matrix_prec_odd[i][j] += pre2.real();
+
+
+
+          }
+          if( compute_rhs && quadrature_points[q_index][2] < -GlobalParams.M_R_ZLength/2.0) {
+              std::complex<double> rhs2 = (mu * es.curl(quadrature_points[q_index])) * Conjugate_Vector(I_Curl) * JxW - ((epsilon * es.val(quadrature_points[q_index]))) * Conjugate_Vector(I_Val)*JxW*GlobalParams.C_omega*GlobalParams.C_omega;
+              cell_rhs[i] -= rhs2.real();
           }
         }
       }
+
       cell->get_dof_indices(local_dof_indices);
-      cm.distribute_local_to_global(cell_matrix_real, cell_rhs, local_dof_indices, system_matrix, system_rhs, true);
-      cm_prec_odd.distribute_local_to_global(cell_matrix_prec_odd, cell_rhs, local_dof_indices, prec_matrix_odd, preconditioner_rhs, true);
-      cm_prec_even.distribute_local_to_global(cell_matrix_prec_even, cell_rhs, local_dof_indices, prec_matrix_even, preconditioner_rhs, true);
+      cm.distribute_local_to_global(cell_matrix_real, cell_rhs, local_dof_indices, system_matrix, system_rhs, false);
+      cm_prec_odd.distribute_local_to_global(cell_matrix_prec_odd, cell_rhs, local_dof_indices, prec_matrix_odd, preconditioner_rhs, false);
+      cm_prec_even.distribute_local_to_global(cell_matrix_prec_even, cell_rhs, local_dof_indices, prec_matrix_even, preconditioner_rhs, false);
     }
   }
-
   locals_set = true;
 
   MPI_Barrier(mpi_comm);
@@ -856,10 +870,11 @@ void Waveguide::MakeBoundaryConditions() {
   cell = dof_handler.begin_active(),
   endc = dof_handler.end();
   bool is_rectangular =(GlobalParams.M_C_Shape == ConnectorType::Rectangle);
-  ExactSolution es(is_rectangular);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, es, 3, cm);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, es, 1, cm);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, es, 2, cm);
+  // ExactSolution es(is_rectangular);
+  dealii::ZeroFunction<3,double> zf(6);
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 3, cm);
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1, cm);
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2, cm);
   std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
 
   const unsigned int face_own_count = std::max(static_cast<unsigned int>(0),fe.dofs_per_face - GeometryInfo<3>::lines_per_face*fe.dofs_per_line);
@@ -982,12 +997,13 @@ void Waveguide::MakePreconditionerBoundaryConditions() {
   cell = dof_handler.begin_active();
   endc = dof_handler.end();
 
-  // VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 3, cm_prec_even);
-  // VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 3, cm_prec_even);
-  VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 1, cm_prec_even);
-  VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 1, cm_prec_odd);
-  VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 2, cm_prec_even);
-  VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 2, cm_prec_odd);
+  dealii::ZeroFunction<3,double> zf(6);
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 3, cm_prec_even);
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 3, cm_prec_odd);
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1, cm_prec_even);
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1, cm_prec_odd);
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2, cm_prec_even);
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2, cm_prec_odd);
 
   double layer_length = GlobalParams.LayerThickness;
   IndexSet own(dof_handler.n_dofs());

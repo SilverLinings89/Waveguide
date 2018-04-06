@@ -5,6 +5,7 @@
 #include <string>
 #include <complex>
 #include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
 #include "ExactSolution.h"
 #include "PointVal.h"
 #include "../Core/Waveguide.h"
@@ -134,7 +135,7 @@ void ExactSolution::vector_value (const Point<3> &in_p,	Vector<double> &values) 
             n = std::sqrt(GlobalParams.M_W_epsilonout);
         }
         double k = n *2* GlobalParams.C_Pi / GlobalParams.M_W_Lambda;
-        std::complex<double> phase(0.0,(p(2) + GlobalParams.M_R_ZLength/2.0)*k);
+        std::complex<double> phase(0.0,-(p(2) + GlobalParams.M_R_ZLength/2.0)*k);
         phase = std::exp(phase);
         for(unsigned int komp = 0; komp <3; komp++ ) {
             std::complex<double> entr (values[0+komp],values[3+komp]);
@@ -155,6 +156,54 @@ void ExactSolution::vector_value (const Point<3> &in_p,	Vector<double> &values) 
   } else {
       for (unsigned int c=0; c<6; ++c) values[c] = ModeMan.get_input_component( c, p, 0);
   }
+}
+
+Tensor<1,3,std::complex<double>> ExactSolution::curl(const Point<3> &in_p) const {
+  const double h = 0.0001;
+  Tensor<1,3,std::complex<double>> ret;
+  if(is_rectangular) {
+    Vector<double> dxF, dyF, dzF, val;
+    dxF.reinit(6, false);
+    dyF.reinit(6, false);
+    dzF.reinit(6, false);
+    val.reinit(6, false);
+    this->vector_value(in_p, val);
+    Point<3> deltap = in_p;
+    deltap[0] = deltap[0]+h;
+    this->vector_value(deltap, dxF);
+    deltap = in_p;
+    deltap[1] = deltap[1]+h;
+    this->vector_value(deltap, dyF);
+    deltap = in_p;
+    deltap[1] = deltap[1]+h;
+    this->vector_value(deltap, dzF);
+    for(int i=0; i < 6; i++) {
+      dxF[i] = (dxF[i] - val[i])/h;
+      dyF[i] = (dyF[i] - val[i])/h;
+      dzF[i] = (dzF[i] - val[i])/h;
+    }
+    ret[0].real(dyF[2] - dzF[1]);
+    ret[0].imag(dyF[5] - dzF[4]);
+    ret[1].real(dzF[0] - dxF[2]);
+    ret[1].imag(dzF[3] - dxF[5]);
+    ret[2].real(dxF[1] - dyF[0]);
+    ret[2].imag(dxF[4] - dyF[3]);
+  }
+  return ret;
+}
+
+Tensor<1,3,std::complex<double>> ExactSolution::val(const Point<3> &in_p) const {
+  Tensor<1,3,std::complex<double>> ret;
+  Vector<double> temp;
+  temp.reinit(6,false);
+  vector_value(in_p, temp);
+  ret[0].real(temp[0]);
+  ret[0].imag(temp[3]);
+  ret[1].real(temp[1]);
+  ret[1].imag(temp[4]);
+  ret[2].real(temp[2]);
+  ret[2].imag(temp[5]);
+  return ret;
 }
 
 std::vector<std::string> ExactSolution::split(std::string str) const{

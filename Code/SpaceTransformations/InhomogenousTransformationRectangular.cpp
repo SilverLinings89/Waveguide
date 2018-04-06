@@ -85,7 +85,7 @@ double InhomogenousTransformationRectangular::PML_Y_Distance(Point<3> &p) const{
 
 double InhomogenousTransformationRectangular::PML_Z_Distance(Point<3> &p) const{
   if(p(2) < 0) {
-    return 0;
+    return -(p(2) + (GlobalParams.M_R_ZLength / 2.0));
   } else {
     return p(2) - (GlobalParams.M_R_ZLength / 2.0);
   }
@@ -120,7 +120,7 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationRectangular::Apply_P
     } else {
       d = GlobalParams.M_BC_XPlus;
     }
-    // sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax );
+    sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax );
     sx.imag( pow(r/d, GlobalParams.M_BC_DampeningExponent)*GlobalParams.M_BC_SigmaXMax );
   }
 
@@ -133,7 +133,7 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationRectangular::Apply_P
       d = GlobalParams.M_BC_YPlus;
     }
 
-    // sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax );
+    sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax );
     sy.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax);
   }
 
@@ -141,8 +141,12 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationRectangular::Apply_P
   if(PML_in_Z(position)){
     double r,d;
     r = PML_Z_Distance(position);
-    d = GlobalParams.M_BC_Zplus;
-    // sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
+    if(position[1] < 0){
+      d = GlobalParams.M_BC_Zminus;
+    } else {
+      d = GlobalParams.M_BC_Zplus;
+    }
+    sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
     sz.imag( pow(r/d ,GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax );
   }
 
@@ -179,7 +183,7 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationRectangular::Apply_P
     } else {
       d = GlobalParams.M_BC_XPlus;
     }
-    // sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax );
+    sx.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaXMax );
     sx.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaXMax );
   }
   if(PML_in_Y(position)){
@@ -191,7 +195,7 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationRectangular::Apply_P
       d = GlobalParams.M_BC_YPlus;
     }
 
-    // sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax );
+    sy.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaYMax );
     sy.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaYMax);
   }
 
@@ -199,7 +203,7 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationRectangular::Apply_P
     double r_temp = Preconditioner_PML_Z_Distance(position, rank);
     double d_temp = GlobalParams.LayerThickness;
 
-    // sz_p.real( pow(r_temp/d_temp , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
+    sz.real( 1 + pow(r_temp/d_temp , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
     sz.imag( pow(r_temp/d_temp , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax);
   }
 
@@ -207,7 +211,7 @@ Tensor<2,3, std::complex<double>> InhomogenousTransformationRectangular::Apply_P
     double r,d;
     r = PML_Z_Distance(position);
     d = GlobalParams.M_BC_Zplus;
-    // sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
+    sz.real( 1 + pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_KappaZMax );
     sz.imag( pow(r/d , GlobalParams.M_BC_DampeningExponent) * GlobalParams.M_BC_SigmaZMax );
   }
 

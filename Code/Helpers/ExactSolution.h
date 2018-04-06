@@ -5,6 +5,7 @@
 #include <string>
 #include <deal.II/base/function.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
 #include "PointVal.h"
 
 using namespace dealii;
@@ -47,6 +48,8 @@ public:
 
   void vector_value (const Point<3> &p,	Vector<double> &value) const;
   std::vector<std::string> split(std::string) const;
+  Tensor<1,3,std::complex<double>> curl(const Point<3> &in_p) const;
+  Tensor<1,3,std::complex<double>> val(const Point<3> &in_p) const;
 };
 
 #endif
