@@ -830,7 +830,7 @@ void Waveguide::assemble_system() {
 
           }
           if( compute_rhs && quadrature_points[q_index][2] < -GlobalParams.M_R_ZLength/2.0) {
-              std::complex<double> rhs2 = (mu * es.curl(quadrature_points[q_index])) * Conjugate_Vector(I_Curl) * JxW - ((epsilon * es.val(quadrature_points[q_index]))) * Conjugate_Vector(I_Val)*JxW*GlobalParams.C_omega*GlobalParams.C_omega;
+              std::complex<double> rhs2 = (mu * I_Curl) * Conjugate_Vector(es.curl(quadrature_points[q_index])) * JxW - ((epsilon * I_Val)) * Conjugate_Vector(es.val(quadrature_points[q_index]))*JxW*GlobalParams.C_omega*GlobalParams.C_omega;
               cell_rhs[i] -= rhs2.real();
           }
         }
