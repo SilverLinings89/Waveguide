@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_gnuplot_generator_8cpp">
+    <title>GnuplotGenerator.cpp File Reference</title>
+    <simplesect>
+        <title>Detailed Description</title>
+    <para>Definition in file /home/kraft/workspace/waveguideproblem/Code/OutputGenerators/Images/GnuplotGenerator.cpp</para>
+    </simplesect>
+    <literallayout><computeroutput>
+1 &#32;
+    </computeroutput></literallayout>
+</section>

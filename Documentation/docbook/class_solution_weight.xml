@@ -1,0 +1,124 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="class_solution_weight">
+<title>SolutionWeight class Reference</title>
+<para>
+    <programlisting>#include <link linkend="_solution_weight_8h">&lt;SolutionWeight.h&gt;</link></programlisting>
+</para>
+    <templateparamlist>
+      <param>
+        <type>int</type>
+        <declname>dim</declname>
+        <defname>dim</defname>
+      </param>
+    </templateparamlist>
+        <section>
+            <title></title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para> <link linkend="class_solution_weight_1a7d7b99c10df9c392d4aa061429b3cb22">SolutionWeight</link> (
+)<para><emphasis>The whole class contains no specific data.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>virtual double <link linkend="class_solution_weight_1ad3e7356174ef64b75596c26a8e225dbb">value</link> (
+const Point&lt; dim &gt; &amp; p, const unsigned int component)<para><emphasis>This function returns 1, if the given component is inside the Waveguide and 0 otherwise.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>virtual void <link linkend="class_solution_weight_1a3282e4b166920b4deaeb174824893aea">vector_value</link> (
+const Point&lt; dim &gt; &amp; p, Vector&lt; double &gt; &amp; value)<para><emphasis>This function gets called by the framework and calls value(const Point&lt;dim&gt; &amp;p, const unsigned int component ) for all components and stores the results in value.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+
+<para>This function has internal usage to execute a function only on the interior of the <link linkend="class_waveguide">Waveguide</link>. </para>
+    </simplesect>
+        <simplesect>
+            <title>Detailed Description</title>
+
+<para><link linkend="class_solution_weight">SolutionWeight</link> is a class, that has been derived from the class Function and which can be used to generate handles to functions, that return specific values. The pattern of passing object built from classes derived from Function is a commonly used one in Deal.II. This function offers a weight for locations inside the waveguide. In order to integrate or calculate the L2-norm inside the <link linkend="class_waveguide">Waveguide</link>, this is needed. The value of the function to be used is multiplied with this weighing-function which returns 1 for any point inside the <link linkend="class_waveguide">Waveguide</link> and 0 outside of it. Mathematically, this function can be represented by <equation><title>form_20</title>\[ f: \mathbb{R}^{dim} \to \{1,0\} , \, \boldsymbol{x} \mapsto \begin{cases}1&amp;\text{ for} \, \boldsymbol{x} \in \Omega_W \\ 0 &amp;\text{ else}\end{cases} \]</equation>, where <equation><title>form_21</title>$ \Omega_W$</equation> is the set of all points contained in the <link linkend="class_waveguide">Waveguide</link>. </para>
+                <para>Definition at line 29 of file SolutionWeight.h</para>
+                <para>The Documentation for this struct was generated from the following file: </para>
+                <para><itemizedlist><listitem><para>SolutionWeight.h</para></listitem></itemizedlist></para>
+        </simplesect>
+            <section xml:id="class_solution_weight_1a7d7b99c10df9c392d4aa061429b3cb22">
+                <title>SolutionWeight&lt; dim &gt;::SolutionWeight ()</title> <emphasis>The whole class contains no specific data.</emphasis>
+                
+<para>The only information it needs stem from the <link linkend="struct_parameters">Parameters</link> object parsed from the input file. This object gets initialized inside this constructor. </para>
+
+            </section>
+            <section xml:id="class_solution_weight_1ad3e7356174ef64b75596c26a8e225dbb">
+                <title>double SolutionWeight&lt; dim &gt;::value (const Point&lt; dim &gt; &amp;p, const unsigned int component) const</title> <emphasis>This function returns 1, if the given component is inside the Waveguide and 0 otherwise.</emphasis>
+                
+<para>Since this method is intended also for vector-valued functions , this method also has to account for a component of the result which for scalar functions is 0. 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>p</entry>
+                                <entry>
+<para>This is the location in which the test should be executed. </para>
+</entry>
+                            </row>
+                            <row>
+                                <entry>component</entry>
+                                <entry>
+<para>Determines which component is to be evaluated. In this case that information does not have any further meaning. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_solution_weight_1a3282e4b166920b4deaeb174824893aea">
+                <title>void SolutionWeight&lt; dim &gt;::vector_value (const Point&lt; dim &gt; &amp;p, Vector&lt; double &gt; &amp;value) const</title> <emphasis>This function gets called by the framework and calls value(const Point&lt;dim&gt; &amp;p, const unsigned int component ) for all components and stores the results in value.</emphasis>
+                
+<para>
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>p</entry>
+                                <entry>
+<para>The location is given here and gets passed along to the individual value-calls. </para>
+</entry>
+                            </row>
+                            <row>
+                                <entry>value</entry>
+                                <entry>
+<para>This is a vector which returns the results in place. It is a reference that is edited in value(const Point&lt;dim&gt; &amp;p, const unsigned int component ). </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+</section>

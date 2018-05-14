@@ -1,0 +1,312 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="class_mode_manager">
+<title>ModeManager class Reference</title>
+        <section>
+            <title>Private Attributes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>bool in_circular</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>bool out_circular</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::vector&lt; double &gt; u_in</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double v_in</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::vector&lt; double &gt; u_out</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double v_out</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>bool in_prepared</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>bool out_prepared</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title></title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para> <link linkend="class_mode_manager_1a9051acf8cc4061ef7cb63d2aa8233615">ModeManager</link> (
+)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_mode_manager_1aa1353a612568b46d3e76629e2bef7b29">prepare_mode_in</link> (
+)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_mode_manager_1a40abd54e26602b1e1dcf092efdf2b5e4">prepare_mode_out</link> (
+)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>int <link linkend="class_mode_manager_1a6bdb75e78a7d6d95c18f8edfaf6af953">number_modes_in</link> (
+)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>int <link linkend="class_mode_manager_1a40b372ae1462e7111eabd6148198bada">number_modes_out</link> (
+)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_mode_manager_1a3d196a5886228aa8b6282ec0cdc3bea3">get_input_component</link> (
+int , dealii::Point&lt; 3, double &gt; , int )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_mode_manager_1abfd5643d3e70c4a02cdbb6c685761b76">get_output_component</link> (
+int , dealii::Point&lt; 3, double &gt; , int )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_mode_manager_1a7c31c130bedc0257234e5e3999b56481">load</link> (
+)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title></title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::vector&lt; double &gt; <link linkend="class_mode_manager_1a959c991220f3dcfd57605c0503e69322">get_us</link> (
+double )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_mode_manager_1abd385ee1379770666bd755d7eb48088d">get_u0</link> (
+double )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_mode_manager_1adb8308f658e82b3e73381991941a1033">get_lhs</link> (
+double )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_mode_manager_1a4d4e69cc94052f942745c060a0b59cef">get_rhs</link> (
+double , double )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_mode_manager_1acbf94ff5af596e0bc8d3e8c541100664">J_0</link> (
+double )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_mode_manager_1a70a194ef22d05e5bd01ef070900ec415">J_1</link> (
+double )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_mode_manager_1aed92bb092f8fd7509b10e67d833932ae">J_n</link> (
+double , int )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_mode_manager_1a2677e47ee6bb7a7ad04f57039f44df60">K_0</link> (
+double )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_mode_manager_1adbb908287dfef45e3dc69e5fca153b5f">K_1</link> (
+double )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_mode_manager_1a4fd96c4a414589bd94e0885eb7c3283d">K_n</link> (
+double , int )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_mode_manager_1a0c429b8a0adb75441fe076619135d3a5">bessi0</link> (
+double )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_mode_manager_1accf36aab18dd7a70bfac5c3f430bb5d0">bessi1</link> (
+double )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title>Member Data Documentation</title>
+        </section>
+            <section xml:id="class_mode_manager_1a9051acf8cc4061ef7cb63d2aa8233615">
+                <title>ModeManager::ModeManager ()</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1aa1353a612568b46d3e76629e2bef7b29">
+                <title>void ModeManager::prepare_mode_in ()</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1a40abd54e26602b1e1dcf092efdf2b5e4">
+                <title>void ModeManager::prepare_mode_out ()</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1a6bdb75e78a7d6d95c18f8edfaf6af953">
+                <title>int ModeManager::number_modes_in ()</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1a40b372ae1462e7111eabd6148198bada">
+                <title>int ModeManager::number_modes_out ()</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1a3d196a5886228aa8b6282ec0cdc3bea3">
+                <title>double ModeManager::get_input_component (int, dealii::Point&lt; 3, double &gt;, int)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1abfd5643d3e70c4a02cdbb6c685761b76">
+                <title>double ModeManager::get_output_component (int, dealii::Point&lt; 3, double &gt;, int)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1a7c31c130bedc0257234e5e3999b56481">
+                <title>void ModeManager::load ()</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1a959c991220f3dcfd57605c0503e69322">
+                <title>std::vector&lt; double &gt; ModeManager::get_us (double)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1abd385ee1379770666bd755d7eb48088d">
+                <title>double ModeManager::get_u0 (double)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1adb8308f658e82b3e73381991941a1033">
+                <title>double ModeManager::get_lhs (double)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1a4d4e69cc94052f942745c060a0b59cef">
+                <title>double ModeManager::get_rhs (double, double)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1acbf94ff5af596e0bc8d3e8c541100664">
+                <title>double ModeManager::J_0 (double)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1a70a194ef22d05e5bd01ef070900ec415">
+                <title>double ModeManager::J_1 (double)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1aed92bb092f8fd7509b10e67d833932ae">
+                <title>double ModeManager::J_n (double, int)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1a2677e47ee6bb7a7ad04f57039f44df60">
+                <title>double ModeManager::K_0 (double)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1adbb908287dfef45e3dc69e5fca153b5f">
+                <title>double ModeManager::K_1 (double)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1a4fd96c4a414589bd94e0885eb7c3283d">
+                <title>double ModeManager::K_n (double, int)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1a0c429b8a0adb75441fe076619135d3a5">
+                <title>double ModeManager::bessi0 (double)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_mode_manager_1accf36aab18dd7a70bfac5c3f430bb5d0">
+                <title>double ModeManager::bessi1 (double)</title> <emphasis></emphasis>
+                
+            </section>
+</section>

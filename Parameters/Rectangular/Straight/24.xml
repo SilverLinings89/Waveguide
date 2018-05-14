@@ -262,14 +262,14 @@
                 <pattern_description>[Selection PML|HSIE ]</pattern_description>
             </Type>
             <ZMinus>
-                <value>2</value>
+                <value>5</value>
                 <default_value>5</default_value>
                 <documentation>Thickness of the additional range on the negative z axis for better wave coupling</documentation>
                 <pattern>33</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </ZMinus>
             <ZPlus>
-                <value>2</value>
+                <value>5</value>
                 <default_value>1</default_value>
                 <documentation>Thickness of the PML area on the side of the output connector.</documentation>
                 <pattern>34</pattern>

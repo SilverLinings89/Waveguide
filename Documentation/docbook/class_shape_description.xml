@@ -1,0 +1,77 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="class_shape_description">
+<title>ShapeDescription class Reference</title>
+        <section>
+            <title>Public Attributes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>int Sectors</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::vector&lt; double &gt; m</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::vector&lt; double &gt; v</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::vector&lt; double &gt; z</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title></title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para> <link linkend="class_shape_description_1a38c6eb732a9951ae43cd3010163a2752">ShapeDescription</link> (
+)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para> <link linkend="class_shape_description_1ac9cdd4d13242d664458e6628a0b0e221">~ShapeDescription</link> (
+)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_shape_description_1ae760d245c1a02af5c1915b3c7f72cc38">SetByString</link> (
+std::string )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title>Member Data Documentation</title>
+        </section>
+            <section xml:id="class_shape_description_1a38c6eb732a9951ae43cd3010163a2752">
+                <title>ShapeDescription::ShapeDescription ()</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_shape_description_1ac9cdd4d13242d664458e6628a0b0e221">
+                <title>ShapeDescription::~ShapeDescription ()</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_shape_description_1ae760d245c1a02af5c1915b3c7f72cc38">
+                <title>void ShapeDescription::SetByString (std::string)</title> <emphasis></emphasis>
+                
+            </section>
+</section>

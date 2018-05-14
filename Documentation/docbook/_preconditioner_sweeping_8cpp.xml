@@ -1,0 +1,299 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_preconditioner_sweeping_8cpp">
+    <title>PreconditionerSweeping.cpp File Reference</title>
+    <programlisting>#include &lt;cmath&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/utilities.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/trilinos_solver.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/vector.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/trilinos_vector.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/solver.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/sparse_direct.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/sparse_matrix.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/trilinos_sparse_matrix.h&gt;</programlisting>
+    <programlisting>#include &quot;PreconditionerSweeping.h&quot;</programlisting>
+        <simplesect>
+            <title> Namespaces </title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>struct <link linkend="namespacedealii">dealii</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </simplesect>
+        <section>
+            <title>Macros</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                            <para>#define <link linkend="_preconditioner_sweeping_8cpp_1ae00e50ce8a2458899d3e2b6d3be29f13">CODE_CORE_PRECONDITIONERSWEEPING_CPP_</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title>Variables</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>dealii::SparseDirectUMFPACK * <link linkend="_preconditioner_sweeping_8cpp_1ab66dbaf2176efb1ae21d951b760e1f35">solver</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>dealii::SparsityPattern <link linkend="_preconditioner_sweeping_8cpp_1a46cc748604d09e3810d8a5e1917a89ab">off_diag_block_lower</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>dealii::SparsityPattern <link linkend="_preconditioner_sweeping_8cpp_1a832e3db088e27e801beb606f63e1b399">off_diag_block_upper</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title>Functions</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>dealii::SolverControl <link linkend="_preconditioner_sweeping_8cpp_1a9827ddc4c510ed892e25397a80e9ba1e">s</link> (
+10 , 1.e- 10, false , false )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+        <title>Detailed Description</title>
+    <para>Definition in file /home/kraft/workspace/waveguideproblem/Code/Core/PreconditionerSweeping.cpp</para>
+    </simplesect>
+    <literallayout><computeroutput>
+1 <emphasis class="comment">//&#32;Copyright&#32;2018&#32;Pascal&#32;Kraft</emphasis>
+2 <emphasis class="preprocessor">#ifndef&#32;CODE_CORE_PRECONDITIONERSWEEPING_CPP_</emphasis>
+3 <emphasis class="preprocessor">#define&#32;CODE_CORE_PRECONDITIONERSWEEPING_CPP_</emphasis>
+4 
+5 <emphasis class="preprocessor">#include&#32;&lt;cmath&gt;</emphasis>
+6 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/utilities.h&gt;</emphasis>
+7 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/trilinos_solver.h&gt;</emphasis>
+8 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/vector.h&gt;</emphasis>
+9 
+10 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/trilinos_vector.h&gt;</emphasis>
+11 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/solver.h&gt;</emphasis>
+12 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/sparse_direct.h&gt;</emphasis>
+13 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/sparse_matrix.h&gt;</emphasis>
+14 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/trilinos_sparse_matrix.h&gt;</emphasis>
+15 
+16 <emphasis class="preprocessor">#include&#32;&quot;PreconditionerSweeping.h&quot;</emphasis>
+17 
+18 <emphasis class="keyword">using&#32;namespace&#32;</emphasis><link linkend="namespacedealii">dealii</link>;
+19 
+20 dealii::SolverControl&#32;s(10,&#32;1.e-10,&#32;<emphasis class="keyword">false</emphasis>,&#32;<emphasis class="keyword">false</emphasis>);
+21 dealii::SparseDirectUMFPACK&#32;*&#32;solver&#32;=&#32;0;
+22 
+23 dealii::SparsityPattern&#32;off_diag_block_lower,&#32;off_diag_block_upper;
+24 
+25 PreconditionerSweeping::~PreconditionerSweeping&#32;(){
+26 &#32;&#32;<emphasis class="keyword">delete</emphasis>&#32;solver;
+27 }
+28 
+<link linkend="class_preconditioner_sweeping_1ac7657732930d3434e0d27950335bfa0c">29 </link><link linkend="class_preconditioner_sweeping_1ac7657732930d3434e0d27950335bfa0c">PreconditionerSweeping::PreconditionerSweeping</link>&#32;(&#32;&#32;MPI_Comm&#32;in_mpi_comm,&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_own,&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_others,&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_above,&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_bandwidth,&#32;IndexSet&#32;in_locally_owned_dofs,&#32;IndexSet&#32;*&#32;in_fixed_dofs,&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_rank)
+30 {
+31 &#32;&#32;&#32;&#32;locally_owned_dofs&#32;=&#32;in_locally_owned_dofs;
+32 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;own&#32;=&#32;in_own;
+33 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;others&#32;=&#32;in_others;
+34 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;IndexSet&#32;elements&#32;(own+others);
+35 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;elements.add_range(0,own+others);
+36 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;indices&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>[in_locally_owned_dofs.n_elements()];
+37 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;sweepable&#32;=&#32;in_locally_owned_dofs.n_elements();
+38 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;sweepable;&#32;i++){
+39 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;indices[i]&#32;=&#32;in_locally_owned_dofs.nth_index_in_set(i);
+40 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+41 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;fixed_dofs&#32;=&#32;in_fixed_dofs;
+42 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;rank&#32;=&#32;in_rank;
+43 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;bandwidth&#32;=&#32;in_bandwidth;
+44 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;mpi_comm&#32;=&#32;in_mpi_comm;
+45 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;above&#32;=&#32;in_above;
+46 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;prec_matrix_lower&#32;=&#32;0;
+47 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;prec_matrix_upper&#32;=&#32;0;
+48 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;matrix&#32;=&#32;0;
+49 }
+50 
+51 <emphasis class="keywordtype">void</emphasis>&#32;PreconditionerSweeping::Prepare&#32;(&#32;TrilinosWrappers::MPI::BlockVector&#32;&amp;&#32;inp)&#32;{
+52 &#32;&#32;&#32;&#32;boundary.reinit(own,&#32;<emphasis class="keyword">false</emphasis>);
+53 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&lt;own;&#32;i++)&#32;{
+54 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;boundary[i]&#32;=&#32;inp[i];
+55 &#32;&#32;&#32;&#32;}
+56 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>;
+57 }
+58 
+<link linkend="class_preconditioner_sweeping_1aff2e2213fb5cd62f9062d9751e41c776">59 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_preconditioner_sweeping_1aff2e2213fb5cd62f9062d9751e41c776">PreconditionerSweeping::vmult</link>&#32;(TrilinosWrappers::MPI::BlockVector&#32;&#32;&#32;&#32;&#32;&#32;&#32;&amp;dst,
+60 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;TrilinosWrappers::MPI::BlockVector&#32;&amp;src)<emphasis class="keyword">const</emphasis>
+61 <emphasis class="keyword"></emphasis>{
+62 &#32;&#32;dealii::Vector&lt;double&gt;&#32;recv_buffer_above&#32;(above);
+63 &#32;&#32;dealii::Vector&lt;double&gt;&#32;recv_buffer_below&#32;(others);
+64 &#32;&#32;dealii::Vector&lt;double&gt;&#32;temp_own&#32;(own);
+65 &#32;&#32;dealii::Vector&lt;double&gt;&#32;temp_own_2&#32;(own);
+66 &#32;&#32;dealii::Vector&lt;double&gt;&#32;input(own);
+67 
+68 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;sweepable;&#32;i++)&#32;{
+69 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;input[i]&#32;=&#32;src[indices[i]];
+70 &#32;&#32;&#32;&#32;}
+71 
+72 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;((<emphasis class="keywordtype">int</emphasis>)rank+1&#32;==&#32;GlobalParams.NumberProcesses)&#32;{
+73 &#32;&#32;&#32;&#32;&#32;&#32;solver-&gt;solve(&#32;input);
+74 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;MPI_Send(&amp;input[0],&#32;own,&#32;MPI_DOUBLE,&#32;rank-1,&#32;0,&#32;mpi_comm);
+75 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+76 &#32;&#32;&#32;&#32;&#32;&#32;MPI_Recv(&amp;&#32;recv_buffer_below[0],&#32;others,&#32;MPI_DOUBLE,&#32;rank+1,&#32;0,&#32;mpi_comm,&#32;MPI_STATUS_IGNORE);
+77 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;UpperProduct(recv_buffer_below,&#32;temp_own);
+78 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;input&#32;-=&#32;temp_own;
+79 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(rank&#32;!=&#32;0)&#32;{
+80 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Hinv(input,&#32;temp_own);
+81 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;MPI_Send(&amp;temp_own[0],&#32;own,&#32;MPI_DOUBLE,&#32;rank&#32;-&#32;1,&#32;0,&#32;mpi_comm);
+82 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+83 
+84 &#32;&#32;&#32;&#32;}
+85 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;
+86 &#32;&#32;<emphasis class="keywordflow">if</emphasis>((<emphasis class="keywordtype">int</emphasis>)rank&#32;+1&#32;!=&#32;GlobalParams.NumberProcesses)&#32;{
+87 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=0;&#32;i&#32;&lt;&#32;own;&#32;i++)&#32;{
+88 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;temp_own[i]&#32;=&#32;input[i];
+89 &#32;&#32;&#32;&#32;&#32;&#32;}
+90 &#32;&#32;&#32;&#32;&#32;&#32;Hinv(temp_own,&#32;input);
+91 &#32;&#32;}
+92 
+93 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(&#32;rank&#32;==&#32;0)&#32;{
+94 &#32;&#32;&#32;&#32;&#32;&#32;MPI_Send(&amp;input[0],&#32;own,&#32;MPI_DOUBLE,&#32;rank&#32;+&#32;1,&#32;0,&#32;mpi_comm);
+95 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+96 &#32;&#32;&#32;&#32;&#32;&#32;MPI_Recv(&amp;&#32;recv_buffer_above[0],&#32;above,&#32;MPI_DOUBLE,&#32;rank-1,&#32;0,&#32;mpi_comm,&#32;MPI_STATUS_IGNORE);
+97 &#32;&#32;&#32;&#32;&#32;&#32;LowerProduct(recv_buffer_above,&#32;temp_own);
+98 &#32;&#32;&#32;&#32;&#32;&#32;Hinv(temp_own,&#32;temp_own_2);
+99 &#32;&#32;&#32;&#32;&#32;&#32;input&#32;-=&#32;temp_own_2;
+100 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>((<emphasis class="keywordtype">int</emphasis>)rank&#32;+1&lt;&#32;GlobalParams.NumberProcesses)&#32;{
+101 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;MPI_Send(&amp;input[0],&#32;own,&#32;MPI_DOUBLE,&#32;rank&#32;+&#32;1,&#32;0,&#32;mpi_comm);
+102 &#32;&#32;&#32;&#32;&#32;&#32;}
+103 &#32;&#32;}
+104 
+105 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;own;&#32;i++&#32;){
+106 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(!&#32;fixed_dofs-&gt;is_element(indices[i])){
+107 &#32;&#32;&#32;&#32;&#32;&#32;dst[indices[i]]&#32;=&#32;input[i];
+108 &#32;&#32;&#32;&#32;}
+109 &#32;&#32;}
+110 
+111 
+112 }
+113 
+<link linkend="class_preconditioner_sweeping_1a3e8229d9aca0e61ecab03196fe16ab7f">114 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_preconditioner_sweeping_1a3e8229d9aca0e61ecab03196fe16ab7f">PreconditionerSweeping::Hinv</link>(<emphasis class="keyword">const</emphasis>&#32;dealii::Vector&lt;double&gt;&#32;&amp;&#32;src,&#32;dealii::Vector&lt;double&gt;&#32;&amp;&#32;dst)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+115 
+116 &#32;&#32;dealii::Vector&lt;double&gt;&#32;inputb(own&#32;+&#32;others);
+117 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;own;&#32;i++)&#32;{
+118 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;inputb[i&#32;]&#32;=&#32;src(i);
+119 &#32;&#32;&#32;&#32;}
+120 
+121 &#32;&#32;&#32;&#32;solver-&gt;solve(&#32;&#32;inputb&#32;);
+122 
+123 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;own;&#32;i++)&#32;{
+124 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;dst[i]&#32;=&#32;inputb[&#32;i];
+125 &#32;&#32;&#32;&#32;}
+126 }
+127 
+128 <emphasis class="keywordtype">void</emphasis>&#32;PreconditionerSweeping::init(SolverControl&#32;,&#32;TrilinosWrappers::SparseMatrix&#32;*&#32;in_prec_upper,&#32;TrilinosWrappers::SparseMatrix&#32;*&#32;in_prec_lower)&#32;{
+129 
+130 &#32;&#32;deallog.push(<emphasis class="stringliteral">&quot;Init&#32;Preconditioner&quot;</emphasis>);
+131 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Prepare&#32;Objects&quot;</emphasis>&#32;&lt;&lt;std::endl;
+132 &#32;&#32;solver&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;SparseDirectUMFPACK();
+133 &#32;&#32;IndexSet&#32;local&#32;(matrix-&gt;m());
+134 &#32;&#32;local.add_range(0,&#32;matrix-&gt;m());
+135 &#32;&#32;dealii::SparsityPattern&#32;sparsity_pattern;
+136 &#32;&#32;dealii::SparseMatrix&lt;double&gt;&#32;*&#32;temp;
+137 &#32;&#32;<emphasis class="comment">//&#32;Main&#32;Matrix&#32;Preparation</emphasis>
+138 
+139 &#32;&#32;sparsity_pattern.reinit(own+&#32;others,&#32;own+others,&#32;bandwidth);
+140 &#32;&#32;TrilinosWrappers::SparseMatrix::iterator&#32;it&#32;=&#32;matrix-&gt;begin();
+141 &#32;&#32;TrilinosWrappers::SparseMatrix::iterator&#32;end&#32;=&#32;matrix-&gt;end();
+142 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(;&#32;it&#32;!=&#32;end;&#32;it++){
+143 &#32;&#32;&#32;&#32;sparsity_pattern.add(it-&gt;row(),&#32;it-&gt;column());
+144 &#32;&#32;}
+145 &#32;&#32;sparsity_pattern.compress();
+146 
+147 &#32;&#32;temp&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;dealii::SparseMatrix&lt;double&gt;(sparsity_pattern);
+148 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Copy&#32;Matrix&quot;</emphasis>&#32;&lt;&lt;std::endl;
+149 &#32;&#32;temp-&gt;copy_from(*&#32;matrix);
+150 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Factorize&#32;Matrix&quot;</emphasis>&#32;&lt;&lt;std::endl;
+151 &#32;&#32;solver-&gt;factorize(*temp);
+152 &#32;&#32;std::cout&#32;&lt;&lt;&#32;this-&gt;rank&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;is&#32;done.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+153 &#32;&#32;temp-&gt;clear();
+154 &#32;&#32;temp&#32;=&#32;0;
+155 &#32;&#32;<emphasis class="comment">//&#32;Prec&#32;Matrix&#32;lower&#32;Preparation</emphasis>
+156 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Prepare&#32;Lower&#32;Block&quot;</emphasis>&#32;&lt;&lt;std::endl;
+157 &#32;&#32;off_diag_block_lower.reinit(own,&#32;above,&#32;bandwidth);
+158 
+159 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(above&#32;!=&#32;0){
+160 &#32;&#32;&#32;&#32;it&#32;=&#32;in_prec_lower-&gt;begin();
+161 &#32;&#32;&#32;&#32;end&#32;=&#32;in_prec_lower-&gt;end();
+162 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(;&#32;it&#32;!=&#32;end;&#32;it++){
+163 &#32;&#32;&#32;&#32;&#32;&#32;off_diag_block_lower.add(it-&gt;row(),&#32;it-&gt;column());
+164 &#32;&#32;&#32;&#32;}
+165 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+166 &#32;&#32;&#32;&#32;off_diag_block_lower.reinit(own,own,&#32;120);
+167 &#32;&#32;&#32;&#32;it&#32;=&#32;in_prec_lower-&gt;begin();
+168 &#32;&#32;&#32;&#32;end&#32;=&#32;in_prec_lower-&gt;end();
+169 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(;&#32;it&#32;!=&#32;end;&#32;it++){
+170 &#32;&#32;&#32;&#32;&#32;&#32;off_diag_block_lower.add(it-&gt;row(),&#32;it-&gt;column());
+171 &#32;&#32;&#32;&#32;}
+172 &#32;&#32;}
+173 &#32;&#32;off_diag_block_lower.compress();
+174 
+175 &#32;&#32;prec_matrix_lower&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;dealii::SparseMatrix&lt;double&gt;(off_diag_block_lower);
+176 &#32;&#32;prec_matrix_lower-&gt;copy_from(*in_prec_lower);
+177 
+178 &#32;&#32;<emphasis class="comment">//&#32;Prec&#32;Matrix&#32;upper&#32;Preparation</emphasis>
+179 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Prepare&#32;Upper&#32;Block&quot;</emphasis>&#32;&lt;&lt;std::endl;
+180 &#32;&#32;off_diag_block_upper.reinit(own,&#32;others,&#32;bandwidth);
+181 
+182 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(others&#32;!=&#32;0){
+183 &#32;&#32;&#32;&#32;it&#32;=&#32;in_prec_upper-&gt;begin();
+184 &#32;&#32;&#32;&#32;end&#32;=&#32;in_prec_upper-&gt;end();
+185 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(;&#32;it&#32;!=&#32;end;&#32;it++){
+186 &#32;&#32;&#32;&#32;&#32;&#32;off_diag_block_upper.add(it-&gt;row(),&#32;it-&gt;column());
+187 &#32;&#32;&#32;&#32;}
+188 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+189 &#32;&#32;&#32;&#32;off_diag_block_upper.reinit(own,own,&#32;120);
+190 &#32;&#32;&#32;&#32;it&#32;=&#32;in_prec_upper-&gt;begin();
+191 &#32;&#32;&#32;&#32;end&#32;=&#32;in_prec_upper-&gt;end();
+192 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(;&#32;it&#32;!=&#32;end;&#32;it++){
+193 &#32;&#32;&#32;&#32;&#32;&#32;off_diag_block_upper.add(it-&gt;row(),&#32;it-&gt;column());
+194 &#32;&#32;&#32;&#32;}
+195 &#32;&#32;}
+196 &#32;&#32;off_diag_block_upper.compress();
+197 
+198 &#32;&#32;prec_matrix_upper&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;dealii::SparseMatrix&lt;double&gt;(off_diag_block_upper);
+199 &#32;&#32;prec_matrix_upper-&gt;copy_from(*in_prec_upper);
+200 &#32;&#32;deallog.pop();
+201 }
+202 
+<link linkend="class_preconditioner_sweeping_1a7206a488cc098c6626440571011e8aa5">203 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_preconditioner_sweeping_1a7206a488cc098c6626440571011e8aa5">PreconditionerSweeping::UpperProduct</link>(<emphasis class="keyword">const</emphasis>&#32;dealii::Vector&lt;double&gt;&#32;&amp;&#32;src,&#32;dealii::Vector&lt;double&gt;&#32;&amp;&#32;dst)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+204 
+205 
+206 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>((<emphasis class="keywordtype">int</emphasis>)rank+1&#32;==&#32;GlobalParams.NumberProcesses)&#32;{
+207 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;ERROR!&quot;</emphasis>&#32;&lt;&lt;std::endl;
+208 &#32;&#32;&#32;&#32;}
+209 
+210 &#32;&#32;&#32;&#32;prec_matrix_upper-&gt;vmult(dst,&#32;src);
+211 
+212 }
+213 
+<link linkend="class_preconditioner_sweeping_1aae4ff00d6f71c0cf176172905be08cff">214 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_preconditioner_sweeping_1aae4ff00d6f71c0cf176172905be08cff">PreconditionerSweeping::LowerProduct</link>(<emphasis class="keyword">const</emphasis>&#32;dealii::Vector&lt;double&gt;&#32;&amp;&#32;src,&#32;dealii::Vector&lt;double&gt;&#32;&amp;&#32;dst)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+215 
+216 &#32;&#32;<emphasis class="keywordflow">if</emphasis>((<emphasis class="keywordtype">int</emphasis>)rank&#32;&#32;==&#32;0)&#32;{
+217 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;ERROR!&quot;</emphasis>&#32;&lt;&lt;std::endl;
+218 &#32;&#32;}
+219 
+220 &#32;&#32;prec_matrix_lower-&gt;vmult(dst,&#32;src);
+221 
+222 }
+223 
+224 <emphasis class="preprocessor">#endif</emphasis>
+    </computeroutput></literallayout>
+</section>

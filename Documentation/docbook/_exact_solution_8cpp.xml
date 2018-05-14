@@ -1,0 +1,329 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_exact_solution_8cpp">
+    <title>ExactSolution.cpp File Reference</title>
+    <programlisting>#include &lt;vector&gt;</programlisting>
+    <programlisting>#include &lt;string&gt;</programlisting>
+    <programlisting>#include &lt;complex&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/point.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/tensor.h&gt;</programlisting>
+    <programlisting>#include &quot;ExactSolution.h&quot;</programlisting>
+    <programlisting>#include &quot;PointVal.h&quot;</programlisting>
+    <programlisting>#include &quot;../Core/Waveguide.h&quot;</programlisting>
+        <section>
+            <title>Macros</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                            <para>#define <link linkend="_exact_solution_8cpp_1aee9d9ab71b84d22a6028152f3258f341">ExactSolutionFlag_CPP</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title>Functions</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="_exact_solution_8cpp_1a17e21330588883bdeae365730d1347e6">scientific_string_to_double</link> (
+std::string inp)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+        <title>Detailed Description</title>
+    <para>Definition in file /home/kraft/workspace/waveguideproblem/Code/Helpers/ExactSolution.cpp</para>
+    </simplesect>
+    <literallayout><computeroutput>
+1 
+2 <emphasis class="preprocessor">#ifndef&#32;ExactSolutionFlag_CPP</emphasis>
+3 <emphasis class="preprocessor">#define&#32;ExactSolutionFlag_CPP</emphasis>
+4 <emphasis class="preprocessor">#include&#32;&lt;vector&gt;</emphasis>
+5 <emphasis class="preprocessor">#include&#32;&lt;string&gt;</emphasis>
+6 <emphasis class="preprocessor">#include&#32;&lt;complex&gt;</emphasis>
+7 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/point.h&gt;</emphasis>
+8 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/tensor.h&gt;</emphasis>
+9 <emphasis class="preprocessor">#include&#32;&quot;ExactSolution.h&quot;</emphasis>
+10 <emphasis class="preprocessor">#include&#32;&quot;PointVal.h&quot;</emphasis>
+11 <emphasis class="preprocessor">#include&#32;&quot;../Core/Waveguide.h&quot;</emphasis>
+12 
+<link linkend="class_exact_solution_1ae34a7cff183d6299852f404eecee0ac5">13 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_exact_solution_1ae34a7cff183d6299852f404eecee0ac5">ExactSolution::value</link>&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3&gt;&#32;&amp;in_p&#32;,&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;component)<emphasis class="keyword">&#32;const</emphasis>
+14 <emphasis class="keyword"></emphasis>{
+15 &#32;&#32;Point&lt;3,double&gt;&#32;p&#32;=&#32;in_p;
+16 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(is_dual)&#32;p[2]&#32;=&#32;-in_p[2];
+17 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;zero&#32;=&#32;<emphasis class="keyword">false</emphasis>;
+18 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(p[0]&#32;&gt;&#32;GlobalParams.M_R_XLength/2.0&#32;-&#32;GlobalParams.M_BC_XPlus)&#32;zero&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+19 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(p[0]&#32;&lt;&#32;-GlobalParams.M_R_XLength/2.0&#32;+&#32;GlobalParams.M_BC_XMinus)&#32;zero&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+20 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(p[1]&#32;&gt;&#32;GlobalParams.M_R_YLength/2.0&#32;-&#32;GlobalParams.M_BC_YPlus)&#32;zero&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+21 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(p[1]&#32;&lt;&#32;-GlobalParams.M_R_YLength/2.0&#32;+&#32;GlobalParams.M_BC_YMinus)&#32;zero&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+22 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(p[2]&#32;&gt;&#32;GlobalParams.M_R_ZLength/2.0)&#32;zero&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+23 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(zero){
+24 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
+25 &#32;&#32;}
+26 
+27 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(is_rectangular){
+28 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::complex&lt;double&gt;&#32;ret_val(0.0,0.0);
+29 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">double</emphasis>&#32;delta&#32;=&#32;abs(mesh_points[0]&#32;-mesh_points[1]);
+30 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;mesh_number&#32;=&#32;mesh_points.size();
+31 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(!&#32;(abs(p(1))&gt;=mesh_points[0]&#32;||&#32;abs(p(0))&gt;=mesh_points[0]))&#32;{
+32 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;ix&#32;=&#32;0;
+33 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;iy&#32;=&#32;0;
+34 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">while</emphasis>(mesh_points[ix]&#32;&gt;&#32;p(0)&#32;&amp;&amp;&#32;ix&#32;&lt;&#32;mesh_number)&#32;ix++;
+35 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">while</emphasis>(mesh_points[iy]&#32;&gt;&#32;p(1)&amp;&amp;&#32;iy&#32;&lt;&#32;mesh_number)&#32;iy++;
+36 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(ix&#32;==&#32;0&#32;||&#32;iy&#32;==&#32;0&#32;||&#32;ix==mesh_number||iy==mesh_number)&#32;{
+37 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
+38 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+39 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;dx&#32;=&#32;(p(0)&#32;-&#32;mesh_points[ix])/delta;
+40 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;dy&#32;=&#32;(p(1)&#32;-&#32;mesh_points[iy])/delta;
+41 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;m1m1&#32;=&#32;dx*dy;
+42 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;m1p1&#32;=&#32;dx*(1.0-dy);
+43 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;p1p1&#32;=&#32;(1.0-dx)*(1.0-dy);
+44 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;p1m1&#32;=&#32;(1.0-dx)*dy;
+45 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">switch</emphasis>&#32;(component%3)&#32;{
+46 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">case</emphasis>&#32;0:
+47 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret_val.real(p1p1*vals[ix][iy].Ex.real()&#32;+&#32;p1m1*vals[ix][iy-1].Ex.real()&#32;+&#32;m1m1*vals[ix-1][iy-1].Ex.real()&#32;+&#32;m1p1*vals[ix-1][iy].Ex.real());
+48 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret_val.imag(p1p1*vals[ix][iy].Ex.imag()&#32;+&#32;p1m1*vals[ix][iy-1].Ex.imag()&#32;+&#32;m1m1*vals[ix-1][iy-1].Ex.imag()&#32;+&#32;m1p1*vals[ix-1][iy].Ex.imag());
+49 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;ret_val&#32;*=&#32;-1.0;</emphasis>
+50 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">break</emphasis>;
+51 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">case</emphasis>&#32;1:
+52 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret_val.real(p1p1*vals[ix][iy].Ey.real()&#32;+&#32;p1m1*vals[ix][iy-1].Ey.real()&#32;+&#32;m1m1*vals[ix-1][iy-1].Ey.real()&#32;+&#32;m1p1*vals[ix-1][iy].Ey.real());
+53 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret_val.imag(p1p1*vals[ix][iy].Ey.imag()&#32;+&#32;p1m1*vals[ix][iy-1].Ey.imag()&#32;+&#32;m1m1*vals[ix-1][iy-1].Ey.imag()&#32;+&#32;m1p1*vals[ix-1][iy].Ey.imag());
+54 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">break</emphasis>;
+55 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">case</emphasis>&#32;2:
+56 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret_val.real(p1p1*vals[ix][iy].Ez.real()&#32;+&#32;p1m1*vals[ix][iy-1].Ez.real()&#32;+&#32;m1m1*vals[ix-1][iy-1].Ez.real()&#32;+&#32;m1p1*vals[ix-1][iy].Ez.real());
+57 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret_val.imag(p1p1*vals[ix][iy].Ez.imag()&#32;+&#32;p1m1*vals[ix][iy-1].Ez.imag()&#32;+&#32;m1m1*vals[ix-1][iy-1].Ez.imag()&#32;+&#32;m1p1*vals[ix-1][iy].Ez.imag());
+58 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">break</emphasis>;
+59 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">default</emphasis>:
+60 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret_val.real(0.0);
+61 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret_val.imag(0.0);
+62 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">break</emphasis>;
+63 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+64 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+65 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;n;
+66 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(abs(p(0))&#32;&lt;=&#32;GlobalParams.M_C_Dim1In/2.0&#32;&amp;&amp;&#32;abs(p(1))&#32;&lt;=&#32;GlobalParams.M_C_Dim2In/2.0)&#32;{
+67 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;n&#32;=&#32;std::sqrt(GlobalParams.M_W_epsilonin);
+68 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+69 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;n&#32;=&#32;std::sqrt(GlobalParams.M_W_epsilonout);
+70 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+71 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;k&#32;=&#32;n*2*&#32;GlobalParams.C_Pi&#32;/&#32;GlobalParams.M_W_Lambda;
+72 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::complex&lt;double&gt;&#32;phase(0.0,(p(2)&#32;-&#32;GlobalParams.Minimum_Z)*k);
+73 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret_val&#32;*=&#32;std::exp(phase);
+74 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(component&gt;2)&#32;{
+75 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret_val.imag();
+76 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+77 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret_val.real();
+78 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+79 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+80 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
+81 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+82 &#32;&#32;&#32;&#32;}<emphasis class="keywordflow">else</emphasis>&#32;{
+83 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ModeMan.get_input_component(&#32;component,&#32;p,&#32;0);
+84 &#32;&#32;&#32;&#32;}
+85 
+86 }
+87 
+88 
+<link linkend="class_exact_solution_1a1cafd1cf8d7f91d178c87a210c4800b2">89 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_exact_solution_1a1cafd1cf8d7f91d178c87a210c4800b2">ExactSolution::vector_value</link>&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3&gt;&#32;&amp;in_p,&#32;Vector&lt;double&gt;&#32;&amp;values)<emphasis class="keyword">&#32;const</emphasis>
+90 <emphasis class="keyword"></emphasis>{
+91 &#32;&#32;Point&lt;3,double&gt;&#32;p&#32;=&#32;in_p;
+92 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(is_dual)&#32;p[2]&#32;=&#32;-in_p[2];
+93 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;zero&#32;=&#32;<emphasis class="keyword">false</emphasis>;
+94 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(p[0]&#32;&gt;&#32;GlobalParams.M_R_XLength/2.0&#32;-&#32;GlobalParams.M_BC_XPlus)&#32;zero&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+95 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(p[0]&#32;&lt;&#32;-GlobalParams.M_R_XLength/2.0&#32;+&#32;GlobalParams.M_BC_XMinus)&#32;zero&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+96 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(p[1]&#32;&gt;&#32;GlobalParams.M_R_YLength/2.0&#32;-&#32;GlobalParams.M_BC_YPlus)&#32;zero&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+97 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(p[1]&#32;&lt;&#32;-GlobalParams.M_R_YLength/2.0&#32;+&#32;GlobalParams.M_BC_YMinus)&#32;zero&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+98 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(p[2]&#32;&gt;&#32;GlobalParams.M_R_ZLength/2.0)&#32;zero&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+99 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(zero){
+100 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;values.size();&#32;i++)&#32;{
+101 &#32;&#32;&#32;&#32;&#32;&#32;values[i]&#32;=&#32;0.0;
+102 &#32;&#32;&#32;&#32;}
+103 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>;
+104 &#32;&#32;}
+105 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(is_rectangular){
+106 &#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">double</emphasis>&#32;delta&#32;=&#32;abs(mesh_points[0]&#32;-mesh_points[1]);
+107 &#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;mesh_number&#32;=&#32;mesh_points.size();
+108 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(!(abs(p(1))&gt;=mesh_points[0]&#32;||&#32;abs(p(0))&gt;=mesh_points[0]))&#32;{
+109 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;ix&#32;=&#32;0;
+110 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;iy&#32;=&#32;0;
+111 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">while</emphasis>(mesh_points[ix]&#32;&gt;&#32;p(0)&#32;&amp;&amp;&#32;ix&#32;&lt;&#32;mesh_number)&#32;ix++;
+112 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">while</emphasis>(mesh_points[iy]&#32;&gt;&#32;p(1&#32;)&amp;&amp;&#32;iy&#32;&lt;&#32;mesh_number)&#32;iy++;
+113 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(ix&#32;==&#32;0&#32;||&#32;iy&#32;==&#32;0&#32;||&#32;ix==mesh_number||iy==mesh_number)&#32;{
+114 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;values.size();&#32;i++)&#32;{
+115 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;values[i]&#32;=&#32;0.0;
+116 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+117 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>;
+118 &#32;&#32;&#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+119 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;dx&#32;=&#32;(p(0)&#32;-&#32;mesh_points[ix])/delta;
+120 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;dy&#32;=&#32;(p(1)&#32;-&#32;mesh_points[iy])/delta;
+121 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;m1m1&#32;=&#32;dx*dy;
+122 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;m1p1&#32;=&#32;dx*(1.0-dy);
+123 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;p1p1&#32;=&#32;(1.0-dx)*(1.0-dy);
+124 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;p1m1&#32;=&#32;(1.0-dx)*dy;
+125 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;values[0]&#32;=&#32;p1p1*vals[ix][iy].Ex.real()&#32;+&#32;p1m1*vals[ix][iy-1].Ex.real()&#32;+&#32;m1m1*vals[ix-1][iy-1].Ex.real()&#32;+&#32;m1p1*vals[ix-1][iy].Ex.real();
+126 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;values[1]&#32;=&#32;p1p1*vals[ix][iy].Ey.real()&#32;+&#32;p1m1*vals[ix][iy-1].Ey.real()&#32;+&#32;m1m1*vals[ix-1][iy-1].Ey.real()&#32;+&#32;m1p1*vals[ix-1][iy].Ey.real();
+127 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;values[2]&#32;=&#32;p1p1*vals[ix][iy].Ez.real()&#32;+&#32;p1m1*vals[ix][iy-1].Ez.real()&#32;+&#32;m1m1*vals[ix-1][iy-1].Ez.real()&#32;+&#32;m1p1*vals[ix-1][iy].Ez.real();
+128 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;values[3]&#32;=&#32;p1p1*vals[ix][iy].Ex.imag()&#32;+&#32;p1m1*vals[ix][iy-1].Ex.imag()&#32;+&#32;m1m1*vals[ix-1][iy-1].Ex.imag()&#32;+&#32;m1p1*vals[ix-1][iy].Ex.imag();
+129 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;values[4]&#32;=&#32;p1p1*vals[ix][iy].Ey.imag()&#32;+&#32;p1m1*vals[ix][iy-1].Ey.imag()&#32;+&#32;m1m1*vals[ix-1][iy-1].Ey.imag()&#32;+&#32;m1p1*vals[ix-1][iy].Ey.imag();
+130 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;values[5]&#32;=&#32;p1p1*vals[ix][iy].Ez.imag()&#32;+&#32;p1m1*vals[ix][iy-1].Ez.imag()&#32;+&#32;m1m1*vals[ix-1][iy-1].Ez.imag()&#32;+&#32;m1p1*vals[ix-1][iy].Ez.imag();
+131 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;n;
+132 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(abs(p(0))&#32;&lt;=&#32;GlobalParams.M_C_Dim1In/2.0&#32;&amp;&amp;&#32;abs(p(1))&#32;&lt;=&#32;GlobalParams.M_C_Dim2In/2.0)&#32;{
+133 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;n&#32;=&#32;std::sqrt(GlobalParams.M_W_epsilonin);
+134 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+135 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;n&#32;=&#32;std::sqrt(GlobalParams.M_W_epsilonout);
+136 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+137 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;k&#32;=&#32;n&#32;*2*&#32;GlobalParams.C_Pi&#32;/&#32;GlobalParams.M_W_Lambda;
+138 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::complex&lt;double&gt;&#32;phase(0.0,-(p(2)&#32;+&#32;GlobalParams.M_R_ZLength/2.0)*k);
+139 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;phase&#32;=&#32;std::exp(phase);
+140 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;komp&#32;=&#32;0;&#32;komp&#32;&lt;3;&#32;komp++&#32;)&#32;{
+141 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::complex&lt;double&gt;&#32;entr&#32;(values[0+komp],values[3+komp]);
+142 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;entr&#32;*=&#32;phase;
+143 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;values[0+komp]&#32;=&#32;entr.real();
+144 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;values[3+komp]&#32;=&#32;entr.imag();
+145 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+146 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;values[0]&#32;*=&#32;-1.0;</emphasis>
+147 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;values[3]&#32;*=&#32;-1.0;</emphasis>
+148 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>;
+149 &#32;&#32;&#32;&#32;&#32;&#32;}
+150 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+151 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;values.size();&#32;i++)&#32;{
+152 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;values[i]&#32;=&#32;0.0;
+153 &#32;&#32;&#32;&#32;&#32;&#32;}
+154 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>;
+155 &#32;&#32;&#32;&#32;}
+156 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+157 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;c=0;&#32;c&lt;6;&#32;++c)&#32;values[c]&#32;=&#32;ModeMan.get_input_component(&#32;c,&#32;p,&#32;0);
+158 &#32;&#32;}
+159 }
+160 
+161 Tensor&lt;1,3,std::complex&lt;double&gt;&gt;&#32;ExactSolution::curl(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3&gt;&#32;&amp;in_p)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+162 &#32;&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">double</emphasis>&#32;h&#32;=&#32;0.0001;
+163 &#32;&#32;Tensor&lt;1,3,std::complex&lt;double&gt;&gt;&#32;ret;
+164 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(is_rectangular)&#32;{
+165 &#32;&#32;&#32;&#32;Vector&lt;double&gt;&#32;dxF,&#32;dyF,&#32;dzF,&#32;val;
+166 &#32;&#32;&#32;&#32;dxF.reinit(6,&#32;<emphasis class="keyword">false</emphasis>);
+167 &#32;&#32;&#32;&#32;dyF.reinit(6,&#32;<emphasis class="keyword">false</emphasis>);
+168 &#32;&#32;&#32;&#32;dzF.reinit(6,&#32;<emphasis class="keyword">false</emphasis>);
+169 &#32;&#32;&#32;&#32;val.reinit(6,&#32;<emphasis class="keyword">false</emphasis>);
+170 &#32;&#32;&#32;&#32;this-&gt;<link linkend="class_exact_solution_1a1cafd1cf8d7f91d178c87a210c4800b2">vector_value</link>(in_p,&#32;val);
+171 &#32;&#32;&#32;&#32;Point&lt;3&gt;&#32;deltap&#32;=&#32;in_p;
+172 &#32;&#32;&#32;&#32;deltap[0]&#32;=&#32;deltap[0]+h;
+173 &#32;&#32;&#32;&#32;this-&gt;<link linkend="class_exact_solution_1a1cafd1cf8d7f91d178c87a210c4800b2">vector_value</link>(deltap,&#32;dxF);
+174 &#32;&#32;&#32;&#32;deltap&#32;=&#32;in_p;
+175 &#32;&#32;&#32;&#32;deltap[1]&#32;=&#32;deltap[1]+h;
+176 &#32;&#32;&#32;&#32;this-&gt;<link linkend="class_exact_solution_1a1cafd1cf8d7f91d178c87a210c4800b2">vector_value</link>(deltap,&#32;dyF);
+177 &#32;&#32;&#32;&#32;deltap&#32;=&#32;in_p;
+178 &#32;&#32;&#32;&#32;deltap[1]&#32;=&#32;deltap[1]+h;
+179 &#32;&#32;&#32;&#32;this-&gt;<link linkend="class_exact_solution_1a1cafd1cf8d7f91d178c87a210c4800b2">vector_value</link>(deltap,&#32;dzF);
+180 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i=0;&#32;i&#32;&lt;&#32;6;&#32;i++)&#32;{
+181 &#32;&#32;&#32;&#32;&#32;&#32;dxF[i]&#32;=&#32;(dxF[i]&#32;-&#32;val[i])/h;
+182 &#32;&#32;&#32;&#32;&#32;&#32;dyF[i]&#32;=&#32;(dyF[i]&#32;-&#32;val[i])/h;
+183 &#32;&#32;&#32;&#32;&#32;&#32;dzF[i]&#32;=&#32;(dzF[i]&#32;-&#32;val[i])/h;
+184 &#32;&#32;&#32;&#32;}
+185 &#32;&#32;&#32;&#32;ret[0].real(dyF[2]&#32;-&#32;dzF[1]);
+186 &#32;&#32;&#32;&#32;ret[0].imag(dyF[5]&#32;-&#32;dzF[4]);
+187 &#32;&#32;&#32;&#32;ret[1].real(dzF[0]&#32;-&#32;dxF[2]);
+188 &#32;&#32;&#32;&#32;ret[1].imag(dzF[3]&#32;-&#32;dxF[5]);
+189 &#32;&#32;&#32;&#32;ret[2].real(dxF[1]&#32;-&#32;dyF[0]);
+190 &#32;&#32;&#32;&#32;ret[2].imag(dxF[4]&#32;-&#32;dyF[3]);
+191 &#32;&#32;}
+192 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+193 }
+194 
+195 Tensor&lt;1,3,std::complex&lt;double&gt;&gt;&#32;ExactSolution::val(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3&gt;&#32;&amp;in_p)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+196 &#32;&#32;Tensor&lt;1,3,std::complex&lt;double&gt;&gt;&#32;ret;
+197 &#32;&#32;Vector&lt;double&gt;&#32;temp;
+198 &#32;&#32;temp.reinit(6,<emphasis class="keyword">false</emphasis>);
+199 &#32;&#32;<link linkend="class_exact_solution_1a1cafd1cf8d7f91d178c87a210c4800b2">vector_value</link>(in_p,&#32;temp);
+200 &#32;&#32;ret[0].real(temp[0]);
+201 &#32;&#32;ret[0].imag(temp[3]);
+202 &#32;&#32;ret[1].real(temp[1]);
+203 &#32;&#32;ret[1].imag(temp[4]);
+204 &#32;&#32;ret[2].real(temp[2]);
+205 &#32;&#32;ret[2].imag(temp[5]);
+206 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+207 }
+208 
+209 std::vector&lt;std::string&gt;&#32;ExactSolution::split(std::string&#32;str)<emphasis class="keyword">&#32;const</emphasis>{
+210 &#32;&#32;std::vector&lt;std::string&gt;&#32;ret;
+211 &#32;&#32;std::istringstream&#32;iss(str);
+212 &#32;&#32;std::string&#32;token;
+213 &#32;&#32;<emphasis class="keywordflow">while</emphasis>(std::getline(iss,&#32;token,&#32;<emphasis class="charliteral">&apos;\t&apos;</emphasis>))&#32;ret.push_back(token);
+214 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+215 }
+216 
+217 <emphasis class="keywordtype">double</emphasis>&#32;scientific_string_to_double(std::string&#32;inp)&#32;{
+218 &#32;&#32;std::istringstream&#32;os(inp);
+219 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;d;
+220 &#32;&#32;os&#32;&gt;&gt;&#32;d;
+221 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;d;
+222 }
+223 
+224 ExactSolution::ExactSolution(<emphasis class="keywordtype">bool</emphasis>&#32;in_rectangular,&#32;<emphasis class="keywordtype">bool</emphasis>&#32;in_dual):&#32;Function&lt;3&gt;(6)&#32;{
+225 &#32;&#32;is_dual&#32;=&#32;in_dual;
+226 &#32;&#32;is_rectangular&#32;=&#32;in_rectangular;
+227 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(is_rectangular)&#32;{
+228 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Preparing&#32;exact&#32;solution&#32;for&#32;rectangular&#32;waveguide.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+229 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+230 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Preparing&#32;exact&#32;solution&#32;for&#32;circular&#32;waveguide.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+231 &#32;&#32;}
+232 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(is_rectangular)&#32;{
+233 &#32;&#32;&#32;&#32;std::ifstream&#32;input(&#32;<emphasis class="stringliteral">&quot;Modes/mode_1550nm.dat&quot;</emphasis>&#32;);
+234 &#32;&#32;&#32;&#32;std::string&#32;line;
+235 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;l_val&#32;=&#32;&#32;3.0;
+236 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;cnt_a&#32;=&#32;0;
+237 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">while</emphasis>&#32;(std::getline(&#32;input,&#32;line&#32;))
+238 &#32;&#32;&#32;&#32;{
+239 &#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;std::string&gt;&#32;ls&#32;=&#32;split(line);
+240 &#32;&#32;&#32;&#32;&#32;&#32;std::istringstream&#32;iss(ls[2]);
+241 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;x;
+242 &#32;&#32;&#32;&#32;&#32;&#32;iss&#32;&gt;&gt;&#32;x;
+243 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(x&#32;&lt;&#32;l_val)&#32;{
+244 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;mesh_points.push_back(x);
+245 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;l_val&#32;=&#32;x;
+246 &#32;&#32;&#32;&#32;&#32;&#32;}
+247 &#32;&#32;&#32;&#32;&#32;&#32;cnt_a&#32;++;
+248 &#32;&#32;&#32;&#32;}
+249 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;cnt_a&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;-&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;mesh_points.size()&#32;&lt;&lt;&#32;std::endl;
+250 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;cnt&#32;&#32;=&#32;mesh_points.size();
+251 &#32;&#32;&#32;&#32;&#32;vals&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;<link linkend="class_point_val">PointVal</link>*[cnt];
+252 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;cnt;&#32;i++)&#32;{
+253 &#32;&#32;&#32;&#32;&#32;&#32;vals[i]&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;<link linkend="class_point_val">PointVal</link>[cnt];
+254 &#32;&#32;&#32;&#32;}
+255 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;cnt&#32;&lt;&lt;&#32;std::endl;
+256 &#32;&#32;&#32;&#32;std::ifstream&#32;input2(&#32;<emphasis class="stringliteral">&quot;Modes/mode_1550nm.dat&quot;</emphasis>&#32;);
+257 &#32;&#32;&#32;&#32;std::string&#32;line2;
+258 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;max&#32;=&#32;0.0;
+259 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;cnt&#32;;&#32;++&#32;i)&#32;{
+260 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&#32;&lt;&#32;cnt&#32;;&#32;++&#32;j)&#32;{
+261 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;getline(&#32;input2,&#32;line2&#32;);
+262 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;std::string&gt;&#32;ls&#32;=&#32;split(line2);
+263 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;d1,&#32;d2,&#32;d3,&#32;d4,&#32;d5,&#32;d6;
+264 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;d1&#32;=&#32;scientific_string_to_double(ls[4]);
+265 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;d2&#32;=&#32;scientific_string_to_double(ls[5]);
+266 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;d3&#32;=&#32;scientific_string_to_double(ls[3]);
+267 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;d4&#32;=&#32;scientific_string_to_double(ls[7]);
+268 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;d5&#32;=&#32;scientific_string_to_double(ls[8]);
+269 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;d6&#32;=&#32;scientific_string_to_double(ls[6]);
+270 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(d1&#32;&gt;&#32;max)&#32;max=d1;
+271 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(d2&#32;&gt;&#32;max)&#32;max=d2;
+272 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(d3&#32;&gt;&#32;max)&#32;max=d3;
+273 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(d4&#32;&gt;&#32;max)&#32;max=d4;
+274 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(d5&#32;&gt;&#32;max)&#32;max=d5;
+275 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(d6&#32;&gt;&#32;max)&#32;max=d6;
+276 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;vals[i][j].set(d1,d2,d3,d4,d5,d6);
+277 &#32;&#32;&#32;&#32;&#32;&#32;}
+278 &#32;&#32;&#32;&#32;}
+279 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;cnt&#32;;&#32;++&#32;i)&#32;{
+280 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&#32;&lt;&#32;cnt&#32;;&#32;++&#32;j)&#32;{
+281 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;vals[j][i].rescale(1.0/max);
+282 &#32;&#32;&#32;&#32;&#32;&#32;}
+283 &#32;&#32;&#32;&#32;}
+284 
+285 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;Mesh&#32;constant:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;abs(mesh_points[0]&#32;-&#32;mesh_points[1])&#32;&lt;&lt;&#32;std::endl;
+286 &#32;&#32;}
+287 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Done&#32;Preparing&#32;exact&#32;solution.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+288 }
+289 
+290 <emphasis class="preprocessor">#endif</emphasis>
+    </computeroutput></literallayout>
+</section>

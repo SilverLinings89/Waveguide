@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_mainpage_doku_8dox">
+    <title>MainpageDoku.dox File Reference</title>
+    <simplesect>
+        <title>Detailed Description</title>
+    <para>Definition in file /home/kraft/workspace/waveguideproblem/Code/MainpageDoku.dox</para>
+    </simplesect>
+    <literallayout><computeroutput>
+1 <emphasis class="comment">/*!</emphasis>
+2 <emphasis class="comment">&#32;&#32;\mainpage&#32;Shape-Optimization&#32;of&#32;a&#32;3D&#32;waveguide&#32;using&#32;dealii,&#32;transformation&#32;optics&#32;and&#32;the&#32;finite&#32;element&#32;method</emphasis>
+3 <emphasis class="comment">&#32;</emphasis>
+4 <emphasis class="comment">&#32;&#32;\section&#32;Topics&#32;Topics&#32;of&#32;this&#32;project</emphasis>
+5 <emphasis class="comment">&#32;</emphasis>
+6 <emphasis class="comment">&#32;&#32;This&#32;project&#32;began&#32;as&#32;the&#32;implementation&#32;used&#32;in&#32;the&#32;thesis&#32;for&#32;the&#32;title&#32;of&#32;Master&#32;of&#32;Science&#32;by&#32;Pascal&#32;Kraft&#32;at&#32;the&#32;KIT.&#32;It&#32;is&#32;continued&#32;for&#32;his&#32;PHD&#32;studies&#32;and&#32;possibly&#32;as&#32;an&#32;introduction&#32;to&#32;dealii&#32;for&#32;other&#32;students&#32;in&#32;the&#32;same&#32;research&#32;group.</emphasis>
+7 <emphasis class="comment">&#32;&#32;This&#32;project,&#32;apart&#32;from&#32;mathematical&#32;goals,&#32;aims&#32;at&#32;creating&#32;a&#32;clear&#32;and&#32;reusable&#32;implementation&#32;of&#32;the&#32;the&#32;finite&#32;element&#32;method&#32;for&#32;Maxwell&apos;s&#32;equaations&#32;in&#32;a&#32;range&#32;of&#32;performance&#32;values,&#32;that&#32;enable&#32;the&#32;inclusion&#32;of&#32;an&#32;optimization-scheme&#32;without&#32;crippling&#32;time-&#32;or&#32;CPU-time&#32;consumption.&#32;Therefore&#32;the&#32;code&#32;should&#32;fullfill&#32;the&#32;following&#32;criteria:</emphasis>
+8 <emphasis class="comment">&#32;&#32;-#&#32;The&#32;code&#32;should&#32;be&#32;readable&#32;to&#32;starters&#32;(educational&#32;purpose),</emphasis>
+9 <emphasis class="comment">&#32;&#32;-#&#32;The&#32;code&#32;should&#32;be&#32;maintainable&#32;(reusability),</emphasis>
+10 <emphasis class="comment">&#32;&#32;-#&#32;The&#32;code&#32;should&#32;be&#32;paralellizable&#32;via&#32;MPI&#32;or&#32;CUDA&#32;(both&#32;will&#32;be&#32;tested&#32;as&#32;a&#32;part&#32;of&#32;the&#32;phd-proceedings),</emphasis>
+11 <emphasis class="comment">&#32;&#32;-#&#32;The&#32;code&#32;should&#32;perform&#32;well&#32;under&#32;the&#32;given&#32;circumstances,</emphasis>
+12 <emphasis class="comment">&#32;&#32;-#&#32;The&#32;code&#32;should&#32;give&#32;scientific&#32;results&#32;and&#32;not&#32;only&#32;operate&#32;on&#32;marginal&#32;domains&#32;of&#32;parameter-values,</emphasis>
+13 <emphasis class="comment">&#32;&#32;-#&#32;The&#32;code&#32;should&#32;be&#32;portable&#32;to&#32;other&#32;hardware-specifications&#32;then&#32;those&#32;on&#32;the&#32;given&#32;computer&#32;at&#32;the&#32;workspace&#32;(i.e.&#32;the&#32;performance&#32;should&#32;be&#32;usable&#32;in&#32;large-scale&#32;computations&#32;for&#32;example&#32;in&#32;SuperComputers&#32;of&#32;the&#32;KIT&quot;s&#32;SCC.</emphasis>
+14 <emphasis class="comment">&#32;</emphasis>
+15 <emphasis class="comment">&#32;&#32;These&#32;demands&#32;led&#32;to&#32;the&#32;introduction&#32;of&#32;a&#32;software&#32;development&#32;scheme&#32;for&#32;the&#32;work&#32;on&#32;the&#32;code&#32;based&#32;on&#32;agile-development&#32;and&#32;git.</emphasis>
+16 <emphasis class="comment">&#32;</emphasis>
+17 <emphasis class="comment">&#32;&#32;\section&#32;Prerequisites&#32;Prerequisites&#32;of&#32;this&#32;project</emphasis>
+18 <emphasis class="comment">&#32;</emphasis>
+19 <emphasis class="comment">&#32;&#32;In&#32;order&#32;to&#32;be&#32;able&#32;to&#32;work&#32;with&#32;this&#32;code&#32;it&#32;is&#32;important&#32;to&#32;first&#32;achieve&#32;a&#32;fundamental&#32;understanding&#32;of&#32;the&#32;following&#32;topics:&#32;First&#32;and&#32;foremost,&#32;an&#32;understanding&#32;of&#32;the&#32;finite&#32;element&#32;method&#32;is&#32;required&#32;and&#32;completely&#32;unreplacable.&#32;There&#32;exists&#32;extensive&#32;documentation&#32;on&#32;this&#32;topic&#32;and&#32;the&#32;reader&#32;should&#32;be&#32;aware&#32;of&#32;the&#32;fact,&#32;that&#32;the&#32;mathematical&#32;background&#32;cannot&#32;be&#32;understood&#32;without&#32;this&#32;knowledge.&#32;However,&#32;there&#32;are&#32;further&#32;demands.&#32;The&#32;programming-language&#32;of&#32;both&#32;this&#32;project&#32;and&#32;dealii&#32;itself&#32;is&#32;C++.&#32;This&#32;language&#32;also&#32;forms&#32;the&#32;backbone&#32;id&#32;CUDA&#32;and&#32;manu&#32;other,&#32;relevant&#32;libraries.&#32;&#32;It&#32;is&#32;to&#32;be&#32;considered&#32;inevitable&#32;in&#32;this&#32;field.&#32;&quot;The&#32;vhoice&#32;of&#32;this&#32;language&#32;in&#32;a&#32;wau&#32;reduces&#32;the&#32;importance&#32;of&#32;the&#32;need&#32;for&#32;a&#32;performanc&#32;implementation&#32;on&#32;the&#32;code&#32;level&#32;*on&#32;the&#32;functional&#32;or&#32;theoretical&#32;level&#32;this&#32;obviously&#32;has&#32;a&#32;very&#32;miimal&#32;influence&#32;on&#32;the&#32;performanc.(.</emphasis>
+20 <emphasis class="comment">&#32;&#32;Also&#32;it&#32;should&#32;be&#32;noted&#32;that&#32;there&#32;exists&#32;a&#32;very&#32;large&#32;documentation&#32;about&#32;dealii&#32;which&#32;might&#32;help&#32;the&#32;reader&#32;understand&#32;this&#32;code.&#32;Lastly&#32;dealii&#32;is&#32;basically&#32;only&#32;available&#32;on&#32;Linux&#32;since&#32;it&#32;nearly&#32;always&#32;requires&#32;a&#32;build-process&#32;which&#32;would&#32;not&#32;be&#32;possible&#32;with&#32;out&#32;enormous&#32;problems&#32;on&#32;different&#32;OS.&#32;As&#32;far&#32;as&#32;mathematical&#32;knowledge&#32;is&#32;concerned,&#32;a&#32;basic&#32;education&#32;in&#32;linear&#32;algebra,&#32;krylov&#32;subspace&#32;methods,&#32;transformation-optics,&#32;functional&#32;analysis,&#32;optics&#32;and&#32;optimization&#32;theory&#32;will&#32;further&#32;the&#32;understanding&#32;of&#32;both&#32;the&#32;code&#32;and&#32;this&#32;documentation&#32;of&#32;it.</emphasis>
+21 <emphasis class="comment">&#32;</emphasis>
+22 <emphasis class="comment">&#32;\author&#32;Pascal&#32;Kraft</emphasis>
+23 <emphasis class="comment">&#32;\version&#32;&#32;2.1</emphasis>
+24 <emphasis class="comment">&#32;*/</emphasis>&#32;
+25 
+    </computeroutput></literallayout>
+</section>

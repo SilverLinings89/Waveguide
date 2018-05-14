@@ -1,0 +1,109 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_round_mesh_generator_8h">
+    <title>RoundMeshGenerator.h File Reference</title>
+    <programlisting>#include &quot;./RoundMeshGenerator.h&quot;</programlisting>
+    <programlisting>#include &lt;vector&gt;</programlisting>
+    <programlisting>#include &lt;array&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/point.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/distributed/tria.h&gt;</programlisting>
+    <programlisting>#include &quot;MeshGenerator.h&quot;</programlisting>
+    <programlisting>#include &quot;../SpaceTransformations/SpaceTransformation.h&quot;</programlisting>
+        <section>
+            <title> Classes </title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>struct <link linkend="class_round_mesh_generator">RoundMeshGenerator</link></para>
+<para><emphasis>This class generates meshes, that are used to discretize a rectangular Waveguide.</emphasis></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+        <title>Detailed Description</title>
+    <para>Definition in file /home/kraft/workspace/waveguideproblem/Code/MeshGenerators/RoundMeshGenerator.h</para>
+    </simplesect>
+    <literallayout><computeroutput>
+1 <emphasis class="preprocessor">#ifndef&#32;RoundMeshGenerator_H_</emphasis>
+2 <emphasis class="preprocessor">#define&#32;RoundMeshGenerator_H_</emphasis>
+3 
+4 <emphasis class="preprocessor">#include&#32;&quot;./RoundMeshGenerator.h&quot;</emphasis>
+5 <emphasis class="preprocessor">#include&#32;&lt;vector&gt;</emphasis>
+6 <emphasis class="preprocessor">#include&#32;&lt;array&gt;</emphasis>
+7 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/point.h&gt;</emphasis>
+8 <emphasis class="preprocessor">#include&#32;&lt;deal.II/distributed/tria.h&gt;</emphasis>
+9 <emphasis class="preprocessor">#include&#32;&quot;MeshGenerator.h&quot;</emphasis>
+10 <emphasis class="preprocessor">#include&#32;&quot;../SpaceTransformations/SpaceTransformation.h&quot;</emphasis><emphasis class="comment"></emphasis>
+11 <emphasis class="comment">/**</emphasis>
+12 <emphasis class="comment">&#32;*&#32;\class&#32;RoundMeshGenerator</emphasis>
+13 <emphasis class="comment">&#32;*&#32;\brief&#32;This&#32;class&#32;generates&#32;meshes,&#32;that&#32;are&#32;used&#32;to&#32;discretize&#32;a&#32;rectangular&#32;Waveguide.&#32;It&#32;is&#32;derived&#32;from&#32;MeshGenerator.</emphasis>
+14 <emphasis class="comment">&#32;*</emphasis>
+15 <emphasis class="comment">&#32;*&#32;This&#32;Generator&#32;creates&#32;a&#32;mesh&#32;around&#32;a&#32;cylindrical&#32;waveguide.&#32;It&#32;should&#32;be&#32;used&#32;in&#32;conjunction&#32;with&#32;a&#32;SpaceTransformation,&#32;which&#32;uses&#32;a&#32;circular&#32;shape&#32;of&#32;the&#32;waveguide&#32;and&#32;an&#32;appropriate&#32;distribution&#32;of&#32;the&#32;DOFs.</emphasis>
+16 <emphasis class="comment">&#32;*&#32;\author&#32;Pascal&#32;Kraft</emphasis>
+17 <emphasis class="comment">&#32;*&#32;\date&#32;28.11.2016</emphasis>
+18 <emphasis class="comment">&#32;*/</emphasis>
+<link linkend="class_round_mesh_generator">19 </link><emphasis class="keyword">class&#32;</emphasis><link linkend="class_round_mesh_generator">RoundMeshGenerator</link>&#32;:&#32;<emphasis class="keyword">public</emphasis>&#32;<link linkend="class_mesh_generator">MeshGenerator</link>&#32;{
+20 
+21 &#32;&#32;parallel::distributed::Triangulation&lt;3&gt;::active_cell_iterator&#32;cell,&#32;endc;
+22 &#32;&#32;<link linkend="class_space_transformation">SpaceTransformation</link>&#32;*&#32;ct;
+23 &#32;&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Layers;
+24 &#32;&#32;Point&lt;3&gt;&#32;origin;
+25 &#32;&#32;std_cxx11::array&lt;&#32;Tensor&lt;&#32;1,&#32;3&#32;&gt;,&#32;3&#32;&gt;&#32;edges;
+26 &#32;&#32;std::vector&lt;unsigned&#32;int&gt;&#32;subs;
+27 
+28 
+29 &#32;&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">double</emphasis>&#32;MaxDistX;
+30 &#32;&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">double</emphasis>&#32;MaxDistY;
+31 
+32 &#32;<emphasis class="keyword">public</emphasis>:
+33 &#32;&#32;<link linkend="class_round_mesh_generator">RoundMeshGenerator</link>(<link linkend="class_space_transformation">SpaceTransformation</link>&#32;*&#32;in_ct);
+34 
+35 &#32;&#32;~<link linkend="class_round_mesh_generator">RoundMeshGenerator</link>();
+36 <emphasis class="comment"></emphasis>
+37 <emphasis class="comment">&#32;&#32;/**</emphasis>
+38 <emphasis class="comment">&#32;&#32;&#32;*&#32;This&#32;function&#32;is&#32;intended&#32;to&#32;execute&#32;a&#32;global&#32;refinement&#32;of&#32;the&#32;mesh.&#32;This&#32;means&#32;that&#32;every&#32;cell&#32;will&#32;be&#32;refined&#32;in&#32;every&#32;direction&#32;(effectively&#32;multiplying&#32;the&#32;number&#32;of&#32;DOFs&#32;by&#32;8).&#32;This&#32;version&#32;is&#32;the&#32;most&#32;expensive&#32;refinement&#32;possible&#32;and&#32;should&#32;be&#32;used&#32;with&#32;caution.</emphasis>
+39 <emphasis class="comment">&#32;&#32;&#32;*&#32;\param&#32;times&#32;Number&#32;of&#32;refinement&#32;steps&#32;to&#32;be&#32;performed&#32;(gives&#32;us&#32;a&#32;multiplication&#32;of&#32;the&#32;number&#32;of&#32;degrees&#32;of&#32;freedom&#32;by&#32;\f$8^{times}\f$.</emphasis>
+40 <emphasis class="comment">&#32;&#32;&#32;*/</emphasis>
+41 &#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_round_mesh_generator_1a6853ef55471fb74a7e4a7c3a3b0f2649">refine_global</link>(parallel::distributed::Triangulation&lt;3&gt;&#32;*&#32;in_tria,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;times);
+42 <emphasis class="comment"></emphasis>
+43 <emphasis class="comment">&#32;&#32;/**</emphasis>
+44 <emphasis class="comment">&#32;&#32;&#32;*&#32;This&#32;function&#32;is&#32;intended&#32;to&#32;execute&#32;an&#32;internal&#32;refinement&#32;of&#32;the&#32;mesh.&#32;This&#32;means&#32;that&#32;every&#32;cell&#32;inside&#32;the&#32;waveguide&#32;will&#32;be&#32;refined&#32;in&#32;every&#32;direction.&#32;This&#32;method&#32;is&#32;rather&#32;cheap&#32;and&#32;only&#32;refines&#32;where&#32;the&#32;field&#32;is&#32;strong,&#32;however,&#32;the&#32;mesh&#32;outside&#32;the&#32;waveguide&#32;should&#32;not&#32;be&#32;too&#32;coarse&#32;to&#32;reduce&#32;numerical&#32;errors.</emphasis>
+45 <emphasis class="comment">&#32;&#32;&#32;*&#32;\param&#32;times&#32;Number&#32;of&#32;refinement&#32;steps&#32;to&#32;be&#32;performed.</emphasis>
+46 <emphasis class="comment">&#32;&#32;&#32;*/</emphasis>
+47 &#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_round_mesh_generator_1ae2a55c58cfe3c69479237921e284e0b8">refine_internal</link>(parallel::distributed::Triangulation&lt;3&gt;&#32;*&#32;in_tria,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;times);
+48 <emphasis class="comment"></emphasis>
+49 <emphasis class="comment">&#32;&#32;/**</emphasis>
+50 <emphasis class="comment">&#32;&#32;&#32;*&#32;This&#32;function&#32;is&#32;intended&#32;to&#32;execute&#32;a&#32;refinement&#32;inside&#32;and&#32;near&#32;the&#32;waveguide&#32;boundary.</emphasis>
+51 <emphasis class="comment">&#32;&#32;&#32;*&#32;\param&#32;times&#32;Number&#32;of&#32;refinement&#32;steps&#32;to&#32;be&#32;performed.</emphasis>
+52 <emphasis class="comment">&#32;&#32;&#32;*/</emphasis>
+53 &#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_round_mesh_generator_1a9bdb7b90cc1988eb80c441ee8f85b0a0">refine_proximity</link>(parallel::distributed::Triangulation&lt;3&gt;&#32;*&#32;in_tria,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;times,&#32;<emphasis class="keywordtype">double</emphasis>&#32;factor);
+54 <emphasis class="comment"></emphasis>
+55 <emphasis class="comment">&#32;&#32;/**</emphasis>
+56 <emphasis class="comment">&#32;&#32;&#32;*&#32;This&#32;function&#32;checks&#32;if&#32;the&#32;given&#32;coordinate&#32;is&#32;inside&#32;the&#32;waveguide&#32;or&#32;not.&#32;The&#32;naming&#32;convention&#32;of&#32;physical&#32;and&#32;mathematical&#32;system&#32;find&#32;application.&#32;In&#32;this&#32;version,&#32;the&#32;waveguide&#32;has&#32;been&#32;transformed&#32;and&#32;the&#32;check&#32;for&#32;a&#32;tubal&#32;waveguide&#32;for&#32;example&#32;only&#32;checks&#32;if&#32;the&#32;radius&#32;of&#32;a&#32;given&#32;vector&#32;is&#32;below&#32;the&#32;average&#32;of&#32;input&#32;and&#32;output&#32;radius.</emphasis>
+57 <emphasis class="comment">&#32;&#32;&#32;*&#32;\params&#32;position&#32;This&#32;value&#32;gives&#32;us&#32;the&#32;location&#32;to&#32;check&#32;for.</emphasis>
+58 <emphasis class="comment">&#32;&#32;&#32;*/</emphasis>
+59 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_round_mesh_generator_1ae28b3d9461233b9de1ce366c0f2458bd">math_coordinate_in_waveguide</link>(Point&lt;3&gt;&#32;position)&#32;<emphasis class="keyword">const</emphasis>&#32;;
+60 <emphasis class="comment"></emphasis>
+61 <emphasis class="comment">&#32;&#32;/**</emphasis>
+62 <emphasis class="comment">&#32;&#32;&#32;*&#32;This&#32;function&#32;checks&#32;if&#32;the&#32;given&#32;coordinate&#32;is&#32;inside&#32;the&#32;waveguide&#32;or&#32;not.&#32;The&#32;naming&#32;convention&#32;of&#32;physical&#32;and&#32;mathematical&#32;system&#32;find&#32;application.&#32;In&#32;this&#32;version,&#32;the&#32;waveguide&#32;is&#32;bent.&#32;If&#32;we&#32;are&#32;using&#32;a&#32;space&#32;transformation&#32;\f$f\f$&#32;then&#32;this&#32;function&#32;is&#32;equal&#32;to&#32;math_coordinate_in_waveguide(f(x,y,z)).</emphasis>
+63 <emphasis class="comment">&#32;&#32;&#32;*&#32;\params&#32;position&#32;This&#32;value&#32;gives&#32;us&#32;the&#32;location&#32;to&#32;check&#32;for.</emphasis>
+64 <emphasis class="comment">&#32;&#32;&#32;*/</emphasis>
+65 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_round_mesh_generator_1aba31fbd62ab56899c0cd06c5257420c7">phys_coordinate_in_waveguide</link>(Point&lt;3&gt;&#32;position)&#32;<emphasis class="keyword">const</emphasis>&#32;;
+66 <emphasis class="comment"></emphasis>
+67 <emphasis class="comment">&#32;&#32;/**</emphasis>
+68 <emphasis class="comment">&#32;&#32;&#32;*&#32;This&#32;function&#32;is&#32;a&#32;helper&#32;during&#32;distributed&#32;mesh&#32;generation.</emphasis>
+69 <emphasis class="comment">&#32;&#32;&#32;*</emphasis>
+70 <emphasis class="comment">&#32;&#32;&#32;*/</emphasis>
+71 &#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_round_mesh_generator_1accafc85e0b02823ef5cd12c384080aad">set_boundary_ids</link>(parallel::distributed::Triangulation&lt;3&gt;&#32;&amp;&#32;tria)&#32;<emphasis class="keyword">const</emphasis>;
+72 <emphasis class="comment"></emphasis>
+73 <emphasis class="comment">&#32;&#32;/**</emphasis>
+74 <emphasis class="comment">&#32;&#32;&#32;*&#32;This&#32;function&#32;takes&#32;a&#32;triangulation&#32;object&#32;and&#32;prepares&#32;it&#32;for&#32;the&#32;further&#32;computations.&#32;It&#32;is&#32;intended&#32;to&#32;encapsulate&#32;all&#32;related&#32;work&#32;and&#32;is&#32;explicitely&#32;not&#32;const.</emphasis>
+75 <emphasis class="comment">&#32;&#32;&#32;*&#32;\param&#32;in_tria&#32;The&#32;triangulation&#32;that&#32;is&#32;supposed&#32;to&#32;be&#32;prepared.&#32;All&#32;further&#32;information&#32;is&#32;derived&#32;from&#32;the&#32;parameter&#32;file&#32;and&#32;not&#32;given&#32;by&#32;parameters.</emphasis>
+76 <emphasis class="comment">&#32;&#32;&#32;*/</emphasis>
+77 &#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_round_mesh_generator_1a7940ac54d22af156b3cc10d490264171">prepare_triangulation</link>(parallel::distributed::Triangulation&lt;3&gt;&#32;*&#32;in_tria)&#32;&#32;;
+78 
+79 };
+80 
+81 <emphasis class="preprocessor">#endif</emphasis>
+    </computeroutput></literallayout>
+</section>

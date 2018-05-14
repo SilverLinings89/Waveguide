@@ -19,7 +19,9 @@
   In order to be able to work with this code it is important to first achieve a fundamental understanding of the following topics: First and foremost, an understanding of the finite element method is required and completely unreplacable. There exists extensive documentation on this topic and the reader should be aware of the fact, that the mathematical background cannot be understood without this knowledge. However, there are further demands. The programming-language of both this project and dealii itself is C++. This language also forms the backbone id CUDA and manu other, relevant libraries.  It is to be considered inevitable in this field. "The vhoice of this language in a wau reduces the importance of the need for a performanc implementation on the code level *on the functional or theoretical level this obviously has a very miimal influence on the performanc.(.
   Also it should be noted that there exists a very large documentation about dealii which might help the reader understand this code. Lastly dealii is basically only available on Linux since it nearly always requires a build-process which would not be possible with out enormous problems on different OS. As far as mathematical knowledge is concerned, a basic education in linear algebra, krylov subspace methods, transformation-optics, functional analysis, optics and optimization theory will further the understanding of both the code and this documentation of it.
  
+  Since Version 2.0 I am working on the complete implementation of complex numbers based on std::complex<double>. Previously deal did not support this completely so in many cases (dof values for example) I had to work around the given restrictions.
+ 
  \author Pascal Kraft
- \version  1.6
+ \version  2.0 pre
  */ 
 

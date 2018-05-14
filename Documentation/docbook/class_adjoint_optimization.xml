@@ -1,0 +1,141 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="class_adjoint_optimization">
+<title>AdjointOptimization class Reference</title>
+<para>
+    <programlisting>#include <link linkend="_adjoint_optimization_8h">&lt;AdjointOptimization.h&gt;</link></programlisting>
+</para>
+        <section>
+            <title>Public Attributes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const int type</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Waveguide * waveguide</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>SpaceTransformation * primal_st</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>SpaceTransformation * dual_st</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>MeshGenerator * mg</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>OptimizationAlgorithm&lt; std::complex&lt; double &gt; &gt; * oa</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title></title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para> <link linkend="class_adjoint_optimization_1a3559e4592891cc20b44d792f0a3c3930">AdjointOptimization</link> (
+<link linkend="class_waveguide">Waveguide</link> * waveguide_primal, <link linkend="class_mesh_generator">MeshGenerator</link> * mg, <link linkend="class_space_transformation">SpaceTransformation</link> * st_primal, <link linkend="class_space_transformation">SpaceTransformation</link> * st_dual, <link linkend="class_optimization_algorithm">OptimizationAlgorithm</link>&lt; std::complex&lt; double &gt;&gt; * Oa)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para> <link linkend="class_adjoint_optimization_1a4d6421b239bee9e576a68423ad3518d7">~AdjointOptimization</link> (
+)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::vector&lt; std::complex&lt; double &gt; &gt; <link linkend="class_adjoint_optimization_1a8e91dd2c0c6675cff4dd36dcf05d6d43">compute_small_step</link> (
+double step)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_adjoint_optimization_1ae83b92afd3bfc29fc6c76e3f16e193d2">compute_big_step</link> (
+std::vector&lt; double &gt; step)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_adjoint_optimization_1a59f56abf3bf2f9179a4d22b7814b87ab">run</link> (
+)<para><emphasis>This function is the core implementation of an optimization algorithm.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+
+<para>Derived from the <link linkend="class_optimization">Optimization</link> class, this class implements an Optimization-scheme based on an adjoint method. </para>
+    </simplesect>
+        <simplesect>
+            <title>Detailed Description</title>
+
+<para>This method should prove to be far superior to a finite difference approach as soon as the shape has more then 2 degrees of freedom since its effort is always a total of 2 forward problems to solve. <formalpara><title>Author: </title>
+
+<para>Pascal Kraft </para>
+</formalpara>
+<formalpara><title>Date: </title>
+
+<para>29.11.2016 </para>
+</formalpara>
+</para>
+                <para>Definition at line 18 of file AdjointOptimization.h</para>
+                <para>The Documentation for this struct was generated from the following file: </para>
+                <para><itemizedlist><listitem><para>AdjointOptimization.h</para></listitem></itemizedlist></para>
+        </simplesect>
+        <section>
+            <title>Member Data Documentation</title>
+        </section>
+            <section xml:id="class_adjoint_optimization_1a3559e4592891cc20b44d792f0a3c3930">
+                <title>AdjointOptimization::AdjointOptimization (Waveguide *waveguide_primal, MeshGenerator *mg, SpaceTransformation *st_primal, SpaceTransformation *st_dual, OptimizationAlgorithm&lt; std::complex&lt; double &gt;&gt; *Oa)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_adjoint_optimization_1a4d6421b239bee9e576a68423ad3518d7">
+                <title>AdjointOptimization::~AdjointOptimization ()</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_adjoint_optimization_1a8e91dd2c0c6675cff4dd36dcf05d6d43">
+                <title>std::vector&lt; std::complex&lt; double &gt; &gt; AdjointOptimization::compute_small_step (double step)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_adjoint_optimization_1ae83b92afd3bfc29fc6c76e3f16e193d2">
+                <title>double AdjointOptimization::compute_big_step (std::vector&lt; double &gt; step)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_adjoint_optimization_1a59f56abf3bf2f9179a4d22b7814b87ab">
+                <title>void AdjointOptimization::run ()</title> <emphasis>This function is the core implementation of an optimization algorithm.</emphasis>
+                
+<para>Currently it is very fundamental in its technical prowess which can be improved upon in later versions. Essentially, it calculates the signal quality for a configurations and for small steps in every one of the dofs. After that, the optimization-step is estimated based on difference-quotients. Following this step, a large step is computed based upon the approximation of the gradient of the signal-quality functional and the iteration starts anew. If a decrease in quality is detected, the optimization-step is undone and the step-width is reduced. This function controls both the Waveguide- and the Waveguide-structure object. </para>
+
+            </section>
+</section>

@@ -1,0 +1,215 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="class_gradient_table">
+<title>GradientTable class Reference</title>
+<para>
+    <programlisting>#include <link linkend="_gradient_table_8h">&lt;GradientTable.h&gt;</link></programlisting>
+</para>
+        <section>
+            <title>Private Attributes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>dealii::Vector&lt; double &gt; steps</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>dealii::Vector&lt; double &gt; qualities</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>dealii::Vector&lt; double &gt; grad_step</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>dealii::Vector&lt; double &gt; ref_configuration</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>dealii::Vector&lt; double &gt; last_configuration</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double final_quality</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double initial_quality</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double last_quality</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title>Public Attributes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const int ndofs</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const int nfreedofs</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const unsigned int GlobalStep</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title></title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para> <link linkend="class_gradient_table_1a39bb3e8c47c7bcd4e3c53154701161bd">GradientTable</link> (
+unsigned int in_step, dealii::Vector&lt; double &gt; in_configuration, double in_quality, dealii::Vector&lt; double &gt; in_last_configuration, double in_last_quality)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para> <link linkend="class_gradient_table_1a0d1ea71553f9c7cd8ab4afdb7cec9462">~GradientTable</link> (
+)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_gradient_table_1a2bb57d034cd547301b4ba0ab34910ba8">SetInitialQuality</link> (
+double in_quality)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_gradient_table_1a167719b7984eb8bf8dedf37069808aee">AddComputationResult</link> (
+int in_component, double in_step, double in_quality)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_gradient_table_1a514fd88e4c76f812fb23b6b434b090a7">AddFullStepResult</link> (
+dealii::Vector&lt; double &gt; in_step, double in_quality)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_gradient_table_1ae56c51dc8ffebcc4875f57d7211b76f6">PrintFullLine</link> (
+)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_gradient_table_1adc013fd5f17700378d0d9d0dd60733a1">PrintTable</link> (
+)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_gradient_table_1a38dbb1b88f8507b33aa3612a415a0edf">WriteTableToFile</link> (
+std::string in_filename)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+
+<para>The Gradient Table is an OutputGenerator, intended to write information about the shape gradient to the console upon its computation. </para>
+    </simplesect>
+        <simplesect>
+            <title>Detailed Description</title>
+
+<para><formalpara><title>Date: </title>
+
+<para>28.11.2016 </para>
+</formalpara>
+<formalpara><title>Author: </title>
+
+<para>Pascal Kraft </para>
+</formalpara>
+</para>
+                <para>Definition at line 11 of file GradientTable.h</para>
+                <para>The Documentation for this struct was generated from the following file: </para>
+                <para><itemizedlist><listitem><para>GradientTable.h</para></listitem></itemizedlist></para>
+        </simplesect>
+        <section>
+            <title>Member Data Documentation</title>
+        </section>
+        <section>
+            <title>Member Data Documentation</title>
+        </section>
+            <section xml:id="class_gradient_table_1a39bb3e8c47c7bcd4e3c53154701161bd">
+                <title>GradientTable::GradientTable (unsigned int in_step, dealii::Vector&lt; double &gt; in_configuration, double in_quality, dealii::Vector&lt; double &gt; in_last_configuration, double in_last_quality)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_gradient_table_1a0d1ea71553f9c7cd8ab4afdb7cec9462">
+                <title>GradientTable::~GradientTable ()</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_gradient_table_1a2bb57d034cd547301b4ba0ab34910ba8">
+                <title>void GradientTable::SetInitialQuality (double in_quality)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_gradient_table_1a167719b7984eb8bf8dedf37069808aee">
+                <title>void GradientTable::AddComputationResult (int in_component, double in_step, double in_quality)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_gradient_table_1a514fd88e4c76f812fb23b6b434b090a7">
+                <title>void GradientTable::AddFullStepResult (dealii::Vector&lt; double &gt; in_step, double in_quality)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_gradient_table_1ae56c51dc8ffebcc4875f57d7211b76f6">
+                <title>void GradientTable::PrintFullLine ()</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_gradient_table_1adc013fd5f17700378d0d9d0dd60733a1">
+                <title>void GradientTable::PrintTable ()</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_gradient_table_1a38dbb1b88f8507b33aa3612a415a0edf">
+                <title>void GradientTable::WriteTableToFile (std::string in_filename)</title> <emphasis></emphasis>
+                
+            </section>
+</section>

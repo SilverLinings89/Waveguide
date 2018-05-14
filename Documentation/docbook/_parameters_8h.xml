@@ -1,0 +1,412 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_parameters_8h">
+    <title>Parameters.h File Reference</title>
+    <programlisting>#include &lt;string&gt;</programlisting>
+    <programlisting>#include &lt;mpi.h&gt;</programlisting>
+    <programlisting>#include &quot;ShapeDescription.h&quot;</programlisting>
+        <section>
+            <title> Classes </title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>struct <link linkend="struct_parameters">Parameters</link></para>
+<para><emphasis>This structure contains all information contained in the input file and some values that can simply be computed from it.</emphasis></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title>Enumerations</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                            <para><literallayout>enum <link linkend="_parameters_8h_1a086c6f6507c67c8809b218d90998c5d6">ConnectorType</link> {
+<link linkend="_parameters_8h_1a086c6f6507c67c8809b218d90998c5d6ad3ce82743a8255ccd69f5b67d257c489">Circle</link>,
+<link linkend="_parameters_8h_1a086c6f6507c67c8809b218d90998c5d6ad614565f121617f9b952559339bffcf6">Rectangle</link>
+}</literallayout>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                            <para><literallayout>enum <link linkend="_parameters_8h_1a1e77af973549bb6475b8f7124ea565fe">BoundaryConditionType</link> {
+<link linkend="_parameters_8h_1a1e77af973549bb6475b8f7124ea565feac9220e8047169671f422164811bc6f00">PML</link>,
+<link linkend="_parameters_8h_1a1e77af973549bb6475b8f7124ea565fea147db9884911bd8886b303be4cc4d0d4">HSIE</link>
+}</literallayout>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                            <para><literallayout>enum <link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246">SpecialCase</link> {
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246ab7e4e0120a041dbe6528b050c04269e0">none</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a96a2dbf84e8e7d21d2c65965c7583f5e">reference_bond_nr_0</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a3b9838b59aa214c39ed433b6f0db734a">reference_bond_nr_1</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246ac2b8c78705627f4bf0bc5fb858a3a0da">reference_bond_nr_2</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246ac3df6987841eba53a20c198d2704934d">reference_bond_nr_40</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a223c7550e988856d6e362fed65651692">reference_bond_nr_41</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246aceeaeaf454c1c213614e6c3d5b1ec9a2">reference_bond_nr_42</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246ac7ce7ec0424fc6a3c52db06788080daf">reference_bond_nr_43</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a133c3ad1017401c09e1d4b2f4f513da5">reference_bond_nr_44</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a53f61171e02f50ba01805a27dee152d8">reference_bond_nr_45</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a9b0f59d20f9e40e02f58078619cd2d6e">reference_bond_nr_46</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a584891aaea3527c6e932d4a4b4f0f98f">reference_bond_nr_47</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a6e8e8937391619ccef738f785d4c44c9">reference_bond_nr_48</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a779c71d6c55f006b073ffb2a1f849f80">reference_bond_nr_49</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a190e0e29f7cc4832e3160a374075d718">reference_bond_nr_50</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246aa462a31ffed39aba45430a49952fc949">reference_bond_nr_51</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246ae8adaa986ba04f2e19bdbede6d803ea3">reference_bond_nr_52</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a1d5875745dc26367cef110cda1347b0f">reference_bond_nr_53</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a41a1b36c5252d07fac9aebeb58267f0d">reference_bond_nr_54</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a5c446109e67ec69ec8fbf71464106041">reference_bond_nr_55</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a155d3e289d98f7412b3bf1d7b10dd255">reference_bond_nr_56</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a6c47ce9b416cd6f7de19a91a63082618">reference_bond_nr_57</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a4d6a36b2a7f636ca31126d593c246b6f">reference_bond_nr_58</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a0df15b3083b7f15f9df47831881f44b5">reference_bond_nr_59</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a9d40a81c29587ab21f64169e9f1145a4">reference_bond_nr_60</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a8d6af3f7f40668ca29dde815a977e2f2">reference_bond_nr_61</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246aab99b5b0a99c49155c42bea7fd5d6b03">reference_bond_nr_62</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a31be4abe11bc2e832e48f45262a57f30">reference_bond_nr_63</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246af26f9c1814355ea8b0fff813b99f4102">reference_bond_nr_64</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a0d2a26b3f9839dfdc3ab870df5698eb3">reference_bond_nr_65</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a2554171ca67474b02a869e1602ddcf0e">reference_bond_nr_66</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246af57afed026f9654c5b4a98ef16e0e9fd">reference_bond_nr_67</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a53ec5a80105d60af2fcb99f6a2cd6978">reference_bond_nr_68</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a291be064e8f9ce3463a0c5b2ba518df5">reference_bond_nr_69</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246aee652b901134c7bdc8fb09fae865961b">reference_bond_nr_70</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246ac44b44be9ad69b10e53f748dc5c62f84">reference_bond_nr_71</link>,
+<link linkend="_parameters_8h_1a041c7b2953cdedd7e3fb878aa823c246a5e7a915772af305548489bcf4995d8a2">reference_bond_nr_72</link>
+}</literallayout>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                            <para><literallayout>enum <link linkend="_parameters_8h_1a21e708e2892c0e7528fbd4996ccc72fd">OptimizationSchema</link> {
+<link linkend="_parameters_8h_1a21e708e2892c0e7528fbd4996ccc72fdaf6cb3036978c564d260f5016cac04f85">FD</link>,
+<link linkend="_parameters_8h_1a21e708e2892c0e7528fbd4996ccc72fda1f4072437cf5115e713bc514693d9323">Adjoint</link>
+}</literallayout>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                            <para><literallayout>enum <link linkend="_parameters_8h_1a26829b1a4470a83e09b84ce752164d92">SolverOptions</link> {
+<link linkend="_parameters_8h_1a26829b1a4470a83e09b84ce752164d92ac8f49d1c89cf479bb8dc2878524b71d2">GMRES</link>,
+<link linkend="_parameters_8h_1a26829b1a4470a83e09b84ce752164d92a3bf0b3bd6144ea534f4d7a460594e973">MINRES</link>,
+<link linkend="_parameters_8h_1a26829b1a4470a83e09b84ce752164d92a8ea5d76ebb0ed454a06211636c22776f">UMFPACK</link>
+}</literallayout>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                            <para><literallayout>enum <link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80e">PreconditionerOptions</link> {
+<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea7645a9d15ef8528f989bb5c335c2e87b">Sweeping</link>,
+<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea9617f95c7d7135334791feeac4d8f3e6">Amesos_Lapack</link>,
+<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea0d5569e9a7045120d300ad622c0b5580">Amesos_Scalapack</link>,
+<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea31ea93a566b2366b000ca1df42c4fd64">Amesos_Klu</link>,
+<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea7a440cdcf7edbdde607c9fefa67c38b3">Amesos_Umfpack</link>,
+<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80eaa92e4c6f57f8945e6eedd1d5deced090">Amesos_Pardiso</link>,
+<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea7842abf3f184390078c0e0b00c602fb7">Amesos_Taucs</link>,
+<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80eaf0643ffc6382e7b4a93e760fad6a5699">Amesos_Superlu</link>,
+<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea8a063ec858fcc94f5a6c6cf1075934c5">Amesos_Superludist</link>,
+<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea59bcf72a577b03995ace6c4c46685161">Amesos_Dscpack</link>,
+<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80eadfbd12116bb18aa7ec4df3152e8bb609">Amesos_Mumps</link>
+}</literallayout>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                            <para><literallayout>enum <link linkend="_parameters_8h_1ae5d027744ba248f35eeefb4e67e45e97">SteppingMethod</link> {
+<link linkend="_parameters_8h_1ae5d027744ba248f35eeefb4e67e45e97acf0ec56e55a336f22010f50d0b6c17e1">Steepest</link>,
+<link linkend="_parameters_8h_1ae5d027744ba248f35eeefb4e67e45e97ab675143c1d974b79ec45f725a4963d60">CG</link>,
+<link linkend="_parameters_8h_1ae5d027744ba248f35eeefb4e67e45e97a898f13ac8979f7d70d900a78c75df8d8">LineSearch</link>
+}</literallayout>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title>Variables</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>static const std::string <link linkend="_parameters_8h_1a2489827d8b8ba4fc46b7c0cfb0a95cd2">PrecOptionNames</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+        <title>Detailed Description</title>
+    <para>Definition in file /home/kraft/workspace/waveguideproblem/Code/Helpers/Parameters.h</para>
+    </simplesect>
+    <literallayout><computeroutput>
+1 
+2 <emphasis class="preprocessor">#ifndef&#32;ParametersFlag</emphasis>
+3 <emphasis class="preprocessor">#define&#32;ParametersFlag</emphasis>
+4 
+5 <emphasis class="preprocessor">#include&#32;&lt;string&gt;</emphasis>
+6 <emphasis class="preprocessor">#include&#32;&lt;mpi.h&gt;</emphasis>
+7 <emphasis class="preprocessor">#include&#32;&quot;ShapeDescription.h&quot;</emphasis><emphasis class="comment"></emphasis>
+8 <emphasis class="comment">/**</emphasis>
+9 <emphasis class="comment">&#32;*&#32;\class&#32;Parameters</emphasis>
+10 <emphasis class="comment">&#32;*&#32;\brief&#32;This&#32;structure&#32;contains&#32;all&#32;information&#32;contained&#32;in&#32;the&#32;input&#32;file&#32;and&#32;some&#32;values&#32;that&#32;can&#32;simply&#32;be&#32;computed&#32;from&#32;it.</emphasis>
+11 <emphasis class="comment">&#32;*</emphasis>
+12 <emphasis class="comment">&#32;*&#32;In&#32;the&#32;application,&#32;static&#32;Variable&#32;of&#32;this&#32;type&#32;makes&#32;the&#32;input&#32;parameters&#32;available&#32;globally.</emphasis>
+13 <emphasis class="comment">&#32;*&#32;\author:&#32;Pascal&#32;Kraft</emphasis>
+14 <emphasis class="comment">&#32;*&#32;\date:&#32;28.11.2016</emphasis>
+15 <emphasis class="comment">&#32;*/</emphasis>
+16 
+17 <emphasis class="keyword">enum</emphasis>&#32;ConnectorType{
+18 &#32;&#32;&#32;&#32;Circle,&#32;Rectangle
+19 };
+20 
+21 <emphasis class="keyword">enum</emphasis>&#32;BoundaryConditionType{
+22 &#32;&#32;&#32;&#32;PML,&#32;HSIE
+23 };
+24 
+25 <emphasis class="keyword">enum</emphasis>&#32;SpecialCase{
+26 &#32;&#32;&#32;&#32;none,
+27 &#32;&#32;&#32;&#32;reference_bond_nr_0,
+28 &#32;&#32;&#32;&#32;reference_bond_nr_1,
+29 &#32;&#32;&#32;&#32;reference_bond_nr_2,
+30 &#32;&#32;&#32;&#32;reference_bond_nr_40,
+31 &#32;&#32;&#32;&#32;reference_bond_nr_41,
+32 &#32;&#32;&#32;&#32;reference_bond_nr_42,
+33 &#32;&#32;&#32;&#32;reference_bond_nr_43,
+34 &#32;&#32;&#32;&#32;reference_bond_nr_44,
+35 &#32;&#32;&#32;&#32;reference_bond_nr_45,
+36 &#32;&#32;&#32;&#32;reference_bond_nr_46,
+37 &#32;&#32;&#32;&#32;reference_bond_nr_47,
+38 &#32;&#32;&#32;&#32;reference_bond_nr_48,
+39 &#32;&#32;&#32;&#32;reference_bond_nr_49,
+40 &#32;&#32;&#32;&#32;reference_bond_nr_50,
+41 &#32;&#32;&#32;&#32;reference_bond_nr_51,
+42 &#32;&#32;&#32;&#32;reference_bond_nr_52,
+43 &#32;&#32;&#32;&#32;reference_bond_nr_53,
+44 &#32;&#32;&#32;&#32;reference_bond_nr_54,
+45 &#32;&#32;&#32;&#32;reference_bond_nr_55,
+46 &#32;&#32;&#32;&#32;reference_bond_nr_56,
+47 &#32;&#32;&#32;&#32;reference_bond_nr_57,
+48 &#32;&#32;&#32;&#32;reference_bond_nr_58,
+49 &#32;&#32;&#32;&#32;reference_bond_nr_59,
+50 &#32;&#32;&#32;&#32;reference_bond_nr_60,
+51 &#32;&#32;&#32;&#32;reference_bond_nr_61,
+52 &#32;&#32;&#32;&#32;reference_bond_nr_62,
+53 &#32;&#32;&#32;&#32;reference_bond_nr_63,
+54 &#32;&#32;&#32;&#32;reference_bond_nr_64,
+55 &#32;&#32;&#32;&#32;reference_bond_nr_65,
+56 &#32;&#32;&#32;&#32;reference_bond_nr_66,
+57 &#32;&#32;&#32;&#32;reference_bond_nr_67,
+58 &#32;&#32;&#32;&#32;reference_bond_nr_68,
+59 &#32;&#32;&#32;&#32;reference_bond_nr_69,
+60 &#32;&#32;&#32;&#32;reference_bond_nr_70,
+61 &#32;&#32;&#32;&#32;reference_bond_nr_71,
+62 &#32;&#32;&#32;&#32;reference_bond_nr_72
+63 };
+64 
+65 <emphasis class="keyword">enum</emphasis>&#32;OptimizationSchema{
+66 &#32;&#32;&#32;&#32;FD,&#32;Adjoint
+67 };
+68 
+69 <emphasis class="keyword">enum</emphasis>&#32;SolverOptions&#32;{
+70 &#32;&#32;&#32;&#32;GMRES,&#32;MINRES,&#32;UMFPACK
+71 };
+72 
+73 <emphasis class="keyword">const</emphasis>&#32;<emphasis class="keyword">static</emphasis>&#32;std::string&#32;PrecOptionNames[]&#32;=&#32;{<emphasis class="stringliteral">&quot;Sweeping&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Lapack&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Scalapack&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Klu&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Umfpack&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Pardiso&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Taucs&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Superlu&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Superludist&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Dscpack&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Mumps&quot;</emphasis>};
+74 
+75 <emphasis class="keyword">enum</emphasis>&#32;PreconditionerOptions&#32;{
+76 &#32;&#32;Sweeping,Amesos_Lapack,Amesos_Scalapack,Amesos_Klu,Amesos_Umfpack,Amesos_Pardiso,Amesos_Taucs,Amesos_Superlu,Amesos_Superludist,Amesos_Dscpack,Amesos_Mumps
+77 };
+78 
+79 <emphasis class="keyword">enum</emphasis>&#32;SteppingMethod&#32;{
+80 &#32;&#32;&#32;&#32;Steepest,&#32;CG,&#32;LineSearch
+81 };
+82 
+<link linkend="struct_parameters">83 </link><emphasis class="keyword">struct&#32;</emphasis><link linkend="struct_parameters">Parameters</link>&#32;{
+84 &#32;&#32;&#32;&#32;
+85 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_G_HistoryLive;
+86 &#32;&#32;&#32;&#32;
+87 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_G_HistoryShapes;
+88 &#32;&#32;&#32;&#32;
+89 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_G_History;
+90 &#32;&#32;&#32;&#32;
+91 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_T_TransformationWeightsAll;
+92 &#32;&#32;&#32;&#32;
+93 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_T_TransformationWeightsFirst;
+94 &#32;&#32;&#32;&#32;
+95 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_T_TransformationWeightsLast;
+96 &#32;&#32;&#32;&#32;
+97 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_S_SolutionAll;
+98 &#32;&#32;&#32;&#32;
+99 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_S_SolutionFirst;
+100 &#32;&#32;&#32;&#32;
+101 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_S_SolutionLast;
+102 &#32;&#32;&#32;&#32;
+103 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_D_ConvergenceAll&#32;;
+104 &#32;&#32;&#32;&#32;
+105 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_D_ConvergenceFirst&#32;;
+106 &#32;&#32;&#32;&#32;
+107 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_D_ConvergenceLast&#32;;
+108 &#32;&#32;&#32;&#32;
+109 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_P_ConvergenceAll&#32;;
+110 &#32;&#32;&#32;&#32;
+111 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_P_ConvergenceFirst&#32;;
+112 &#32;&#32;&#32;&#32;
+113 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_P_ConvergenceLast&#32;;
+114 &#32;&#32;&#32;&#32;
+115 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_G_Summary;
+116 &#32;&#32;&#32;&#32;
+117 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_G_Log;
+118 &#32;&#32;&#32;&#32;
+119 &#32;&#32;&#32;&#32;ConnectorType&#32;M_C_Shape;
+120 &#32;&#32;&#32;&#32;
+121 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_C_Dim1In;
+122 &#32;&#32;&#32;&#32;
+123 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_C_Dim2In;
+124 &#32;&#32;&#32;&#32;
+125 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_C_Dim1Out;
+126 &#32;&#32;&#32;&#32;
+127 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_C_Dim2Out;
+128 &#32;&#32;&#32;&#32;
+129 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_R_XLength;
+130 &#32;&#32;&#32;&#32;
+131 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_R_YLength;
+132 &#32;&#32;&#32;&#32;
+133 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_R_ZLength;
+134 &#32;&#32;&#32;&#32;
+135 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_W_Delta;
+136 &#32;&#32;&#32;&#32;
+137 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_W_epsilonin;
+138 &#32;&#32;&#32;&#32;
+139 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_W_epsilonout;
+140 &#32;&#32;&#32;&#32;
+141 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;M_W_Sectors;
+142 &#32;&#32;&#32;&#32;
+143 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_W_Lambda;
+144 &#32;&#32;&#32;&#32;
+145 &#32;&#32;&#32;&#32;BoundaryConditionType&#32;M_BC_Type;
+146 &#32;&#32;&#32;&#32;
+147 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_Zminus;
+148 &#32;&#32;&#32;&#32;
+149 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_Zplus;
+150 &#32;&#32;&#32;&#32;
+151 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_XMinus;
+152 &#32;&#32;&#32;&#32;
+153 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_XPlus;
+154 &#32;&#32;&#32;&#32;
+155 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_YMinus;
+156 &#32;&#32;&#32;&#32;
+157 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_YPlus;
+158 &#32;&#32;&#32;&#32;
+159 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_KappaXMax;
+160 &#32;&#32;&#32;&#32;
+161 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_KappaZMax;
+162 &#32;&#32;&#32;&#32;
+163 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_KappaYMax;
+164 &#32;&#32;&#32;&#32;
+165 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_SigmaXMax;
+166 &#32;&#32;&#32;&#32;
+167 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_SigmaZMax;
+168 &#32;&#32;&#32;&#32;
+169 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_SigmaYMax;
+170 &#32;&#32;&#32;&#32;
+171 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_DampeningExponent;
+172 &#32;&#32;&#32;&#32;
+173 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;Sc_Homogeneity;
+174 &#32;&#32;&#32;&#32;
+175 &#32;&#32;&#32;&#32;OptimizationSchema&#32;Sc_Schema;
+176 &#32;&#32;&#32;&#32;
+177 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;Sc_OptimizationSteps;
+178 &#32;&#32;&#32;&#32;
+179 &#32;&#32;&#32;&#32;SteppingMethod&#32;Sc_SteppingMethod;
+180 
+181 &#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;StepWidth&#32;Sc_StepWidth;</emphasis>
+182 
+183 &#32;&#32;&#32;&#32;SolverOptions&#32;So_Solver;
+184 &#32;&#32;&#32;&#32;
+185 &#32;&#32;&#32;&#32;PreconditionerOptions&#32;So_Preconditioner;
+186 
+187 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;So_ElementOrder;
+188 
+189 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;So_RestartSteps;
+190 &#32;&#32;&#32;&#32;
+191 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;So_TotalSteps;
+192 &#32;&#32;&#32;&#32;
+193 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;So_Precision;
+194 &#32;&#32;&#32;&#32;
+195 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;C_AllOne;
+196 &#32;&#32;&#32;&#32;
+197 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_Mu;
+198 &#32;&#32;&#32;&#32;
+199 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_Epsilon;
+200 &#32;&#32;&#32;&#32;
+201 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_Pi;
+202 &#32;&#32;&#32;&#32;
+203 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_c;
+204 
+205 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_f0;
+206 
+207 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_k0;
+208 
+209 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_omega;
+210 
+211 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;R_Global;
+212 &#32;&#32;&#32;&#32;
+213 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;R_Local;
+214 &#32;&#32;&#32;&#32;
+215 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;R_Interior;
+216 &#32;&#32;&#32;&#32;
+217 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;LayerThickness;
+218 &#32;&#32;&#32;&#32;
+219 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;SectorThickness;
+220 
+221 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;&#32;&#32;&#32;MPI_Rank;
+222 
+223 &#32;&#32;&#32;&#32;MPI_Comm&#32;&#32;&#32;&#32;MPIC_World;
+224 
+225 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;PMLLayer;
+226 
+227 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;LayersPerSector;
+228 
+229 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;NumberProcesses;
+230 
+231 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;Head&#32;=&#32;<emphasis class="keyword">false</emphasis>;
+232 
+233 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;SystemLength;
+234 
+235 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;Maximum_Z;
+236 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;Minimum_Z;
+237 &#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;unsigned&#32;int&#32;MPI_Size;</emphasis>
+238 
+239 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;Phys_V;
+240 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;Phys_SpotRadius;
+241 
+242 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;StepWidth;
+243 
+244 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;M_PC_Use;
+245 
+246 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;M_PC_Case;
+247 
+248 &#32;&#32;&#32;&#32;<link linkend="class_shape_description">ShapeDescription</link>&#32;sd;
+249 
+250 };
+251 
+252 <emphasis class="preprocessor">#endif</emphasis>
+    </computeroutput></literallayout>
+</section>

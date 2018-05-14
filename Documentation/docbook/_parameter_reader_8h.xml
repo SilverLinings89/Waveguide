@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_parameter_reader_8h">
+    <title>ParameterReader.h File Reference</title>
+    <programlisting>#include &lt;deal.II/base/parameter_handler.h&gt;</programlisting>
+    <programlisting>#include &quot;../Core/Waveguide.h&quot;</programlisting>
+        <section>
+            <title> Classes </title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>struct <link linkend="class_parameter_reader">ParameterReader</link></para>
+<para><emphasis>This class is used to gather all the information from the input file and store it in a static object available to all processes.</emphasis></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+        <title>Detailed Description</title>
+    <para>Definition in file /home/kraft/workspace/waveguideproblem/Code/Helpers/ParameterReader.h</para>
+    </simplesect>
+    <literallayout><computeroutput>
+1 <emphasis class="preprocessor">#ifndef&#32;ParameterReaderFlag</emphasis>
+2 <emphasis class="preprocessor">#define&#32;ParameterReaderFlag</emphasis>
+3 
+4 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/parameter_handler.h&gt;</emphasis>
+5 <emphasis class="preprocessor">#include&#32;&quot;../Core/Waveguide.h&quot;</emphasis>
+6 <emphasis class="keyword">using&#32;namespace&#32;</emphasis><link linkend="namespacedealii">dealii</link>;
+7 <emphasis class="comment"></emphasis>
+8 <emphasis class="comment">/**</emphasis>
+9 <emphasis class="comment">&#32;*&#32;\class&#32;ParameterReader</emphasis>
+10 <emphasis class="comment">&#32;*&#32;\brief&#32;This&#32;class&#32;is&#32;used&#32;to&#32;gather&#32;all&#32;the&#32;information&#32;from&#32;the&#32;input&#32;file&#32;and&#32;store&#32;it&#32;in&#32;a&#32;static&#32;object&#32;available&#32;to&#32;all&#32;processes.</emphasis>
+11 <emphasis class="comment">&#32;*</emphasis>
+12 <emphasis class="comment">&#32;*&#32;The&#32;ParameterReader&#32;is&#32;a&#32;very&#32;useful&#32;tool.&#32;It&#32;uses&#32;a&#32;deal-function&#32;to&#32;read&#32;a&#32;xml-file&#32;and&#32;parse&#32;the&#32;contents&#32;to&#32;specific&#32;variables.&#32;These&#32;variables&#32;have&#32;default&#32;values&#32;used&#32;in&#32;their&#32;declaration.&#32;The&#32;members&#32;of&#32;this&#32;class&#32;do&#32;two&#32;things:</emphasis>
+13 <emphasis class="comment">&#32;*&#32;-#&#32;declare&#32;the&#32;variables.&#32;This&#32;includes&#32;setting&#32;a&#32;data-type&#32;for&#32;them&#32;and&#32;a&#32;default&#32;value&#32;should&#32;none&#32;be&#32;provided&#32;in&#32;the&#32;input&#32;file.&#32;Furthermore&#32;there&#32;can&#32;be&#32;restrictions&#32;like&#32;maximum&#32;or&#32;minimum&#32;values&#32;etc.</emphasis>
+14 <emphasis class="comment">&#32;*&#32;-#&#32;call&#32;an&#32;external&#32;function&#32;to&#32;parse&#32;an&#32;input-file.</emphasis>
+15 <emphasis class="comment">&#32;*</emphasis>
+16 <emphasis class="comment">&#32;*&#32;After&#32;creating&#32;an&#32;object&#32;of&#32;this&#32;type&#32;and&#32;calling&#32;both&#32;declare()&#32;and&#32;read(),&#32;this&#32;object&#32;contains&#32;all&#32;the&#32;information&#32;from&#32;the&#32;input&#32;file&#32;and&#32;can&#32;be&#32;used&#32;in&#32;the&#32;code&#32;without&#32;dealing&#32;with&#32;persistence.</emphasis>
+17 <emphasis class="comment">&#32;*</emphasis>
+18 <emphasis class="comment">&#32;*\author&#32;Pascal&#32;Kraft</emphasis>
+19 <emphasis class="comment">&#32;*\date&#32;23.11.2015</emphasis>
+20 <emphasis class="comment">&#32;*/</emphasis>
+<link linkend="class_parameter_reader">21 </link><emphasis class="keyword">class&#32;</emphasis><link linkend="class_parameter_reader">ParameterReader</link>&#32;:&#32;<emphasis class="keyword">public</emphasis>&#32;Subscriptor
+22 {
+23 <emphasis class="keyword">public</emphasis>:
+24 <emphasis class="comment"></emphasis>
+25 <emphasis class="comment">&#32;&#32;&#32;&#32;/**</emphasis>
+26 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;Deal&#32;Offers&#32;the&#32;ParameterHandler&#32;object&#32;wich&#32;contains&#32;all&#32;of&#32;the&#32;parsing-functionality.&#32;An&#32;object&#32;of&#32;that&#32;type&#32;is&#32;included&#32;in&#32;this&#32;one.&#32;This&#32;constructor&#32;simply&#32;uses&#32;a&#32;copy-constructor&#32;to&#32;initialize&#32;it.</emphasis>
+27 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+28 &#32;&#32;&#32;&#32;<link linkend="class_parameter_reader">ParameterReader</link>&#32;(ParameterHandler&#32;&amp;prmhandler);
+29 <emphasis class="comment"></emphasis>
+30 <emphasis class="comment">&#32;&#32;&#32;&#32;/**</emphasis>
+31 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;This&#32;member&#32;calls&#32;the&#32;read_input_from_xml()-function&#32;of&#32;the&#32;contained&#32;ParameterHandler&#32;and&#32;this&#32;replaces&#32;the&#32;default&#32;values&#32;with&#32;the&#32;values&#32;in&#32;the&#32;input&#32;file.</emphasis>
+32 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+33 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;read_parameters&#32;&#32;&#32;&#32;(<emphasis class="keyword">const</emphasis>&#32;std::string&#32;inputfile);
+34 <emphasis class="comment"></emphasis>
+35 <emphasis class="comment">&#32;&#32;&#32;&#32;/**</emphasis>
+36 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;In&#32;this&#32;function,&#32;we&#32;add&#32;all&#32;values&#32;descriptions&#32;to&#32;the&#32;parameter-handler.&#32;This&#32;includes</emphasis>
+37 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;-#&#32;a&#32;default&#32;value,</emphasis>
+38 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;-#&#32;a&#32;data-type,</emphasis>
+39 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;-#&#32;possible&#32;restrictions&#32;(greater&#32;than&#32;zero&#32;etc.),</emphasis>
+40 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;-#&#32;a&#32;description,&#32;which&#32;is&#32;displayed&#32;in&#32;deals&#32;ParameterGUI-tool,</emphasis>
+41 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;-#&#32;a&#32;hierarchical&#32;structure&#32;to&#32;order&#32;the&#32;variables.</emphasis>
+42 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*</emphasis>
+43 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;Deals&#32;Parameter-GUI&#32;can&#32;be&#32;installed&#32;at&#32;build-time&#32;of&#32;the&#32;library&#32;and&#32;offers&#32;a&#32;great&#32;and&#32;easy&#32;way&#32;to&#32;edit&#32;the&#32;input&#32;file.&#32;It&#32;displays&#32;appropriate&#32;input-methods&#32;depending&#32;on&#32;the&#32;type,&#32;so,&#32;for&#32;example,&#32;in&#32;case&#32;of&#32;a&#32;selection&#32;from&#32;three&#32;different&#32;values&#32;(i.e.&#32;the&#32;name&#32;of&#32;a&#32;solver&#32;that&#32;has&#32;to&#32;either&#32;be&#32;GMRES,&#32;MINRES&#32;or&#32;UMFPACK)&#32;it&#32;displays&#32;a&#32;dropdown&#32;containing&#32;all&#32;the&#32;options.</emphasis>
+44 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+45 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;declare_parameters&#32;();
+46 
+47 <emphasis class="keyword">private</emphasis>:
+48 &#32;&#32;&#32;&#32;ParameterHandler&#32;&amp;prm;
+49 
+50 };
+51 
+52 <emphasis class="preprocessor">#endif</emphasis>
+    </computeroutput></literallayout>
+</section>
