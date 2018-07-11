@@ -696,6 +696,8 @@ void Waveguide::reinit_preconditioner() {
 
 void Waveguide::reinit_preconditioner_fast() { }
 
+
+
 void Waveguide::assemble_system() {
   reinit_rhs();
 
