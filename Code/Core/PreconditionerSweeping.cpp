@@ -26,26 +26,27 @@ PreconditionerSweeping::~PreconditionerSweeping (){
   delete solver;
 }
 
-PreconditionerSweeping::PreconditionerSweeping (  MPI_Comm in_mpi_comm, int in_own, int in_others, int in_above, int in_bandwidth, IndexSet in_locally_owned_dofs, IndexSet * in_fixed_dofs, int in_rank)
+PreconditionerSweeping::PreconditionerSweeping (  MPI_Comm in_mpi_comm, int in_own, int in_others, int in_above, int in_bandwidth, IndexSet in_locally_owned_dofs, IndexSet * in_fixed_dofs, int in_rank, bool in_fast)
 {
-    locally_owned_dofs = in_locally_owned_dofs;
-		own = in_own;
-		others = in_others;
-		IndexSet elements (own+others);
-		elements.add_range(0,own+others);
-		indices = new int[in_locally_owned_dofs.n_elements()];
-		sweepable = in_locally_owned_dofs.n_elements();
-		for(unsigned int i = 0; i < sweepable; i++){
-			indices[i] = in_locally_owned_dofs.nth_index_in_set(i);
-		}
-		fixed_dofs = in_fixed_dofs;
-		rank = in_rank;
-		bandwidth = in_bandwidth;
-		mpi_comm = in_mpi_comm;
-		above = in_above;
-		prec_matrix_lower = 0;
-		prec_matrix_upper = 0;
-		matrix = 0;
+  locally_owned_dofs = in_locally_owned_dofs;
+  own = in_own;
+  others = in_others;
+  IndexSet elements (own+others);
+  elements.add_range(0,own+others);
+  indices = new int[in_locally_owned_dofs.n_elements()];
+  sweepable = in_locally_owned_dofs.n_elements();
+  for(unsigned int i = 0; i < sweepable; i++){
+    indices[i] = in_locally_owned_dofs.nth_index_in_set(i);
+  }
+  fixed_dofs = in_fixed_dofs;
+  rank = in_rank;
+  bandwidth = in_bandwidth;
+  mpi_comm = in_mpi_comm;
+  above = in_above;
+  prec_matrix_lower = 0;
+  prec_matrix_upper = 0;
+  matrix = 0;
+  fast = in_fast;
 }
 
 void PreconditionerSweeping::Prepare ( TrilinosWrappers::MPI::BlockVector & inp) {
@@ -57,6 +58,79 @@ void PreconditionerSweeping::Prepare ( TrilinosWrappers::MPI::BlockVector & inp)
 }
 
 void PreconditionerSweeping::vmult (TrilinosWrappers::MPI::BlockVector       &dst,
+            const TrilinosWrappers::MPI::BlockVector &src)const {
+    if(fast) {
+      this->vmult_fast(dst, src);
+    } else {
+      this->vmult_slow(dst, src);
+    }
+}
+
+void PreconditionerSweeping::vmult_fast (TrilinosWrappers::MPI::BlockVector       &dst,
+            const TrilinosWrappers::MPI::BlockVector &src)const
+{
+  dealii::Vector<double> recv_buffer_above (above);
+  dealii::Vector<double> recv_buffer_below (others);
+  dealii::Vector<double> temp_own (own);
+  dealii::Vector<double> temp_own_2 (own);
+  dealii::Vector<double> input(own);
+  MPI_Request request, request2;
+  for (unsigned int i = 0; i < sweepable; i++) {
+        input[i] = src[indices[i]];
+  }
+
+  if (rank == GlobalParams.NumberProcesses-1) {
+    solver->solve( input);
+  } else {
+    if( rank > 0) {
+      Hinv(input, temp_own);
+    }
+  }
+  if (rank == GlobalParams.NumberProcesses-1) {
+    MPI_Send(&input[0], own, MPI_DOUBLE, rank-1, 0, mpi_comm);
+  } else {
+    MPI_Recv(& recv_buffer_below[0], others, MPI_DOUBLE, rank+1, 0, mpi_comm, MPI_STATUS_IGNORE);
+    if(rank > 0) MPI_Send(&temp_own[0], own, MPI_DOUBLE, rank-1, 0, mpi_comm);
+  }
+
+  if(rank < GlobalParams.NumberProcesses-1) {
+    UpperProduct(recv_buffer_below, temp_own);
+    input -= temp_own;
+  }
+
+  if(rank < GlobalParams.NumberProcesses-1 ) {
+    for(int i =0; i < own; i++) {
+        temp_own[i] = input[i];
+    }
+    Hinv(temp_own, input);
+  }
+
+  if ( rank == 0) {
+    MPI_Send(&input[0], own, MPI_DOUBLE, rank + 1, 0, mpi_comm);
+  } else {
+    MPI_Recv(& recv_buffer_above[0], above, MPI_DOUBLE, rank-1, 0, mpi_comm, MPI_STATUS_IGNORE);
+    if(rank < GlobalParams.NumberProcesses-1) MPI_Send(&input[0], own, MPI_DOUBLE, rank + 1, 0, mpi_comm);
+  }
+
+  if(rank > 0) {
+    LowerProduct(recv_buffer_above, temp_own);
+    if(rank == GlobalParams.NumberProcesses-1) {
+      solver->solve(temp_own);
+      input -= temp_own;
+    } else {
+      Hinv(temp_own, temp_own_2);
+      input -= temp_own_2;
+    }
+  }
+
+  for(int i = 0; i < own; i++ ){
+    if(! fixed_dofs->is_element(indices[i])){
+      dst[indices[i]] = input[i];
+    }
+  }
+}
+
+void PreconditionerSweeping::vmult_slow (TrilinosWrappers::MPI::BlockVector       &dst,
 			const TrilinosWrappers::MPI::BlockVector &src)const
 {
   dealii::Vector<double> recv_buffer_above (above);

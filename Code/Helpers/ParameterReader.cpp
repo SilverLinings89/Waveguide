@@ -99,7 +99,8 @@ void ParameterReader::declare_parameters()
   prm.enter_subsection("Solver");
       prm.declare_entry("Solver", "GMRES", Patterns::Selection("GMRES|UMFPACK|MINRES"), "Which Solver to use for the solution of the system matrix");
       prm.declare_entry("GMRESSteps", "30", Patterns::Integer(1), "Steps until restart of Krylow subspace generation");
-      prm.declare_entry("Preconditioner", "Sweeping", Patterns::Selection("Sweeping|Amesos_Lapack|Amesos_Scalapack|Amesos_Klu|Amesos_Umfpack|Amesos_Pardiso|Amesos_Taucs|Amesos_Superlu|Amesos_Superludist|Amesos_Dscpack|Amesos_Mumps"), "Which preconditioner to use");
+      prm.declare_entry("Preconditioner", "Sweeping", Patterns::Selection("Sweeping|FastSweeping|HSIESweeping|HSIEFastSweeping"), "Which preconditioner to use");
+      prm.declare_entry("PreconditionerDampening", "0.0", Patterns::Double(0), "Dampening for the preconditioner to acclelerate convergence. Typically 0 (off) or 1.0");
       prm.declare_entry("Steps", "30", Patterns::Integer(1), "Number of Steps the Solver is supposed to do.");
       prm.declare_entry("Precision", "1e-6", Patterns::Double(0), "Minimal error value, the solver is supposed to accept as correct solution.");
   prm.leave_subsection();

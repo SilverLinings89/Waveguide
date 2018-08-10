@@ -53,8 +53,12 @@ class PreconditionerSweeping : dealii::TrilinosWrappers::PreconditionBase {
    * \param in_others This is the number of degrees of freedom that the process below has. Every process has to deal with one other process. The other neighbor only contacts it for a multiplication with its own matrix block - in this case, no objects of unknown size are concerned. However: for the one process that does require more contact needs a vector tp be initialized. This vectors size is this int.
    * \param bandwidth The number of dofs per line on average is required for the construction of matrices.
    * \param locally_owned The degrees of freedom associated with the current process. Required for vector and matrix construction.
+   * \param dampening_parameter If set to zero, no dampening is used. Otherwise, dampening according to (3.10) in the sweeping preconditioner paper is used. Thi solves the equation
+   * \f[
+   * \nabla \times \tilde{\mu}^{-1}\nabla \times \boldsymbol{E} - (\kappa + i \alpha)^2 \tilde{\epsilon}\boldsymbol{E} = 0
+   * \f]
    */
-  PreconditionerSweeping(MPI_Comm in_mpi_comm, int in_own, int in_others, int in_above, int bandwidth, dealii::IndexSet locally_owned, dealii::IndexSet * in_fixed_dofs, int rank);
+  PreconditionerSweeping(MPI_Comm in_mpi_comm, int in_own, int in_others, int in_above, int bandwidth, dealii::IndexSet locally_owned, dealii::IndexSet * in_fixed_dofs, int rank, bool fast);
 
     ~PreconditionerSweeping();
 
@@ -84,6 +88,8 @@ class PreconditionerSweeping : dealii::TrilinosWrappers::PreconditionBase {
    * \param src The vector to be multiplied by the approximate inverse.
    */
   virtual void vmult(dealii::TrilinosWrappers::MPI::BlockVector &dst, const dealii::TrilinosWrappers::MPI::BlockVector &src) const;
+  virtual void vmult_fast(dealii::TrilinosWrappers::MPI::BlockVector &dst, const dealii::TrilinosWrappers::MPI::BlockVector &src) const;
+  virtual void vmult_slow(dealii::TrilinosWrappers::MPI::BlockVector &dst, const dealii::TrilinosWrappers::MPI::BlockVector &src) const;
 
   dealii::TrilinosWrappers::SparseMatrix * matrix;
   dealii::SparseMatrix<double> * prec_matrix_upper;
@@ -93,8 +99,8 @@ class PreconditionerSweeping : dealii::TrilinosWrappers::PreconditionBase {
   void Prepare(dealii::TrilinosWrappers::MPI::BlockVector &src);
 
   void init(dealii::SolverControl in_sc, dealii::TrilinosWrappers::SparseMatrix *, dealii::TrilinosWrappers::SparseMatrix *);
-
  private:
+  bool fast;
   int * indices;
   int own, others;
   dealii::TrilinosWrappers::MPI::Vector itmp, otmp;

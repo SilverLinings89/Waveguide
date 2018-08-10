@@ -271,9 +271,14 @@ Parameters GetParameters() {
     temp = prm.get("Preconditioner");
     if (temp == "Sweeping") {
       ret.So_Preconditioner = PreconditionerOptions::Sweeping;
-    } else if(temp == "Amesos_Lapack") {
-      ret.So_Preconditioner = PreconditionerOptions::Amesos_Lapack;
+    } else if(temp == "FastSweeping") {
+      ret.So_Preconditioner = PreconditionerOptions::FastSweeping;
+    } else if(temp == "HSIESweeping") {
+      ret.So_Preconditioner = PreconditionerOptions::HSIESweeping;
+    } else if(temp == "HSIEFastSweeping") {
+      ret.So_Preconditioner = PreconditionerOptions::HSIEFastSweeping;
     }
+    ret.So_PreconditionerDampening = prm.get_double("PreconditionerDampening");
     ret.So_TotalSteps = prm.get_integer("Steps");
     ret.So_Precision = prm.get_double("Precision");
   }
