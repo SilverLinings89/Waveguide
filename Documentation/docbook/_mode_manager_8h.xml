@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_mode_manager_8h">
+    <title>ModeManager.h File Reference</title>
+    <programlisting>#include &lt;deal.II/base/point.h&gt;</programlisting>
+        <section>
+            <title> Classes </title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>struct <link linkend="class_mode_manager">ModeManager</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+        <title>Detailed Description</title>
+    <para>Definition in file /home/kraft/workspace/waveguideproblem/Code/Helpers/ModeManager.h</para>
+    </simplesect>
+    <literallayout><computeroutput>
+1 <emphasis class="comment">/*</emphasis>
+2 <emphasis class="comment">&#32;*&#32;ModeManager.h</emphasis>
+3 <emphasis class="comment">&#32;*</emphasis>
+4 <emphasis class="comment">&#32;*&#32;&#32;\date&#32;23.03.2017</emphasis>
+5 <emphasis class="comment">&#32;*&#32;&#32;\author&#32;Pascal&#32;Kraft</emphasis>
+6 <emphasis class="comment">&#32;*/</emphasis>
+7 
+8 <emphasis class="preprocessor">#ifndef&#32;CODE_HELPERS_MODEMANAGER_H_</emphasis>
+9 <emphasis class="preprocessor">#define&#32;CODE_HELPERS_MODEMANAGER_H_</emphasis>
+10 
+11 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/point.h&gt;</emphasis>
+12 
+<link linkend="class_mode_manager">13 </link><emphasis class="keyword">class&#32;</emphasis><link linkend="class_mode_manager">ModeManager</link>&#32;{
+14 <emphasis class="keyword">public</emphasis>:
+15 &#32;&#32;&#32;&#32;<link linkend="class_mode_manager">ModeManager</link>();
+16 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;prepare_mode_in();
+17 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;prepare_mode_out();
+18 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;number_modes_in();
+19 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;number_modes_out();
+20 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;get_input_component(&#32;<emphasis class="keywordtype">int</emphasis>&#32;,&#32;dealii::Point&lt;3,double&gt;&#32;,&#32;<emphasis class="keywordtype">int</emphasis>);
+21 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;get_output_component(&#32;<emphasis class="keywordtype">int</emphasis>&#32;,&#32;dealii::Point&lt;3,double&gt;&#32;,&#32;<emphasis class="keywordtype">int</emphasis>&#32;);
+22 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;load();
+23 
+24 <emphasis class="keyword">private</emphasis>:
+25 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;in_circular;
+26 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;out_circular;
+27 &#32;&#32;&#32;&#32;std::vector&lt;double&gt;&#32;u_in;
+28 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;v_in;
+29 &#32;&#32;&#32;&#32;std::vector&lt;double&gt;&#32;u_out;
+30 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;v_out;
+31 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;in_prepared;
+32 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;out_prepared;
+33 
+34 &#32;&#32;&#32;&#32;std::vector&lt;double&gt;&#32;get_us(<emphasis class="keywordtype">double</emphasis>);
+35 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;get_u0(<emphasis class="keywordtype">double</emphasis>);
+36 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;get_lhs(<emphasis class="keywordtype">double</emphasis>);
+37 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;get_rhs(<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>);
+38 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;J_0(<emphasis class="keywordtype">double</emphasis>);
+39 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;J_1(<emphasis class="keywordtype">double</emphasis>);
+40 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;J_n(<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">int</emphasis>);
+41 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;K_0(<emphasis class="keywordtype">double</emphasis>);
+42 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;K_1(<emphasis class="keywordtype">double</emphasis>);
+43 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;K_n(<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">int</emphasis>);
+44 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;bessi0(<emphasis class="keywordtype">double</emphasis>);
+45 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;bessi1(<emphasis class="keywordtype">double</emphasis>);
+46 
+47 };
+48 
+49 
+50 
+51 <emphasis class="preprocessor">#endif&#32;</emphasis><emphasis class="comment">/*&#32;CODE_HELPERS_MODEMANAGER_H_&#32;*/</emphasis><emphasis class="preprocessor"></emphasis>
+    </computeroutput></literallayout>
+</section>

@@ -1,0 +1,585 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_waveguide_8h">
+    <title>Waveguide.h File Reference</title>
+    <programlisting>#include &lt;sys/stat.h&gt;</programlisting>
+    <programlisting>#include &lt;mpi.h&gt;</programlisting>
+    <programlisting>#include &lt;math.h&gt;</programlisting>
+    <programlisting>#include &lt;fstream&gt;</programlisting>
+    <programlisting>#include &lt;iostream&gt;</programlisting>
+    <programlisting>#include &lt;cmath&gt;</programlisting>
+    <programlisting>#include &lt;sstream&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/dofs/dof_handler.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/grid/grid_generator.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/grid/manifold_lib.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/thread_management.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/multithread_info.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/grid/tria_accessor.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/grid/tria_iterator.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/grid/filtered_iterator.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/dofs/dof_accessor.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/grid/tria_boundary_lib.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/grid/grid_out.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/grid/grid_tools.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/dofs/dof_renumbering.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/fe/fe_q.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/fe/fe_nedelec.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/fe/fe_system.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/dofs/dof_tools.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/fe/fe_values.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/quadrature_lib.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/function.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/numerics/vector_tools.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/numerics/matrix_tools.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/full_matrix.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/block_sparsity_pattern.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/dynamic_sparsity_pattern.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/block_matrix_array.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/solver_gmres.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/solver_minres.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/precondition.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/sparse_direct.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/block_sparse_matrix.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/block_vector.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/timer.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/parameter_handler.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/numerics/data_out.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/logstream.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/index_set.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/distributed/tria.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/distributed/grid_refinement.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/point.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/trilinos_precondition.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/trilinos_solver.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/trilinos_sparsity_pattern.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/trilinos_block_sparse_matrix.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/la_parallel_vector.h&gt;</programlisting>
+    <programlisting>#include &quot;../Helpers/ExactSolution.h&quot;</programlisting>
+    <programlisting>#include &quot;../Helpers/Parameters.h&quot;</programlisting>
+    <programlisting>#include &quot;../Helpers/ParameterReader.h&quot;</programlisting>
+    <programlisting>#include &quot;./PreconditionerSweeping.h&quot;</programlisting>
+    <programlisting>#include &quot;../Helpers/staticfunctions.h&quot;</programlisting>
+    <programlisting>#include &quot;../Helpers/ModeManager.h&quot;</programlisting>
+    <programlisting>#include &quot;../MeshGenerators/MeshGenerator.h&quot;</programlisting>
+    <programlisting>#include &quot;../SpaceTransformations/SpaceTransformation.h&quot;</programlisting>
+    <programlisting>#include &lt;deal.II/base/convergence_table.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/table_handler.h&gt;</programlisting>
+        <section>
+            <title> Classes </title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>struct <link linkend="class_waveguide">Waveguide</link></para>
+<para><emphasis>This class encapsulates all important mechanism for solving a FEM problem.</emphasis></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title>Variables</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para><link linkend="struct_parameters">Parameters</link> <link linkend="_waveguide_8h_1a76239e059c1f8545b24809e138decdb7">GlobalParams</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para><link linkend="class_mode_manager">ModeManager</link> <link linkend="_waveguide_8h_1a2540c1b01e5c3d0d044ed313cefb0e36">ModeMan</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>dealii::ConvergenceTable <link linkend="_waveguide_8h_1a85bc643b803a3dea5bb9135ff360cef4">Convergence_Table</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>dealii::TableHandler <link linkend="_waveguide_8h_1ac9986726c30e30de323acd6975664b9f">Optimization_Steps</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const int <link linkend="_waveguide_8h_1ae484f777aebe6f207abf03554c1d04d9">STEPS_PER_DOFS</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double * <link linkend="_waveguide_8h_1a50c05eebe0d325f44416da346c81c775">steps_widths</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title>Functions</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>static const CylindricalManifold&lt; 3, 3 &gt; <link linkend="_waveguide_8h_1a6f3d4490670bfe6c71c6b9bc432335aa">round_description</link> (
+2 )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+        <title>Detailed Description</title>
+    <para>Definition in file /home/kraft/workspace/waveguideproblem/Code/Core/Waveguide.h</para>
+    </simplesect>
+    <literallayout><computeroutput>
+1 <emphasis class="comment">//&#32;Copyright&#32;2018&#32;Pascal&#32;Kraft</emphasis>
+2 <emphasis class="preprocessor">#ifndef&#32;CODE_CORE_WAVEGUIDE_H_</emphasis>
+3 <emphasis class="preprocessor">#define&#32;CODE_CORE_WAVEGUIDE_H_</emphasis>
+4 <emphasis class="preprocessor">#include&#32;&lt;sys/stat.h&gt;</emphasis>
+5 <emphasis class="preprocessor">#include&#32;&lt;mpi.h&gt;</emphasis>
+6 <emphasis class="preprocessor">#include&#32;&lt;math.h&gt;</emphasis>
+7 <emphasis class="preprocessor">#include&#32;&lt;fstream&gt;</emphasis>
+8 <emphasis class="preprocessor">#include&#32;&lt;iostream&gt;</emphasis>
+9 <emphasis class="preprocessor">#include&#32;&lt;cmath&gt;</emphasis>
+10 <emphasis class="preprocessor">#include&#32;&lt;sstream&gt;</emphasis>
+11 
+12 <emphasis class="preprocessor">#include&#32;&lt;deal.II/dofs/dof_handler.h&gt;</emphasis>
+13 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/grid_generator.h&gt;</emphasis>
+14 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/manifold_lib.h&gt;</emphasis>
+15 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/thread_management.h&gt;</emphasis>
+16 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/multithread_info.h&gt;</emphasis>
+17 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/tria_accessor.h&gt;</emphasis>
+18 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/tria_iterator.h&gt;</emphasis>
+19 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/filtered_iterator.h&gt;</emphasis>
+20 <emphasis class="preprocessor">#include&#32;&lt;deal.II/dofs/dof_accessor.h&gt;</emphasis>
+21 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/tria_boundary_lib.h&gt;</emphasis>
+22 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/grid_out.h&gt;</emphasis>
+23 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/grid_tools.h&gt;</emphasis>
+24 <emphasis class="preprocessor">#include&#32;&lt;deal.II/dofs/dof_renumbering.h&gt;</emphasis>
+25 <emphasis class="preprocessor">#include&#32;&lt;deal.II/fe/fe_q.h&gt;</emphasis>
+26 <emphasis class="preprocessor">#include&#32;&lt;deal.II/fe/fe_nedelec.h&gt;</emphasis>
+27 <emphasis class="preprocessor">#include&#32;&lt;deal.II/fe/fe_system.h&gt;</emphasis>
+28 <emphasis class="preprocessor">#include&#32;&lt;deal.II/dofs/dof_tools.h&gt;</emphasis>
+29 <emphasis class="preprocessor">#include&#32;&lt;deal.II/fe/fe_values.h&gt;</emphasis>
+30 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/quadrature_lib.h&gt;</emphasis>
+31 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/function.h&gt;</emphasis>
+32 <emphasis class="preprocessor">#include&#32;&lt;deal.II/numerics/vector_tools.h&gt;</emphasis>
+33 <emphasis class="preprocessor">#include&#32;&lt;deal.II/numerics/matrix_tools.h&gt;</emphasis>
+34 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/full_matrix.h&gt;</emphasis>
+35 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/block_sparsity_pattern.h&gt;</emphasis>
+36 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/dynamic_sparsity_pattern.h&gt;</emphasis>
+37 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/block_matrix_array.h&gt;</emphasis>
+38 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/solver_gmres.h&gt;</emphasis>
+39 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/solver_minres.h&gt;</emphasis>
+40 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/precondition.h&gt;</emphasis>
+41 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/sparse_direct.h&gt;</emphasis>
+42 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/block_sparse_matrix.h&gt;</emphasis>
+43 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/block_vector.h&gt;</emphasis>
+44 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/timer.h&gt;</emphasis>
+45 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/parameter_handler.h&gt;</emphasis>
+46 <emphasis class="preprocessor">#include&#32;&lt;deal.II/numerics/data_out.h&gt;</emphasis>
+47 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/logstream.h&gt;</emphasis>
+48 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/index_set.h&gt;</emphasis>
+49 <emphasis class="preprocessor">#include&#32;&lt;deal.II/distributed/tria.h&gt;</emphasis>
+50 <emphasis class="preprocessor">#include&#32;&lt;deal.II/distributed/grid_refinement.h&gt;</emphasis>
+51 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/point.h&gt;</emphasis>
+52 
+53 <emphasis class="comment">//&#32;Trilinos&#32;Headers</emphasis>
+54 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/trilinos_precondition.h&gt;</emphasis>
+55 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/trilinos_solver.h&gt;</emphasis>
+56 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/trilinos_sparsity_pattern.h&gt;</emphasis>
+57 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/trilinos_block_sparse_matrix.h&gt;</emphasis>
+58 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/la_parallel_vector.h&gt;</emphasis>
+59 
+60 <emphasis class="preprocessor">#include&#32;&quot;../Helpers/ExactSolution.h&quot;</emphasis>
+61 <emphasis class="preprocessor">#include&#32;&quot;../Helpers/Parameters.h&quot;</emphasis>
+62 <emphasis class="preprocessor">#include&#32;&quot;../Helpers/ParameterReader.h&quot;</emphasis>
+63 <emphasis class="preprocessor">#include&#32;&quot;./PreconditionerSweeping.h&quot;</emphasis>
+64 <emphasis class="preprocessor">#include&#32;&quot;../Helpers/staticfunctions.h&quot;</emphasis>
+65 <emphasis class="preprocessor">#include&#32;&quot;../Helpers/ModeManager.h&quot;</emphasis>
+66 <emphasis class="preprocessor">#include&#32;&quot;../MeshGenerators/MeshGenerator.h&quot;</emphasis>
+67 <emphasis class="preprocessor">#include&#32;&quot;../SpaceTransformations/SpaceTransformation.h&quot;</emphasis>
+68 
+69 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/convergence_table.h&gt;</emphasis>
+70 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/table_handler.h&gt;</emphasis>
+71 
+72 <emphasis class="keyword">using&#32;namespace&#32;</emphasis><link linkend="namespacedealii">dealii</link>;
+73 
+74 
+75 <emphasis class="keyword">extern</emphasis>&#32;<link linkend="struct_parameters">Parameters</link>&#32;GlobalParams;
+76 <emphasis class="keyword">extern</emphasis>&#32;<link linkend="class_mode_manager">ModeManager</link>&#32;ModeMan;
+77 <emphasis class="keyword">extern</emphasis>&#32;dealii::ConvergenceTable&#32;Convergence_Table;
+78 <emphasis class="keyword">extern</emphasis>&#32;dealii::TableHandler&#32;Optimization_Steps;
+79 
+80 <emphasis class="keyword">static</emphasis>&#32;<emphasis class="keyword">const</emphasis>&#32;CylindricalManifold&lt;3,&#32;3&gt;&#32;round_description&#32;(2);
+81 
+82 <emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;STEPS_PER_DOFS&#32;=&#32;11;
+83 
+84 <emphasis class="keyword">extern</emphasis>&#32;<emphasis class="keywordtype">double</emphasis>&#32;*&#32;steps_widths;
+85 <emphasis class="comment"></emphasis>
+86 <emphasis class="comment">/**</emphasis>
+87 <emphasis class="comment">&#32;*&#32;\class&#32;Waveguide</emphasis>
+88 <emphasis class="comment">&#32;*&#32;\brief&#32;This&#32;class&#32;encapsulates&#32;all&#32;important&#32;mechanism&#32;for&#32;solving&#32;a&#32;FEM&#32;problem.&#32;In&#32;earlier&#32;versions&#32;this&#32;also&#32;included&#32;space&#32;transformation&#32;and&#32;computation&#32;of&#32;materials.&#32;Now&#32;it&#32;only&#32;includes&#32;FEM&#32;essentials&#32;and&#32;solving&#32;the&#32;system&#32;matrix.</emphasis>
+89 <emphasis class="comment">&#32;*</emphasis>
+90 <emphasis class="comment">&#32;*&#32;Upon&#32;initialization&#32;it&#32;requires&#32;structural&#32;information&#32;about&#32;the&#32;waveguide&#32;that&#32;will&#32;be&#32;simulated.&#32;The&#32;object&#32;then&#32;continues&#32;to&#32;initialize&#32;the&#32;FEM-framework.&#32;After&#32;allocating&#32;space&#32;for&#32;all&#32;objects,&#32;the&#32;assemblation-process&#32;of&#32;the&#32;system-matrix&#32;begins.&#32;Following&#32;this&#32;step,&#32;the&#32;user-selected&#32;preconditioner&#32;and&#32;solver&#32;are&#32;used&#32;to&#32;solve&#32;the&#32;system&#32;and&#32;generate&#32;outputs.</emphasis>
+91 <emphasis class="comment">&#32;*&#32;This&#32;class&#32;is&#32;the&#32;core&#32;piece&#32;of&#32;the&#32;implementation.</emphasis>
+92 <emphasis class="comment">&#32;*</emphasis>
+93 <emphasis class="comment">&#32;*&#32;\author&#32;Pascal&#32;Kraft</emphasis>
+94 <emphasis class="comment">&#32;*&#32;\date&#32;03.07.2016</emphasis>
+95 <emphasis class="comment">&#32;*/</emphasis>
+<link linkend="class_waveguide">96 </link><emphasis class="keyword">class&#32;</emphasis><link linkend="class_waveguide">Waveguide</link>
+97 {
+98 &#32;&#32;&#32;&#32;<emphasis class="keyword">public</emphasis>:<emphasis class="comment"></emphasis>
+99 <emphasis class="comment">&#32;&#32;&#32;&#32;/**</emphasis>
+100 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;This&#32;is&#32;the&#32;constructor&#32;that&#32;should&#32;be&#32;used&#32;to&#32;initialize&#32;objects&#32;of&#32;this&#32;type.</emphasis>
+101 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*</emphasis>
+102 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;\param&#32;param&#32;This&#32;is&#32;a&#32;reference&#32;to&#32;a&#32;parsed&#32;form&#32;of&#32;the&#32;input-file.</emphasis>
+103 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;\param&#32;structure&#32;This&#32;parameter&#32;gives&#32;a&#32;reference&#32;to&#32;the&#32;structure&#32;of&#32;the&#32;real&#32;Waveguide.&#32;This&#32;is&#32;necessary&#32;since&#32;during&#32;matrix-assembly&#32;it&#32;is&#32;required&#32;to&#32;call&#32;a&#32;function&#32;which&#32;generates&#32;the&#32;transformation&#32;tensor&#32;which&#32;is&#32;purely&#32;structure-dependent.</emphasis>
+104 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+105 
+106 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_waveguide">Waveguide</link>&#32;(MPI_Comm&#32;in_mpi_comm,&#32;<link linkend="class_mesh_generator">MeshGenerator</link>&#32;*&#32;in_mg,&#32;<link linkend="class_space_transformation">SpaceTransformation</link>&#32;*&#32;in_st&#32;);
+107 
+108 &#32;&#32;&#32;&#32;~<link linkend="class_waveguide">Waveguide</link>&#32;();
+109 <emphasis class="comment"></emphasis>
+110 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+111 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;This&#32;method&#32;as&#32;well&#32;as&#32;the&#32;rerun()&#32;method,&#32;are&#32;used&#32;by&#32;the&#32;optimization-algorithm&#32;to&#32;use&#32;and&#32;reuse&#32;the&#32;Waveguide-object.&#32;Since&#32;the&#32;system-matrix&#32;consumes&#32;a&#32;lot&#32;of&#32;memory&#32;it&#32;makes&#32;sense&#32;to&#32;reuse&#32;it,&#32;rather&#32;then&#32;creating&#32;a&#32;new&#32;one&#32;for&#32;every&#32;optimization&#32;step.</emphasis>
+112 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;All&#32;properties&#32;of&#32;position[2]the&#32;object&#32;have&#32;to&#32;be&#32;created&#32;properly&#32;for&#32;this&#32;function&#32;to&#32;work.</emphasis>
+113 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+114 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;run&#32;();
+115 <emphasis class="comment"></emphasis>
+116 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+117 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;The&#32;assemble_part(unsigned&#32;int&#32;in_part)&#32;function&#32;is&#32;a&#32;part&#32;of&#32;the&#32;assemble_system()&#32;functionality.&#32;It&#32;builds&#32;a&#32;part&#32;of&#32;the&#32;system-matrix.&#32;assemble_system()&#32;creates&#32;the&#32;global&#32;system&#32;matrix.&#32;After&#32;splitting&#32;the&#32;degrees&#32;of&#32;freedom&#32;into&#32;several&#32;block,&#32;this&#32;method&#32;takes&#32;one&#32;block&#32;(identified&#32;by&#32;the&#32;integer&#32;passed&#32;as&#32;an&#32;argument)&#32;and&#32;calculates&#32;all&#32;matrix-entries&#32;that&#32;reference&#32;it.</emphasis>
+118 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;@param&#32;in_part&#32;Numerical&#32;identifier&#32;of&#32;the&#32;part&#32;of&#32;the&#32;system.</emphasis>
+119 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;@date&#32;13.11.2015</emphasis>
+120 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;@author&#32;Pascal&#32;Kraft</emphasis>
+121 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+122 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;assemble_part&#32;();
+123 
+124 <emphasis class="comment"></emphasis>
+125 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+126 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;To&#32;compute&#32;the&#32;output&#32;quality&#32;of&#32;the&#32;signal&#32;and&#32;it&apos;s&#32;transmition&#32;along&#32;the&#32;waveguid-axis,&#32;this&#32;function&#32;performs&#32;a&#32;comparison&#32;of&#32;the&#32;fundamental&#32;mode&#32;of&#32;a&#32;waveguide&#32;and&#32;the&#32;actual&#32;situation.&#32;For&#32;this&#32;purpose&#32;we&#32;integrate&#32;the&#32;product&#32;of&#32;the&#32;two&#32;functions&#32;over&#32;a&#32;cross-section&#32;of&#32;the&#32;waveguide&#32;in&#32;transformed&#32;coordinates.&#32;To&#32;perform&#32;this&#32;action&#32;we&#32;need&#32;to&#32;use&#32;numeric&#32;integration&#32;so&#32;the&#32;integral&#32;is&#32;decomposed&#32;into&#32;a&#32;sum&#32;over&#32;local&#32;evaluations.&#32;For&#32;this&#32;to&#32;be&#32;possible&#32;this&#32;function&#32;can&#32;be&#32;handed&#32;x,y&#32;and&#32;z&#32;coordinates&#32;and&#32;returns&#32;the&#32;according&#32;value.</emphasis>
+127 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;\param&#32;x&#32;gives&#32;the&#32;x-coordinate.</emphasis>
+128 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;\param&#32;y&#32;gives&#32;the&#32;y-coordinate.</emphasis>
+129 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;\param&#32;z&#32;gives&#32;the&#32;z-coordinate.</emphasis>
+130 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+131 &#32;&#32;&#32;&#32;std::complex&lt;double&gt;&#32;evaluate_for_Position(<emphasis class="keywordtype">double</emphasis>&#32;x,&#32;<emphasis class="keywordtype">double</emphasis>&#32;y,&#32;<emphasis class="keywordtype">double</emphasis>&#32;z);
+132 <emphasis class="comment"></emphasis>
+133 <emphasis class="comment">&#32;&#32;&#32;&#32;/**</emphasis>
+134 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;To&#32;compute&#32;the&#32;output&#32;quality&#32;of&#32;the&#32;signal&#32;and&#32;it&apos;s&#32;transmition&#32;along&#32;the&#32;waveguid-axis,&#32;this&#32;function&#32;performs&#32;a&#32;comparison&#32;of&#32;the&#32;fundamental&#32;mode&#32;of&#32;a&#32;waveguide&#32;and&#32;the&#32;actual&#32;situation.&#32;For&#32;this&#32;purpose&#32;we&#32;integrate&#32;the&#32;product&#32;of&#32;the&#32;two&#32;functions&#32;over&#32;a&#32;cross-section&#32;of&#32;the&#32;waveguide&#32;in&#32;transformed&#32;coordinates.&#32;To&#32;perform&#32;this&#32;action&#32;we&#32;need&#32;to&#32;use&#32;numeric&#32;integration&#32;so&#32;the&#32;integral&#32;is&#32;decomposed&#32;into&#32;a&#32;sum&#32;over&#32;local&#32;evaluations.&#32;For&#32;this&#32;to&#32;be&#32;possible&#32;this&#32;function&#32;can&#32;be&#32;handed&#32;x,y&#32;and&#32;z&#32;coordinates&#32;and&#32;returns&#32;the&#32;according&#32;value.</emphasis>
+135 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;\param&#32;x&#32;gives&#32;the&#32;x-coordinate.</emphasis>
+136 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;\param&#32;y&#32;gives&#32;the&#32;y-coordinate.</emphasis>
+137 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;\param&#32;z&#32;gives&#32;the&#32;z-coordinate.</emphasis>
+138 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+139 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;evaluate_for_z(<emphasis class="keywordtype">double</emphasis>);
+140 <emphasis class="comment"></emphasis>
+141 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+142 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;This&#32;function&#32;has&#32;the&#32;purpose&#32;of&#32;filling&#32;the&#32;qualities&#32;array&#32;in&#32;every&#32;process&#32;with&#32;the&#32;appropriate&#32;Values&#32;from&#32;the&#32;other&#32;ones.</emphasis>
+143 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;Now&#32;it&#32;will&#32;become&#32;necessary&#32;to&#32;build&#32;an&#32;optimization-scheme&#32;ontop,&#32;which&#32;can&#32;handle&#32;this&#32;information&#32;on&#32;process&#32;one&#32;and&#32;then&#32;distribute&#32;a&#32;new&#32;shape&#32;to&#32;the&#32;others.&#32;The&#32;function&#32;will&#32;use&#32;the&#32;Waveguide-Property&#32;execute_rebuild&#32;to&#32;signal&#32;a&#32;need&#32;for&#32;recomputation.</emphasis>
+144 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+145 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;evaluate();
+146 <emphasis class="comment"></emphasis>
+147 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+148 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;The&#32;storage&#32;has&#32;the&#32;following&#32;purpose:&#32;Regarding&#32;the&#32;optimization-process&#32;there&#32;are&#32;two&#32;kinds&#32;of&#32;runs.&#32;The&#32;first&#32;one,&#32;taking&#32;place&#32;with&#32;no&#32;knowledge&#32;of&#32;appropriate&#32;starting&#32;values&#32;for&#32;the&#32;degrees&#32;of&#32;freedom,&#32;and&#32;the&#32;following&#32;steps,&#32;in&#32;which&#32;the&#32;prior&#32;results&#32;can&#32;be&#32;used&#32;to&#32;estimate&#32;appropriate&#32;starting&#32;values&#32;for&#32;iterative&#32;solvers&#32;as&#32;well&#32;as&#32;the&#32;preconditioner.&#32;This&#32;function&#32;switches&#32;the&#32;behaviour&#32;in&#32;the&#32;following&#32;way:&#32;Once&#32;it&#32;is&#32;called,&#32;it&#32;stores&#32;the&#32;current&#32;solution&#32;in&#32;a&#32;run-independent&#32;variable,&#32;making&#32;it&#32;available&#32;for&#32;later&#32;runs.&#32;Also&#32;it&#32;sets&#32;a&#32;flag,&#32;indicating,&#32;that&#32;prior&#32;solutions&#32;are&#32;now&#32;available&#32;for&#32;usage&#32;in&#32;the&#32;solution&#32;process.</emphasis>
+149 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+150 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;store();
+151 
+152 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;*&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;qualities;
+153 <emphasis class="comment"></emphasis>
+154 <emphasis class="comment">&#32;&#32;&#32;&#32;/**</emphasis>
+155 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;This&#32;function&#32;is&#32;currently&#32;not&#32;in&#32;use.&#32;It&#32;is&#32;supposed&#32;to&#32;create&#32;a&#32;useful&#32;input-vector&#32;for&#32;the&#32;first&#32;step&#32;of&#32;the&#32;iteration.&#32;However&#32;currently&#32;this&#32;is&#32;not&#32;used,&#32;since&#32;current&#32;cases&#32;simply&#32;use&#32;a&#32;zero-vector&#32;for&#32;the&#32;first&#32;step&#32;and&#32;previous&#32;solutions&#32;in&#32;the&#32;subsequent&#32;steps.</emphasis>
+156 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*</emphasis>
+157 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+158 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;estimate_solution();
+159 
+160 &#32;&#32;&#32;&#32;std::vector&lt;std::complex&lt;double&gt;&gt;&#32;assemble_adjoint_local_contribution(&#32;<emphasis class="keywordtype">double</emphasis>&#32;stepwidth);
+161 
+162 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;switch_to_primal&#32;(<link linkend="class_space_transformation">SpaceTransformation</link>&#32;*&#32;primal_st);
+163 
+164 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;switch_to_dual&#32;(<link linkend="class_space_transformation">SpaceTransformation</link>&#32;*&#32;dual_st);
+165 
+166 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;transform_coordinate(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;);
+167 
+168 &#32;&#32;&#32;&#32;<link linkend="class_mesh_generator">MeshGenerator</link>&#32;*&#32;mg;
+169 
+170 &#32;&#32;&#32;&#32;<emphasis class="keyword">private</emphasis>:
+171 <emphasis class="comment"></emphasis>
+172 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+173 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;Grid-generation&#32;is&#32;a&#32;crucial&#32;part&#32;of&#32;any&#32;FEM-Code.&#32;This&#32;function&#32;holds&#32;all&#32;functionality&#32;concerning&#32;that&#32;topic.&#32;In&#32;the&#32;current&#32;implementation&#32;we&#32;start&#32;with&#32;a&#32;cubic&#32;Mesh.&#32;That&#32;mesh&#32;originally&#32;is&#32;subdivided&#32;in&#32;5&#32;cells&#32;per&#32;dimension&#32;yielding&#32;a&#32;total&#32;of&#32;5*5*5&#32;=&#32;125&#32;cells.&#32;The&#32;central&#32;cells&#32;in&#32;the&#32;x-z&#32;planes&#32;are&#32;given&#32;a&#32;cylindrical&#32;manifold-description&#32;forcing&#32;them&#32;to&#32;interpolate&#32;the&#32;new&#32;points&#32;during&#32;global&#32;refinement&#32;using&#32;a&#32;circular&#32;shape&#32;rather&#32;than&#32;linear&#32;interpolation.&#32;This&#32;leads&#32;to&#32;the&#32;description&#32;of&#32;a&#32;cylinder&#32;included&#32;within&#32;a&#32;cube.&#32;There&#32;are&#32;currently&#32;three&#32;techniques&#32;for&#32;mesh-refinement:</emphasis>
+174 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;&#32;-#&#32;Global&#32;refinement:&#32;For&#32;such&#32;refinement-cases,&#32;any&#32;cell&#32;is&#32;subdivided&#32;in&#32;the&#32;middle&#32;of&#32;any&#32;dimension.&#32;In&#32;this&#32;case&#32;every&#32;cell&#32;is&#32;split&#32;into&#32;8&#32;new&#32;ones,&#32;increasing&#32;the&#32;number&#32;of&#32;cells&#32;massively.&#32;Pros:&#32;no&#32;hanging&#32;nodes.&#32;Cons:&#32;Very&#32;many&#32;new&#32;dofs&#32;that&#32;might&#32;be&#32;in&#32;areas,&#32;where&#32;the&#32;resolution&#32;of&#32;the&#32;mesh&#32;is&#32;already&#32;large&#32;enough.</emphasis>
+175 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;&#32;-#&#32;Inner&#32;refinement:&#32;In&#32;this&#32;case,&#32;only&#32;degrees&#32;that&#32;were&#32;in&#32;the&#32;original&#32;core-cells,&#32;will&#32;be&#32;refined.&#32;These&#32;are&#32;cells,&#32;which&#32;in&#32;the&#32;real&#32;physical&#32;simulation&#32;are&#32;part&#32;of&#32;the&#32;waveguide-core&#32;rather&#32;then&#32;the&#32;mantle.</emphasis>
+176 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;&#32;-#&#32;Boundary-refinement:&#32;In&#32;this&#32;case,&#32;cells&#32;are&#32;refined,&#32;that&#32;are&#32;close&#32;to&#32;the&#32;boundary&#32;of&#32;the&#32;waveguide&#32;(not&#32;close&#32;to&#32;the&#32;boundary&#32;of&#32;the&#32;computational&#32;domain!).&#32;To&#32;see&#32;the&#32;used&#32;definition&#32;of&#32;close,&#32;please&#32;see&#32;the&#32;code.</emphasis>
+177 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*</emphasis>
+178 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;&#32;Following&#32;the&#32;creation&#32;of&#32;the&#32;mesh,&#32;the&#32;dofs&#32;are&#32;distributed&#32;to&#32;it&#32;using&#32;the&#32;function&#32;setup_system().&#32;This&#32;function&#32;only&#32;has&#32;to&#32;be&#32;used&#32;once&#32;even&#32;in&#32;optimization&#32;runs&#32;since&#32;the&#32;mesh&#32;can&#32;be&#32;reused&#32;for&#32;every&#32;run.&#32;This&#32;saves&#32;a&#32;lot&#32;of&#32;time&#32;especially&#32;for&#32;large&#32;cases&#32;and&#32;distributed&#32;calculations.</emphasis>
+179 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+180 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;make_grid&#32;();
+181 <emphasis class="comment"></emphasis>
+182 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+183 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;In&#32;this&#32;function,&#32;the&#32;first&#32;case-specific&#32;data&#32;is&#32;used.&#32;First&#32;off&#32;we&#32;number&#32;the&#32;degrees&#32;of&#32;freedom.&#32;After&#32;completion&#32;of&#32;this&#32;task&#32;we&#32;start&#32;making&#32;boundary-conditions.&#32;The&#32;creation&#32;of&#32;appropriate&#32;boundary-conditions&#32;is&#32;twofold:</emphasis>
+184 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;&#32;#-&#32;Mathematical&#32;boundary&#32;conditions&#32;as&#32;described&#32;in&#32;the&#32;literature&#32;on&#32;this&#32;matter.&#32;In&#32;this&#32;case&#32;we&#32;use&#32;Dirichlet&#32;boundary&#32;values&#32;that&#32;are&#32;either&#32;zero-values&#32;or&#32;alternatively&#32;are&#32;calculated&#32;from&#32;the&#32;mode-distribution&#32;of&#32;the&#32;incoming&#32;signal.</emphasis>
+185 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;&#32;#-&#32;Numerical&#32;constraints&#32;from&#32;hanging&#32;nodes.&#32;The&#32;non-global&#32;refinement&#32;steps&#32;cause&#32;hanging-nodes&#32;that&#32;have&#32;to&#32;be&#32;constrained&#32;to&#32;their&#32;neighbors.&#32;This&#32;problem&#32;can&#32;be&#32;solved&#32;automatically&#32;by&#32;deal&#32;and&#32;uses&#32;the&#32;same&#32;mechanism&#32;(constraints)&#32;as&#32;mathematical&#32;boundary&#32;values&#32;do.</emphasis>
+186 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*</emphasis>
+187 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;&#32;Constraint&#32;Matrixes&#32;(as&#32;constructed&#32;in&#32;this&#32;function)&#32;can&#32;be&#32;used&#32;primarily&#32;in&#32;two&#32;ways.&#32;Documentation&#32;concerning&#32;this&#32;problem&#32;can&#32;be&#32;found&#32;at&#32;[Constraints&#32;On&#32;Degrees&#32;Of&#32;Freedom](https://www.dealii.org/developer/doxygen/deal.II/group__constraints.html).</emphasis>
+188 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+189 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;setup_system&#32;();
+190 <emphasis class="comment"></emphasis>
+191 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+192 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;Assemble&#32;system&#32;is&#32;the&#32;function&#32;to&#32;build&#32;a&#32;system-matrix.&#32;This&#32;can&#32;either&#32;happen&#32;incrementally&#32;or&#32;from&#32;scratch&#32;depending&#32;on&#32;if&#32;a&#32;solution&#32;has&#32;been&#32;stored&#32;before&#32;or&#32;not.&#32;Essentially&#32;it&#32;splits&#32;the&#32;system&#32;in&#32;blocks&#32;and&#32;then&#32;calls&#32;assemble_block(unsigned&#32;int&#32;index)&#32;for&#32;the&#32;individual&#32;blocks.&#32;This&#32;function&#32;will&#32;have&#32;to&#32;be&#32;improved&#32;for&#32;incremental&#32;building&#32;of&#32;the&#32;system&#32;matrix&#32;in&#32;order&#32;to&#32;proceed&#32;to&#32;upcoming&#32;versions.</emphasis>
+193 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;\author&#32;Pascal&#32;Kraft</emphasis>
+194 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;\date&#32;16.11.2015</emphasis>
+195 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+196 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;assemble_system&#32;();
+197 
+198 
+199 <emphasis class="comment"></emphasis>
+200 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+201 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;Upon&#32;successful&#32;assembly&#32;of&#32;the&#32;system-matrix,&#32;the&#32;solution&#32;has&#32;to&#32;be&#32;calculated.&#32;This&#32;is&#32;done&#32;in&#32;this&#32;function.&#32;There&#32;are&#32;multiple&#32;Templates&#32;of&#32;this&#32;function&#32;for&#32;enabling&#32;switching&#32;between&#32;libraries.&#32;The&#32;Dealii&#32;implementation&#32;uses&#32;deal&apos;s&#32;native&#32;solvers&#32;as&#32;well&#32;as&#32;data-types.&#32;The&#32;other&#32;templated&#32;editions&#32;use&#32;the&#32;PETSc&#32;and&#32;Trilinos&#32;equivalents.&#32;The&#32;type&#32;of&#32;solver&#32;to&#32;be&#32;used&#32;and&#32;its&#32;parameters&#32;are&#32;specified&#32;via&#32;the&#32;parameter&#32;GYU</emphasis>
+202 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+203 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;solve&#32;();
+204 <emphasis class="comment"></emphasis>
+205 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+206 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;In&#32;case&#32;no&#32;differential&#32;implementation&#32;is&#32;used&#32;(this&#32;means,&#32;that&#32;in&#32;every&#32;step&#32;of&#32;both&#32;the&#32;optimization&#32;and&#32;the&#32;calculation&#32;of&#32;the&#32;gradient,&#32;the&#32;system-matrix&#32;and&#32;all&#32;other&#32;elements&#32;are&#32;completely&#32;rebuilt)&#32;this&#32;function&#32;is&#32;used,&#32;to&#32;clear&#32;all&#32;values&#32;out&#32;of&#32;the&#32;data-objects.</emphasis>
+207 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*</emphasis>
+208 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+209 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;reset_changes();
+210 <emphasis class="comment"></emphasis>
+211 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+212 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;This&#32;function&#32;takes&#32;the&#32;Waveguides&#32;solution-vector&#32;member&#32;and&#32;exports&#32;it&#32;in&#32;a&#32;.vtk-file&#32;along&#32;with&#32;the&#32;mesh-structure&#32;to&#32;make&#32;the&#32;results&#32;visible.</emphasis>
+213 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+214 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;output_results&#32;(<emphasis class="keywordtype">bool</emphasis>&#32;details);
+215 <emphasis class="comment"></emphasis>
+216 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+217 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;This&#32;function&#32;is&#32;used&#32;bz&#32;the&#32;GMRE-solvers&#32;in&#32;deal.&#32;This&#32;solver&#32;uses&#32;the&#32;iteration-results&#32;to&#32;estimate&#32;the&#32;eigenvalues&#32;and&#32;this&#32;function&#32;is&#32;used&#32;via&#32;handle&#32;to&#32;use&#32;them.&#32;In&#32;this&#32;function,&#32;the&#32;eigenvalues&#32;are&#32;simply&#32;pushed&#32;into&#32;a&#32;file.</emphasis>
+218 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+219 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;print_eigenvalues(<emphasis class="keyword">const</emphasis>&#32;std::vector&lt;std::complex&lt;double&gt;&gt;&#32;&amp;);
+220 <emphasis class="comment"></emphasis>
+221 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+222 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;Similar&#32;to&#32;the&#32;functio&#32;print_eigenvalues(const&#32;std::vector&lt;std::complex&lt;double&gt;&gt;&#32;&amp;)&#32;,&#32;this&#32;function&#32;uses&#32;step-results&#32;of&#32;the&#32;GMRES-solver&#32;to&#32;make&#32;properties&#32;of&#32;the&#32;system-matrix&#32;available.&#32;In&#32;this&#32;case&#32;it&#32;is&#32;the&#32;condition&#32;number,&#32;estimated&#32;on&#32;the&#32;basis&#32;of&#32;said&#32;eigenvalues,&#32;that&#32;gets&#32;pushed&#32;to&#32;a&#32;file&#32;also.</emphasis>
+223 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+224 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;print_condition&#32;(<emphasis class="keywordtype">double</emphasis>);
+225 <emphasis class="comment"></emphasis>
+226 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+227 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;This&#32;function&#32;occupies&#32;one&#32;slot&#32;of&#32;the&#32;Solver&#32;and&#32;will&#32;generate&#32;formatted&#32;output&#32;on&#32;the&#32;console&#32;and&#32;write&#32;the&#32;convergence&#32;history&#32;to&#32;a&#32;file.</emphasis>
+228 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+229 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;SolverControl::State&#32;check_iteration_state(<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>,&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keyword">const</emphasis>&#32;dealii::TrilinosWrappers::MPI::Vector&#32;&amp;);
+230 <emphasis class="comment"></emphasis>
+231 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+232 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;This&#32;function&#32;fills&#32;the&#32;ConstraintMatrix-object&#32;of&#32;the&#32;Waveguide-object&#32;with&#32;all&#32;constraints&#32;needed&#32;for&#32;condensation&#32;into&#32;the&#32;szstem-matrix.&#32;It&apos;s&#32;properties&#32;are&#32;derived&#32;from&#32;the&#32;Waveguide&#32;itself&#32;and&#32;the&#32;Waveguide-Structure-object&#32;available&#32;to&#32;it,&#32;therefore&#32;there&#32;are&#32;no&#32;parameters&#32;but&#32;those&#32;members&#32;need&#32;to&#32;be&#32;prepared&#32;accordingly..</emphasis>
+233 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+234 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;MakeBoundaryConditions&#32;();
+235 <emphasis class="comment"></emphasis>
+236 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+237 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;This&#32;function&#32;generates&#32;the&#32;Constraint-Matrices&#32;for&#32;the&#32;two&#32;Preconditioner&#32;Matrices.</emphasis>
+238 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+239 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;MakePreconditionerBoundaryConditions&#32;(&#32;);
+240 <emphasis class="comment"></emphasis>
+241 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+242 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;This&#32;function&#32;executes&#32;refined&#32;downstream&#32;ordering&#32;of&#32;degrees&#32;of&#32;freedom.</emphasis>
+243 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+244 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;Compute_Dof_Numbers();
+245 
+246 
+247 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;Prepare_Boundary_Constraints();
+248 <emphasis class="comment"></emphasis>
+249 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+250 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;DEPRECATED.&#32;SCHEDULED&#32;FOR&#32;REMOVAL.</emphasis>
+251 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+252 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;&#32;RHS_value(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3&gt;&#32;&amp;,&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;component);
+253 <emphasis class="comment"></emphasis>
+254 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+255 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;This&#32;function&#32;returns&#32;the&#32;transposed&#32;and&#32;complex&#32;conjugated&#32;Matrix&#32;for&#32;the&#32;given&#32;Matrix.&#32;The&#32;function&#32;operates&#32;on&#32;a&#32;copy,&#32;it&#32;doesn&apos;t&#32;change&#32;the&#32;arguments&#32;value.</emphasis>
+256 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;\param&#32;input&#32;This&#32;is&#32;the&#32;order&#32;2&#32;Tensor&#32;(Matrix)&#32;to&#32;be&#32;transposed&#32;(\f$a_{ij}&#32;=&#32;a&apos;{ji}\f$)&#32;and&#32;complex&#32;conjugated&#32;(\f$\operatorname{Im}(a_{ij})&#32;=&#32;-&#32;\operatorname{Im}(a&apos;_{ji})\f$)</emphasis>
+257 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+258 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Tensor&lt;2,3,&#32;std::complex&lt;double&gt;&gt;&#32;Conjugate_Tensor(Tensor&lt;2,3,&#32;std::complex&lt;double&gt;&gt;&#32;input);
+259 <emphasis class="comment"></emphasis>
+260 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+261 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;This&#32;function&#32;calculates&#32;the&#32;complex&#32;conjugate&#32;of&#32;every&#32;vector&#32;entry&#32;and&#32;returns&#32;the&#32;result&#32;in&#32;a&#32;copy.&#32;Similar&#32;to&#32;Conjugate_Tensor(Tensor&lt;2,3,&#32;std::complex&lt;double&gt;&gt;&#32;input)&#32;this&#32;function&#32;does&#32;not&#32;operate&#32;in&#32;place&#32;-&#32;it&#32;operates&#32;on&#32;a&#32;copy&#32;and&#32;hence&#32;returns&#32;a&#32;new&#32;object.</emphasis>
+262 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+263 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Tensor&lt;1,3,&#32;std::complex&lt;double&gt;&gt;&#32;Conjugate_Vector(Tensor&lt;1,3,&#32;std::complex&lt;double&gt;&gt;&#32;input);
+264 <emphasis class="comment"></emphasis>
+265 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+266 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;Reinit&#32;all&#32;datastorage&#32;objects.</emphasis>
+267 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+268 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;reinit_all();
+269 <emphasis class="comment"></emphasis>
+270 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+271 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;Reinit&#32;only&#32;the&#32;right&#32;hand&#32;side&#32;vector.</emphasis>
+272 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+273 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;reinit_rhs();
+274 <emphasis class="comment"></emphasis>
+275 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+276 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;Reinit&#32;only&#32;the&#32;PML-Matrix&#32;which&#32;is&#32;used&#32;in&#32;the&#32;construction&#32;of&#32;the&#32;Preconditioner.&#32;This&#32;should&#32;only&#32;be&#32;used&#32;if&#32;the&#32;need&#32;for&#32;space&#32;is&#32;there.&#32;Otherwise&#32;this&#32;matrix&#32;while&#32;being&#32;a&#32;temporary&#32;object,&#32;is&#32;very&#32;large.</emphasis>
+277 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+278 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;reinit_preconditioner();
+279 <emphasis class="comment"></emphasis>
+280 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+281 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;Reinit&#32;only&#32;the&#32;system&#32;matrix.</emphasis>
+282 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+283 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;reinit_systemmatrix();
+284 <emphasis class="comment"></emphasis>
+285 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+286 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;The&#32;cell&#32;weights&#32;can&#32;be&#32;used&#32;to&#32;store&#32;any&#32;scalar&#32;information&#32;about&#32;each&#32;cell&#32;of&#32;the&#32;mesh.&#32;This&#32;reinit-function&#32;prepares&#32;the&#32;data&#32;structures&#32;for&#32;its&#32;usage.</emphasis>
+287 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+288 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;reinit_cell_weights();
+289 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="comment"></emphasis>
+290 <emphasis class="comment">&#32;&#32;&#32;&#32;/**</emphasis>
+291 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*&#32;In&#32;calculate&#32;cell&#32;weights&#32;an&#32;arbitrary&#32;value&#32;for&#32;each&#32;cell&#32;can&#32;be&#32;computed&#32;and&#32;then&#32;this&#32;value&#32;can&#32;be&#32;sent&#32;to&#32;the&#32;output&#32;to&#32;generate&#32;a&#32;plot&#32;of&#32;it.&#32;An&#32;example&#32;for&#32;this&#32;procedure&#32;is&#32;the&#32;computation&#32;of&#32;the&#32;norm&#32;of&#32;the&#32;material&#32;tensor&#32;to&#32;check&#32;it&apos;s&#32;validity&#32;across&#32;the&#32;mesh.</emphasis>
+292 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+293 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;calculate_cell_weights&#32;();
+294 <emphasis class="comment"></emphasis>
+295 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+296 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;Reinit&#32;only&#32;the&#32;solution&#32;vector.</emphasis>
+297 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+298 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;reinit_solution();
+299 <emphasis class="comment"></emphasis>
+300 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+301 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;This&#32;function&#32;only&#32;initializes&#32;the&#32;storage&#32;vector.&#32;Keep&#32;in&#32;mind,&#32;that&#32;a&#32;call&#32;to&#32;this&#32;function&#32;is&#32;*not*&#32;included&#32;in&#32;reinit_all().</emphasis>
+302 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+303 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;reinit_storage();
+304 <emphasis class="comment"></emphasis>
+305 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+306 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;When&#32;a&#32;run&#32;has&#32;already&#32;been&#32;completed,&#32;not&#32;all&#32;data&#32;structures&#32;need&#32;to&#32;be&#32;completely&#32;be&#32;rebuilt.&#32;They&#32;only&#32;need&#32;to&#32;be&#32;emptied.&#32;This&#32;function&#32;does&#32;just&#32;that.</emphasis>
+307 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+308 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;reinit_for_rerun();
+309 <emphasis class="comment"></emphasis>
+310 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+311 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;Similar&#32;to&#32;the&#32;function&#32;reinit_for_rerun&#32;but&#32;focused&#32;on&#32;the&#32;data&#32;structures&#32;used&#32;by&#32;the&#32;preconditioner.</emphasis>
+312 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+313 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;&#32;&#32;&#32;reinit_preconditioner_fast();
+314 <emphasis class="comment"></emphasis>
+315 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+316 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;While&#32;the&#32;solver&#32;runs,&#32;this&#32;function&#32;performs&#32;an&#32;action&#32;on&#32;the&#32;residual.&#32;In&#32;the&#32;most&#32;common&#32;use&#32;case&#32;this&#32;action&#32;is&#32;to&#32;print&#32;it&#32;to&#32;the&#32;console&#32;or&#32;to&#32;push&#32;it&#32;to&#32;some&#32;data&#32;stream.</emphasis>
+317 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+318 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;SolverControl::State&#32;residual_tracker(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Iteration,&#32;<emphasis class="keywordtype">double</emphasis>&#32;resiudal,&#32;dealii::TrilinosWrappers::MPI::BlockVector&#32;vec);
+319 <emphasis class="comment"></emphasis>
+320 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;/**</emphasis>
+321 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*&#32;This&#32;function&#32;encapsulates&#32;a&#32;library&#32;call&#32;for&#32;2D&#32;numeric&#32;integration&#32;over&#32;a&#32;circle&#32;with&#32;given&#32;properties.&#32;It&#32;is&#32;included&#32;that&#32;this&#32;function&#32;calls&#32;evaluate_for_Position(x,y,z)</emphasis>
+322 <emphasis class="comment">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*/</emphasis>
+323 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::complex&lt;double&gt;&#32;gauss_product_2D_sphere(<emphasis class="keywordtype">double</emphasis>&#32;z,&#32;<emphasis class="keywordtype">int</emphasis>&#32;n,&#32;<emphasis class="keywordtype">double</emphasis>&#32;R,&#32;<emphasis class="keywordtype">double</emphasis>&#32;Xc,&#32;<emphasis class="keywordtype">double</emphasis>&#32;Yc);
+324 
+325 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Tensor&lt;1,3,std::complex&lt;double&gt;&gt;&#32;solution_evaluation(Point&lt;3,double&gt;&#32;position)&#32;<emphasis class="keyword">const</emphasis>;
+326 
+327 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;solution_evaluation(Point&lt;3,double&gt;&#32;position,&#32;<emphasis class="keywordtype">double</emphasis>&#32;*&#32;solution)&#32;<emphasis class="keyword">const</emphasis>;
+328 
+329 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Tensor&lt;1,3,std::complex&lt;double&gt;&gt;&#32;adjoint_solution_evaluation(Point&lt;3,double&gt;&#32;position)&#32;<emphasis class="keyword">const</emphasis>;
+330 
+331 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;adjoint_solution_evaluation(Point&lt;3,double&gt;&#32;position,&#32;<emphasis class="keywordtype">double</emphasis>&#32;*&#32;solution)&#32;<emphasis class="keyword">const</emphasis>;
+332 
+333 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;IndexSet&#32;combine_indexes(IndexSet&#32;lower,&#32;IndexSet&#32;upper)&#32;<emphasis class="keyword">const</emphasis>;
+334 
+335 
+336 
+337 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;HIER&#32;BEGINNT&#32;DIE&#32;NEUE&#32;VERSION...</emphasis>
+338 
+339 
+340 
+341 
+342 
+343 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_space_transformation">SpaceTransformation</link>&#32;*&#32;st;
+344 
+345 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;MPI_Comm&#32;mpi_comm;
+346 
+347 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;parallel::distributed::Triangulation&lt;3&gt;::active_cell_iterator&#32;cell,&#32;endc;
+348 
+349 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;FESystem&lt;3&gt;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;fe;
+350 
+351 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;parallel::distributed::Triangulation&lt;3&gt;&#32;&#32;&#32;&#32;&#32;triangulation;
+352 
+353 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;TrilinosWrappers::MPI::BlockVector&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;system_rhs;
+354 
+355 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;TrilinosWrappers::BlockSparseMatrix&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;system_matrix;
+356 
+357 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;TrilinosWrappers::BlockSparseMatrix&#32;prec_matrix_odd,&#32;prec_matrix_even;
+358 
+359 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">bool</emphasis>&#32;even;
+360 
+361 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;rank;
+362 
+363 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;FEValuesExtractors::Vector&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;real,&#32;imag;
+364 
+365 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;SolverControl&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;solver_control;
+366 
+367 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ConstraintMatrix&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cm,&#32;cm_prec_even,&#32;cm_prec_odd;
+368 
+369 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;DoFHandler&lt;3&gt;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;dof_handler;
+370 
+371 &#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;IndexSet&gt;&#32;i_prec_even_owned_row;
+372 &#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;IndexSet&gt;&#32;i_prec_even_owned_col;
+373 &#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;IndexSet&gt;&#32;i_prec_even_writable;
+374 &#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;IndexSet&gt;&#32;i_prec_odd_owned_row;
+375 &#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;IndexSet&gt;&#32;i_prec_odd_owned_col;
+376 &#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;IndexSet&gt;&#32;i_prec_odd_writable;
+377 &#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;IndexSet&gt;&#32;i_sys_owned;
+378 &#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;IndexSet&gt;&#32;i_sys_readable;
+379 
+380 &#32;&#32;&#32;&#32;&#32;&#32;TrilinosWrappers::MPI::BlockVector&#32;primal_solution,&#32;dual_solution;
+381 
+382 &#32;&#32;&#32;&#32;&#32;&#32;TrilinosWrappers::MPI::BlockVector&#32;*&#32;solution;
+383 
+384 &#32;&#32;&#32;&#32;TrilinosWrappers::MPI::BlockVector&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;EstimatedSolution,&#32;ErrorOfSolution&#32;;
+385 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;IndexSet&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;locally_owned_dofs,&#32;locally_relevant_dofs,&#32;locally_active_dofs,&#32;extended_relevant_dofs;
+386 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;IndexSet&gt;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;locally_relevant_dofs_per_subdomain;
+387 
+388 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Vector&lt;double&gt;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;preconditioner_rhs;
+389 
+390 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;LinearAlgebra::distributed::Vector&lt;double&gt;&#32;primal_with_relevant;
+391 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;LinearAlgebra::distributed::Vector&lt;double&gt;&#32;dual_with_relevant;
+392 
+393 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;IndexSet&gt;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;locally_relevant_dofs_all_processors;
+394 &#32;&#32;&#32;&#32;IndexSet&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;UpperDofs,&#32;LowerDofs;
+395 
+396 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;run_number;
+397 
+398 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;condition_file_counter,&#32;eigenvalue_file_counter;
+399 &#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Layers;
+400 &#32;&#32;&#32;&#32;std::vector&lt;int&gt;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Dofs_Below_Subdomain,&#32;Block_Sizes;
+401 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;is_stored;
+402 
+403 &#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Sectors;
+404 
+405 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;minimum_local_z;
+406 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;maximum_local_z;
+407 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;locals_set&#32;=&#32;<emphasis class="keyword">false</emphasis>;
+408 
+409 &#32;&#32;&#32;&#32;std::string&#32;path_prefix;
+410 
+411 &#32;&#32;&#32;&#32;IndexSet&#32;fixed_dofs;
+412 
+413 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">long</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;solver_start_milis&#32;=0;
+414 
+415 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;primal&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+416 
+417 &#32;&#32;&#32;&#32;ConditionalOStream&#32;pout;
+418 &#32;&#32;&#32;&#32;TimerOutput&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;timer;
+419 &#32;&#32;&#32;&#32;<link linkend="class_exact_solution">ExactSolution</link>&#32;es;
+420 
+421 &#32;&#32;&#32;&#32;std::map&lt;&#32;types::global_dof_index,&#32;double&#32;&gt;&#32;dirichlet_data,&#32;preconditioner_dirichlet_data_even,&#32;preconditioner_dirichlet_data_odd;
+422 &#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;HIER&#32;BEGINNT&#32;DIE&#32;ALTE&#32;VERSION&#32;...</emphasis>
+423 
+424 
+425 
+426 
+427 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ConstraintMatrix&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;boundary_value_constraints_imaginary;
+428 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ConstraintMatrix&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;boundary_value_constraints_real;
+429 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ConstraintMatrix&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;hanging_global;
+430 
+431 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;TrilinosWrappers::MPI::BlockVector&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;storage;
+432 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;TrilinosWrappers::MPI::BlockVector&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;temp_storage;
+433 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::ofstream&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;eigenvalue_file,&#32;condition_file,&#32;result_file,&#32;iteration_file;
+434 
+435 
+436 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;IndexSet&gt;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keyword">set</emphasis>;
+437 
+438 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;execute_recomputation;
+439 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Vector&lt;float&gt;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell_weights;
+440 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Vector&lt;float&gt;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell_weights_prec_1;
+441 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Vector&lt;float&gt;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell_weights_prec_2;
+442 &#32;&#32;&#32;&#32;IndexSet&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;locally_owned_cells,&#32;sweepable;
+443 };
+444 
+445 
+446 <emphasis class="preprocessor">#endif</emphasis>
+    </computeroutput></literallayout>
+</section>

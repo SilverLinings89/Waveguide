@@ -1,0 +1,167 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_f_d_optimization_8cpp">
+    <title>FDOptimization.cpp File Reference</title>
+    <programlisting>#include &quot;FDOptimization.h&quot;</programlisting>
+    <programlisting>#include &lt;complex&gt;</programlisting>
+    <programlisting>#include &lt;vector&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/point.h&gt;</programlisting>
+    <programlisting>#include &quot;../Core/Waveguide.h&quot;</programlisting>
+    <programlisting>#include &quot;../MeshGenerators/MeshGenerator.h&quot;</programlisting>
+    <programlisting>#include &quot;../SpaceTransformations/SpaceTransformation.h&quot;</programlisting>
+    <programlisting>#include &quot;../OptimizationAlgorithm/OptimizationAlgorithm.h&quot;</programlisting>
+        <section>
+            <title>Macros</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                            <para>#define <link linkend="_f_d_optimization_8cpp_1a86a3dcac4b98d9867fe5dd81f13634ad">FDOptimization_CPP_</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+        <title>Detailed Description</title>
+    <para>Definition in file /home/kraft/workspace/waveguideproblem/Code/OptimizationStrategies/FDOptimization.cpp</para>
+    </simplesect>
+    <literallayout><computeroutput>
+1 <emphasis class="preprocessor">#ifndef&#32;FDOptimization_CPP_</emphasis>
+2 <emphasis class="preprocessor">#define&#32;FDOptimization_CPP_</emphasis>
+3 
+4 
+5 
+6 <emphasis class="preprocessor">#include&#32;&quot;FDOptimization.h&quot;</emphasis>
+7 <emphasis class="preprocessor">#include&#32;&lt;complex&gt;</emphasis>
+8 <emphasis class="preprocessor">#include&#32;&lt;vector&gt;</emphasis>
+9 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/point.h&gt;</emphasis>
+10 <emphasis class="preprocessor">#include&#32;&quot;../Core/Waveguide.h&quot;</emphasis>
+11 <emphasis class="preprocessor">#include&#32;&quot;../MeshGenerators/MeshGenerator.h&quot;</emphasis>
+12 <emphasis class="preprocessor">#include&#32;&quot;../SpaceTransformations/SpaceTransformation.h&quot;</emphasis>
+13 <emphasis class="preprocessor">#include&#32;&quot;../OptimizationAlgorithm/OptimizationAlgorithm.h&quot;</emphasis>
+14 
+15 <emphasis class="keyword">using&#32;namespace&#32;</emphasis><link linkend="namespacedealii">dealii</link>;
+16 
+17 FDOptimization::FDOptimization(<link linkend="class_waveguide">Waveguide</link>&#32;*&#32;in_waveguide,&#32;<link linkend="class_mesh_generator">MeshGenerator</link>&#32;*&#32;in_mg,&#32;<link linkend="class_space_transformation">SpaceTransformation</link>&#32;*&#32;in_st,&#32;<link linkend="class_optimization_algorithm">OptimizationAlgorithm&lt;double&gt;</link>&#32;*&#32;in_Oa)&#32;{
+18 &#32;&#32;waveguide&#32;=&#32;in_waveguide;
+19 
+20 &#32;&#32;st&#32;=&#32;in_st;
+21 
+22 &#32;&#32;oa&#32;=&#32;in_Oa;
+23 
+24 &#32;&#32;mg&#32;=&#32;in_mg;
+25 
+26 }
+27 
+28 FDOptimization::~FDOptimization()&#32;{
+29 
+30 }
+31 
+32 <emphasis class="keywordtype">double</emphasis>&#32;FDOptimization::evaluate()&#32;{
+33 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;quality&#32;=&#32;0;
+34 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;q_in&#32;&#32;=&#32;std::abs(st-&gt;evaluate_for_z(-&#32;GlobalParams.M_R_ZLength/2.0&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;,&#32;waveguide));
+35 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;q_out&#32;=&#32;std::abs(st-&gt;evaluate_for_z(&#32;&#32;GlobalParams.M_R_ZLength/2.0-0.0001&#32;,&#32;waveguide));
+36 &#32;&#32;quality&#32;=&#32;q_out&#32;/&#32;q_in;
+37 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;quality;
+38 }
+39 
+40 std::vector&lt;double&gt;&#32;FDOptimization::compute_small_step(<emphasis class="keywordtype">double</emphasis>&#32;step)&#32;{
+41 &#32;&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;ndofs&#32;=&#32;st-&gt;NDofs();
+42 &#32;&#32;std::complex&lt;double&gt;&#32;global_a_out=&#32;st-&gt;evaluate_for_z(&#32;&#32;GlobalParams.M_R_ZLength/2.0&#32;-0.0001&#32;,&#32;waveguide);
+43 &#32;&#32;std::vector&lt;double&gt;&#32;ret;
+44 &#32;&#32;ret.resize(ndofs);
+45 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;q_old&#32;=&#32;evaluate();
+46 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=0;&#32;i&#32;&lt;&#32;ndofs;&#32;i++)&#32;{
+47 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;old_dof_value&#32;=&#32;st-&gt;get_dof(i);
+48 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(st-&gt;IsDofFree(i))&#32;{
+49 &#32;&#32;&#32;&#32;&#32;&#32;st-&gt;set_dof(i,&#32;old_dof_value&#32;+&#32;step);
+50 &#32;&#32;&#32;&#32;&#32;&#32;waveguide-&gt;run();
+51 &#32;&#32;&#32;&#32;&#32;&#32;ret[i]&#32;=&#32;(evaluate()&#32;-&#32;q_old)/step;
+52 
+53 &#32;&#32;&#32;&#32;&#32;&#32;std::complex&lt;double&gt;&#32;a_in&#32;=&#32;st-&gt;evaluate_for_z(-&#32;GlobalParams.M_R_ZLength/2.0,&#32;waveguide);
+54 &#32;&#32;&#32;&#32;&#32;&#32;std::complex&lt;double&gt;&#32;a_out=&#32;st-&gt;evaluate_for_z(&#32;&#32;GlobalParams.M_R_ZLength/2.0&#32;-0.0001&#32;,&#32;waveguide);
+55 &#32;&#32;&#32;&#32;&#32;&#32;deallog&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Phase&#32;in:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;a_in&#32;;
+56 &#32;&#32;&#32;&#32;&#32;&#32;deallog&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;Phase&#32;out:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;a_out&#32;;
+57 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;Quality&#32;derivative:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;ret[i];
+58 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;Step:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;step;
+59 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;Phase&#32;derivative:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;(a_out&#32;-&#32;global_a_out)/step&#32;&lt;&lt;std::endl;
+60 &#32;&#32;&#32;&#32;&#32;&#32;st-&gt;set_dof(i,&#32;old_dof_value);
+61 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+62 &#32;&#32;&#32;&#32;&#32;&#32;ret[i]&#32;=&#32;0.0;
+63 &#32;&#32;&#32;&#32;}
+64 
+65 &#32;&#32;}
+66 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+67 }
+68 
+69 <emphasis class="keywordtype">double</emphasis>&#32;FDOptimization::compute_big_step(std::vector&lt;double&gt;&#32;step)&#32;{
+70 &#32;&#32;Vector&lt;double&gt;&#32;current_config&#32;=&#32;st-&gt;Dofs();
+71 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&lt;&#32;step.size();&#32;i++){
+72 &#32;&#32;&#32;&#32;st-&gt;set_dof(i,&#32;current_config[i]&#32;+&#32;step[i]);
+73 &#32;&#32;}
+74 &#32;&#32;MPI_Barrier(MPI_COMM_WORLD);
+75 &#32;&#32;waveguide-&gt;switch_to_primal(st);
+76 &#32;&#32;waveguide-&gt;run();
+77 &#32;&#32;MPI_Barrier(MPI_COMM_WORLD);
+78 
+79 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;evaluate();
+80 }
+81 
+82 
+83 <emphasis class="keywordtype">void</emphasis>&#32;FDOptimization::run()&#32;{
+84 &#32;&#32;Convergence_Table.set_auto_fill_mode(<emphasis class="keyword">true</emphasis>);
+85 
+86 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;run&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+87 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;counter&#32;=&#32;0;
+88 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;quality&#32;=0;
+89 
+90 &#32;&#32;<emphasis class="keywordflow">while</emphasis>(run)&#32;{
+91 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;small_steps&#32;=&#32;0;
+92 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">while</emphasis>(oa-&gt;perform_small_step_next(small_steps))&#32;{
+93 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Performing&#32;a&#32;small&#32;step.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+94 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;temp_step_width&#32;=&#32;oa-&gt;get_small_step_step_width(small_steps);
+95 &#32;&#32;&#32;&#32;&#32;&#32;oa-&gt;pass_result_small_step(compute_small_step(temp_step_width));
+96 &#32;&#32;&#32;&#32;&#32;&#32;small_steps++;
+97 &#32;&#32;&#32;&#32;}
+98 
+99 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(oa-&gt;perform_big_step_next(small_steps))&#32;{
+100 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Performing&#32;a&#32;big&#32;step.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+101 &#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;double&gt;&#32;step&#32;=&#32;oa-&gt;get_big_step_configuration();
+102 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Got&#32;the&#32;following&#32;big&#32;step&#32;configuration:&#32;&quot;</emphasis>;
+103 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;step.size();&#32;i++)&#32;{
+104 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;step[i]&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;,&#32;&quot;</emphasis>;
+105 &#32;&#32;&#32;&#32;&#32;&#32;}
+106 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;std::endl;
+107 &#32;&#32;&#32;&#32;&#32;&#32;quality&#32;=&#32;compute_big_step(step);
+108 &#32;&#32;&#32;&#32;&#32;&#32;oa-&gt;pass_result_big_step(quality);
+109 &#32;&#32;&#32;&#32;}
+110 
+111 &#32;&#32;&#32;&#32;counter++;
+112 
+113 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(counter&#32;&gt;=&#32;GlobalParams.Sc_OptimizationSteps&#32;||&#32;quality&#32;&gt;&#32;1.0)&#32;{
+114 &#32;&#32;&#32;&#32;&#32;&#32;run&#32;=&#32;<emphasis class="keyword">false</emphasis>;
+115 &#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;The&#32;optimization&#32;is&#32;shutting&#32;down&#32;after&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;counter&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;steps.&#32;Last&#32;quality:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;100*&#32;quality&#32;&lt;&lt;<emphasis class="stringliteral">&quot;%&quot;</emphasis>&#32;&lt;&lt;std::endl;
+116 &#32;&#32;&#32;&#32;}
+117 
+118 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>((GlobalParams.O_C_D_ConvergenceFirst&#32;||&#32;GlobalParams.O_C_D_ConvergenceAll)&amp;&amp;&#32;(GlobalParams.MPI_Rank==0))&#32;{
+119 &#32;&#32;&#32;&#32;&#32;&#32;std::ofstream&#32;result_file;
+120 &#32;&#32;&#32;&#32;&#32;&#32;result_file.open((solutionpath&#32;+&#32;<emphasis class="stringliteral">&quot;/convergence_rates.dat&quot;</emphasis>).c_str(),std::ios_base::openmode::_S_trunc);
+121 
+122 &#32;&#32;&#32;&#32;&#32;&#32;Convergence_Table.write_text(result_file,&#32;dealii::TableHandler::TextOutputFormat::table_with_headers);
+123 &#32;&#32;&#32;&#32;&#32;&#32;result_file.close();
+124 &#32;&#32;&#32;&#32;&#32;&#32;result_file.open((solutionpath&#32;+&#32;<emphasis class="stringliteral">&quot;/convergence_rates.tex&quot;</emphasis>).c_str(),std::ios_base::openmode::_S_trunc);
+125 &#32;&#32;&#32;&#32;&#32;&#32;Convergence_Table.write_tex(result_file);
+126 &#32;&#32;&#32;&#32;&#32;&#32;result_file.close();
+127 
+128 &#32;&#32;&#32;&#32;&#32;&#32;result_file.open((solutionpath&#32;+&#32;<emphasis class="stringliteral">&quot;/steps.dat&quot;</emphasis>).c_str(),std::ios_base::openmode::_S_trunc);
+129 &#32;&#32;&#32;&#32;&#32;&#32;oa-&gt;WriteStepsOut(result_file);
+130 &#32;&#32;&#32;&#32;&#32;&#32;result_file.close();
+131 &#32;&#32;&#32;&#32;}
+132 
+133 &#32;&#32;}
+134 
+135 }
+136 
+137 <emphasis class="preprocessor">#endif</emphasis>
+138 
+139 
+    </computeroutput></literallayout>
+</section>

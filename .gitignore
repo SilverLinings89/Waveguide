@@ -57,12 +57,11 @@ Main/CMakeFiles/
 Main/CMakeCache.txt
 Main/cmake_install.cmake
 Main/Makefile
+Documentation/
 Waveguide
 .cproject
 temp
 Solutions/
-html/
-latex/
 Efficiency/
 Performance_Results/
 routes_*

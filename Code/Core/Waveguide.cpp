@@ -696,6 +696,8 @@ void Waveguide::reinit_preconditioner() {
 
 void Waveguide::reinit_preconditioner_fast() { }
 
+
+
 void Waveguide::assemble_system() {
   reinit_rhs();
 
@@ -734,7 +736,8 @@ void Waveguide::assemble_system() {
   DoFHandler<3>::active_cell_iterator cell, endc;
   cell = dof_handler.begin_active(),
   endc = dof_handler.end();
-
+  std::complex<double> k_a_sqr(GlobalParams.C_omega, GlobalParams.So_PreconditionerDampening);
+  k_a_sqr= k_a_sqr*k_a_sqr;
   for (; cell != endc; ++cell) {
     unsigned int subdomain_id = cell->subdomain_id();
     if (subdomain_id == rank) {
@@ -820,10 +823,10 @@ void Waveguide::assemble_system() {
             cell_matrix_real[i][j] += x.real();
 
 
-            std::complex<double> pre1 =(mu_prec1 * I_Curl) * Conjugate_Vector(J_Curl) * JxW -((epsilon_pre1 * I_Val) * Conjugate_Vector(J_Val))*JxW*GlobalParams.C_omega*GlobalParams.C_omega;
+            std::complex<double> pre1 =(mu_prec1 * I_Curl) * Conjugate_Vector(J_Curl) * JxW -((epsilon_pre1 * I_Val) * Conjugate_Vector(J_Val))*JxW*k_a_sqr;
             cell_matrix_prec_even[i][j] += pre1.real();
 
-            std::complex<double> pre2 =(mu_prec2 * I_Curl) * Conjugate_Vector(J_Curl) * JxW -((epsilon_pre2 * I_Val) * Conjugate_Vector(J_Val))*JxW*GlobalParams.C_omega*GlobalParams.C_omega;
+            std::complex<double> pre2 =(mu_prec2 * I_Curl) * Conjugate_Vector(J_Curl) * JxW -((epsilon_pre2 * I_Val) * Conjugate_Vector(J_Val))*JxW*k_a_sqr;
             cell_matrix_prec_odd[i][j] += pre2.real();
 
 
@@ -1124,7 +1127,7 @@ void Waveguide::solve() {
           below = locally_relevant_dofs_all_processors[rank-1].n_elements();
         }
 
-    PreconditionerSweeping sweep(mpi_comm, locally_owned_dofs.n_elements(), above, below, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, &fixed_dofs, rank);
+    PreconditionerSweeping sweep(mpi_comm, locally_owned_dofs.n_elements(), above, below, dof_handler.max_couplings_between_dofs(), locally_owned_dofs, &fixed_dofs, rank, true);
 
     if (rank == 0) {
       sweep.Prepare(*solution);

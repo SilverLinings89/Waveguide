@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_point_val_8h">
+    <title>PointVal.h File Reference</title>
+    <programlisting>#include &lt;complex&gt;</programlisting>
+        <section>
+            <title> Classes </title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>struct <link linkend="class_point_val">PointVal</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+        <title>Detailed Description</title>
+    <para>Definition in file /home/kraft/workspace/waveguideproblem/Code/Helpers/PointVal.h</para>
+    </simplesect>
+    <literallayout><computeroutput>
+1 <emphasis class="preprocessor">#ifndef&#32;PointValHeaderFlag</emphasis>
+2 <emphasis class="preprocessor">#define&#32;PointValHeaderFlag</emphasis>
+3 
+4 <emphasis class="preprocessor">#include&#32;&lt;complex&gt;</emphasis>
+5 
+<link linkend="class_point_val">6 </link><emphasis class="keyword">class&#32;</emphasis><link linkend="class_point_val">PointVal</link>&#32;{
+7 &#32;<emphasis class="keyword">public</emphasis>:
+8 &#32;&#32;std::complex&lt;double&gt;&#32;Ex,Ey,Ez;
+9 
+10 &#32;&#32;<link linkend="class_point_val">PointVal</link>();
+11 &#32;&#32;<link linkend="class_point_val">PointVal</link>(<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>);
+12 &#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<emphasis class="keyword">set</emphasis>(double,&#32;double,&#32;double,&#32;double,&#32;double,&#32;double);
+13 &#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;rescale&#32;(<emphasis class="keywordtype">double</emphasis>);
+14 };
+15 
+16 <emphasis class="preprocessor">#endif</emphasis>
+    </computeroutput></literallayout>
+</section>

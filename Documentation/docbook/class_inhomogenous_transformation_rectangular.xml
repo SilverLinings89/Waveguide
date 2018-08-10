@@ -1,0 +1,954 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="class_inhomogenous_transformation_rectangular">
+<title>InhomogenousTransformationRectangular class Reference</title>
+        <section>
+            <title>Public Attributes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double XMinus</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double XPlus</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double YMinus</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double YPlus</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double ZMinus</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double ZPlus</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::vector&lt; Sector&lt; 2 &gt; &gt; case_sectors<para><emphasis>This member contains all the Sectors who, as a sum, form the complete Waveguide.</emphasis></para></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double epsilon_K<para><emphasis>The material-property \form#38 has a different value inside and outside of the waveguides core.</emphasis></para></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double epsilon_M<para><emphasis>The material-property \form#38 has a different value inside and outside of the waveguides core.</emphasis></para></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const int sectors<para><emphasis>Since the computational domain is split into subdomains (called sectors), it is important to keep track of the amount of subdomains.</emphasis></para></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double deltaY<para><emphasis>This value is initialized with the value Delta from the input-file.</emphasis></para></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Vector&lt; double &gt; InitialDofs<para><emphasis>This vector of values saves the initial configuration.</emphasis></para></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title></title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para> <link linkend="class_inhomogenous_transformation_rectangular_1a00b993b190a6659fbc3a1c71f206f72b">InhomogenousTransformationRectangular</link> (
+int )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>virtual <link linkend="class_inhomogenous_transformation_rectangular_1a4a41187bdf9e8950430734ef3d53e795">~InhomogenousTransformationRectangular</link> (
+)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Point&lt; 3 &gt; <link linkend="class_inhomogenous_transformation_rectangular_1a42258784b86f7e55e35834f507584893">math_to_phys</link> (
+Point&lt; 3 &gt; coord)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Point&lt; 3 &gt; <link linkend="class_inhomogenous_transformation_rectangular_1a2bae666d64ffa96a56d98ee01261bb12">phys_to_math</link> (
+Point&lt; 3 &gt; coord)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>bool <link linkend="class_inhomogenous_transformation_rectangular_1a544be0a750d66fea733ea0f218cbc866">is_identity</link> (
+Point&lt; 3 &gt; coord)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_inhomogenous_transformation_rectangular_1aea5e4c8b7307174f5d1bd1f0644a569f">get_Tensor</link> (
+Point&lt; 3 &gt; &amp; coordinate)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_inhomogenous_transformation_rectangular_1ad7a252d3effdcb89374d6ffb15115452">get_Preconditioner_Tensor</link> (
+Point&lt; 3 &gt; &amp; coordinate, int block)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_inhomogenous_transformation_rectangular_1ae9366270d55c3fc30e2011d764c344d9">Apply_PML_To_Tensor</link> (
+Point&lt; 3 &gt; &amp; coordinate, Tensor&lt; 2, 3, double &gt; Tensor_input)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_inhomogenous_transformation_rectangular_1af9ac7fa1961923e7b0ee4a8528794a86">Apply_PML_To_Tensor_For_Preconditioner</link> (
+Point&lt; 3 &gt; &amp; coordinate, Tensor&lt; 2, 3, double &gt; Tensor_input, int block)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Tensor&lt; 2, 3, double &gt; <link linkend="class_inhomogenous_transformation_rectangular_1a6b337e4e30b07b7b2d4808b70fef22ba">get_Space_Transformation_Tensor</link> (
+Point&lt; 3 &gt; &amp; coordinate)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Tensor&lt; 2, 3, double &gt; <link linkend="class_inhomogenous_transformation_rectangular_1a7eed31a427625862cd9980709325595e">get_Space_Transformation_Tensor_Homogenized</link> (
+Point&lt; 3 &gt; &amp; coordinate)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>bool <link linkend="class_inhomogenous_transformation_rectangular_1a6cb643e640c943a28bfc9b43c23d41de">PML_in_X</link> (
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>bool <link linkend="class_inhomogenous_transformation_rectangular_1abc2972d217a900bcb9abdf8db6cefd3a">PML_in_Y</link> (
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the y-axis.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>bool <link linkend="class_inhomogenous_transformation_rectangular_1a5298100533de731ceb7889cc25cb54ee">PML_in_Z</link> (
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the z-axis.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>bool <link linkend="class_inhomogenous_transformation_rectangular_1ae07b09515c6866bee1bfbcfcdb93d6ce">Preconditioner_PML_in_Z</link> (
+Point&lt; 3 &gt; &amp; p, unsigned int block)<para><emphasis>Similar to the PML_in_Z only this function is used to generate the artificial PML used in the Preconditioner.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_rectangular_1a1561364a5dda687f5ab1f987828fd928">Preconditioner_PML_Z_Distance</link> (
+Point&lt; 3 &gt; &amp; p, unsigned int block)<para><emphasis>This function fulfills the same purpose as those with similar names but it is supposed to be used together with Preconditioner_PML_in_Z instead of the versions without &quot;Preconditioner&quot;.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_rectangular_1aae6d8b1612f012f07a750655470f9651">PML_X_Distance</link> (
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_rectangular_1a2f730276696ed21ae025b38d7f145334">PML_Y_Distance</link> (
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_rectangular_1abc77e051b32e0846310fe324a97889e6">PML_Z_Distance</link> (
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_inhomogenous_transformation_rectangular_1a57bfab6df3943d1a551fa2ab8b5b5f98">estimate_and_initialize</link> (
+)<para><emphasis>At the beginning (before the first solution of a system) only the boundary conditions for the shape of the waveguide are known.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_rectangular_1acee242562240efec2caba6dfbef3f751">get_Q1</link> (
+double z)<para><emphasis>This member calculates the value of Q1 for a provided \form#39-coordinate.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_rectangular_1a6a862fd0e48df918ed615032adc251af">get_Q2</link> (
+double z)<para><emphasis>This member calculates the value of Q2 for a provided \form#39-coordinate.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_rectangular_1ac7642401fd8d72b7a0f88314437f395c">get_Q3</link> (
+double z)<para><emphasis>This member calculates the value of Q3 for a provided \form#39-coordinate.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_rectangular_1a9afcf7381a1f09eb07c5ab6e91ebf360">get_dof</link> (
+int dof)<para><emphasis>This is a getter for the values of degrees of freedom.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_inhomogenous_transformation_rectangular_1a430a8e171a06b84c6c6c7f9c0505eba6">set_dof</link> (
+int dof, double value)<para><emphasis>This function sets the value of the dof provided to the given value.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_rectangular_1aa160a28a90440c898d393aca94840a1c">get_free_dof</link> (
+int dof)<para><emphasis>This is a getter for the values of degrees of freedom.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_inhomogenous_transformation_rectangular_1a7d6faa62a95704da012d55f1319fc7be">set_free_dof</link> (
+int dof, double value)<para><emphasis>This function sets the value of the dof provided to the given value.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_rectangular_1a52e0de3d05ab06b897de34cf71266e63">System_Length</link> (
+)<para><emphasis>Returns the complete length of the computational domain.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_rectangular_1ad710784eedb69216061abb2c68a3cf27">Sector_Length</link> (
+)<para><emphasis>Returns the length of one sector.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_rectangular_1ab88341aeedc0bda0fd07ca366d153ee9">Layer_Length</link> (
+)<para><emphasis>Returns the length of one layer.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_rectangular_1a2d3550e479f1a2015700ea7619312c64">get_r</link> (
+double in_z)<para><emphasis>Returns the radius for a system-coordinate;.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_rectangular_1a2aedc5c4044617415189c769ef444ce2">get_m</link> (
+double in_z)<para><emphasis>Returns the shift for a system-coordinate;.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_rectangular_1aac3e020f5543a1fbdc50a9b1e90485b6">get_v</link> (
+double in_z)<para><emphasis>Returns the tilt for a system-coordinate;.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>int <link linkend="class_inhomogenous_transformation_rectangular_1adddc494f74540759b471dd940ded487e">Z_to_Layer</link> (
+double )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Vector&lt; double &gt; <link linkend="class_inhomogenous_transformation_rectangular_1a6f7772c13ef16ffca0bd4f02cbd5bbe6">Dofs</link> (
+)<para><emphasis>Other objects can use this function to retrieve an array of the current values of the degrees of freedom of the functional we are optimizing.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>unsigned int <link linkend="class_inhomogenous_transformation_rectangular_1a98e0f78b4f0dde6957787f9864a1eb4e">NFreeDofs</link> (
+)<para><emphasis>This function returns the number of unrestrained degrees of freedom of the current optimization run.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>unsigned int <link linkend="class_inhomogenous_transformation_rectangular_1a763065737c653b754373c6550317798e">NDofs</link> (
+)<para><emphasis>This function returns the total number of DOFs including restrained ones.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>bool <link linkend="class_inhomogenous_transformation_rectangular_1addcdac558877e24a1d1327c44dcdbc4d">IsDofFree</link> (
+int )<para><emphasis>Since Dofs() also returns restrained degrees of freedom, this function can be applied to determine if a degree of freedom is indeed free or restrained.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_inhomogenous_transformation_rectangular_1ac167cd73546a4ec03615f0e3748fd0c8">Print</link> (
+)<para><emphasis>Console output of the current Waveguide Structure.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::complex&lt; double &gt; <link linkend="class_inhomogenous_transformation_rectangular_1acc9dfa2f7206f9829ed2e5d0640eb504">evaluate_for_z_with_sum</link> (
+double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::complex&lt; double &gt; <link linkend="class_inhomogenous_transformation_rectangular_1aeee00d4fa66b35deead406433368ac1a">evaluate_for_z</link> (
+double , <link linkend="class_waveguide">Waveguide</link> * )<para><emphasis>Since the Wavegudie itself may be circular or rectangular now, the evaluation routines should be moved to a point in the code where this information is included in the code.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title>Member Data Documentation</title>
+            <simplesect>
+                <title>std::vector&lt;Sector&lt;2&gt; &gt; InhomogenousTransformationRectangular::case_sectors</title>                
+<para>These Sectors are a partition of the simulated domain. </para>
+
+                <para>Definition at line 101 of file InhomogenousTransformationRectangular.h</para>
+                <para>The Documentation for this struct was generated from the following file: </para>
+                <para><itemizedlist><listitem><para>InhomogenousTransformationRectangular.h</para></listitem></itemizedlist></para>
+            </simplesect>
+            <simplesect>
+                <title>const double InhomogenousTransformationRectangular::epsilon_K</title>                
+<para>This variable stores its value inside the core. </para>
+
+                <para>Definition at line 106 of file InhomogenousTransformationRectangular.h</para>
+                <para>The Documentation for this struct was generated from the following file: </para>
+                <para><itemizedlist><listitem><para>InhomogenousTransformationRectangular.h</para></listitem></itemizedlist></para>
+            </simplesect>
+            <simplesect>
+                <title>const double InhomogenousTransformationRectangular::epsilon_M</title>                
+<para>This variable stores its value outside the core. </para>
+
+                <para>Definition at line 110 of file InhomogenousTransformationRectangular.h</para>
+                <para>The Documentation for this struct was generated from the following file: </para>
+                <para><itemizedlist><listitem><para>InhomogenousTransformationRectangular.h</para></listitem></itemizedlist></para>
+            </simplesect>
+            <simplesect>
+                <title>const int InhomogenousTransformationRectangular::sectors</title>                
+<para>This member stores the number of Sectors the computational domain has been split into. </para>
+
+                <para>Definition at line 114 of file InhomogenousTransformationRectangular.h</para>
+                <para>The Documentation for this struct was generated from the following file: </para>
+                <para><itemizedlist><listitem><para>InhomogenousTransformationRectangular.h</para></listitem></itemizedlist></para>
+            </simplesect>
+        </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a00b993b190a6659fbc3a1c71f206f72b">
+                <title>InhomogenousTransformationRectangular::InhomogenousTransformationRectangular (int)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a4a41187bdf9e8950430734ef3d53e795">
+                <title>InhomogenousTransformationRectangular::~InhomogenousTransformationRectangular ()</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a42258784b86f7e55e35834f507584893">
+                <title>Point&lt; 3 &gt; InhomogenousTransformationRectangular::math_to_phys (Point&lt; 3 &gt; coord) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a2bae666d64ffa96a56d98ee01261bb12">
+                <title>Point&lt; 3 &gt; InhomogenousTransformationRectangular::phys_to_math (Point&lt; 3 &gt; coord) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a544be0a750d66fea733ea0f218cbc866">
+                <title>bool InhomogenousTransformationRectangular::is_identity (Point&lt; 3 &gt; coord) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1aea5e4c8b7307174f5d1bd1f0644a569f">
+                <title>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; InhomogenousTransformationRectangular::get_Tensor (Point&lt; 3 &gt; &amp;coordinate) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1ad7a252d3effdcb89374d6ffb15115452">
+                <title>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; InhomogenousTransformationRectangular::get_Preconditioner_Tensor (Point&lt; 3 &gt; &amp;coordinate, int block) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1ae9366270d55c3fc30e2011d764c344d9">
+                <title>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; InhomogenousTransformationRectangular::Apply_PML_To_Tensor (Point&lt; 3 &gt; &amp;coordinate, Tensor&lt; 2, 3, double &gt; Tensor_input) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1af9ac7fa1961923e7b0ee4a8528794a86">
+                <title>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; InhomogenousTransformationRectangular::Apply_PML_To_Tensor_For_Preconditioner (Point&lt; 3 &gt; &amp;coordinate, Tensor&lt; 2, 3, double &gt; Tensor_input, int block) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a6b337e4e30b07b7b2d4808b70fef22ba">
+                <title>Tensor&lt; 2, 3, double &gt; InhomogenousTransformationRectangular::get_Space_Transformation_Tensor (Point&lt; 3 &gt; &amp;coordinate) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a7eed31a427625862cd9980709325595e">
+                <title>Tensor&lt; 2, 3, double &gt; InhomogenousTransformationRectangular::get_Space_Transformation_Tensor_Homogenized (Point&lt; 3 &gt; &amp;coordinate) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a6cb643e640c943a28bfc9b43c23d41de">
+                <title>bool InhomogenousTransformationRectangular::PML_in_X (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis.</emphasis>
+                
+<para>Since there are 3 blocks of PML-type material, there are 3 functions. 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>position</entry>
+                                <entry>
+<para>Stores the position in which to test for presence of a PML-Material. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1abc2972d217a900bcb9abdf8db6cefd3a">
+                <title>bool InhomogenousTransformationRectangular::PML_in_Y (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the y-axis.</emphasis>
+                
+<para>Since there are 3 blocks of PML-type material, there are 3 functions. 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>position</entry>
+                                <entry>
+<para>Stores the position in which to test for presence of a PML-Material. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a5298100533de731ceb7889cc25cb54ee">
+                <title>bool InhomogenousTransformationRectangular::PML_in_Z (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the z-axis.</emphasis>
+                
+<para>Since there are 3 blocks of PML-type material, there are 3 functions. 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>position</entry>
+                                <entry>
+<para>Stores the position in which to test for presence of a PML-Material. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1ae07b09515c6866bee1bfbcfcdb93d6ce">
+                <title>bool InhomogenousTransformationRectangular::Preconditioner_PML_in_Z (Point&lt; 3 &gt; &amp;p, unsigned int block) const</title> <emphasis>Similar to the PML_in_Z only this function is used to generate the artificial PML used in the Preconditioner.</emphasis>
+                
+<para>These Layers are not only situated at the surface of the computational domain but also inside it at the interfaces of Sectors. </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a1561364a5dda687f5ab1f987828fd928">
+                <title>double InhomogenousTransformationRectangular::Preconditioner_PML_Z_Distance (Point&lt; 3 &gt; &amp;p, unsigned int block) const</title> <emphasis>This function fulfills the same purpose as those with similar names but it is supposed to be used together with Preconditioner_PML_in_Z instead of the versions without &quot;Preconditioner&quot;.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1aae6d8b1612f012f07a750655470f9651">
+                <title>double InhomogenousTransformationRectangular::PML_X_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis>
+                
+<para>This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction). 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>position</entry>
+                                <entry>
+<para>Stores the position from which to calculate the distance to the PML-surface. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a2f730276696ed21ae025b38d7f145334">
+                <title>double InhomogenousTransformationRectangular::PML_Y_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis>
+                
+<para>This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction). 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>position</entry>
+                                <entry>
+<para>Stores the position from which to calculate the distance to the PML-surface. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1abc77e051b32e0846310fe324a97889e6">
+                <title>double InhomogenousTransformationRectangular::PML_Z_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis>
+                
+<para>This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction). 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>position</entry>
+                                <entry>
+<para>Stores the position from which to calculate the distance to the PML-surface. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a57bfab6df3943d1a551fa2ab8b5b5f98">
+                <title>void InhomogenousTransformationRectangular::estimate_and_initialize ()</title> <emphasis>At the beginning (before the first solution of a system) only the boundary conditions for the shape of the waveguide are known.</emphasis>
+                
+<para>Therefore the values for the degrees of freedom need to be estimated. This function sets all variables to appropiate values and estimates an appropriate shape based on averages and a polynomial interpolation of the boundary conditions on the shape. </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1acee242562240efec2caba6dfbef3f751">
+                <title>double InhomogenousTransformationRectangular::get_Q1 (double z) const</title> <emphasis>This member calculates the value of Q1 for a provided \form#39-coordinate.</emphasis>
+                
+<para>This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field). 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>z</entry>
+                                <entry>
+<para>The value of Q1 is independent of <equation><title>form_40</title>$x$</equation> and <equation><title>form_41</title>$y$</equation>. Therefore only a <equation><title>form_39</title>$z$</equation>-coordinate is provided in a call to the function. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a6a862fd0e48df918ed615032adc251af">
+                <title>double InhomogenousTransformationRectangular::get_Q2 (double z) const</title> <emphasis>This member calculates the value of Q2 for a provided \form#39-coordinate.</emphasis>
+                
+<para>This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field). 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>z</entry>
+                                <entry>
+<para>The value of Q2 is independent of <equation><title>form_40</title>$x$</equation> and <equation><title>form_41</title>$y$</equation>. Therefore only a <equation><title>form_39</title>$z$</equation>-coordinate is provided in a call to the function. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1ac7642401fd8d72b7a0f88314437f395c">
+                <title>double InhomogenousTransformationRectangular::get_Q3 (double z) const</title> <emphasis>This member calculates the value of Q3 for a provided \form#39-coordinate.</emphasis>
+                
+<para>This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field). 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>z</entry>
+                                <entry>
+<para>The value of Q3 is independent of <equation><title>form_40</title>$x$</equation> and <equation><title>form_41</title>$y$</equation>. Therefore only a <equation><title>form_39</title>$z$</equation>-coordinate is provided in a call to the function. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a9afcf7381a1f09eb07c5ab6e91ebf360">
+                <title>double InhomogenousTransformationRectangular::get_dof (int dof) const</title> <emphasis>This is a getter for the values of degrees of freedom.</emphasis>
+                
+<para>A getter-setter interface was introduced since the values are estimated automatically during the optimization and non-physical systems should be excluded from the domain of possible cases. 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>dof</entry>
+                                <entry>
+<para>The index of the degree of freedom to be retrieved from the structure of the modelled waveguide. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                <formalpara><title>Returns: </title>
+
+<para>This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd. </para>
+</formalpara>
+</para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a430a8e171a06b84c6c6c7f9c0505eba6">
+                <title>void InhomogenousTransformationRectangular::set_dof (int dof, double value)</title> <emphasis>This function sets the value of the dof provided to the given value.</emphasis>
+                
+<para>It is important to consider, that some dofs are non-writable (i.e. the values of the degrees of freedom on the boundary, like the radius of the input-connector cannot be changed). 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>dof</entry>
+                                <entry>
+<para>The index of the parameter to be changed. </para>
+</entry>
+                            </row>
+                            <row>
+                                <entry>value</entry>
+                                <entry>
+<para>The value, the dof should be set to. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1aa160a28a90440c898d393aca94840a1c">
+                <title>double InhomogenousTransformationRectangular::get_free_dof (int dof) const</title> <emphasis>This is a getter for the values of degrees of freedom.</emphasis>
+                
+<para>A getter-setter interface was introduced since the values are estimated automatically during the optimization and non-physical systems should be excluded from the domain of possible cases. 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>dof</entry>
+                                <entry>
+<para>The index of the degree of freedom to be retrieved from the structure of the modelled waveguide. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                <formalpara><title>Returns: </title>
+
+<para>This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd. </para>
+</formalpara>
+</para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a7d6faa62a95704da012d55f1319fc7be">
+                <title>void InhomogenousTransformationRectangular::set_free_dof (int dof, double value)</title> <emphasis>This function sets the value of the dof provided to the given value.</emphasis>
+                
+<para>It is important to consider, that some dofs are non-writable (i.e. the values of the degrees of freedom on the boundary, like the radius of the input-connector cannot be changed). 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>dof</entry>
+                                <entry>
+<para>The index of the parameter to be changed. </para>
+</entry>
+                            </row>
+                            <row>
+                                <entry>value</entry>
+                                <entry>
+<para>The value, the dof should be set to. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a52e0de3d05ab06b897de34cf71266e63">
+                <title>double InhomogenousTransformationRectangular::System_Length () const</title> <emphasis>Returns the complete length of the computational domain.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1ad710784eedb69216061abb2c68a3cf27">
+                <title>double InhomogenousTransformationRectangular::Sector_Length () const</title> <emphasis>Returns the length of one sector.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1ab88341aeedc0bda0fd07ca366d153ee9">
+                <title>double InhomogenousTransformationRectangular::Layer_Length () const</title> <emphasis>Returns the length of one layer.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a2d3550e479f1a2015700ea7619312c64">
+                <title>double InhomogenousTransformationRectangular::get_r (double in_z) const</title> <emphasis>Returns the radius for a system-coordinate;.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a2aedc5c4044617415189c769ef444ce2">
+                <title>double InhomogenousTransformationRectangular::get_m (double in_z) const</title> <emphasis>Returns the shift for a system-coordinate;.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1aac3e020f5543a1fbdc50a9b1e90485b6">
+                <title>double InhomogenousTransformationRectangular::get_v (double in_z) const</title> <emphasis>Returns the tilt for a system-coordinate;.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1adddc494f74540759b471dd940ded487e">
+                <title>int InhomogenousTransformationRectangular::Z_to_Layer (double) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a6f7772c13ef16ffca0bd4f02cbd5bbe6">
+                <title>Vector&lt; double &gt; InhomogenousTransformationRectangular::Dofs () const</title> <emphasis>Other objects can use this function to retrieve an array of the current values of the degrees of freedom of the functional we are optimizing.</emphasis>
+                
+<para>This also includes restrained degrees of freedom and other functions can be used to determine this property. This has to be done because in different cases the number of restrained degrees of freedom can vary and we want no logic about this in other functions. </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a98e0f78b4f0dde6957787f9864a1eb4e">
+                <title>unsigned int InhomogenousTransformationRectangular::NFreeDofs () const</title> <emphasis>This function returns the number of unrestrained degrees of freedom of the current optimization run.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1a763065737c653b754373c6550317798e">
+                <title>unsigned int InhomogenousTransformationRectangular::NDofs () const</title> <emphasis>This function returns the total number of DOFs including restrained ones.</emphasis>
+                
+<para>This is the lenght of the array returned by <link linkend="class_inhomogenous_transformation_rectangular_1a6f7772c13ef16ffca0bd4f02cbd5bbe6">Dofs()</link>. </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1addcdac558877e24a1d1327c44dcdbc4d">
+                <title>bool InhomogenousTransformationRectangular::IsDofFree (int) const</title> <emphasis>Since Dofs() also returns restrained degrees of freedom, this function can be applied to determine if a degree of freedom is indeed free or restrained.</emphasis>
+                
+<para>&quot;restrained&quot; means that for example the DOF represents the radius at one of the connectors (input or output) and therefore we forbid the optimization scheme to vary this value. </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1ac167cd73546a4ec03615f0e3748fd0c8">
+                <title>void InhomogenousTransformationRectangular::Print () const</title> <emphasis>Console output of the current Waveguide Structure.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1acc9dfa2f7206f9829ed2e5d0640eb504">
+                <title>std::complex&lt;double&gt; InhomogenousTransformationRectangular::evaluate_for_z_with_sum (double, double, Waveguide *)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_rectangular_1aeee00d4fa66b35deead406433368ac1a">
+                <title>std::complex&lt; double &gt; InhomogenousTransformationRectangular::evaluate_for_z (double z_in, Waveguide *)</title> <emphasis>Since the Wavegudie itself may be circular or rectangular now, the evaluation routines should be moved to a point in the code where this information is included in the code.</emphasis>
+                
+<para>Since I dont want to create derived classes from waveguide (which I should do eventually) I will for now include this functionality into the space transformation which is shape-sensitive. The waveguide only offers the evaluation at a point. The quadrature-rule has to be imposed by the space transformation. </para>
+
+            </section>
+</section>

@@ -1,0 +1,260 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_adjoint_optimization_8cpp">
+    <title>AdjointOptimization.cpp File Reference</title>
+    <programlisting>#include &quot;AdjointOptimization.h&quot;</programlisting>
+    <programlisting>#include &lt;complex&gt;</programlisting>
+    <programlisting>#include &lt;vector&gt;</programlisting>
+    <programlisting>#include &lt;string&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/point.h&gt;</programlisting>
+    <programlisting>#include &quot;../Core/Waveguide.h&quot;</programlisting>
+    <programlisting>#include &quot;../MeshGenerators/MeshGenerator.h&quot;</programlisting>
+    <programlisting>#include &quot;../SpaceTransformations/SpaceTransformation.h&quot;</programlisting>
+    <programlisting>#include &quot;../OptimizationAlgorithm/OptimizationAlgorithm.h&quot;</programlisting>
+        <section>
+            <title>Macros</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                            <para>#define <link linkend="_adjoint_optimization_8cpp_1a9c9cd8efa6ce0516fcd2000ae74f1f26">AdjointOptimization_CPP_</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+        <title>Detailed Description</title>
+    <para>Definition in file /home/kraft/workspace/waveguideproblem/Code/OptimizationStrategies/AdjointOptimization.cpp</para>
+    </simplesect>
+    <literallayout><computeroutput>
+1 <emphasis class="preprocessor">#ifndef&#32;AdjointOptimization_CPP_</emphasis>
+2 <emphasis class="preprocessor">#define&#32;AdjointOptimization_CPP_</emphasis>
+3 
+4 
+5 
+6 <emphasis class="preprocessor">#include&#32;&quot;AdjointOptimization.h&quot;</emphasis>
+7 <emphasis class="preprocessor">#include&#32;&lt;complex&gt;</emphasis>
+8 <emphasis class="preprocessor">#include&#32;&lt;vector&gt;</emphasis>
+9 <emphasis class="preprocessor">#include&#32;&lt;string&gt;</emphasis>
+10 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/point.h&gt;</emphasis>
+11 <emphasis class="preprocessor">#include&#32;&quot;../Core/Waveguide.h&quot;</emphasis>
+12 <emphasis class="preprocessor">#include&#32;&quot;../MeshGenerators/MeshGenerator.h&quot;</emphasis>
+13 <emphasis class="preprocessor">#include&#32;&quot;../SpaceTransformations/SpaceTransformation.h&quot;</emphasis>
+14 <emphasis class="preprocessor">#include&#32;&quot;../OptimizationAlgorithm/OptimizationAlgorithm.h&quot;</emphasis>
+15 
+16 <emphasis class="keyword">using&#32;namespace&#32;</emphasis><link linkend="namespacedealii">dealii</link>;
+17 
+18 AdjointOptimization::AdjointOptimization(<link linkend="class_waveguide">Waveguide</link>&#32;*&#32;in_waveguide_primal,&#32;<link linkend="class_mesh_generator">MeshGenerator</link>&#32;*&#32;in_mg,&#32;<link linkend="class_space_transformation">SpaceTransformation</link>&#32;*&#32;in_st_primal,&#32;<link linkend="class_space_transformation">SpaceTransformation</link>&#32;*&#32;in_st_dual,&#32;<link linkend="class_optimization_algorithm">OptimizationAlgorithm</link>&lt;std::complex&lt;double&gt;&gt;&#32;*&#32;in_Oa)&#32;{
+19 &#32;&#32;waveguide&#32;=&#32;in_waveguide_primal;
+20 &#32;&#32;primal_st&#32;=&#32;in_st_primal;
+21 &#32;&#32;dual_st&#32;=&#32;in_st_dual;
+22 &#32;&#32;mg&#32;=&#32;in_mg;
+23 &#32;&#32;oa&#32;=&#32;in_Oa;
+24 
+25 }
+26 
+27 AdjointOptimization::~AdjointOptimization()&#32;{
+28 
+29 }
+30 
+31 std::vector&lt;std::complex&lt;double&gt;&gt;&#32;AdjointOptimization::compute_small_step(<emphasis class="keywordtype">double</emphasis>&#32;step)&#32;{
+32 &#32;&#32;waveguide-&gt;switch_to_primal(primal_st);
+33 &#32;&#32;std::complex&lt;double&gt;&#32;global_a_out=&#32;primal_st-&gt;evaluate_for_z(&#32;&#32;GlobalParams.M_R_ZLength/2.0&#32;-0.0001&#32;,&#32;waveguide);
+34 &#32;&#32;std::vector&lt;std::complex&lt;double&gt;&gt;&#32;grad&#32;=&#32;waveguide-&gt;assemble_adjoint_local_contribution(step);
+35 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;grad.size();&#32;i++)&#32;{
+36 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Phase&#32;Derivative:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;grad[i]/step&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;Step:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;step&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Quality&#32;derivative:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;std::abs(global_a_out&#32;+&#32;grad[i])&#32;-&#32;std::abs(global_a_out)&lt;&lt;&#32;std::endl;
+37 &#32;&#32;}
+38 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;grad;
+39 }
+40 
+41 <emphasis class="keywordtype">double</emphasis>&#32;AdjointOptimization::compute_big_step(std::vector&lt;double&gt;&#32;step)&#32;{
+42 &#32;&#32;Vector&lt;double&gt;&#32;current_config&#32;=&#32;primal_st-&gt;Dofs();
+43 
+44 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&lt;&#32;step.size();&#32;i++){
+45 &#32;&#32;&#32;&#32;&#32;&#32;primal_st-&gt;set_dof(i,&#32;current_config[i]&#32;+&#32;step[i]);
+46 &#32;&#32;&#32;&#32;&#32;&#32;dual_st-&gt;set_dof(i,&#32;current_config[i]&#32;+&#32;step[i]);
+47 &#32;&#32;}
+48 
+49 &#32;&#32;deallog.push(<emphasis class="stringliteral">&quot;Config&quot;</emphasis>);
+50 &#32;&#32;Vector&lt;double&gt;&#32;for_output&#32;=&#32;primal_st-&gt;Dofs();
+51 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&lt;&#32;step.size();&#32;i++){
+52 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;for_output[i]&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;,&#32;&quot;</emphasis>;
+53 &#32;&#32;}
+54 &#32;&#32;deallog&lt;&lt;std::endl;
+55 &#32;&#32;deallog.pop();
+56 
+57 &#32;&#32;MPI_Barrier(MPI_COMM_WORLD);
+58 &#32;&#32;waveguide-&gt;switch_to_primal(primal_st);
+59 &#32;&#32;waveguide-&gt;run();
+60 &#32;&#32;MPI_Barrier(MPI_COMM_WORLD);
+61 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;quality&#32;=&#32;0;
+62 &#32;&#32;std::complex&lt;double&gt;&#32;a_in&#32;=&#32;primal_st-&gt;evaluate_for_z_with_sum(-&#32;GlobalParams.M_R_ZLength/2.0&#32;,&#32;2.0*&#32;GlobalParams.M_C_Dim1In,&#32;waveguide);
+63 &#32;&#32;std::complex&lt;double&gt;&#32;a_out=&#32;primal_st-&gt;evaluate_for_z_with_sum(&#32;&#32;GlobalParams.M_R_ZLength/2.0&#32;,&#32;2.0*&#32;GlobalParams.M_C_Dim1In,&#32;waveguide);
+64 &#32;&#32;deallog&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Phase&#32;in&#32;(@&#32;&quot;</emphasis>&lt;&lt;-GlobalParams.M_R_ZLength/2.0&lt;&lt;<emphasis class="stringliteral">&quot;:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;a_in&#32;&lt;&lt;&#32;std::endl;
+65 &#32;&#32;deallog&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Phase&#32;out(@&#32;&quot;</emphasis>&lt;&lt;&#32;GlobalParams.M_R_ZLength/2.0&lt;&lt;<emphasis class="stringliteral">&quot;:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;a_out&#32;&lt;&lt;&#32;std::endl;
+66 &#32;&#32;quality&#32;=&#32;std::abs(a_out&#32;/&#32;a_in);
+67 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Computed&#32;primal&#32;quality&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;quality&#32;&lt;&lt;&#32;std::endl;
+68 &#32;&#32;<emphasis class="comment">//&#32;New&#32;starts&#32;here</emphasis>
+69 &#32;&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">double</emphasis>&#32;step_width&#32;=&#32;0.01;
+70 &#32;&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;cnt_steps&#32;=&#32;0;
+71 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;z_temp&#32;=&#32;GlobalParams.Minimum_Z;
+72 &#32;&#32;<emphasis class="keywordflow">while</emphasis>&#32;(&#32;z_temp&#32;&lt;&#32;GlobalParams.Maximum_Z){
+73 &#32;&#32;&#32;&#32;cnt_steps&#32;++;
+74 &#32;&#32;&#32;&#32;z_temp&#32;+=&#32;step_width;
+75 &#32;&#32;}
+76 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Start&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+77 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>*&#32;mine&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;<emphasis class="keywordtype">bool</emphasis>[cnt_steps];
+78 &#32;&#32;z_temp&#32;=&#32;GlobalParams.Minimum_Z&#32;+&#32;0.0001;
+79 &#32;&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;own_cnt&#32;=&#32;0;
+80 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;lowest_own&#32;=&#32;GlobalParams.Minimum_Z&#32;-10.0;
+81 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;lowest_idx&#32;=&#32;0;
+82 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i=0;&#32;i&lt;&#32;cnt_steps;&#32;i++)&#32;{
+83 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(z_temp&#32;&gt;&#32;this-&gt;waveguide-&gt;mg-&gt;z_min&#32;&amp;&amp;&#32;z_temp&#32;&lt;&#32;this-&gt;waveguide-&gt;mg-&gt;z_max)&#32;{
+84 &#32;&#32;&#32;&#32;&#32;&#32;mine[i]&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+85 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(own_cnt&#32;==&#32;0)&#32;{
+86 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;lowest_own&#32;=&#32;z_temp;
+87 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;lowest_idx&#32;=&#32;i;
+88 &#32;&#32;&#32;&#32;&#32;&#32;}
+89 &#32;&#32;&#32;&#32;&#32;&#32;own_cnt&#32;++;
+90 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+91 &#32;&#32;&#32;&#32;&#32;&#32;mine[i]&#32;=&#32;<emphasis class="keyword">false</emphasis>;
+92 &#32;&#32;&#32;&#32;}
+93 &#32;&#32;&#32;&#32;z_temp&#32;+=&#32;step_width;
+94 &#32;&#32;}
+95 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;*&#32;displs;
+96 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(GlobalParams.MPI_Rank&#32;==&#32;0)&#32;{
+97 &#32;&#32;&#32;&#32;displs&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>[GlobalParams.NumberProcesses];
+98 &#32;&#32;}
+99 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;I&#32;am&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;GlobalParams.MPI_Rank&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;.&#32;I&#32;have&#32;lowest&#32;own&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;lowest_own&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;and&#32;own_cnt&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;own_cnt&#32;&lt;&lt;&#32;std::endl;
+100 &#32;&#32;MPI_Gather(&amp;lowest_idx,&#32;1,&#32;MPI_INTEGER,&#32;displs,&#32;1,&#32;MPI_INTEGER,&#32;0,&#32;MPI_COMM_WORLD);
+101 &#32;&#32;<emphasis class="keywordtype">double</emphasis>*&#32;a_reals&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;<emphasis class="keywordtype">double</emphasis>[own_cnt];
+102 &#32;&#32;<emphasis class="keywordtype">double</emphasis>*&#32;a_imags&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;<emphasis class="keywordtype">double</emphasis>[own_cnt];
+103 &#32;&#32;<emphasis class="keywordtype">double</emphasis>*&#32;a_abolutes&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;<emphasis class="keywordtype">double</emphasis>[own_cnt];
+104 &#32;&#32;z_temp&#32;=&#32;lowest_own;
+105 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;own_cnt-1;&#32;i++)&#32;{
+106 &#32;&#32;&#32;&#32;std::complex&lt;double&gt;&#32;l_val(0,0);
+107 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">try</emphasis>&#32;{
+108 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Executing&#32;for&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;z_temp&#32;&lt;&lt;&#32;std::endl;
+109 &#32;&#32;&#32;&#32;&#32;&#32;l_val&#32;=&#32;primal_st-&gt;evaluate_for_z(z_temp,&#32;waveguide);
+110 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">catch</emphasis>(...)&#32;{
+111 &#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;In&#32;Process&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;GlobalParams.MPI_Rank&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;:&#32;Broke&#32;for&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;z_temp&#32;&lt;&lt;&#32;std::endl;
+112 &#32;&#32;&#32;&#32;}
+113 &#32;&#32;&#32;&#32;a_reals[i]&#32;=&#32;l_val.real();
+114 &#32;&#32;&#32;&#32;a_imags[i]&#32;=&#32;l_val.imag();
+115 &#32;&#32;&#32;&#32;a_abolutes[i]&#32;=&#32;std::sqrt(a_reals[i]*a_reals[i]&#32;+&#32;a_imags[i]*a_imags[i]);
+116 &#32;&#32;&#32;&#32;z_temp&#32;+=&#32;step_width;
+117 &#32;&#32;}
+118 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;I&#32;am&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;GlobalParams.MPI_Rank&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;.&#32;My&#32;dofs&#32;are&#32;&quot;</emphasis>;
+119 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;i&#32;&lt;&#32;cnt_steps&#32;;&#32;i++)&#32;{
+120 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(mine[i])&#32;{
+121 &#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;i&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;&quot;</emphasis>;
+122 &#32;&#32;&#32;&#32;}
+123 &#32;&#32;}
+124 &#32;&#32;std::cout&#32;&lt;&lt;&#32;std::endl;
+125 
+126 &#32;&#32;MPI_Barrier(MPI_COMM_WORLD);
+127 &#32;&#32;<emphasis class="keywordtype">double</emphasis>*&#32;all_reals;
+128 &#32;&#32;<emphasis class="keywordtype">double</emphasis>*&#32;all_imags;
+129 &#32;&#32;<emphasis class="keywordtype">double</emphasis>*&#32;all_absolutes;
+130 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;*&#32;cnt_recv;
+131 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(GlobalParams.MPI_Rank&#32;==&#32;0)&#32;{
+132 &#32;&#32;&#32;&#32;all_reals&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;<emphasis class="keywordtype">double</emphasis>[cnt_steps];
+133 &#32;&#32;&#32;&#32;all_imags&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;<emphasis class="keywordtype">double</emphasis>[cnt_steps];
+134 &#32;&#32;&#32;&#32;all_absolutes&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;<emphasis class="keywordtype">double</emphasis>[cnt_steps];
+135 &#32;&#32;&#32;&#32;cnt_recv&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>[GlobalParams.NumberProcesses];
+136 &#32;&#32;&#32;&#32;cnt_recv[0]&#32;=&#32;own_cnt;
+137 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=1;&#32;i&#32;&lt;&#32;GlobalParams.NumberProcesses-1;&#32;i++)&#32;{
+138 &#32;&#32;&#32;&#32;&#32;&#32;cnt_recv[i]&#32;=&#32;displs[i+1]-displs[i];
+139 &#32;&#32;&#32;&#32;}
+140 &#32;&#32;&#32;&#32;cnt_recv[GlobalParams.NumberProcesses-1]&#32;=&#32;cnt_steps&#32;-&#32;displs[GlobalParams.NumberProcesses-1];
+141 &#32;&#32;}
+142 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Output&#32;proc&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;GlobalParams.MPI_Rank&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;.&quot;</emphasis>&#32;&lt;&lt;std::endl;
+143 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;own_cnt;&#32;i++)&#32;{
+144 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;a_reals[i]&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;a_imags[i]&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;a_abolutes[i]&#32;&lt;&lt;&#32;std::endl;
+145 &#32;&#32;}
+146 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Ready&#32;proc&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;GlobalParams.MPI_Rank&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;.&quot;</emphasis>&#32;&lt;&lt;std::endl;
+147 &#32;&#32;MPI_Gatherv(a_reals,&#32;own_cnt,&#32;MPI_DOUBLE,&#32;all_reals,&#32;cnt_recv,&#32;displs,&#32;MPI_DOUBLE,&#32;0,&#32;MPI_COMM_WORLD);
+148 &#32;&#32;MPI_Gatherv(a_imags,&#32;own_cnt,&#32;MPI_DOUBLE,&#32;all_imags,&#32;cnt_recv,&#32;displs,&#32;MPI_DOUBLE,&#32;0,&#32;MPI_COMM_WORLD);
+149 &#32;&#32;MPI_Gatherv(a_abolutes,&#32;own_cnt,&#32;MPI_DOUBLE,&#32;all_absolutes,&#32;cnt_recv,&#32;displs,&#32;MPI_DOUBLE,&#32;0,&#32;MPI_COMM_WORLD);
+150 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(GlobalParams.MPI_Rank&#32;==&#32;0){
+151 &#32;&#32;&#32;&#32;std::ofstream&#32;result_file;
+152 &#32;&#32;&#32;&#32;result_file.open((solutionpath&#32;+&#32;<emphasis class="stringliteral">&quot;/ComplexQualities.dat&quot;</emphasis>).c_str(),std::ios_base::openmode::_S_trunc);
+153 &#32;&#32;&#32;&#32;result_file&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;z&#32;\t&#32;re(f)&#32;\t&#32;im(f)&#32;\t&#32;|f|&quot;</emphasis>&#32;&lt;&lt;std::endl;
+154 &#32;&#32;&#32;&#32;z_temp&#32;=&#32;GlobalParams.Minimum_Z;
+155 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;cnt_steps;&#32;i++)&#32;{
+156 &#32;&#32;&#32;&#32;&#32;&#32;result_file&#32;&lt;&lt;&#32;z_temp&lt;&lt;&#32;<emphasis class="stringliteral">&quot;\t&quot;</emphasis>&#32;&lt;&lt;&#32;all_reals[i]&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;\t&quot;</emphasis>&#32;&lt;&lt;&#32;all_imags[i]&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;\t&quot;</emphasis>&#32;&lt;&lt;&#32;all_absolutes[i]&#32;&lt;&lt;&#32;std::endl;
+157 &#32;&#32;&#32;&#32;&#32;&#32;z_temp&#32;+=&#32;step_width;
+158 &#32;&#32;&#32;&#32;}
+159 &#32;&#32;&#32;&#32;result_file.close();
+160 &#32;&#32;}
+161 
+162 &#32;&#32;MPI_Barrier(MPI_COMM_WORLD);
+163 &#32;&#32;waveguide-&gt;switch_to_dual(dual_st);
+164 &#32;&#32;waveguide-&gt;run();
+165 &#32;&#32;MPI_Barrier(MPI_COMM_WORLD);
+166 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;dual_quality&#32;=&#32;0;
+167 &#32;&#32;std::complex&lt;double&gt;&#32;d_a_in&#32;=&#32;primal_st-&gt;evaluate_for_z(-&#32;GlobalParams.M_R_ZLength/2.0,&#32;waveguide);
+168 &#32;&#32;std::complex&lt;double&gt;&#32;d_a_out=&#32;primal_st-&gt;evaluate_for_z(&#32;&#32;GlobalParams.M_R_ZLength/2.0,&#32;waveguide);
+169 &#32;&#32;dual_quality&#32;=&#32;std::abs(d_a_out/d_a_in);
+170 &#32;&#32;deallog&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Phase&#32;in:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;d_a_in&#32;&lt;&lt;&#32;std::endl;
+171 &#32;&#32;deallog&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Phase&#32;out:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;d_a_out&#32;&lt;&lt;&#32;std::endl;
+172 
+173 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Computed&#32;dual&#32;quality&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;dual_quality&#32;&lt;&lt;&#32;std::endl;
+174 &#32;&#32;waveguide-&gt;switch_to_primal(primal_st);
+175 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;quality;
+176 }
+177 
+<link linkend="class_adjoint_optimization_1a59f56abf3bf2f9179a4d22b7814b87ab">178 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_adjoint_optimization_1a59f56abf3bf2f9179a4d22b7814b87ab">AdjointOptimization::run</link>()&#32;{
+179 &#32;&#32;Convergence_Table.set_auto_fill_mode(<emphasis class="keyword">true</emphasis>);
+180 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;run&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+181 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;counter&#32;=&#32;0;
+182 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;quality&#32;=0;
+183 
+184 &#32;&#32;<emphasis class="keywordflow">while</emphasis>(run)&#32;{
+185 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;small_steps&#32;=&#32;0;
+186 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">while</emphasis>(oa-&gt;perform_small_step_next(small_steps))&#32;{
+187 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Performing&#32;a&#32;small&#32;step.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+188 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;temp_step_width&#32;=&#32;oa-&gt;get_small_step_step_width(small_steps);
+189 &#32;&#32;&#32;&#32;&#32;&#32;oa-&gt;pass_result_small_step(compute_small_step(temp_step_width));
+190 &#32;&#32;&#32;&#32;&#32;&#32;small_steps++;
+191 &#32;&#32;&#32;&#32;}
+192 
+193 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(oa-&gt;perform_big_step_next(small_steps))&#32;{
+194 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Performing&#32;a&#32;big&#32;step.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+195 &#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;double&gt;&#32;step&#32;=&#32;oa-&gt;get_big_step_configuration();
+196 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Got&#32;the&#32;following&#32;big&#32;step&#32;configuration:&#32;&quot;</emphasis>;
+197 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;step.size();&#32;i++)&#32;{
+198 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;step[i]&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;,&#32;&quot;</emphasis>;
+199 &#32;&#32;&#32;&#32;&#32;&#32;}
+200 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;std::endl;
+201 &#32;&#32;&#32;&#32;&#32;&#32;quality&#32;=&#32;compute_big_step(step);
+202 &#32;&#32;&#32;&#32;&#32;&#32;oa-&gt;pass_result_big_step(primal_st-&gt;evaluate_for_z(GlobalParams.M_R_ZLength/2.0&#32;,&#32;waveguide));
+203 &#32;&#32;&#32;&#32;}
+204 
+205 &#32;&#32;&#32;&#32;counter++;
+206 
+207 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(counter&#32;&gt;&#32;GlobalParams.Sc_OptimizationSteps&#32;||&#32;quality&#32;&gt;&#32;1.0)&#32;{
+208 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;The&#32;optimization&#32;is&#32;shutting&#32;down&#32;after&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;counter&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;steps.&#32;Last&#32;quality:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;100*quality&#32;&lt;&lt;<emphasis class="stringliteral">&quot;%.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+209 &#32;&#32;&#32;&#32;&#32;&#32;run&#32;=&#32;<emphasis class="keyword">false</emphasis>;
+210 &#32;&#32;&#32;&#32;}
+211 
+212 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>((GlobalParams.O_C_D_ConvergenceFirst&#32;||&#32;GlobalParams.O_C_D_ConvergenceAll)&amp;&amp;&#32;(GlobalParams.MPI_Rank==0))&#32;{
+213 &#32;&#32;&#32;&#32;&#32;&#32;std::ofstream&#32;result_file;
+214 &#32;&#32;&#32;&#32;&#32;&#32;result_file.open((solutionpath&#32;+&#32;<emphasis class="stringliteral">&quot;/convergence_rates.dat&quot;</emphasis>).c_str(),std::ios_base::openmode::_S_trunc);
+215 
+216 &#32;&#32;&#32;&#32;&#32;&#32;Convergence_Table.write_text(result_file,&#32;dealii::TableHandler::TextOutputFormat::table_with_headers);
+217 &#32;&#32;&#32;&#32;&#32;&#32;result_file.close();
+218 &#32;&#32;&#32;&#32;&#32;&#32;result_file.open((solutionpath&#32;+&#32;<emphasis class="stringliteral">&quot;/convergence_rates.tex&quot;</emphasis>).c_str(),std::ios_base::openmode::_S_trunc);
+219 &#32;&#32;&#32;&#32;&#32;&#32;Convergence_Table.write_tex(result_file);
+220 &#32;&#32;&#32;&#32;&#32;&#32;result_file.close();
+221 
+222 &#32;&#32;&#32;&#32;&#32;&#32;result_file.open((solutionpath&#32;+&#32;<emphasis class="stringliteral">&quot;/steps.dat&quot;</emphasis>).c_str(),std::ios_base::openmode::_S_trunc);
+223 &#32;&#32;&#32;&#32;&#32;&#32;oa-&gt;WriteStepsOut(result_file);
+224 &#32;&#32;&#32;&#32;&#32;&#32;result_file.close();
+225 &#32;&#32;&#32;&#32;}
+226 &#32;&#32;}
+227 }
+228 
+229 <emphasis class="preprocessor">#endif</emphasis>
+230 
+231 
+    </computeroutput></literallayout>
+</section>

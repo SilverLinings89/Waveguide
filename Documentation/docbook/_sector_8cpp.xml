@@ -1,0 +1,354 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_sector_8cpp">
+    <title>Sector.cpp File Reference</title>
+    <programlisting>#include &quot;Sector.h&quot;</programlisting>
+    <programlisting>#include &lt;deal.II/base/tensor.h&gt;</programlisting>
+    <programlisting>#include &quot;../Helpers/staticfunctions.h&quot;</programlisting>
+        <section>
+            <title>Macros</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                            <para>#define <link linkend="_sector_8cpp_1ab00f84d46942545c4c2e3d75db5c47a3">SectorFlagCPP</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+        <title>Detailed Description</title>
+    <para>Definition in file /home/kraft/workspace/waveguideproblem/Code/Core/Sector.cpp</para>
+    </simplesect>
+    <literallayout><computeroutput>
+1 <emphasis class="preprocessor">#ifndef&#32;SectorFlagCPP</emphasis>
+2 <emphasis class="preprocessor">#define&#32;SectorFlagCPP</emphasis>
+3 
+4 <emphasis class="preprocessor">#include&#32;&quot;Sector.h&quot;</emphasis>
+5 
+6 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/tensor.h&gt;</emphasis>
+7 <emphasis class="preprocessor">#include&#32;&quot;../Helpers/staticfunctions.h&quot;</emphasis>
+8 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/tensor.h&gt;</emphasis>
+9 <emphasis class="keyword">using&#32;namespace&#32;</emphasis><link linkend="namespacedealii">dealii</link>;
+10 
+11 
+12 <emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<link linkend="class_sector">Sector&lt;Dofs_Per_Sector&gt;::~Sector</link>()&#32;{
+13 
+14 }
+15 
+16 <emphasis class="keyword">template</emphasis>&lt;&gt;&#32;<link linkend="class_sector">Sector&lt;3&gt;::~Sector</link>()&#32;{
+17 
+18 }
+19 
+20 <emphasis class="keyword">template</emphasis>&lt;&gt;&#32;<link linkend="class_sector">Sector&lt;2&gt;::~Sector</link>()&#32;{
+21 
+22 }
+23 
+<link linkend="class_sector_1a538e56d469fd8efd80afbc613451837e">24 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<link linkend="class_sector_1a538e56d469fd8efd80afbc613451837e">Sector&lt;Dofs_Per_Sector&gt;::Sector</link>(<emphasis class="keywordtype">bool</emphasis>&#32;in_left,&#32;<emphasis class="keywordtype">bool</emphasis>&#32;in_right,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_z_0,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_z_1):left(in_left),&#32;right(in_right),&#32;boundary(in_left&#32;&amp;&amp;&#32;in_right),&#32;z_0(in_z_0),&#32;z_1(in_z_1)&#32;{
+25 &#32;&#32;dofs_l&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;<emphasis class="keywordtype">double</emphasis>[Dofs_Per_Sector];
+26 &#32;&#32;dofs_r&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;<emphasis class="keywordtype">double</emphasis>[Dofs_Per_Sector];
+27 &#32;&#32;derivative&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>[Dofs_Per_Sector];
+28 &#32;&#32;zero_derivative&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;<emphasis class="keywordtype">bool</emphasis>[Dofs_Per_Sector];
+29 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(Dofs_Per_Sector&#32;==&#32;3)&#32;{
+30 &#32;&#32;&#32;&#32;zero_derivative[0]&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+31 &#32;&#32;&#32;&#32;zero_derivative[1]&#32;=&#32;<emphasis class="keyword">false</emphasis>;
+32 &#32;&#32;&#32;&#32;zero_derivative[2]&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+33 &#32;&#32;&#32;&#32;derivative[0]&#32;=&#32;0;
+34 &#32;&#32;&#32;&#32;derivative[1]&#32;=&#32;2;
+35 &#32;&#32;&#32;&#32;derivative[2]&#32;=&#32;0;
+36 &#32;&#32;}
+37 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(Dofs_Per_Sector&#32;==&#32;2)&#32;{
+38 &#32;&#32;&#32;&#32;zero_derivative[0]&#32;=&#32;<emphasis class="keyword">false</emphasis>;
+39 &#32;&#32;&#32;&#32;zero_derivative[1]&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+40 &#32;&#32;&#32;&#32;derivative[0]&#32;=&#32;1;
+41 &#32;&#32;&#32;&#32;derivative[1]&#32;=&#32;0;
+42 &#32;&#32;}
+43 
+44 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;Dofs_Per_Sector;&#32;i++)&#32;{
+45 &#32;&#32;&#32;&#32;dofs_l[i]&#32;=&#32;0;
+46 &#32;&#32;&#32;&#32;dofs_r[i]&#32;=&#32;0;
+47 
+48 &#32;&#32;}
+49 &#32;&#32;&#32;&#32;NInternalBoundaryDofs&#32;=0;
+50 &#32;&#32;&#32;&#32;LowestDof&#32;=&#32;0;
+51 &#32;&#32;&#32;&#32;NActiveCells&#32;=&#32;0;
+52 &#32;&#32;&#32;&#32;NDofs&#32;=&#32;Dofs_Per_Sector;
+53 }
+54 
+55 
+56 
+57 <emphasis class="keyword">template</emphasis>&lt;&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_sector_1ad5afcfc433e07108c156e2596ded82cd">Sector&lt;2&gt;::set_properties</link>(<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>)&#32;{
+58 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Wrong&#32;call&#32;in&#32;Sector.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+59 }
+60 
+61 <emphasis class="keyword">template</emphasis>&lt;&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_sector_1ad5afcfc433e07108c156e2596ded82cd">Sector&lt;3&gt;::set_properties</link>(<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>)&#32;{
+62 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Wrong&#32;call&#32;in&#32;Sector.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+63 }
+64 
+65 <emphasis class="keyword">template</emphasis>&lt;&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_sector_1ad5afcfc433e07108c156e2596ded82cd">Sector&lt;2&gt;::set_properties</link>(<emphasis class="keywordtype">double</emphasis>&#32;in_m_0,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_m_1,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_v_0,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_v_1)&#32;{
+66 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(!<link linkend="class_sector_1a5086c099e7bc0bcd921596f3f097c134">left</link>)&#32;{
+67 &#32;&#32;&#32;&#32;dofs_l[0]&#32;=&#32;in_m_0;
+68 &#32;&#32;&#32;&#32;dofs_l[1]&#32;=&#32;in_v_0;
+69 &#32;&#32;}
+70 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(!<link linkend="class_sector_1a719bee5389220c7c80c103db57480cd5">right</link>)&#32;{
+71 &#32;&#32;&#32;&#32;dofs_r[0]&#32;=&#32;in_m_1;
+72 &#32;&#32;&#32;&#32;dofs_r[1]&#32;=&#32;in_v_1;
+73 &#32;&#32;}
+74 
+75 }
+76 
+77 <emphasis class="keyword">template</emphasis>&lt;&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_sector_1ad5afcfc433e07108c156e2596ded82cd">Sector&lt;3&gt;::set_properties</link>(<emphasis class="keywordtype">double</emphasis>&#32;in_m_0,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_m_1,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_r_0,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_r_1,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_v_0,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_v_1)&#32;{
+78 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(!<link linkend="class_sector_1a5086c099e7bc0bcd921596f3f097c134">left</link>)&#32;{
+79 &#32;&#32;&#32;&#32;dofs_l[0]&#32;=&#32;in_r_0;
+80 &#32;&#32;&#32;&#32;dofs_l[1]&#32;=&#32;in_m_0;
+81 &#32;&#32;&#32;&#32;dofs_l[2]&#32;=&#32;in_v_0;
+82 &#32;&#32;}
+83 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(!<link linkend="class_sector_1a719bee5389220c7c80c103db57480cd5">right</link>)&#32;{
+84 &#32;&#32;&#32;&#32;dofs_r[0]&#32;=&#32;in_r_1;
+85 &#32;&#32;&#32;&#32;dofs_r[1]&#32;=&#32;in_m_1;
+86 &#32;&#32;&#32;&#32;dofs_r[2]&#32;=&#32;in_v_1;
+87 &#32;&#32;}
+88 }
+89 
+90 <emphasis class="keyword">template</emphasis>&lt;&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_sector_1a197c78d119ee872f43c895b02ebb3e8d">Sector&lt;2&gt;::set_properties_force</link>(<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>)&#32;{
+91 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Wrong&#32;call&#32;in&#32;Sector.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+92 }
+93 
+94 <emphasis class="keyword">template</emphasis>&lt;&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_sector_1a197c78d119ee872f43c895b02ebb3e8d">Sector&lt;3&gt;::set_properties_force</link>(<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>)&#32;{
+95 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Wrong&#32;call&#32;in&#32;Sector.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+96 }
+97 
+98 <emphasis class="keyword">template</emphasis>&lt;&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_sector_1a197c78d119ee872f43c895b02ebb3e8d">Sector&lt;2&gt;::set_properties_force</link>(<emphasis class="keywordtype">double</emphasis>&#32;in_m_0,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_m_1,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_v_0,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_v_1)&#32;{
+99 &#32;&#32;&#32;&#32;dofs_l[0]&#32;=&#32;in_m_0;
+100 &#32;&#32;&#32;&#32;dofs_l[1]&#32;=&#32;in_v_0;
+101 &#32;&#32;&#32;&#32;dofs_r[0]&#32;=&#32;in_m_1;
+102 &#32;&#32;&#32;&#32;dofs_r[1]&#32;=&#32;in_v_1;
+103 }
+104 
+105 <emphasis class="keyword">template</emphasis>&lt;&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_sector_1a197c78d119ee872f43c895b02ebb3e8d">Sector&lt;3&gt;::set_properties_force</link>(<emphasis class="keywordtype">double</emphasis>&#32;in_m_0,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_m_1,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_r_0,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_r_1,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_v_0,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_v_1)&#32;{
+106 &#32;&#32;&#32;&#32;dofs_l[0]&#32;=&#32;in_r_0;
+107 &#32;&#32;&#32;&#32;dofs_l[1]&#32;=&#32;in_m_0;
+108 &#32;&#32;&#32;&#32;dofs_l[2]&#32;=&#32;in_v_0;
+109 &#32;&#32;&#32;&#32;dofs_r[0]&#32;=&#32;in_r_1;
+110 &#32;&#32;&#32;&#32;dofs_r[1]&#32;=&#32;in_m_1;
+111 &#32;&#32;&#32;&#32;dofs_r[2]&#32;=&#32;in_v_1;
+112 }
+113 
+<link linkend="class_sector_1ad5afcfc433e07108c156e2596ded82cd">114 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_sector_1ad5afcfc433e07108c156e2596ded82cd">Sector&lt;Dofs_Per_Sector&gt;::set_properties</link>(&#32;<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>&#32;)&#32;{
+115 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;The&#32;code&#32;does&#32;not&#32;work&#32;for&#32;this&#32;number&#32;of&#32;dofs&#32;per&#32;Sector.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+116 &#32;&#32;<emphasis class="keywordflow">return</emphasis>;
+117 }
+118 
+119 <emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_sector_1ad5afcfc433e07108c156e2596ded82cd">Sector&lt;Dofs_Per_Sector&gt;::set_properties</link>(<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>)&#32;{
+120 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;The&#32;code&#32;does&#32;not&#32;work&#32;for&#32;this&#32;number&#32;of&#32;dofs&#32;per&#32;Sector.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+121 &#32;&#32;<emphasis class="keywordflow">return</emphasis>;
+122 }
+123 
+<link linkend="class_sector_1a197c78d119ee872f43c895b02ebb3e8d">124 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_sector_1a197c78d119ee872f43c895b02ebb3e8d">Sector&lt;Dofs_Per_Sector&gt;::set_properties_force</link>(&#32;<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>&#32;)&#32;{
+125 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;The&#32;code&#32;does&#32;not&#32;work&#32;for&#32;this&#32;number&#32;of&#32;dofs&#32;per&#32;Sector.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+126 &#32;&#32;<emphasis class="keywordflow">return</emphasis>;
+127 }
+128 
+129 <emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_sector_1a197c78d119ee872f43c895b02ebb3e8d">Sector&lt;Dofs_Per_Sector&gt;::set_properties_force</link>(<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>)&#32;{
+130 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;The&#32;code&#32;does&#32;not&#32;work&#32;for&#32;this&#32;number&#32;of&#32;dofs&#32;per&#32;Sector.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+131 &#32;&#32;<emphasis class="keywordflow">return</emphasis>;
+132 }
+133 
+<link linkend="class_sector_1a2a7e42b042cbcf3bb107a64d377c578f">134 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_sector_1a2a7e42b042cbcf3bb107a64d377c578f">Sector&lt;Dofs_Per_Sector&gt;::get_dof</link>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i,&#32;<emphasis class="keywordtype">double</emphasis>&#32;z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+135 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(i&#32;&gt;&#32;0&#32;&amp;&amp;&#32;i&#32;&lt;&#32;NDofs)&#32;{
+136 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(&#32;z&#32;&lt;&#32;0.0&#32;)&#32;z&#32;=&#32;0.0;
+137 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(&#32;z&#32;&gt;&#32;1.0&#32;)&#32;z&#32;=&#32;1.0;
+138 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(zero_derivative[i])&#32;{
+139 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;InterpolationPolynomialZeroDerivative(z,&#32;dofs_l[i],&#32;dofs_r[i]);
+140 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+141 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;InterpolationPolynomial(z,&#32;dofs_l[i],&#32;dofs_r[i],&#32;dofs_l[derivative[i]],&#32;dofs_r[derivative[i]]);
+142 &#32;&#32;&#32;&#32;}
+143 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+144 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;There&#32;seems&#32;to&#32;be&#32;an&#32;error&#32;in&#32;Sector::get_dof.&#32;i&#32;&gt;&#32;0&#32;&amp;&amp;&#32;i&#32;&lt;&#32;dofs_per_sector&#32;false.&quot;</emphasis>&lt;&lt;std::endl;
+145 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0;
+146 &#32;&#32;}
+147 
+148 }
+149 
+<link linkend="class_sector_1a2fcef999ffc19d510f17662565b921f0">150 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_sector_1a2fcef999ffc19d510f17662565b921f0">Sector&lt;Dofs_Per_Sector&gt;::get_r</link>(<emphasis class="keywordtype">double</emphasis>&#32;z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+151 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(&#32;z&#32;&lt;&#32;0.0&#32;)&#32;z&#32;=&#32;0.0;
+152 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(&#32;z&#32;&gt;&#32;1.0&#32;)&#32;z&#32;=&#32;1.0;
+153 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(Dofs_Per_Sector&#32;&lt;&#32;3){
+154 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Error&#32;in&#32;Sector:&#32;Acces&#32;to&#32;radius&#32;dof&#32;without&#32;existence.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+155 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0;
+156 &#32;&#32;&#32;&#32;}
+157 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;InterpolationPolynomialZeroDerivative(z,&#32;dofs_l[0],&#32;dofs_r[0]);
+158 }
+159 
+<link linkend="class_sector_1acf707bf29246b564338b49d6653812ab">160 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_sector_1acf707bf29246b564338b49d6653812ab">Sector&lt;Dofs_Per_Sector&gt;::get_m</link>(<emphasis class="keywordtype">double</emphasis>&#32;z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+161 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(&#32;z&#32;&lt;&#32;0.0&#32;)&#32;z&#32;=&#32;0.0;
+162 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(&#32;z&#32;&gt;&#32;1.0&#32;)&#32;z&#32;=&#32;1.0;
+163 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(Dofs_Per_Sector==2)&#32;{
+164 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;InterpolationPolynomial(z,&#32;dofs_l[0],&#32;dofs_r[0],&#32;dofs_l[1],&#32;dofs_r[1]);
+165 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+166 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;InterpolationPolynomial(z,&#32;dofs_l[1],&#32;dofs_r[1],&#32;dofs_l[2],&#32;dofs_r[2]);
+167 &#32;&#32;&#32;&#32;}
+168 
+169 }
+170 
+<link linkend="class_sector_1addd7217e2ab6fe8104e092e4514804fc">171 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_sector_1addd7217e2ab6fe8104e092e4514804fc">Sector&lt;Dofs_Per_Sector&gt;::get_v</link>(<emphasis class="keywordtype">double</emphasis>&#32;z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+172 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(&#32;z&#32;&lt;&#32;0.0&#32;)&#32;z&#32;=&#32;0.0;
+173 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(&#32;z&#32;&gt;&#32;1.0&#32;)&#32;z&#32;=&#32;1.0;
+174 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(Dofs_Per_Sector==2)&#32;{
+175 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;InterpolationPolynomialZeroDerivative(z,&#32;dofs_l[1],&#32;dofs_r[1]);
+176 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+177 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;InterpolationPolynomialZeroDerivative(z,&#32;dofs_l[2],&#32;dofs_r[2]);
+178 &#32;&#32;}
+179 }
+180 
+<link linkend="class_sector_1a01595c09bec7ef57431ab39e29a90a67">181 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_sector_1a01595c09bec7ef57431ab39e29a90a67">Sector&lt;Dofs_Per_Sector&gt;::getQ1</link>&#32;(&#32;<emphasis class="keywordtype">double</emphasis>&#32;z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+182 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;1/(dofs_l[0]&#32;+&#32;z*z*z*(2*dofs_l[0]&#32;-&#32;2*dofs_r[0])&#32;-&#32;z*z*(3*dofs_l[0]&#32;-&#32;3*dofs_r[0]));
+183 }
+184 
+<link linkend="class_sector_1a55743720f4d5d768c7bd30658c19f499">185 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_sector_1a55743720f4d5d768c7bd30658c19f499">Sector&lt;Dofs_Per_Sector&gt;::getQ2</link>&#32;(&#32;<emphasis class="keywordtype">double</emphasis>&#32;z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+186 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;1/(dofs_l[0]&#32;+&#32;z*z*z*(2*dofs_l[0]&#32;-&#32;2*dofs_r[0])&#32;-&#32;z*z*(3*dofs_l[0]&#32;-&#32;3*dofs_r[0]));
+187 }
+188 
+<link linkend="class_sector_1a11a28348094a673a59d26fe1c05cd910">189 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_sector_1a11a28348094a673a59d26fe1c05cd910">Sector&lt;Dofs_Per_Sector&gt;::getQ3</link>&#32;(&#32;<emphasis class="keywordtype">double</emphasis>&#32;)<emphasis class="keyword">&#32;&#32;const&#32;</emphasis>{
+190 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
+191 }
+192 
+193 <emphasis class="keyword">template</emphasis>&lt;&gt;&#32;Tensor&lt;2,3,&#32;double&gt;&#32;<link linkend="class_sector_1a2b2569942b14219db1d11200684f7ac8">Sector&lt;3&gt;::TransformationTensorInternal</link>&#32;(<emphasis class="keywordtype">double</emphasis>&#32;in_x,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_y,&#32;<emphasis class="keywordtype">double</emphasis>&#32;z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+194 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(z&lt;0&#32;||&#32;z&gt;1)&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Falty&#32;implementation&#32;of&#32;internal&#32;Tensor&#32;calculation:&#32;z:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;z&#32;&lt;&lt;&#32;std::endl;
+195 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;RadiusInMultiplyer&#32;=&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)/(2*&#32;dofs_l[0]);
+196 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;RadiusOutMultiplyer&#32;=&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)/(2*&#32;dofs_r[0]);
+197 
+198 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;temp&#32;=&#32;1&#32;/&#32;(RadiusInMultiplyer&#32;-&#32;3*RadiusInMultiplyer*z*z&#32;+&#32;2*RadiusInMultiplyer*z*z*z&#32;+&#32;3*RadiusOutMultiplyer*z*z&#32;-&#32;2*RadiusOutMultiplyer*z*z*z);
+199 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;zz&#32;=&#32;z*z;
+200 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;zzz&#32;=&#32;zz*z;
+201 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;zzzz&#32;=&#32;zz*zz;
+202 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;zzzzz&#32;=&#32;zzz*zz;
+203 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;help1&#32;=&#32;(RadiusInMultiplyer&#32;-&#32;3*RadiusInMultiplyer*zz&#32;+&#32;2*RadiusInMultiplyer*zzz&#32;+&#32;3*RadiusOutMultiplyer*zz&#32;-&#32;2*RadiusOutMultiplyer*zzz);
+204 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;help2&#32;=&#32;(help1*(dofs_l[2]&#32;-&#32;6*dofs_l[1]*z&#32;+&#32;6*dofs_r[1]*z&#32;-&#32;4*dofs_l[2]*z&#32;-&#32;2*dofs_r[2]*z&#32;+&#32;6*dofs_l[1]*zz&#32;-&#32;6*dofs_r[1]*zz&#32;+&#32;3*dofs_l[2]*zz&#32;+&#32;3*dofs_r[2]*zz)&#32;+&#32;6*z*(RadiusInMultiplyer&#32;-&#32;RadiusOutMultiplyer)*(z&#32;-&#32;1)*(dofs_l[1]&#32;+&#32;zzz*(2*dofs_l[1]&#32;-&#32;2*dofs_r[1]&#32;+&#32;dofs_l[2]&#32;+&#32;dofs_r[2])&#32;+&#32;dofs_l[2]*z&#32;-&#32;zz*(3*dofs_l[1]&#32;-&#32;3*dofs_r[1]&#32;+&#32;2*dofs_l[2]&#32;+&#32;dofs_r[2])))/help1&#32;-&#32;(6*in_y*z*(RadiusInMultiplyer&#32;-&#32;RadiusOutMultiplyer)*(z&#32;-&#32;1))/help1;
+205 
+206 &#32;&#32;&#32;&#32;Tensor&lt;2,3,&#32;double&gt;&#32;u;
+207 &#32;&#32;&#32;&#32;u[0][0]=&#32;temp;
+208 &#32;&#32;&#32;&#32;u[0][1]=&#32;0.0;
+209 &#32;&#32;&#32;&#32;u[0][2]=&#32;0.0;
+210 &#32;&#32;&#32;&#32;u[1][0]=&#32;0.0;
+211 &#32;&#32;&#32;&#32;u[1][1]=&#32;temp;
+212 &#32;&#32;&#32;&#32;u[1][2]=&#32;0.0;
+213 &#32;&#32;&#32;&#32;u[2][0]=&#32;-(6*in_x*z*(RadiusInMultiplyer-RadiusOutMultiplyer)*(z&#32;-&#32;1))/help1;
+214 &#32;&#32;&#32;&#32;u[2][1]=&#32;(RadiusInMultiplyer*dofs_l[2]&#32;+&#32;12*dofs_l[1]*RadiusInMultiplyer*zz&#32;+&#32;36*dofs_l[1]*RadiusInMultiplyer*zzz&#32;-&#32;6*dofs_l[1]*RadiusOutMultiplyer*zz&#32;-&#32;6*dofs_r[1]*RadiusInMultiplyer*zz&#32;-&#32;60*dofs_l[1]*RadiusInMultiplyer*zzzz&#32;-&#32;36*dofs_l[1]*RadiusOutMultiplyer*zzz&#32;-&#32;36*dofs_r[1]*RadiusInMultiplyer*zzz&#32;+&#32;24*dofs_l[1]*RadiusInMultiplyer*zzzzz&#32;+&#32;60*dofs_l[1]*RadiusOutMultiplyer*zzzz&#32;+&#32;60*dofs_r[1]*RadiusInMultiplyer*zzzz&#32;+&#32;36*dofs_r[1]*RadiusOutMultiplyer*zzz&#32;-&#32;24*dofs_l[1]*RadiusOutMultiplyer*zzzzz&#32;-&#32;24*dofs_r[1]*RadiusInMultiplyer*zzzzz&#32;-&#32;60*dofs_r[1]*RadiusOutMultiplyer*zzzz&#32;+&#32;24*dofs_r[1]*RadiusOutMultiplyer*zzzzz&#32;-&#32;6*RadiusInMultiplyer*dofs_l[2]*zz&#32;+&#32;32*RadiusInMultiplyer*dofs_l[2]*zzz&#32;+&#32;3*RadiusInMultiplyer*dofs_r[2]*zz&#32;+&#32;9*RadiusOutMultiplyer*dofs_l[2]*zz&#32;-&#32;35*RadiusInMultiplyer*dofs_l[2]*zzzz&#32;+&#32;12*RadiusInMultiplyer*dofs_r[2]*zzz&#32;-&#32;32*RadiusOutMultiplyer*dofs_l[2]*zzz&#32;+&#32;12*RadiusInMultiplyer*dofs_l[2]*zzzzz&#32;-&#32;25*RadiusInMultiplyer*dofs_r[2]*zzzz&#32;+&#32;35*RadiusOutMultiplyer*dofs_l[2]*zzzz&#32;-&#32;12*RadiusOutMultiplyer*dofs_r[2]*zzz&#32;+&#32;12*RadiusInMultiplyer*dofs_r[2]*zzzzz&#32;-&#32;12*RadiusOutMultiplyer*dofs_l[2]*zzzzz&#32;+&#32;25*RadiusOutMultiplyer*dofs_r[2]*zzzz&#32;-&#32;12*RadiusOutMultiplyer*dofs_r[2]*zzzzz&#32;-&#32;6*RadiusInMultiplyer*in_y*zz&#32;+&#32;6*RadiusOutMultiplyer*in_y*zz&#32;-&#32;12*dofs_l[1]*RadiusInMultiplyer*z&#32;+&#32;6*dofs_l[1]*RadiusOutMultiplyer*z&#32;+&#32;6*dofs_r[1]*RadiusInMultiplyer*z&#32;-&#32;4*RadiusInMultiplyer*dofs_l[2]*z&#32;-&#32;2*RadiusInMultiplyer*dofs_r[2]*z&#32;+&#32;6*RadiusInMultiplyer*in_y*z&#32;-&#32;6*RadiusOutMultiplyer*in_y*z)/help1;
+215 &#32;&#32;&#32;&#32;u[2][2]=&#32;1.0;
+216 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;Q&#32;[3];
+217 
+218 &#32;&#32;&#32;&#32;Q[0]&#32;=&#32;1/(RadiusInMultiplyer&#32;+&#32;zzz*(2*RadiusInMultiplyer&#32;-&#32;2*RadiusOutMultiplyer)&#32;-&#32;zz*(3*RadiusInMultiplyer&#32;-&#32;3*RadiusOutMultiplyer));
+219 &#32;&#32;&#32;&#32;Q[1]&#32;=&#32;1/(RadiusInMultiplyer&#32;+&#32;zzz*(2*RadiusInMultiplyer&#32;-&#32;2*RadiusOutMultiplyer)&#32;-&#32;zz*(3*RadiusInMultiplyer&#32;-&#32;3*RadiusOutMultiplyer));
+220 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(Q[1]&#32;&lt;&#32;0)&#32;Q[1]&#32;*=&#32;-1.0;
+221 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(Q[0]&#32;&lt;&#32;0)&#32;Q[0]&#32;*=&#32;-1.0;
+222 &#32;&#32;&#32;&#32;Q[2]&#32;=&#32;sqrt(&#32;help2*help2&#32;+&#32;(36*in_x*in_x*zz*(RadiusInMultiplyer&#32;-&#32;RadiusOutMultiplyer)*(RadiusInMultiplyer&#32;-&#32;RadiusOutMultiplyer)*(z&#32;-&#32;1)*(z&#32;-&#32;1))/(help1*help1)&#32;+&#32;1);
+223 
+224 &#32;&#32;&#32;&#32;Tensor&lt;2,3,double&gt;&#32;ginv;
+225 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&lt;3;&#32;i++)&#32;{
+226 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&lt;3;&#32;j++)&#32;{
+227 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;k&#32;=&#32;0;&#32;k&lt;&#32;3;&#32;k++)&#32;ginv[i][j]&#32;+=&#32;u[i][k]&#32;*&#32;u[j][k];
+228 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+229 &#32;&#32;&#32;&#32;}
+230 
+231 &#32;&#32;&#32;&#32;Tensor&lt;2,3,double&gt;&#32;g;
+232 
+233 &#32;&#32;&#32;&#32;g&#32;=&#32;invert(ginv);
+234 
+235 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;sp&#32;=&#32;dotproduct(u[0],&#32;crossproduct(u[1],&#32;u[2]));
+236 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(sp&#32;&lt;&#32;0)&#32;sp&#32;*=&#32;-1.0;
+237 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&lt;&#32;3;&#32;i++)&#32;{
+238 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&lt;3;&#32;j++)&#32;{
+239 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;g[i][j]&#32;*=&#32;sp&#32;*&#32;Q[0]*Q[1]*Q[2]&#32;/&#32;(Q[i]&#32;*&#32;Q[j]);
+240 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+241 &#32;&#32;&#32;&#32;}
+242 
+243 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;g;
+244 }
+245 
+246 <emphasis class="keyword">template</emphasis>&lt;&gt;&#32;Tensor&lt;2,3,&#32;double&gt;&#32;<link linkend="class_sector_1a2b2569942b14219db1d11200684f7ac8">Sector&lt;2&gt;::TransformationTensorInternal</link>&#32;(<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>&#32;z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+247 &#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(z&lt;0&#32;||&#32;z&gt;1)&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Falty&#32;implementation&#32;of&#32;internal&#32;Tensor&#32;calculation:&#32;z:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;z&#32;&lt;&lt;&#32;std::endl;
+248 
+249 &#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;zz&#32;=&#32;z*z;
+250 
+251 &#32;&#32;&#32;Tensor&lt;2,3,&#32;double&gt;&#32;u;
+252 &#32;&#32;&#32;u[0][0]=&#32;1;
+253 &#32;&#32;&#32;u[0][1]=&#32;0.0;
+254 &#32;&#32;&#32;u[0][2]=&#32;0.0;
+255 &#32;&#32;&#32;u[1][0]=&#32;0.0;
+256 &#32;&#32;&#32;u[1][1]=&#32;1;
+257 &#32;&#32;&#32;u[1][2]=&#32;0.0;
+258 &#32;&#32;&#32;u[2][0]=&#32;0.0;
+259 &#32;&#32;&#32;u[2][1]=&#32;6*dofs_l[0]*z&#32;-&#32;dofs_l[1]&#32;-&#32;6*dofs_r[0]*z&#32;+&#32;4*dofs_l[1]*z&#32;+&#32;2*dofs_r[1]*z&#32;-&#32;6*dofs_l[0]*zz&#32;+&#32;6*dofs_r[0]*zz&#32;-&#32;3*dofs_l[1]*zz&#32;-&#32;3*dofs_r[1]*zz;
+260 &#32;&#32;&#32;u[2][2]=&#32;1.0;
+261 &#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;Q&#32;[3];
+262 &#32;&#32;&#32;Q[0]&#32;=&#32;1;
+263 &#32;&#32;&#32;Q[1]&#32;=&#32;1;
+264 &#32;&#32;&#32;Q[2]&#32;=&#32;std::sqrt((dofs_l[1]&#32;-&#32;2*z*(3*dofs_l[0]&#32;-&#32;3*dofs_r[0]&#32;+&#32;2*dofs_l[1]&#32;+&#32;dofs_r[1])&#32;+&#32;3*zz*std::pow(2*dofs_l[0]&#32;-&#32;2*dofs_r[0]&#32;+&#32;dofs_l[1]&#32;+&#32;dofs_r[1],&#32;2))&#32;+&#32;1);
+265 
+266 &#32;&#32;&#32;Tensor&lt;2,3,double&gt;&#32;ginv;
+267 &#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&lt;3;&#32;i++)&#32;{
+268 &#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&lt;3;&#32;j++)&#32;{
+269 &#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;k&#32;=&#32;0;&#32;k&lt;&#32;3;&#32;k++)&#32;ginv[i][j]&#32;+=&#32;u[i][k]&#32;*&#32;u[j][k];
+270 &#32;&#32;&#32;&#32;&#32;}
+271 &#32;&#32;&#32;}
+272 
+273 &#32;&#32;&#32;Tensor&lt;2,3,double&gt;&#32;g;
+274 
+275 &#32;&#32;&#32;g&#32;=&#32;invert(ginv);
+276 
+277 &#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;sp&#32;=&#32;dotproduct(u[0],&#32;crossproduct(u[1],&#32;u[2]));
+278 &#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(sp&#32;&lt;&#32;0)&#32;sp&#32;*=&#32;-1.0;
+279 &#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&lt;&#32;3;&#32;i++)&#32;{
+280 &#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&lt;3;&#32;j++)&#32;{
+281 &#32;&#32;&#32;&#32;&#32;&#32;&#32;g[i][j]&#32;*=&#32;sp&#32;*&#32;Q[0]*Q[1]*Q[2]&#32;/&#32;(Q[i]&#32;*&#32;Q[j]);
+282 &#32;&#32;&#32;&#32;&#32;}
+283 &#32;&#32;&#32;}
+284 
+285 &#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;g;
+286 &#32;}
+287 
+<link linkend="class_sector_1a2b2569942b14219db1d11200684f7ac8">288 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dimension&gt;&#32;Tensor&lt;2,3,double&gt;&#32;<link linkend="class_sector_1a2b2569942b14219db1d11200684f7ac8">Sector&lt;Dimension&gt;::TransformationTensorInternal</link>(<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>&#32;)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+289 &#32;&#32;Tensor&lt;2,3,double&gt;&#32;ret;
+290 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;The&#32;code&#32;does&#32;not&#32;work&#32;for&#32;you&#32;Sector&#32;specification.&quot;</emphasis>&#32;&lt;&lt;&#32;Dimension&#32;&lt;&lt;&#32;std::endl;
+291 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+292 }
+293 
+294 
+295 
+<link linkend="class_sector_1a74f1d1424faf72379ef85818509feb18">296 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;<link linkend="class_sector_1a74f1d1424faf72379ef85818509feb18">Sector&lt;Dofs_Per_Sector&gt;::getLowestDof</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
+297 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;LowestDof;
+298 }
+299 
+<link linkend="class_sector_1a28c9ae7f32eb149d7f3a8e7808e56aa7">300 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;<link linkend="class_sector_1a28c9ae7f32eb149d7f3a8e7808e56aa7">Sector&lt;Dofs_Per_Sector&gt;::getNDofs</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
+301 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;NDofs;
+302 }
+303 
+<link linkend="class_sector_1a664059f783a9f7be0da5aa48a18430e0">304 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;<link linkend="class_sector_1a664059f783a9f7be0da5aa48a18430e0">Sector&lt;Dofs_Per_Sector&gt;::getNInternalBoundaryDofs</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
+305 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;NInternalBoundaryDofs;
+306 }
+307 
+<link linkend="class_sector_1a4a746c6e92da3f9968fa1ae8df179ac0">308 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;<link linkend="class_sector_1a4a746c6e92da3f9968fa1ae8df179ac0">Sector&lt;Dofs_Per_Sector&gt;::getNActiveCells</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
+309 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;NActiveCells;
+310 }
+311 
+<link linkend="class_sector_1a43ad74bf2b9e740f2d3172b15349de5c">312 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_sector_1a43ad74bf2b9e740f2d3172b15349de5c">Sector&lt;Dofs_Per_Sector&gt;::setLowestDof</link>(&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_lowestdof)&#32;{
+313 &#32;&#32;&#32;&#32;LowestDof&#32;=&#32;in_lowestdof;
+314 }
+315 
+<link linkend="class_sector_1aae228325497b1b8da9bc2e2a325fcc6f">316 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_sector_1aae228325497b1b8da9bc2e2a325fcc6f">Sector&lt;Dofs_Per_Sector&gt;::setNDofs</link>(&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_ndofs)&#32;{
+317 &#32;&#32;&#32;&#32;NDofs&#32;=&#32;in_ndofs;
+318 }
+319 
+<link linkend="class_sector_1a0d8e1e8ea932dddd7af3dae10af20156">320 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_sector_1a0d8e1e8ea932dddd7af3dae10af20156">Sector&lt;Dofs_Per_Sector&gt;::setNInternalBoundaryDofs</link>(&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_ninternalboundarydofs)&#32;{
+321 &#32;&#32;&#32;&#32;NInternalBoundaryDofs&#32;=&#32;in_ninternalboundarydofs;
+322 }
+323 
+<link linkend="class_sector_1ac021e78fe81aea278d5d0c76486fdb50">324 </link><emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;Dofs_Per_Sector&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_sector_1ac021e78fe81aea278d5d0c76486fdb50">Sector&lt;Dofs_Per_Sector&gt;::setNActiveCells</link>(&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_nactivecells)&#32;{
+325 &#32;&#32;&#32;&#32;NActiveCells&#32;=&#32;in_nactivecells;
+326 }
+327 
+328 <emphasis class="keyword">template</emphasis>&#32;<emphasis class="keyword">class&#32;</emphasis><link linkend="class_sector">Sector&lt;2&gt;</link>;
+329 <emphasis class="keyword">template</emphasis>&#32;<emphasis class="keyword">class&#32;</emphasis><link linkend="class_sector">Sector&lt;3&gt;</link>;
+330 
+331 <emphasis class="preprocessor">#endif</emphasis>
+    </computeroutput></literallayout>
+</section>

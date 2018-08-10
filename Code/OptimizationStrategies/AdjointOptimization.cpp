@@ -66,7 +66,7 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   quality = std::abs(a_out / a_in);
   deallog << "Computed primal quality " << quality << std::endl;
   // New starts here
-  const double step_width = 0.05;
+  const double step_width = 0.01;
   unsigned int cnt_steps = 0;
   double z_temp = GlobalParams.Minimum_Z;
   while ( z_temp < GlobalParams.Maximum_Z){

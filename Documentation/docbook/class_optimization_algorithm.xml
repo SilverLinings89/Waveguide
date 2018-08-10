@@ -1,0 +1,294 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="class_optimization_algorithm">
+<title>OptimizationAlgorithm class Reference</title>
+<para>
+    <programlisting>#include <link linkend="_optimization_algorithm_8h">&lt;OptimizationAlgorithm.h&gt;</link></programlisting>
+</para>
+    <templateparamlist>
+      <param>
+        <type>typename</type>
+        <declname>datatype</declname>
+        <defname>datatype</defname>
+      </param>
+    </templateparamlist>
+        <section>
+            <title>Public Attributes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::vector&lt; std::vector&lt; datatype &gt; &gt; states</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::vector&lt; datatype &gt; residuals</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title></title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para> <link linkend="class_optimization_algorithm_1a0d4abb4a56e3bf9462941a6bf3229e6d">OptimizationAlgorithm</link> (
+)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para> <link linkend="class_optimization_algorithm_1acfc9775924298e06e0e7e68e3cff15d3">~OptimizationAlgorithm</link> (
+)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>virtual void <link linkend="class_optimization_algorithm_1a8b94776efc6cb8783f3781c75a6c8d01">pass_result_small_step</link> (
+std::vector&lt; datatype &gt; vec)<para><emphasis>A function to pass a vector of values, computed by performing a single or multiple steps with short step-width.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>virtual void <link linkend="class_optimization_algorithm_1ac35f79dd2065a34291033e10393059f0">pass_result_big_step</link> (
+datatype input)<para><emphasis>Similar to pass_result_small_step but for the results of big steps.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>virtual bool <link linkend="class_optimization_algorithm_1acd99748a064841050a37f71625742578">perform_small_step_next</link> (
+int small_steps_before)<para><emphasis>The optimization is mainly split into two kinds of steps: Full and small steps.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>virtual double <link linkend="class_optimization_algorithm_1a2646d4c12be435b286a9a720e45789e6">get_small_step_step_width</link> (
+int small_steps_before)<para><emphasis>For the optimization scheme to know, which step size is appropriate, this function was included.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>virtual bool <link linkend="class_optimization_algorithm_1ab633847baf50637039a6498ba2fa114d">perform_big_step_next</link> (
+int small_steps_before)<para><emphasis>This functions returns true, if enough steps were performed to compute the next state to compute a full solution on.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>virtual std::vector&lt; double &gt; <link linkend="class_optimization_algorithm_1a01cc30d556e002bf8cb1128dd932071a">get_big_step_configuration</link> (
+)<para><emphasis>This function computes the states that should be computed next.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_optimization_algorithm_1a663b0f1ea9c297b343af6d49df4b3b33">WriteStepsOut</link> (
+std::ofstream &amp; )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+
+<para>This class is an interface for <link linkend="class_optimization">Optimization</link> algorithms such as CG or steepest descent. </para>
+    </simplesect>
+        <simplesect>
+            <title>Detailed Description</title>
+
+<para>The derived classes take residuals and gradients, store them in a history and compute the next configuration based on the data. This functionality is encapsulated like this to enable easy exchange and comparison of convergence rates. Later on the interface will be extended to make use of output generators during runtime or at the end of the program to directly generate convergence plots. This class will also be extended to allow for restrained optimization which will become necessary at some point. <formalpara><title>Author: </title>
+
+<para>Pascal Kraft </para>
+</formalpara>
+<formalpara><title>Date: </title>
+
+<para>29.11.2016 </para>
+</formalpara>
+</para>
+                <para>Definition at line 17 of file OptimizationAlgorithm.h</para>
+                <para>The Documentation for this struct was generated from the following file: </para>
+                <para><itemizedlist><listitem><para>OptimizationAlgorithm.h</para></listitem></itemizedlist></para>
+        </simplesect>
+        <section>
+            <title>Member Data Documentation</title>
+        </section>
+            <section xml:id="class_optimization_algorithm_1a0d4abb4a56e3bf9462941a6bf3229e6d">
+                <title>OptimizationAlgorithm&lt; datatype &gt;::OptimizationAlgorithm ()</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_optimization_algorithm_1acfc9775924298e06e0e7e68e3cff15d3">
+                <title>OptimizationAlgorithm&lt; datatype &gt;::~OptimizationAlgorithm ()</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_optimization_algorithm_1a8b94776efc6cb8783f3781c75a6c8d01">
+                <title>void OptimizationAlgorithm&lt; datatype &gt;::pass_result_small_step (std::vector&lt; datatype &gt; vec)</title> <emphasis>A function to pass a vector of values, computed by performing a single or multiple steps with short step-width.</emphasis>
+                
+<para>&quot;small&quot; in the name references the fact, that the step width is small. In gerneral this is done whenever an accurat approximation of a gradient is saught based on linearization. This computation (especially in finite difference based approaches) can be much more costly than a big step. In a big step, one forward problem has to be solved. A small step computation based on finite differences requires <equation><title>form_37</title>$NDofs$</equation> forward problems to be solved. This function has the purpose of passing the result of such computations to the optimization algorithm which will store it and use it to compute optimization steps in the future. 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>vec</entry>
+                                <entry>
+<para>This parameter is a vector of changes of the target functional based on a change in the individual component. The components belonging to restrained degrees of freedom are set to zero. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_optimization_algorithm_1ac35f79dd2065a34291033e10393059f0">
+                <title>void OptimizationAlgorithm&lt; datatype &gt;::pass_result_big_step (datatype input)</title> <emphasis>Similar to pass_result_small_step but for the results of big steps.</emphasis>
+                
+<para>Since for a big step we always only perform the solution of one forward problem we also only get one change of the target functional. Therefore in this case we only pass a value, not a vector of the like. 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>input</entry>
+                                <entry>
+<para>This is the value describing how much the target functional has changed upon performing the step last computed by this optimization algorithm. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_optimization_algorithm_1acd99748a064841050a37f71625742578">
+                <title>virtual bool OptimizationAlgorithm&lt; datatype &gt;::perform_small_step_next (int small_steps_before)=0</title> <emphasis>The optimization is mainly split into two kinds of steps: Full and small steps.</emphasis>
+                
+<para>For FD based schemes, a small step is a computation of finite differences for all degrees of freedom which entails a lot of computation. Small here refers to the norm of the step width - not necessarily to the amount of computation required. In general this function is supposed to gather information about the target functional around the current state. 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>small_steps_before</entry>
+                                <entry>
+<para>this number tells the scheme how many small steps were performed before the current request. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                <formalpara><title>Returns: </title>
+
+<para>this is true, if the <link linkend="class_optimization">Optimization</link> Scheme requires more small steps before a big step can be performed. </para>
+</formalpara>
+</para>
+
+            </section>
+            <section xml:id="class_optimization_algorithm_1a2646d4c12be435b286a9a720e45789e6">
+                <title>virtual double OptimizationAlgorithm&lt; datatype &gt;::get_small_step_step_width (int small_steps_before)=0</title> <emphasis>For the optimization scheme to know, which step size is appropriate, this function was included.</emphasis>
+                
+<para>
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>small_steps_before</entry>
+                                <entry>
+<para>similar to perform_small_step_next this is the number of small steps before the current one. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                <formalpara><title>Returns: </title>
+
+<para>double this is how much the values of the degrees of freedom should be adapted. </para>
+</formalpara>
+</para>
+
+            </section>
+            <section xml:id="class_optimization_algorithm_1ab633847baf50637039a6498ba2fa114d">
+                <title>virtual bool OptimizationAlgorithm&lt; datatype &gt;::perform_big_step_next (int small_steps_before)=0</title> <emphasis>This functions returns true, if enough steps were performed to compute the next state to compute a full solution on.</emphasis>
+                
+<para>
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>small_steps_before</entry>
+                                <entry>
+<para>number of small steps performed before this call. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                <formalpara><title>Returns: </title>
+
+<para>true, if the next computation should be a big step - otherwise false. </para>
+</formalpara>
+</para>
+
+            </section>
+            <section xml:id="class_optimization_algorithm_1a01cc30d556e002bf8cb1128dd932071a">
+                <title>virtual std::vector&lt;double&gt; OptimizationAlgorithm&lt; datatype &gt;::get_big_step_configuration ()=0</title> <emphasis>This function computes the states that should be computed next.</emphasis>
+                
+<para>If the next step will be a small step the update can be done by simply updating all dofs with a step width (or only one depending on the pattern) so this function is only used when a big step will be computed next and therefore all dofs could change differently. <formalpara><title>Returns: </title>
+
+<para>This is a vector of degrees of freedom which can be used by the <link linkend="class_optimization">Optimization</link> Strategy to update the Space Transformation. </para>
+</formalpara>
+</para>
+
+            </section>
+            <section xml:id="class_optimization_algorithm_1a663b0f1ea9c297b343af6d49df4b3b33">
+                <title>void OptimizationAlgorithm&lt; datatype &gt;::WriteStepsOut (std::ofstream &amp;)</title> <emphasis></emphasis>
+                
+            </section>
+</section>

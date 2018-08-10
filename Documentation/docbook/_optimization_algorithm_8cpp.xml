@@ -1,0 +1,121 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_optimization_algorithm_8cpp">
+    <title>OptimizationAlgorithm.cpp File Reference</title>
+    <programlisting>#include &quot;OptimizationAlgorithm.h&quot;</programlisting>
+        <section>
+            <title>Macros</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                            <para>#define <link linkend="_optimization_algorithm_8cpp_1ab873a4c37ca2011c16fa58d581667c87">OPTIMIZATION_ALGORITHM_CPP</link></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+        <title>Detailed Description</title>
+    <para>Definition in file /home/kraft/workspace/waveguideproblem/Code/OptimizationAlgorithm/OptimizationAlgorithm.cpp</para>
+    </simplesect>
+    <literallayout><computeroutput>
+1 <emphasis class="preprocessor">#ifndef&#32;OPTIMIZATION_ALGORITHM_CPP</emphasis>
+2 <emphasis class="preprocessor">#define&#32;OPTIMIZATION_ALGORITHM_CPP</emphasis>
+3 
+4 <emphasis class="preprocessor">#include&#32;&quot;OptimizationAlgorithm.h&quot;</emphasis>
+5 
+6 <emphasis class="keyword">template</emphasis>&lt;<emphasis class="keyword">typename</emphasis>&#32;datatype&gt;
+7 <link linkend="class_optimization_algorithm">OptimizationAlgorithm&lt;datatype&gt;::OptimizationAlgorithm</link>&#32;(){
+8 
+9 }
+10 
+11 <emphasis class="keyword">template</emphasis>&lt;<emphasis class="keyword">typename</emphasis>&#32;datatype&gt;
+12 <link linkend="class_optimization_algorithm">OptimizationAlgorithm&lt;datatype&gt;::~OptimizationAlgorithm</link>()&#32;{
+13 
+14 }
+15 
+16 <emphasis class="keyword">template</emphasis>&lt;<emphasis class="keyword">typename</emphasis>&#32;datatype&gt;
+<link linkend="class_optimization_algorithm_1a8b94776efc6cb8783f3781c75a6c8d01">17 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_optimization_algorithm_1a8b94776efc6cb8783f3781c75a6c8d01">OptimizationAlgorithm&lt;datatype&gt;::pass_result_small_step</link>(std::vector&lt;datatype&gt;&#32;in_step_result){
+18 &#32;&#32;deallog.push(<emphasis class="stringliteral">&quot;Small&#32;Step&#32;Result&quot;</emphasis>);
+19 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;complex&#32;=&#32;std::is_same&lt;datatype,&#32;std::complex&lt;double&gt;&gt;::value;
+20 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(complex)&#32;{
+21 &#32;&#32;&#32;&#32;std::vector&lt;double&gt;&#32;values;
+22 &#32;&#32;&#32;&#32;values.resize(2*in_step_result.size());
+23 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i=&#32;0;&#32;i&#32;&lt;&#32;in_step_result.size();&#32;i++)&#32;{
+24 &#32;&#32;&#32;&#32;&#32;&#32;values[2*i]&#32;=&#32;((std::complex&lt;double&gt;)in_step_result[i]).real();
+25 &#32;&#32;&#32;&#32;&#32;&#32;values[2*i&#32;+&#32;1]&#32;=&#32;((std::complex&lt;double&gt;)in_step_result[i]).imag();
+26 &#32;&#32;&#32;&#32;}
+27 &#32;&#32;&#32;&#32;dealii::Utilities::MPI::sum(values,&#32;MPI_COMM_WORLD,&#32;values);
+28 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;in_step_result.size();&#32;i++)&#32;{
+29 &#32;&#32;&#32;&#32;&#32;&#32;((std::complex&lt;double&gt;)in_step_result[i]).real(values[2*i]);
+30 &#32;&#32;&#32;&#32;&#32;&#32;((std::complex&lt;double&gt;)in_step_result[i]).imag(values[2*i+1]);
+31 &#32;&#32;&#32;&#32;}
+32 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+33 
+34 &#32;&#32;}
+35 
+36 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;in_step_result.size();&#32;i++)&#32;{
+37 &#32;&#32;&#32;&#32;deallog&lt;&lt;in_step_result[i];
+38 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(i&#32;!=&#32;in_step_result.size()-1)&#32;{
+39 &#32;&#32;&#32;&#32;&#32;&#32;deallog&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;,&#32;&quot;</emphasis>&#32;;
+40 &#32;&#32;&#32;&#32;}
+41 &#32;&#32;}
+42 &#32;&#32;deallog&#32;&lt;&lt;&#32;std::endl;
+43 &#32;&#32;deallog.pop();
+44 &#32;&#32;states.push_back(in_step_result);
+45 }
+46 
+47 <emphasis class="keyword">template</emphasis>&lt;<emphasis class="keyword">typename</emphasis>&#32;datatype&gt;
+<link linkend="class_optimization_algorithm_1ac35f79dd2065a34291033e10393059f0">48 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_optimization_algorithm_1ac35f79dd2065a34291033e10393059f0">OptimizationAlgorithm&lt;datatype&gt;::pass_result_big_step</link>(datatype&#32;in_change){
+49 &#32;&#32;deallog.push(<emphasis class="stringliteral">&quot;Big&#32;Step&#32;Result&#32;passed&quot;</emphasis>);
+50 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Result:&quot;</emphasis>&#32;&lt;&lt;&#32;in_change&#32;&lt;&lt;std::endl;
+51 &#32;&#32;deallog.pop();
+52 &#32;&#32;residuals.push_back(in_change);
+53 }
+54 
+55 <emphasis class="keyword">template</emphasis>&lt;<emphasis class="keyword">typename</emphasis>&#32;datatype&gt;
+56 <emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_optimization_algorithm">OptimizationAlgorithm&lt;datatype&gt;::WriteStepsOut</link>(std::ofstream&#32;&amp;&#32;result_file&#32;)&#32;{
+57 &#32;&#32;deallog.push(<emphasis class="stringliteral">&quot;Writing&#32;state&#32;table&quot;</emphasis>);
+58 &#32;&#32;std::string&#32;*&#32;names&#32;=&#32;<emphasis class="keyword">new</emphasis>&#32;std::string[3]&#32;;
+59 &#32;&#32;names[0]&#32;=&#32;<emphasis class="stringliteral">&quot;Radius&#32;&quot;</emphasis>;
+60 &#32;&#32;names[1]&#32;=&#32;<emphasis class="stringliteral">&quot;Shift&#32;&quot;</emphasis>;
+61 &#32;&#32;names[2]&#32;=&#32;<emphasis class="stringliteral">&quot;Angle&#32;&quot;</emphasis>;
+62 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;complex&#32;=&#32;std::is_same&lt;datatype,&#32;std::complex&lt;double&gt;&gt;::value;
+63 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Writing&#32;values&quot;</emphasis>&lt;&lt;std::endl;
+64 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;l&#32;=&#32;0;&#32;l&#32;&lt;&#32;states.size();&#32;l++){
+65 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=0;&#32;i&#32;&lt;&#32;3;&#32;i++)&#32;{
+66 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&#32;&lt;&#32;states[l].size()/3;&#32;j++)&#32;{
+67 
+68 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(complex)&#32;{
+69 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::complex&lt;double&gt;&#32;temp&#32;=&#32;(std::complex&lt;double&gt;)states[l][3*j&#32;+&#32;i];
+70 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Optimization_Steps.add_value(names[i]&#32;+&#32;std::to_string(j)&#32;+&#32;<emphasis class="stringliteral">&quot;r&quot;</emphasis>,&#32;temp.real());
+71 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Optimization_Steps.add_value(names[i]&#32;+&#32;std::to_string(j)&#32;+&#32;<emphasis class="stringliteral">&quot;i&quot;</emphasis>,&#32;temp.imag());
+72 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+73 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="comment">//Optimization_Steps.add_value(names[i]&#32;+&#32;std::to_string(j)&#32;,&#32;(double)states[l][3*j&#32;+&#32;i]);</emphasis>
+74 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+75 
+76 &#32;&#32;&#32;&#32;&#32;&#32;}
+77 &#32;&#32;&#32;&#32;}
+78 &#32;&#32;&#32;&#32;Optimization_Steps.add_value(<emphasis class="stringliteral">&quot;Step&#32;Width&quot;</emphasis>,&#32;steps_widths[l%STEPS_PER_DOFS]);
+79 &#32;&#32;}
+80 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Managing&#32;Table&#32;Columns&quot;</emphasis>&#32;&lt;&lt;std::endl;
+81 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(states.size()&gt;0){
+82 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=0;&#32;i&#32;&lt;&#32;3;&#32;i++)&#32;{
+83 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&#32;&lt;&#32;states[0].size()/3;&#32;j++)&#32;{
+84 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(complex){
+85 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Optimization_Steps.add_column_to_supercolumn(names[i]&#32;+&#32;std::to_string(j)+&#32;<emphasis class="stringliteral">&quot;r&quot;</emphasis>,&#32;names[i]);
+86 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Optimization_Steps.add_column_to_supercolumn(names[i]&#32;+&#32;std::to_string(j)+&#32;<emphasis class="stringliteral">&quot;i&quot;</emphasis>,&#32;names[i]);
+87 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+88 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Optimization_Steps.add_column_to_supercolumn(names[i]&#32;+&#32;std::to_string(j),&#32;names[i]);
+89 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+90 &#32;&#32;&#32;&#32;&#32;&#32;}
+91 &#32;&#32;&#32;&#32;}
+92 &#32;&#32;}
+93 &#32;&#32;deallog&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Done&quot;</emphasis>&#32;&lt;&lt;std::endl;
+94 &#32;&#32;Optimization_Steps.write_tex(result_file);
+95 &#32;&#32;deallog.pop();
+96 }
+97 
+98 <emphasis class="keyword">template</emphasis>&#32;<emphasis class="keyword">class&#32;</emphasis><link linkend="class_optimization_algorithm">OptimizationAlgorithm&lt;std::complex&lt;double&gt;</link>&gt;;
+99 <emphasis class="keyword">template</emphasis>&#32;<emphasis class="keyword">class&#32;</emphasis><link linkend="class_optimization_algorithm">OptimizationAlgorithm&lt;double&gt;</link>;
+100 <emphasis class="preprocessor">#endif</emphasis>
+    </computeroutput></literallayout>
+</section>

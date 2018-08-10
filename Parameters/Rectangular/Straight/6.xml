@@ -400,24 +400,31 @@
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </GMRESSteps>
         <Preconditioner>
-            <value>Amesos_Umfpack</value>
+            <value>Sweeping</value>
             <default_value>Amesos_Lapack</default_value>
             <documentation>Which preconditioner to use</documentation>
             <pattern>52</pattern>
-            <pattern_description>[Selection Sweeping|Amesos_Lapack|Amesos_Scalapack|Amesos_Klu|Amesos_Umfpack|Amesos_Pardiso|Amesos_Taucs|Amesos_Superlu|Amesos_Superludist|Amesos_Dscpack|Amesos_Mumps ]</pattern_description>
+            <pattern_description>[Selection Sweeping|FastSweeping|HSIESweeping|HSIEFastSweeping ]</pattern_description>
         </Preconditioner>
+	<PreconditionerDampening>
+            <value>0.0</value>
+            <default_value>0.0</default_value>
+            <documentation>Dampening for the preconditioner to acclelerate convergence. Typically 0 (off) or 1.0</documentation>
+            <pattern>53</pattern>
+            <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
+        </PreconditionerDampening>
         <Steps>
-            <value>200</value>
+            <value>700</value>
             <default_value>30</default_value>
             <documentation>Number of Steps the Solver is supposed to do.</documentation>
-            <pattern>53</pattern>
+            <pattern>54</pattern>
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </Steps>
         <Precision>
             <value>0.0001</value>
             <default_value>1e-6</default_value>
             <documentation>Minimal error value, the solver is supposed to accept as correct solution.</documentation>
-            <pattern>54</pattern>
+            <pattern>55</pattern>
             <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
         </Precision>
     </Solver>
@@ -426,28 +433,28 @@
             <value>true</value>
             <default_value>true</default_value>
             <documentation>If this is set to true, EpsilonZero and MuZero are set to 1.</documentation>
-            <pattern>55</pattern>
+            <pattern>56</pattern>
             <pattern_description>[Bool]</pattern_description>
         </AllOne>
         <EpsilonZero>
             <value>8.854e-18</value>
             <default_value>8.854e-18</default_value>
             <documentation>Physical constant Epsilon zero. The standard value is measured in micrometers.</documentation>
-            <pattern>56</pattern>
+            <pattern>57</pattern>
             <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
         </EpsilonZero>
         <MuZero>
             <value>1.257e-12</value>
             <default_value>1.257e-12</default_value>
             <documentation>Physical constant Mu zero. The standard value is measured in micrometers.</documentation>
-            <pattern>57</pattern>
+            <pattern>58</pattern>
             <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
         </MuZero>
         <Pi>
             <value>3.14159265</value>
             <default_value>3.14159265</default_value>
             <documentation>Mathematical constant Pi.</documentation>
-            <pattern>58</pattern>
+            <pattern>59</pattern>
             <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
         </Pi>
     </Constants>
@@ -456,21 +463,21 @@
             <value>1</value>
             <default_value>1</default_value>
             <documentation>Global refinement-steps.</documentation>
-            <pattern>59</pattern>
+            <pattern>60</pattern>
             <pattern_description>[Integer range 0...2147483647 (inclusive)]</pattern_description>
         </Global>
         <SemiGlobal>
             <value>0</value>
             <default_value>1</default_value>
             <documentation>Semi-Global refinement-steps (close to the Waveguide-boundary and inside).</documentation>
-            <pattern>60</pattern>
+            <pattern>61</pattern>
             <pattern_description>[Integer range 0...2147483647 (inclusive)]</pattern_description>
         </SemiGlobal>
         <Internal>
             <value>1</value>
             <default_value>1</default_value>
             <documentation>Internal refinement-steps.</documentation>
-            <pattern>61</pattern>
+            <pattern>62</pattern>
             <pattern_description>[Integer range 0...2147483647 (inclusive)]</pattern_description>
         </Internal>
     </Refinement>

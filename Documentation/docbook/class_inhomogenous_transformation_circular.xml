@@ -1,0 +1,1010 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="class_inhomogenous_transformation_circular">
+<title>InhomogenousTransformationCircular class Reference</title>
+<para>
+    <programlisting>#include <link linkend="_inhomogenous_transformation_circular_8h">&lt;InhomogenousTransformationCircular.h&gt;</link></programlisting>
+</para>
+        <section>
+            <title>Public Attributes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double XMinus</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double XPlus</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double YMinus</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double YPlus</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double ZMinus</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double ZPlus</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::vector&lt; Sector&lt; 3 &gt; &gt; case_sectors<para><emphasis>This member contains all the Sectors who, as a sum, form the complete Waveguide.</emphasis></para></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double epsilon_K<para><emphasis>The material-property \form#38 has a different value inside and outside of the waveguides core.</emphasis></para></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double epsilon_M<para><emphasis>The material-property \form#38 has a different value inside and outside of the waveguides core.</emphasis></para></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const int sectors<para><emphasis>Since the computational domain is split into subdomains (called sectors), it is important to keep track of the amount of subdomains.</emphasis></para></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>const double deltaY<para><emphasis>This value is initialized with the value Delta from the input-file.</emphasis></para></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Vector&lt; double &gt; InitialDofs<para><emphasis>This vector of values saves the initial configuration.</emphasis></para></para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section>
+            <title></title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para> <link linkend="class_inhomogenous_transformation_circular_1a3f7e79a7fe037fd63da9f11bd5447477">InhomogenousTransformationCircular</link> (
+int )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>virtual <link linkend="class_inhomogenous_transformation_circular_1acaa175889bd084aba89c9a879bed7bd6">~InhomogenousTransformationCircular</link> (
+)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Point&lt; 3 &gt; <link linkend="class_inhomogenous_transformation_circular_1add3b2734d8e74765e177fb6ab8b9c5cd">math_to_phys</link> (
+Point&lt; 3 &gt; coord)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Point&lt; 3 &gt; <link linkend="class_inhomogenous_transformation_circular_1a90303cc04f5821257050899a3aa683e3">phys_to_math</link> (
+Point&lt; 3 &gt; coord)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>bool <link linkend="class_inhomogenous_transformation_circular_1ab5ab06933cc27b59a79df3244f5b0616">is_identity</link> (
+Point&lt; 3 &gt; coord)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_inhomogenous_transformation_circular_1aabe173e85b573ec2d58368a13a2ff458">get_Tensor</link> (
+Point&lt; 3 &gt; &amp; coordinate)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_inhomogenous_transformation_circular_1abc72e62f6ff42370165e2eaf4db883c5">get_Preconditioner_Tensor</link> (
+Point&lt; 3 &gt; &amp; coordinate, int block)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_inhomogenous_transformation_circular_1a60f30af418cf3611b897afe5eb890a06">Apply_PML_To_Tensor</link> (
+Point&lt; 3 &gt; &amp; coordinate, Tensor&lt; 2, 3, double &gt; Tensor_input)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_inhomogenous_transformation_circular_1aafcae43370f204bbf752a05054ef4189">Apply_PML_To_Tensor_For_Preconditioner</link> (
+Point&lt; 3 &gt; &amp; coordinate, Tensor&lt; 2, 3, double &gt; Tensor_input, int block)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Tensor&lt; 2, 3, double &gt; <link linkend="class_inhomogenous_transformation_circular_1af9796901eb10f91bf283ce79e9d39673">get_Space_Transformation_Tensor</link> (
+Point&lt; 3 &gt; &amp; coordinate)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Tensor&lt; 2, 3, double &gt; <link linkend="class_inhomogenous_transformation_circular_1a3b21cc3f2a6fff561c1905635fa18dd4">get_Space_Transformation_Tensor_Homogenized</link> (
+Point&lt; 3 &gt; &amp; coordinate)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>bool <link linkend="class_inhomogenous_transformation_circular_1a9cd5164ad5e81222d84ccae959e09ed9">PML_in_X</link> (
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>bool <link linkend="class_inhomogenous_transformation_circular_1a37c2ebdba9a6bfb45410c4c525328e84">PML_in_Y</link> (
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the y-axis.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>bool <link linkend="class_inhomogenous_transformation_circular_1a9876ac78c5c2ec3524ca331cba9466e5">PML_in_Z</link> (
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the z-axis.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>bool <link linkend="class_inhomogenous_transformation_circular_1a660bcd33bfadfeff68a1cd9c845f6f4f">Preconditioner_PML_in_Z</link> (
+Point&lt; 3 &gt; &amp; p, unsigned int block)<para><emphasis>Similar to the PML_in_Z only this function is used to generate the artificial PML used in the Preconditioner.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_circular_1aba258d6b34408aaf252fed22497f54f8">Preconditioner_PML_Z_Distance</link> (
+Point&lt; 3 &gt; &amp; p, unsigned int block)<para><emphasis>This function fulfills the same purpose as those with similar names but it is supposed to be used together with Preconditioner_PML_in_Z instead of the versions without &quot;Preconditioner&quot;.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_circular_1a95ca00c40d36fafd09c941ce338a5f06">PML_X_Distance</link> (
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_circular_1aca704212b3f0ab894d7aa43706dba5ba">PML_Y_Distance</link> (
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_circular_1abf499ff100ae388c4b819f0db3717e9f">PML_Z_Distance</link> (
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_inhomogenous_transformation_circular_1afa3cb42cd9f1aff1c55c314292f8210f">estimate_and_initialize</link> (
+)<para><emphasis>At the beginning (before the first solution of a system) only the boundary conditions for the shape of the waveguide are known.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_circular_1a561d8bc7277ec12f14f5ad08a455e207">get_Q1</link> (
+double z)<para><emphasis>This member calculates the value of Q1 for a provided \form#39-coordinate.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_circular_1a4ce74da5ef6e98d7f59e2e8579f13df8">get_Q2</link> (
+double z)<para><emphasis>This member calculates the value of Q2 for a provided \form#39-coordinate.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_circular_1a51184fd504be95826363f3522b1d82e1">get_Q3</link> (
+double z)<para><emphasis>This member calculates the value of Q3 for a provided \form#39-coordinate.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_circular_1a47af0c99415a86b9d14f85560b8c37d1">get_dof</link> (
+int dof)<para><emphasis>This is a getter for the values of degrees of freedom.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_inhomogenous_transformation_circular_1a32a2a00f0f97fe31e17a4e51e9bd5086">set_dof</link> (
+int dof, double value)<para><emphasis>This function sets the value of the dof provided to the given value.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_circular_1a5237ae50c525178bf178aa8bbd39851b">get_free_dof</link> (
+int dof)<para><emphasis>This is a getter for the values of degrees of freedom.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_inhomogenous_transformation_circular_1a36465b5c3ea82329c2186f7cf4b75044">set_free_dof</link> (
+int dof, double value)<para><emphasis>This function sets the value of the dof provided to the given value.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_circular_1ad111014c3cd633ec6df7474e0cfb4833">System_Length</link> (
+)<para><emphasis>Using this method unifies the usage of coordinates.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_circular_1a07a16c6e19f6727a5dea930da36b75ad">Sector_Length</link> (
+)<para><emphasis>Returns the length of one sector.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_circular_1a3b39972dabd2f4e444f97113ee9d11fc">Layer_Length</link> (
+)<para><emphasis>Returns the length of one layer.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_circular_1a8d10e2f3dd9a9d388f752afc90adb3e5">get_r</link> (
+double in_z)<para><emphasis>Returns the radius for a system-coordinate;.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_circular_1a0965c1dd67106af6b91d7ef82bf6d27b">get_m</link> (
+double in_z)<para><emphasis>Returns the shift for a system-coordinate;.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double <link linkend="class_inhomogenous_transformation_circular_1abc26eb4fee67b8e7baf48dc607f0b8d1">get_v</link> (
+double in_z)<para><emphasis>Returns the tilt for a system-coordinate;.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>int <link linkend="class_inhomogenous_transformation_circular_1a31db100c8a34eda52541f34d6f022cda">Z_to_Layer</link> (
+double )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Vector&lt; double &gt; <link linkend="class_inhomogenous_transformation_circular_1a471f574ec6e6e567dd6909ba387b1166">Dofs</link> (
+)<para><emphasis>Other objects can use this function to retrieve an array of the current values of the degrees of freedom of the functional we are optimizing.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>unsigned int <link linkend="class_inhomogenous_transformation_circular_1aca05178f5abd01fea3336ba7b6e3685f">NFreeDofs</link> (
+)<para><emphasis>This function returns the number of unrestrained degrees of freedom of the current optimization run.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>unsigned int <link linkend="class_inhomogenous_transformation_circular_1a9a6e0c656aa21a476e608d1e54dd456b">NDofs</link> (
+)<para><emphasis>This function returns the total number of DOFs including restrained ones.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>bool <link linkend="class_inhomogenous_transformation_circular_1ac5ecd2e9c068eeb1483669606321ad6d">IsDofFree</link> (
+int )<para><emphasis>Since Dofs() also returns restrained degrees of freedom, this function can be applied to determine if a degree of freedom is indeed free or restrained.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>void <link linkend="class_inhomogenous_transformation_circular_1a7f1220326d89857f5de36e8bbcca2b53">Print</link> (
+)<para><emphasis>Console output of the current Waveguide Structure.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::complex&lt; double &gt; <link linkend="class_inhomogenous_transformation_circular_1a72926c2aabf7eb3c8b56aed37a439cb6">evaluate_for_z</link> (
+double , <link linkend="class_waveguide">Waveguide</link> * )<para><emphasis>Since the Wavegudie itself may be circular or rectangular now, the evaluation routines should be moved to a point in the code where this information is included in the code.</emphasis></para>
+</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::complex&lt; double &gt; <link linkend="class_inhomogenous_transformation_circular_1ad52845c64cd8b39a664e812b47bb60f4">evaluate_for_z_with_sum</link> (
+double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::complex&lt; double &gt; <link linkend="class_inhomogenous_transformation_circular_1ac343f45af6422b6a1850fa1f4d005369">gauss_product_2D_sphere</link> (
+double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide">Waveguide</link> * in_w)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    <simplesect>
+
+<para>In this case we regard a tubular waveguide and the effects on the material tensor by the space transformation and the boundary condition PML may overlap (hence inhomogenous space transformation) </para>
+    </simplesect>
+        <simplesect>
+            <title>Detailed Description</title>
+
+<para>The usage of a coordinate transformation which is identity on the domain containing our PML is a strong restriction however it ensures lower errors since the quality of the PML is harder to estimate otherwise. Also it limits us in how we model the waveguide essentially forcing us to have no bent between the wavguides-connectors. <formalpara><title>Author: </title>
+
+<para>Pascal Kraft </para>
+</formalpara>
+<formalpara><title>Date: </title>
+
+<para>28.11.2016 </para>
+</formalpara>
+</para>
+                <para>Definition at line 24 of file InhomogenousTransformationCircular.h</para>
+                <para>The Documentation for this struct was generated from the following file: </para>
+                <para><itemizedlist><listitem><para>InhomogenousTransformationCircular.h</para></listitem></itemizedlist></para>
+        </simplesect>
+        <section>
+            <title>Member Data Documentation</title>
+            <simplesect>
+                <title>std::vector&lt;Sector&lt;3&gt; &gt; InhomogenousTransformationCircular::case_sectors</title>                
+<para>These Sectors are a partition of the simulated domain. </para>
+
+                <para>Definition at line 101 of file InhomogenousTransformationCircular.h</para>
+                <para>The Documentation for this struct was generated from the following file: </para>
+                <para><itemizedlist><listitem><para>InhomogenousTransformationCircular.h</para></listitem></itemizedlist></para>
+            </simplesect>
+            <simplesect>
+                <title>const double InhomogenousTransformationCircular::epsilon_K</title>                
+<para>This variable stores its value inside the core. </para>
+
+                <para>Definition at line 106 of file InhomogenousTransformationCircular.h</para>
+                <para>The Documentation for this struct was generated from the following file: </para>
+                <para><itemizedlist><listitem><para>InhomogenousTransformationCircular.h</para></listitem></itemizedlist></para>
+            </simplesect>
+            <simplesect>
+                <title>const double InhomogenousTransformationCircular::epsilon_M</title>                
+<para>This variable stores its value outside the core. </para>
+
+                <para>Definition at line 110 of file InhomogenousTransformationCircular.h</para>
+                <para>The Documentation for this struct was generated from the following file: </para>
+                <para><itemizedlist><listitem><para>InhomogenousTransformationCircular.h</para></listitem></itemizedlist></para>
+            </simplesect>
+            <simplesect>
+                <title>const int InhomogenousTransformationCircular::sectors</title>                
+<para>This member stores the number of Sectors the computational domain has been split into. </para>
+
+                <para>Definition at line 114 of file InhomogenousTransformationCircular.h</para>
+                <para>The Documentation for this struct was generated from the following file: </para>
+                <para><itemizedlist><listitem><para>InhomogenousTransformationCircular.h</para></listitem></itemizedlist></para>
+            </simplesect>
+        </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a3f7e79a7fe037fd63da9f11bd5447477">
+                <title>InhomogenousTransformationCircular::InhomogenousTransformationCircular (int)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1acaa175889bd084aba89c9a879bed7bd6">
+                <title>InhomogenousTransformationCircular::~InhomogenousTransformationCircular ()</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1add3b2734d8e74765e177fb6ab8b9c5cd">
+                <title>Point&lt; 3 &gt; InhomogenousTransformationCircular::math_to_phys (Point&lt; 3 &gt; coord) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a90303cc04f5821257050899a3aa683e3">
+                <title>Point&lt; 3 &gt; InhomogenousTransformationCircular::phys_to_math (Point&lt; 3 &gt; coord) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1ab5ab06933cc27b59a79df3244f5b0616">
+                <title>bool InhomogenousTransformationCircular::is_identity (Point&lt; 3 &gt; coord) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1aabe173e85b573ec2d58368a13a2ff458">
+                <title>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; InhomogenousTransformationCircular::get_Tensor (Point&lt; 3 &gt; &amp;coordinate) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1abc72e62f6ff42370165e2eaf4db883c5">
+                <title>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; InhomogenousTransformationCircular::get_Preconditioner_Tensor (Point&lt; 3 &gt; &amp;coordinate, int block) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a60f30af418cf3611b897afe5eb890a06">
+                <title>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; InhomogenousTransformationCircular::Apply_PML_To_Tensor (Point&lt; 3 &gt; &amp;coordinate, Tensor&lt; 2, 3, double &gt; Tensor_input) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1aafcae43370f204bbf752a05054ef4189">
+                <title>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; InhomogenousTransformationCircular::Apply_PML_To_Tensor_For_Preconditioner (Point&lt; 3 &gt; &amp;coordinate, Tensor&lt; 2, 3, double &gt; Tensor_input, int block) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1af9796901eb10f91bf283ce79e9d39673">
+                <title>Tensor&lt; 2, 3, double &gt; InhomogenousTransformationCircular::get_Space_Transformation_Tensor (Point&lt; 3 &gt; &amp;coordinate) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a3b21cc3f2a6fff561c1905635fa18dd4">
+                <title>Tensor&lt; 2, 3, double &gt; InhomogenousTransformationCircular::get_Space_Transformation_Tensor_Homogenized (Point&lt; 3 &gt; &amp;coordinate) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a9cd5164ad5e81222d84ccae959e09ed9">
+                <title>bool InhomogenousTransformationCircular::PML_in_X (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis.</emphasis>
+                
+<para>Since there are 3 blocks of PML-type material, there are 3 functions. 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>position</entry>
+                                <entry>
+<para>Stores the position in which to test for presence of a PML-Material. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a37c2ebdba9a6bfb45410c4c525328e84">
+                <title>bool InhomogenousTransformationCircular::PML_in_Y (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the y-axis.</emphasis>
+                
+<para>Since there are 3 blocks of PML-type material, there are 3 functions. 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>position</entry>
+                                <entry>
+<para>Stores the position in which to test for presence of a PML-Material. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a9876ac78c5c2ec3524ca331cba9466e5">
+                <title>bool InhomogenousTransformationCircular::PML_in_Z (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the z-axis.</emphasis>
+                
+<para>Since there are 3 blocks of PML-type material, there are 3 functions. 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>position</entry>
+                                <entry>
+<para>Stores the position in which to test for presence of a PML-Material. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a660bcd33bfadfeff68a1cd9c845f6f4f">
+                <title>bool InhomogenousTransformationCircular::Preconditioner_PML_in_Z (Point&lt; 3 &gt; &amp;p, unsigned int block) const</title> <emphasis>Similar to the PML_in_Z only this function is used to generate the artificial PML used in the Preconditioner.</emphasis>
+                
+<para>These Layers are not only situated at the surface of the computational domain but also inside it at the interfaces of Sectors. </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1aba258d6b34408aaf252fed22497f54f8">
+                <title>double InhomogenousTransformationCircular::Preconditioner_PML_Z_Distance (Point&lt; 3 &gt; &amp;p, unsigned int block) const</title> <emphasis>This function fulfills the same purpose as those with similar names but it is supposed to be used together with Preconditioner_PML_in_Z instead of the versions without &quot;Preconditioner&quot;.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a95ca00c40d36fafd09c941ce338a5f06">
+                <title>double InhomogenousTransformationCircular::PML_X_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis>
+                
+<para>This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction). 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>position</entry>
+                                <entry>
+<para>Stores the position from which to calculate the distance to the PML-surface. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1aca704212b3f0ab894d7aa43706dba5ba">
+                <title>double InhomogenousTransformationCircular::PML_Y_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis>
+                
+<para>This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction). 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>position</entry>
+                                <entry>
+<para>Stores the position from which to calculate the distance to the PML-surface. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1abf499ff100ae388c4b819f0db3717e9f">
+                <title>double InhomogenousTransformationCircular::PML_Z_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis>
+                
+<para>This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction). 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>position</entry>
+                                <entry>
+<para>Stores the position from which to calculate the distance to the PML-surface. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1afa3cb42cd9f1aff1c55c314292f8210f">
+                <title>void InhomogenousTransformationCircular::estimate_and_initialize ()</title> <emphasis>At the beginning (before the first solution of a system) only the boundary conditions for the shape of the waveguide are known.</emphasis>
+                
+<para>Therefore the values for the degrees of freedom need to be estimated. This function sets all variables to appropiate values and estimates an appropriate shape based on averages and a polynomial interpolation of the boundary conditions on the shape. </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a561d8bc7277ec12f14f5ad08a455e207">
+                <title>double InhomogenousTransformationCircular::get_Q1 (double z) const</title> <emphasis>This member calculates the value of Q1 for a provided \form#39-coordinate.</emphasis>
+                
+<para>This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field). 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>z</entry>
+                                <entry>
+<para>The value of Q1 is independent of <equation><title>form_40</title>$x$</equation> and <equation><title>form_41</title>$y$</equation>. Therefore only a <equation><title>form_39</title>$z$</equation>-coordinate is provided in a call to the function. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a4ce74da5ef6e98d7f59e2e8579f13df8">
+                <title>double InhomogenousTransformationCircular::get_Q2 (double z) const</title> <emphasis>This member calculates the value of Q2 for a provided \form#39-coordinate.</emphasis>
+                
+<para>This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field). 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>z</entry>
+                                <entry>
+<para>The value of Q2 is independent of <equation><title>form_40</title>$x$</equation> and <equation><title>form_41</title>$y$</equation>. Therefore only a <equation><title>form_39</title>$z$</equation>-coordinate is provided in a call to the function. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a51184fd504be95826363f3522b1d82e1">
+                <title>double InhomogenousTransformationCircular::get_Q3 (double z) const</title> <emphasis>This member calculates the value of Q3 for a provided \form#39-coordinate.</emphasis>
+                
+<para>This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field). 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>z</entry>
+                                <entry>
+<para>The value of Q3 is independent of <equation><title>form_40</title>$x$</equation> and <equation><title>form_41</title>$y$</equation>. Therefore only a <equation><title>form_39</title>$z$</equation>-coordinate is provided in a call to the function. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a47af0c99415a86b9d14f85560b8c37d1">
+                <title>double InhomogenousTransformationCircular::get_dof (int dof) const</title> <emphasis>This is a getter for the values of degrees of freedom.</emphasis>
+                
+<para>A getter-setter interface was introduced since the values are estimated automatically during the optimization and non-physical systems should be excluded from the domain of possible cases. 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>dof</entry>
+                                <entry>
+<para>The index of the degree of freedom to be retrieved from the structure of the modelled waveguide. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                <formalpara><title>Returns: </title>
+
+<para>This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd. </para>
+</formalpara>
+</para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a32a2a00f0f97fe31e17a4e51e9bd5086">
+                <title>void InhomogenousTransformationCircular::set_dof (int dof, double value)</title> <emphasis>This function sets the value of the dof provided to the given value.</emphasis>
+                
+<para>It is important to consider, that some dofs are non-writable (i.e. the values of the degrees of freedom on the boundary, like the radius of the input-connector cannot be changed). 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>dof</entry>
+                                <entry>
+<para>The index of the parameter to be changed. </para>
+</entry>
+                            </row>
+                            <row>
+                                <entry>value</entry>
+                                <entry>
+<para>The value, the dof should be set to. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a5237ae50c525178bf178aa8bbd39851b">
+                <title>double InhomogenousTransformationCircular::get_free_dof (int dof) const</title> <emphasis>This is a getter for the values of degrees of freedom.</emphasis>
+                
+<para>A getter-setter interface was introduced since the values are estimated automatically during the optimization and non-physical systems should be excluded from the domain of possible cases. 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>dof</entry>
+                                <entry>
+<para>The index of the degree of freedom to be retrieved from the structure of the modelled waveguide. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                <formalpara><title>Returns: </title>
+
+<para>This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd. </para>
+</formalpara>
+</para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a36465b5c3ea82329c2186f7cf4b75044">
+                <title>void InhomogenousTransformationCircular::set_free_dof (int dof, double value)</title> <emphasis>This function sets the value of the dof provided to the given value.</emphasis>
+                
+<para>It is important to consider, that some dofs are non-writable (i.e. the values of the degrees of freedom on the boundary, like the radius of the input-connector cannot be changed). 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>dof</entry>
+                                <entry>
+<para>The index of the parameter to be changed. </para>
+</entry>
+                            </row>
+                            <row>
+                                <entry>value</entry>
+                                <entry>
+<para>The value, the dof should be set to. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1ad111014c3cd633ec6df7474e0cfb4833">
+                <title>double InhomogenousTransformationCircular::System_Length () const</title> <emphasis>Using this method unifies the usage of coordinates.</emphasis>
+                
+<para>This function takes a global <equation><title>form_39</title>$z$</equation> coordinate (in the computational domain) and returns both a Sector-Index and an internal <equation><title>form_39</title>$z$</equation> coordinate indicating which sector this coordinate belongs to and how far along in the sector it is located. 
+                <formalpara>
+                    <title/>
+                    <table frame="all">
+                        <title>Parameters                        </title>
+                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
+                        <colspec colwidth="1*"/>
+                        <colspec colwidth="4*"/>
+                        <tbody>
+                            <row>
+                                <entry>double</entry>
+                                <entry>
+<para>in_z global system <equation><title>form_39</title>$z$</equation> coordinate for the transformation. Returns the complete length of the computational domain. </para>
+</entry>
+                            </row>
+                        </tbody>
+                        </tgroup>
+                    </table>
+                </formalpara>
+                </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a07a16c6e19f6727a5dea930da36b75ad">
+                <title>double InhomogenousTransformationCircular::Sector_Length () const</title> <emphasis>Returns the length of one sector.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a3b39972dabd2f4e444f97113ee9d11fc">
+                <title>double InhomogenousTransformationCircular::Layer_Length () const</title> <emphasis>Returns the length of one layer.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a8d10e2f3dd9a9d388f752afc90adb3e5">
+                <title>double InhomogenousTransformationCircular::get_r (double in_z) const</title> <emphasis>Returns the radius for a system-coordinate;.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a0965c1dd67106af6b91d7ef82bf6d27b">
+                <title>double InhomogenousTransformationCircular::get_m (double in_z) const</title> <emphasis>Returns the shift for a system-coordinate;.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1abc26eb4fee67b8e7baf48dc607f0b8d1">
+                <title>double InhomogenousTransformationCircular::get_v (double in_z) const</title> <emphasis>Returns the tilt for a system-coordinate;.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a31db100c8a34eda52541f34d6f022cda">
+                <title>int InhomogenousTransformationCircular::Z_to_Layer (double) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a471f574ec6e6e567dd6909ba387b1166">
+                <title>Vector&lt; double &gt; InhomogenousTransformationCircular::Dofs () const</title> <emphasis>Other objects can use this function to retrieve an array of the current values of the degrees of freedom of the functional we are optimizing.</emphasis>
+                
+<para>This also includes restrained degrees of freedom and other functions can be used to determine this property. This has to be done because in different cases the number of restrained degrees of freedom can vary and we want no logic about this in other functions. </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1aca05178f5abd01fea3336ba7b6e3685f">
+                <title>unsigned int InhomogenousTransformationCircular::NFreeDofs () const</title> <emphasis>This function returns the number of unrestrained degrees of freedom of the current optimization run.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a9a6e0c656aa21a476e608d1e54dd456b">
+                <title>unsigned int InhomogenousTransformationCircular::NDofs () const</title> <emphasis>This function returns the total number of DOFs including restrained ones.</emphasis>
+                
+<para>This is the lenght of the array returned by <link linkend="class_inhomogenous_transformation_circular_1a471f574ec6e6e567dd6909ba387b1166">Dofs()</link>. </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1ac5ecd2e9c068eeb1483669606321ad6d">
+                <title>bool InhomogenousTransformationCircular::IsDofFree (int) const</title> <emphasis>Since Dofs() also returns restrained degrees of freedom, this function can be applied to determine if a degree of freedom is indeed free or restrained.</emphasis>
+                
+<para>&quot;restrained&quot; means that for example the DOF represents the radius at one of the connectors (input or output) and therefore we forbid the optimization scheme to vary this value. </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a7f1220326d89857f5de36e8bbcca2b53">
+                <title>void InhomogenousTransformationCircular::Print () const</title> <emphasis>Console output of the current Waveguide Structure.</emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1a72926c2aabf7eb3c8b56aed37a439cb6">
+                <title>std::complex&lt; double &gt; InhomogenousTransformationCircular::evaluate_for_z (double z_in, Waveguide *)</title> <emphasis>Since the Wavegudie itself may be circular or rectangular now, the evaluation routines should be moved to a point in the code where this information is included in the code.</emphasis>
+                
+<para>Since I dont want to create derived classes from waveguide (which I should do eventually) I will for now include this functionality into the space transformation which is shape-sensitive. The waveguide only offers the evaluation at a point. The quadrature-rule has to be imposed by the space transformation. </para>
+
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1ad52845c64cd8b39a664e812b47bb60f4">
+                <title>std::complex&lt;double&gt; InhomogenousTransformationCircular::evaluate_for_z_with_sum (double, double, Waveguide *)</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_inhomogenous_transformation_circular_1ac343f45af6422b6a1850fa1f4d005369">
+                <title>std::complex&lt; double &gt; InhomogenousTransformationCircular::gauss_product_2D_sphere (double z, int n, double R, double Xc, double Yc, Waveguide *in_w)</title> <emphasis></emphasis>
+                
+            </section>
+</section>
