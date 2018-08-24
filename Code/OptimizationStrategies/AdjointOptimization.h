@@ -1,26 +1,31 @@
 #ifndef AdjointOptimization_H_
 #define AdjointOptimization_H_
 
-#include "Optimization.h"
 #include "../Core/Waveguide.h"
 #include "../OptimizationAlgorithm/OptimizationAlgorithm.h"
+#include "Optimization.h"
 
 using namespace dealii;
 
 /**
  * \class AdjointOptimization
- * \brief Derived from the Optimization class, this class implements an Optimization-scheme based on an adjoint method.
+ * \brief Derived from the Optimization class, this class implements an
+ * Optimization-scheme based on an adjoint method.
  *
- * This method should prove to be far superior to a finite difference approach as soon as the shape has more then 2 degrees of freedom since its effort is always a total of 2 forward problems to solve.
- * \author Pascal Kraft
+ * This method should prove to be far superior to a finite difference approach
+ * as soon as the shape has more then 2 degrees of freedom since its effort is
+ * always a total of 2 forward problems to solve. \author Pascal Kraft
  * \date 29.11.2016
  */
 class AdjointOptimization : public Optimization {
-
  public:
-  const int type = 1; // Allows callers to identify the exact type easily. 0 = FD, 1 = Adj.
+  const int type =
+      1;  // Allows callers to identify the exact type easily. 0 = FD, 1 = Adj.
 
-  AdjointOptimization(Waveguide * waveguide_primal, MeshGenerator * mg, SpaceTransformation * st_primal, SpaceTransformation * st_dual, OptimizationAlgorithm<std::complex<double>> * Oa);
+  AdjointOptimization(Waveguide* waveguide_primal, MeshGenerator* mg,
+                      SpaceTransformation* st_primal,
+                      SpaceTransformation* st_dual,
+                      OptimizationAlgorithm<std::complex<double>>* Oa);
 
   ~AdjointOptimization();
 
@@ -30,15 +35,14 @@ class AdjointOptimization : public Optimization {
 
   void run();
 
-  Waveguide * waveguide;
+  Waveguide* waveguide;
 
-  SpaceTransformation * primal_st;
-  SpaceTransformation * dual_st;
+  SpaceTransformation* primal_st;
+  SpaceTransformation* dual_st;
 
-  MeshGenerator * mg;
+  MeshGenerator* mg;
 
-  OptimizationAlgorithm<std::complex<double>> * oa;
-
+  OptimizationAlgorithm<std::complex<double>>* oa;
 };
 
 #endif

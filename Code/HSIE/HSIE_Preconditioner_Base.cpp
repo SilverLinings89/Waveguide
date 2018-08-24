@@ -9,6 +9,4 @@
  *      Author: kraft
  */
 
-
-
 #endif

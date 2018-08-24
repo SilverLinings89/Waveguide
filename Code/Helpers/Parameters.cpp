@@ -4,6 +4,4 @@
 
 using namespace dealii;
 
-
-
 #endif

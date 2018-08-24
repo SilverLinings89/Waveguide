@@ -7,14 +7,8 @@
 
 using namespace dealii;
 
-Optimization::Optimization():
-    pout(std::cout, GlobalParams.MPI_Rank==0) {
+Optimization::Optimization() : pout(std::cout, GlobalParams.MPI_Rank == 0) {}
 
-}
-
-Optimization::~Optimization() {
-
-}
+Optimization::~Optimization() {}
 
 #endif
-
