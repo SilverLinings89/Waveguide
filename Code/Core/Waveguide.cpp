@@ -957,6 +957,7 @@ void Waveguide::MakeBoundaryConditions() {
   deallog << "The input cell interface layer is located at " << cell_layer_z
           << std::endl;
   MPI_Barrier(MPI_COMM_WORLD);
+
   for (; cell != endc; ++cell) {
     if (cell->is_locally_owned()) {
       for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {

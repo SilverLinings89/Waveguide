@@ -1,6 +1,7 @@
 #ifndef HSIEPRECONDITIONERBASE_H
 #define HSIEPRECONDITIONERBASE_H
 
+#include <complex.h>
 #include <deal.II/base/point.h>
 #include <deal.II/distributed/tria.h>
 #include <deal.II/lac/trilinos_parallel_block_vector.h>
