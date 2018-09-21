@@ -52,4 +52,36 @@ std::complex<double>* a(int in_i, int in_j) {
   return ret;
 }
 
+int count_HSIE_dofs(dealii::parallel::distributed::Triangulation<3>* tria,
+                    unsigned int degree, double in_z) {
+  dealii::IndexSet interfacevertices(tria->n_vertices());
+  dealii::IndexSet interfaceedges(tria->n_active_lines());
+  dealii::parallel::distributed::Triangulation<3>::active_cell_iterator
+      cell = tria->begin_active(),
+      endc = tria->end();
+  for (; cell != endc; ++cell) {
+    if (cell->is_locally_owned()) {
+      for (unsigned int i = 0; i < dealii::GeometryInfo<3>::faces_per_cell;
+           i++) {
+        dealii::Point<3, double> pos = cell->face(i)->center(true, true);
+        if (abs(pos[2] - in_z) < 0.0001) {
+          for (unsigned int j = 0; j < dealii::GeometryInfo<3>::lines_per_face;
+               j++) {
+            interfacevertices.add_index(
+                cell->face(i)->line(j)->vertex_index(0));
+            interfacevertices.add_index(
+                cell->face(i)->line(j)->vertex_index(1));
+            interfaceedges.add_index(cell->face(i)->line(j)->index());
+          }
+        }
+      }
+    }
+  }
+
+  int n_if_edges = interfaceedges.n_elements();
+  int n_if_vertices = interfacevertices.n_elements();
+
+  return n_if_vertices * (degree + 2) + n_if_edges * 1 * (degree + 1);
+}
+
 #endif

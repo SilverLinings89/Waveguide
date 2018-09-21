@@ -42,6 +42,22 @@ void alert() {
   alert_counter++;
 }
 
+std::complex<double> matrixD(int in_row, int in_column, double in_k0) {
+  std::complex<double> ret(0, 0);
+  if (std::abs(in_row - in_column) > 1) {
+    return ret;
+  }
+  std::complex<double> part(0, 1.0 / (std::complex<double>(0, 2 * in_k0)));
+  if (in_row == in_column) {
+    ret = -1.0 * (in_row * 2 - 1) * part;
+    ret += std::complex<double>(1, 0);
+    return ret;
+  } else {
+    ret += std::complex<double>(1, 0) + in_row * part;
+    return ret;
+  }
+}
+
 void PrepareStreams() {
   char *pPath;
   pPath = getenv("WORK");
