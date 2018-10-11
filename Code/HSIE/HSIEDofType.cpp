@@ -143,10 +143,13 @@ std::vector<std::complex<double>> HSIE_Dof_Type<hsie_order>::evaluate_U(
       new std::vector<std::complex<double>>();
   ret.resize(3);
   if (type == 0) {
+    // U_1 = 0;
   }
   if (type == 2) {
+    // U_2 = U_3 = 0;
   }
   if (type == 3) {
+    // U_1 = 0;
   }
   return ret;
 }
@@ -158,10 +161,13 @@ std::vector<std::complex<double>> HSIE_Dof_Type<hsie_order>::evaluate_U_for_ACT(
       new std::vector<std::complex<double>>();
   ret.resize(3);
   if (type == 0) {
+    // entries in every component
   }
   if (type == 2) {
+    // Comp 1 = 0;
   }
   if (type == 3) {
+    // entries in every component
   }
   return ret;
 }
