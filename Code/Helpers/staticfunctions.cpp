@@ -647,9 +647,10 @@ inline bool file_exists(const std::string &name) {
 }
 
 std::vector<types::global_dof_index> Add_Zero_Restraint_test(
-    dealii::ConstraintMatrix *, DoFHandler<3>::active_cell_iterator in_cell,
-    unsigned int in_face, unsigned int DofsPerLine, unsigned int DofsPerFace,
-    bool in_non_face_dofs, IndexSet *locally_owned_dofs) {
+    dealii::ConstraintMatrix *,
+    dealii::DoFHandler<3>::active_cell_iterator in_cell, unsigned int in_face,
+    unsigned int DofsPerLine, unsigned int DofsPerFace, bool in_non_face_dofs,
+    IndexSet *locally_owned_dofs) {
   std::vector<types::global_dof_index> local_line_dofs(DofsPerLine);
   std::vector<types::global_dof_index> local_face_dofs(DofsPerFace);
   std::vector<types::global_dof_index> ret;
@@ -677,16 +678,16 @@ std::vector<types::global_dof_index> Add_Zero_Restraint_test(
 
 std::vector<types::global_dof_index> Add_Zero_Restraint(
     dealii::ConstraintMatrix *in_cm,
-    DoFHandler<3>::active_cell_iterator in_cell, unsigned int in_face,
-    unsigned int DofsPerLine, unsigned int DofsPerFace, bool in_non_face_dofs,
-    IndexSet *locally_owned_dofs) {
+    dealii::DoFHandler<3>::active_cell_iterator in_cell, unsigned int in_face,
+    const unsigned int DofsPerLine, const unsigned int DofsPerFace,
+    const bool in_non_face_dofs, IndexSet locally_owned_dofs) {
   std::vector<types::global_dof_index> local_line_dofs(DofsPerLine);
   std::vector<types::global_dof_index> local_face_dofs(DofsPerFace);
   std::vector<types::global_dof_index> ret;
   for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
     ((in_cell->face(in_face))->line(j))->get_dof_indices(local_line_dofs);
     for (unsigned int k = 0; k < DofsPerLine; k++) {
-      if (locally_owned_dofs->is_element(local_line_dofs[k])) {
+      if (locally_owned_dofs.is_element(local_line_dofs[k])) {
         in_cm->add_line(local_line_dofs[k]);
         in_cm->set_inhomogeneity(local_line_dofs[k], 0.0);
         ret.push_back(local_line_dofs[k]);
@@ -697,7 +698,7 @@ std::vector<types::global_dof_index> Add_Zero_Restraint(
     in_cell->face(in_face)->get_dof_indices(local_face_dofs);
     for (unsigned int j = GeometryInfo<3>::lines_per_face * DofsPerLine;
          j < DofsPerFace; j++) {
-      if (locally_owned_dofs->is_element(local_face_dofs[j])) {
+      if (locally_owned_dofs.is_element(local_face_dofs[j])) {
         in_cm->add_line(local_face_dofs[j]);
         in_cm->set_inhomogeneity(local_face_dofs[j], 0.0);
         ret.push_back(local_face_dofs[j]);

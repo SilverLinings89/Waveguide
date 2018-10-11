@@ -1,0 +1,78 @@
+/*
+ * HSIEDofType.h
+ *
+ *  Created on: Oct 8, 2018
+ *      Author: kraft
+ */
+
+#ifndef CODE_HSIE_HSIEDOFTYPE_H_
+#define CODE_HSIE_HSIEDOFTYPE_H_
+
+#include <deal.II/base/tensor.h>
+#include <complex>
+#include <vector>
+
+template <int hsie_order>
+class HSIE_Dof_Type {
+ private:
+  static bool D_and_I_initialized = false;
+  static dealii::Tensor<2, hsie_order + 1, std::complex<double>> D;
+  static dealii::Tensor<2, hsie_order + 1, std::complex<double>> I;
+  unsigned int type;
+  unsigned int order;
+  std::vector<std::complex<double>> hardy_monomial_base;
+  std::vector<std::complex<double>> IPsiK;
+  std::vector<std::complex<double>> dxiPsiK;
+  int base_point, base_edge;
+
+ public:
+  HSIE_Dof_Type(unsigned int in_type, unsigned int in_order);
+  virtual ~HSIE_Dof_Type();
+  /**
+   * Base Points are numbered:
+   * 0: low x, low y;
+   * 1: low x, high y;
+   * 2: high x, high y;
+   * 3: high x, low y;
+   */
+  void set_base_point(unsigned int);
+
+  /**
+   * Edges are numbered:
+   * 0: y edge from point 0;
+   * 1: x edge from point 1;
+   * 2: y edge from point 2;
+   * 3: x edge from point 3;
+   */
+  void set_base_edge(unsigned int);
+
+  std::complex<double> eval_base(std::complex<double>* in_base,
+                                 std::complex<double> in_x);
+  /**
+   * This describes the properties of a HSIE dof type. The versions are
+descirbed in 3.2 of "High order Curl-conforming Hardy space infinite elements
+for exterior Maxwell problems". Possible types are:
+   * 0. edge functions
+   * 1. surface functions
+   * 2. ray functions
+   * 3. infinite face functions type 1
+   * 4. infinite face functions type 2
+   * 5. segment functions type 1
+   * 6. segment functions type 2
+   */
+  unsigned int get_type();
+  /*
+   * returns the order of the dof.
+   */
+  unsigned int get_order();
+
+  void compute_IPsik();
+  void compute_dxiPsik();
+
+  std::vector<std::complex<double>> evaluate_U(dealii::Point<2, double>,
+                                               double xi);
+  std::vector<std::complex<double>> evaluate_U_for_ACT(dealii::Point<2, double>,
+                                                       double xi);
+};
+
+#endif /* CODE_HSIE_HSIEDOFTYPE_H_ */

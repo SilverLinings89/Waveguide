@@ -2,6 +2,8 @@
 #define HSIEPRECONDITIONERBASE_CPP
 #include "HSIE_Preconditioner_Base.h"
 #include <complex.h>
+#include <deal.II/base/quadrature_lib.h>
+#include <vector>
 
 /*
  * HSIE_Preconditioner_Base.cpp
@@ -20,7 +22,7 @@
  */
 
 const unsigned int S1IntegrationPoints = 100;
-const std::complex<double> k0(5, -1);
+const double k0 = 0.5;
 
 dealii::Point<3, std::complex<double>> base_fun(int i, int j,
                                                 dealii::Point<2, double> x) {
@@ -82,6 +84,33 @@ int count_HSIE_dofs(dealii::parallel::distributed::Triangulation<3>* tria,
   int n_if_vertices = interfacevertices.n_elements();
 
   return n_if_vertices * (degree + 2) + n_if_edges * 1 * (degree + 1);
+}
+
+template <int hsie_order>
+unsigned int HSIEPreconditionerBase<hsie_order>::compute_number_of_dofs() {}
+
+template <int hsie_order>
+std::complex<double> HSIEPreconditionerBase<hsie_order>::a(
+    HSIE_Dof_Type<hsie_order> u, HSIE_Dof_Type<hsie_order> v,
+    bool use_curl_fomulation, dealii::Point<2, double> x) {}
+
+template <int hsie_order>
+std::complex<double> HSIEPreconditionerBase<hsie_order>::A(
+    HSIE_Dof_Type<hsie_order> u, HSIE_Dof_Type<hsie_order> v,
+    dealii::Tensor<2, 3, double> G, bool use_curl_fomulation) {
+  dealii::QGauss<2> quadrature_formula(2);
+  std::complex<double> ret(0,0);
+  std::vector<dealii::Point<2>> quad_points =
+      quadrature_formula.quadrature_points;
+  for (unsigned int i = 0; i < quad_points.size(); i++) {
+    for (unsigned int j = 0; j < 3; j++) {
+      for (unsigned int k = 0; k < 3; k++) {
+        ret += quadrature_formula.weight(i) * G[j, k] *
+               a(u, v, true, quad_points[i]);
+      }
+    }
+  }
+  return ret;
 }
 
 #endif

@@ -83,12 +83,12 @@ Point<3, double> Triangulation_Stretch_Computational_Rectangle(
 Point<3, double> Triangulation_Transform_to_physical(const Point<3, double> &);
 
 std::vector<types::global_dof_index> Add_Zero_Restraint(
-    dealii::ConstraintMatrix *, DoFHandler<3>::active_cell_iterator,
-    unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet *);
+    dealii::ConstraintMatrix *, dealii::DoFHandler<3>::active_cell_iterator &,
+    unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet);
 
 std::vector<types::global_dof_index> Add_Zero_Restraint_test(
-    dealii::ConstraintMatrix *, DoFHandler<3>::active_cell_iterator,
-    unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet *);
+    dealii::ConstraintMatrix *, dealii::DoFHandler<3>::active_cell_iterator &,
+    unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet);
 
 void add_vector_of_indices(dealii::IndexSet *,
                            std::vector<types::global_dof_index>);

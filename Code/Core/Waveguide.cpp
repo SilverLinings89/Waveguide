@@ -7,6 +7,7 @@
 #include <deal.II/base/timer.h>
 #include <deal.II/distributed/shared_tria.h>
 #include <deal.II/distributed/tria.h>
+#include <deal.II/dofs/dof_handler.h>
 #include <deal.II/grid/tria_boundary_lib.h>
 #include <deal.II/lac/block_matrix_array.h>
 #include <deal.II/lac/block_sparsity_pattern.h>
@@ -1114,8 +1115,8 @@ void Waveguide::MakeBoundaryConditions() {
 }
 
 void Waveguide::MakePreconditionerBoundaryConditions() {
-  DoFHandler<3>::active_cell_iterator cell, endc;
-  cell = dof_handler.begin_active();
+  dealii::DoFHandler<3>::active_cell_iterator cell_loc, endc;
+  cell_loc = dof_handler.begin_active();
   endc = dof_handler.end();
 
   dealii::ZeroFunction<3, double> zf(6);
@@ -1159,83 +1160,83 @@ void Waveguide::MakePreconditionerBoundaryConditions() {
       cm, dealii::ConstraintMatrix::MergeConflictBehavior::right_object_wins,
       true);
 
-  for (; cell != endc; ++cell) {
-    if (std::abs(static_cast<int>((cell->subdomain_id() - rank))) < 3) {
+  for (; cell_loc != endc; ++cell_loc) {
+    if (std::abs(static_cast<int>((cell_loc->subdomain_id() - rank))) < 3) {
       for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
-        Point<3, double> center = (cell->face(i))->center(true, false);
+        Point<3, double> center = (cell_loc->face(i))->center(true, false);
         if (center[0] < 0) center[0] *= (-1.0);
         if (center[1] < 0) center[1] *= (-1.0);
 
         // Set x-boundary values
         if (std::abs(center[0] - GlobalParams.M_R_XLength / 2.0) < 0.0001) {
-          Add_Zero_Restraint(&cm_prec_odd, cell, i, fe.dofs_per_line,
+          Add_Zero_Restraint(&cm_prec_odd, cell_loc, i, fe.dofs_per_line,
                              fe.dofs_per_face, has_non_edge_dofs,
-                             &locally_owned_dofs);
-          Add_Zero_Restraint(&cm_prec_even, cell, i, fe.dofs_per_line,
+                             locally_owned_dofs);
+          Add_Zero_Restraint(&cm_prec_even, cell_loc, i, fe.dofs_per_line,
                              fe.dofs_per_face, has_non_edge_dofs,
-                             &locally_owned_dofs);
+                             locally_owned_dofs);
         }
 
         // Set y-boundary values
         if (std::abs(center[1] - GlobalParams.M_R_YLength / 2.0) < 0.0001) {
-          Add_Zero_Restraint(&cm_prec_odd, cell, i, fe.dofs_per_line,
+          Add_Zero_Restraint(&cm_prec_odd, cell_loc, i, fe.dofs_per_line,
                              fe.dofs_per_face, has_non_edge_dofs,
-                             &locally_owned_dofs);
-          Add_Zero_Restraint(&cm_prec_even, cell, i, fe.dofs_per_line,
+                             locally_owned_dofs);
+          Add_Zero_Restraint(&cm_prec_even, cell_loc, i, fe.dofs_per_line,
                              fe.dofs_per_face, has_non_edge_dofs,
-                             &locally_owned_dofs);
+                             locally_owned_dofs);
         }
 
         if (even) {
           if (rank != 0) {
             if (std::abs(center[2] - GlobalParams.Minimum_Z -
                          (rank * layer_length)) < 0.0001) {
-              Add_Zero_Restraint(&cm_prec_even, cell, i, fe.dofs_per_line,
+              Add_Zero_Restraint(&cm_prec_even, cell_loc, i, fe.dofs_per_line,
                                  fe.dofs_per_face, has_non_edge_dofs,
-                                 &locally_owned_dofs);
+                                 locally_owned_dofs);
             }
           }
 
           if (std::abs(center[2] - GlobalParams.Minimum_Z -
                        ((rank + 2) * layer_length)) < 0.0001) {
-            Add_Zero_Restraint(&cm_prec_even, cell, i, fe.dofs_per_line,
+            Add_Zero_Restraint(&cm_prec_even, cell_loc, i, fe.dofs_per_line,
                                fe.dofs_per_face, has_non_edge_dofs,
-                               &locally_owned_dofs);
+                               locally_owned_dofs);
           }
 
           if (std::abs(center[2] - GlobalParams.Minimum_Z -
                        ((rank + 1) * layer_length)) < 0.0001) {
-            Add_Zero_Restraint(&cm_prec_odd, cell, i, fe.dofs_per_line,
+            Add_Zero_Restraint(&cm_prec_odd, cell_loc, i, fe.dofs_per_line,
                                fe.dofs_per_face, has_non_edge_dofs,
-                               &locally_owned_dofs);
+                               locally_owned_dofs);
           }
 
           if (std::abs(center[2] - GlobalParams.Minimum_Z -
                        ((rank - 1) * layer_length)) < 0.0001) {
-            Add_Zero_Restraint(&cm_prec_odd, cell, i, fe.dofs_per_line,
+            Add_Zero_Restraint(&cm_prec_odd, cell_loc, i, fe.dofs_per_line,
                                fe.dofs_per_face, has_non_edge_dofs,
-                               &locally_owned_dofs);
+                               locally_owned_dofs);
           }
         } else {
           if (std::abs(center[2] - GlobalParams.Minimum_Z -
                        (rank * layer_length)) < 0.0001) {
-            Add_Zero_Restraint(&cm_prec_odd, cell, i, fe.dofs_per_line,
+            Add_Zero_Restraint(&cm_prec_odd, cell_loc, i, fe.dofs_per_line,
                                fe.dofs_per_face, has_non_edge_dofs,
-                               &locally_owned_dofs);
+                               locally_owned_dofs);
           }
 
           if (std::abs(center[2] - GlobalParams.Minimum_Z -
                        ((rank + 2) * layer_length)) < 0.0001) {
-            Add_Zero_Restraint(&cm_prec_odd, cell, i, fe.dofs_per_line,
+            Add_Zero_Restraint(&cm_prec_odd, cell_loc, i, fe.dofs_per_line,
                                fe.dofs_per_face, has_non_edge_dofs,
-                               &locally_owned_dofs);
+                               locally_owned_dofs);
           }
 
           if (std::abs(center[2] - GlobalParams.Minimum_Z -
                        ((rank + 1) * layer_length)) < 0.0001) {
-            Add_Zero_Restraint(&cm_prec_even, cell, i, fe.dofs_per_line,
+            Add_Zero_Restraint(&cm_prec_even, cell_loc, i, fe.dofs_per_line,
                                fe.dofs_per_face, has_non_edge_dofs,
-                               &locally_owned_dofs);
+                               locally_owned_dofs);
           }
         }
       }
