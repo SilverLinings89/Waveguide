@@ -1244,6 +1244,38 @@ void Waveguide::MakePreconditionerBoundaryConditions() {
   }
 }
 
+std::vector<unsigned int> Waveguide::Add_Zero_Restraint(
+    dealii::ConstraintMatrix *in_cm,
+    dealii::DoFHandler<3>::active_cell_iterator &in_cell, unsigned int in_face,
+    unsigned int DofsPerLine, unsigned int DofsPerFace, bool in_non_face_dofs,
+    IndexSet locally_owned_dofs) {
+  std::vector<types::global_dof_index> local_line_dofs(DofsPerLine);
+  std::vector<types::global_dof_index> local_face_dofs(DofsPerFace);
+  std::vector<types::global_dof_index> ret;
+  for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
+    ((in_cell->face(in_face))->line(j))->get_dof_indices(local_line_dofs);
+    for (unsigned int k = 0; k < DofsPerLine; k++) {
+      if (locally_owned_dofs.is_element(local_line_dofs[k])) {
+        in_cm->add_line(local_line_dofs[k]);
+        in_cm->set_inhomogeneity(local_line_dofs[k], 0.0);
+        ret.push_back(local_line_dofs[k]);
+      }
+    }
+  }
+  if (in_non_face_dofs) {
+    in_cell->face(in_face)->get_dof_indices(local_face_dofs);
+    for (unsigned int j = GeometryInfo<3>::lines_per_face * DofsPerLine;
+         j < DofsPerFace; j++) {
+      if (locally_owned_dofs.is_element(local_face_dofs[j])) {
+        in_cm->add_line(local_face_dofs[j]);
+        in_cm->set_inhomogeneity(local_face_dofs[j], 0.0);
+        ret.push_back(local_face_dofs[j]);
+      }
+    }
+  }
+  return ret;
+}
+
 void Waveguide::solve() {
   SolverControl lsc =
       SolverControl(GlobalParams.So_TotalSteps, 1.e-5, true, true);

@@ -15,18 +15,23 @@
 template <int hsie_order>
 class HSIE_Dof_Type {
  private:
-  static bool D_and_I_initialized = false;
+  static bool D_and_I_initialized;
   static dealii::Tensor<2, hsie_order + 1, std::complex<double>> D;
   static dealii::Tensor<2, hsie_order + 1, std::complex<double>> I;
   unsigned int type;
   unsigned int order;
+  double x_length;
+  double y_length;
   std::vector<std::complex<double>> hardy_monomial_base;
   std::vector<std::complex<double>> IPsiK;
   std::vector<std::complex<double>> dxiPsiK;
+  std::vector<double> w_k;
+  std::vector<double> v_k;
   int base_point, base_edge;
 
  public:
-  HSIE_Dof_Type(unsigned int in_type, unsigned int in_order);
+  HSIE_Dof_Type(unsigned int in_type, unsigned int in_order,
+                unsigned int q_count);
   virtual ~HSIE_Dof_Type();
   /**
    * Base Points are numbered:
@@ -46,7 +51,7 @@ class HSIE_Dof_Type {
    */
   void set_base_edge(unsigned int);
 
-  std::complex<double> eval_base(std::complex<double>* in_base,
+  std::complex<double> eval_base(std::vector<std::complex<double>>* in_base,
                                  std::complex<double> in_x);
   /**
    * This describes the properties of a HSIE dof type. The versions are
@@ -61,10 +66,18 @@ for exterior Maxwell problems". Possible types are:
    * 6. segment functions type 2
    */
   unsigned int get_type();
+
+  void set_x_length(double in_length);
+  void set_y_length(double in_length);
   /*
    * returns the order of the dof.
    */
   unsigned int get_order();
+
+  // This functions computes the values of w_k and v_k for a given set of
+  // quadrature points.
+  void prepare_for_quadrature_points(
+      std::vector<dealii::Point<2, double>> q_points);
 
   void compute_IPsik();
   void compute_dxiPsik();
@@ -73,6 +86,24 @@ for exterior Maxwell problems". Possible types are:
                                                double xi);
   std::vector<std::complex<double>> evaluate_U_for_ACT(dealii::Point<2, double>,
                                                        double xi);
+  std::complex<double> component_1a(double x, double y,
+                                    std::complex<double> xhi);
+  std::complex<double> component_1b(double x, double y,
+                                    std::complex<double> xhi);
+  std::complex<double> component_2a(double x, double y,
+                                    std::complex<double> xhi);
+  std::complex<double> component_2b(double x, double y,
+                                    std::complex<double> xhi);
+  std::complex<double> component_3a(double x, double y,
+                                    std::complex<double> xhi);
+  std::complex<double> component_3b(double x, double y,
+                                    std::complex<double> xhi);
+
+  std::vector<std::complex<double>> apply_T_plus(
+      std::vector<std::complex<double>>, double);
+
+  std::vector<std::complex<double>> apply_T_minus(
+      std::vector<std::complex<double>>, double);
 };
 
 #endif /* CODE_HSIE_HSIEDOFTYPE_H_ */

@@ -464,6 +464,10 @@ class Waveguide {
 
   IndexSet combine_indexes(IndexSet lower, IndexSet upper) const;
 
+  std::vector<unsigned int> Add_Zero_Restraint(
+      dealii::ConstraintMatrix *, dealii::DoFHandler<3>::active_cell_iterator &,
+      unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet);
+
   // HIER BEGINNT DIE NEUE VERSION...
 
   SpaceTransformation *st;

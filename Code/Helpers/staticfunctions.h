@@ -32,6 +32,8 @@ extern SpaceTransformation *the_st;
  */
 Tensor<1, 3, double> crossproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 
+std::complex<double> matrixD(int in_row, int in_column, double in_k0);
+
 void set_the_st(SpaceTransformation *);
 
 double dotproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
@@ -83,10 +85,6 @@ Point<3, double> Triangulation_Stretch_Computational_Rectangle(
 Point<3, double> Triangulation_Transform_to_physical(const Point<3, double> &);
 
 std::vector<types::global_dof_index> Add_Zero_Restraint(
-    dealii::ConstraintMatrix *, dealii::DoFHandler<3>::active_cell_iterator &,
-    unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet);
-
-std::vector<types::global_dof_index> Add_Zero_Restraint_test(
     dealii::ConstraintMatrix *, dealii::DoFHandler<3>::active_cell_iterator &,
     unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet);
 

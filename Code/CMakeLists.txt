@@ -29,6 +29,10 @@ ADD_LIBRARY(Code
 	SpaceTransformations/InhomogenousTransformationCircular.cpp
 	SpaceTransformations/InhomogenousTransformationRectangular.cpp
 	SpaceTransformations/SpaceTransformation.cpp
+	HSIE/FaceSurfaceComparator.cpp
+	HSIE/FaceSurfaceComparatorZ.cpp
+	HSIE/HSIE_Preconditioner_Base.cpp
+	HSIE/HSIEDofType.cpp
 	)
 	
 DEAL_II_SETUP_TARGET(Code)
