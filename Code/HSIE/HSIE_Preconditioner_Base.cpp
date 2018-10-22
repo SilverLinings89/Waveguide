@@ -5,6 +5,8 @@
 #include <deal.II/base/quadrature_lib.h>
 #include <vector>
 #include "FaceSurfaceComparator.h"
+#include "FaceSurfaceComparatorZ.h"
+#include "Waveguide.h"
 
 /*
  * HSIE_Preconditioner_Base.cpp
@@ -25,101 +27,14 @@
 const unsigned int S1IntegrationPoints = 100;
 const double k0 = 0.5;
 
-dealii::Point<3, std::complex<double>> base_fun(int i, int j,
-                                                dealii::Point<2, double> x) {
-  dealii::Point<3, std::complex<double>> ret;
-  ret[0] = std::complex<double>(0.0, 0.0);
-  ret[1] = std::complex<double>(0.0, 0.0);
-  ret[2] = std::complex<double>(0.0, 0.0);
-  return ret;
-}
-
-std::complex<double> a(int in_i, int in_j) {
-  std::complex<double> ret(0, 0);
-  for (unsigned int i = 0; i < S1IntegrationPoints; i++) {
-    double x = std::sin(2 * 3.14159265359 * ((double)i) /
-                        ((double)S1IntegrationPoints));
-    double y = std::cos(2 * 3.14159265359 * ((double)i) /
-                        ((double)S1IntegrationPoints));
-    dealii::Point<2, double> p1(x, y);
-    dealii::Point<2, double> p2(x, -y);
-    ret += base_fun(in_i, 0, p1) * base_fun(in_j, 0, p2);
-  }
-  ret /= (double)S1IntegrationPoints;
-  ret *= k0 * std::complex<double>(0, 1) / 3.14159265359;
-  return ret;
-}
-
-int count_HSIE_dofs(dealii::parallel::distributed::Triangulation<3>* tria,
-                    unsigned int degree, double in_z) {
-  dealii::IndexSet interfacevertices(tria->n_vertices());
-  dealii::IndexSet interfaceedges(tria->n_active_lines());
-  dealii::parallel::distributed::Triangulation<3>::active_cell_iterator
-      cell = tria->begin_active(),
-      endc = tria->end();
-  for (; cell != endc; ++cell) {
-    if (cell->is_locally_owned()) {
-      for (unsigned int i = 0; i < dealii::GeometryInfo<3>::faces_per_cell;
-           i++) {
-        dealii::Point<3, double> pos = cell->face(i)->center(true, true);
-        if (abs(pos[2] - in_z) < 0.0001) {
-          for (unsigned int j = 0; j < dealii::GeometryInfo<3>::lines_per_face;
-               j++) {
-            interfacevertices.add_index(
-                cell->face(i)->line(j)->vertex_index(0));
-            interfacevertices.add_index(
-                cell->face(i)->line(j)->vertex_index(1));
-            interfaceedges.add_index(cell->face(i)->line(j)->index());
-          }
-        }
-      }
-    }
-  }
-
-  int n_if_edges = interfaceedges.n_elements();
-  int n_if_vertices = interfacevertices.n_elements();
-
-  return n_if_vertices * (degree + 2) + n_if_edges * 1 * (degree + 1);
-}
-
-template <int hsie_order>
-unsigned int HSIEPreconditionerBase<hsie_order>::compute_number_of_dofs() {}
-
-template <int hsie_order>
-std::complex<double> HSIEPreconditionerBase<hsie_order>::a(
-    HSIE_Dof_Type<hsie_order> u, HSIE_Dof_Type<hsie_order> v,
-    bool use_curl_fomulation, dealii::Point<2, double> x) {}
-
-template <int hsie_order>
-std::complex<double> HSIEPreconditionerBase<hsie_order>::A(
-    HSIE_Dof_Type<hsie_order> u, HSIE_Dof_Type<hsie_order> v,
-    dealii::Tensor<2, 3, double> G, bool use_curl_fomulation) {
-  dealii::QGauss<2> quadrature_formula(2);
-  std::complex<double> ret(0,0);
-  std::vector<dealii::Point<2>> quad_points =
-      quadrature_formula.quadrature_points;
-  for (unsigned int i = 0; i < quad_points.size(); i++) {
-    for (unsigned int j = 0; j < 3; j++) {
-      for (unsigned int k = 0; k < 3; k++) {
-        ret += quadrature_formula.weight(i) * G[j, k] *
-               a(u, v, true, quad_points[i]);
-      }
-    }
-  }
-  return ret;
-}
-
-template <template <int, int> class MeshType, int dim, int spacedim>
-#ifndef _MSC_VER
-std::map<typename MeshType<dim - 1, spacedim>::cell_iterator,
-         typename MeshType<dim, spacedim>::face_iterator>
-#else
-typename ExtractBoundaryMesh<MeshType, dim, spacedim>::return_type
-#endif
+std::map<
+    dealii::Triangulation<2, 3>::cell_iterator,
+    typename dealii::parallel::distributed::Triangulation<3, 3>::face_iterator>
 extract_surface_mesh_at_z(
-    const MeshType<dim, spacedim> &volume_mesh,
-    MeshType<dim - 1, spacedim> &surface_mesh,
-    FaceSurfaceComparator<MeshType, dim, spacedim> &comp) {
+    const dealii::parallel::distributed::Triangulation<3, 3> *volume_mesh,
+    dealii::Triangulation<2, 3> *surface_mesh, FaceSurfaceComparator &comp) {
+  const int dim = 3;
+  const int spacedim = 3;
   Assert((dynamic_cast<const parallel::distributed::Triangulation<dim, spacedim>
                            *>(&volume_mesh.get_triangulation()) == 0),
          ExcNotImplemented());
@@ -129,32 +44,32 @@ extract_surface_mesh_at_z(
   //    the order of cells passed in using the CellData argument; also,
   //    that it will not reorder the vertices.
 
-  std::map<typename MeshType<dim - 1, spacedim>::cell_iterator,
-           typename MeshType<dim, spacedim>::face_iterator>
+  std::map<typename dealii::Triangulation<2,3>::cell_iterator,
+           typename dealii::parallel::distributed::Triangulation<3,3>::face_iterator>
       surface_to_volume_mapping;
 
-  const unsigned int boundary_dim = dim - 1;  // dimension of the boundary mesh
+  const unsigned int boundary_dim = 2;  // dimension of the boundary mesh
 
   // First create surface mesh and mapping
   // from only level(0) cells of volume_mesh
-  std::vector<typename MeshType<dim, spacedim>::face_iterator>
+  std::vector<typename dealii::parallel::distributed::Triangulation<3,3>::face_iterator>
       mapping;  // temporary map for level==0
 
-  std::vector<bool> touched(volume_mesh.get_triangulation().n_vertices(),
+  std::vector<bool> touched(volume_mesh->get_triangulation().n_vertices(),
                             false);
   std::vector<dealii::CellData<boundary_dim>> cells;
   dealii::SubCellData subcell_data;
-  std::vector<dealii::Point<spacedim>> vertices;
+  std::vector<dealii::Point<3>> vertices;
 
   std::map<unsigned int, unsigned int>
       map_vert_index;  // volume vertex indices to surf ones
 
-  for (typename MeshType<dim, spacedim>::cell_iterator cell =
-           volume_mesh.begin(0);
-       cell != volume_mesh.end(0); ++cell)
+  for (typename dealii::parallel::distributed::Triangulation<
+           3, 3>::cell_iterator cell = volume_mesh->begin(0);
+       cell != volume_mesh->end(0); ++cell)
     for (unsigned int i = 0; i < dealii::GeometryInfo<dim>::faces_per_cell;
          ++i) {
-      const typename MeshType<dim, spacedim>::face_iterator face =
+      const typename dealii::parallel::distributed::Triangulation<3,3>::face_iterator face =
           cell->face(i);
 
       if (comp.check_face(face)) {
@@ -241,21 +156,21 @@ extract_surface_mesh_at_z(
   // create level 0 surface triangulation
   Assert(cells.size() > 0, ExcMessage("No boundary faces selected"));
   const_cast<dealii::Triangulation<dim - 1, spacedim> &>(
-      surface_mesh.get_triangulation())
+      surface_mesh->get_triangulation())
       .create_triangulation(vertices, cells, subcell_data);
 
   // Make the actual mapping
-  for (typename MeshType<dim - 1, spacedim>::active_cell_iterator cell =
-           surface_mesh.begin(0);
-       cell != surface_mesh.end(0); ++cell)
+  for (typename dealii::Triangulation<2, 3>::active_cell_iterator cell =
+           surface_mesh->begin(0);
+       cell != surface_mesh->end(0); ++cell)
     surface_to_volume_mapping[cell] = mapping.at(cell->index());
 
   do {
     bool changed = false;
 
-    for (typename MeshType<dim - 1, spacedim>::active_cell_iterator cell =
-             surface_mesh.begin_active();
-         cell != surface_mesh.end(); ++cell)
+    for (typename dealii::Triangulation<2, 3>::active_cell_iterator cell =
+             surface_mesh->begin_active();
+         cell != surface_mesh->end(); ++cell)
       if (surface_to_volume_mapping[cell]->has_children() == true) {
         cell->set_refine_flag();
         changed = true;
@@ -263,12 +178,12 @@ extract_surface_mesh_at_z(
 
     if (changed) {
       const_cast<dealii::Triangulation<dim - 1, spacedim> &>(
-          surface_mesh.get_triangulation())
+          surface_mesh->get_triangulation())
           .execute_coarsening_and_refinement();
 
-      for (typename MeshType<dim - 1, spacedim>::cell_iterator surface_cell =
-               surface_mesh.begin();
-           surface_cell != surface_mesh.end(); ++surface_cell)
+      for (typename dealii::Triangulation<2, 3>::cell_iterator surface_cell =
+               surface_mesh->begin();
+           surface_cell != surface_mesh->end(); ++surface_cell)
         for (unsigned int c = 0; c < surface_cell->n_children(); c++)
           if (surface_to_volume_mapping.find(surface_cell->child(c)) ==
               surface_to_volume_mapping.end())
@@ -279,6 +194,108 @@ extract_surface_mesh_at_z(
   } while (true);
 
   return surface_to_volume_mapping;
+}
+
+template <int hsie_order>
+HSIEPreconditionerBase<hsie_order>::HSIEPreconditionerBase(
+    const dealii::parallel::distributed::Triangulation<3, 3> *in_tria,
+    double in_z) {
+  FaceSurfaceComparatorZ fscz = new FaceSurfaceComparatorZ(in_z, 0.00001);
+  association = extract_surface_mesh_at_z(in_tria, &surf_tria, fscz);
+  surface_edges = surf_tria.n_active_lines();
+  surface_faces = surf_tria.n_active_faces();
+  surface_vertices = surf_tria.n_vertices();
+  HSIE_dofs_type_1 = surface_edges * 2;
+  HSIE_dofs_type_3 = surface_edges * 2 * (hsie_order + 1);
+  HSIE_dofs_type_2 = surface_vertices * 2.0 * (hsie_order + 1);
+  HSIE_degree = hsie_order;
+  fe_nedelec(GlobalParams.So_ElementOrder);
+  fe_q(1);
+  hsie_dof_handler(surf_tria);
+}
+
+dealii::Point<3, std::complex<double>> base_fun(int i, int j,
+                                                dealii::Point<2, double> x) {
+  dealii::Point<3, std::complex<double>> ret;
+  ret[0] = std::complex<double>(0.0, 0.0);
+  ret[1] = std::complex<double>(0.0, 0.0);
+  ret[2] = std::complex<double>(0.0, 0.0);
+  return ret;
+}
+
+std::complex<double> a(int in_i, int in_j) {
+  std::complex<double> ret(0, 0);
+  for (unsigned int i = 0; i < S1IntegrationPoints; i++) {
+    double x = std::sin(2 * 3.14159265359 * ((double)i) /
+                        ((double)S1IntegrationPoints));
+    double y = std::cos(2 * 3.14159265359 * ((double)i) /
+                        ((double)S1IntegrationPoints));
+    dealii::Point<2, double> p1(x, y);
+    dealii::Point<2, double> p2(x, -y);
+    ret += base_fun(in_i, 0, p1) * base_fun(in_j, 0, p2);
+  }
+  ret /= (double)S1IntegrationPoints;
+  ret *= k0 * std::complex<double>(0.0, 1.0) / 3.14159265359;
+  return ret;
+}
+
+int count_HSIE_dofs(dealii::parallel::distributed::Triangulation<3> *tria,
+                    unsigned int degree, double in_z) {
+  dealii::IndexSet interfacevertices(tria->n_vertices());
+  dealii::IndexSet interfaceedges(tria->n_active_lines());
+  dealii::parallel::distributed::Triangulation<3>::active_cell_iterator
+      cell = tria->begin_active(),
+      endc = tria->end();
+  for (; cell != endc; ++cell) {
+    if (cell->is_locally_owned()) {
+      for (unsigned int i = 0; i < dealii::GeometryInfo<3>::faces_per_cell;
+           i++) {
+        dealii::Point<3, double> pos = cell->face(i)->center(true, true);
+        if (abs(pos[2] - in_z) < 0.0001) {
+          for (unsigned int j = 0; j < dealii::GeometryInfo<3>::lines_per_face;
+               j++) {
+            interfacevertices.add_index(
+                cell->face(i)->line(j)->vertex_index(0));
+            interfacevertices.add_index(
+                cell->face(i)->line(j)->vertex_index(1));
+            interfaceedges.add_index(cell->face(i)->line(j)->index());
+          }
+        }
+      }
+    }
+  }
+
+  int n_if_edges = interfaceedges.n_elements();
+  int n_if_vertices = interfacevertices.n_elements();
+
+  return n_if_vertices * (degree + 2) + n_if_edges * 1 * (degree + 1);
+}
+
+template <int hsie_order>
+unsigned int HSIEPreconditionerBase<hsie_order>::compute_number_of_dofs() {}
+
+template <int hsie_order>
+std::complex<double> HSIEPreconditionerBase<hsie_order>::a(
+    HSIE_Dof_Type<hsie_order> u, HSIE_Dof_Type<hsie_order> v,
+    bool use_curl_fomulation, dealii::Point<2, double> x) {}
+
+template <int hsie_order>
+std::complex<double> HSIEPreconditionerBase<hsie_order>::A(
+    HSIE_Dof_Type<hsie_order> u, HSIE_Dof_Type<hsie_order> v,
+    dealii::Tensor<2, 3, double> G, bool use_curl_fomulation) {
+  dealii::QGauss<2> quadrature_formula(2);
+  std::complex<double> ret(0, 0);
+  std::vector<dealii::Point<2>> quad_points =
+      quadrature_formula.quadrature_points;
+  for (unsigned int i = 0; i < quad_points.size(); i++) {
+    for (unsigned int j = 0; j < 3; j++) {
+      for (unsigned int k = 0; k < 3; k++) {
+        ret += quadrature_formula.weight(i) * G[j, k] *
+               a(u, v, true, quad_points[i]);
+      }
+    }
+  }
+  return ret;
 }
 
 #endif

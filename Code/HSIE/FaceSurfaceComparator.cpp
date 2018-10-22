@@ -7,18 +7,16 @@
 
 #include "./FaceSurfaceComparator.h"
 
-template <template <int, int> class MeshType, int dim, int spacedim>
-FaceSurfaceComparator<MeshType, dim, spacedim>::FaceSurfaceComparator() {
+FaceSurfaceComparator::FaceSurfaceComparator() {
   // TODO Auto-generated constructor stub
 }
 
-template <template <int, int> class MeshType, int dim, int spacedim>
-FaceSurfaceComparator<MeshType, dim, spacedim>::~FaceSurfaceComparator() {
+FaceSurfaceComparator::~FaceSurfaceComparator() {
   // TODO Auto-generated destructor stub
 }
 
-template <template <int, int> class MeshType, int dim, int spacedim>
-bool FaceSurfaceComparator<MeshType, dim, spacedim>::check_face(
-    const typename MeshType<dim, spacedim>::face_iterator face_iterator) {
+bool FaceSurfaceComparator::check_face(
+    const dealii::parallel::distributed::Triangulation<3, 3>::face_iterator
+        face_iterator) {
   return false;
 }
