@@ -26,7 +26,8 @@
                 <itemizedlist>
                     <listitem>
                         <para>bool <link linkend="class_optimization1_d_1ad5dd75f9d24d681050f471fbfb8b74e2">perform_small_step_next</link> (
-int small_steps_before)<para><emphasis>The optimization is mainly split into two kinds of steps: Full and small steps.</emphasis></para>
+int small_steps_before)<para><emphasis>The optimization is mainly split into two kinds of steps: Full and small
+steps.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -35,7 +36,8 @@ int small_steps_before)<para><emphasis>The optimization is mainly split into two
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_optimization1_d_1ad458c8235115a9a8dac013afe6b8d484">get_small_step_step_width</link> (
-int small_steps_before)<para><emphasis>For the optimization scheme to know, which step size is appropriate, this function was included.</emphasis></para>
+int small_steps_before)<para><emphasis>For the optimization scheme to know, which step size is appropriate, this
+function was included.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -44,7 +46,8 @@ int small_steps_before)<para><emphasis>For the optimization scheme to know, whic
                 <itemizedlist>
                     <listitem>
                         <para>bool <link linkend="class_optimization1_d_1a2084077506e3b4a7432c74406f6598f1">perform_big_step_next</link> (
-int small_steps_before)<para><emphasis>This functions returns true, if enough steps were performed to compute the next state to compute a full solution on.</emphasis></para>
+int small_steps_before)<para><emphasis>This functions returns true, if enough steps were performed to compute the
+next state to compute a full solution on.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -75,7 +78,7 @@ int small_steps_before)<para><emphasis>This functions returns true, if enough st
 <para>9.1.2017 </para>
 </formalpara>
 </para>
-                <para>Definition at line 14 of file Optimization1D.h</para>
+                <para>Definition at line 16 of file Optimization1D.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>Optimization1D.h</para></listitem></itemizedlist></para>
         </simplesect>
@@ -88,7 +91,8 @@ int small_steps_before)<para><emphasis>This functions returns true, if enough st
                 
             </section>
             <section xml:id="class_optimization1_d_1ad5dd75f9d24d681050f471fbfb8b74e2">
-                <title>bool Optimization1D::perform_small_step_next (int small_steps_before)</title> <emphasis>The optimization is mainly split into two kinds of steps: Full and small steps.</emphasis>
+                <title>bool Optimization1D::perform_small_step_next (int small_steps_before)</title> <emphasis>The optimization is mainly split into two kinds of steps: Full and small
+steps.</emphasis>
                 
 <para>For FD based schemes, a small step is a computation of finite differences for all degrees of freedom which entails a lot of computation. Small here refers to the norm of the step width - not necessarily to the amount of computation required. In general this function is supposed to gather information about the target functional around the current state. 
                 <formalpara>
@@ -117,7 +121,8 @@ int small_steps_before)<para><emphasis>This functions returns true, if enough st
 
             </section>
             <section xml:id="class_optimization1_d_1ad458c8235115a9a8dac013afe6b8d484">
-                <title>double Optimization1D::get_small_step_step_width (int small_steps_before)</title> <emphasis>For the optimization scheme to know, which step size is appropriate, this function was included.</emphasis>
+                <title>double Optimization1D::get_small_step_step_width (int small_steps_before)</title> <emphasis>For the optimization scheme to know, which step size is appropriate, this
+function was included.</emphasis>
                 
 <para>
                 <formalpara>
@@ -146,7 +151,8 @@ int small_steps_before)<para><emphasis>This functions returns true, if enough st
 
             </section>
             <section xml:id="class_optimization1_d_1a2084077506e3b4a7432c74406f6598f1">
-                <title>bool Optimization1D::perform_big_step_next (int small_steps_before)</title> <emphasis>This functions returns true, if enough steps were performed to compute the next state to compute a full solution on.</emphasis>
+                <title>bool Optimization1D::perform_big_step_next (int small_steps_before)</title> <emphasis>This functions returns true, if enough steps were performed to compute the
+next state to compute a full solution on.</emphasis>
                 
 <para>
                 <formalpara>

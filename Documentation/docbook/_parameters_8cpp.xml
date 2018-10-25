@@ -23,8 +23,6 @@
 4 
 5 <emphasis class="keyword">using&#32;namespace&#32;</emphasis><link linkend="namespacedealii">dealii</link>;
 6 
-7 
-8 
-9 <emphasis class="preprocessor">#endif</emphasis>
+7 <emphasis class="preprocessor">#endif</emphasis>
     </computeroutput></literallayout>
 </section>

@@ -20,7 +20,8 @@
                 <itemizedlist>
                     <listitem>
                         <para> <link linkend="class_parameter_reader_1aa48ec0eb9614ac9aa76b8d6146015c6b">ParameterReader</link> (
-ParameterHandler &amp; prmhandler)<para><emphasis>Deal Offers the ParameterHandler object wich contains all of the parsing-functionality.</emphasis></para>
+ParameterHandler &amp; prmhandler)<para><emphasis>Deal Offers the ParameterHandler object wich contains all of the
+parsing-functionality.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -29,7 +30,9 @@ ParameterHandler &amp; prmhandler)<para><emphasis>Deal Offers the ParameterHandl
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_parameter_reader_1ab9462a51546741d97e9dbca7d3dee7a2">read_parameters</link> (
-const std::string inputfile)<para><emphasis>This member calls the read_input_from_xml()-function of the contained ParameterHandler and this replaces the default values with the values in the input file.</emphasis></para>
+const std::string inputfile)<para><emphasis>This member calls the read_input_from_xml()-function of the contained
+ParameterHandler and this replaces the default values with the values in
+the input file.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -70,7 +73,7 @@ const std::string inputfile)<para><emphasis>This member calls the read_input_fro
 <para>23.11.2015 </para>
 </formalpara>
 </para>
-                <para>Definition at line 22 of file ParameterReader.h</para>
+                <para>Definition at line 29 of file ParameterReader.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>ParameterReader.h</para></listitem></itemizedlist></para>
         </simplesect>
@@ -78,13 +81,16 @@ const std::string inputfile)<para><emphasis>This member calls the read_input_fro
             <title>Member Data Documentation</title>
         </section>
             <section xml:id="class_parameter_reader_1aa48ec0eb9614ac9aa76b8d6146015c6b">
-                <title>ParameterReader::ParameterReader (ParameterHandler &amp;prmhandler)</title> <emphasis>Deal Offers the ParameterHandler object wich contains all of the parsing-functionality.</emphasis>
+                <title>ParameterReader::ParameterReader (ParameterHandler &amp;prmhandler)</title> <emphasis>Deal Offers the ParameterHandler object wich contains all of the
+parsing-functionality.</emphasis>
                 
 <para>An object of that type is included in this one. This constructor simply uses a copy-constructor to initialize it. </para>
 
             </section>
             <section xml:id="class_parameter_reader_1ab9462a51546741d97e9dbca7d3dee7a2">
-                <title>void ParameterReader::read_parameters (const std::string inputfile)</title> <emphasis>This member calls the read_input_from_xml()-function of the contained ParameterHandler and this replaces the default values with the values in the input file.</emphasis>
+                <title>void ParameterReader::read_parameters (const std::string inputfile)</title> <emphasis>This member calls the read_input_from_xml()-function of the contained
+ParameterHandler and this replaces the default values with the values in
+the input file.</emphasis>
                 
             </section>
             <section xml:id="class_parameter_reader_1a1cb311d600af9927d6466c046b730ad5">

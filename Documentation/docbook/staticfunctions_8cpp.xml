@@ -2,18 +2,18 @@
 <section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="staticfunctions_8cpp">
     <title>staticfunctions.cpp File Reference</title>
     <programlisting>#include &quot;staticfunctions.h&quot;</programlisting>
-    <programlisting>#include &lt;unistd.h&gt;</programlisting>
-    <programlisting>#include &lt;sys/stat.h&gt;</programlisting>
-    <programlisting>#include &lt;mpi.h&gt;</programlisting>
-    <programlisting>#include &lt;string&gt;</programlisting>
     <programlisting>#include &lt;deal.II/base/point.h&gt;</programlisting>
-    <programlisting>#include &lt;deal.II/dofs/dof_handler.h&gt;</programlisting>
-    <programlisting>#include &lt;deal.II/base/tensor.h&gt;</programlisting>
-    <programlisting>#include &lt;deal.II/base/mpi.h&gt;</programlisting>
+    <programlisting>#include &lt;mpi.h&gt;</programlisting>
+    <programlisting>#include &lt;sys/stat.h&gt;</programlisting>
+    <programlisting>#include &lt;unistd.h&gt;</programlisting>
+    <programlisting>#include &lt;string&gt;</programlisting>
     <programlisting>#include &lt;deal.II/base/logstream.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/mpi.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/tensor.h&gt;</programlisting>
     <programlisting>#include &lt;deal.II/distributed/tria.h&gt;</programlisting>
-    <programlisting>#include &quot;Parameters.h&quot;</programlisting>
+    <programlisting>#include &lt;deal.II/dofs/dof_handler.h&gt;</programlisting>
     <programlisting>#include &quot;ParameterReader.h&quot;</programlisting>
+    <programlisting>#include &quot;Parameters.h&quot;</programlisting>
     <programlisting>#include &quot;ShapeDescription.h&quot;</programlisting>
         <section>
             <title>Macros</title>
@@ -133,6 +133,14 @@
             <para>
                 <itemizedlist>
                     <listitem>
+                        <para>std::complex&lt; double &gt; <link linkend="staticfunctions_8cpp_1a8ff836a6d1fdc521e2259282ec1eaab5">matrixD</link> (
+int in_row, int in_column, double in_k0)</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
                         <para>void <link linkend="staticfunctions_8cpp_1a767352fd796820847bd58080782aafe6">PrepareStreams</link> (
 )</para>
                     </listitem>
@@ -181,9 +189,9 @@ Point&lt; 3, double &gt; position, Point&lt; 3, double &gt; to)</para>
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>Tensor&lt; 1, 3, double &gt; <link linkend="staticfunctions_8cpp_1ac67c18be952e911125753441bebdb45c">crossproduct</link> (
-Tensor&lt; 1, 3, double &gt; a, Tensor&lt; 1, 3, double &gt; b)<para><emphasis>For given vectors \form#32, this function calculates the following crossproduct:
- \form#33.</emphasis></para>
+                        <para>Tensor&lt; 1, 3, double &gt; <link linkend="staticfunctions_8cpp_1a3ff1a941a231c95699bcba57217415ca">crossproduct</link> (
+Tensor&lt; 1, 3, double &gt; a, Tensor&lt; 1, 3, double &gt; b)<para><emphasis>For given vectors \form#33, this
+function calculates the following crossproduct: \form#34@_fakenl@_fakenl.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -311,16 +319,8 @@ const std::string &amp; name)</para>
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>std::vector&lt; types::global_dof_index &gt; <link linkend="staticfunctions_8cpp_1a446babda4858c686df1d2e73bf2f1f63">Add_Zero_Restraint_test</link> (
-dealii::ConstraintMatrix * , DoFHandler&lt; 3 &gt;::active_cell_iterator in_cell, unsigned int in_face, unsigned int DofsPerLine, unsigned int DofsPerFace, bool in_non_face_dofs, IndexSet * locally_owned_dofs)</para>
-                    </listitem>
-                </itemizedlist>
-            </para>
-            <para>
-                <itemizedlist>
-                    <listitem>
-                        <para>std::vector&lt; types::global_dof_index &gt; <link linkend="staticfunctions_8cpp_1a8e91e346d6f8408ef91b044c8c2a8679">Add_Zero_Restraint</link> (
-dealii::ConstraintMatrix * in_cm, DoFHandler&lt; 3 &gt;::active_cell_iterator in_cell, unsigned int in_face, unsigned int DofsPerLine, unsigned int DofsPerFace, bool in_non_face_dofs, IndexSet * locally_owned_dofs)</para>
+                        <para>std::vector&lt; types::global_dof_index &gt; <link linkend="staticfunctions_8cpp_1a96520d5b7a34f13930a49ad70104b975">Add_Zero_Restraint_test</link> (
+dealii::ConstraintMatrix * , dealii::DoFHandler&lt; 3 &gt;::active_cell_iterator in_cell, unsigned int in_face, unsigned int DofsPerLine, unsigned int DofsPerFace, bool in_non_face_dofs, IndexSet * locally_owned_dofs)</para>
                     </listitem>
                 </itemizedlist>
             </para>
@@ -342,664 +342,688 @@ dealii::IndexSet * in_index_set, std::vector&lt; types::global_dof_index &gt; in
 2 <emphasis class="preprocessor">#define&#32;StaticFunctionsFlag</emphasis>
 3 
 4 <emphasis class="preprocessor">#include&#32;&quot;staticfunctions.h&quot;</emphasis>
-5 <emphasis class="preprocessor">#include&#32;&lt;unistd.h&gt;</emphasis>
-6 <emphasis class="preprocessor">#include&#32;&lt;sys/stat.h&gt;</emphasis>
-7 <emphasis class="preprocessor">#include&#32;&lt;mpi.h&gt;</emphasis>
-8 <emphasis class="preprocessor">#include&#32;&lt;string&gt;</emphasis>
-9 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/point.h&gt;</emphasis>
+5 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/point.h&gt;</emphasis>
+6 <emphasis class="preprocessor">#include&#32;&lt;mpi.h&gt;</emphasis>
+7 <emphasis class="preprocessor">#include&#32;&lt;sys/stat.h&gt;</emphasis>
+8 <emphasis class="preprocessor">#include&#32;&lt;unistd.h&gt;</emphasis>
+9 <emphasis class="preprocessor">#include&#32;&lt;string&gt;</emphasis>
 10 
-11 <emphasis class="preprocessor">#include&#32;&lt;deal.II/dofs/dof_handler.h&gt;</emphasis>
-12 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/tensor.h&gt;</emphasis>
-13 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/mpi.h&gt;</emphasis>
-14 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/logstream.h&gt;</emphasis>
-15 <emphasis class="preprocessor">#include&#32;&lt;deal.II/distributed/tria.h&gt;</emphasis>
-16 <emphasis class="preprocessor">#include&#32;&quot;Parameters.h&quot;</emphasis>
-17 <emphasis class="preprocessor">#include&#32;&quot;ParameterReader.h&quot;</emphasis>
+11 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/logstream.h&gt;</emphasis>
+12 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/mpi.h&gt;</emphasis>
+13 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/tensor.h&gt;</emphasis>
+14 <emphasis class="preprocessor">#include&#32;&lt;deal.II/distributed/tria.h&gt;</emphasis>
+15 <emphasis class="preprocessor">#include&#32;&lt;deal.II/dofs/dof_handler.h&gt;</emphasis>
+16 <emphasis class="preprocessor">#include&#32;&quot;ParameterReader.h&quot;</emphasis>
+17 <emphasis class="preprocessor">#include&#32;&quot;Parameters.h&quot;</emphasis>
 18 <emphasis class="preprocessor">#include&#32;&quot;ShapeDescription.h&quot;</emphasis>
 19 
-20 
-21 <emphasis class="keyword">using&#32;namespace&#32;</emphasis><link linkend="namespacedealii">dealii</link>;
-22 
-23 std::string&#32;solutionpath&#32;=&#32;<emphasis class="stringliteral">&quot;&quot;</emphasis>;
-24 std::ofstream&#32;log_stream;
-25 std::string&#32;constraints_filename&#32;&#32;&#32;&#32;=&#32;<emphasis class="stringliteral">&quot;constraints.log&quot;</emphasis>;
-26 std::string&#32;assemble_filename&#32;&#32;&#32;&#32;&#32;&#32;&#32;=&#32;<emphasis class="stringliteral">&quot;assemble.log&quot;</emphasis>;
-27 std::string&#32;precondition_filename&#32;&#32;&#32;=&#32;<emphasis class="stringliteral">&quot;precondition.log&quot;</emphasis>;
-28 std::string&#32;solver_filename&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;=&#32;<emphasis class="stringliteral">&quot;solver.log&quot;</emphasis>;
-29 std::string&#32;total_filename&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;=&#32;<emphasis class="stringliteral">&quot;total.log&quot;</emphasis>;
-30 <emphasis class="keywordtype">int</emphasis>&#32;&#32;&#32;&#32;&#32;StepsR&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;=&#32;10;
-31 <emphasis class="keywordtype">int</emphasis>&#32;&#32;&#32;&#32;&#32;StepsPhi&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;=&#32;10;
-32 <emphasis class="keywordtype">int</emphasis>&#32;alert_counter&#32;=&#32;0;
-33 std::string&#32;input_file_name&#32;=&#32;<emphasis class="stringliteral">&quot;&quot;</emphasis>;
-34 <link linkend="class_space_transformation">SpaceTransformation</link>*&#32;the_st&#32;&#32;=&#32;0;
-35 
-36 <emphasis class="keywordtype">void</emphasis>&#32;set_the_st(<link linkend="class_space_transformation">SpaceTransformation</link>*&#32;in_st)&#32;{
-37 &#32;&#32;the_st&#32;=&#32;in_st;
-38 }
-39 
-40 <emphasis class="keywordtype">void</emphasis>&#32;alert()&#32;{
-41 &#32;&#32;MPI_Barrier(MPI_COMM_WORLD);
-42 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)&#32;==&#32;0)&#32;{
-43 &#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Alert:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;alert_counter&#32;&lt;&lt;&#32;std::endl;
-44 &#32;&#32;}
-45 &#32;&#32;alert_counter++;
-46 }
-47 
-48 <emphasis class="keywordtype">void</emphasis>&#32;PrepareStreams()&#32;&#32;{
-49 
-50 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">char</emphasis>*&#32;pPath;
-51 &#32;&#32;&#32;&#32;pPath&#32;=&#32;getenv&#32;(<emphasis class="stringliteral">&quot;WORK&quot;</emphasis>);
-52 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;seperate_solutions&#32;=&#32;(pPath!=NULL);
-53 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)&#32;==&#32;0)&#32;{
-54 &#32;&#32;&#32;&#32;deallog.depth_console(10);
+20 <emphasis class="keyword">using&#32;namespace&#32;</emphasis><link linkend="namespacedealii">dealii</link>;
+21 
+22 std::string&#32;solutionpath&#32;=&#32;<emphasis class="stringliteral">&quot;&quot;</emphasis>;
+23 std::ofstream&#32;log_stream;
+24 std::string&#32;constraints_filename&#32;=&#32;<emphasis class="stringliteral">&quot;constraints.log&quot;</emphasis>;
+25 std::string&#32;assemble_filename&#32;=&#32;<emphasis class="stringliteral">&quot;assemble.log&quot;</emphasis>;
+26 std::string&#32;precondition_filename&#32;=&#32;<emphasis class="stringliteral">&quot;precondition.log&quot;</emphasis>;
+27 std::string&#32;solver_filename&#32;=&#32;<emphasis class="stringliteral">&quot;solver.log&quot;</emphasis>;
+28 std::string&#32;total_filename&#32;=&#32;<emphasis class="stringliteral">&quot;total.log&quot;</emphasis>;
+29 <emphasis class="keywordtype">int</emphasis>&#32;StepsR&#32;=&#32;10;
+30 <emphasis class="keywordtype">int</emphasis>&#32;StepsPhi&#32;=&#32;10;
+31 <emphasis class="keywordtype">int</emphasis>&#32;alert_counter&#32;=&#32;0;
+32 std::string&#32;input_file_name&#32;=&#32;<emphasis class="stringliteral">&quot;&quot;</emphasis>;
+33 <link linkend="class_space_transformation">SpaceTransformation</link>&#32;*the_st&#32;=&#32;0;
+34 
+35 <emphasis class="keywordtype">void</emphasis>&#32;set_the_st(<link linkend="class_space_transformation">SpaceTransformation</link>&#32;*in_st)&#32;{&#32;the_st&#32;=&#32;in_st;&#32;}
+36 
+37 <emphasis class="keywordtype">void</emphasis>&#32;alert()&#32;{
+38 &#32;&#32;MPI_Barrier(MPI_COMM_WORLD);
+39 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)&#32;==&#32;0)&#32;{
+40 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Alert:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;alert_counter&#32;&lt;&lt;&#32;std::endl;
+41 &#32;&#32;}
+42 &#32;&#32;alert_counter++;
+43 }
+44 
+45 std::complex&lt;double&gt;&#32;matrixD(<emphasis class="keywordtype">int</emphasis>&#32;in_row,&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_column,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_k0)&#32;{
+46 &#32;&#32;std::complex&lt;double&gt;&#32;ret(0,&#32;0);
+47 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(std::abs(in_row&#32;-&#32;in_column)&#32;&gt;&#32;1)&#32;{
+48 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+49 &#32;&#32;}
+50 &#32;&#32;std::complex&lt;double&gt;&#32;part&#32;=&#32;1.0&#32;/&#32;(std::complex&lt;double&gt;(0,&#32;2&#32;*&#32;in_k0));
+51 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(in_row&#32;==&#32;in_column)&#32;{
+52 &#32;&#32;&#32;&#32;ret&#32;=&#32;std::complex&lt;double&gt;(-1.0&#32;*&#32;((in_row&#32;+&#32;1)&#32;*&#32;2&#32;-&#32;1),&#32;0)&#32;*&#32;part;
+53 &#32;&#32;&#32;&#32;ret&#32;+=&#32;std::complex&lt;double&gt;(1,&#32;0);
+54 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
 55 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-56 &#32;&#32;&#32;&#32;deallog.depth_console(0);
-57 &#32;&#32;}
-58 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;
-59 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;dir_exists&#32;=&#32;<emphasis class="keyword">true</emphasis>;
-60 &#32;&#32;<emphasis class="keywordflow">while</emphasis>(dir_exists)&#32;{
-61 &#32;&#32;&#32;&#32;std::stringstream&#32;out;
-62 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(seperate_solutions)&#32;{
-63 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;out&#32;&lt;&lt;&#32;pPath&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;/&quot;</emphasis>&#32;;
-64 &#32;&#32;&#32;&#32;&#32;&#32;}
-65 &#32;&#32;&#32;&#32;out&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Solutions/run&quot;</emphasis>;
-66 &#32;&#32;&#32;&#32;out&#32;&lt;&lt;&#32;i;
-67 &#32;&#32;&#32;&#32;solutionpath&#32;=&#32;out.str();
-68 &#32;&#32;&#32;&#32;<emphasis class="keyword">struct&#32;</emphasis>stat&#32;myStat;
-69 &#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">char</emphasis>&#32;*myDir&#32;=&#32;solutionpath.c_str();
-70 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;((stat(myDir,&#32;&amp;myStat)&#32;==&#32;0)&#32;&amp;&amp;&#32;(((myStat.st_mode)&#32;&amp;&#32;S_IFMT)&#32;==&#32;S_IFDIR))&#32;{
-71 &#32;&#32;&#32;&#32;&#32;&#32;i++;
-72 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-73 &#32;&#32;&#32;&#32;&#32;&#32;dir_exists&#32;=&#32;<emphasis class="keyword">false</emphasis>;
-74 &#32;&#32;&#32;&#32;}
-75 &#32;&#32;}
-76 &#32;&#32;i&#32;=&#32;Utilities::MPI::max(i,&#32;MPI_COMM_WORLD);
-77 &#32;&#32;std::stringstream&#32;out;
-78 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(seperate_solutions)&#32;{
-79 &#32;&#32;&#32;&#32;out&#32;&lt;&lt;&#32;pPath&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;/&quot;</emphasis>&#32;;
-80 &#32;&#32;}
-81 &#32;&#32;out&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Solutions/run&quot;</emphasis>;
-82 
-83 &#32;&#32;out&#32;&lt;&lt;&#32;i;
-84 &#32;&#32;solutionpath&#32;=&#32;out.str();
-85 &#32;&#32;mkdir(solutionpath.c_str(),&#32;ACCESSPERMS);
-86 
-87 &#32;&#32;log_stream.open(solutionpath&#32;+&#32;<emphasis class="stringliteral">&quot;/main&quot;</emphasis>+&#32;std::to_string(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))&#32;+<emphasis class="stringliteral">&quot;.log&quot;</emphasis>,&#32;std::ios::binary);
-88 
-89 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;create_link&#32;=&#32;symlink(solutionpath.c_str(),&#32;<emphasis class="stringliteral">&quot;./latest&quot;</emphasis>);
-90 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(create_link&#32;==&#32;0)&#32;{
-91 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Symlink&#32;latest&#32;created.&quot;</emphasis>&#32;&lt;&lt;std::endl;
-92 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-93 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Symlink&#32;latest&#32;creation&#32;failed.&quot;</emphasis>&#32;&lt;&lt;std::endl;
+56 &#32;&#32;&#32;&#32;ret&#32;+=
+57 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::complex&lt;double&gt;(1,&#32;0)&#32;+&#32;std::complex&lt;double&gt;(in_row&#32;+&#32;1,&#32;0)&#32;*&#32;part;
+58 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+59 &#32;&#32;}
+60 }
+61 
+62 <emphasis class="keywordtype">void</emphasis>&#32;PrepareStreams()&#32;{
+63 &#32;&#32;<emphasis class="keywordtype">char</emphasis>&#32;*pPath;
+64 &#32;&#32;pPath&#32;=&#32;getenv(<emphasis class="stringliteral">&quot;WORK&quot;</emphasis>);
+65 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;seperate_solutions&#32;=&#32;(pPath&#32;!=&#32;NULL);
+66 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)&#32;==&#32;0)&#32;{
+67 &#32;&#32;&#32;&#32;deallog.depth_console(10);
+68 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+69 &#32;&#32;&#32;&#32;deallog.depth_console(0);
+70 &#32;&#32;}
+71 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;
+72 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;dir_exists&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+73 &#32;&#32;<emphasis class="keywordflow">while</emphasis>&#32;(dir_exists)&#32;{
+74 &#32;&#32;&#32;&#32;std::stringstream&#32;out;
+75 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(seperate_solutions)&#32;{
+76 &#32;&#32;&#32;&#32;&#32;&#32;out&#32;&lt;&lt;&#32;pPath&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;/&quot;</emphasis>;
+77 &#32;&#32;&#32;&#32;}
+78 &#32;&#32;&#32;&#32;out&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Solutions/run&quot;</emphasis>;
+79 &#32;&#32;&#32;&#32;out&#32;&lt;&lt;&#32;i;
+80 &#32;&#32;&#32;&#32;solutionpath&#32;=&#32;out.str();
+81 &#32;&#32;&#32;&#32;<emphasis class="keyword">struct&#32;</emphasis>stat&#32;myStat;
+82 &#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">char</emphasis>&#32;*myDir&#32;=&#32;solutionpath.c_str();
+83 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;((stat(myDir,&#32;&amp;myStat)&#32;==&#32;0)&#32;&amp;&amp;
+84 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(((myStat.st_mode)&#32;&amp;&#32;S_IFMT)&#32;==&#32;S_IFDIR))&#32;{
+85 &#32;&#32;&#32;&#32;&#32;&#32;i++;
+86 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+87 &#32;&#32;&#32;&#32;&#32;&#32;dir_exists&#32;=&#32;<emphasis class="keyword">false</emphasis>;
+88 &#32;&#32;&#32;&#32;}
+89 &#32;&#32;}
+90 &#32;&#32;i&#32;=&#32;Utilities::MPI::max(i,&#32;MPI_COMM_WORLD);
+91 &#32;&#32;std::stringstream&#32;out;
+92 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(seperate_solutions)&#32;{
+93 &#32;&#32;&#32;&#32;out&#32;&lt;&lt;&#32;pPath&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;/&quot;</emphasis>;
 94 &#32;&#32;}
-95 
-96 &#32;&#32;deallog.attach(log_stream);
-97 
-98 }
-99 
-100 <link linkend="struct_parameters">Parameters</link>&#32;GetParameters()&#32;{
-101 &#32;&#32;&#32;&#32;ParameterHandler&#32;prm;
-102 &#32;&#32;&#32;&#32;<link linkend="class_parameter_reader">ParameterReader</link>&#32;param(prm);
-103 &#32;&#32;&#32;&#32;param.read_parameters(input_file_name);
-104 &#32;&#32;&#32;&#32;<emphasis class="keyword">struct&#32;</emphasis><link linkend="struct_parameters">Parameters</link>&#32;ret;
-105 &#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Output&quot;</emphasis>);
-106 &#32;&#32;&#32;&#32;{
-107 &#32;&#32;&#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Optimization&quot;</emphasis>);
-108 &#32;&#32;&#32;&#32;&#32;&#32;{
-109 &#32;&#32;&#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Gnuplot&quot;</emphasis>);
-110 &#32;&#32;&#32;&#32;&#32;&#32;{
-111 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_G_HistoryLive&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;Optimization&#32;History&#32;Live&quot;</emphasis>);
-112 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_G_HistoryShapes&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;Optimization&#32;History&#32;Shapes&quot;</emphasis>);
-113 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_G_History&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;Optimization&#32;History&quot;</emphasis>);
-114 &#32;&#32;&#32;&#32;&#32;&#32;}
-115 &#32;&#32;&#32;&#32;&#32;&#32;prm.leave_subsection();
+95 &#32;&#32;out&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Solutions/run&quot;</emphasis>;
+96 
+97 &#32;&#32;out&#32;&lt;&lt;&#32;i;
+98 &#32;&#32;solutionpath&#32;=&#32;out.str();
+99 &#32;&#32;mkdir(solutionpath.c_str(),&#32;ACCESSPERMS);
+100 
+101 &#32;&#32;log_stream.open(
+102 &#32;&#32;&#32;&#32;&#32;&#32;solutionpath&#32;+&#32;<emphasis class="stringliteral">&quot;/main&quot;</emphasis>&#32;+
+103 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::to_string(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))&#32;+
+104 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="stringliteral">&quot;.log&quot;</emphasis>,
+105 &#32;&#32;&#32;&#32;&#32;&#32;std::ios::binary);
+106 
+107 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;create_link&#32;=&#32;symlink(solutionpath.c_str(),&#32;<emphasis class="stringliteral">&quot;./latest&quot;</emphasis>);
+108 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(create_link&#32;==&#32;0)&#32;{
+109 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Symlink&#32;latest&#32;created.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+110 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+111 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Symlink&#32;latest&#32;creation&#32;failed.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+112 &#32;&#32;}
+113 
+114 &#32;&#32;deallog.attach(log_stream);
+115 }
 116 
-117 &#32;&#32;&#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;VTK&quot;</emphasis>);
-118 &#32;&#32;&#32;&#32;&#32;&#32;{
-119 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;TransformationWeights&quot;</emphasis>);
-120 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;{
-121 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_V_T_TransformationWeightsAll&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;TransformationWeightsAll&quot;</emphasis>);
-122 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_V_T_TransformationWeightsFirst&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;TransformationWeightsFirst&quot;</emphasis>);
-123 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_V_T_TransformationWeightsLast&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;TransformationWeightsLast&quot;</emphasis>);
-124 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-125 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;prm.leave_subsection();
-126 
-127 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Solution&quot;</emphasis>);
-128 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;{
-129 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_V_S_SolutionAll&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;SolutionAll&quot;</emphasis>);
-130 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_V_S_SolutionFirst&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;SolutionFirst&quot;</emphasis>);
-131 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_V_S_SolutionLast&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;SolutionLast&quot;</emphasis>);
-132 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-133 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;prm.leave_subsection();
-134 
-135 &#32;&#32;&#32;&#32;&#32;&#32;}
-136 &#32;&#32;&#32;&#32;&#32;&#32;prm.leave_subsection();
-137 &#32;&#32;&#32;&#32;&#32;&#32;}
-138 &#32;&#32;&#32;&#32;&#32;&#32;prm.leave_subsection();
-139 
-140 &#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Convergence&quot;</emphasis>);
-141 &#32;&#32;&#32;&#32;{
-142 &#32;&#32;&#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;DataFiles&quot;</emphasis>);
-143 &#32;&#32;&#32;&#32;&#32;&#32;{
-144 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_C_D_ConvergenceFirst&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;ConvergenceFirst&quot;</emphasis>);
-145 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_C_D_ConvergenceLast&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;ConvergenceLast&quot;</emphasis>);
-146 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_C_D_ConvergenceAll&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;ConvergenceAll&quot;</emphasis>);
-147 &#32;&#32;&#32;&#32;&#32;&#32;}
-148 &#32;&#32;&#32;&#32;&#32;&#32;prm.leave_subsection();
-149 
-150 &#32;&#32;&#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Plots&quot;</emphasis>);
-151 &#32;&#32;&#32;&#32;&#32;&#32;{
-152 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_C_P_ConvergenceFirst&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;ConvergenceFirst&quot;</emphasis>);
-153 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_C_P_ConvergenceLast&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;ConvergenceLast&quot;</emphasis>);
-154 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_C_P_ConvergenceAll&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;ConvergenceAll&quot;</emphasis>);
-155 &#32;&#32;&#32;&#32;&#32;&#32;}
-156 &#32;&#32;&#32;&#32;&#32;&#32;prm.leave_subsection();
-157 
-158 &#32;&#32;&#32;&#32;}
-159 &#32;&#32;&#32;&#32;prm.leave_subsection();
-160 
-161 &#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;General&quot;</emphasis>);
-162 &#32;&#32;&#32;&#32;{
-163 &#32;&#32;&#32;&#32;&#32;&#32;ret.O_G_Summary&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;SummaryFile&quot;</emphasis>);
-164 &#32;&#32;&#32;&#32;&#32;&#32;ret.O_G_Log&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;LogFile&quot;</emphasis>);
-165 &#32;&#32;&#32;&#32;}
-166 &#32;&#32;&#32;&#32;prm.leave_subsection();
-167 
-168 &#32;&#32;&#32;&#32;}
-169 &#32;&#32;prm.leave_subsection();
-170 
-171 &#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Measures&quot;</emphasis>);
-172 &#32;&#32;{
-173 &#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;PredefinedCases&quot;</emphasis>);
-174 &#32;&#32;&#32;&#32;{
-175 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_PC_Use&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;ComputeCase&quot;</emphasis>);
-176 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_PC_Case&#32;=&#32;prm.get_integer(<emphasis class="stringliteral">&quot;SelectCase&quot;</emphasis>);
-177 &#32;&#32;&#32;&#32;}
-178 &#32;&#32;&#32;&#32;prm.leave_subsection();
-179 &#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Connectors&quot;</emphasis>);
+117 <link linkend="struct_parameters">Parameters</link>&#32;GetParameters()&#32;{
+118 &#32;&#32;ParameterHandler&#32;prm;
+119 &#32;&#32;<link linkend="class_parameter_reader">ParameterReader</link>&#32;param(prm);
+120 &#32;&#32;param.read_parameters(input_file_name);
+121 &#32;&#32;<emphasis class="keyword">struct&#32;</emphasis><link linkend="struct_parameters">Parameters</link>&#32;ret;
+122 &#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Output&quot;</emphasis>);
+123 &#32;&#32;{
+124 &#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Optimization&quot;</emphasis>);
+125 &#32;&#32;&#32;&#32;{
+126 &#32;&#32;&#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Gnuplot&quot;</emphasis>);
+127 &#32;&#32;&#32;&#32;&#32;&#32;{
+128 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_G_HistoryLive&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;Optimization&#32;History&#32;Live&quot;</emphasis>);
+129 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_G_HistoryShapes&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;Optimization&#32;History&#32;Shapes&quot;</emphasis>);
+130 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_G_History&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;Optimization&#32;History&quot;</emphasis>);
+131 &#32;&#32;&#32;&#32;&#32;&#32;}
+132 &#32;&#32;&#32;&#32;&#32;&#32;prm.leave_subsection();
+133 
+134 &#32;&#32;&#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;VTK&quot;</emphasis>);
+135 &#32;&#32;&#32;&#32;&#32;&#32;{
+136 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;TransformationWeights&quot;</emphasis>);
+137 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;{
+138 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_V_T_TransformationWeightsAll&#32;=
+139 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;prm.get_bool(<emphasis class="stringliteral">&quot;TransformationWeightsAll&quot;</emphasis>);
+140 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_V_T_TransformationWeightsFirst&#32;=
+141 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;prm.get_bool(<emphasis class="stringliteral">&quot;TransformationWeightsFirst&quot;</emphasis>);
+142 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_V_T_TransformationWeightsLast&#32;=
+143 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;prm.get_bool(<emphasis class="stringliteral">&quot;TransformationWeightsLast&quot;</emphasis>);
+144 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+145 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;prm.leave_subsection();
+146 
+147 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Solution&quot;</emphasis>);
+148 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;{
+149 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_V_S_SolutionAll&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;SolutionAll&quot;</emphasis>);
+150 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_V_S_SolutionFirst&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;SolutionFirst&quot;</emphasis>);
+151 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_O_V_S_SolutionLast&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;SolutionLast&quot;</emphasis>);
+152 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+153 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;prm.leave_subsection();
+154 &#32;&#32;&#32;&#32;&#32;&#32;}
+155 &#32;&#32;&#32;&#32;&#32;&#32;prm.leave_subsection();
+156 &#32;&#32;&#32;&#32;}
+157 &#32;&#32;&#32;&#32;prm.leave_subsection();
+158 
+159 &#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Convergence&quot;</emphasis>);
+160 &#32;&#32;&#32;&#32;{
+161 &#32;&#32;&#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;DataFiles&quot;</emphasis>);
+162 &#32;&#32;&#32;&#32;&#32;&#32;{
+163 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_C_D_ConvergenceFirst&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;ConvergenceFirst&quot;</emphasis>);
+164 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_C_D_ConvergenceLast&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;ConvergenceLast&quot;</emphasis>);
+165 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_C_D_ConvergenceAll&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;ConvergenceAll&quot;</emphasis>);
+166 &#32;&#32;&#32;&#32;&#32;&#32;}
+167 &#32;&#32;&#32;&#32;&#32;&#32;prm.leave_subsection();
+168 
+169 &#32;&#32;&#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Plots&quot;</emphasis>);
+170 &#32;&#32;&#32;&#32;&#32;&#32;{
+171 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_C_P_ConvergenceFirst&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;ConvergenceFirst&quot;</emphasis>);
+172 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_C_P_ConvergenceLast&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;ConvergenceLast&quot;</emphasis>);
+173 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.O_C_P_ConvergenceAll&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;ConvergenceAll&quot;</emphasis>);
+174 &#32;&#32;&#32;&#32;&#32;&#32;}
+175 &#32;&#32;&#32;&#32;&#32;&#32;prm.leave_subsection();
+176 &#32;&#32;&#32;&#32;}
+177 &#32;&#32;&#32;&#32;prm.leave_subsection();
+178 
+179 &#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;General&quot;</emphasis>);
 180 &#32;&#32;&#32;&#32;{
-181 &#32;&#32;&#32;&#32;&#32;&#32;std::string&#32;temp&#32;=&#32;prm.get(<emphasis class="stringliteral">&quot;Shape&quot;</emphasis>);
-182 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(temp&#32;==&#32;<emphasis class="stringliteral">&quot;Circle&quot;</emphasis>)&#32;{
-183 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.M_C_Shape&#32;=&#32;ConnectorType::Circle;
-184 &#32;&#32;&#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-185 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.M_C_Shape&#32;=&#32;ConnectorType::Rectangle;
-186 &#32;&#32;&#32;&#32;&#32;&#32;}
-187 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_C_Dim1In&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;Dimension1&#32;In&quot;</emphasis>);
-188 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_C_Dim2In&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;Dimension2&#32;In&quot;</emphasis>);
-189 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_C_Dim1Out&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;Dimension1&#32;Out&quot;</emphasis>);
-190 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_C_Dim2Out&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;Dimension2&#32;Out&quot;</emphasis>);
-191 &#32;&#32;&#32;&#32;}
-192 &#32;&#32;&#32;&#32;prm.leave_subsection();
-193 
-194 &#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Region&quot;</emphasis>);
-195 &#32;&#32;&#32;&#32;{
-196 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_R_XLength&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;XLength&quot;</emphasis>);
-197 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_R_YLength&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;YLength&quot;</emphasis>);
-198 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_R_ZLength&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;ZLength&quot;</emphasis>);
-199 &#32;&#32;&#32;&#32;}
-200 &#32;&#32;&#32;&#32;prm.leave_subsection();
-201 
-202 &#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Waveguide&quot;</emphasis>);
-203 &#32;&#32;&#32;&#32;{
-204 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_W_Delta&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;Delta&quot;</emphasis>);
-205 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_W_epsilonin&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;epsilon&#32;in&quot;</emphasis>);
-206 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_W_epsilonout&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;epsilon&#32;out&quot;</emphasis>);
-207 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_W_Lambda&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;Lambda&quot;</emphasis>);
-208 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_W_Sectors&#32;=&#32;prm.get_integer(<emphasis class="stringliteral">&quot;Sectors&quot;</emphasis>);
-209 &#32;&#32;&#32;&#32;}
-210 &#32;&#32;&#32;&#32;prm.leave_subsection();
-211 
-212 &#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Boundary&#32;Conditions&quot;</emphasis>);
-213 &#32;&#32;&#32;&#32;{
-214 &#32;&#32;&#32;&#32;&#32;&#32;std::string&#32;temp&#32;=&#32;prm.get(<emphasis class="stringliteral">&quot;Type&quot;</emphasis>);
-215 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;PML&quot;</emphasis>)&#32;{
-216 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_Type=&#32;BoundaryConditionType::PML;
-217 &#32;&#32;&#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-218 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_Type=&#32;BoundaryConditionType::HSIE;
-219 &#32;&#32;&#32;&#32;&#32;&#32;}
-220 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_Zminus&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;ZMinus&quot;</emphasis>);
-221 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_Zplus&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;ZPlus&quot;</emphasis>);
-222 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_XMinus&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;XMinus&quot;</emphasis>);
-223 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_XPlus&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;XPlus&quot;</emphasis>);
-224 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_YMinus&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;YMinus&quot;</emphasis>);
-225 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_YPlus&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;YPlus&quot;</emphasis>);
-226 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_KappaXMax&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;KappaXMax&quot;</emphasis>);
-227 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_KappaYMax&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;KappaYMax&quot;</emphasis>);
-228 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_KappaZMax&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;KappaZMax&quot;</emphasis>);
-229 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_SigmaXMax&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;SigmaXMax&quot;</emphasis>);
-230 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_SigmaYMax&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;SigmaYMax&quot;</emphasis>);
-231 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_SigmaZMax&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;SigmaZMax&quot;</emphasis>);
-232 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_DampeningExponent&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;DampeningExponentM&quot;</emphasis>);
-233 &#32;&#32;&#32;&#32;}
-234 &#32;&#32;&#32;&#32;prm.leave_subsection();
-235 
-236 &#32;&#32;}
-237 &#32;&#32;prm.leave_subsection();
-238 
-239 &#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Schema&quot;</emphasis>);
-240 &#32;&#32;{
-241 &#32;&#32;&#32;&#32;ret.Sc_Homogeneity&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;Homogeneity&quot;</emphasis>);
-242 &#32;&#32;&#32;&#32;std::string&#32;temp&#32;=&#32;prm.get(<emphasis class="stringliteral">&quot;Optimization&#32;Schema&quot;</emphasis>);
-243 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(temp&#32;==&#32;<emphasis class="stringliteral">&quot;Adjoint&quot;</emphasis>)&#32;{
-244 &#32;&#32;&#32;&#32;&#32;&#32;ret.Sc_Schema&#32;=&#32;OptimizationSchema::Adjoint;
-245 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;FD&quot;</emphasis>)&#32;{
-246 &#32;&#32;&#32;&#32;&#32;&#32;ret.Sc_Schema&#32;=&#32;OptimizationSchema::FD;
-247 &#32;&#32;&#32;&#32;}
-248 &#32;&#32;&#32;&#32;ret.Sc_OptimizationSteps&#32;=&#32;prm.get_integer(<emphasis class="stringliteral">&quot;Optimization&#32;Steps&quot;</emphasis>);
-249 &#32;&#32;&#32;&#32;temp&#32;=&#32;prm.get(<emphasis class="stringliteral">&quot;Stepping&#32;Method&quot;</emphasis>);
-250 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(temp&#32;==&#32;<emphasis class="stringliteral">&quot;Steepest&quot;</emphasis>)&#32;{
-251 &#32;&#32;&#32;&#32;&#32;&#32;ret.Sc_SteppingMethod&#32;=&#32;SteppingMethod::Steepest;
-252 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;CG&quot;</emphasis>)&#32;{
-253 &#32;&#32;&#32;&#32;&#32;&#32;ret.Sc_SteppingMethod&#32;=&#32;SteppingMethod::CG;
-254 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;LineSearch&quot;</emphasis>)&#32;{
-255 &#32;&#32;&#32;&#32;&#32;&#32;ret.Sc_SteppingMethod&#32;=&#32;SteppingMethod::LineSearch;
-256 &#32;&#32;&#32;&#32;}
-257 &#32;&#32;}
-258 &#32;&#32;prm.leave_subsection();
-259 
-260 &#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Solver&quot;</emphasis>);
-261 &#32;&#32;{
-262 &#32;&#32;&#32;&#32;std::string&#32;temp&#32;=&#32;prm.get(<emphasis class="stringliteral">&quot;Solver&quot;</emphasis>);
-263 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(temp&#32;==&#32;<emphasis class="stringliteral">&quot;GMRES&quot;</emphasis>){
-264 &#32;&#32;&#32;&#32;&#32;&#32;ret.So_Solver&#32;=&#32;SolverOptions::GMRES;
-265 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;MINRES&quot;</emphasis>){
-266 &#32;&#32;&#32;&#32;&#32;&#32;ret.So_Solver&#32;=&#32;SolverOptions::MINRES;
-267 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;UMFPACK&quot;</emphasis>)&#32;{
-268 &#32;&#32;&#32;&#32;&#32;&#32;ret.So_Solver&#32;=&#32;SolverOptions::UMFPACK;
-269 &#32;&#32;&#32;&#32;}
-270 &#32;&#32;&#32;&#32;ret.So_RestartSteps&#32;=&#32;prm.get_integer(<emphasis class="stringliteral">&quot;GMRESSteps&quot;</emphasis>);
-271 &#32;&#32;&#32;&#32;temp&#32;=&#32;prm.get(<emphasis class="stringliteral">&quot;Preconditioner&quot;</emphasis>);
-272 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;Sweeping&quot;</emphasis>)&#32;{
-273 &#32;&#32;&#32;&#32;&#32;&#32;ret.So_Preconditioner&#32;=&#32;PreconditionerOptions::Sweeping;
-274 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>(temp&#32;==&#32;<emphasis class="stringliteral">&quot;Amesos_Lapack&quot;</emphasis>)&#32;{
-275 &#32;&#32;&#32;&#32;&#32;&#32;ret.So_Preconditioner&#32;=&#32;PreconditionerOptions::Amesos_Lapack;
-276 &#32;&#32;&#32;&#32;}
-277 &#32;&#32;&#32;&#32;ret.So_TotalSteps&#32;=&#32;prm.get_integer(<emphasis class="stringliteral">&quot;Steps&quot;</emphasis>);
-278 &#32;&#32;&#32;&#32;ret.So_Precision&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;Precision&quot;</emphasis>);
-279 &#32;&#32;}
-280 &#32;&#32;prm.leave_subsection();
-281 
-282 &#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Constants&quot;</emphasis>);
-283 &#32;&#32;{
-284 &#32;&#32;&#32;&#32;ret.C_AllOne&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;AllOne&quot;</emphasis>);
-285 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(ret.C_AllOne)&#32;{
-286 &#32;&#32;&#32;&#32;&#32;&#32;ret.C_Epsilon&#32;=&#32;1.0;
-287 &#32;&#32;&#32;&#32;&#32;&#32;ret.C_Mu&#32;=&#32;1.0;
-288 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-289 &#32;&#32;&#32;&#32;&#32;&#32;ret.C_Epsilon&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;EpsilonZero&quot;</emphasis>);
-290 &#32;&#32;&#32;&#32;&#32;&#32;ret.C_Mu&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;MuZero&quot;</emphasis>);
-291 &#32;&#32;&#32;&#32;}
-292 &#32;&#32;&#32;&#32;ret.C_c&#32;=&#32;1.0&#32;/&#32;sqrt(ret.C_Epsilon&#32;*&#32;ret.C_Mu);
-293 &#32;&#32;&#32;&#32;ret.C_f0&#32;=&#32;ret.C_c/ret.M_W_Lambda;
-294 &#32;&#32;&#32;&#32;ret.C_Pi&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;Pi&quot;</emphasis>);
-295 &#32;&#32;&#32;&#32;ret.C_k0&#32;=&#32;2.0&#32;*&#32;ret.C_Pi&#32;/&#32;ret.M_W_Lambda;
-296 &#32;&#32;&#32;&#32;ret.C_omega&#32;=&#32;2.0&#32;*&#32;ret.C_Pi&#32;*&#32;ret.C_f0;
-297 &#32;&#32;}
-298 &#32;&#32;prm.leave_subsection();
-299 
-300 &#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Refinement&quot;</emphasis>);
-301 &#32;&#32;{
-302 &#32;&#32;&#32;&#32;ret.R_Global&#32;=&#32;prm.get_integer(<emphasis class="stringliteral">&quot;Global&quot;</emphasis>);
-303 &#32;&#32;&#32;&#32;ret.R_Local&#32;=&#32;prm.get_integer(<emphasis class="stringliteral">&quot;SemiGlobal&quot;</emphasis>);
-304 &#32;&#32;&#32;&#32;ret.R_Interior&#32;=&#32;prm.get_integer(<emphasis class="stringliteral">&quot;Internal&quot;</emphasis>);
-305 &#32;&#32;}
-306 &#32;&#32;prm.leave_subsection();
-307 
-308 &#32;&#32;ret.MPIC_World&#32;=&#32;MPI_COMM_WORLD;
-309 &#32;&#32;ret.MPI_Rank&#32;=&#32;Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
-310 &#32;&#32;ret.NumberProcesses&#32;=&#32;Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
-311 
-312 &#32;&#32;ret.Head&#32;=&#32;(ret.MPI_Rank&#32;==&#32;0);
-313 
-314 &#32;&#32;<emphasis class="keywordflow">if</emphasis>((<emphasis class="keywordtype">int</emphasis>)ret.MPI_Rank&#32;&gt;&#32;ret.NumberProcesses&#32;-&#32;ret.M_BC_Zplus&#32;-1&#32;)&#32;{
-315 &#32;&#32;&#32;&#32;ret.PMLLayer&#32;=&#32;<emphasis class="keyword">true</emphasis>;
-316 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-317 &#32;&#32;&#32;&#32;ret.PMLLayer&#32;=&#32;<emphasis class="keyword">false</emphasis>;
+181 &#32;&#32;&#32;&#32;&#32;&#32;ret.O_G_Summary&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;SummaryFile&quot;</emphasis>);
+182 &#32;&#32;&#32;&#32;&#32;&#32;ret.O_G_Log&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;LogFile&quot;</emphasis>);
+183 &#32;&#32;&#32;&#32;}
+184 &#32;&#32;&#32;&#32;prm.leave_subsection();
+185 &#32;&#32;}
+186 &#32;&#32;prm.leave_subsection();
+187 
+188 &#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Measures&quot;</emphasis>);
+189 &#32;&#32;{
+190 &#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;PredefinedCases&quot;</emphasis>);
+191 &#32;&#32;&#32;&#32;{
+192 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_PC_Use&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;ComputeCase&quot;</emphasis>);
+193 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_PC_Case&#32;=&#32;prm.get_integer(<emphasis class="stringliteral">&quot;SelectCase&quot;</emphasis>);
+194 &#32;&#32;&#32;&#32;}
+195 &#32;&#32;&#32;&#32;prm.leave_subsection();
+196 &#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Connectors&quot;</emphasis>);
+197 &#32;&#32;&#32;&#32;{
+198 &#32;&#32;&#32;&#32;&#32;&#32;std::string&#32;temp&#32;=&#32;prm.get(<emphasis class="stringliteral">&quot;Shape&quot;</emphasis>);
+199 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;Circle&quot;</emphasis>)&#32;{
+200 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.M_C_Shape&#32;=&#32;ConnectorType::Circle;
+201 &#32;&#32;&#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+202 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.M_C_Shape&#32;=&#32;ConnectorType::Rectangle;
+203 &#32;&#32;&#32;&#32;&#32;&#32;}
+204 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_C_Dim1In&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;Dimension1&#32;In&quot;</emphasis>);
+205 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_C_Dim2In&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;Dimension2&#32;In&quot;</emphasis>);
+206 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_C_Dim1Out&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;Dimension1&#32;Out&quot;</emphasis>);
+207 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_C_Dim2Out&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;Dimension2&#32;Out&quot;</emphasis>);
+208 &#32;&#32;&#32;&#32;}
+209 &#32;&#32;&#32;&#32;prm.leave_subsection();
+210 
+211 &#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Region&quot;</emphasis>);
+212 &#32;&#32;&#32;&#32;{
+213 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_R_XLength&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;XLength&quot;</emphasis>);
+214 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_R_YLength&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;YLength&quot;</emphasis>);
+215 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_R_ZLength&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;ZLength&quot;</emphasis>);
+216 &#32;&#32;&#32;&#32;}
+217 &#32;&#32;&#32;&#32;prm.leave_subsection();
+218 
+219 &#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Waveguide&quot;</emphasis>);
+220 &#32;&#32;&#32;&#32;{
+221 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_W_Delta&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;Delta&quot;</emphasis>);
+222 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_W_epsilonin&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;epsilon&#32;in&quot;</emphasis>);
+223 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_W_epsilonout&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;epsilon&#32;out&quot;</emphasis>);
+224 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_W_Lambda&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;Lambda&quot;</emphasis>);
+225 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_W_Sectors&#32;=&#32;prm.get_integer(<emphasis class="stringliteral">&quot;Sectors&quot;</emphasis>);
+226 &#32;&#32;&#32;&#32;}
+227 &#32;&#32;&#32;&#32;prm.leave_subsection();
+228 
+229 &#32;&#32;&#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Boundary&#32;Conditions&quot;</emphasis>);
+230 &#32;&#32;&#32;&#32;{
+231 &#32;&#32;&#32;&#32;&#32;&#32;std::string&#32;temp&#32;=&#32;prm.get(<emphasis class="stringliteral">&quot;Type&quot;</emphasis>);
+232 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;PML&quot;</emphasis>)&#32;{
+233 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_Type&#32;=&#32;BoundaryConditionType::PML;
+234 &#32;&#32;&#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+235 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_Type&#32;=&#32;BoundaryConditionType::HSIE;
+236 &#32;&#32;&#32;&#32;&#32;&#32;}
+237 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_Zminus&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;ZMinus&quot;</emphasis>);
+238 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_Zplus&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;ZPlus&quot;</emphasis>);
+239 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_XMinus&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;XMinus&quot;</emphasis>);
+240 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_XPlus&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;XPlus&quot;</emphasis>);
+241 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_YMinus&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;YMinus&quot;</emphasis>);
+242 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_YPlus&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;YPlus&quot;</emphasis>);
+243 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_KappaXMax&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;KappaXMax&quot;</emphasis>);
+244 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_KappaYMax&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;KappaYMax&quot;</emphasis>);
+245 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_KappaZMax&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;KappaZMax&quot;</emphasis>);
+246 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_SigmaXMax&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;SigmaXMax&quot;</emphasis>);
+247 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_SigmaYMax&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;SigmaYMax&quot;</emphasis>);
+248 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_SigmaZMax&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;SigmaZMax&quot;</emphasis>);
+249 &#32;&#32;&#32;&#32;&#32;&#32;ret.M_BC_DampeningExponent&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;DampeningExponentM&quot;</emphasis>);
+250 &#32;&#32;&#32;&#32;}
+251 &#32;&#32;&#32;&#32;prm.leave_subsection();
+252 &#32;&#32;}
+253 &#32;&#32;prm.leave_subsection();
+254 
+255 &#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Schema&quot;</emphasis>);
+256 &#32;&#32;{
+257 &#32;&#32;&#32;&#32;ret.Sc_Homogeneity&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;Homogeneity&quot;</emphasis>);
+258 &#32;&#32;&#32;&#32;std::string&#32;temp&#32;=&#32;prm.get(<emphasis class="stringliteral">&quot;Optimization&#32;Schema&quot;</emphasis>);
+259 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;Adjoint&quot;</emphasis>)&#32;{
+260 &#32;&#32;&#32;&#32;&#32;&#32;ret.Sc_Schema&#32;=&#32;OptimizationSchema::Adjoint;
+261 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;FD&quot;</emphasis>)&#32;{
+262 &#32;&#32;&#32;&#32;&#32;&#32;ret.Sc_Schema&#32;=&#32;OptimizationSchema::FD;
+263 &#32;&#32;&#32;&#32;}
+264 &#32;&#32;&#32;&#32;ret.Sc_OptimizationSteps&#32;=&#32;prm.get_integer(<emphasis class="stringliteral">&quot;Optimization&#32;Steps&quot;</emphasis>);
+265 &#32;&#32;&#32;&#32;temp&#32;=&#32;prm.get(<emphasis class="stringliteral">&quot;Stepping&#32;Method&quot;</emphasis>);
+266 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;Steepest&quot;</emphasis>)&#32;{
+267 &#32;&#32;&#32;&#32;&#32;&#32;ret.Sc_SteppingMethod&#32;=&#32;SteppingMethod::Steepest;
+268 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;CG&quot;</emphasis>)&#32;{
+269 &#32;&#32;&#32;&#32;&#32;&#32;ret.Sc_SteppingMethod&#32;=&#32;SteppingMethod::CG;
+270 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;LineSearch&quot;</emphasis>)&#32;{
+271 &#32;&#32;&#32;&#32;&#32;&#32;ret.Sc_SteppingMethod&#32;=&#32;SteppingMethod::LineSearch;
+272 &#32;&#32;&#32;&#32;}
+273 &#32;&#32;}
+274 &#32;&#32;prm.leave_subsection();
+275 
+276 &#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Solver&quot;</emphasis>);
+277 &#32;&#32;{
+278 &#32;&#32;&#32;&#32;std::string&#32;temp&#32;=&#32;prm.get(<emphasis class="stringliteral">&quot;Solver&quot;</emphasis>);
+279 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;GMRES&quot;</emphasis>)&#32;{
+280 &#32;&#32;&#32;&#32;&#32;&#32;ret.So_Solver&#32;=&#32;SolverOptions::GMRES;
+281 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;MINRES&quot;</emphasis>)&#32;{
+282 &#32;&#32;&#32;&#32;&#32;&#32;ret.So_Solver&#32;=&#32;SolverOptions::MINRES;
+283 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;UMFPACK&quot;</emphasis>)&#32;{
+284 &#32;&#32;&#32;&#32;&#32;&#32;ret.So_Solver&#32;=&#32;SolverOptions::UMFPACK;
+285 &#32;&#32;&#32;&#32;}
+286 &#32;&#32;&#32;&#32;ret.So_RestartSteps&#32;=&#32;prm.get_integer(<emphasis class="stringliteral">&quot;GMRESSteps&quot;</emphasis>);
+287 &#32;&#32;&#32;&#32;temp&#32;=&#32;prm.get(<emphasis class="stringliteral">&quot;Preconditioner&quot;</emphasis>);
+288 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;Sweeping&quot;</emphasis>)&#32;{
+289 &#32;&#32;&#32;&#32;&#32;&#32;ret.So_Preconditioner&#32;=&#32;PreconditionerOptions::Sweeping;
+290 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;FastSweeping&quot;</emphasis>)&#32;{
+291 &#32;&#32;&#32;&#32;&#32;&#32;ret.So_Preconditioner&#32;=&#32;PreconditionerOptions::FastSweeping;
+292 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;HSIESweeping&quot;</emphasis>)&#32;{
+293 &#32;&#32;&#32;&#32;&#32;&#32;ret.So_Preconditioner&#32;=&#32;PreconditionerOptions::HSIESweeping;
+294 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;==&#32;<emphasis class="stringliteral">&quot;HSIEFastSweeping&quot;</emphasis>)&#32;{
+295 &#32;&#32;&#32;&#32;&#32;&#32;ret.So_Preconditioner&#32;=&#32;PreconditionerOptions::HSIEFastSweeping;
+296 &#32;&#32;&#32;&#32;}
+297 &#32;&#32;&#32;&#32;ret.So_PreconditionerDampening&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;PreconditionerDampening&quot;</emphasis>);
+298 &#32;&#32;&#32;&#32;ret.So_TotalSteps&#32;=&#32;prm.get_integer(<emphasis class="stringliteral">&quot;Steps&quot;</emphasis>);
+299 &#32;&#32;&#32;&#32;ret.So_Precision&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;Precision&quot;</emphasis>);
+300 &#32;&#32;}
+301 &#32;&#32;prm.leave_subsection();
+302 
+303 &#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Constants&quot;</emphasis>);
+304 &#32;&#32;{
+305 &#32;&#32;&#32;&#32;ret.C_AllOne&#32;=&#32;prm.get_bool(<emphasis class="stringliteral">&quot;AllOne&quot;</emphasis>);
+306 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(ret.C_AllOne)&#32;{
+307 &#32;&#32;&#32;&#32;&#32;&#32;ret.C_Epsilon&#32;=&#32;1.0;
+308 &#32;&#32;&#32;&#32;&#32;&#32;ret.C_Mu&#32;=&#32;1.0;
+309 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+310 &#32;&#32;&#32;&#32;&#32;&#32;ret.C_Epsilon&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;EpsilonZero&quot;</emphasis>);
+311 &#32;&#32;&#32;&#32;&#32;&#32;ret.C_Mu&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;MuZero&quot;</emphasis>);
+312 &#32;&#32;&#32;&#32;}
+313 &#32;&#32;&#32;&#32;ret.C_c&#32;=&#32;1.0&#32;/&#32;sqrt(ret.C_Epsilon&#32;*&#32;ret.C_Mu);
+314 &#32;&#32;&#32;&#32;ret.C_f0&#32;=&#32;ret.C_c&#32;/&#32;ret.M_W_Lambda;
+315 &#32;&#32;&#32;&#32;ret.C_Pi&#32;=&#32;prm.get_double(<emphasis class="stringliteral">&quot;Pi&quot;</emphasis>);
+316 &#32;&#32;&#32;&#32;ret.C_k0&#32;=&#32;2.0&#32;*&#32;ret.C_Pi&#32;/&#32;ret.M_W_Lambda;
+317 &#32;&#32;&#32;&#32;ret.C_omega&#32;=&#32;2.0&#32;*&#32;ret.C_Pi&#32;*&#32;ret.C_f0;
 318 &#32;&#32;}
-319 
-320 &#32;&#32;ret.SystemLength&#32;=&#32;ret.M_R_ZLength&#32;+&#32;ret.M_BC_Zplus&#32;+&#32;ret.M_BC_Zminus;
-321 
-322 &#32;&#32;ret.LayerThickness&#32;=&#32;ret.SystemLength&#32;/&#32;(double)ret.NumberProcesses;
-323 
-324 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Case&#32;Detection:&#32;&quot;</emphasis>&#32;;
-325 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(ret.M_PC_Use)&#32;{
-326 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Using&#32;case&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;ret.M_PC_Case&#32;&lt;&lt;&#32;std::endl;
-327 &#32;&#32;&#32;&#32;std::ifstream&#32;input(&#32;<emphasis class="stringliteral">&quot;Modes/test.csv&quot;</emphasis>&#32;);
-328 &#32;&#32;&#32;&#32;std::string&#32;line;
-329 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;counter&#32;=&#32;0;
-330 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;case_found&#32;=&#32;<emphasis class="keyword">false</emphasis>;
-331 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(ret.M_PC_Case&#32;&gt;=&#32;0&#32;&amp;&amp;&#32;ret.M_PC_Case&#32;&lt;&#32;36){
-332 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">while</emphasis>(std::getline(&#32;input,&#32;line&#32;)&#32;&amp;&amp;&#32;counter&#32;&lt;&#32;36){
-333 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(counter&#32;==&#32;ret.M_PC_Case)&#32;{
-334 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.sd.SetByString(line);
-335 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;case_found&#32;=&#32;<emphasis class="keyword">true</emphasis>;
-336 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-337 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;counter++;
-338 &#32;&#32;&#32;&#32;&#32;&#32;}
-339 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(!case_found)&#32;{
-340 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;There&#32;was&#32;a&#32;severe&#32;error.&#32;The&#32;case&#32;was&#32;not&#32;found&#32;therefore&#32;not&#32;initialized.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
-341 &#32;&#32;&#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-342 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.M_W_Sectors&#32;=&#32;ret.sd.Sectors;
-343 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.M_R_ZLength&#32;=&#32;ret.sd.z[ret.sd.Sectors-1]&#32;-&#32;ret.sd.z[0];
-344 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.SystemLength&#32;=&#32;ret.M_R_ZLength&#32;+&#32;ret.M_BC_Zplus&#32;+&#32;ret.M_BC_Zminus;
-345 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.LayerThickness&#32;=&#32;ret.SystemLength&#32;/&#32;(double)ret.NumberProcesses;
-346 &#32;&#32;&#32;&#32;&#32;&#32;}
-347 &#32;&#32;&#32;&#32;}
-348 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-349 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Not&#32;using&#32;case.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
-350 &#32;&#32;}
-351 
-352 &#32;&#32;ret.SectorThickness&#32;=&#32;ret.M_R_ZLength&#32;/&#32;ret.M_W_Sectors;
-353 
-354 &#32;&#32;ret.LayersPerSector&#32;=&#32;ret.SectorThickness/ret.LayerThickness;
-355 
-356 &#32;&#32;ret.Maximum_Z&#32;=&#32;(ret.M_R_ZLength/2.0)&#32;+&#32;ret.M_BC_Zplus;
-357 &#32;&#32;ret.Minimum_Z&#32;=&#32;-(ret.M_R_ZLength/2.0)&#32;-&#32;ret.M_BC_Zminus;
-358 
-359 &#32;&#32;deallog.push(<emphasis class="stringliteral">&quot;Checking&#32;Waveguide&#32;Properties&quot;</emphasis>);
-360 
-361 &#32;&#32;ret.Phys_V&#32;=&#32;2&#32;*&#32;ret.C_Pi&#32;*&#32;ret.M_C_Dim1In&#32;/&#32;ret.M_W_Lambda&#32;*std::sqrt(ret.M_W_epsilonin&#32;*&#32;ret.M_W_epsilonin&#32;-&#32;ret.M_W_epsilonout&#32;*&#32;ret.M_W_epsilonout);
-362 
-363 &#32;&#32;ret.So_ElementOrder&#32;=&#32;0;
-364 
-365 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Normalized&#32;Frequency&#32;V:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;ret.Phys_V&#32;&lt;&lt;std::endl;
-366 
-367 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(ret.Phys_V&gt;&#32;1.5&#32;&amp;&amp;&#32;ret.Phys_V&#32;&lt;&#32;2.405){
-368 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;This&#32;Waveguide&#32;is&#32;Single&#32;Moded&quot;</emphasis>&#32;&lt;&lt;std::endl;
-369 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-370 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;This&#32;Waveguide&#32;is&#32;not&#32;Single&#32;Moded&quot;</emphasis>&#32;&lt;&lt;std::endl;
-371 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;temp&#32;=&#32;ret.Phys_V&#32;*&#32;ret.M_W_Lambda;
-372 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Minimum&#32;Lambda:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;temp/1.5&#32;&lt;&lt;std::endl;
-373 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Maximum&#32;Lambda:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;temp/2.405&#32;&lt;&lt;std::endl;
-374 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Current&#32;Lambda:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;ret.M_W_Lambda&#32;&lt;&lt;std::endl;
-375 &#32;&#32;}
+319 &#32;&#32;prm.leave_subsection();
+320 
+321 &#32;&#32;prm.enter_subsection(<emphasis class="stringliteral">&quot;Refinement&quot;</emphasis>);
+322 &#32;&#32;{
+323 &#32;&#32;&#32;&#32;ret.R_Global&#32;=&#32;prm.get_integer(<emphasis class="stringliteral">&quot;Global&quot;</emphasis>);
+324 &#32;&#32;&#32;&#32;ret.R_Local&#32;=&#32;prm.get_integer(<emphasis class="stringliteral">&quot;SemiGlobal&quot;</emphasis>);
+325 &#32;&#32;&#32;&#32;ret.R_Interior&#32;=&#32;prm.get_integer(<emphasis class="stringliteral">&quot;Internal&quot;</emphasis>);
+326 &#32;&#32;}
+327 &#32;&#32;prm.leave_subsection();
+328 
+329 &#32;&#32;ret.MPIC_World&#32;=&#32;MPI_COMM_WORLD;
+330 &#32;&#32;ret.MPI_Rank&#32;=&#32;Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
+331 &#32;&#32;ret.NumberProcesses&#32;=&#32;Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
+332 
+333 &#32;&#32;ret.Head&#32;=&#32;(ret.MPI_Rank&#32;==&#32;0);
+334 
+335 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;((<emphasis class="keywordtype">int</emphasis>)ret.MPI_Rank&#32;&gt;&#32;ret.NumberProcesses&#32;-&#32;ret.M_BC_Zplus&#32;-&#32;1)&#32;{
+336 &#32;&#32;&#32;&#32;ret.PMLLayer&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+337 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+338 &#32;&#32;&#32;&#32;ret.PMLLayer&#32;=&#32;<emphasis class="keyword">false</emphasis>;
+339 &#32;&#32;}
+340 
+341 &#32;&#32;ret.SystemLength&#32;=&#32;ret.M_R_ZLength&#32;+&#32;ret.M_BC_Zplus&#32;+&#32;ret.M_BC_Zminus;
+342 
+343 &#32;&#32;ret.LayerThickness&#32;=&#32;ret.SystemLength&#32;/&#32;(double)ret.NumberProcesses;
+344 
+345 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Case&#32;Detection:&#32;&quot;</emphasis>;
+346 &#32;&#32;if&#32;(ret.M_PC_Use)&#32;{
+347 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Using&#32;case&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;ret.M_PC_Case&#32;&lt;&lt;&#32;std::endl;
+348 &#32;&#32;&#32;&#32;std::ifstream&#32;input(<emphasis class="stringliteral">&quot;Modes/test.csv&quot;</emphasis>);
+349 &#32;&#32;&#32;&#32;std::string&#32;line;
+350 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;counter&#32;=&#32;0;
+351 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;case_found&#32;=&#32;<emphasis class="keyword">false</emphasis>;
+352 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(ret.M_PC_Case&#32;&gt;=&#32;0&#32;&amp;&amp;&#32;ret.M_PC_Case&#32;&lt;&#32;36)&#32;{
+353 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">while</emphasis>&#32;(std::getline(input,&#32;line)&#32;&amp;&amp;&#32;counter&#32;&lt;&#32;36)&#32;{
+354 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(counter&#32;==&#32;ret.M_PC_Case)&#32;{
+355 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.sd.SetByString(line);
+356 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;case_found&#32;=&#32;<emphasis class="keyword">true</emphasis>;
+357 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+358 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;counter++;
+359 &#32;&#32;&#32;&#32;&#32;&#32;}
+360 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(!case_found)&#32;{
+361 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;There&#32;was&#32;a&#32;severe&#32;error.&#32;The&#32;case&#32;was&#32;not&#32;found&#32;therefore&#32;&quot;</emphasis>
+362 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="stringliteral">&quot;not&#32;initialized.&quot;</emphasis>
+363 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;std::endl;
+364 &#32;&#32;&#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+365 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.M_W_Sectors&#32;=&#32;ret.sd.Sectors;
+366 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.M_R_ZLength&#32;=&#32;ret.sd.z[ret.sd.Sectors&#32;-&#32;1]&#32;-&#32;ret.sd.z[0];
+367 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.SystemLength&#32;=&#32;ret.M_R_ZLength&#32;+&#32;ret.M_BC_Zplus&#32;+&#32;ret.M_BC_Zminus;
+368 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.LayerThickness&#32;=&#32;ret.SystemLength&#32;/&#32;(double)ret.NumberProcesses;
+369 &#32;&#32;&#32;&#32;&#32;&#32;}
+370 &#32;&#32;&#32;&#32;}
+371 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+372 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Not&#32;using&#32;case.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+373 &#32;&#32;}
+374 
+375 &#32;&#32;ret.SectorThickness&#32;=&#32;ret.M_R_ZLength&#32;/&#32;ret.M_W_Sectors;
 376 
-377 &#32;&#32;ret.Phys_SpotRadius&#32;=&#32;(0.65&#32;+&#32;1.619/(std::pow(ret.Phys_V,&#32;1.5))&#32;+&#32;2.879/(std::pow(ret.Phys_V,&#32;6)))&#32;*&#32;ret.M_C_Dim1In;
+377 &#32;&#32;ret.LayersPerSector&#32;=&#32;ret.SectorThickness&#32;/&#32;ret.LayerThickness;
 378 
-379 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Spot&#32;Radius&#32;omega:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;ret.Phys_SpotRadius&#32;&lt;&lt;std::endl;
-380 
+379 &#32;&#32;ret.Maximum_Z&#32;=&#32;(ret.M_R_ZLength&#32;/&#32;2.0)&#32;+&#32;ret.M_BC_Zplus;
+380 &#32;&#32;ret.Minimum_Z&#32;=&#32;-(ret.M_R_ZLength&#32;/&#32;2.0)&#32;-&#32;ret.M_BC_Zminus;
 381 
-382 &#32;&#32;deallog.pop();
+382 &#32;&#32;deallog.push(<emphasis class="stringliteral">&quot;Checking&#32;Waveguide&#32;Properties&quot;</emphasis>);
 383 
-384 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
-385 }
-386 
-387 <emphasis class="keywordtype">double</emphasis>&#32;InterpolationPolynomial(<emphasis class="keywordtype">double</emphasis>&#32;in_z,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_val_zero,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_val_one,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_derivative_zero,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_derivative_one)&#32;{
-388 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(in_z&#32;&lt;&#32;0.0)&#32;<emphasis class="keywordflow">return</emphasis>&#32;in_val_zero;
-389 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(in_z&#32;&gt;&#32;1.0)&#32;<emphasis class="keywordflow">return</emphasis>&#32;in_val_one;
-390 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;(2*(in_val_zero&#32;-&#32;in_val_one)&#32;+&#32;in_derivative_zero&#32;+&#32;in_derivative_one)&#32;*&#32;pow(in_z,3)&#32;+&#32;(3*(in_val_one&#32;-&#32;in_val_zero)&#32;-&#32;(2*in_derivative_zero)&#32;-&#32;in_derivative_one)*pow(in_z,2)&#32;+&#32;in_derivative_zero*in_z&#32;+&#32;in_val_zero;
-391 }
-392 
-393 <emphasis class="keywordtype">double</emphasis>&#32;InterpolationPolynomialDerivative(<emphasis class="keywordtype">double</emphasis>&#32;in_z,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_val_zero,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_val_one,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_derivative_zero,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_derivative_one)&#32;{
-394 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(in_z&#32;&lt;&#32;0.0)&#32;<emphasis class="keywordflow">return</emphasis>&#32;in_derivative_zero;
-395 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(in_z&#32;&gt;&#32;1.0)&#32;<emphasis class="keywordflow">return</emphasis>&#32;in_derivative_one;
-396 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;3*&#32;(2*(in_val_zero&#32;-&#32;in_val_one)&#32;+&#32;in_derivative_zero&#32;+&#32;in_derivative_one)&#32;*&#32;pow(in_z,2)&#32;+&#32;2*(3*(in_val_one&#32;-&#32;in_val_zero)&#32;-&#32;(2*in_derivative_zero)&#32;-&#32;in_derivative_one)*in_z&#32;+&#32;in_derivative_zero;
-397 }
-398 
-399 <emphasis class="keywordtype">double</emphasis>&#32;InterpolationPolynomialZeroDerivative(<emphasis class="keywordtype">double</emphasis>&#32;in_z&#32;,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_val_zero,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_val_one)&#32;{
-400 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;InterpolationPolynomial(in_z,&#32;in_val_zero,&#32;in_val_one,&#32;0.0,&#32;0.0);
-401 }
-402 
-403 <emphasis class="keywordtype">double</emphasis>&#32;Distance2D&#32;(Point&lt;3,&#32;double&gt;&#32;position,&#32;Point&lt;3,&#32;double&gt;&#32;to&#32;)&#32;{
-404 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;sqrt((position(0)-to(0))*(position(0)-to(0))&#32;+&#32;(position(1)-to(1))*(position(1)-to(1)));
-405 }
-406 
-407 Tensor&lt;1,&#32;3&#32;,&#32;double&gt;&#32;crossproduct(Tensor&lt;1,&#32;3,&#32;double&gt;&#32;a,&#32;Tensor&lt;1,&#32;3,&#32;double&gt;&#32;b)&#32;{
-408 &#32;&#32;&#32;&#32;Tensor&lt;1,3,double&gt;&#32;ret;
-409 &#32;&#32;&#32;&#32;ret[0]&#32;=&#32;a[1]&#32;*&#32;b[2]&#32;-&#32;a[2]&#32;*&#32;b[1];
-410 &#32;&#32;&#32;&#32;ret[1]&#32;=&#32;a[2]&#32;*&#32;b[0]&#32;-&#32;a[0]&#32;*&#32;b[2];
-411 &#32;&#32;&#32;&#32;ret[2]&#32;=&#32;a[0]&#32;*&#32;b[1]&#32;-&#32;a[1]&#32;*&#32;b[0];
-412 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
-413 }
-414 
-415 <emphasis class="keywordtype">double</emphasis>&#32;dotproduct(Tensor&lt;1,&#32;3,&#32;double&gt;&#32;a,&#32;Tensor&lt;1,&#32;3,&#32;double&gt;&#32;b)&#32;{
-416 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;a[0]&#32;*&#32;b[0]&#32;+&#32;a[1]&#32;*&#32;b[1]&#32;+&#32;a[2]&#32;*&#32;b[2];
-417 }
-418 
-419 <emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">int</emphasis>&#32;dim&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;mesh_info(<emphasis class="keyword">const</emphasis>&#32;parallel::distributed::Triangulation&lt;dim&gt;&#32;&amp;tria,&#32;<emphasis class="keyword">const</emphasis>&#32;std::string&#32;&amp;filename)
-420 {
-421 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Mesh&#32;info:&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;dimension:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;dim&#32;&lt;&lt;&#32;std::endl&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;no.&#32;of&#32;cells:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;tria.n_active_cells()&#32;&lt;&lt;&#32;std::endl;
-422 &#32;&#32;&#32;&#32;{
-423 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::map&lt;unsigned&#32;int,&#32;unsigned&#32;int&gt;&#32;boundary_count;
-424 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keyword">typename</emphasis>&#32;parallel::distributed::Triangulation&lt;dim&gt;::active_cell_iterator
-425 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell&#32;=&#32;tria.begin_active(),
-426 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;endc&#32;=&#32;tria.end();
-427 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell!=endc;&#32;++cell)
-428 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;{
-429 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;face=0;&#32;face&lt;GeometryInfo&lt;dim&gt;::faces_per_cell;&#32;++face)
-430 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;{
-431 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(cell-&gt;face(face)-&gt;at_boundary())
-432 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;boundary_count[cell-&gt;face(face)-&gt;boundary_id()]++;
-433 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-434 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-435 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;boundary&#32;indicators:&#32;&quot;</emphasis>;
-436 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(std::map&lt;unsigned&#32;int,&#32;unsigned&#32;int&gt;::iterator&#32;it=boundary_count.begin();
-437 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;it!=boundary_count.end();
-438 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;++it)
-439 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;{
-440 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;it-&gt;first&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;(&quot;</emphasis>&#32;&lt;&lt;&#32;it-&gt;second&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;times)&#32;&quot;</emphasis>;
-441 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-442 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::endl;
-443 &#32;&#32;&#32;&#32;}
-444 &#32;&#32;&#32;&#32;std::ofstream&#32;out&#32;(filename.c_str());
-445 &#32;&#32;&#32;&#32;GridOut&#32;grid_out;
-446 &#32;&#32;&#32;&#32;grid_out.write_vtk&#32;(tria,&#32;out);
-447 &#32;&#32;&#32;&#32;out.close();
-448 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;written&#32;to&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;filename&#32;&lt;&lt;&#32;std::endl&#32;&lt;&lt;&#32;std::endl;
-449 }
-450 
-451 <emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">int</emphasis>&#32;dim&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;mesh_info(<emphasis class="keyword">const</emphasis>&#32;parallel::distributed::Triangulation&lt;dim&gt;&#32;&amp;tria)
-452 {
-453 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Mesh&#32;info:&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;dimension:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;dim&#32;&lt;&lt;&#32;std::endl&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;no.&#32;of&#32;cells:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;tria.n_active_cells()&#32;&lt;&lt;&#32;std::endl;
-454 &#32;&#32;{
-455 &#32;&#32;&#32;&#32;std::map&lt;unsigned&#32;int,&#32;unsigned&#32;int&gt;&#32;boundary_count;
-456 &#32;&#32;&#32;&#32;<emphasis class="keyword">typename</emphasis>&#32;parallel::distributed::Triangulation&lt;dim&gt;::active_cell_iterator
-457 &#32;&#32;&#32;&#32;cell&#32;=&#32;tria.begin_active(),
-458 &#32;&#32;&#32;&#32;endc&#32;=&#32;tria.end();
-459 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell!=endc;&#32;++cell)
-460 &#32;&#32;&#32;&#32;{
-461 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;face=0;&#32;face&lt;GeometryInfo&lt;dim&gt;::faces_per_cell;&#32;++face)
-462 &#32;&#32;&#32;&#32;&#32;&#32;{
-463 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(cell-&gt;face(face)-&gt;at_boundary())
-464 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;boundary_count[cell-&gt;face(face)-&gt;boundary_id()]++;
-465 &#32;&#32;&#32;&#32;&#32;&#32;}
-466 &#32;&#32;&#32;&#32;}
-467 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;boundary&#32;indicators:&#32;&quot;</emphasis>;
-468 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(std::map&lt;unsigned&#32;int,&#32;unsigned&#32;int&gt;::iterator&#32;it=boundary_count.begin();
-469 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;it!=boundary_count.end();
-470 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;++it)
-471 &#32;&#32;&#32;&#32;{
-472 &#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;it-&gt;first&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;(&quot;</emphasis>&#32;&lt;&lt;&#32;it-&gt;second&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;times)&#32;&quot;</emphasis>;
-473 &#32;&#32;&#32;&#32;}
-474 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::endl;
-475 &#32;&#32;}
-476 
-477 }
-478 
-479 <emphasis class="keywordtype">double</emphasis>&#32;sigma&#32;(<emphasis class="keywordtype">double</emphasis>&#32;in_z,&#32;<emphasis class="keywordtype">double</emphasis>&#32;min,&#32;<emphasis class="keywordtype">double</emphasis>&#32;max)&#32;{
-480 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(&#32;min&#32;==&#32;max&#32;)&#32;<emphasis class="keywordflow">return</emphasis>&#32;(in_z&#32;&lt;&#32;min&#32;)?&#32;0.0&#32;:&#32;1.0;
-481 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(in_z&#32;&lt;&#32;min)&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
-482 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(in_z&#32;&gt;&#32;max)&#32;<emphasis class="keywordflow">return</emphasis>&#32;1.0;
-483 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;ret&#32;=&#32;0;
-484 &#32;&#32;&#32;&#32;ret&#32;=&#32;(in_z&#32;-&#32;min)&#32;/&#32;(&#32;max&#32;-&#32;min);
-485 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(ret&#32;&lt;&#32;0.0)&#32;ret&#32;=&#32;0.0;
-486 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(ret&#32;&gt;&#32;1.0)&#32;ret&#32;=&#32;1.0;
-487 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
-488 }
-489 
-490 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_X&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)
-491 {
-492 &#32;&#32;Point&lt;3,&#32;double&gt;&#32;q&#32;=&#32;p;
-493 &#32;&#32;q[0]&#32;*=&#32;GlobalParams.M_R_XLength&#32;/&#32;2.0&#32;;
-494 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;q;
-495 }
-496 
-497 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_Y&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)
-498 {
-499 &#32;&#32;Point&lt;3,&#32;double&gt;&#32;q&#32;=&#32;p;
-500 &#32;&#32;q[1]&#32;*=&#32;GlobalParams.M_R_YLength&#32;/&#32;2.0&#32;;
-501 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;q;
-502 }
-503 
-504 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_Z&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)
-505 {
-506 &#32;&#32;Point&lt;3,&#32;double&gt;&#32;q&#32;=&#32;p;
-507 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;total_length&#32;=&#32;GlobalParams.SystemLength;
-508 &#32;&#32;q[2]&#32;*=&#32;total_length&#32;/&#32;2.0;
-509 &#32;&#32;q[1]&#32;=&#32;p[1];
-510 &#32;&#32;q[0]&#32;=&#32;p[0];
-511 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;q;
-512 }
-513 
-514 Point&lt;3,&#32;double&gt;&#32;Triangulation_Shift_Z&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)
-515 {
-516 &#32;&#32;Point&lt;3,&#32;double&gt;&#32;q&#32;=&#32;p;
-517 &#32;&#32;q[2]&#32;+=&#32;(GlobalParams.M_BC_Zplus&#32;-&#32;GlobalParams.M_BC_Zminus)/2.0;
-518 &#32;&#32;q[1]&#32;=&#32;p[1];
-519 &#32;&#32;q[0]&#32;=&#32;p[0];
-520 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;q;
-521 }
-522 
-523 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_to_circle&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)
-524 {
-525 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;q&#32;=&#32;p;
-526 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(abs(q[0])&#32;&lt;&#32;0.01&#32;&amp;&amp;&#32;abs(q[1])&#32;-&#32;0.25&#32;&lt;&#32;0.01&#32;)&#32;{
-527 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;q[1]&#32;*=&#32;sqrt(2);
-528 &#32;&#32;&#32;&#32;}
-529 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(abs(q[1])&#32;&lt;&#32;0.01&#32;&amp;&amp;&#32;abs(q[0])&#32;-&#32;0.25&#32;&lt;&#32;0.01&#32;)&#32;{
-530 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;q[0]&#32;*=&#32;sqrt(2);
-531 &#32;&#32;&#32;&#32;}
-532 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;q;
-533 }
-534 
-535 Point&lt;3,&#32;double&gt;&#32;Triangulation_Transform_to_physical&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)
-536 {
-537 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(the_st&#32;!=&#32;0)&#32;{
-538 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;the_st-&gt;math_to_phys(p);
-539 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-540 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;Point&lt;3,&#32;double&gt;(0,0,0);
-541 &#32;&#32;}
+384 &#32;&#32;ret.Phys_V&#32;=&#32;2&#32;*&#32;ret.C_Pi&#32;*&#32;ret.M_C_Dim1In&#32;/&#32;ret.M_W_Lambda&#32;*
+385 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::sqrt(ret.M_W_epsilonin&#32;*&#32;ret.M_W_epsilonin&#32;-
+386 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.M_W_epsilonout&#32;*&#32;ret.M_W_epsilonout);
+387 
+388 &#32;&#32;ret.So_ElementOrder&#32;=&#32;0;
+389 
+390 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Normalized&#32;Frequency&#32;V:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;ret.Phys_V&#32;&lt;&lt;&#32;std::endl;
+391 
+392 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(ret.Phys_V&#32;&gt;&#32;1.5&#32;&amp;&amp;&#32;ret.Phys_V&#32;&lt;&#32;2.405)&#32;{
+393 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;This&#32;Waveguide&#32;is&#32;Single&#32;Moded&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+394 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+395 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;This&#32;Waveguide&#32;is&#32;not&#32;Single&#32;Moded&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+396 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;temp&#32;=&#32;ret.Phys_V&#32;*&#32;ret.M_W_Lambda;
+397 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Minimum&#32;Lambda:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;temp&#32;/&#32;1.5&#32;&lt;&lt;&#32;std::endl;
+398 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Maximum&#32;Lambda:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;temp&#32;/&#32;2.405&#32;&lt;&lt;&#32;std::endl;
+399 &#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Current&#32;Lambda:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;ret.M_W_Lambda&#32;&lt;&lt;&#32;std::endl;
+400 &#32;&#32;}
+401 
+402 &#32;&#32;ret.Phys_SpotRadius&#32;=&#32;(0.65&#32;+&#32;1.619&#32;/&#32;(std::pow(ret.Phys_V,&#32;1.5))&#32;+
+403 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;2.879&#32;/&#32;(std::pow(ret.Phys_V,&#32;6)))&#32;*
+404 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.M_C_Dim1In;
+405 
+406 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Spot&#32;Radius&#32;omega:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;ret.Phys_SpotRadius&#32;&lt;&lt;&#32;std::endl;
+407 
+408 &#32;&#32;deallog.pop();
+409 
+410 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+411 }
+412 
+413 <emphasis class="keywordtype">double</emphasis>&#32;InterpolationPolynomial(<emphasis class="keywordtype">double</emphasis>&#32;in_z,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_val_zero,
+414 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_val_one,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_derivative_zero,
+415 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_derivative_one)&#32;{
+416 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(in_z&#32;&lt;&#32;0.0)&#32;<emphasis class="keywordflow">return</emphasis>&#32;in_val_zero;
+417 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(in_z&#32;&gt;&#32;1.0)&#32;<emphasis class="keywordflow">return</emphasis>&#32;in_val_one;
+418 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;(2&#32;*&#32;(in_val_zero&#32;-&#32;in_val_one)&#32;+&#32;in_derivative_zero&#32;+
+419 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;in_derivative_one)&#32;*
+420 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;pow(in_z,&#32;3)&#32;+
+421 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(3&#32;*&#32;(in_val_one&#32;-&#32;in_val_zero)&#32;-&#32;(2&#32;*&#32;in_derivative_zero)&#32;-
+422 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;in_derivative_one)&#32;*
+423 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;pow(in_z,&#32;2)&#32;+
+424 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;in_derivative_zero&#32;*&#32;in_z&#32;+&#32;in_val_zero;
+425 }
+426 
+427 <emphasis class="keywordtype">double</emphasis>&#32;InterpolationPolynomialDerivative(<emphasis class="keywordtype">double</emphasis>&#32;in_z,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_val_zero,
+428 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_val_one,
+429 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_derivative_zero,
+430 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_derivative_one)&#32;{
+431 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(in_z&#32;&lt;&#32;0.0)&#32;<emphasis class="keywordflow">return</emphasis>&#32;in_derivative_zero;
+432 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(in_z&#32;&gt;&#32;1.0)&#32;<emphasis class="keywordflow">return</emphasis>&#32;in_derivative_one;
+433 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;3&#32;*
+434 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(2&#32;*&#32;(in_val_zero&#32;-&#32;in_val_one)&#32;+&#32;in_derivative_zero&#32;+
+435 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;in_derivative_one)&#32;*
+436 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;pow(in_z,&#32;2)&#32;+
+437 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;2&#32;*
+438 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(3&#32;*&#32;(in_val_one&#32;-&#32;in_val_zero)&#32;-&#32;(2&#32;*&#32;in_derivative_zero)&#32;-
+439 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;in_derivative_one)&#32;*
+440 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;in_z&#32;+
+441 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;in_derivative_zero;
+442 }
+443 
+444 <emphasis class="keywordtype">double</emphasis>&#32;InterpolationPolynomialZeroDerivative(<emphasis class="keywordtype">double</emphasis>&#32;in_z,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_val_zero,
+445 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_val_one)&#32;{
+446 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;InterpolationPolynomial(in_z,&#32;in_val_zero,&#32;in_val_one,&#32;0.0,&#32;0.0);
+447 }
+448 
+449 <emphasis class="keywordtype">double</emphasis>&#32;Distance2D(Point&lt;3,&#32;double&gt;&#32;position,&#32;Point&lt;3,&#32;double&gt;&#32;to)&#32;{
+450 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;sqrt((position(0)&#32;-&#32;to(0))&#32;*&#32;(position(0)&#32;-&#32;to(0))&#32;+
+451 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(position(1)&#32;-&#32;to(1))&#32;*&#32;(position(1)&#32;-&#32;to(1)));
+452 }
+453 
+454 Tensor&lt;1,&#32;3,&#32;double&gt;&#32;crossproduct(Tensor&lt;1,&#32;3,&#32;double&gt;&#32;a,
+455 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Tensor&lt;1,&#32;3,&#32;double&gt;&#32;b)&#32;{
+456 &#32;&#32;Tensor&lt;1,&#32;3,&#32;double&gt;&#32;ret;
+457 &#32;&#32;ret[0]&#32;=&#32;a[1]&#32;*&#32;b[2]&#32;-&#32;a[2]&#32;*&#32;b[1];
+458 &#32;&#32;ret[1]&#32;=&#32;a[2]&#32;*&#32;b[0]&#32;-&#32;a[0]&#32;*&#32;b[2];
+459 &#32;&#32;ret[2]&#32;=&#32;a[0]&#32;*&#32;b[1]&#32;-&#32;a[1]&#32;*&#32;b[0];
+460 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+461 }
+462 
+463 <emphasis class="keywordtype">double</emphasis>&#32;dotproduct(Tensor&lt;1,&#32;3,&#32;double&gt;&#32;a,&#32;Tensor&lt;1,&#32;3,&#32;double&gt;&#32;b)&#32;{
+464 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;a[0]&#32;*&#32;b[0]&#32;+&#32;a[1]&#32;*&#32;b[1]&#32;+&#32;a[2]&#32;*&#32;b[2];
+465 }
+466 
+467 <emphasis class="keyword">template</emphasis>&#32;&lt;<emphasis class="keywordtype">int</emphasis>&#32;dim&gt;
+468 <emphasis class="keywordtype">void</emphasis>&#32;mesh_info(<emphasis class="keyword">const</emphasis>&#32;parallel::distributed::Triangulation&lt;dim&gt;&#32;&amp;tria,
+469 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;std::string&#32;&amp;filename)&#32;{
+470 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Mesh&#32;info:&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl
+471 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;dimension:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;dim&#32;&lt;&lt;&#32;std::endl
+472 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;no.&#32;of&#32;cells:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;tria.n_active_cells()&#32;&lt;&lt;&#32;std::endl;
+473 &#32;&#32;{
+474 &#32;&#32;&#32;&#32;std::map&lt;unsigned&#32;int,&#32;unsigned&#32;int&gt;&#32;boundary_count;
+475 &#32;&#32;&#32;&#32;<emphasis class="keyword">typename</emphasis>&#32;parallel::distributed::Triangulation&lt;dim&gt;::active_cell_iterator
+476 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell&#32;=&#32;tria.begin_active(),
+477 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;endc&#32;=&#32;tria.end();
+478 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell&#32;!=&#32;endc;&#32;++cell)&#32;{
+479 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;face&#32;=&#32;0;&#32;face&#32;&lt;&#32;GeometryInfo&lt;dim&gt;::faces_per_cell;
+480 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;++face)&#32;{
+481 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(cell-&gt;face(face)-&gt;at_boundary())
+482 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;boundary_count[cell-&gt;face(face)-&gt;boundary_id()]++;
+483 &#32;&#32;&#32;&#32;&#32;&#32;}
+484 &#32;&#32;&#32;&#32;}
+485 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;boundary&#32;indicators:&#32;&quot;</emphasis>;
+486 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(std::map&lt;unsigned&#32;int,&#32;unsigned&#32;int&gt;::iterator&#32;it&#32;=
+487 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;boundary_count.begin();
+488 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;it&#32;!=&#32;boundary_count.end();&#32;++it)&#32;{
+489 &#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;it-&gt;first&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;(&quot;</emphasis>&#32;&lt;&lt;&#32;it-&gt;second&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;times)&#32;&quot;</emphasis>;
+490 &#32;&#32;&#32;&#32;}
+491 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::endl;
+492 &#32;&#32;}
+493 &#32;&#32;std::ofstream&#32;out(filename.c_str());
+494 &#32;&#32;GridOut&#32;grid_out;
+495 &#32;&#32;grid_out.write_vtk(tria,&#32;out);
+496 &#32;&#32;out.close();
+497 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;written&#32;to&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;filename&#32;&lt;&lt;&#32;std::endl&#32;&lt;&lt;&#32;std::endl;
+498 }
+499 
+500 <emphasis class="keyword">template</emphasis>&#32;&lt;<emphasis class="keywordtype">int</emphasis>&#32;dim&gt;
+501 <emphasis class="keywordtype">void</emphasis>&#32;mesh_info(<emphasis class="keyword">const</emphasis>&#32;parallel::distributed::Triangulation&lt;dim&gt;&#32;&amp;tria)&#32;{
+502 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Mesh&#32;info:&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl
+503 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;dimension:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;dim&#32;&lt;&lt;&#32;std::endl
+504 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;no.&#32;of&#32;cells:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;tria.n_active_cells()&#32;&lt;&lt;&#32;std::endl;
+505 &#32;&#32;{
+506 &#32;&#32;&#32;&#32;std::map&lt;unsigned&#32;int,&#32;unsigned&#32;int&gt;&#32;boundary_count;
+507 &#32;&#32;&#32;&#32;<emphasis class="keyword">typename</emphasis>&#32;parallel::distributed::Triangulation&lt;dim&gt;::active_cell_iterator
+508 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell&#32;=&#32;tria.begin_active(),
+509 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;endc&#32;=&#32;tria.end();
+510 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell&#32;!=&#32;endc;&#32;++cell)&#32;{
+511 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;face&#32;=&#32;0;&#32;face&#32;&lt;&#32;GeometryInfo&lt;dim&gt;::faces_per_cell;
+512 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;++face)&#32;{
+513 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(cell-&gt;face(face)-&gt;at_boundary())
+514 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;boundary_count[cell-&gt;face(face)-&gt;boundary_id()]++;
+515 &#32;&#32;&#32;&#32;&#32;&#32;}
+516 &#32;&#32;&#32;&#32;}
+517 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;boundary&#32;indicators:&#32;&quot;</emphasis>;
+518 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(std::map&lt;unsigned&#32;int,&#32;unsigned&#32;int&gt;::iterator&#32;it&#32;=
+519 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;boundary_count.begin();
+520 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;it&#32;!=&#32;boundary_count.end();&#32;++it)&#32;{
+521 &#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;it-&gt;first&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;(&quot;</emphasis>&#32;&lt;&lt;&#32;it-&gt;second&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;times)&#32;&quot;</emphasis>;
+522 &#32;&#32;&#32;&#32;}
+523 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::endl;
+524 &#32;&#32;}
+525 }
+526 
+527 <emphasis class="keywordtype">double</emphasis>&#32;sigma(<emphasis class="keywordtype">double</emphasis>&#32;in_z,&#32;<emphasis class="keywordtype">double</emphasis>&#32;min,&#32;<emphasis class="keywordtype">double</emphasis>&#32;max)&#32;{
+528 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(min&#32;==&#32;max)&#32;<emphasis class="keywordflow">return</emphasis>&#32;(in_z&#32;&lt;&#32;min)&#32;?&#32;0.0&#32;:&#32;1.0;
+529 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(in_z&#32;&lt;&#32;min)&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
+530 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(in_z&#32;&gt;&#32;max)&#32;<emphasis class="keywordflow">return</emphasis>&#32;1.0;
+531 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;ret&#32;=&#32;0;
+532 &#32;&#32;ret&#32;=&#32;(in_z&#32;-&#32;min)&#32;/&#32;(max&#32;-&#32;min);
+533 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(ret&#32;&lt;&#32;0.0)&#32;ret&#32;=&#32;0.0;
+534 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(ret&#32;&gt;&#32;1.0)&#32;ret&#32;=&#32;1.0;
+535 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+536 }
+537 
+538 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_X(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)&#32;{
+539 &#32;&#32;Point&lt;3,&#32;double&gt;&#32;q&#32;=&#32;p;
+540 &#32;&#32;q[0]&#32;*=&#32;GlobalParams.M_R_XLength&#32;/&#32;2.0;
+541 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;q;
 542 }
 543 
-544 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_Computational_Radius&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)
-545 {
-546 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r_goal&#32;=&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)/2.0;
-547 &#32;&#32;&#32;&#32;<emphasis class="comment">//double&#32;r_current&#32;=&#32;(GlobalParams.PRM_M_R_XLength&#32;)&#32;/&#32;7.12644;</emphasis>
-548 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r_current&#32;=&#32;(GlobalParams.M_R_XLength&#32;)&#32;/&#32;5.65;
-549 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r_max&#32;=&#32;(GlobalParams.M_R_XLength&#32;/&#32;2.0&#32;)&#32;*&#32;(1.0&#32;-&#32;(2.0*GlobalParams.M_BC_XMinus));
-550 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r_point&#32;=&#32;sqrt(p[0]*p[0]&#32;+&#32;p[1]*p[1]);
-551 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;factor&#32;=&#32;InterpolationPolynomialZeroDerivative(sigma(r_point,&#32;r_current,&#32;r_max),&#32;r_goal/r_current&#32;,&#32;1.0);
-552 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;q&#32;=&#32;p;
-553 &#32;&#32;&#32;&#32;q[0]&#32;*=&#32;factor;
-554 &#32;&#32;&#32;&#32;q[1]&#32;*=&#32;factor;
-555 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;q;
-556 }
-557 
-558 <emphasis class="keywordtype">double</emphasis>&#32;my_inter&#32;(<emphasis class="keywordtype">double</emphasis>&#32;x,&#32;<emphasis class="keywordtype">double</emphasis>&#32;l,&#32;<emphasis class="keywordtype">double</emphasis>&#32;w)&#32;{
-559 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;a&#32;=&#32;1.0/9.0&#32;*&#32;(l+8.0*w);
-560 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;c&#32;=&#32;(16.0/9.0)&#32;*&#32;(l-w);
-561 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;b&#32;=&#32;-(8.0/9.0)&#32;*&#32;(l-w);
-562 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;a&#32;+&#32;b*x&#32;+&#32;c*x*x;
-563 }
-564 
-565 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_Computational_Rectangle&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)
-566 {
-567 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;d1_goal&#32;=&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)/2.0;
-568 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;d2_goal&#32;=&#32;(GlobalParams.M_C_Dim2In&#32;+&#32;GlobalParams.M_C_Dim2Out)/2.0;
-569 
-570 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;q&#32;=&#32;p;
-571 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(abs(p[0])&#32;&lt;=&#32;0.2501){
-572 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;q[0]&#32;=&#32;q[0]&#32;*&#32;3.0&#32;*&#32;d1_goal;
-573 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-574 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;q[0]&#32;=&#32;&#32;my_inter(std::abs(p[0]),&#32;GlobalParams.M_R_XLength&#32;/&#32;2.0,&#32;d1_goal);
-575 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(p[0]&#32;&lt;0.0)&#32;q[0]&#32;*=&#32;-1.0;
-576 &#32;&#32;&#32;&#32;}
-577 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(abs(p[1])&#32;&lt;=&#32;0.2501){
-578 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;q[1]&#32;=&#32;q[1]&#32;*&#32;3.0&#32;*&#32;d2_goal;
-579 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-580 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;q[1]&#32;=&#32;my_inter(std::abs(p[1]),&#32;GlobalParams.M_R_YLength&#32;/&#32;2.0,&#32;d2_goal);
-581 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(p[1]&#32;&lt;0)&#32;q[1]*=&#32;-1.0;
-582 &#32;&#32;&#32;&#32;}
-583 &#32;&#32;q[2]&#32;=&#32;p[2];
-584 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;q;
+544 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_Y(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)&#32;{
+545 &#32;&#32;Point&lt;3,&#32;double&gt;&#32;q&#32;=&#32;p;
+546 &#32;&#32;q[1]&#32;*=&#32;GlobalParams.M_R_YLength&#32;/&#32;2.0;
+547 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;q;
+548 }
+549 
+550 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_Z(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)&#32;{
+551 &#32;&#32;Point&lt;3,&#32;double&gt;&#32;q&#32;=&#32;p;
+552 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;total_length&#32;=&#32;GlobalParams.SystemLength;
+553 &#32;&#32;q[2]&#32;*=&#32;total_length&#32;/&#32;2.0;
+554 &#32;&#32;q[1]&#32;=&#32;p[1];
+555 &#32;&#32;q[0]&#32;=&#32;p[0];
+556 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;q;
+557 }
+558 
+559 Point&lt;3,&#32;double&gt;&#32;Triangulation_Shift_Z(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)&#32;{
+560 &#32;&#32;Point&lt;3,&#32;double&gt;&#32;q&#32;=&#32;p;
+561 &#32;&#32;q[2]&#32;+=&#32;(GlobalParams.M_BC_Zplus&#32;-&#32;GlobalParams.M_BC_Zminus)&#32;/&#32;2.0;
+562 &#32;&#32;q[1]&#32;=&#32;p[1];
+563 &#32;&#32;q[0]&#32;=&#32;p[0];
+564 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;q;
+565 }
+566 
+567 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_to_circle(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)&#32;{
+568 &#32;&#32;Point&lt;3,&#32;double&gt;&#32;q&#32;=&#32;p;
+569 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(abs(q[0])&#32;&lt;&#32;0.01&#32;&amp;&amp;&#32;abs(q[1])&#32;-&#32;0.25&#32;&lt;&#32;0.01)&#32;{
+570 &#32;&#32;&#32;&#32;q[1]&#32;*=&#32;sqrt(2);
+571 &#32;&#32;}
+572 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(abs(q[1])&#32;&lt;&#32;0.01&#32;&amp;&amp;&#32;abs(q[0])&#32;-&#32;0.25&#32;&lt;&#32;0.01)&#32;{
+573 &#32;&#32;&#32;&#32;q[0]&#32;*=&#32;sqrt(2);
+574 &#32;&#32;}
+575 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;q;
+576 }
+577 
+578 Point&lt;3,&#32;double&gt;&#32;Triangulation_Transform_to_physical(
+579 &#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)&#32;{
+580 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(the_st&#32;!=&#32;0)&#32;{
+581 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;the_st-&gt;math_to_phys(p);
+582 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+583 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;Point&lt;3,&#32;double&gt;(0,&#32;0,&#32;0);
+584 &#32;&#32;}
 585 }
 586 
-587 <emphasis class="keywordtype">double</emphasis>&#32;TEMode00&#32;(&#32;dealii::Point&lt;3,&#32;double&gt;&#32;p&#32;,&#32;<emphasis class="keywordtype">int</emphasis>&#32;component)
-588 {
-589 
-590 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(component&#32;==&#32;0)&#32;{
-591 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;double&#32;d2&#32;=&#32;(2*&#32;Distance2D(p))&#32;/&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)&#32;;</emphasis>
-592 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;d2&#32;=&#32;Distance2D(p);
-593 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;return&#32;exp(-d2*d2&#32;/&#32;(GlobalParams.Phys_SpotRadius&#32;*&#32;GlobalParams.Phys_SpotRadius));</emphasis>
-594 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;exp(-d2*d2&#32;/&#32;2.25);
-595 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="comment">//return&#32;1.0;</emphasis>
-596 &#32;&#32;&#32;&#32;}
-597 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
-598 }
-599 
-600 <emphasis class="keyword">inline</emphasis>&#32;<emphasis class="keywordtype">bool</emphasis>&#32;file_exists&#32;(<emphasis class="keyword">const</emphasis>&#32;std::string&amp;&#32;name)&#32;{
-601 &#32;&#32;<emphasis class="keyword">struct&#32;</emphasis>stat&#32;buffer;
-602 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;(stat&#32;(name.c_str(),&#32;&amp;buffer)&#32;==&#32;0);
-603 }
-604 
-605 std::vector&lt;types::global_dof_index&gt;&#32;Add_Zero_Restraint_test(dealii::ConstraintMatrix&#32;*&#32;,&#32;DoFHandler&lt;3&gt;::active_cell_iterator&#32;in_cell&#32;,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_face,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;DofsPerLine,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;DofsPerFace,&#32;<emphasis class="keywordtype">bool</emphasis>&#32;in_non_face_dofs,&#32;IndexSet&#32;*&#32;locally_owned_dofs)&#32;{
-606 &#32;&#32;&#32;&#32;std::vector&lt;types::global_dof_index&gt;&#32;local_line_dofs(DofsPerLine);
-607 &#32;&#32;&#32;&#32;std::vector&lt;types::global_dof_index&gt;&#32;local_face_dofs(DofsPerFace);
-608 &#32;&#32;&#32;&#32;std::vector&lt;types::global_dof_index&gt;&#32;ret;
-609 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&lt;&#32;GeometryInfo&lt;3&gt;::lines_per_face;&#32;j++)&#32;{
-610 &#32;&#32;&#32;&#32;&#32;((in_cell-&gt;face(in_face))-&gt;line(j))-&gt;get_dof_indices(local_line_dofs);
-611 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;k&#32;=0;&#32;k&#32;&lt;&#32;DofsPerLine;&#32;k++)&#32;{
-612 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(locally_owned_dofs-&gt;is_element(local_line_dofs[k]))&#32;{
-613 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;in_cm-&gt;add_line(local_line_dofs[k]);</emphasis>
-614 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.push_back(local_line_dofs[k]);
-615 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-616 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-617 &#32;&#32;&#32;&#32;}
-618 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(in_non_face_dofs)&#32;{
-619 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;in_cell-&gt;face(in_face)-&gt;get_dof_indices(local_face_dofs);
-620 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;GeometryInfo&lt;3&gt;::lines_per_face*DofsPerLine;&#32;j&#32;&lt;&#32;DofsPerFace;&#32;j++)&#32;{
-621 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(locally_owned_dofs-&gt;is_element(local_face_dofs[j]))&#32;{
-622 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;in_cm-&gt;add_line(local_face_dofs[j]);</emphasis>
-623 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.push_back(local_face_dofs[j]);
-624 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-625 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-626 &#32;&#32;&#32;&#32;}
-627 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
-628 }
-629 
-630 std::vector&lt;types::global_dof_index&gt;&#32;Add_Zero_Restraint(dealii::ConstraintMatrix&#32;*&#32;in_cm,&#32;DoFHandler&lt;3&gt;::active_cell_iterator&#32;in_cell&#32;,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_face,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;DofsPerLine,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;DofsPerFace,&#32;<emphasis class="keywordtype">bool</emphasis>&#32;in_non_face_dofs,&#32;IndexSet&#32;*&#32;locally_owned_dofs)&#32;{
-631 &#32;&#32;&#32;&#32;std::vector&lt;types::global_dof_index&gt;&#32;local_line_dofs(DofsPerLine);
-632 &#32;&#32;&#32;&#32;std::vector&lt;types::global_dof_index&gt;&#32;local_face_dofs(DofsPerFace);
-633 &#32;&#32;&#32;&#32;std::vector&lt;types::global_dof_index&gt;&#32;ret;
-634 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&lt;&#32;GeometryInfo&lt;3&gt;::lines_per_face;&#32;j++)&#32;{
-635 &#32;&#32;&#32;&#32;&#32;((in_cell-&gt;face(in_face))-&gt;line(j))-&gt;get_dof_indices(local_line_dofs);
-636 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;k&#32;=0;&#32;k&#32;&lt;&#32;DofsPerLine;&#32;k++)&#32;{
-637 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(locally_owned_dofs-&gt;is_element(local_line_dofs[k]))&#32;{
-638 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;in_cm-&gt;add_line(local_line_dofs[k]);
-639 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;in_cm-&gt;set_inhomogeneity(local_line_dofs[k],&#32;0.0);
-640 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.push_back(local_line_dofs[k]);
-641 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-642 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-643 &#32;&#32;&#32;&#32;}
-644 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(in_non_face_dofs)&#32;{
-645 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;in_cell-&gt;face(in_face)-&gt;get_dof_indices(local_face_dofs);
-646 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;GeometryInfo&lt;3&gt;::lines_per_face*DofsPerLine;&#32;j&#32;&lt;&#32;DofsPerFace;&#32;j++)&#32;{
-647 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(locally_owned_dofs-&gt;is_element(local_face_dofs[j]))&#32;{
-648 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;in_cm-&gt;add_line(local_face_dofs[j]);
-649 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;in_cm-&gt;set_inhomogeneity(local_face_dofs[j],&#32;0.0);
-650 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.push_back(local_face_dofs[j]);
-651 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-652 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-653 &#32;&#32;&#32;&#32;}
-654 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
-655 }
-656 
-657 <emphasis class="keywordtype">void</emphasis>&#32;add_vector_of_indices(dealii::IndexSet&#32;*&#32;in_index_set,&#32;std::vector&lt;types::global_dof_index&gt;&#32;in_indices)&#32;{
-658 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;in_indices.size();&#32;i++)&#32;{
-659 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;in_index_set-&gt;add_index(in_indices[i]);
-660 &#32;&#32;&#32;&#32;}
-661 }
-662 
-663 <emphasis class="preprocessor">#endif</emphasis>
+587 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_Computational_Radius(
+588 &#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)&#32;{
+589 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r_goal&#32;=&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)&#32;/&#32;2.0;
+590 &#32;&#32;<emphasis class="comment">//&#32;double&#32;r_current&#32;=&#32;(GlobalParams.PRM_M_R_XLength&#32;)&#32;/&#32;7.12644;</emphasis>
+591 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r_current&#32;=&#32;(GlobalParams.M_R_XLength)&#32;/&#32;5.65;
+592 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r_max&#32;=&#32;(GlobalParams.M_R_XLength&#32;/&#32;2.0)&#32;*
+593 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(1.0&#32;-&#32;(2.0&#32;*&#32;GlobalParams.M_BC_XMinus));
+594 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r_point&#32;=&#32;sqrt(p[0]&#32;*&#32;p[0]&#32;+&#32;p[1]&#32;*&#32;p[1]);
+595 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;factor&#32;=&#32;InterpolationPolynomialZeroDerivative(
+596 &#32;&#32;&#32;&#32;&#32;&#32;sigma(r_point,&#32;r_current,&#32;r_max),&#32;r_goal&#32;/&#32;r_current,&#32;1.0);
+597 &#32;&#32;Point&lt;3,&#32;double&gt;&#32;q&#32;=&#32;p;
+598 &#32;&#32;q[0]&#32;*=&#32;factor;
+599 &#32;&#32;q[1]&#32;*=&#32;factor;
+600 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;q;
+601 }
+602 
+603 <emphasis class="keywordtype">double</emphasis>&#32;my_inter(<emphasis class="keywordtype">double</emphasis>&#32;x,&#32;<emphasis class="keywordtype">double</emphasis>&#32;l,&#32;<emphasis class="keywordtype">double</emphasis>&#32;w)&#32;{
+604 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;a&#32;=&#32;1.0&#32;/&#32;9.0&#32;*&#32;(l&#32;+&#32;8.0&#32;*&#32;w);
+605 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;c&#32;=&#32;(16.0&#32;/&#32;9.0)&#32;*&#32;(l&#32;-&#32;w);
+606 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;b&#32;=&#32;-(8.0&#32;/&#32;9.0)&#32;*&#32;(l&#32;-&#32;w);
+607 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;a&#32;+&#32;b&#32;*&#32;x&#32;+&#32;c&#32;*&#32;x&#32;*&#32;x;
+608 }
+609 
+610 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_Computational_Rectangle(
+611 &#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)&#32;{
+612 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;d1_goal&#32;=&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)&#32;/&#32;2.0;
+613 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;d2_goal&#32;=&#32;(GlobalParams.M_C_Dim2In&#32;+&#32;GlobalParams.M_C_Dim2Out)&#32;/&#32;2.0;
+614 
+615 &#32;&#32;Point&lt;3,&#32;double&gt;&#32;q&#32;=&#32;p;
+616 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(abs(p[0])&#32;&lt;=&#32;0.2501)&#32;{
+617 &#32;&#32;&#32;&#32;q[0]&#32;=&#32;q[0]&#32;*&#32;3.0&#32;*&#32;d1_goal;
+618 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+619 &#32;&#32;&#32;&#32;q[0]&#32;=&#32;my_inter(std::abs(p[0]),&#32;GlobalParams.M_R_XLength&#32;/&#32;2.0,&#32;d1_goal);
+620 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(p[0]&#32;&lt;&#32;0.0)&#32;q[0]&#32;*=&#32;-1.0;
+621 &#32;&#32;}
+622 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(abs(p[1])&#32;&lt;=&#32;0.2501)&#32;{
+623 &#32;&#32;&#32;&#32;q[1]&#32;=&#32;q[1]&#32;*&#32;3.0&#32;*&#32;d2_goal;
+624 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+625 &#32;&#32;&#32;&#32;q[1]&#32;=&#32;my_inter(std::abs(p[1]),&#32;GlobalParams.M_R_YLength&#32;/&#32;2.0,&#32;d2_goal);
+626 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(p[1]&#32;&lt;&#32;0)&#32;q[1]&#32;*=&#32;-1.0;
+627 &#32;&#32;}
+628 &#32;&#32;q[2]&#32;=&#32;p[2];
+629 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;q;
+630 }
+631 
+632 <emphasis class="keywordtype">double</emphasis>&#32;TEMode00(dealii::Point&lt;3,&#32;double&gt;&#32;p,&#32;<emphasis class="keywordtype">int</emphasis>&#32;component)&#32;{
+633 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(component&#32;==&#32;0)&#32;{
+634 &#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;double&#32;d2&#32;=&#32;(2*&#32;Distance2D(p))&#32;/&#32;(GlobalParams.M_C_Dim1In&#32;+</emphasis>
+635 &#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;GlobalParams.M_C_Dim1Out)&#32;;</emphasis>
+636 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;d2&#32;=&#32;Distance2D(p);
+637 &#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;return&#32;exp(-d2*d2&#32;/&#32;(GlobalParams.Phys_SpotRadius&#32;*</emphasis>
+638 &#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;GlobalParams.Phys_SpotRadius));</emphasis>
+639 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;exp(-d2&#32;*&#32;d2&#32;/&#32;2.25);
+640 &#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;return&#32;1.0;</emphasis>
+641 &#32;&#32;}
+642 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
+643 }
+644 
+645 <emphasis class="keyword">inline</emphasis>&#32;<emphasis class="keywordtype">bool</emphasis>&#32;file_exists(<emphasis class="keyword">const</emphasis>&#32;std::string&#32;&amp;name)&#32;{
+646 &#32;&#32;<emphasis class="keyword">struct&#32;</emphasis>stat&#32;buffer;
+647 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;(stat(name.c_str(),&#32;&amp;buffer)&#32;==&#32;0);
+648 }
+649 
+650 std::vector&lt;types::global_dof_index&gt;&#32;Add_Zero_Restraint_test(
+651 &#32;&#32;&#32;&#32;dealii::ConstraintMatrix&#32;*,
+652 &#32;&#32;&#32;&#32;dealii::DoFHandler&lt;3&gt;::active_cell_iterator&#32;in_cell,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_face,
+653 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;DofsPerLine,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;DofsPerFace,&#32;<emphasis class="keywordtype">bool</emphasis>&#32;in_non_face_dofs,
+654 &#32;&#32;&#32;&#32;IndexSet&#32;*locally_owned_dofs)&#32;{
+655 &#32;&#32;std::vector&lt;types::global_dof_index&gt;&#32;local_line_dofs(DofsPerLine);
+656 &#32;&#32;std::vector&lt;types::global_dof_index&gt;&#32;local_face_dofs(DofsPerFace);
+657 &#32;&#32;std::vector&lt;types::global_dof_index&gt;&#32;ret;
+658 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&#32;&lt;&#32;GeometryInfo&lt;3&gt;::lines_per_face;&#32;j++)&#32;{
+659 &#32;&#32;&#32;&#32;((in_cell-&gt;face(in_face))-&gt;line(j))-&gt;get_dof_indices(local_line_dofs);
+660 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;k&#32;=&#32;0;&#32;k&#32;&lt;&#32;DofsPerLine;&#32;k++)&#32;{
+661 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(locally_owned_dofs-&gt;is_element(local_line_dofs[k]))&#32;{
+662 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;in_cm-&gt;add_line(local_line_dofs[k]);</emphasis>
+663 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.push_back(local_line_dofs[k]);
+664 &#32;&#32;&#32;&#32;&#32;&#32;}
+665 &#32;&#32;&#32;&#32;}
+666 &#32;&#32;}
+667 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(in_non_face_dofs)&#32;{
+668 &#32;&#32;&#32;&#32;in_cell-&gt;face(in_face)-&gt;get_dof_indices(local_face_dofs);
+669 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;GeometryInfo&lt;3&gt;::lines_per_face&#32;*&#32;DofsPerLine;
+670 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;j&#32;&lt;&#32;DofsPerFace;&#32;j++)&#32;{
+671 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(locally_owned_dofs-&gt;is_element(local_face_dofs[j]))&#32;{
+672 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;in_cm-&gt;add_line(local_face_dofs[j]);</emphasis>
+673 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret.push_back(local_face_dofs[j]);
+674 &#32;&#32;&#32;&#32;&#32;&#32;}
+675 &#32;&#32;&#32;&#32;}
+676 &#32;&#32;}
+677 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+678 }
+679 
+680 <emphasis class="keywordtype">void</emphasis>&#32;add_vector_of_indices(dealii::IndexSet&#32;*in_index_set,
+681 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;types::global_dof_index&gt;&#32;in_indices)&#32;{
+682 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;in_indices.size();&#32;i++)&#32;{
+683 &#32;&#32;&#32;&#32;in_index_set-&gt;add_index(in_indices[i]);
+684 &#32;&#32;}
+685 }
+686 
+687 <emphasis class="preprocessor">#endif</emphasis>
     </computeroutput></literallayout>
 </section>

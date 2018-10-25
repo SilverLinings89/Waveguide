@@ -58,7 +58,8 @@ const Point&lt; 3 &gt; &amp; p, const unsigned int component)<para><emphasis>Thi
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_exact_solution_1a1cafd1cf8d7f91d178c87a210c4800b2">vector_value</link> (
-const Point&lt; 3 &gt; &amp; p, Vector&lt; double &gt; &amp; value)<para><emphasis>This function is the one that gets called from external contexts and calls the value-function to calculate the individual components.</emphasis></para>
+const Point&lt; 3 &gt; &amp; p, Vector&lt; double &gt; &amp; value)<para><emphasis>This function is the one that gets called from external contexts and calls
+the value-function to calculate the individual components.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -114,7 +115,7 @@ const Point&lt; 3 &gt; &amp; in_p)</para>
 <para>23.11.2015 </para>
 </formalpara>
 </para>
-                <para>Definition at line 26 of file ExactSolution.h</para>
+                <para>Definition at line 36 of file ExactSolution.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>ExactSolution.h</para></listitem></itemizedlist></para>
         </simplesect>
@@ -128,7 +129,7 @@ const Point&lt; 3 &gt; &amp; in_p)</para>
             <section xml:id="class_exact_solution_1ae34a7cff183d6299852f404eecee0ac5">
                 <title>double ExactSolution::value (const Point&lt; 3 &gt; &amp;p, const unsigned int component) const</title> <emphasis>This function calculates one single component of the solution vector.</emphasis>
                 
-<para>To calculate this, we do the following: We know the input on the boundary of the computational domain for <equation><title>form_24</title>$z = z_{in}$</equation>. So for a given position <equation><title>form_25</title>$ p = (x,y,z)$</equation> we calculate <equation><title>form_26</title>\[ f_c(x,y,z) = \sum_{j=0}^N \left( a_j \, \boldsymbol{\phi_j}(x,y,z_{in}) \right) \cdot \boldsymbol{e_c} \, \mathrm{e}^{i \omega (z-z_{in})}.\]</equation> Here, <equation><title>form_27</title>$\boldsymbol{\phi_j}$</equation> is the j-th mode of the waveguide which is induced with the intensity <equation><title>form_28</title>$ a_j$</equation>. <equation><title>form_29</title>$\boldsymbol{e_c}$</equation> is the c-th unit-vector with <equation><title>form_30</title>$c$</equation> being the index of the component we want to compute. 
+<para>To calculate this, we do the following: We know the input on the boundary of the computational domain for <equation><title>form_25</title>$z = z_{in}$</equation>. So for a given position <equation><title>form_26</title>$ p = (x,y,z)$</equation> we calculate <equation><title>form_27</title>\[ f_c(x,y,z) = \sum_{j=0}^N \left( a_j \, \boldsymbol{\phi_j}(x,y,z_{in}) \right) \cdot \boldsymbol{e_c} \, \mathrm{e}^{i \omega (z-z_{in})}.\]</equation> Here, <equation><title>form_28</title>$\boldsymbol{\phi_j}$</equation> is the j-th mode of the waveguide which is induced with the intensity <equation><title>form_29</title>$ a_j$</equation>. <equation><title>form_30</title>$\boldsymbol{e_c}$</equation> is the c-th unit-vector with <equation><title>form_31</title>$c$</equation> being the index of the component we want to compute. 
                 <formalpara>
                     <title/>
                     <table frame="all">
@@ -157,9 +158,10 @@ const Point&lt; 3 &gt; &amp; in_p)</para>
 
             </section>
             <section xml:id="class_exact_solution_1a1cafd1cf8d7f91d178c87a210c4800b2">
-                <title>void ExactSolution::vector_value (const Point&lt; 3 &gt; &amp;p, Vector&lt; double &gt; &amp;value) const</title> <emphasis>This function is the one that gets called from external contexts and calls the value-function to calculate the individual components.</emphasis>
+                <title>void ExactSolution::vector_value (const Point&lt; 3 &gt; &amp;p, Vector&lt; double &gt; &amp;value) const</title> <emphasis>This function is the one that gets called from external contexts and calls
+the value-function to calculate the individual components.</emphasis>
                 
-<para>The real solution looks as follows: <equation><title>form_31</title>\[ f(x,y,z) = \begin{pmatrix} \operatorname{value}(x,y,z,0) \\ \operatorname{value}(x,y,z,1)\\\operatorname{value}(x,y,z,2) \end{pmatrix} + i \begin{pmatrix}\operatorname{value}(x,y,z,3)\\\operatorname{value}(x,y,z,4)\\\operatorname{value}(x,y,z,5)\end{pmatrix}.\]</equation> </para>
+<para>The real solution looks as follows: <equation><title>form_32</title>\[ f(x,y,z) = \begin{pmatrix} \operatorname{value}(x,y,z,0) \\ \operatorname{value}(x,y,z,1)\\\operatorname{value}(x,y,z,2) \end{pmatrix} + i \begin{pmatrix}\operatorname{value}(x,y,z,3)\\\operatorname{value}(x,y,z,4)\\\operatorname{value}(x,y,z,5)\end{pmatrix}.\]</equation> </para>
 
             </section>
             <section xml:id="class_exact_solution_1ae5631eb0180157a43d021644ab437e76">

@@ -2,18 +2,18 @@
 <section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_square_mesh_generator_8cpp">
     <title>SquareMeshGenerator.cpp File Reference</title>
     <programlisting>#include &quot;SquareMeshGenerator.h&quot;</programlisting>
-    <programlisting>#include &lt;deal.II/base/tensor.h&gt;</programlisting>
-    <programlisting>#include &lt;deal.II/base/std_cxx11/bind.h&gt;</programlisting>
-    <programlisting>#include &lt;deal.II/base/std_cxx11/array.h&gt;</programlisting>
-    <programlisting>#include &lt;deal.II/grid/grid_generator.h&gt;</programlisting>
-    <programlisting>#include &lt;deal.II/grid/manifold_lib.h&gt;</programlisting>
-    <programlisting>#include &lt;deal.II/base/thread_management.h&gt;</programlisting>
     <programlisting>#include &lt;deal.II/base/multithread_info.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/std_cxx11/array.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/std_cxx11/bind.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/tensor.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/base/thread_management.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/distributed/tria.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/grid/grid_generator.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/grid/grid_out.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/grid/grid_tools.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/grid/manifold_lib.h&gt;</programlisting>
     <programlisting>#include &lt;deal.II/grid/tria_accessor.h&gt;</programlisting>
     <programlisting>#include &lt;deal.II/grid/tria_iterator.h&gt;</programlisting>
-    <programlisting>#include &lt;deal.II/grid/grid_tools.h&gt;</programlisting>
-    <programlisting>#include &lt;deal.II/distributed/tria.h&gt;</programlisting>
-    <programlisting>#include &lt;deal.II/grid/grid_out.h&gt;</programlisting>
     <programlisting>#include &quot;../Helpers/staticfunctions.h&quot;</programlisting>
         <section>
             <title>Macros</title>
@@ -34,227 +34,248 @@
 2 <emphasis class="preprocessor">#define&#32;SquareMeshGeneratorCppFlag</emphasis>
 3 
 4 <emphasis class="preprocessor">#include&#32;&quot;SquareMeshGenerator.h&quot;</emphasis>
-5 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/tensor.h&gt;</emphasis>
-6 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/std_cxx11/bind.h&gt;</emphasis>
-7 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/std_cxx11/array.h&gt;</emphasis>
-8 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/grid_generator.h&gt;</emphasis>
-9 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/manifold_lib.h&gt;</emphasis>
-10 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/thread_management.h&gt;</emphasis>
-11 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/multithread_info.h&gt;</emphasis>
-12 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/tria_accessor.h&gt;</emphasis>
-13 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/tria_iterator.h&gt;</emphasis>
-14 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/grid_tools.h&gt;</emphasis>
-15 <emphasis class="preprocessor">#include&#32;&lt;deal.II/distributed/tria.h&gt;</emphasis>
-16 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/grid_out.h&gt;</emphasis>
+5 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/multithread_info.h&gt;</emphasis>
+6 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/std_cxx11/array.h&gt;</emphasis>
+7 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/std_cxx11/bind.h&gt;</emphasis>
+8 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/tensor.h&gt;</emphasis>
+9 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/thread_management.h&gt;</emphasis>
+10 <emphasis class="preprocessor">#include&#32;&lt;deal.II/distributed/tria.h&gt;</emphasis>
+11 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/grid_generator.h&gt;</emphasis>
+12 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/grid_out.h&gt;</emphasis>
+13 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/grid_tools.h&gt;</emphasis>
+14 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/manifold_lib.h&gt;</emphasis>
+15 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/tria_accessor.h&gt;</emphasis>
+16 <emphasis class="preprocessor">#include&#32;&lt;deal.II/grid/tria_iterator.h&gt;</emphasis>
 17 <emphasis class="preprocessor">#include&#32;&quot;../Helpers/staticfunctions.h&quot;</emphasis>
 18 
 19 <emphasis class="keyword">using&#32;namespace&#32;</emphasis><link linkend="namespacedealii">dealii</link>;
 20 
-21 SquareMeshGenerator::SquareMeshGenerator(<link linkend="class_space_transformation">SpaceTransformation</link>&#32;*&#32;in_ct)&#32;:
-22 &#32;&#32;&#32;&#32;MaxDistX((GlobalParams.M_C_Dim1Out&#32;+&#32;GlobalParams.M_C_Dim1In)*1.4/2.0),
-23 &#32;&#32;&#32;&#32;MaxDistY((GlobalParams.M_C_Dim2Out&#32;+&#32;GlobalParams.M_C_Dim2In)*1.4/2.0)
-24 &#32;&#32;&#32;&#32;{
-25 &#32;&#32;ct&#32;=&#32;in_ct;
-26 &#32;&#32;Layers&#32;=&#32;Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
-27 &#32;&#32;origin&#32;=&#32;Point&lt;3&gt;(-1,-1,-1);
-28 &#32;&#32;p1&#32;=&#32;Point&lt;3&gt;(-1,-1,-1);
-29 &#32;&#32;p2&#32;=&#32;Point&lt;3&gt;(1,1,1);
-30 &#32;&#32;edges[0][0]&#32;=&#32;2;
-31 &#32;&#32;edges[0][1]&#32;=&#32;0;
-32 &#32;&#32;edges[0][2]&#32;=&#32;0;
-33 
-34 &#32;&#32;edges[1][0]&#32;=&#32;0;
-35 &#32;&#32;edges[1][1]&#32;=&#32;2;
-36 &#32;&#32;edges[1][2]&#32;=&#32;0;
-37 
-38 &#32;&#32;edges[2][0]&#32;=&#32;0;
-39 &#32;&#32;edges[2][1]&#32;=&#32;0;
-40 &#32;&#32;edges[2][2]&#32;=&#32;2;
-41 
-42 &#32;&#32;subs.push_back(1);
+21 SquareMeshGenerator::SquareMeshGenerator(<link linkend="class_space_transformation">SpaceTransformation</link>&#32;*in_ct)
+22 &#32;&#32;&#32;&#32;:&#32;MaxDistX((GlobalParams.M_C_Dim1Out&#32;+&#32;GlobalParams.M_C_Dim1In)&#32;*&#32;1.4&#32;/
+23 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;2.0),
+24 &#32;&#32;&#32;&#32;&#32;&#32;MaxDistY((GlobalParams.M_C_Dim2Out&#32;+&#32;GlobalParams.M_C_Dim2In)&#32;*&#32;1.4&#32;/
+25 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;2.0)&#32;{
+26 &#32;&#32;ct&#32;=&#32;in_ct;
+27 &#32;&#32;Layers&#32;=&#32;Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
+28 &#32;&#32;origin&#32;=&#32;Point&lt;3&gt;(-1,&#32;-1,&#32;-1);
+29 &#32;&#32;p1&#32;=&#32;Point&lt;3&gt;(-1,&#32;-1,&#32;-1);
+30 &#32;&#32;p2&#32;=&#32;Point&lt;3&gt;(1,&#32;1,&#32;1);
+31 &#32;&#32;edges[0][0]&#32;=&#32;2;
+32 &#32;&#32;edges[0][1]&#32;=&#32;0;
+33 &#32;&#32;edges[0][2]&#32;=&#32;0;
+34 
+35 &#32;&#32;edges[1][0]&#32;=&#32;0;
+36 &#32;&#32;edges[1][1]&#32;=&#32;2;
+37 &#32;&#32;edges[1][2]&#32;=&#32;0;
+38 
+39 &#32;&#32;edges[2][0]&#32;=&#32;0;
+40 &#32;&#32;edges[2][1]&#32;=&#32;0;
+41 &#32;&#32;edges[2][2]&#32;=&#32;2;
+42 
 43 &#32;&#32;subs.push_back(1);
-44 &#32;&#32;subs.push_back(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD));
-45 }
-46 
-47 SquareMeshGenerator::~SquareMeshGenerator()&#32;{
-48 
-49 }
-50 
-51 <emphasis class="keywordtype">void</emphasis>&#32;SquareMeshGenerator::set_boundary_ids(parallel::distributed::Triangulation&lt;3&gt;&#32;&amp;&#32;tria)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-52 
-53 &#32;&#32;&#32;&#32;parallel::distributed::Triangulation&lt;3&gt;::active_cell_iterator&#32;cell2&#32;=&#32;tria.begin_active(),
-54 &#32;&#32;&#32;&#32;endc2&#32;=&#32;tria.end();
-55 &#32;&#32;&#32;&#32;tria.set_all_manifold_ids(0);
-56 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;min_z&#32;=&#32;100000.0;
-57 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;max_z&#32;=&#32;-100000.0;
-58 &#32;&#32;&#32;&#32;parallel::distributed::Triangulation&lt;3&gt;::cell_iterator&#32;boundary_searcher_begin&#32;=&#32;tria.begin();
-59 &#32;&#32;&#32;&#32;parallel::distributed::Triangulation&lt;3&gt;::cell_iterator&#32;boundary_searcher_end&#32;=&#32;tria.end();
-60 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;boundary_searcher_begin&#32;!=&#32;boundary_searcher_end;&#32;boundary_searcher_begin&#32;++)&#32;{
-61 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i=0;&#32;i&lt;GeometryInfo&lt;3&gt;::vertices_per_cell;&#32;++i)
-62 &#32;&#32;&#32;&#32;&#32;&#32;{
-63 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Point&lt;3&gt;&#32;&amp;v&#32;=&#32;boundary_searcher_begin-&gt;vertex(i);
-64 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(&#32;v(2)&#32;&lt;&#32;min_z)&#32;{
-65 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;min_z&#32;=&#32;v(2);
-66 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-67 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(&#32;v(2)&#32;&gt;&#32;max_z)&#32;{
-68 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;max_z&#32;=&#32;v(2);
-69 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-70 &#32;&#32;&#32;&#32;&#32;&#32;}
-71 &#32;&#32;&#32;&#32;}
-72 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell2!=endc2;&#32;++cell2){
-73 &#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(cell2-&gt;at_boundary()){
-74 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&lt;6;&#32;j++){
-75 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Point&lt;3&gt;&#32;ctr&#32;=cell2-&gt;face(j)-&gt;center();
-76 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(cell2-&gt;face(j)-&gt;at_boundary()){
-77 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell2-&gt;face(j)-&gt;set_all_boundary_ids(1);
-78 
-79 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(std::abs(ctr(2)&#32;-&#32;max_z)&#32;&lt;&#32;0.00001)&#32;{
-80 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell2-&gt;face(j)-&gt;set_all_boundary_ids(2);
-81 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-82 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(std::abs(ctr(2)&#32;-&#32;min_z)&#32;&lt;&#32;0.00001)&#32;{
-83 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell2-&gt;face(j)-&gt;set_all_boundary_ids(3);
-84 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-85 
-86 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-87 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-88 &#32;&#32;&#32;&#32;&#32;}
+44 &#32;&#32;subs.push_back(1);
+45 &#32;&#32;subs.push_back(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD));
+46 }
+47 
+48 SquareMeshGenerator::~SquareMeshGenerator()&#32;{}
+49 
+50 <emphasis class="keywordtype">void</emphasis>&#32;SquareMeshGenerator::set_boundary_ids(
+51 &#32;&#32;&#32;&#32;parallel::distributed::Triangulation&lt;3&gt;&#32;&amp;tria)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+52 &#32;&#32;parallel::distributed::Triangulation&lt;3&gt;::active_cell_iterator
+53 &#32;&#32;&#32;&#32;&#32;&#32;cell2&#32;=&#32;tria.begin_active(),
+54 &#32;&#32;&#32;&#32;&#32;&#32;endc2&#32;=&#32;tria.end();
+55 &#32;&#32;tria.set_all_manifold_ids(0);
+56 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;min_z&#32;=&#32;100000.0;
+57 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;max_z&#32;=&#32;-100000.0;
+58 &#32;&#32;parallel::distributed::Triangulation&lt;3&gt;::cell_iterator
+59 &#32;&#32;&#32;&#32;&#32;&#32;boundary_searcher_begin&#32;=&#32;tria.begin();
+60 &#32;&#32;parallel::distributed::Triangulation&lt;3&gt;::cell_iterator&#32;boundary_searcher_end&#32;=
+61 &#32;&#32;&#32;&#32;&#32;&#32;tria.end();
+62 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;boundary_searcher_begin&#32;!=&#32;boundary_searcher_end;
+63 &#32;&#32;&#32;&#32;&#32;&#32;&#32;boundary_searcher_begin++)&#32;{
+64 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;GeometryInfo&lt;3&gt;::vertices_per_cell;&#32;++i)&#32;{
+65 &#32;&#32;&#32;&#32;&#32;&#32;Point&lt;3&gt;&#32;&amp;v&#32;=&#32;boundary_searcher_begin-&gt;vertex(i);
+66 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(v(2)&#32;&lt;&#32;min_z)&#32;{
+67 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;min_z&#32;=&#32;v(2);
+68 &#32;&#32;&#32;&#32;&#32;&#32;}
+69 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(v(2)&#32;&gt;&#32;max_z)&#32;{
+70 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;max_z&#32;=&#32;v(2);
+71 &#32;&#32;&#32;&#32;&#32;&#32;}
+72 &#32;&#32;&#32;&#32;}
+73 &#32;&#32;}
+74 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell2&#32;!=&#32;endc2;&#32;++cell2)&#32;{
+75 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(cell2-&gt;at_boundary())&#32;{
+76 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&#32;&lt;&#32;6;&#32;j++)&#32;{
+77 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Point&lt;3&gt;&#32;ctr&#32;=&#32;cell2-&gt;face(j)-&gt;center();
+78 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(cell2-&gt;face(j)-&gt;at_boundary())&#32;{
+79 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell2-&gt;face(j)-&gt;set_all_boundary_ids(1);
+80 
+81 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(std::abs(ctr(2)&#32;-&#32;max_z)&#32;&lt;&#32;0.00001)&#32;{
+82 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell2-&gt;face(j)-&gt;set_all_boundary_ids(2);
+83 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+84 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(std::abs(ctr(2)&#32;-&#32;min_z)&#32;&lt;&#32;0.00001)&#32;{
+85 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell2-&gt;face(j)-&gt;set_all_boundary_ids(3);
+86 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+87 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
+88 &#32;&#32;&#32;&#32;&#32;&#32;}
 89 &#32;&#32;&#32;&#32;}
-90 }
-91 
-<link linkend="class_square_mesh_generator_1a5d4f5e0caaf4c22ef1d67759560c0acf">92 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_square_mesh_generator_1a5d4f5e0caaf4c22ef1d67759560c0acf">SquareMeshGenerator::prepare_triangulation</link>(parallel::distributed::Triangulation&lt;3&gt;&#32;*&#32;in_tria){
-93 
-94 &#32;&#32;deallog.push(<emphasis class="stringliteral">&quot;SquareMeshGenerator:prepare_triangulation&quot;</emphasis>);
-95 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Starting&#32;Mesh&#32;preparation&quot;</emphasis>&lt;&lt;std::endl;
-96 
-97 &#32;&#32;<emphasis class="keyword">const</emphasis>&#32;std_cxx11::array&lt;&#32;Tensor&lt;&#32;1,&#32;3&#32;&gt;,&#32;3&#32;&gt;&#32;edges2(edges);
-98 
-99 &#32;&#32;GridGenerator::subdivided_parallelepiped&lt;3,3&gt;(*&#32;in_tria,&#32;origin,&#32;edges2,&#32;subs,&#32;<emphasis class="keyword">false</emphasis>);
-100 
-101 &#32;&#32;in_tria-&gt;repartition();
+90 &#32;&#32;}
+91 }
+92 
+<link linkend="class_square_mesh_generator_1a5d4f5e0caaf4c22ef1d67759560c0acf">93 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_square_mesh_generator_1a5d4f5e0caaf4c22ef1d67759560c0acf">SquareMeshGenerator::prepare_triangulation</link>(
+94 &#32;&#32;&#32;&#32;parallel::distributed::Triangulation&lt;3&gt;&#32;*in_tria)&#32;{
+95 &#32;&#32;deallog.push(<emphasis class="stringliteral">&quot;SquareMeshGenerator:prepare_triangulation&quot;</emphasis>);
+96 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Starting&#32;Mesh&#32;preparation&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+97 
+98 &#32;&#32;<emphasis class="keyword">const</emphasis>&#32;std_cxx11::array&lt;Tensor&lt;1,&#32;3&gt;,&#32;3&gt;&#32;edges2(edges);
+99 
+100 &#32;&#32;GridGenerator::subdivided_parallelepiped&lt;3,&#32;3&gt;(*in_tria,&#32;origin,&#32;edges2,&#32;subs,
+101 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keyword">false</emphasis>);
 102 
-103 &#32;&#32;in_tria-&gt;signals.post_refinement.connect
-104 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(std_cxx11::bind&#32;(&amp;&#32;SquareMeshGenerator::set_boundary_ids,
-105 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std_cxx11::cref(*<emphasis class="keyword">this</emphasis>),
-106 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std_cxx11::ref(*in_tria)));
-107 
-108 &#32;&#32;in_tria-&gt;refine_global(3);
-109 
-110 &#32;&#32;GridTools::transform(&amp;&#32;Triangulation_Stretch_Computational_Rectangle,&#32;*&#32;in_tria);
-111 
-112 &#32;&#32;parallel::distributed::Triangulation&lt;3&gt;::active_cell_iterator
+103 &#32;&#32;in_tria-&gt;repartition();
+104 
+105 &#32;&#32;in_tria-&gt;signals.post_refinement.connect(
+106 &#32;&#32;&#32;&#32;&#32;&#32;std_cxx11::bind(&amp;SquareMeshGenerator::set_boundary_ids,
+107 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std_cxx11::cref(*<emphasis class="keyword">this</emphasis>),&#32;std_cxx11::ref(*in_tria)));
+108 
+109 &#32;&#32;in_tria-&gt;refine_global(3);
+110 
+111 &#32;&#32;GridTools::transform(&amp;Triangulation_Stretch_Computational_Rectangle,
+112 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;*in_tria);
 113 
-114 &#32;&#32;cell&#32;=&#32;in_tria-&gt;begin_active(),
-115 &#32;&#32;endc&#32;=&#32;in_tria-&gt;end();
-116 
-117 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;len&#32;=&#32;2.0&#32;/&#32;Layers;
+114 &#32;&#32;parallel::distributed::Triangulation&lt;3&gt;::active_cell_iterator
+115 
+116 &#32;&#32;&#32;&#32;&#32;&#32;cell&#32;=&#32;in_tria-&gt;begin_active(),
+117 &#32;&#32;&#32;&#32;&#32;&#32;endc&#32;=&#32;in_tria-&gt;end();
 118 
-119 &#32;&#32;cell&#32;=&#32;in_tria-&gt;begin_active();
-120 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell!=endc;&#32;++cell){
-121 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;temp&#32;&#32;=&#32;(int)&#32;std::floor((cell-&gt;center()[2]&#32;+&#32;1.0)/len);
-122 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(&#32;temp&#32;&gt;=&#32;&#32;(<emphasis class="keywordtype">int</emphasis>)Layers&#32;||&#32;temp&#32;&lt;&#32;0)&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Critical&#32;Error&#32;in&#32;Mesh&#32;partitioning.&#32;See&#32;make_grid!&#32;Solvers&#32;might&#32;not&#32;work.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
-123 &#32;&#32;}
-124 
-125 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(GlobalParams.R_Global&#32;&gt;&#32;0)&#32;{
-126 &#32;&#32;&#32;&#32;&#32;&#32;in_tria-&gt;refine_global(GlobalParams.R_Global);
-127 &#32;&#32;}
-128 
+119 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;len&#32;=&#32;2.0&#32;/&#32;Layers;
+120 
+121 &#32;&#32;cell&#32;=&#32;in_tria-&gt;begin_active();
+122 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell&#32;!=&#32;endc;&#32;++cell)&#32;{
+123 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;temp&#32;=&#32;(int)std::floor((cell-&gt;center()[2]&#32;+&#32;1.0)&#32;/&#32;len);
+124 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(temp&#32;&gt;=&#32;(<emphasis class="keywordtype">int</emphasis>)Layers&#32;||&#32;temp&#32;&lt;&#32;0)
+125 &#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Critical&#32;Error&#32;in&#32;Mesh&#32;partitioning.&#32;See&#32;make_grid!&#32;&quot;</emphasis>
+126 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="stringliteral">&quot;Solvers&#32;might&#32;not&#32;work.&quot;</emphasis>
+127 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;std::endl;
+128 &#32;&#32;}
 129 
-130 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;MaxDistX&#32;=&#32;(GlobalParams.M_C_Dim1Out&#32;+&#32;GlobalParams.M_C_Dim1In)*1.4/2.0;
-131 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;MaxDistY&#32;=&#32;(GlobalParams.M_C_Dim2Out&#32;+&#32;GlobalParams.M_C_Dim2In)*1.4/2.0;
-132 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;GlobalParams.R_Local;&#32;i++)&#32;{
-133 &#32;&#32;&#32;&#32;cell&#32;=&#32;in_tria-&gt;begin_active();
-134 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell!=endc;&#32;++cell){
-135 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(std::abs(cell-&gt;center()[0])&lt;&#32;MaxDistX&#32;&amp;&amp;&#32;std::abs(cell-&gt;center()[1])&lt;&#32;MaxDistY&#32;){
-136 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell-&gt;set_refine_flag();
-137 &#32;&#32;&#32;&#32;&#32;&#32;}
-138 &#32;&#32;&#32;&#32;}
-139 &#32;&#32;&#32;&#32;in_tria-&gt;execute_coarsening_and_refinement();
-140 &#32;&#32;&#32;&#32;MaxDistX&#32;=&#32;(GlobalParams.M_C_Dim1Out&#32;+&#32;GlobalParams.M_C_Dim1In)*1.4/2.0;
-141 &#32;&#32;&#32;&#32;MaxDistY&#32;=&#32;(GlobalParams.M_C_Dim2Out&#32;+&#32;GlobalParams.M_C_Dim2In)*1.4/2.0;
-142 
-143 &#32;&#32;}
-144 
-145 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;GlobalParams.R_Interior;&#32;i++)&#32;{
-146 &#32;&#32;&#32;&#32;cell&#32;=&#32;in_tria-&gt;begin_active();
-147 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell!=endc;&#32;++cell){
-148 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(&#32;std::abs(cell-&gt;center()[0])&#32;&lt;&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)/2.0&#32;&amp;&amp;&#32;std::abs(cell-&gt;center()[1])&#32;&lt;&#32;(GlobalParams.M_C_Dim2In&#32;+&#32;GlobalParams.M_C_Dim2Out)/2.0)&#32;&#32;{
-149 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell-&gt;set_refine_flag();
-150 &#32;&#32;&#32;&#32;&#32;&#32;}
-151 &#32;&#32;&#32;&#32;}
-152 &#32;&#32;&#32;&#32;in_tria-&gt;execute_coarsening_and_refinement();
-153 &#32;&#32;}
-154 
-155 &#32;&#32;GridTools::transform(&amp;&#32;Triangulation_Stretch_Z,&#32;*&#32;in_tria);
-156 
-157 &#32;&#32;GridTools::transform(&amp;&#32;Triangulation_Shift_Z&#32;,&#32;*&#32;in_tria);
-158 
-159 &#32;&#32;z_min&#32;=&#32;10000000.0;
-160 &#32;&#32;z_max&#32;=&#32;-10000000.0;
-161 &#32;&#32;cell&#32;=&#32;in_tria-&gt;begin_active();
-162 &#32;&#32;endc&#32;=&#32;in_tria-&gt;end();
+130 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(GlobalParams.R_Global&#32;&gt;&#32;0)&#32;{
+131 &#32;&#32;&#32;&#32;in_tria-&gt;refine_global(GlobalParams.R_Global);
+132 &#32;&#32;}
+133 
+134 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;MaxDistX&#32;=
+135 &#32;&#32;&#32;&#32;&#32;&#32;(GlobalParams.M_C_Dim1Out&#32;+&#32;GlobalParams.M_C_Dim1In)&#32;*&#32;1.4&#32;/&#32;2.0;
+136 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;MaxDistY&#32;=
+137 &#32;&#32;&#32;&#32;&#32;&#32;(GlobalParams.M_C_Dim2Out&#32;+&#32;GlobalParams.M_C_Dim2In)&#32;*&#32;1.4&#32;/&#32;2.0;
+138 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;GlobalParams.R_Local;&#32;i++)&#32;{
+139 &#32;&#32;&#32;&#32;cell&#32;=&#32;in_tria-&gt;begin_active();
+140 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell&#32;!=&#32;endc;&#32;++cell)&#32;{
+141 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(std::abs(cell-&gt;center()[0])&#32;&lt;&#32;MaxDistX&#32;&amp;&amp;
+142 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::abs(cell-&gt;center()[1])&#32;&lt;&#32;MaxDistY)&#32;{
+143 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell-&gt;set_refine_flag();
+144 &#32;&#32;&#32;&#32;&#32;&#32;}
+145 &#32;&#32;&#32;&#32;}
+146 &#32;&#32;&#32;&#32;in_tria-&gt;execute_coarsening_and_refinement();
+147 &#32;&#32;&#32;&#32;MaxDistX&#32;=&#32;(GlobalParams.M_C_Dim1Out&#32;+&#32;GlobalParams.M_C_Dim1In)&#32;*&#32;1.4&#32;/&#32;2.0;
+148 &#32;&#32;&#32;&#32;MaxDistY&#32;=&#32;(GlobalParams.M_C_Dim2Out&#32;+&#32;GlobalParams.M_C_Dim2In)&#32;*&#32;1.4&#32;/&#32;2.0;
+149 &#32;&#32;}
+150 
+151 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;GlobalParams.R_Interior;&#32;i++)&#32;{
+152 &#32;&#32;&#32;&#32;cell&#32;=&#32;in_tria-&gt;begin_active();
+153 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell&#32;!=&#32;endc;&#32;++cell)&#32;{
+154 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(std::abs(cell-&gt;center()[0])&#32;&lt;
+155 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)&#32;/&#32;2.0&#32;&amp;&amp;
+156 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::abs(cell-&gt;center()[1])&#32;&lt;
+157 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(GlobalParams.M_C_Dim2In&#32;+&#32;GlobalParams.M_C_Dim2Out)&#32;/&#32;2.0)&#32;{
+158 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell-&gt;set_refine_flag();
+159 &#32;&#32;&#32;&#32;&#32;&#32;}
+160 &#32;&#32;&#32;&#32;}
+161 &#32;&#32;&#32;&#32;in_tria-&gt;execute_coarsening_and_refinement();
+162 &#32;&#32;}
 163 
-164 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell!=endc;&#32;++cell){
-165 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(cell-&gt;is_locally_owned()){
-166 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;face&#32;=&#32;0;&#32;face&#32;&lt;&#32;6;&#32;face++)&#32;{
-167 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;z_min&#32;=&#32;std::min(z_min,&#32;cell-&gt;face(face)-&gt;center()[2]);
-168 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;z_max&#32;=&#32;std::max(z_max,&#32;cell-&gt;face(face)-&gt;center()[2]);
-169 &#32;&#32;&#32;&#32;&#32;&#32;}
-170 &#32;&#32;&#32;&#32;}
-171 &#32;&#32;}
+164 &#32;&#32;GridTools::transform(&amp;Triangulation_Stretch_Z,&#32;*in_tria);
+165 
+166 &#32;&#32;GridTools::transform(&amp;Triangulation_Shift_Z,&#32;*in_tria);
+167 
+168 &#32;&#32;z_min&#32;=&#32;10000000.0;
+169 &#32;&#32;z_max&#32;=&#32;-10000000.0;
+170 &#32;&#32;cell&#32;=&#32;in_tria-&gt;begin_active();
+171 &#32;&#32;endc&#32;=&#32;in_tria-&gt;end();
 172 
-173 &#32;&#32;cell&#32;=&#32;in_tria-&gt;begin_active();
-174 &#32;&#32;endc&#32;=&#32;in_tria-&gt;end();
-175 
-176 &#32;&#32;<link linkend="class_round_mesh_generator_1accafc85e0b02823ef5cd12c384080aad">set_boundary_ids</link>(*in_tria);
-177 
-178 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Done&quot;</emphasis>&#32;&lt;&lt;std::endl;
-179 &#32;&#32;deallog.pop();
-180 
-181 }
-182 
-<link linkend="class_square_mesh_generator_1a472172871d02e901edc48c40eb829a17">183 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_square_mesh_generator_1a472172871d02e901edc48c40eb829a17">SquareMeshGenerator::math_coordinate_in_waveguide</link>(Point&lt;3,double&gt;&#32;in_position)<emphasis class="keyword">&#32;const&#32;&#32;</emphasis>{
-184 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;std::abs(in_position[0])&lt;&#32;(GlobalParams.M_C_Dim1In+GlobalParams.M_C_Dim1Out)/2.0&#32;&amp;&amp;&#32;std::abs(in_position[1])&lt;&#32;(GlobalParams.M_C_Dim2In+GlobalParams.M_C_Dim2Out)/2.0;
-185 }
+173 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell&#32;!=&#32;endc;&#32;++cell)&#32;{
+174 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(cell-&gt;is_locally_owned())&#32;{
+175 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;face&#32;=&#32;0;&#32;face&#32;&lt;&#32;6;&#32;face++)&#32;{
+176 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;z_min&#32;=&#32;std::min(z_min,&#32;cell-&gt;face(face)-&gt;center()[2]);
+177 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;z_max&#32;=&#32;std::max(z_max,&#32;cell-&gt;face(face)-&gt;center()[2]);
+178 &#32;&#32;&#32;&#32;&#32;&#32;}
+179 &#32;&#32;&#32;&#32;}
+180 &#32;&#32;}
+181 
+182 &#32;&#32;cell&#32;=&#32;in_tria-&gt;begin_active();
+183 &#32;&#32;endc&#32;=&#32;in_tria-&gt;end();
+184 
+185 &#32;&#32;<link linkend="class_round_mesh_generator_1accafc85e0b02823ef5cd12c384080aad">set_boundary_ids</link>(*in_tria);
 186 
-<link linkend="class_square_mesh_generator_1a0567efd954b9f8fb04863ee35f6e10f8">187 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_square_mesh_generator_1a0567efd954b9f8fb04863ee35f6e10f8">SquareMeshGenerator::phys_coordinate_in_waveguide</link>(Point&lt;3,double&gt;&#32;in_position)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-188 &#32;&#32;std::cout&lt;&lt;&#32;<emphasis class="stringliteral">&quot;NOT&#32;IMPLEMENTED:&#32;SquareMeshGenerator::phys_coordinate_in_waveguide&quot;</emphasis>&lt;&lt;std::endl;
-189 &#32;&#32;Point&lt;3,double&gt;&#32;temp&#32;=&#32;in_position;
-190 &#32;&#32;temp[1]&#32;-=&#32;ct-&gt;<link linkend="class_space_transformation_1a164857fcea7bbad31325ee26705f8e0b">get_m</link>(in_position[2]);
-191 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r&#32;=&#32;ct-&gt;<link linkend="class_space_transformation_1a15a36cfba06f1242c243d3f92c79b3d8">get_r</link>(in_position[2]);
-192 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;(abs(temp[0])&#32;&lt;&#32;r&#32;&amp;&amp;&#32;abs(temp[1])&#32;&lt;&#32;r&#32;);
-193 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<emphasis class="keyword">false</emphasis>;
-194 }
-195 
-<link linkend="class_square_mesh_generator_1a4bf7ccb54b42b23c4c21e6b0348cfa64">196 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_square_mesh_generator_1a4bf7ccb54b42b23c4c21e6b0348cfa64">SquareMeshGenerator::refine_global</link>(parallel::distributed::Triangulation&lt;3&gt;&#32;*&#32;in_tria,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;times)&#32;{
-197 &#32;&#32;in_tria-&gt;refine_global(times);
-198 }
-199 
-<link linkend="class_square_mesh_generator_1a942195cc1dbc944e5ec96c41b82084f5">200 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_square_mesh_generator_1a942195cc1dbc944e5ec96c41b82084f5">SquareMeshGenerator::refine_proximity</link>(parallel::distributed::Triangulation&lt;3&gt;&#32;*&#32;in_tria,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;times,&#32;<emphasis class="keywordtype">double</emphasis>&#32;factor)&#32;{
-201 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;X&#32;=&#32;(GlobalParams.M_C_Dim1Out&#32;+&#32;GlobalParams.M_C_Dim1In)*(1.0&#32;+&#32;factor)/2.0;
-202 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;Y&#32;=&#32;(GlobalParams.M_C_Dim2Out&#32;+&#32;GlobalParams.M_C_Dim2In)*(1.0&#32;+&#32;factor)/2.0;
-203 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;times;&#32;i++)&#32;{
-204 &#32;&#32;&#32;&#32;cell&#32;=&#32;in_tria-&gt;begin_active();
-205 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell!=endc;&#32;++cell){
-206 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(std::abs(cell-&gt;center()[0])&lt;&#32;X&#32;&amp;&amp;&#32;std::abs(cell-&gt;center()[1])&lt;&#32;Y)&#32;{
-207 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell-&gt;set_refine_flag();
-208 &#32;&#32;&#32;&#32;&#32;&#32;}
-209 &#32;&#32;&#32;&#32;}
-210 &#32;&#32;&#32;&#32;in_tria-&gt;execute_coarsening_and_refinement();
-211 &#32;&#32;}
-212 }
-213 
-<link linkend="class_square_mesh_generator_1aeb8209c7e20ee24c98bfa2b3e0e70ffa">214 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_square_mesh_generator_1aeb8209c7e20ee24c98bfa2b3e0e70ffa">SquareMeshGenerator::refine_internal</link>(parallel::distributed::Triangulation&lt;3&gt;&#32;*&#32;in_tria,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;times)&#32;{
-215 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;times;&#32;i++)&#32;{
-216 &#32;&#32;&#32;&#32;cell&#32;=&#32;in_tria-&gt;begin_active();
-217 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell!=endc;&#32;++cell){
-218 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(<link linkend="class_round_mesh_generator_1ae28b3d9461233b9de1ce366c0f2458bd">math_coordinate_in_waveguide</link>(cell-&gt;center()))&#32;{
-219 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell-&gt;set_refine_flag();
-220 &#32;&#32;&#32;&#32;&#32;&#32;}
-221 &#32;&#32;&#32;&#32;}
-222 &#32;&#32;&#32;&#32;in_tria-&gt;execute_coarsening_and_refinement();
-223 &#32;&#32;}
-224 }
-225 
-226 <emphasis class="preprocessor">#endif</emphasis>
+187 &#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Done&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+188 &#32;&#32;deallog.pop();
+189 }
+190 
+<link linkend="class_square_mesh_generator_1a472172871d02e901edc48c40eb829a17">191 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_square_mesh_generator_1a472172871d02e901edc48c40eb829a17">SquareMeshGenerator::math_coordinate_in_waveguide</link>(
+192 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;in_position)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+193 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;std::abs(in_position[0])&#32;&lt;
+194 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)&#32;/&#32;2.0&#32;&amp;&amp;
+195 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::abs(in_position[1])&#32;&lt;
+196 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(GlobalParams.M_C_Dim2In&#32;+&#32;GlobalParams.M_C_Dim2Out)&#32;/&#32;2.0;
+197 }
+198 
+<link linkend="class_square_mesh_generator_1a0567efd954b9f8fb04863ee35f6e10f8">199 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_square_mesh_generator_1a0567efd954b9f8fb04863ee35f6e10f8">SquareMeshGenerator::phys_coordinate_in_waveguide</link>(
+200 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;in_position)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+201 &#32;&#32;std::cout
+202 &#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;NOT&#32;IMPLEMENTED:&#32;SquareMeshGenerator::phys_coordinate_in_waveguide&quot;</emphasis>
+203 &#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;std::endl;
+204 &#32;&#32;Point&lt;3,&#32;double&gt;&#32;temp&#32;=&#32;in_position;
+205 &#32;&#32;temp[1]&#32;-=&#32;ct-&gt;<link linkend="class_space_transformation_1a164857fcea7bbad31325ee26705f8e0b">get_m</link>(in_position[2]);
+206 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r&#32;=&#32;ct-&gt;<link linkend="class_space_transformation_1a15a36cfba06f1242c243d3f92c79b3d8">get_r</link>(in_position[2]);
+207 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;(abs(temp[0])&#32;&lt;&#32;r&#32;&amp;&amp;&#32;abs(temp[1])&#32;&lt;&#32;r);
+208 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<emphasis class="keyword">false</emphasis>;
+209 }
+210 
+<link linkend="class_square_mesh_generator_1a4bf7ccb54b42b23c4c21e6b0348cfa64">211 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_square_mesh_generator_1a4bf7ccb54b42b23c4c21e6b0348cfa64">SquareMeshGenerator::refine_global</link>(
+212 &#32;&#32;&#32;&#32;parallel::distributed::Triangulation&lt;3&gt;&#32;*in_tria,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;times)&#32;{
+213 &#32;&#32;in_tria-&gt;refine_global(times);
+214 }
+215 
+<link linkend="class_square_mesh_generator_1a942195cc1dbc944e5ec96c41b82084f5">216 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_square_mesh_generator_1a942195cc1dbc944e5ec96c41b82084f5">SquareMeshGenerator::refine_proximity</link>(
+217 &#32;&#32;&#32;&#32;parallel::distributed::Triangulation&lt;3&gt;&#32;*in_tria,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;times,
+218 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;factor)&#32;{
+219 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;X&#32;=&#32;(GlobalParams.M_C_Dim1Out&#32;+&#32;GlobalParams.M_C_Dim1In)&#32;*
+220 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(1.0&#32;+&#32;factor)&#32;/&#32;2.0;
+221 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;Y&#32;=&#32;(GlobalParams.M_C_Dim2Out&#32;+&#32;GlobalParams.M_C_Dim2In)&#32;*
+222 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(1.0&#32;+&#32;factor)&#32;/&#32;2.0;
+223 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;times;&#32;i++)&#32;{
+224 &#32;&#32;&#32;&#32;cell&#32;=&#32;in_tria-&gt;begin_active();
+225 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell&#32;!=&#32;endc;&#32;++cell)&#32;{
+226 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(std::abs(cell-&gt;center()[0])&#32;&lt;&#32;X&#32;&amp;&amp;&#32;std::abs(cell-&gt;center()[1])&#32;&lt;&#32;Y)&#32;{
+227 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell-&gt;set_refine_flag();
+228 &#32;&#32;&#32;&#32;&#32;&#32;}
+229 &#32;&#32;&#32;&#32;}
+230 &#32;&#32;&#32;&#32;in_tria-&gt;execute_coarsening_and_refinement();
+231 &#32;&#32;}
+232 }
+233 
+<link linkend="class_square_mesh_generator_1aeb8209c7e20ee24c98bfa2b3e0e70ffa">234 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_square_mesh_generator_1aeb8209c7e20ee24c98bfa2b3e0e70ffa">SquareMeshGenerator::refine_internal</link>(
+235 &#32;&#32;&#32;&#32;parallel::distributed::Triangulation&lt;3&gt;&#32;*in_tria,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;times)&#32;{
+236 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;times;&#32;i++)&#32;{
+237 &#32;&#32;&#32;&#32;cell&#32;=&#32;in_tria-&gt;begin_active();
+238 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(;&#32;cell&#32;!=&#32;endc;&#32;++cell)&#32;{
+239 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(<link linkend="class_round_mesh_generator_1ae28b3d9461233b9de1ce366c0f2458bd">math_coordinate_in_waveguide</link>(cell-&gt;center()))&#32;{
+240 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;cell-&gt;set_refine_flag();
+241 &#32;&#32;&#32;&#32;&#32;&#32;}
+242 &#32;&#32;&#32;&#32;}
+243 &#32;&#32;&#32;&#32;in_tria-&gt;execute_coarsening_and_refinement();
+244 &#32;&#32;}
+245 }
+246 
+247 <emphasis class="preprocessor">#endif</emphasis>
     </computeroutput></literallayout>
 </section>

@@ -26,7 +26,8 @@
                 <itemizedlist>
                     <listitem>
                         <para>virtual double <link linkend="class_solution_weight_1ad3e7356174ef64b75596c26a8e225dbb">value</link> (
-const Point&lt; dim &gt; &amp; p, const unsigned int component)<para><emphasis>This function returns 1, if the given component is inside the Waveguide and 0 otherwise.</emphasis></para>
+const Point&lt; dim &gt; &amp; p, const unsigned int component)<para><emphasis>This function returns 1, if the given component is inside the Waveguide and
+0 otherwise.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -35,7 +36,9 @@ const Point&lt; dim &gt; &amp; p, const unsigned int component)<para><emphasis>T
                 <itemizedlist>
                     <listitem>
                         <para>virtual void <link linkend="class_solution_weight_1a3282e4b166920b4deaeb174824893aea">vector_value</link> (
-const Point&lt; dim &gt; &amp; p, Vector&lt; double &gt; &amp; value)<para><emphasis>This function gets called by the framework and calls value(const Point&lt;dim&gt; &amp;p, const unsigned int component ) for all components and stores the results in value.</emphasis></para>
+const Point&lt; dim &gt; &amp; p, Vector&lt; double &gt; &amp; value)<para><emphasis>This function gets called by the framework and calls value(const Point&lt;dim&gt;
+&amp;p, const unsigned int component ) for all components and stores the
+results in value.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -48,8 +51,8 @@ const Point&lt; dim &gt; &amp; p, Vector&lt; double &gt; &amp; value)<para><emph
         <simplesect>
             <title>Detailed Description</title>
 
-<para><link linkend="class_solution_weight">SolutionWeight</link> is a class, that has been derived from the class Function and which can be used to generate handles to functions, that return specific values. The pattern of passing object built from classes derived from Function is a commonly used one in Deal.II. This function offers a weight for locations inside the waveguide. In order to integrate or calculate the L2-norm inside the <link linkend="class_waveguide">Waveguide</link>, this is needed. The value of the function to be used is multiplied with this weighing-function which returns 1 for any point inside the <link linkend="class_waveguide">Waveguide</link> and 0 outside of it. Mathematically, this function can be represented by <equation><title>form_20</title>\[ f: \mathbb{R}^{dim} \to \{1,0\} , \, \boldsymbol{x} \mapsto \begin{cases}1&amp;\text{ for} \, \boldsymbol{x} \in \Omega_W \\ 0 &amp;\text{ else}\end{cases} \]</equation>, where <equation><title>form_21</title>$ \Omega_W$</equation> is the set of all points contained in the <link linkend="class_waveguide">Waveguide</link>. </para>
-                <para>Definition at line 29 of file SolutionWeight.h</para>
+<para><link linkend="class_solution_weight">SolutionWeight</link> is a class, that has been derived from the class Function and which can be used to generate handles to functions, that return specific values. The pattern of passing object built from classes derived from Function is a commonly used one in Deal.II. This function offers a weight for locations inside the waveguide. In order to integrate or calculate the L2-norm inside the <link linkend="class_waveguide">Waveguide</link>, this is needed. The value of the function to be used is multiplied with this weighing-function which returns 1 for any point inside the <link linkend="class_waveguide">Waveguide</link> and 0 outside of it. Mathematically, this function can be represented by <equation><title>form_21</title>\[ f: \mathbb{R}^{dim} \to \{1,0\} , \, \boldsymbol{x} \mapsto \begin{cases}1&amp;\text{ for} \, \boldsymbol{x} \in \Omega_W \\ 0 &amp;\text{ else}\end{cases} \]</equation>, where <equation><title>form_22</title>$ \Omega_W$</equation> is the set of all points contained in the <link linkend="class_waveguide">Waveguide</link>. </para>
+                <para>Definition at line 40 of file SolutionWeight.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>SolutionWeight.h</para></listitem></itemizedlist></para>
         </simplesect>
@@ -60,7 +63,8 @@ const Point&lt; dim &gt; &amp; p, Vector&lt; double &gt; &amp; value)<para><emph
 
             </section>
             <section xml:id="class_solution_weight_1ad3e7356174ef64b75596c26a8e225dbb">
-                <title>double SolutionWeight&lt; dim &gt;::value (const Point&lt; dim &gt; &amp;p, const unsigned int component) const</title> <emphasis>This function returns 1, if the given component is inside the Waveguide and 0 otherwise.</emphasis>
+                <title>double SolutionWeight&lt; dim &gt;::value (const Point&lt; dim &gt; &amp;p, const unsigned int component) const</title> <emphasis>This function returns 1, if the given component is inside the Waveguide and
+0 otherwise.</emphasis>
                 
 <para>Since this method is intended also for vector-valued functions , this method also has to account for a component of the result which for scalar functions is 0. 
                 <formalpara>
@@ -91,7 +95,9 @@ const Point&lt; dim &gt; &amp; p, Vector&lt; double &gt; &amp; value)<para><emph
 
             </section>
             <section xml:id="class_solution_weight_1a3282e4b166920b4deaeb174824893aea">
-                <title>void SolutionWeight&lt; dim &gt;::vector_value (const Point&lt; dim &gt; &amp;p, Vector&lt; double &gt; &amp;value) const</title> <emphasis>This function gets called by the framework and calls value(const Point&lt;dim&gt; &amp;p, const unsigned int component ) for all components and stores the results in value.</emphasis>
+                <title>void SolutionWeight&lt; dim &gt;::vector_value (const Point&lt; dim &gt; &amp;p, Vector&lt; double &gt; &amp;value) const</title> <emphasis>This function gets called by the framework and calls value(const Point&lt;dim&gt;
+&amp;p, const unsigned int component ) for all components and stores the
+results in value.</emphasis>
                 
 <para>
                 <formalpara>

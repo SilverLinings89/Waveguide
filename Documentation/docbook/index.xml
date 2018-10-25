@@ -36,8 +36,8 @@
         <xi:include href="classstd_1_1forward__list_1_1const__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1map_1_1const__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1unordered__map_1_1const__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <xi:include href="classstd_1_1basic__string_1_1const__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1multimap_1_1const__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="classstd_1_1basic__string_1_1const__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1unordered__multimap_1_1const__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1set_1_1const__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1string_1_1const__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -70,6 +70,8 @@
         <xi:include href="classstd_1_1error__condition.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="class_exact_solution.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1exception.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="class_face_surface_comparator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="class_face_surface_comparator_z.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1ios__base_1_1failure.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1forward__list.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1fstream.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -77,6 +79,8 @@
         <xi:include href="class_gradient_table.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="class_homogenous_transformation_circular.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="class_homogenous_transformation_rectangular.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="class_h_s_i_e___dof___type.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="class_h_s_i_e_preconditioner_base.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1ifstream.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="class_inhomogenous_transformation_circular.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="class_inhomogenous_transformation_rectangle.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -88,19 +92,19 @@
         <xi:include href="classstd_1_1istringstream.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1list_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1forward__list_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <xi:include href="classstd_1_1map_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1unordered__map_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1multimap_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <xi:include href="classstd_1_1unordered__multimap_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1basic__string_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="classstd_1_1unordered__multimap_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="classstd_1_1map_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1set_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1string_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1unordered__set_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1wstring_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <xi:include href="classstd_1_1multiset_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1unordered__multiset_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1vector_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1deque_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="classstd_1_1multiset_1_1iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1length__error.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1list.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1logic__error.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -127,20 +131,20 @@
         <xi:include href="classstd_1_1priority__queue.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1queue.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1range__error.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <xi:include href="classstd_1_1unordered__multiset_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <xi:include href="classstd_1_1wstring_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <xi:include href="classstd_1_1multimap_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <xi:include href="classstd_1_1unordered__map_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <xi:include href="classstd_1_1basic__string_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1list_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="classstd_1_1unordered__map_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="classstd_1_1multimap_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1set_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <xi:include href="classstd_1_1string_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <xi:include href="classstd_1_1unordered__set_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <xi:include href="classstd_1_1forward__list_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <xi:include href="classstd_1_1map_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1multiset_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1unordered__multimap_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="classstd_1_1string_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="classstd_1_1unordered__set_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="classstd_1_1map_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="classstd_1_1basic__string_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="classstd_1_1wstring_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="classstd_1_1unordered__multiset_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1vector_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="classstd_1_1forward__list_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1deque_1_1reverse__iterator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="class_round_mesh_generator.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="classstd_1_1runtime__error.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -204,6 +208,14 @@
         <xi:include href="_shape_description_8h.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="staticfunctions_8cpp.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="staticfunctions_8h.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="_face_surface_comparator_8cpp.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="_face_surface_comparator_8h.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="_face_surface_comparator_z_8cpp.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="_face_surface_comparator_z_8h.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="_h_s_i_e___preconditioner___base_8cpp.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="_h_s_i_e___preconditioner___base_8h.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="_h_s_i_e_dof_type_8cpp.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="_h_s_i_e_dof_type_8h.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="_mainpage_doku_8dox.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="_mesh_generator_8cpp.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="_mesh_generator_8h.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>

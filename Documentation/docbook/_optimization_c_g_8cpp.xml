@@ -22,43 +22,43 @@
 3 
 4 <emphasis class="preprocessor">#include&#32;&quot;OptimizationCG.h&quot;</emphasis>
 5 
-6 OptimizationCG::OptimizationCG()&#32;{
+6 OptimizationCG::OptimizationCG()&#32;{}
 7 
-8 }
+8 OptimizationCG::~OptimizationCG()&#32;{}
 9 
-10 OptimizationCG::~OptimizationCG()&#32;{
-11 
-12 }
-13 
-<link linkend="class_optimization_c_g_1a9b0d0c44baea9c922a787525811259ad">14 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_optimization_c_g_1a9b0d0c44baea9c922a787525811259ad">OptimizationCG::pass_result_small_step</link>(std::vector&lt;double&gt;)&#32;{
-15 &#32;&#32;<emphasis class="comment">//&#32;TODO:&#32;This&#32;implementation&#32;is&#32;still&#32;missing&#32;-&#32;uncertain&#32;and&#32;unimportant.</emphasis>
-16 &#32;&#32;<emphasis class="keywordflow">return</emphasis>;
-17 }
-18 
-<link linkend="class_optimization_c_g_1a7b55765b281b623f9c8ef93e7ad00aa7">19 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_optimization_c_g_1a7b55765b281b623f9c8ef93e7ad00aa7">OptimizationCG::pass_result_big_step</link>(<emphasis class="keywordtype">double</emphasis>)&#32;{
-20 &#32;&#32;<emphasis class="comment">//&#32;TODO:&#32;implement&#32;this&#32;function&#32;as&#32;core&#32;functionality&#32;of&#32;CG-based&#32;stepping&#32;scheme.</emphasis>
-21 &#32;&#32;<emphasis class="keywordflow">return</emphasis>;
-22 }
-23 
-24 
-<link linkend="class_optimization_c_g_1ae779e5bee6aaee38999e4705c72e11dc">25 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_optimization_c_g_1ae779e5bee6aaee38999e4705c72e11dc">OptimizationCG::perform_small_step_next</link>(&#32;<emphasis class="keywordtype">int</emphasis>&#32;&#32;)&#32;{
-26 &#32;&#32;<emphasis class="comment">//&#32;TODO:&#32;implement&#32;this&#32;function&#32;as&#32;core&#32;functionality&#32;of&#32;CG-based&#32;stepping&#32;scheme.</emphasis>
-27 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<emphasis class="keyword">false</emphasis>;
-28 }
-29 
-<link linkend="class_optimization_c_g_1a670ceaf08732728cf8e949fddd037787">30 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_optimization_c_g_1a670ceaf08732728cf8e949fddd037787">OptimizationCG::get_small_step_step_width</link>(&#32;<emphasis class="keywordtype">int</emphasis>&#32;)&#32;{
-31 &#32;&#32;<emphasis class="comment">//&#32;TODO:&#32;implement&#32;this&#32;function&#32;as&#32;core&#32;functionality&#32;of&#32;CG-based&#32;stepping&#32;scheme.</emphasis>
-32 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
-33 }
-34 
-<link linkend="class_optimization_c_g_1a5ad38004f2848c1e77613d5c6d69bdcd">35 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_optimization_c_g_1a5ad38004f2848c1e77613d5c6d69bdcd">OptimizationCG::perform_big_step_next</link>(&#32;<emphasis class="keywordtype">int</emphasis>&#32;&#32;)&#32;&#32;{
-36 &#32;&#32;<emphasis class="comment">//&#32;TODO:&#32;implement&#32;this&#32;function&#32;as&#32;core&#32;functionality&#32;of&#32;CG-based&#32;stepping&#32;scheme.</emphasis>
-37 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<emphasis class="keyword">false</emphasis>;
-38 }
-39 
-<link linkend="class_optimization_c_g_1a91574337c2111756126703e7f414e7ff">40 </link>std::vector&lt;double&gt;&#32;<link linkend="class_optimization_c_g_1a91574337c2111756126703e7f414e7ff">OptimizationCG::get_big_step_configuration</link>()&#32;{
-41 &#32;&#32;std::vector&lt;double&gt;&#32;ret;
-42 &#32;&#32;<emphasis class="comment">//&#32;TODO:&#32;implement&#32;this&#32;function&#32;as&#32;core&#32;functionality&#32;of&#32;CG-based&#32;stepping&#32;scheme.</emphasis>
+<link linkend="class_optimization_c_g_1a9b0d0c44baea9c922a787525811259ad">10 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_optimization_c_g_1a9b0d0c44baea9c922a787525811259ad">OptimizationCG::pass_result_small_step</link>(std::vector&lt;double&gt;)&#32;{
+11 &#32;&#32;<emphasis class="comment">//&#32;TODO:&#32;This&#32;implementation&#32;is&#32;still&#32;missing&#32;-&#32;uncertain&#32;and&#32;unimportant.</emphasis>
+12 &#32;&#32;<emphasis class="keywordflow">return</emphasis>;
+13 }
+14 
+<link linkend="class_optimization_c_g_1a7b55765b281b623f9c8ef93e7ad00aa7">15 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_optimization_c_g_1a7b55765b281b623f9c8ef93e7ad00aa7">OptimizationCG::pass_result_big_step</link>(<emphasis class="keywordtype">double</emphasis>)&#32;{
+16 &#32;&#32;<emphasis class="comment">//&#32;TODO:&#32;implement&#32;this&#32;function&#32;as&#32;core&#32;functionality&#32;of&#32;CG-based&#32;stepping</emphasis>
+17 &#32;&#32;<emphasis class="comment">//&#32;scheme.</emphasis>
+18 &#32;&#32;<emphasis class="keywordflow">return</emphasis>;
+19 }
+20 
+<link linkend="class_optimization_c_g_1ae779e5bee6aaee38999e4705c72e11dc">21 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_optimization_c_g_1ae779e5bee6aaee38999e4705c72e11dc">OptimizationCG::perform_small_step_next</link>(<emphasis class="keywordtype">int</emphasis>)&#32;{
+22 &#32;&#32;<emphasis class="comment">//&#32;TODO:&#32;implement&#32;this&#32;function&#32;as&#32;core&#32;functionality&#32;of&#32;CG-based&#32;stepping</emphasis>
+23 &#32;&#32;<emphasis class="comment">//&#32;scheme.</emphasis>
+24 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<emphasis class="keyword">false</emphasis>;
+25 }
+26 
+<link linkend="class_optimization_c_g_1a670ceaf08732728cf8e949fddd037787">27 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_optimization_c_g_1a670ceaf08732728cf8e949fddd037787">OptimizationCG::get_small_step_step_width</link>(<emphasis class="keywordtype">int</emphasis>)&#32;{
+28 &#32;&#32;<emphasis class="comment">//&#32;TODO:&#32;implement&#32;this&#32;function&#32;as&#32;core&#32;functionality&#32;of&#32;CG-based&#32;stepping</emphasis>
+29 &#32;&#32;<emphasis class="comment">//&#32;scheme.</emphasis>
+30 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
+31 }
+32 
+<link linkend="class_optimization_c_g_1a5ad38004f2848c1e77613d5c6d69bdcd">33 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_optimization_c_g_1a5ad38004f2848c1e77613d5c6d69bdcd">OptimizationCG::perform_big_step_next</link>(<emphasis class="keywordtype">int</emphasis>)&#32;{
+34 &#32;&#32;<emphasis class="comment">//&#32;TODO:&#32;implement&#32;this&#32;function&#32;as&#32;core&#32;functionality&#32;of&#32;CG-based&#32;stepping</emphasis>
+35 &#32;&#32;<emphasis class="comment">//&#32;scheme.</emphasis>
+36 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<emphasis class="keyword">false</emphasis>;
+37 }
+38 
+<link linkend="class_optimization_c_g_1a91574337c2111756126703e7f414e7ff">39 </link>std::vector&lt;double&gt;&#32;<link linkend="class_optimization_c_g_1a91574337c2111756126703e7f414e7ff">OptimizationCG::get_big_step_configuration</link>()&#32;{
+40 &#32;&#32;std::vector&lt;double&gt;&#32;ret;
+41 &#32;&#32;<emphasis class="comment">//&#32;TODO:&#32;implement&#32;this&#32;function&#32;as&#32;core&#32;functionality&#32;of&#32;CG-based&#32;stepping</emphasis>
+42 &#32;&#32;<emphasis class="comment">//&#32;scheme.</emphasis>
 43 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
 44 }
 45 

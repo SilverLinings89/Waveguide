@@ -5,10 +5,10 @@
     <programlisting>#include &lt;deal.II/base/point.h&gt;</programlisting>
     <programlisting>#include &lt;deal.II/base/tensor.h&gt;</programlisting>
     <programlisting>#include &lt;deal.II/lac/vector.h&gt;</programlisting>
-    <programlisting>#include &quot;SpaceTransformation.h&quot;</programlisting>
+    <programlisting>#include &quot;../Core/Sector.h&quot;</programlisting>
     <programlisting>#include &quot;../Helpers/QuadratureFormulaCircle.cpp&quot;</programlisting>
     <programlisting>#include &quot;../Helpers/staticfunctions.h&quot;</programlisting>
-    <programlisting>#include &quot;../Core/Sector.h&quot;</programlisting>
+    <programlisting>#include &quot;SpaceTransformation.h&quot;</programlisting>
         <section>
             <title>Macros</title>
             <para>
@@ -31,463 +31,541 @@
 5 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/point.h&gt;</emphasis>
 6 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/tensor.h&gt;</emphasis>
 7 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/vector.h&gt;</emphasis>
-8 <emphasis class="preprocessor">#include&#32;&quot;SpaceTransformation.h&quot;</emphasis>
+8 <emphasis class="preprocessor">#include&#32;&quot;../Core/Sector.h&quot;</emphasis>
 9 <emphasis class="preprocessor">#include&#32;&quot;../Helpers/QuadratureFormulaCircle.cpp&quot;</emphasis>
 10 <emphasis class="preprocessor">#include&#32;&quot;../Helpers/staticfunctions.h&quot;</emphasis>
-11 <emphasis class="preprocessor">#include&#32;&quot;../Core/Sector.h&quot;</emphasis>
+11 <emphasis class="preprocessor">#include&#32;&quot;SpaceTransformation.h&quot;</emphasis>
 12 <emphasis class="keyword">using&#32;namespace&#32;</emphasis><link linkend="namespacedealii">dealii</link>;
 13 
-14 HomogenousTransformationRectangular::HomogenousTransformationRectangular&#32;(<emphasis class="keywordtype">int</emphasis>&#32;in_rank):
-15 &#32;&#32;&#32;&#32;<link linkend="class_space_transformation">SpaceTransformation</link>(2,&#32;in_rank),
-16 &#32;&#32;XMinus(&#32;-(GlobalParams.M_R_XLength&#32;*0.5&#32;-&#32;GlobalParams.M_BC_XMinus)),
-17 &#32;&#32;XPlus(&#32;GlobalParams.M_R_XLength&#32;*0.5&#32;-&#32;GlobalParams.M_BC_XPlus),
-18 &#32;&#32;YMinus(&#32;-(GlobalParams.M_R_YLength&#32;*0.5&#32;-&#32;GlobalParams.M_BC_YMinus)),
-19 &#32;&#32;YPlus(&#32;GlobalParams.M_R_YLength&#32;*0.5&#32;-&#32;GlobalParams.M_BC_YPlus),
-20 &#32;&#32;ZMinus(&#32;-&#32;GlobalParams.M_R_ZLength&#32;*0.5&#32;),
-21 &#32;&#32;ZPlus(&#32;GlobalParams.M_R_ZLength&#32;*0.5&#32;),
-22 &#32;&#32;epsilon_K(GlobalParams.M_W_epsilonin),
-23 &#32;&#32;epsilon_M(GlobalParams.M_W_epsilonout),
-24 &#32;&#32;sectors(GlobalParams.M_W_Sectors),
-25 &#32;&#32;deltaY(GlobalParams.M_W_Delta)
-26 {
+14 HomogenousTransformationRectangular::HomogenousTransformationRectangular(
+15 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_rank)
+16 &#32;&#32;&#32;&#32;:&#32;<link linkend="class_space_transformation">SpaceTransformation</link>(2,&#32;in_rank),
+17 &#32;&#32;&#32;&#32;&#32;&#32;XMinus(-(GlobalParams.M_R_XLength&#32;*&#32;0.5&#32;-&#32;GlobalParams.M_BC_XMinus)),
+18 &#32;&#32;&#32;&#32;&#32;&#32;XPlus(GlobalParams.M_R_XLength&#32;*&#32;0.5&#32;-&#32;GlobalParams.M_BC_XPlus),
+19 &#32;&#32;&#32;&#32;&#32;&#32;YMinus(-(GlobalParams.M_R_YLength&#32;*&#32;0.5&#32;-&#32;GlobalParams.M_BC_YMinus)),
+20 &#32;&#32;&#32;&#32;&#32;&#32;YPlus(GlobalParams.M_R_YLength&#32;*&#32;0.5&#32;-&#32;GlobalParams.M_BC_YPlus),
+21 &#32;&#32;&#32;&#32;&#32;&#32;ZMinus(-GlobalParams.M_R_ZLength&#32;*&#32;0.5),
+22 &#32;&#32;&#32;&#32;&#32;&#32;ZPlus(GlobalParams.M_R_ZLength&#32;*&#32;0.5),
+23 &#32;&#32;&#32;&#32;&#32;&#32;epsilon_K(GlobalParams.M_W_epsilonin),
+24 &#32;&#32;&#32;&#32;&#32;&#32;epsilon_M(GlobalParams.M_W_epsilonout),
+25 &#32;&#32;&#32;&#32;&#32;&#32;sectors(GlobalParams.M_W_Sectors),
+26 &#32;&#32;&#32;&#32;&#32;&#32;deltaY(GlobalParams.M_W_Delta)&#32;{
 27 &#32;&#32;homogenized&#32;=&#32;<emphasis class="keyword">true</emphasis>;
 28 }
 29 
-30 HomogenousTransformationRectangular::~HomogenousTransformationRectangular()&#32;{
+30 HomogenousTransformationRectangular::~HomogenousTransformationRectangular()&#32;{}
 31 
-32 }
-33 
-34 Point&lt;3,&#32;double&gt;&#32;HomogenousTransformationRectangular::math_to_phys(Point&lt;3,&#32;double&gt;&#32;coord)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-35 &#32;&#32;Point&lt;3,&#32;double&gt;&#32;ret;
-36 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(coord[2]&#32;&lt;&#32;GlobalParams.M_R_ZLength/(-2.0))&#32;{
-37 &#32;&#32;&#32;&#32;ret[0]&#32;=&#32;(2*GlobalParams.M_C_Dim1In)&#32;*&#32;coord[0]&#32;/&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out);
-38 &#32;&#32;&#32;&#32;ret[1]&#32;=&#32;(2*GlobalParams.M_C_Dim2In)&#32;*&#32;coord[1]&#32;/&#32;(GlobalParams.M_C_Dim2In&#32;+&#32;GlobalParams.M_C_Dim2Out);
-39 &#32;&#32;&#32;&#32;ret[2]&#32;=&#32;coord[2];
-40 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>(coord[2]&#32;&gt;=&#32;GlobalParams.M_R_ZLength/(-2.0)&#32;&amp;&amp;&#32;coord[2]&#32;&lt;&#32;GlobalParams.M_R_ZLength/(2.0))&#32;{
-41 &#32;&#32;&#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;sec&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(coord[2]);
-42 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;m&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sec.first].get_m(sec.second);
-43 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret[0]&#32;=&#32;coord[0]&#32;;
-44 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret[1]&#32;=&#32;coord[1]&#32;+&#32;m;
-45 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret[2]&#32;=&#32;coord[2];
-46 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-47 &#32;&#32;&#32;&#32;ret[0]&#32;=&#32;(2*GlobalParams.M_C_Dim1Out)&#32;*&#32;coord[0]&#32;/&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out);
-48 &#32;&#32;&#32;&#32;ret[1]&#32;=&#32;(2*GlobalParams.M_C_Dim2Out)&#32;*&#32;coord[1]&#32;/&#32;(GlobalParams.M_C_Dim2In&#32;+&#32;GlobalParams.M_C_Dim2Out);
-49 &#32;&#32;&#32;&#32;ret[2]&#32;=&#32;coord[2];
-50 &#32;&#32;}
-51 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
-52 }
-53 
-54 Point&lt;3,&#32;double&gt;&#32;HomogenousTransformationRectangular::phys_to_math(Point&lt;3,&#32;double&gt;&#32;coord)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-55 &#32;&#32;Point&lt;3,&#32;double&gt;&#32;ret;
-56 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(coord[2]&#32;&lt;&#32;GlobalParams.M_R_ZLength/(-2.0))&#32;{
-57 &#32;&#32;&#32;&#32;ret[0]&#32;=&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)&#32;*&#32;coord[0]&#32;/&#32;(2*GlobalParams.M_C_Dim1In);
-58 &#32;&#32;&#32;&#32;ret[1]&#32;=&#32;(GlobalParams.M_C_Dim2In&#32;+&#32;GlobalParams.M_C_Dim2Out)&#32;*&#32;coord[1]&#32;/&#32;(2*GlobalParams.M_C_Dim2In);
-59 &#32;&#32;&#32;&#32;ret[2]&#32;=&#32;coord[2];
-60 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>(coord[2]&#32;&gt;=&#32;GlobalParams.M_R_ZLength/(-2.0)&#32;&amp;&amp;&#32;coord[2]&#32;&lt;&#32;GlobalParams.M_R_ZLength/(2.0))&#32;{
-61 &#32;&#32;&#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;sec&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(coord[2]);
-62 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;m&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sec.first].get_m(sec.second);
-63 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret[0]&#32;=&#32;coord[0]&#32;;
-64 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret[1]&#32;=&#32;coord[1]&#32;-m;
-65 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret[2]&#32;=&#32;coord[2];
-66 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-67 &#32;&#32;&#32;&#32;ret[0]&#32;=&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)&#32;*&#32;coord[0]&#32;/&#32;(2*GlobalParams.M_C_Dim1In);
-68 &#32;&#32;&#32;&#32;ret[1]&#32;=&#32;(GlobalParams.M_C_Dim2In&#32;+&#32;GlobalParams.M_C_Dim2Out)&#32;*&#32;coord[1]&#32;/&#32;(2*GlobalParams.M_C_Dim2In);
-69 &#32;&#32;&#32;&#32;ret[2]&#32;=&#32;coord[2];
-70 &#32;&#32;}
-71 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
-72 }
-73 
-<link linkend="class_homogenous_transformation_rectangular_1a334838f6301d536104444359dd7e8fe6">74 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a334838f6301d536104444359dd7e8fe6">HomogenousTransformationRectangular::PML_in_X</link>(Point&lt;3,&#32;double&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-75 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;p(0)&#32;&lt;&#32;XMinus&#32;||p(0)&#32;&gt;&#32;XPlus;
-76 }
-77 
-<link linkend="class_homogenous_transformation_rectangular_1a8dbc61c674d9f04f6569ba5106d3a8cc">78 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a8dbc61c674d9f04f6569ba5106d3a8cc">HomogenousTransformationRectangular::PML_in_Y</link>(Point&lt;3,&#32;double&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-79 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;p(1)&#32;&lt;&#32;YMinus&#32;||p(1)&#32;&gt;&#32;YPlus;
-80 }
-81 
-<link linkend="class_homogenous_transformation_rectangular_1a1d1b67c2ab4c738f83293f9fddda8119">82 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a1d1b67c2ab4c738f83293f9fddda8119">HomogenousTransformationRectangular::PML_in_Z</link>(Point&lt;3,&#32;double&gt;&#32;&amp;p)<emphasis class="keyword">&#32;&#32;const</emphasis>{
-83 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;p(2)&#32;&gt;&#32;ZPlus&#32;||&#32;p(2)&#32;&lt;&#32;ZMinus;
-84 }
-85 
-<link linkend="class_homogenous_transformation_rectangular_1ab5cc5b32d443c2d8ceead062480bab00">86 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1ab5cc5b32d443c2d8ceead062480bab00">HomogenousTransformationRectangular::Preconditioner_PML_Z_Distance</link>(Point&lt;3,&#32;double&gt;&#32;&amp;p,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;rank&#32;)<emphasis class="keyword">&#32;const</emphasis>{
-87 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;p(2)&#32;-&#32;GlobalParams.Minimum_Z&#32;-&#32;((double)rank)*GlobalParams.LayerThickness;
-88 }
-89 
-<link linkend="class_homogenous_transformation_rectangular_1ae9b78461ebb9e788aacb47522076d3b5">90 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1ae9b78461ebb9e788aacb47522076d3b5">HomogenousTransformationRectangular::PML_X_Distance</link>(Point&lt;3,&#32;double&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const</emphasis>{
-91 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(p(0)&#32;&gt;0){
-92 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;p(0)&#32;-&#32;XPlus&#32;;
-93 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-94 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;-p(0)&#32;+&#32;XMinus;
-95 &#32;&#32;}
-96 }
-97 
-<link linkend="class_homogenous_transformation_rectangular_1a125305f07aeb0d86e34eb2e06377be68">98 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a125305f07aeb0d86e34eb2e06377be68">HomogenousTransformationRectangular::PML_Y_Distance</link>(Point&lt;3,&#32;double&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const</emphasis>{
-99 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(p(1)&#32;&gt;0){
-100 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;p(1)&#32;-&#32;YPlus;
-101 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-102 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;-p(1)&#32;+&#32;YMinus;
-103 &#32;&#32;}
-104 }
-105 
-<link linkend="class_homogenous_transformation_rectangular_1a608043303e86a44dfae8f36baf963d86">106 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a608043303e86a44dfae8f36baf963d86">HomogenousTransformationRectangular::PML_Z_Distance</link>(Point&lt;3,&#32;double&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const</emphasis>{
-107 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(p(2)&#32;&lt;&#32;0)&#32;{
-108 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;-(p(2)&#32;+&#32;(GlobalParams.M_R_ZLength&#32;/&#32;2.0));
-109 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-110 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;p(2)&#32;-&#32;(GlobalParams.M_R_ZLength&#32;/&#32;2.0);
-111 &#32;&#32;}
-112 }
-113 
-114 Tensor&lt;2,3,std::complex&lt;double&gt;&gt;&#32;HomogenousTransformationRectangular::get_Tensor(Point&lt;3,&#32;double&gt;&#32;&amp;&#32;position)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-115 &#32;&#32;Tensor&lt;2,3,double&gt;&#32;transform&#32;=&#32;get_Space_Transformation_Tensor_Homogenized(position);
-116 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;Apply_PML_To_Tensor(position,&#32;transform);
-117 }
-118 
-119 Tensor&lt;2,3,std::complex&lt;double&gt;&gt;&#32;HomogenousTransformationRectangular::get_Preconditioner_Tensor(Point&lt;3,&#32;double&gt;&#32;&amp;&#32;position,&#32;<emphasis class="keywordtype">int</emphasis>&#32;block)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-120 &#32;&#32;Tensor&lt;2,3,double&gt;&#32;transform&#32;=&#32;get_Space_Transformation_Tensor_Homogenized(position);
-121 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;Apply_PML_To_Tensor_For_Preconditioner(position,&#32;transform,&#32;block);
-122 }
-123 
-124 Tensor&lt;2,3,double&gt;&#32;HomogenousTransformationRectangular::get_Space_Transformation_Tensor_Homogenized(Point&lt;3,&#32;double&gt;&#32;&amp;&#32;position)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-125 &#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;sector_z&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(position[2]);
-126 
-127 &#32;&#32;Tensor&lt;2,3,&#32;double&gt;&#32;transformation&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector_z.first].TransformationTensorInternal(position[0],&#32;position[1],&#32;sector_z.second);
+32 Point&lt;3,&#32;double&gt;&#32;HomogenousTransformationRectangular::math_to_phys(
+33 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;coord)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+34 &#32;&#32;Point&lt;3,&#32;double&gt;&#32;ret;
+35 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(coord[2]&#32;&lt;&#32;GlobalParams.M_R_ZLength&#32;/&#32;(-2.0))&#32;{
+36 &#32;&#32;&#32;&#32;ret[0]&#32;=&#32;(2&#32;*&#32;GlobalParams.M_C_Dim1In)&#32;*&#32;coord[0]&#32;/
+37 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out);
+38 &#32;&#32;&#32;&#32;ret[1]&#32;=&#32;(2&#32;*&#32;GlobalParams.M_C_Dim2In)&#32;*&#32;coord[1]&#32;/
+39 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(GlobalParams.M_C_Dim2In&#32;+&#32;GlobalParams.M_C_Dim2Out);
+40 &#32;&#32;&#32;&#32;ret[2]&#32;=&#32;coord[2];
+41 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(coord[2]&#32;&gt;=&#32;GlobalParams.M_R_ZLength&#32;/&#32;(-2.0)&#32;&amp;&amp;
+42 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;coord[2]&#32;&lt;&#32;GlobalParams.M_R_ZLength&#32;/&#32;(2.0))&#32;{
+43 &#32;&#32;&#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;sec&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(coord[2]);
+44 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;m&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sec.first].get_m(sec.second);
+45 &#32;&#32;&#32;&#32;ret[0]&#32;=&#32;coord[0];
+46 &#32;&#32;&#32;&#32;ret[1]&#32;=&#32;coord[1]&#32;+&#32;m;
+47 &#32;&#32;&#32;&#32;ret[2]&#32;=&#32;coord[2];
+48 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+49 &#32;&#32;&#32;&#32;ret[0]&#32;=&#32;(2&#32;*&#32;GlobalParams.M_C_Dim1Out)&#32;*&#32;coord[0]&#32;/
+50 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out);
+51 &#32;&#32;&#32;&#32;ret[1]&#32;=&#32;(2&#32;*&#32;GlobalParams.M_C_Dim2Out)&#32;*&#32;coord[1]&#32;/
+52 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(GlobalParams.M_C_Dim2In&#32;+&#32;GlobalParams.M_C_Dim2Out);
+53 &#32;&#32;&#32;&#32;ret[2]&#32;=&#32;coord[2];
+54 &#32;&#32;}
+55 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+56 }
+57 
+58 Point&lt;3,&#32;double&gt;&#32;HomogenousTransformationRectangular::phys_to_math(
+59 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;coord)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+60 &#32;&#32;Point&lt;3,&#32;double&gt;&#32;ret;
+61 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(coord[2]&#32;&lt;&#32;GlobalParams.M_R_ZLength&#32;/&#32;(-2.0))&#32;{
+62 &#32;&#32;&#32;&#32;ret[0]&#32;=&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)&#32;*&#32;coord[0]&#32;/
+63 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(2&#32;*&#32;GlobalParams.M_C_Dim1In);
+64 &#32;&#32;&#32;&#32;ret[1]&#32;=&#32;(GlobalParams.M_C_Dim2In&#32;+&#32;GlobalParams.M_C_Dim2Out)&#32;*&#32;coord[1]&#32;/
+65 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(2&#32;*&#32;GlobalParams.M_C_Dim2In);
+66 &#32;&#32;&#32;&#32;ret[2]&#32;=&#32;coord[2];
+67 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(coord[2]&#32;&gt;=&#32;GlobalParams.M_R_ZLength&#32;/&#32;(-2.0)&#32;&amp;&amp;
+68 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;coord[2]&#32;&lt;&#32;GlobalParams.M_R_ZLength&#32;/&#32;(2.0))&#32;{
+69 &#32;&#32;&#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;sec&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(coord[2]);
+70 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;m&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sec.first].get_m(sec.second);
+71 &#32;&#32;&#32;&#32;ret[0]&#32;=&#32;coord[0];
+72 &#32;&#32;&#32;&#32;ret[1]&#32;=&#32;coord[1]&#32;-&#32;m;
+73 &#32;&#32;&#32;&#32;ret[2]&#32;=&#32;coord[2];
+74 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+75 &#32;&#32;&#32;&#32;ret[0]&#32;=&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)&#32;*&#32;coord[0]&#32;/
+76 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(2&#32;*&#32;GlobalParams.M_C_Dim1In);
+77 &#32;&#32;&#32;&#32;ret[1]&#32;=&#32;(GlobalParams.M_C_Dim2In&#32;+&#32;GlobalParams.M_C_Dim2Out)&#32;*&#32;coord[1]&#32;/
+78 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(2&#32;*&#32;GlobalParams.M_C_Dim2In);
+79 &#32;&#32;&#32;&#32;ret[2]&#32;=&#32;coord[2];
+80 &#32;&#32;}
+81 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+82 }
+83 
+<link linkend="class_homogenous_transformation_rectangular_1a334838f6301d536104444359dd7e8fe6">84 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a334838f6301d536104444359dd7e8fe6">HomogenousTransformationRectangular::PML_in_X</link>(Point&lt;3,&#32;double&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+85 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;p(0)&#32;&lt;&#32;XMinus&#32;||&#32;p(0)&#32;&gt;&#32;XPlus;
+86 }
+87 
+<link linkend="class_homogenous_transformation_rectangular_1a8dbc61c674d9f04f6569ba5106d3a8cc">88 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a8dbc61c674d9f04f6569ba5106d3a8cc">HomogenousTransformationRectangular::PML_in_Y</link>(Point&lt;3,&#32;double&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+89 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;p(1)&#32;&lt;&#32;YMinus&#32;||&#32;p(1)&#32;&gt;&#32;YPlus;
+90 }
+91 
+<link linkend="class_homogenous_transformation_rectangular_1a1d1b67c2ab4c738f83293f9fddda8119">92 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a1d1b67c2ab4c738f83293f9fddda8119">HomogenousTransformationRectangular::PML_in_Z</link>(Point&lt;3,&#32;double&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+93 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;p(2)&#32;&gt;&#32;ZPlus&#32;||&#32;p(2)&#32;&lt;&#32;ZMinus;
+94 }
+95 
+<link linkend="class_homogenous_transformation_rectangular_1ab5cc5b32d443c2d8ceead062480bab00">96 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1ab5cc5b32d443c2d8ceead062480bab00">HomogenousTransformationRectangular::Preconditioner_PML_Z_Distance</link>(
+97 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;rank)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+98 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;p(2)&#32;-&#32;GlobalParams.Minimum_Z&#32;-
+99 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;((double)rank)&#32;*&#32;GlobalParams.LayerThickness;
+100 }
+101 
+<link linkend="class_homogenous_transformation_rectangular_1ae9b78461ebb9e788aacb47522076d3b5">102 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1ae9b78461ebb9e788aacb47522076d3b5">HomogenousTransformationRectangular::PML_X_Distance</link>(
+103 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+104 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(p(0)&#32;&gt;&#32;0)&#32;{
+105 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;p(0)&#32;-&#32;XPlus;
+106 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+107 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;-p(0)&#32;+&#32;XMinus;
+108 &#32;&#32;}
+109 }
+110 
+<link linkend="class_homogenous_transformation_rectangular_1a125305f07aeb0d86e34eb2e06377be68">111 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a125305f07aeb0d86e34eb2e06377be68">HomogenousTransformationRectangular::PML_Y_Distance</link>(
+112 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+113 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(p(1)&#32;&gt;&#32;0)&#32;{
+114 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;p(1)&#32;-&#32;YPlus;
+115 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+116 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;-p(1)&#32;+&#32;YMinus;
+117 &#32;&#32;}
+118 }
+119 
+<link linkend="class_homogenous_transformation_rectangular_1a608043303e86a44dfae8f36baf963d86">120 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a608043303e86a44dfae8f36baf963d86">HomogenousTransformationRectangular::PML_Z_Distance</link>(
+121 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+122 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(p(2)&#32;&lt;&#32;0)&#32;{
+123 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;-(p(2)&#32;+&#32;(GlobalParams.M_R_ZLength&#32;/&#32;2.0));
+124 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+125 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;p(2)&#32;-&#32;(GlobalParams.M_R_ZLength&#32;/&#32;2.0);
+126 &#32;&#32;}
+127 }
 128 
-129 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;dist&#32;=&#32;position[0]&#32;*&#32;position[0]&#32;+&#32;position[1]*position[1];
-130 
-131 &#32;&#32;dist&#32;=&#32;sqrt(dist);
-132 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;v1&#32;=&#32;GlobalParams.M_R_XLength/2.0&#32;-&#32;std::min(GlobalParams.M_BC_XMinus,&#32;GlobalParams.M_BC_XPlus);
-133 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;v2&#32;=&#32;GlobalParams.M_R_YLength/2.0&#32;-&#32;std::min(GlobalParams.M_BC_YMinus,&#32;GlobalParams.M_BC_YPlus);
-134 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;maxdist&#32;=&#32;std::min(v1,&#32;v2);
-135 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;mindist&#32;=&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)/2.0;
-136 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;sig&#32;=&#32;sigma(dist,&#32;mindist,&#32;maxdist);
-137 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;factor&#32;=&#32;InterpolationPolynomialZeroDerivative(sig,&#32;1,0);
-138 &#32;&#32;transformation&#32;*=&#32;factor;
-139 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;3;&#32;i++)&#32;{
-140 &#32;&#32;&#32;&#32;transformation[i][i]&#32;+=&#32;1-factor;
-141 &#32;&#32;}
-142 
-143 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;transformation;
-144 }
-145 
-146 Tensor&lt;2,3,double&gt;&#32;HomogenousTransformationRectangular::get_Space_Transformation_Tensor(Point&lt;3,&#32;double&gt;&#32;&amp;&#32;position)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-147 &#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;sector_z&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(position[2]);
-148 
-149 &#32;&#32;Tensor&lt;2,3,&#32;double&gt;&#32;transformation&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector_z.first].TransformationTensorInternal(position[0],&#32;position[1],&#32;sector_z.second);
-150 
-151 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;transformation;
-152 }
+129 Tensor&lt;2,&#32;3,&#32;std::complex&lt;double&gt;&gt;
+130 HomogenousTransformationRectangular::get_Tensor(
+131 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;&amp;position)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+132 &#32;&#32;Tensor&lt;2,&#32;3,&#32;double&gt;&#32;transform&#32;=
+133 &#32;&#32;&#32;&#32;&#32;&#32;get_Space_Transformation_Tensor_Homogenized(position);
+134 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;Apply_PML_To_Tensor(position,&#32;transform);
+135 }
+136 
+137 Tensor&lt;2,&#32;3,&#32;std::complex&lt;double&gt;&gt;
+138 HomogenousTransformationRectangular::get_Preconditioner_Tensor(
+139 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;&amp;position,&#32;<emphasis class="keywordtype">int</emphasis>&#32;block)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+140 &#32;&#32;Tensor&lt;2,&#32;3,&#32;double&gt;&#32;transform&#32;=
+141 &#32;&#32;&#32;&#32;&#32;&#32;get_Space_Transformation_Tensor_Homogenized(position);
+142 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;Apply_PML_To_Tensor_For_Preconditioner(position,&#32;transform,&#32;block);
+143 }
+144 
+145 Tensor&lt;2,&#32;3,&#32;double&gt;&#32;HomogenousTransformationRectangular::
+146 &#32;&#32;&#32;&#32;get_Space_Transformation_Tensor_Homogenized(
+147 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;&amp;position)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+148 &#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;sector_z&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(position[2]);
+149 
+150 &#32;&#32;Tensor&lt;2,&#32;3,&#32;double&gt;&#32;transformation&#32;=
+151 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector_z.first].TransformationTensorInternal(
+152 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;position[0],&#32;position[1],&#32;sector_z.second);
 153 
-154 Tensor&lt;2,3,&#32;std::complex&lt;double&gt;&gt;&#32;HomogenousTransformationRectangular::Apply_PML_To_Tensor(Point&lt;3,&#32;double&gt;&#32;&amp;&#32;position,&#32;Tensor&lt;2,3,double&gt;&#32;transformation)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-155 &#32;&#32;&#32;&#32;Tensor&lt;2,3,&#32;std::complex&lt;double&gt;&gt;&#32;MaterialTensor;
-156 
-157 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;3;&#32;i++)&#32;{
-158 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&#32;&lt;&#32;3;&#32;j++)&#32;{
-159 &#32;&#32;&#32;&#32;&#32;&#32;MaterialTensor[i][j]&#32;=&#32;transformation[i][j]*&#32;std::complex&lt;double&gt;(1.0,&#32;0.0);
-160 &#32;&#32;&#32;&#32;}
-161 &#32;&#32;}
-162 
-163 &#32;&#32;std::complex&lt;double&gt;&#32;sx(1.0,&#32;0.0),sy(1.0,0.0),&#32;sz(1.0,0.0);
-164 
-165 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(<link linkend="class_homogenous_transformation_circular_1a1dbcf7e3b6b7e15d470def1a38eb0398">PML_in_X</link>(position)){
-166 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r,d;
-167 &#32;&#32;&#32;&#32;r&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1ad5c6cf15b68b9a33513041962fccbdd3">PML_X_Distance</link>(position);
-168 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(position[0]&#32;&lt;&#32;0){
-169 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_XMinus;
-170 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-171 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_XPlus;
-172 &#32;&#32;&#32;&#32;}
-173 &#32;&#32;&#32;&#32;sx.real(&#32;1&#32;+&#32;pow(r/d&#32;,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*&#32;GlobalParams.M_BC_KappaXMax&#32;);
-174 &#32;&#32;&#32;&#32;sx.imag(&#32;pow(r/d,&#32;GlobalParams.M_BC_DampeningExponent)*GlobalParams.M_BC_SigmaXMax&#32;);
-175 &#32;&#32;}
-176 
-177 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(<link linkend="class_homogenous_transformation_circular_1a3411d710f6517b0362f2a77fad575a2d">PML_in_Y</link>(position)){
-178 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r,d;
-179 &#32;&#32;&#32;&#32;r&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1a18ff543846986f7d07a7a73738918ce7">PML_Y_Distance</link>(position);
-180 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(position[1]&#32;&lt;&#32;0){
-181 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_YMinus;
-182 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-183 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_YPlus;
-184 &#32;&#32;&#32;&#32;}
-185 
-186 &#32;&#32;&#32;&#32;sy.real(&#32;1&#32;+&#32;pow(r/d&#32;,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*&#32;GlobalParams.M_BC_KappaYMax&#32;);
-187 &#32;&#32;&#32;&#32;sy.imag(&#32;pow(r/d&#32;,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*&#32;GlobalParams.M_BC_SigmaYMax);
-188 &#32;&#32;}
+154 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;dist&#32;=&#32;position[0]&#32;*&#32;position[0]&#32;+&#32;position[1]&#32;*&#32;position[1];
+155 
+156 &#32;&#32;dist&#32;=&#32;sqrt(dist);
+157 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;v1&#32;=&#32;GlobalParams.M_R_XLength&#32;/&#32;2.0&#32;-
+158 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::min(GlobalParams.M_BC_XMinus,&#32;GlobalParams.M_BC_XPlus);
+159 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;v2&#32;=&#32;GlobalParams.M_R_YLength&#32;/&#32;2.0&#32;-
+160 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::min(GlobalParams.M_BC_YMinus,&#32;GlobalParams.M_BC_YPlus);
+161 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;maxdist&#32;=&#32;std::min(v1,&#32;v2);
+162 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;mindist&#32;=&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)&#32;/&#32;2.0;
+163 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;sig&#32;=&#32;sigma(dist,&#32;mindist,&#32;maxdist);
+164 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;factor&#32;=&#32;InterpolationPolynomialZeroDerivative(sig,&#32;1,&#32;0);
+165 &#32;&#32;transformation&#32;*=&#32;factor;
+166 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;3;&#32;i++)&#32;{
+167 &#32;&#32;&#32;&#32;transformation[i][i]&#32;+=&#32;1&#32;-&#32;factor;
+168 &#32;&#32;}
+169 
+170 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;transformation;
+171 }
+172 
+173 Tensor&lt;2,&#32;3,&#32;double&gt;
+174 HomogenousTransformationRectangular::get_Space_Transformation_Tensor(
+175 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;&amp;position)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+176 &#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;sector_z&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(position[2]);
+177 
+178 &#32;&#32;Tensor&lt;2,&#32;3,&#32;double&gt;&#32;transformation&#32;=
+179 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector_z.first].TransformationTensorInternal(
+180 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;position[0],&#32;position[1],&#32;sector_z.second);
+181 
+182 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;transformation;
+183 }
+184 
+185 Tensor&lt;2,&#32;3,&#32;std::complex&lt;double&gt;&gt;
+186 HomogenousTransformationRectangular::Apply_PML_To_Tensor(
+187 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;&amp;position,&#32;Tensor&lt;2,&#32;3,&#32;double&gt;&#32;transformation)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+188 &#32;&#32;Tensor&lt;2,&#32;3,&#32;std::complex&lt;double&gt;&gt;&#32;MaterialTensor;
 189 
-190 
-191 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(<link linkend="class_homogenous_transformation_circular_1a63d75536a44e85bbc7f230f3f6914527">PML_in_Z</link>(position)){
-192 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r,d;
-193 &#32;&#32;&#32;&#32;r&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1a64395825fffa38be12d3af9b4ad0278f">PML_Z_Distance</link>(position);
-194 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(position[1]&#32;&lt;&#32;0){
-195 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_Zminus;
-196 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-197 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_Zplus;
-198 &#32;&#32;&#32;&#32;}
-199 &#32;&#32;&#32;&#32;sz.real(&#32;1&#32;+&#32;pow(r/d&#32;,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*&#32;GlobalParams.M_BC_KappaZMax&#32;);
-200 &#32;&#32;&#32;&#32;sz.imag(&#32;pow(r/d&#32;,GlobalParams.M_BC_DampeningExponent)&#32;*&#32;GlobalParams.M_BC_SigmaZMax&#32;);
-201 &#32;&#32;}
-202 
-203 &#32;&#32;MaterialTensor[0][0]&#32;*=&#32;sy*sz/sx;
-204 &#32;&#32;MaterialTensor[0][1]&#32;*=&#32;sz;
-205 &#32;&#32;MaterialTensor[0][2]&#32;*=&#32;sy;
-206 
-207 &#32;&#32;MaterialTensor[1][0]&#32;*=&#32;sz;
-208 &#32;&#32;MaterialTensor[1][1]&#32;*=&#32;sx*sz/sy;
-209 &#32;&#32;MaterialTensor[1][2]&#32;*=&#32;sx;
-210 
-211 &#32;&#32;MaterialTensor[2][0]&#32;*=&#32;sy;
-212 &#32;&#32;MaterialTensor[2][1]&#32;*=&#32;sx;
-213 &#32;&#32;MaterialTensor[2][2]&#32;*=&#32;sx*sy/sz;
-214 
-215 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;MaterialTensor;
-216 }
-217 
-218 Tensor&lt;2,3,&#32;std::complex&lt;double&gt;&gt;&#32;HomogenousTransformationRectangular::Apply_PML_To_Tensor_For_Preconditioner(Point&lt;3,&#32;double&gt;&#32;&amp;&#32;position,&#32;Tensor&lt;2,3,double&gt;&#32;transformation,&#32;<emphasis class="keywordtype">int</emphasis>)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-219 &#32;&#32;&#32;&#32;Tensor&lt;2,3,&#32;std::complex&lt;double&gt;&gt;&#32;MaterialTensor;
-220 
-221 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;3;&#32;i++)&#32;{
-222 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&#32;&lt;&#32;3;&#32;j++)&#32;{
-223 &#32;&#32;&#32;&#32;&#32;&#32;MaterialTensor[i][j]&#32;=&#32;transformation[i][j]*&#32;std::complex&lt;double&gt;(1.0,&#32;0.0);
-224 &#32;&#32;&#32;&#32;}
-225 &#32;&#32;}
-226 
-227 &#32;&#32;std::complex&lt;double&gt;&#32;sx(1.0,&#32;0.0),sy(1.0,0.0),&#32;sz(1.0,0.0),sz_p(0.0,0.0);
-228 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(<link linkend="class_homogenous_transformation_circular_1a1dbcf7e3b6b7e15d470def1a38eb0398">PML_in_X</link>(position)){
-229 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r,d;
-230 &#32;&#32;&#32;&#32;r&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1ad5c6cf15b68b9a33513041962fccbdd3">PML_X_Distance</link>(position);
-231 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(position[0]&#32;&lt;&#32;0){
-232 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_XMinus;
+190 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;3;&#32;i++)&#32;{
+191 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&#32;&lt;&#32;3;&#32;j++)&#32;{
+192 &#32;&#32;&#32;&#32;&#32;&#32;MaterialTensor[i][j]&#32;=
+193 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;transformation[i][j]&#32;*&#32;std::complex&lt;double&gt;(1.0,&#32;0.0);
+194 &#32;&#32;&#32;&#32;}
+195 &#32;&#32;}
+196 
+197 &#32;&#32;std::complex&lt;double&gt;&#32;sx(1.0,&#32;0.0),&#32;sy(1.0,&#32;0.0),&#32;sz(1.0,&#32;0.0);
+198 
+199 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(<link linkend="class_homogenous_transformation_circular_1a1dbcf7e3b6b7e15d470def1a38eb0398">PML_in_X</link>(position))&#32;{
+200 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r,&#32;d;
+201 &#32;&#32;&#32;&#32;r&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1ad5c6cf15b68b9a33513041962fccbdd3">PML_X_Distance</link>(position);
+202 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(position[0]&#32;&lt;&#32;0)&#32;{
+203 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_XMinus;
+204 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+205 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_XPlus;
+206 &#32;&#32;&#32;&#32;}
+207 &#32;&#32;&#32;&#32;sx.real(1&#32;+&#32;pow(r&#32;/&#32;d,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*
+208 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_BC_KappaXMax);
+209 &#32;&#32;&#32;&#32;sx.imag(pow(r&#32;/&#32;d,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*
+210 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_BC_SigmaXMax);
+211 &#32;&#32;}
+212 
+213 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(<link linkend="class_homogenous_transformation_circular_1a3411d710f6517b0362f2a77fad575a2d">PML_in_Y</link>(position))&#32;{
+214 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r,&#32;d;
+215 &#32;&#32;&#32;&#32;r&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1a18ff543846986f7d07a7a73738918ce7">PML_Y_Distance</link>(position);
+216 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(position[1]&#32;&lt;&#32;0)&#32;{
+217 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_YMinus;
+218 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+219 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_YPlus;
+220 &#32;&#32;&#32;&#32;}
+221 
+222 &#32;&#32;&#32;&#32;sy.real(1&#32;+&#32;pow(r&#32;/&#32;d,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*
+223 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_BC_KappaYMax);
+224 &#32;&#32;&#32;&#32;sy.imag(pow(r&#32;/&#32;d,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*
+225 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_BC_SigmaYMax);
+226 &#32;&#32;}
+227 
+228 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(<link linkend="class_homogenous_transformation_circular_1a63d75536a44e85bbc7f230f3f6914527">PML_in_Z</link>(position))&#32;{
+229 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r,&#32;d;
+230 &#32;&#32;&#32;&#32;r&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1a64395825fffa38be12d3af9b4ad0278f">PML_Z_Distance</link>(position);
+231 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(position[1]&#32;&lt;&#32;0)&#32;{
+232 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_Zminus;
 233 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-234 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_XPlus;
+234 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_Zplus;
 235 &#32;&#32;&#32;&#32;}
-236 &#32;&#32;&#32;&#32;sx.real(&#32;1&#32;+&#32;pow(r/d&#32;,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*&#32;GlobalParams.M_BC_KappaXMax&#32;);
-237 &#32;&#32;&#32;&#32;sx.imag(&#32;pow(r/d&#32;,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*&#32;GlobalParams.M_BC_SigmaXMax&#32;);
-238 &#32;&#32;}
-239 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(<link linkend="class_homogenous_transformation_circular_1a3411d710f6517b0362f2a77fad575a2d">PML_in_Y</link>(position)){
-240 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r,d;
-241 &#32;&#32;&#32;&#32;r&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1a18ff543846986f7d07a7a73738918ce7">PML_Y_Distance</link>(position);
-242 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(position[1]&#32;&lt;&#32;0){
-243 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_YMinus;
-244 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-245 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_YPlus;
-246 &#32;&#32;&#32;&#32;}
-247 
-248 &#32;&#32;&#32;&#32;sy.real(&#32;1&#32;+&#32;pow(r/d&#32;,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*&#32;GlobalParams.M_BC_KappaYMax&#32;);
-249 &#32;&#32;&#32;&#32;sy.imag(&#32;pow(r/d&#32;,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*&#32;GlobalParams.M_BC_SigmaYMax);
-250 &#32;&#32;}
-251 
-252 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(<link linkend="class_homogenous_transformation_circular_1a0104c2e9318d30c656a7c7bea2fe94c4">Preconditioner_PML_Z_Distance</link>(position,&#32;rank)&#32;&gt;&#32;0){
-253 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r_temp&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1a0104c2e9318d30c656a7c7bea2fe94c4">Preconditioner_PML_Z_Distance</link>(position,&#32;rank);
-254 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;d_temp&#32;=&#32;GlobalParams.LayerThickness;
-255 
-256 &#32;&#32;&#32;&#32;sz.real(&#32;1&#32;+&#32;pow(r_temp/d_temp&#32;,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*&#32;GlobalParams.M_BC_KappaZMax&#32;);
-257 &#32;&#32;&#32;&#32;sz.imag(&#32;pow(r_temp/d_temp&#32;,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*&#32;GlobalParams.M_BC_SigmaZMax);
-258 &#32;&#32;}
-259 
-260 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(<link linkend="class_homogenous_transformation_circular_1a63d75536a44e85bbc7f230f3f6914527">PML_in_Z</link>(position)){
-261 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r,d;
-262 &#32;&#32;&#32;&#32;r&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1a64395825fffa38be12d3af9b4ad0278f">PML_Z_Distance</link>(position);
-263 &#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_Zplus&#32;;
-264 &#32;&#32;&#32;&#32;sz.real(&#32;1&#32;+&#32;pow(r/d&#32;,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*&#32;GlobalParams.M_BC_KappaZMax&#32;);
-265 &#32;&#32;&#32;&#32;sz.imag(&#32;pow(r/d&#32;,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*&#32;GlobalParams.M_BC_SigmaZMax&#32;);
-266 &#32;&#32;}
-267 
-268 &#32;&#32;MaterialTensor[0][0]&#32;*=&#32;sy*sz/sx;
-269 &#32;&#32;MaterialTensor[0][1]&#32;*=&#32;sz;
-270 &#32;&#32;MaterialTensor[0][2]&#32;*=&#32;sy;
-271 
-272 &#32;&#32;MaterialTensor[1][0]&#32;*=&#32;sz;
-273 &#32;&#32;MaterialTensor[1][1]&#32;*=&#32;sx*sz/sy;
-274 &#32;&#32;MaterialTensor[1][2]&#32;*=&#32;sx;
-275 
-276 &#32;&#32;MaterialTensor[2][0]&#32;*=&#32;sy;
-277 &#32;&#32;MaterialTensor[2][1]&#32;*=&#32;sx;
-278 &#32;&#32;MaterialTensor[2][2]&#32;*=&#32;sx*sy/sz;
-279 
-280 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;MaterialTensor;
-281 }
-282 
-<link linkend="class_homogenous_transformation_rectangular_1a80c1ce86635edce1227ab26fa2ae0008">283 </link>std::complex&lt;double&gt;&#32;<link linkend="class_homogenous_transformation_rectangular_1a80c1ce86635edce1227ab26fa2ae0008">HomogenousTransformationRectangular::evaluate_for_z</link>(<emphasis class="keywordtype">double</emphasis>&#32;in_z,&#32;<link linkend="class_waveguide">Waveguide</link>&#32;*&#32;in_w)&#32;{
-284 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r&#32;=&#32;GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out;
-285 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;gauss_product_2D_sphere(in_z,10,r,0,0,&#32;in_w);
-286 }
-287 
-<link linkend="class_homogenous_transformation_rectangular_1aee91e2e47daaceb2553c21d321f94802">288 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1aee91e2e47daaceb2553c21d321f94802">HomogenousTransformationRectangular::get_dof</link>(<emphasis class="keywordtype">int</emphasis>&#32;dof)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-289 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(dof&#32;&lt;&#32;(<emphasis class="keywordtype">int</emphasis>)<link linkend="class_homogenous_transformation_circular_1a4a8c29a84f21edaccaf249a4427928d7">NDofs</link>()&#32;&amp;&amp;&#32;dof&#32;&gt;=&#32;0)&#32;{
-290 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;sector&#32;=&#32;floor(dof/2);
-291 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(sector&#32;==&#32;<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>)&#32;{
-292 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector-1].dofs_r[dof%2];
-293 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-294 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector].dofs_l[dof%2];
-295 &#32;&#32;&#32;&#32;}
-296 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-297 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Critical:&#32;DOF-index&#32;out&#32;of&#32;bounds&#32;in&#32;HomogenousTransformationRectangular::get_dof!&quot;</emphasis>&#32;&lt;&lt;std::endl;
-298 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
-299 &#32;&#32;}
-300 }
-301 
-<link linkend="class_homogenous_transformation_rectangular_1a815313c86f6f989c76431ac6f7a6e271">302 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a815313c86f6f989c76431ac6f7a6e271">HomogenousTransformationRectangular::get_free_dof</link>(<emphasis class="keywordtype">int</emphasis>&#32;in_dof)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-303 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;dof&#32;=&#32;in_dof&#32;+&#32;2&#32;;
-304 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(dof&#32;&lt;&#32;(<emphasis class="keywordtype">int</emphasis>)<link linkend="class_homogenous_transformation_circular_1a4a8c29a84f21edaccaf249a4427928d7">NDofs</link>()-2&#32;&amp;&amp;&#32;dof&#32;&gt;=&#32;0)&#32;{
-305 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;sector&#32;=&#32;floor(dof/2);
-306 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(sector&#32;==&#32;<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>)&#32;{
-307 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector-1].dofs_r[dof%2];
-308 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-309 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector].dofs_l[dof%2];
-310 &#32;&#32;&#32;&#32;}
-311 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-312 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Critical:&#32;DOF-index&#32;out&#32;of&#32;bounds&#32;in&#32;HomogenousTransformationRectangular::get_free_dof!&quot;</emphasis>&#32;&lt;&lt;std::endl;
-313 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
-314 &#32;&#32;}
-315 }
-316 
-<link linkend="class_homogenous_transformation_rectangular_1a9b199987886875675611f31871391771">317 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a9b199987886875675611f31871391771">HomogenousTransformationRectangular::set_dof</link>(<emphasis class="keywordtype">int</emphasis>&#32;dof,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_val)&#32;{
-318 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(dof&#32;&lt;&#32;(<emphasis class="keywordtype">int</emphasis>)<link linkend="class_homogenous_transformation_circular_1a4a8c29a84f21edaccaf249a4427928d7">NDofs</link>()&#32;&amp;&amp;&#32;dof&#32;&gt;=&#32;0)&#32;{
-319 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;sector&#32;=&#32;floor(dof/2);
-320 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(sector&#32;==&#32;<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>)&#32;{
-321 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector-1].dofs_r[dof%2]&#32;=&#32;in_val;
-322 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(sector&#32;==&#32;0)&#32;{
-323 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[0].dofs_l[dof%2]&#32;=&#32;in_val;
-324 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-325 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector].dofs_l[dof%2]&#32;=&#32;in_val;
-326 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector-1].dofs_r[dof%2]&#32;=&#32;in_val;
-327 &#32;&#32;&#32;&#32;}
-328 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-329 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Critical:&#32;DOF-index&#32;out&#32;of&#32;bounds&#32;in&#32;HomogenousTransformationRectangular::set_dof!&quot;</emphasis>&#32;&lt;&lt;std::endl;
-330 &#32;&#32;}
-331 }
-332 
-<link linkend="class_homogenous_transformation_rectangular_1ad88fde6f93b6940c66e3bc56acc6a593">333 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1ad88fde6f93b6940c66e3bc56acc6a593">HomogenousTransformationRectangular::set_free_dof</link>(<emphasis class="keywordtype">int</emphasis>&#32;in_dof,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_val)&#32;{
-334 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;dof&#32;=&#32;in_dof&#32;+&#32;2;
-335 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(dof&#32;&lt;&#32;(<emphasis class="keywordtype">int</emphasis>)<link linkend="class_homogenous_transformation_circular_1a4a8c29a84f21edaccaf249a4427928d7">NDofs</link>()&#32;-2&#32;&amp;&amp;&#32;dof&#32;&gt;=&#32;0)&#32;{
-336 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;sector&#32;=&#32;floor(dof/2);
-337 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(sector&#32;==&#32;<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>)&#32;{
-338 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector-1].dofs_r[dof%2]&#32;=&#32;in_val;
-339 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(sector&#32;==&#32;0)&#32;{
-340 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[0].dofs_l[dof%2]&#32;=&#32;in_val;
-341 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-342 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector].dofs_l[dof%2]&#32;=&#32;in_val;
-343 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector-1].dofs_r[dof%2]&#32;=&#32;in_val;
-344 &#32;&#32;&#32;&#32;}
-345 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-346 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Critical:&#32;DOF-index&#32;out&#32;of&#32;bounds&#32;in&#32;HomogenousTransformationRectangular::set_free_dof!&quot;</emphasis>&#32;&lt;&lt;std::endl;
-347 &#32;&#32;}
-348 }
-349 
-<link linkend="class_homogenous_transformation_rectangular_1aa43e78f29f12ce9f6361f95e0a49ee7d">350 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1aa43e78f29f12ce9f6361f95e0a49ee7d">HomogenousTransformationRectangular::Sector_Length</link>()<emphasis class="keyword">&#32;&#32;const</emphasis>{
-351 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;GlobalParams.SectorThickness;
-352 }
-353 
-<link linkend="class_homogenous_transformation_rectangular_1a3535990a0409755ae25b820bfb2adbc8">354 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a3535990a0409755ae25b820bfb2adbc8">HomogenousTransformationRectangular::estimate_and_initialize</link>()&#32;{
-355 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(GlobalParams.M_PC_Use)&#32;{
-356 &#32;&#32;&#32;&#32;<link linkend="class_sector">Sector&lt;2&gt;</link>&#32;the_first(<emphasis class="keyword">true</emphasis>,&#32;<emphasis class="keyword">false</emphasis>,&#32;GlobalParams.sd.z[0],&#32;GlobalParams.sd.z[1]);
-357 &#32;&#32;&#32;&#32;the_first.<link linkend="class_sector_1a197c78d119ee872f43c895b02ebb3e8d">set_properties_force</link>(GlobalParams.sd.m[0],GlobalParams.sd.m[1],GlobalParams.sd.v[0],GlobalParams.sd.v[1]);
-358 &#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>.push_back(the_first);
-359 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;1;&#32;i&#32;&lt;&#32;GlobalParams.sd.Sectors-2;&#32;i++)&#32;{
-360 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_sector">Sector&lt;2&gt;</link>&#32;intermediate(<emphasis class="keyword">false</emphasis>,&#32;<emphasis class="keyword">false</emphasis>,&#32;GlobalParams.sd.z[i],&#32;GlobalParams.sd.z[i+1]&#32;);
-361 &#32;&#32;&#32;&#32;&#32;&#32;intermediate.<link linkend="class_sector_1a197c78d119ee872f43c895b02ebb3e8d">set_properties_force</link>(GlobalParams.sd.m[i],GlobalParams.sd.m[i+1],GlobalParams.sd.v[i],GlobalParams.sd.v[i+1]);
-362 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>.push_back(intermediate);
-363 &#32;&#32;&#32;&#32;}
-364 &#32;&#32;&#32;&#32;<link linkend="class_sector">Sector&lt;2&gt;</link>&#32;the_last(<emphasis class="keyword">false</emphasis>,&#32;<emphasis class="keyword">true</emphasis>,&#32;GlobalParams.sd.z[GlobalParams.sd.Sectors-2],&#32;GlobalParams.sd.z[GlobalParams.sd.Sectors-1]);
-365 &#32;&#32;&#32;&#32;the_last.<link linkend="class_sector_1a197c78d119ee872f43c895b02ebb3e8d">set_properties_force</link>(GlobalParams.sd.m[GlobalParams.sd.Sectors-2],GlobalParams.sd.m[GlobalParams.sd.Sectors-1],GlobalParams.sd.v[GlobalParams.sd.Sectors-2],GlobalParams.sd.v[GlobalParams.sd.Sectors-1]);
-366 &#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>.push_back(the_last);
-367 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>.size();&#32;i++)&#32;{
-368 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;From&#32;z:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[i].z_0&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;(m:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[i].get_m(0.0)&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;v:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[i].get_v(0.0)&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;)&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
-369 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;&#32;To&#32;z:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[i].z_1&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;(m:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[i].get_m(1.0)&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;v:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[i].get_v(1.0)&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;)&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
-370 &#32;&#32;&#32;&#32;}
-371 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-372 &#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>.reserve(<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>);
-373 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;m_0&#32;=&#32;GlobalParams.M_W_Delta/2.0;
-374 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;m_1&#32;=&#32;-GlobalParams.M_W_Delta/2.0;
-375 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>&#32;==&#32;1)&#32;{
-376 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_sector">Sector&lt;2&gt;</link>&#32;temp12(<emphasis class="keyword">true</emphasis>,&#32;<emphasis class="keyword">true</emphasis>,&#32;-GlobalParams.M_R_ZLength/2.0,&#32;GlobalParams.M_R_ZLength/2.0&#32;);
-377 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>.push_back(temp12);
-378 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[0].set_properties_force(GlobalParams.M_W_Delta/2.0,-GlobalParams.M_W_Delta/2.0,&#32;GlobalParams.M_C_Dim1In,&#32;GlobalParams.M_C_Dim1Out,&#32;0,&#32;0);
-379 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-380 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;length&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1ac01f00a49d38f8bb7c65a6f5681653fc">Sector_Length</link>();
-381 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_sector">Sector&lt;2&gt;</link>&#32;temp(<emphasis class="keyword">true</emphasis>,&#32;<emphasis class="keyword">false</emphasis>,&#32;-GlobalParams.M_R_ZLength/(2.0),&#32;-GlobalParams.M_R_ZLength/2.0&#32;+&#32;length&#32;);
-382 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>.push_back(temp);
-383 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;&#32;i&#32;=&#32;1;&#32;i&#32;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>;&#32;i++)&#32;{
-384 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_sector">Sector&lt;2&gt;</link>&#32;temp2(&#32;<emphasis class="keyword">false</emphasis>,&#32;<emphasis class="keyword">false</emphasis>,&#32;-GlobalParams.M_R_ZLength/(2.0)&#32;+&#32;length*(1.0&#32;*i),&#32;-GlobalParams.M_R_ZLength/(2.0)&#32;+&#32;length*(i&#32;+&#32;1.0)&#32;);
-385 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>.push_back(temp2);
-386 &#32;&#32;&#32;&#32;&#32;&#32;}
-387 
-388 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;length_rel&#32;=&#32;1.0/((double)(sectors));
-389 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[0].set_properties_force(
-390 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;m_0,
-391 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;InterpolationPolynomialZeroDerivative(length_rel,&#32;m_0,&#32;m_1),
-392 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;0,
-393 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;InterpolationPolynomialDerivative(length_rel,&#32;m_0,&#32;m_1,&#32;0,&#32;0)
-394 &#32;&#32;&#32;&#32;&#32;&#32;);
-395 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;&#32;i&#32;=&#32;1;&#32;i&#32;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>&#32;;&#32;i++)&#32;{
-396 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;z_l&#32;=&#32;i*length_rel;
-397 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;z_r&#32;=&#32;(i+1)*length_rel;
-398 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[i].set_properties_force(
-399 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;InterpolationPolynomialZeroDerivative(z_l,&#32;m_0,&#32;m_1),
-400 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;InterpolationPolynomialZeroDerivative(z_r,&#32;m_0,&#32;m_1),
-401 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;InterpolationPolynomialDerivative(z_l,&#32;m_0,&#32;m_1,&#32;0,&#32;0),
-402 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;InterpolationPolynomialDerivative(z_r,&#32;m_0,&#32;m_1,&#32;0,&#32;0)
-403 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;);
-404 &#32;&#32;&#32;&#32;&#32;&#32;}
-405 &#32;&#32;&#32;&#32;}
-406 &#32;&#32;}
-407 }
-408 
-<link linkend="class_homogenous_transformation_rectangular_1a4d586cde943d67b91cef5f9ded17fc03">409 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a4d586cde943d67b91cef5f9ded17fc03">HomogenousTransformationRectangular::get_r</link>(<emphasis class="keywordtype">double</emphasis>&#32;)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-410 &#32;&#32;<emphasis class="comment">//std::pair&lt;int,&#32;double&gt;&#32;two&#32;=&#32;Z_to_Sector_and_local_z(z_in);</emphasis>
-411 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Asking&#32;for&#32;Radius&#32;of&#32;rectangular&#32;Waveguide.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
-412 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0;
+236 &#32;&#32;&#32;&#32;sz.real(1&#32;+&#32;pow(r&#32;/&#32;d,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*
+237 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_BC_KappaZMax);
+238 &#32;&#32;&#32;&#32;sz.imag(pow(r&#32;/&#32;d,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*
+239 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_BC_SigmaZMax);
+240 &#32;&#32;}
+241 
+242 &#32;&#32;MaterialTensor[0][0]&#32;*=&#32;sy&#32;*&#32;sz&#32;/&#32;sx;
+243 &#32;&#32;MaterialTensor[0][1]&#32;*=&#32;sz;
+244 &#32;&#32;MaterialTensor[0][2]&#32;*=&#32;sy;
+245 
+246 &#32;&#32;MaterialTensor[1][0]&#32;*=&#32;sz;
+247 &#32;&#32;MaterialTensor[1][1]&#32;*=&#32;sx&#32;*&#32;sz&#32;/&#32;sy;
+248 &#32;&#32;MaterialTensor[1][2]&#32;*=&#32;sx;
+249 
+250 &#32;&#32;MaterialTensor[2][0]&#32;*=&#32;sy;
+251 &#32;&#32;MaterialTensor[2][1]&#32;*=&#32;sx;
+252 &#32;&#32;MaterialTensor[2][2]&#32;*=&#32;sx&#32;*&#32;sy&#32;/&#32;sz;
+253 
+254 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;MaterialTensor;
+255 }
+256 
+257 Tensor&lt;2,&#32;3,&#32;std::complex&lt;double&gt;&gt;
+258 HomogenousTransformationRectangular::Apply_PML_To_Tensor_For_Preconditioner(
+259 &#32;&#32;&#32;&#32;Point&lt;3,&#32;double&gt;&#32;&amp;position,&#32;Tensor&lt;2,&#32;3,&#32;double&gt;&#32;transformation,
+260 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+261 &#32;&#32;Tensor&lt;2,&#32;3,&#32;std::complex&lt;double&gt;&gt;&#32;MaterialTensor;
+262 
+263 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;3;&#32;i++)&#32;{
+264 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&#32;&lt;&#32;3;&#32;j++)&#32;{
+265 &#32;&#32;&#32;&#32;&#32;&#32;MaterialTensor[i][j]&#32;=
+266 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;transformation[i][j]&#32;*&#32;std::complex&lt;double&gt;(1.0,&#32;0.0);
+267 &#32;&#32;&#32;&#32;}
+268 &#32;&#32;}
+269 
+270 &#32;&#32;std::complex&lt;double&gt;&#32;sx(1.0,&#32;0.0),&#32;sy(1.0,&#32;0.0),&#32;sz(1.0,&#32;0.0),&#32;sz_p(0.0,&#32;0.0);
+271 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(<link linkend="class_homogenous_transformation_circular_1a1dbcf7e3b6b7e15d470def1a38eb0398">PML_in_X</link>(position))&#32;{
+272 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r,&#32;d;
+273 &#32;&#32;&#32;&#32;r&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1ad5c6cf15b68b9a33513041962fccbdd3">PML_X_Distance</link>(position);
+274 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(position[0]&#32;&lt;&#32;0)&#32;{
+275 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_XMinus;
+276 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+277 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_XPlus;
+278 &#32;&#32;&#32;&#32;}
+279 &#32;&#32;&#32;&#32;sx.real(1&#32;+&#32;pow(r&#32;/&#32;d,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*
+280 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_BC_KappaXMax);
+281 &#32;&#32;&#32;&#32;sx.imag(pow(r&#32;/&#32;d,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*
+282 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_BC_SigmaXMax);
+283 &#32;&#32;}
+284 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(<link linkend="class_homogenous_transformation_circular_1a3411d710f6517b0362f2a77fad575a2d">PML_in_Y</link>(position))&#32;{
+285 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r,&#32;d;
+286 &#32;&#32;&#32;&#32;r&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1a18ff543846986f7d07a7a73738918ce7">PML_Y_Distance</link>(position);
+287 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(position[1]&#32;&lt;&#32;0)&#32;{
+288 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_YMinus;
+289 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+290 &#32;&#32;&#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_YPlus;
+291 &#32;&#32;&#32;&#32;}
+292 
+293 &#32;&#32;&#32;&#32;sy.real(1&#32;+&#32;pow(r&#32;/&#32;d,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*
+294 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_BC_KappaYMax);
+295 &#32;&#32;&#32;&#32;sy.imag(pow(r&#32;/&#32;d,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*
+296 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_BC_SigmaYMax);
+297 &#32;&#32;}
+298 
+299 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(<link linkend="class_homogenous_transformation_circular_1a0104c2e9318d30c656a7c7bea2fe94c4">Preconditioner_PML_Z_Distance</link>(position,&#32;rank)&#32;&gt;&#32;0)&#32;{
+300 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r_temp&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1a0104c2e9318d30c656a7c7bea2fe94c4">Preconditioner_PML_Z_Distance</link>(position,&#32;rank);
+301 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;d_temp&#32;=&#32;GlobalParams.LayerThickness;
+302 
+303 &#32;&#32;&#32;&#32;sz.real(1&#32;+&#32;pow(r_temp&#32;/&#32;d_temp,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*
+304 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_BC_KappaZMax);
+305 &#32;&#32;&#32;&#32;sz.imag(pow(r_temp&#32;/&#32;d_temp,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*
+306 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_BC_SigmaZMax);
+307 &#32;&#32;}
+308 
+309 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(<link linkend="class_homogenous_transformation_circular_1a63d75536a44e85bbc7f230f3f6914527">PML_in_Z</link>(position))&#32;{
+310 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r,&#32;d;
+311 &#32;&#32;&#32;&#32;r&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1a64395825fffa38be12d3af9b4ad0278f">PML_Z_Distance</link>(position);
+312 &#32;&#32;&#32;&#32;d&#32;=&#32;GlobalParams.M_BC_Zplus;
+313 &#32;&#32;&#32;&#32;sz.real(1&#32;+&#32;pow(r&#32;/&#32;d,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*
+314 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_BC_KappaZMax);
+315 &#32;&#32;&#32;&#32;sz.imag(pow(r&#32;/&#32;d,&#32;GlobalParams.M_BC_DampeningExponent)&#32;*
+316 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_BC_SigmaZMax);
+317 &#32;&#32;}
+318 
+319 &#32;&#32;MaterialTensor[0][0]&#32;*=&#32;sy&#32;*&#32;sz&#32;/&#32;sx;
+320 &#32;&#32;MaterialTensor[0][1]&#32;*=&#32;sz;
+321 &#32;&#32;MaterialTensor[0][2]&#32;*=&#32;sy;
+322 
+323 &#32;&#32;MaterialTensor[1][0]&#32;*=&#32;sz;
+324 &#32;&#32;MaterialTensor[1][1]&#32;*=&#32;sx&#32;*&#32;sz&#32;/&#32;sy;
+325 &#32;&#32;MaterialTensor[1][2]&#32;*=&#32;sx;
+326 
+327 &#32;&#32;MaterialTensor[2][0]&#32;*=&#32;sy;
+328 &#32;&#32;MaterialTensor[2][1]&#32;*=&#32;sx;
+329 &#32;&#32;MaterialTensor[2][2]&#32;*=&#32;sx&#32;*&#32;sy&#32;/&#32;sz;
+330 
+331 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;MaterialTensor;
+332 }
+333 
+<link linkend="class_homogenous_transformation_rectangular_1a80c1ce86635edce1227ab26fa2ae0008">334 </link>std::complex&lt;double&gt;&#32;<link linkend="class_homogenous_transformation_rectangular_1a80c1ce86635edce1227ab26fa2ae0008">HomogenousTransformationRectangular::evaluate_for_z</link>(
+335 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_z,&#32;<link linkend="class_waveguide">Waveguide</link>&#32;*in_w)&#32;{
+336 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;r&#32;=&#32;GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out;
+337 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;gauss_product_2D_sphere(in_z,&#32;10,&#32;r,&#32;0,&#32;0,&#32;in_w);
+338 }
+339 
+<link linkend="class_homogenous_transformation_rectangular_1aee91e2e47daaceb2553c21d321f94802">340 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1aee91e2e47daaceb2553c21d321f94802">HomogenousTransformationRectangular::get_dof</link>(<emphasis class="keywordtype">int</emphasis>&#32;dof)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+341 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(dof&#32;&lt;&#32;(<emphasis class="keywordtype">int</emphasis>)<link linkend="class_homogenous_transformation_circular_1a4a8c29a84f21edaccaf249a4427928d7">NDofs</link>()&#32;&amp;&amp;&#32;dof&#32;&gt;=&#32;0)&#32;{
+342 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;sector&#32;=&#32;floor(dof&#32;/&#32;2);
+343 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(sector&#32;==&#32;<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>)&#32;{
+344 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector&#32;-&#32;1].dofs_r[dof&#32;%&#32;2];
+345 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+346 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector].dofs_l[dof&#32;%&#32;2];
+347 &#32;&#32;&#32;&#32;}
+348 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+349 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Critical:&#32;DOF-index&#32;out&#32;of&#32;bounds&#32;in&#32;&quot;</emphasis>
+350 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="stringliteral">&quot;HomogenousTransformationRectangular::get_dof!&quot;</emphasis>
+351 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;std::endl;
+352 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
+353 &#32;&#32;}
+354 }
+355 
+<link linkend="class_homogenous_transformation_rectangular_1a815313c86f6f989c76431ac6f7a6e271">356 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a815313c86f6f989c76431ac6f7a6e271">HomogenousTransformationRectangular::get_free_dof</link>(<emphasis class="keywordtype">int</emphasis>&#32;in_dof)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+357 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;dof&#32;=&#32;in_dof&#32;+&#32;2;
+358 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(dof&#32;&lt;&#32;(<emphasis class="keywordtype">int</emphasis>)<link linkend="class_homogenous_transformation_circular_1a4a8c29a84f21edaccaf249a4427928d7">NDofs</link>()&#32;-&#32;2&#32;&amp;&amp;&#32;dof&#32;&gt;=&#32;0)&#32;{
+359 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;sector&#32;=&#32;floor(dof&#32;/&#32;2);
+360 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(sector&#32;==&#32;<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>)&#32;{
+361 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector&#32;-&#32;1].dofs_r[dof&#32;%&#32;2];
+362 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+363 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector].dofs_l[dof&#32;%&#32;2];
+364 &#32;&#32;&#32;&#32;}
+365 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+366 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Critical:&#32;DOF-index&#32;out&#32;of&#32;bounds&#32;in&#32;&quot;</emphasis>
+367 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="stringliteral">&quot;HomogenousTransformationRectangular::get_free_dof!&quot;</emphasis>
+368 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;std::endl;
+369 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
+370 &#32;&#32;}
+371 }
+372 
+<link linkend="class_homogenous_transformation_rectangular_1a9b199987886875675611f31871391771">373 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a9b199987886875675611f31871391771">HomogenousTransformationRectangular::set_dof</link>(<emphasis class="keywordtype">int</emphasis>&#32;dof,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_val)&#32;{
+374 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(dof&#32;&lt;&#32;(<emphasis class="keywordtype">int</emphasis>)<link linkend="class_homogenous_transformation_circular_1a4a8c29a84f21edaccaf249a4427928d7">NDofs</link>()&#32;&amp;&amp;&#32;dof&#32;&gt;=&#32;0)&#32;{
+375 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;sector&#32;=&#32;floor(dof&#32;/&#32;2);
+376 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(sector&#32;==&#32;<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>)&#32;{
+377 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector&#32;-&#32;1].dofs_r[dof&#32;%&#32;2]&#32;=&#32;in_val;
+378 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(sector&#32;==&#32;0)&#32;{
+379 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[0].dofs_l[dof&#32;%&#32;2]&#32;=&#32;in_val;
+380 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+381 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector].dofs_l[dof&#32;%&#32;2]&#32;=&#32;in_val;
+382 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector&#32;-&#32;1].dofs_r[dof&#32;%&#32;2]&#32;=&#32;in_val;
+383 &#32;&#32;&#32;&#32;}
+384 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+385 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Critical:&#32;DOF-index&#32;out&#32;of&#32;bounds&#32;in&#32;&quot;</emphasis>
+386 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="stringliteral">&quot;HomogenousTransformationRectangular::set_dof!&quot;</emphasis>
+387 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;std::endl;
+388 &#32;&#32;}
+389 }
+390 
+<link linkend="class_homogenous_transformation_rectangular_1ad88fde6f93b6940c66e3bc56acc6a593">391 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1ad88fde6f93b6940c66e3bc56acc6a593">HomogenousTransformationRectangular::set_free_dof</link>(<emphasis class="keywordtype">int</emphasis>&#32;in_dof,
+392 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_val)&#32;{
+393 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;dof&#32;=&#32;in_dof&#32;+&#32;2;
+394 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(dof&#32;&lt;&#32;(<emphasis class="keywordtype">int</emphasis>)<link linkend="class_homogenous_transformation_circular_1a4a8c29a84f21edaccaf249a4427928d7">NDofs</link>()&#32;-&#32;2&#32;&amp;&amp;&#32;dof&#32;&gt;=&#32;0)&#32;{
+395 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;sector&#32;=&#32;floor(dof&#32;/&#32;2);
+396 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(sector&#32;==&#32;<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>)&#32;{
+397 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector&#32;-&#32;1].dofs_r[dof&#32;%&#32;2]&#32;=&#32;in_val;
+398 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">if</emphasis>&#32;(sector&#32;==&#32;0)&#32;{
+399 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[0].dofs_l[dof&#32;%&#32;2]&#32;=&#32;in_val;
+400 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+401 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector].dofs_l[dof&#32;%&#32;2]&#32;=&#32;in_val;
+402 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[sector&#32;-&#32;1].dofs_r[dof&#32;%&#32;2]&#32;=&#32;in_val;
+403 &#32;&#32;&#32;&#32;}
+404 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+405 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Critical:&#32;DOF-index&#32;out&#32;of&#32;bounds&#32;in&#32;&quot;</emphasis>
+406 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="stringliteral">&quot;HomogenousTransformationRectangular::set_free_dof!&quot;</emphasis>
+407 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;std::endl;
+408 &#32;&#32;}
+409 }
+410 
+<link linkend="class_homogenous_transformation_rectangular_1aa43e78f29f12ce9f6361f95e0a49ee7d">411 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1aa43e78f29f12ce9f6361f95e0a49ee7d">HomogenousTransformationRectangular::Sector_Length</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
+412 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;GlobalParams.SectorThickness;
 413 }
 414 
-<link linkend="class_homogenous_transformation_rectangular_1aa0c6506515772340c3b10d9417a83c08">415 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1aa0c6506515772340c3b10d9417a83c08">HomogenousTransformationRectangular::get_m</link>(<emphasis class="keywordtype">double</emphasis>&#32;z_in)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-416 &#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;two&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(z_in);
-417 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[two.first].get_m(two.second);
-418 }
-419 
-<link linkend="class_homogenous_transformation_rectangular_1aa21f28ed22fdf5f5988de026368b398a">420 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1aa21f28ed22fdf5f5988de026368b398a">HomogenousTransformationRectangular::get_v</link>(<emphasis class="keywordtype">double</emphasis>&#32;z_in)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-421 &#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;two&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(z_in);
-422 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[two.first].get_v(two.second);
-423 }
-424 
-<link linkend="class_homogenous_transformation_rectangular_1ab4e01389b3c5a7ae6b7f72ec1005bdb0">425 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1ab4e01389b3c5a7ae6b7f72ec1005bdb0">HomogenousTransformationRectangular::get_Q1</link>(<emphasis class="keywordtype">double</emphasis>&#32;z_in)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-426 &#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;two&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(z_in);
-427 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[two.first].getQ1(two.second);
-428 }
-429 
-<link linkend="class_homogenous_transformation_rectangular_1adf188a4be678bd1336fd3ba5a4f41812">430 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1adf188a4be678bd1336fd3ba5a4f41812">HomogenousTransformationRectangular::get_Q2</link>(<emphasis class="keywordtype">double</emphasis>&#32;z_in)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-431 &#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;two&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(z_in);
-432 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[two.first].getQ2(two.second);
-433 }
-434 
-<link linkend="class_homogenous_transformation_rectangular_1a1fd6e2f15de3260d1094d889d8a75ecf">435 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a1fd6e2f15de3260d1094d889d8a75ecf">HomogenousTransformationRectangular::get_Q3</link>(<emphasis class="keywordtype">double</emphasis>&#32;z_in)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-436 &#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;two&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(z_in);
-437 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[two.first].getQ3(two.second);
-438 }
-439 
-<link linkend="class_homogenous_transformation_rectangular_1ab1469e6950d4831b3bd0f808be6adc4f">440 </link>Vector&lt;double&gt;&#32;<link linkend="class_homogenous_transformation_rectangular_1ab1469e6950d4831b3bd0f808be6adc4f">HomogenousTransformationRectangular::Dofs</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
-441 &#32;&#32;Vector&lt;double&gt;&#32;ret;
-442 &#32;&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;total&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1a4a8c29a84f21edaccaf249a4427928d7">NDofs</link>();
-443 &#32;&#32;ret.reinit(total);
-444 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i=&#32;0;&#32;i&#32;&lt;&#32;total;&#32;i++&#32;){
-445 &#32;&#32;&#32;&#32;ret[i]&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1ac980007ea59b186caa54e72108f489e5">get_dof</link>(i);
-446 &#32;&#32;}
-447 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
-448 }
-449 
-<link linkend="class_homogenous_transformation_rectangular_1ac93f901b6918a7656b484537c72c5355">450 </link><emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1ac93f901b6918a7656b484537c72c5355">HomogenousTransformationRectangular::NFreeDofs</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
-451 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1a4a8c29a84f21edaccaf249a4427928d7">NDofs</link>()&#32;-&#32;4;
-452 }
-453 
-<link linkend="class_homogenous_transformation_rectangular_1ac708707e024d6da1abb803ffeb86a2c3">454 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1ac708707e024d6da1abb803ffeb86a2c3">HomogenousTransformationRectangular::IsDofFree</link>(<emphasis class="keywordtype">int</emphasis>&#32;index)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-455 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;index&#32;&gt;&#32;1&#32;&amp;&amp;&#32;index&#32;&lt;&#32;(int)<link linkend="class_homogenous_transformation_circular_1a4a8c29a84f21edaccaf249a4427928d7">NDofs</link>()-1;
-456 }
-457 
-<link linkend="class_homogenous_transformation_rectangular_1abc3469d1400dbe5b801a1b48d90a727c">458 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1abc3469d1400dbe5b801a1b48d90a727c">HomogenousTransformationRectangular::Print</link>&#32;()<emphasis class="keyword">&#32;&#32;const</emphasis>{
-459 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Printing&#32;is&#32;not&#32;yet&#32;implemented.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
-460 }
-461 
-<link linkend="class_homogenous_transformation_rectangular_1a4460090bfb1dcd2ab2c44f2f4561a0d0">462 </link><emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a4460090bfb1dcd2ab2c44f2f4561a0d0">HomogenousTransformationRectangular::NDofs</link>()<emphasis class="keyword">&#32;&#32;const</emphasis>{
-463 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>&#32;*&#32;2&#32;+&#32;2;
-464 }
-465 <emphasis class="preprocessor">#endif</emphasis>
+<link linkend="class_homogenous_transformation_rectangular_1a3535990a0409755ae25b820bfb2adbc8">415 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a3535990a0409755ae25b820bfb2adbc8">HomogenousTransformationRectangular::estimate_and_initialize</link>()&#32;{
+416 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(GlobalParams.M_PC_Use)&#32;{
+417 &#32;&#32;&#32;&#32;<link linkend="class_sector">Sector&lt;2&gt;</link>&#32;the_first(<emphasis class="keyword">true</emphasis>,&#32;<emphasis class="keyword">false</emphasis>,&#32;GlobalParams.sd.z[0],
+418 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.sd.z[1]);
+419 &#32;&#32;&#32;&#32;the_first.<link linkend="class_sector_1a197c78d119ee872f43c895b02ebb3e8d">set_properties_force</link>(GlobalParams.sd.m[0],&#32;GlobalParams.sd.m[1],
+420 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.sd.v[0],&#32;GlobalParams.sd.v[1]);
+421 &#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>.push_back(the_first);
+422 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;1;&#32;i&#32;&lt;&#32;GlobalParams.sd.Sectors&#32;-&#32;2;&#32;i++)&#32;{
+423 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_sector">Sector&lt;2&gt;</link>&#32;intermediate(<emphasis class="keyword">false</emphasis>,&#32;<emphasis class="keyword">false</emphasis>,&#32;GlobalParams.sd.z[i],
+424 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.sd.z[i&#32;+&#32;1]);
+425 &#32;&#32;&#32;&#32;&#32;&#32;intermediate.<link linkend="class_sector_1a197c78d119ee872f43c895b02ebb3e8d">set_properties_force</link>(
+426 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.sd.m[i],&#32;GlobalParams.sd.m[i&#32;+&#32;1],&#32;GlobalParams.sd.v[i],
+427 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.sd.v[i&#32;+&#32;1]);
+428 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>.push_back(intermediate);
+429 &#32;&#32;&#32;&#32;}
+430 &#32;&#32;&#32;&#32;<link linkend="class_sector">Sector&lt;2&gt;</link>&#32;the_last(<emphasis class="keyword">false</emphasis>,&#32;<emphasis class="keyword">true</emphasis>,
+431 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.sd.z[GlobalParams.sd.Sectors&#32;-&#32;2],
+432 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.sd.z[GlobalParams.sd.Sectors&#32;-&#32;1]);
+433 &#32;&#32;&#32;&#32;the_last.<link linkend="class_sector_1a197c78d119ee872f43c895b02ebb3e8d">set_properties_force</link>(
+434 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.sd.m[GlobalParams.sd.Sectors&#32;-&#32;2],
+435 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.sd.m[GlobalParams.sd.Sectors&#32;-&#32;1],
+436 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.sd.v[GlobalParams.sd.Sectors&#32;-&#32;2],
+437 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.sd.v[GlobalParams.sd.Sectors&#32;-&#32;1]);
+438 &#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>.push_back(the_last);
+439 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>.size();&#32;i++)&#32;{
+440 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;From&#32;z:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[i].z_0
+441 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;(m:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[i].get_m(0.0)
+442 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;v:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[i].get_v(0.0)&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;)&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+443 &#32;&#32;&#32;&#32;&#32;&#32;deallog&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;&#32;To&#32;z:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[i].z_1
+444 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;(m:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[i].get_m(1.0)
+445 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;v:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[i].get_v(1.0)&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;)&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+446 &#32;&#32;&#32;&#32;}
+447 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+448 &#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>.reserve(<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>);
+449 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;m_0&#32;=&#32;GlobalParams.M_W_Delta&#32;/&#32;2.0;
+450 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;m_1&#32;=&#32;-GlobalParams.M_W_Delta&#32;/&#32;2.0;
+451 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>&#32;==&#32;1)&#32;{
+452 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_sector">Sector&lt;2&gt;</link>&#32;temp12(<emphasis class="keyword">true</emphasis>,&#32;<emphasis class="keyword">true</emphasis>,&#32;-GlobalParams.M_R_ZLength&#32;/&#32;2.0,
+453 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_R_ZLength&#32;/&#32;2.0);
+454 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>.push_back(temp12);
+455 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[0].set_properties_force(
+456 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_W_Delta&#32;/&#32;2.0,&#32;-GlobalParams.M_W_Delta&#32;/&#32;2.0,
+457 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;GlobalParams.M_C_Dim1In,&#32;GlobalParams.M_C_Dim1Out,&#32;0,&#32;0);
+458 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+459 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;length&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1ac01f00a49d38f8bb7c65a6f5681653fc">Sector_Length</link>();
+460 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_sector">Sector&lt;2&gt;</link>&#32;temp(<emphasis class="keyword">true</emphasis>,&#32;<emphasis class="keyword">false</emphasis>,&#32;-GlobalParams.M_R_ZLength&#32;/&#32;(2.0),
+461 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;-GlobalParams.M_R_ZLength&#32;/&#32;2.0&#32;+&#32;length);
+462 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>.push_back(temp);
+463 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;1;&#32;i&#32;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>;&#32;i++)&#32;{
+464 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_sector">Sector&lt;2&gt;</link>&#32;temp2(<emphasis class="keyword">false</emphasis>,&#32;<emphasis class="keyword">false</emphasis>,
+465 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;-GlobalParams.M_R_ZLength&#32;/&#32;(2.0)&#32;+&#32;length&#32;*&#32;(1.0&#32;*&#32;i),
+466 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;-GlobalParams.M_R_ZLength&#32;/&#32;(2.0)&#32;+&#32;length&#32;*&#32;(i&#32;+&#32;1.0));
+467 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>.push_back(temp2);
+468 &#32;&#32;&#32;&#32;&#32;&#32;}
+469 
+470 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;length_rel&#32;=&#32;1.0&#32;/&#32;((double)(sectors));
+471 &#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[0].set_properties_force(
+472 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;m_0,&#32;InterpolationPolynomialZeroDerivative(length_rel,&#32;m_0,&#32;m_1),&#32;0,
+473 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;InterpolationPolynomialDerivative(length_rel,&#32;m_0,&#32;m_1,&#32;0,&#32;0));
+474 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;1;&#32;i&#32;&lt;&#32;<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>;&#32;i++)&#32;{
+475 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;z_l&#32;=&#32;i&#32;*&#32;length_rel;
+476 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;z_r&#32;=&#32;(i&#32;+&#32;1)&#32;*&#32;length_rel;
+477 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[i].set_properties_force(
+478 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;InterpolationPolynomialZeroDerivative(z_l,&#32;m_0,&#32;m_1),
+479 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;InterpolationPolynomialZeroDerivative(z_r,&#32;m_0,&#32;m_1),
+480 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;InterpolationPolynomialDerivative(z_l,&#32;m_0,&#32;m_1,&#32;0,&#32;0),
+481 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;InterpolationPolynomialDerivative(z_r,&#32;m_0,&#32;m_1,&#32;0,&#32;0));
+482 &#32;&#32;&#32;&#32;&#32;&#32;}
+483 &#32;&#32;&#32;&#32;}
+484 &#32;&#32;}
+485 }
+486 
+<link linkend="class_homogenous_transformation_rectangular_1a4d586cde943d67b91cef5f9ded17fc03">487 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a4d586cde943d67b91cef5f9ded17fc03">HomogenousTransformationRectangular::get_r</link>(<emphasis class="keywordtype">double</emphasis>)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+488 &#32;&#32;<emphasis class="comment">//&#32;std::pair&lt;int,&#32;double&gt;&#32;two&#32;=&#32;Z_to_Sector_and_local_z(z_in);</emphasis>
+489 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Asking&#32;for&#32;Radius&#32;of&#32;rectangular&#32;Waveguide.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+490 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0;
+491 }
+492 
+<link linkend="class_homogenous_transformation_rectangular_1aa0c6506515772340c3b10d9417a83c08">493 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1aa0c6506515772340c3b10d9417a83c08">HomogenousTransformationRectangular::get_m</link>(<emphasis class="keywordtype">double</emphasis>&#32;z_in)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+494 &#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;two&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(z_in);
+495 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[two.first].get_m(two.second);
+496 }
+497 
+<link linkend="class_homogenous_transformation_rectangular_1aa21f28ed22fdf5f5988de026368b398a">498 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1aa21f28ed22fdf5f5988de026368b398a">HomogenousTransformationRectangular::get_v</link>(<emphasis class="keywordtype">double</emphasis>&#32;z_in)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+499 &#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;two&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(z_in);
+500 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[two.first].get_v(two.second);
+501 }
+502 
+<link linkend="class_homogenous_transformation_rectangular_1ab4e01389b3c5a7ae6b7f72ec1005bdb0">503 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1ab4e01389b3c5a7ae6b7f72ec1005bdb0">HomogenousTransformationRectangular::get_Q1</link>(<emphasis class="keywordtype">double</emphasis>&#32;z_in)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+504 &#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;two&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(z_in);
+505 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[two.first].getQ1(two.second);
+506 }
+507 
+<link linkend="class_homogenous_transformation_rectangular_1adf188a4be678bd1336fd3ba5a4f41812">508 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1adf188a4be678bd1336fd3ba5a4f41812">HomogenousTransformationRectangular::get_Q2</link>(<emphasis class="keywordtype">double</emphasis>&#32;z_in)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+509 &#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;two&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(z_in);
+510 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[two.first].getQ2(two.second);
+511 }
+512 
+<link linkend="class_homogenous_transformation_rectangular_1a1fd6e2f15de3260d1094d889d8a75ecf">513 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a1fd6e2f15de3260d1094d889d8a75ecf">HomogenousTransformationRectangular::get_Q3</link>(<emphasis class="keywordtype">double</emphasis>&#32;z_in)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+514 &#32;&#32;std::pair&lt;int,&#32;double&gt;&#32;two&#32;=&#32;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(z_in);
+515 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad3bef3a9732db995720a3329497ad8e9">case_sectors</link>[two.first].getQ3(two.second);
+516 }
+517 
+<link linkend="class_homogenous_transformation_rectangular_1ab1469e6950d4831b3bd0f808be6adc4f">518 </link>Vector&lt;double&gt;&#32;<link linkend="class_homogenous_transformation_rectangular_1ab1469e6950d4831b3bd0f808be6adc4f">HomogenousTransformationRectangular::Dofs</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
+519 &#32;&#32;Vector&lt;double&gt;&#32;ret;
+520 &#32;&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;total&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1a4a8c29a84f21edaccaf249a4427928d7">NDofs</link>();
+521 &#32;&#32;ret.reinit(total);
+522 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;total;&#32;i++)&#32;{
+523 &#32;&#32;&#32;&#32;ret[i]&#32;=&#32;<link linkend="class_homogenous_transformation_circular_1ac980007ea59b186caa54e72108f489e5">get_dof</link>(i);
+524 &#32;&#32;}
+525 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+526 }
+527 
+<link linkend="class_homogenous_transformation_rectangular_1ac93f901b6918a7656b484537c72c5355">528 </link><emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1ac93f901b6918a7656b484537c72c5355">HomogenousTransformationRectangular::NFreeDofs</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
+529 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1a4a8c29a84f21edaccaf249a4427928d7">NDofs</link>()&#32;-&#32;4;
+530 }
+531 
+<link linkend="class_homogenous_transformation_rectangular_1ac708707e024d6da1abb803ffeb86a2c3">532 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1ac708707e024d6da1abb803ffeb86a2c3">HomogenousTransformationRectangular::IsDofFree</link>(<emphasis class="keywordtype">int</emphasis>&#32;index)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+533 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;index&#32;&gt;&#32;1&#32;&amp;&amp;&#32;index&#32;&lt;&#32;(int)<link linkend="class_homogenous_transformation_circular_1a4a8c29a84f21edaccaf249a4427928d7">NDofs</link>()&#32;-&#32;1;
+534 }
+535 
+<link linkend="class_homogenous_transformation_rectangular_1abc3469d1400dbe5b801a1b48d90a727c">536 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1abc3469d1400dbe5b801a1b48d90a727c">HomogenousTransformationRectangular::Print</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
+537 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Printing&#32;is&#32;not&#32;yet&#32;implemented.&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+538 }
+539 
+<link linkend="class_homogenous_transformation_rectangular_1a4460090bfb1dcd2ab2c44f2f4561a0d0">540 </link><emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;<link linkend="class_homogenous_transformation_rectangular_1a4460090bfb1dcd2ab2c44f2f4561a0d0">HomogenousTransformationRectangular::NDofs</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
+541 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;<link linkend="class_homogenous_transformation_circular_1ad22b89f3468dd51770855d6a75338dbd">sectors</link>&#32;*&#32;2&#32;+&#32;2;
+542 }
+543 <emphasis class="preprocessor">#endif</emphasis>
     </computeroutput></literallayout>
 </section>

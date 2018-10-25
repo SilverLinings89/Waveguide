@@ -26,7 +26,8 @@
                 <itemizedlist>
                     <listitem>
                         <para>virtual void <link linkend="class_optimization_c_g_1a9b0d0c44baea9c922a787525811259ad">pass_result_small_step</link> (
-std::vector&lt; double &gt; vec)<para><emphasis>A function to pass a vector of values, computed by performing a single or multiple steps with short step-width.</emphasis></para>
+std::vector&lt; double &gt; vec)<para><emphasis>A function to pass a vector of values, computed by performing a single or
+multiple steps with short step-width.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -44,7 +45,8 @@ double input)<para><emphasis>Similar to pass_result_small_step but for the resul
                 <itemizedlist>
                     <listitem>
                         <para>virtual bool <link linkend="class_optimization_c_g_1ae779e5bee6aaee38999e4705c72e11dc">perform_small_step_next</link> (
-int small_steps_before)<para><emphasis>The optimization is mainly split into two kinds of steps: Full and small steps.</emphasis></para>
+int small_steps_before)<para><emphasis>The optimization is mainly split into two kinds of steps: Full and small
+steps.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -53,7 +55,8 @@ int small_steps_before)<para><emphasis>The optimization is mainly split into two
                 <itemizedlist>
                     <listitem>
                         <para>virtual double <link linkend="class_optimization_c_g_1a670ceaf08732728cf8e949fddd037787">get_small_step_step_width</link> (
-int small_steps_before)<para><emphasis>For the optimization scheme to know, which step size is appropriate, this function was included.</emphasis></para>
+int small_steps_before)<para><emphasis>For the optimization scheme to know, which step size is appropriate, this
+function was included.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -62,7 +65,8 @@ int small_steps_before)<para><emphasis>For the optimization scheme to know, whic
                 <itemizedlist>
                     <listitem>
                         <para>virtual bool <link linkend="class_optimization_c_g_1a5ad38004f2848c1e77613d5c6d69bdcd">perform_big_step_next</link> (
-int small_steps_before)<para><emphasis>This functions returns true, if enough steps were performed to compute the next state to compute a full solution on.</emphasis></para>
+int small_steps_before)<para><emphasis>This functions returns true, if enough steps were performed to compute the
+next state to compute a full solution on.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -93,7 +97,7 @@ int small_steps_before)<para><emphasis>This functions returns true, if enough st
 <para>29.11.2016 </para>
 </formalpara>
 </para>
-                <para>Definition at line 15 of file OptimizationCG.h</para>
+                <para>Definition at line 17 of file OptimizationCG.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>OptimizationCG.h</para></listitem></itemizedlist></para>
         </simplesect>
@@ -106,9 +110,10 @@ int small_steps_before)<para><emphasis>This functions returns true, if enough st
                 
             </section>
             <section xml:id="class_optimization_c_g_1a9b0d0c44baea9c922a787525811259ad">
-                <title>void OptimizationCG::pass_result_small_step (std::vector&lt; double &gt;)</title> <emphasis>A function to pass a vector of values, computed by performing a single or multiple steps with short step-width.</emphasis>
+                <title>void OptimizationCG::pass_result_small_step (std::vector&lt; double &gt;)</title> <emphasis>A function to pass a vector of values, computed by performing a single or
+multiple steps with short step-width.</emphasis>
                 
-<para>&quot;small&quot; in the name references the fact, that the step width is small. In gerneral this is done whenever an accurat approximation of a gradient is saught based on linearization. This computation (especially in finite difference based approaches) can be much more costly than a big step. In a big step, one forward problem has to be solved. A small step computation based on finite differences requires <equation><title>form_37</title>$NDofs$</equation> forward problems to be solved. This function has the purpose of passing the result of such computations to the optimization algorithm which will store it and use it to compute optimization steps in the future. 
+<para>&quot;small&quot; in the name references the fact, that the step width is small. In gerneral this is done whenever an accurat approximation of a gradient is saught based on linearization. This computation (especially in finite difference based approaches) can be much more costly than a big step. In a big step, one forward problem has to be solved. A small step computation based on finite differences requires <equation><title>form_40</title>$NDofs$</equation> forward problems to be solved. This function has the purpose of passing the result of such computations to the optimization algorithm which will store it and use it to compute optimization steps in the future. 
                 <formalpara>
                     <title/>
                     <table frame="all">
@@ -156,7 +161,8 @@ int small_steps_before)<para><emphasis>This functions returns true, if enough st
 
             </section>
             <section xml:id="class_optimization_c_g_1ae779e5bee6aaee38999e4705c72e11dc">
-                <title>bool OptimizationCG::perform_small_step_next (int small_steps_before)</title> <emphasis>The optimization is mainly split into two kinds of steps: Full and small steps.</emphasis>
+                <title>bool OptimizationCG::perform_small_step_next (int small_steps_before)</title> <emphasis>The optimization is mainly split into two kinds of steps: Full and small
+steps.</emphasis>
                 
 <para>For FD based schemes, a small step is a computation of finite differences for all degrees of freedom which entails a lot of computation. Small here refers to the norm of the step width - not necessarily to the amount of computation required. In general this function is supposed to gather information about the target functional around the current state. 
                 <formalpara>
@@ -185,7 +191,8 @@ int small_steps_before)<para><emphasis>This functions returns true, if enough st
 
             </section>
             <section xml:id="class_optimization_c_g_1a670ceaf08732728cf8e949fddd037787">
-                <title>double OptimizationCG::get_small_step_step_width (int small_steps_before)</title> <emphasis>For the optimization scheme to know, which step size is appropriate, this function was included.</emphasis>
+                <title>double OptimizationCG::get_small_step_step_width (int small_steps_before)</title> <emphasis>For the optimization scheme to know, which step size is appropriate, this
+function was included.</emphasis>
                 
 <para>
                 <formalpara>
@@ -214,7 +221,8 @@ int small_steps_before)<para><emphasis>This functions returns true, if enough st
 
             </section>
             <section xml:id="class_optimization_c_g_1a5ad38004f2848c1e77613d5c6d69bdcd">
-                <title>bool OptimizationCG::perform_big_step_next (int small_steps_before)</title> <emphasis>This functions returns true, if enough steps were performed to compute the next state to compute a full solution on.</emphasis>
+                <title>bool OptimizationCG::perform_big_step_next (int small_steps_before)</title> <emphasis>This functions returns true, if enough steps were performed to compute the
+next state to compute a full solution on.</emphasis>
                 
 <para>
                 <formalpara>

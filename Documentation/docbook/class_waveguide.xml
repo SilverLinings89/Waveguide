@@ -327,6 +327,20 @@
             <para>
                 <itemizedlist>
                     <listitem>
+                        <para>IndexSet JumpDofs</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double JumpCoordinate</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
                         <para>int run_number</para>
                     </listitem>
                 </itemizedlist>
@@ -583,6 +597,20 @@
                     </listitem>
                 </itemizedlist>
             </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>IndexSet InputInterfaceDofs</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>double cell_layer_z</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
         </section>
         <section>
             <title></title>
@@ -590,7 +618,8 @@
                 <itemizedlist>
                     <listitem>
                         <para> <link linkend="class_waveguide_1aacf2484e402aa1afc05b1b278ea8ce73">Waveguide</link> (
-MPI_Comm in_mpi_comm, <link linkend="class_mesh_generator">MeshGenerator</link> * in_mg, <link linkend="class_space_transformation">SpaceTransformation</link> * in_st)<para><emphasis>This is the constructor that should be used to initialize objects of this type.</emphasis></para>
+MPI_Comm in_mpi_comm, <link linkend="class_mesh_generator">MeshGenerator</link> * in_mg, <link linkend="class_space_transformation">SpaceTransformation</link> * in_st)<para><emphasis>This is the constructor that should be used to initialize objects of this
+type.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -607,7 +636,8 @@ MPI_Comm in_mpi_comm, <link linkend="class_mesh_generator">MeshGenerator</link> 
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_waveguide_1a50cf6893286ff8b1b4955f98df0194d2">run</link> (
-)<para><emphasis>This method as well as the rerun() method, are used by the optimization-algorithm to use and reuse the Waveguide-object.</emphasis></para>
+)<para><emphasis>This method as well as the rerun() method, are used by the
+optimization-algorithm to use and reuse the Waveguide-object.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -616,7 +646,8 @@ MPI_Comm in_mpi_comm, <link linkend="class_mesh_generator">MeshGenerator</link> 
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_waveguide_1ac393acf22cbd722518c449e977824713">assemble_part</link> (
-)<para><emphasis>The assemble_part(unsigned int in_part) function is a part of the assemble_system() functionality.</emphasis></para>
+)<para><emphasis>The assemble_part function is a part of the
+assemble_system() functionality.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -625,7 +656,9 @@ MPI_Comm in_mpi_comm, <link linkend="class_mesh_generator">MeshGenerator</link> 
                 <itemizedlist>
                     <listitem>
                         <para>std::complex&lt; double &gt; <link linkend="class_waveguide_1a79986c7554f0cd73cb13a3494caf6eab">evaluate_for_Position</link> (
-double x, double y, double z)<para><emphasis>To compute the output quality of the signal and it&apos;s transmition along the waveguid-axis, this function performs a comparison of the fundamental mode of a waveguide and the actual situation.</emphasis></para>
+double x, double y, double z)<para><emphasis>To compute the output quality of the signal and it&apos;s transmition along
+the waveguid-axis, this function performs a comparison of the fundamental
+mode of a waveguide and the actual situation.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -634,7 +667,9 @@ double x, double y, double z)<para><emphasis>To compute the output quality of th
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_waveguide_1aa8d0471156e3b8b969b5d26dc2db98f3">evaluate_for_z</link> (
-double )<para><emphasis>To compute the output quality of the signal and it&apos;s transmition along the waveguid-axis, this function performs a comparison of the fundamental mode of a waveguide and the actual situation.</emphasis></para>
+double )<para><emphasis>To compute the output quality of the signal and it&apos;s transmition along the
+waveguid-axis, this function performs a comparison of the fundamental mode
+of a waveguide and the actual situation.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -643,7 +678,8 @@ double )<para><emphasis>To compute the output quality of the signal and it&apos;
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_waveguide_1a78d46797f2fcf1aa43310bf98c87b83e">evaluate</link> (
-)<para><emphasis>This function has the purpose of filling the qualities array in every process with the appropriate Values from the other ones.</emphasis></para>
+)<para><emphasis>This function has the purpose of filling the qualities array in every
+process with the appropriate Values from the other ones.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -652,7 +688,8 @@ double )<para><emphasis>To compute the output quality of the signal and it&apos;
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_waveguide_1a3c6bc7f419f94b50c85edbd917c550d1">store</link> (
-)<para><emphasis>The storage has the following purpose: Regarding the optimization-process there are two kinds of runs.</emphasis></para>
+)<para><emphasis>The storage has the following purpose: Regarding the optimization-process
+there are two kinds of runs.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -732,7 +769,8 @@ const Point&lt; 3, double &gt; )</para>
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_waveguide_1acb47bc05db1424a2fb08d90b4ed45efb">solve</link> (
-)<para><emphasis>Upon successful assembly of the system-matrix, the solution has to be calculated.</emphasis></para>
+)<para><emphasis>Upon successful assembly of the system-matrix, the solution has to be
+calculated.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -741,7 +779,10 @@ const Point&lt; 3, double &gt; )</para>
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_waveguide_1af29661c9638aa793f0eff09692c3a1cc">reset_changes</link> (
-)<para><emphasis>In case no differential implementation is used (this means, that in every step of both the optimization and the calculation of the gradient, the system-matrix and all other elements are completely rebuilt) this function is used, to clear all values out of the data-objects.</emphasis></para>
+)<para><emphasis>In case no differential implementation is used (this means, that in every
+step of both the optimization and the calculation of the gradient, the
+system-matrix and all other elements are completely rebuilt) this function
+is used, to clear all values out of the data-objects.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -750,7 +791,8 @@ const Point&lt; 3, double &gt; )</para>
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_waveguide_1aae6de6026641c23029faa5c0fc26d019">output_results</link> (
-bool details)<para><emphasis>This function takes the Waveguides solution-vector member and exports it in a .vtk-file along with the mesh-structure to make the results visible.</emphasis></para>
+bool details)<para><emphasis>This function takes the Waveguides solution-vector member and exports it in
+a .vtk-file along with the mesh-structure to make the results visible.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -768,7 +810,9 @@ const std::vector&lt; std::complex&lt; double &gt;&gt; &amp; )<para><emphasis>Th
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_waveguide_1a2483d366ceae565a30ae2341bcd958c4">print_condition</link> (
-double )<para><emphasis>Similar to the functio print_eigenvalues(const std::vector&lt;std::complex&lt;double&gt;&gt; &amp;) , this function uses step-results of the GMRES-solver to make properties of the system-matrix available.</emphasis></para>
+double )<para><emphasis>Similar to the functio print_eigenvalues(const
+std::vector&lt;std::complex&lt;double&gt;&gt; &amp;) , this function uses step-results of
+the GMRES-solver to make properties of the system-matrix available.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -777,7 +821,8 @@ double )<para><emphasis>Similar to the functio print_eigenvalues(const std::vect
                 <itemizedlist>
                     <listitem>
                         <para>SolverControl::State <link linkend="class_waveguide_1a7b59eb1b20d03076ccd180cfc1b4e15a">check_iteration_state</link> (
-const unsigned int, const double , const dealii::TrilinosWrappers::MPI::Vector &amp; )<para><emphasis>This function occupies one slot of the Solver and will generate formatted output on the console and write the convergence history to a file.</emphasis></para>
+const unsigned int, const double , const dealii::TrilinosWrappers::MPI::Vector &amp; )<para><emphasis>This function occupies one slot of the Solver and will generate formatted
+output on the console and write the convergence history to a file.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -786,7 +831,8 @@ const unsigned int, const double , const dealii::TrilinosWrappers::MPI::Vector &
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_waveguide_1acf90b894904c9f392ee6b90a2ad9aa41">MakeBoundaryConditions</link> (
-)<para><emphasis>This function fills the ConstraintMatrix-object of the Waveguide-object with all constraints needed for condensation into the szstem-matrix.</emphasis></para>
+)<para><emphasis>This function fills the ConstraintMatrix-object of the Waveguide-object
+with all constraints needed for condensation into the szstem-matrix.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -795,7 +841,8 @@ const unsigned int, const double , const dealii::TrilinosWrappers::MPI::Vector &
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_waveguide_1a6aeeead3e873b27499ca9542f9ed29ee">MakePreconditionerBoundaryConditions</link> (
-)<para><emphasis>This function generates the Constraint-Matrices for the two Preconditioner Matrices.</emphasis></para>
+)<para><emphasis>This function generates the Constraint-Matrices for the two Preconditioner
+Matrices.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -830,7 +877,8 @@ const Point&lt; 3 &gt; &amp; , const unsigned int component)<para><emphasis>DEPR
                 <itemizedlist>
                     <listitem>
                         <para>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_waveguide_1ad1d80bf8fe0393f741c37b45099ba457">Conjugate_Tensor</link> (
-Tensor&lt; 2, 3, std::complex&lt; double &gt;&gt; input)<para><emphasis>This function returns the transposed and complex conjugated Matrix for the given Matrix.</emphasis></para>
+Tensor&lt; 2, 3, std::complex&lt; double &gt;&gt; input)<para><emphasis>This function returns the transposed and complex conjugated Matrix for the
+given Matrix.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -839,7 +887,8 @@ Tensor&lt; 2, 3, std::complex&lt; double &gt;&gt; input)<para><emphasis>This fun
                 <itemizedlist>
                     <listitem>
                         <para>Tensor&lt; 1, 3, std::complex&lt; double &gt; &gt; <link linkend="class_waveguide_1aa21b8f8cd7ae015ccc63abdd966fc043">Conjugate_Vector</link> (
-Tensor&lt; 1, 3, std::complex&lt; double &gt;&gt; input)<para><emphasis>This function calculates the complex conjugate of every vector entry and returns the result in a copy.</emphasis></para>
+Tensor&lt; 1, 3, std::complex&lt; double &gt;&gt; input)<para><emphasis>This function calculates the complex conjugate of every vector entry and
+returns the result in a copy.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -866,7 +915,8 @@ Tensor&lt; 1, 3, std::complex&lt; double &gt;&gt; input)<para><emphasis>This fun
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_waveguide_1a736d6f21b2ba33a778a3af5e86abf511">reinit_preconditioner</link> (
-)<para><emphasis>Reinit only the PML-Matrix which is used in the construction of the Preconditioner.</emphasis></para>
+)<para><emphasis>Reinit only the PML-Matrix which is used in the construction of the
+Preconditioner.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -884,7 +934,8 @@ Tensor&lt; 1, 3, std::complex&lt; double &gt;&gt; input)<para><emphasis>This fun
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_waveguide_1aec58220e99ae874c4745027a30f6798a">reinit_cell_weights</link> (
-)<para><emphasis>The cell weights can be used to store any scalar information about each cell of the mesh.</emphasis></para>
+)<para><emphasis>The cell weights can be used to store any scalar information about each
+cell of the mesh.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -893,7 +944,8 @@ Tensor&lt; 1, 3, std::complex&lt; double &gt;&gt; input)<para><emphasis>This fun
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_waveguide_1a8057013d1836e2282f7de6fd2c8340a2">calculate_cell_weights</link> (
-)<para><emphasis>In calculate cell weights an arbitrary value for each cell can be computed and then this value can be sent to the output to generate a plot of it.</emphasis></para>
+)<para><emphasis>In calculate cell weights an arbitrary value for each cell can be computed
+and then this value can be sent to the output to generate a plot of it.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -920,7 +972,8 @@ Tensor&lt; 1, 3, std::complex&lt; double &gt;&gt; input)<para><emphasis>This fun
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_waveguide_1ad5455dd56074cacba7ce904f2335cea9">reinit_for_rerun</link> (
-)<para><emphasis>When a run has already been completed, not all data structures need to be completely be rebuilt.</emphasis></para>
+)<para><emphasis>When a run has already been completed, not all data structures need to be
+completely be rebuilt.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -929,7 +982,8 @@ Tensor&lt; 1, 3, std::complex&lt; double &gt;&gt; input)<para><emphasis>This fun
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_waveguide_1a6005bda52cf5adf9dc1ab8f0669b579d">reinit_preconditioner_fast</link> (
-)<para><emphasis>Similar to the function reinit_for_rerun but focused on the data structures used by the preconditioner.</emphasis></para>
+)<para><emphasis>Similar to the function reinit_for_rerun but focused on the data structures
+used by the preconditioner.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -947,7 +1001,8 @@ unsigned int Iteration, double resiudal, dealii::TrilinosWrappers::MPI::BlockVec
                 <itemizedlist>
                     <listitem>
                         <para>std::complex&lt; double &gt; <link linkend="class_waveguide_1a2b1181fe82eeef848a95ac11b700f5f5">gauss_product_2D_sphere</link> (
-double z, int n, double R, double Xc, double Yc)<para><emphasis>This function encapsulates a library call for 2D numeric integration over a circle with given properties.</emphasis></para>
+double z, int n, double R, double Xc, double Yc)<para><emphasis>This function encapsulates a library call for 2D numeric integration over a
+circle with given properties.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -992,6 +1047,14 @@ IndexSet lower, IndexSet upper)</para>
                     </listitem>
                 </itemizedlist>
             </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::vector&lt; unsigned int &gt; <link linkend="class_waveguide_1a57678fa2d373134db51e918e87e1785e">Add_Zero_Restraint</link> (
+dealii::ConstraintMatrix * , dealii::DoFHandler&lt; 3 &gt;::active_cell_iterator &amp; , unsigned int, unsigned int, unsigned int, bool , dealii::IndexSet )</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
         </section>
     <simplesect>
 
@@ -1013,7 +1076,7 @@ IndexSet lower, IndexSet upper)</para>
 <para>03.07.2016 </para>
 </formalpara>
 </para>
-                <para>Definition at line 97 of file Waveguide.h</para>
+                <para>Definition at line 102 of file Waveguide.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>Waveguide.h</para></listitem></itemizedlist></para>
         </simplesect>
@@ -1024,7 +1087,8 @@ IndexSet lower, IndexSet upper)</para>
             <title>Member Data Documentation</title>
         </section>
             <section xml:id="class_waveguide_1aacf2484e402aa1afc05b1b278ea8ce73">
-                <title>Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator *in_mg, SpaceTransformation *in_st)</title> <emphasis>This is the constructor that should be used to initialize objects of this type.</emphasis>
+                <title>Waveguide::Waveguide (MPI_Comm in_mpi_comm, MeshGenerator *in_mg, SpaceTransformation *in_st)</title> <emphasis>This is the constructor that should be used to initialize objects of this
+type.</emphasis>
                 
 <para>
                 <formalpara>
@@ -1059,36 +1123,19 @@ IndexSet lower, IndexSet upper)</para>
                 
             </section>
             <section xml:id="class_waveguide_1a50cf6893286ff8b1b4955f98df0194d2">
-                <title>void Waveguide::run ()</title> <emphasis>This method as well as the rerun() method, are used by the optimization-algorithm to use and reuse the Waveguide-object.</emphasis>
+                <title>void Waveguide::run ()</title> <emphasis>This method as well as the rerun() method, are used by the
+optimization-algorithm to use and reuse the Waveguide-object.</emphasis>
                 
 <para>Since the system-matrix consumes a lot of memory it makes sense to reuse it, rather then creating a new one for every optimization step. All properties of position[2]the object have to be created properly for this function to work. </para>
 
             </section>
             <section xml:id="class_waveguide_1ac393acf22cbd722518c449e977824713">
-                <title>void Waveguide::assemble_part ()</title> <emphasis>The assemble_part(unsigned int in_part) function is a part of the assemble_system() functionality.</emphasis>
+                <title>void Waveguide::assemble_part ()</title> <emphasis>The assemble_part function is a part of the
+assemble_system() functionality.</emphasis>
                 
-<para>It builds a part of the system-matrix. assemble_system() creates the global system matrix. After splitting the degrees of freedom into several block, this method takes one block (identified by the integer passed as an argument) and calculates all matrix-entries that reference it. 
-                <formalpara>
-                    <title/>
-                    <table frame="all">
-                        <title>Parameters                        </title>
-                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
-                        <colspec colwidth="1*"/>
-                        <colspec colwidth="4*"/>
-                        <tbody>
-                            <row>
-                                <entry>in_part</entry>
-                                <entry>
-<para>Numerical identifier of the part of the system. </para>
-</entry>
-                            </row>
-                        </tbody>
-                        </tgroup>
-                    </table>
-                </formalpara>
-                <formalpara><title>Date: </title>
+<para>It builds a part of the system-matrix. assemble_system() creates the global system matrix. After splitting the degrees of freedom into several blocks, this method takes one block (identified by the integer passed as an argument) and calculates all matrix-entries that reference it. <formalpara><title>Date: </title>
 
-<para>13.11.2015 </para>
+<para>25.10.2018 </para>
 </formalpara>
 <formalpara><title>Author: </title>
 
@@ -1098,7 +1145,9 @@ IndexSet lower, IndexSet upper)</para>
 
             </section>
             <section xml:id="class_waveguide_1a79986c7554f0cd73cb13a3494caf6eab">
-                <title>std::complex&lt; double &gt; Waveguide::evaluate_for_Position (double x, double y, double z)</title> <emphasis>To compute the output quality of the signal and it&apos;s transmition along the waveguid-axis, this function performs a comparison of the fundamental mode of a waveguide and the actual situation.</emphasis>
+                <title>std::complex&lt; double &gt; Waveguide::evaluate_for_Position (double x, double y, double z)</title> <emphasis>To compute the output quality of the signal and it&apos;s transmition along
+the waveguid-axis, this function performs a comparison of the fundamental
+mode of a waveguide and the actual situation.</emphasis>
                 
 <para>For this purpose we integrate the product of the two functions over a cross-section of the waveguide in transformed coordinates. To perform this action we need to use numeric integration so the integral is decomposed into a sum over local evaluations. For this to be possible this function can be handed x,y and z coordinates and returns the according value. 
                 <formalpara>
@@ -1135,7 +1184,9 @@ IndexSet lower, IndexSet upper)</para>
 
             </section>
             <section xml:id="class_waveguide_1aa8d0471156e3b8b969b5d26dc2db98f3">
-                <title>double Waveguide::evaluate_for_z (double)</title> <emphasis>To compute the output quality of the signal and it&apos;s transmition along the waveguid-axis, this function performs a comparison of the fundamental mode of a waveguide and the actual situation.</emphasis>
+                <title>double Waveguide::evaluate_for_z (double)</title> <emphasis>To compute the output quality of the signal and it&apos;s transmition along the
+waveguid-axis, this function performs a comparison of the fundamental mode
+of a waveguide and the actual situation.</emphasis>
                 
 <para>For this purpose we integrate the product of the two functions over a cross-section of the waveguide in transformed coordinates. To perform this action we need to use numeric integration so the integral is decomposed into a sum over local evaluations. For this to be possible this function can be handed x,y and z coordinates and returns the according value. 
                 <formalpara>
@@ -1172,13 +1223,15 @@ IndexSet lower, IndexSet upper)</para>
 
             </section>
             <section xml:id="class_waveguide_1a78d46797f2fcf1aa43310bf98c87b83e">
-                <title>void Waveguide::evaluate ()</title> <emphasis>This function has the purpose of filling the qualities array in every process with the appropriate Values from the other ones.</emphasis>
+                <title>void Waveguide::evaluate ()</title> <emphasis>This function has the purpose of filling the qualities array in every
+process with the appropriate Values from the other ones.</emphasis>
                 
 <para>Now it will become necessary to build an optimization-scheme ontop, which can handle this information on process one and then distribute a new shape to the others. The function will use the Waveguide-Property execute_rebuild to signal a need for recomputation. </para>
 
             </section>
             <section xml:id="class_waveguide_1a3c6bc7f419f94b50c85edbd917c550d1">
-                <title>void Waveguide::store ()</title> <emphasis>The storage has the following purpose: Regarding the optimization-process there are two kinds of runs.</emphasis>
+                <title>void Waveguide::store ()</title> <emphasis>The storage has the following purpose: Regarding the optimization-process
+there are two kinds of runs.</emphasis>
                 
 <para>The first one, taking place with no knowledge of appropriate starting values for the degrees of freedom, and the following steps, in which the prior results can be used to estimate appropriate starting values for iterative solvers as well as the preconditioner. This function switches the behaviour in the following way: Once it is called, it stores the current solution in a run-independent variable, making it available for later runs. Also it sets a flag, indicating, that prior solutions are now available for usage in the solution process. </para>
 
@@ -1214,19 +1267,17 @@ IndexSet lower, IndexSet upper)</para>
 </listitem><listitem>
 <para>Inner refinement: In this case, only degrees that were in the original core-cells, will be refined. These are cells, which in the real physical simulation are part of the waveguide-core rather then the mantle.</para>
 </listitem><listitem>
-<para>Boundary-refinement: In this case, cells are refined, that are close to the boundary of the waveguide (not close to the boundary of the computational domain!). To see the used definition of close, please see the code.</para>
+<para>Boundary-refinement: In this case, cells are refined, that are close to the boundary of the waveguide (not close to the boundary of the computational domain!). To see the used definition of close, please see the code. <literallayout>Following the creation of the mesh, the dofs are distributed to it using
+</literallayout> the function setup_system(). This function only has to be used once even in optimization runs since the mesh can be reused for every run. This saves a lot of time especially for large cases and distributed calculations. </para>
 </listitem></orderedlist>
 </para>
-
-<para>Following the creation of the mesh, the dofs are distributed to it using the function setup_system(). This function only has to be used once even in optimization runs since the mesh can be reused for every run. This saves a lot of time especially for large cases and distributed calculations. </para>
 
             </section>
             <section xml:id="class_waveguide_1ae2cd9522a7b46a2a50edb8df8aca40d1">
                 <title>void Waveguide::setup_system ()</title> <emphasis>In this function, the first case-specific data is used.</emphasis>
                 
-<para>First off we number the degrees of freedom. After completion of this task we start making boundary-conditions. The creation of appropriate boundary-conditions is twofold: #- Mathematical boundary conditions as described in the literature on this matter. In this case we use Dirichlet boundary values that are either zero-values or alternatively are calculated from the mode-distribution of the incoming signal. #- Numerical constraints from hanging nodes. The non-global refinement steps cause hanging-nodes that have to be constrained to their neighbors. This problem can be solved automatically by deal and uses the same mechanism (constraints) as mathematical boundary values do.</para>
-
-<para>Constraint Matrixes (as constructed in this function) can be used primarily in two ways. Documentation concerning this problem can be found at <link xlink:href="https://www.dealii.org/developer/doxygen/deal.II/group__constraints.html">Constraints On Degrees Of Freedom</link>. </para>
+<para>First off we number the degrees of freedom. After completion of this task we start making boundary-conditions. The creation of appropriate boundary-conditions is twofold: #- Mathematical boundary conditions as described in the literature on this matter. In this case we use Dirichlet boundary values that are either zero-values or alternatively are calculated from the mode-distribution of the incoming signal. #- Numerical constraints from hanging nodes. The non-global refinement steps cause hanging-nodes that have to be constrained to their neighbors. This problem can be solved automatically by deal and uses the same mechanism (constraints) as mathematical boundary values do. <literallayout>Constraint Matrixes (as constructed in this function) can be used
+</literallayout> primarily in two ways. Documentation concerning this problem can be found at <link xlink:href="https://www.dealii.org/developer/doxygen/deal.II/group__constraints.html">Constraints On Degrees Of Freedom</link>. </para>
 
             </section>
             <section xml:id="class_waveguide_1a5ceba704e2d31be61c08d8f8ad105eae">
@@ -1244,17 +1295,22 @@ IndexSet lower, IndexSet upper)</para>
 
             </section>
             <section xml:id="class_waveguide_1acb47bc05db1424a2fb08d90b4ed45efb">
-                <title>void Waveguide::solve ()</title> <emphasis>Upon successful assembly of the system-matrix, the solution has to be calculated.</emphasis>
+                <title>void Waveguide::solve ()</title> <emphasis>Upon successful assembly of the system-matrix, the solution has to be
+calculated.</emphasis>
                 
 <para>This is done in this function. There are multiple Templates of this function for enabling switching between libraries. The Dealii implementation uses deal&apos;s native solvers as well as data-types. The other templated editions use the PETSc and Trilinos equivalents. The type of solver to be used and its parameters are specified via the parameter GYU </para>
 
             </section>
             <section xml:id="class_waveguide_1af29661c9638aa793f0eff09692c3a1cc">
-                <title>void Waveguide::reset_changes ()</title> <emphasis>In case no differential implementation is used (this means, that in every step of both the optimization and the calculation of the gradient, the system-matrix and all other elements are completely rebuilt) this function is used, to clear all values out of the data-objects.</emphasis>
+                <title>void Waveguide::reset_changes ()</title> <emphasis>In case no differential implementation is used (this means, that in every
+step of both the optimization and the calculation of the gradient, the
+system-matrix and all other elements are completely rebuilt) this function
+is used, to clear all values out of the data-objects.</emphasis>
                 
             </section>
             <section xml:id="class_waveguide_1aae6de6026641c23029faa5c0fc26d019">
-                <title>void Waveguide::output_results (bool details)</title> <emphasis>This function takes the Waveguides solution-vector member and exports it in a .vtk-file along with the mesh-structure to make the results visible.</emphasis>
+                <title>void Waveguide::output_results (bool details)</title> <emphasis>This function takes the Waveguides solution-vector member and exports it in
+a .vtk-file along with the mesh-structure to make the results visible.</emphasis>
                 
             </section>
             <section xml:id="class_waveguide_1a5a8bed1a0db5082d9589fa341c7c0d05">
@@ -1264,23 +1320,28 @@ IndexSet lower, IndexSet upper)</para>
 
             </section>
             <section xml:id="class_waveguide_1a2483d366ceae565a30ae2341bcd958c4">
-                <title>void Waveguide::print_condition (double)</title> <emphasis>Similar to the functio print_eigenvalues(const std::vector&lt;std::complex&lt;double&gt;&gt; &amp;) , this function uses step-results of the GMRES-solver to make properties of the system-matrix available.</emphasis>
+                <title>void Waveguide::print_condition (double)</title> <emphasis>Similar to the functio print_eigenvalues(const
+std::vector&lt;std::complex&lt;double&gt;&gt; &amp;) , this function uses step-results of
+the GMRES-solver to make properties of the system-matrix available.</emphasis>
                 
 <para>In this case it is the condition number, estimated on the basis of said eigenvalues, that gets pushed to a file also. </para>
 
             </section>
             <section xml:id="class_waveguide_1a7b59eb1b20d03076ccd180cfc1b4e15a">
-                <title>SolverControl::State Waveguide::check_iteration_state (const unsigned int, const double, const dealii::TrilinosWrappers::MPI::Vector &amp;)</title> <emphasis>This function occupies one slot of the Solver and will generate formatted output on the console and write the convergence history to a file.</emphasis>
+                <title>SolverControl::State Waveguide::check_iteration_state (const unsigned int, const double, const dealii::TrilinosWrappers::MPI::Vector &amp;)</title> <emphasis>This function occupies one slot of the Solver and will generate formatted
+output on the console and write the convergence history to a file.</emphasis>
                 
             </section>
             <section xml:id="class_waveguide_1acf90b894904c9f392ee6b90a2ad9aa41">
-                <title>void Waveguide::MakeBoundaryConditions ()</title> <emphasis>This function fills the ConstraintMatrix-object of the Waveguide-object with all constraints needed for condensation into the szstem-matrix.</emphasis>
+                <title>void Waveguide::MakeBoundaryConditions ()</title> <emphasis>This function fills the ConstraintMatrix-object of the Waveguide-object
+with all constraints needed for condensation into the szstem-matrix.</emphasis>
                 
 <para>It&apos;s properties are derived from the <link linkend="class_waveguide">Waveguide</link> itself and the Waveguide-Structure-object available to it, therefore there are no parameters but those members need to be prepared accordingly.. </para>
 
             </section>
             <section xml:id="class_waveguide_1a6aeeead3e873b27499ca9542f9ed29ee">
-                <title>void Waveguide::MakePreconditionerBoundaryConditions ()</title> <emphasis>This function generates the Constraint-Matrices for the two Preconditioner Matrices.</emphasis>
+                <title>void Waveguide::MakePreconditionerBoundaryConditions ()</title> <emphasis>This function generates the Constraint-Matrices for the two Preconditioner
+Matrices.</emphasis>
                 
             </section>
             <section xml:id="class_waveguide_1a8d9f2467a6115437bc8555c03780a84b">
@@ -1298,7 +1359,8 @@ IndexSet lower, IndexSet upper)</para>
 
             </section>
             <section xml:id="class_waveguide_1ad1d80bf8fe0393f741c37b45099ba457">
-                <title>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; Waveguide::Conjugate_Tensor (Tensor&lt; 2, 3, std::complex&lt; double &gt;&gt; input)</title> <emphasis>This function returns the transposed and complex conjugated Matrix for the given Matrix.</emphasis>
+                <title>Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; Waveguide::Conjugate_Tensor (Tensor&lt; 2, 3, std::complex&lt; double &gt;&gt; input)</title> <emphasis>This function returns the transposed and complex conjugated Matrix for the
+given Matrix.</emphasis>
                 
 <para>The function operates on a copy, it doesn&apos;t change the arguments value. 
                 <formalpara>
@@ -1312,7 +1374,7 @@ IndexSet lower, IndexSet upper)</para>
                             <row>
                                 <entry>input</entry>
                                 <entry>
-<para>This is the order 2 Tensor (Matrix) to be transposed ( <equation><title>form_22</title>$a_{ij} = a&apos;{ji}$</equation>) and complex conjugated ( <equation><title>form_23</title>$\operatorname{Im}(a_{ij}) = - \operatorname{Im}(a&apos;_{ji})$</equation>) </para>
+<para>This is the order 2 Tensor (Matrix) to be transposed ( <equation><title>form_23</title>$a_{ij} = a&apos;{ji}$</equation>) and complex conjugated ( <equation><title>form_24</title>$\operatorname{Im}(a_{ij}) = - \operatorname{Im}(a&apos;_{ji})$</equation>) </para>
 </entry>
                             </row>
                         </tbody>
@@ -1323,7 +1385,8 @@ IndexSet lower, IndexSet upper)</para>
 
             </section>
             <section xml:id="class_waveguide_1aa21b8f8cd7ae015ccc63abdd966fc043">
-                <title>Tensor&lt; 1, 3, std::complex&lt; double &gt; &gt; Waveguide::Conjugate_Vector (Tensor&lt; 1, 3, std::complex&lt; double &gt;&gt; input)</title> <emphasis>This function calculates the complex conjugate of every vector entry and returns the result in a copy.</emphasis>
+                <title>Tensor&lt; 1, 3, std::complex&lt; double &gt; &gt; Waveguide::Conjugate_Vector (Tensor&lt; 1, 3, std::complex&lt; double &gt;&gt; input)</title> <emphasis>This function calculates the complex conjugate of every vector entry and
+returns the result in a copy.</emphasis>
                 
 <para>Similar to Conjugate_Tensor(Tensor&lt;2,3, std::complex&lt;double&gt;&gt; input) this function does not operate in place - it operates on a copy and hence returns a new object. </para>
 
@@ -1337,7 +1400,8 @@ IndexSet lower, IndexSet upper)</para>
                 
             </section>
             <section xml:id="class_waveguide_1a736d6f21b2ba33a778a3af5e86abf511">
-                <title>void Waveguide::reinit_preconditioner ()</title> <emphasis>Reinit only the PML-Matrix which is used in the construction of the Preconditioner.</emphasis>
+                <title>void Waveguide::reinit_preconditioner ()</title> <emphasis>Reinit only the PML-Matrix which is used in the construction of the
+Preconditioner.</emphasis>
                 
 <para>This should only be used if the need for space is there. Otherwise this matrix while being a temporary object, is very large. </para>
 
@@ -1347,13 +1411,15 @@ IndexSet lower, IndexSet upper)</para>
                 
             </section>
             <section xml:id="class_waveguide_1aec58220e99ae874c4745027a30f6798a">
-                <title>void Waveguide::reinit_cell_weights ()</title> <emphasis>The cell weights can be used to store any scalar information about each cell of the mesh.</emphasis>
+                <title>void Waveguide::reinit_cell_weights ()</title> <emphasis>The cell weights can be used to store any scalar information about each
+cell of the mesh.</emphasis>
                 
 <para>This reinit-function prepares the data structures for its usage. </para>
 
             </section>
             <section xml:id="class_waveguide_1a8057013d1836e2282f7de6fd2c8340a2">
-                <title>void Waveguide::calculate_cell_weights ()</title> <emphasis>In calculate cell weights an arbitrary value for each cell can be computed and then this value can be sent to the output to generate a plot of it.</emphasis>
+                <title>void Waveguide::calculate_cell_weights ()</title> <emphasis>In calculate cell weights an arbitrary value for each cell can be computed
+and then this value can be sent to the output to generate a plot of it.</emphasis>
                 
 <para>An example for this procedure is the computation of the norm of the material tensor to check it&apos;s validity across the mesh. </para>
 
@@ -1369,13 +1435,15 @@ IndexSet lower, IndexSet upper)</para>
 
             </section>
             <section xml:id="class_waveguide_1ad5455dd56074cacba7ce904f2335cea9">
-                <title>void Waveguide::reinit_for_rerun ()</title> <emphasis>When a run has already been completed, not all data structures need to be completely be rebuilt.</emphasis>
+                <title>void Waveguide::reinit_for_rerun ()</title> <emphasis>When a run has already been completed, not all data structures need to be
+completely be rebuilt.</emphasis>
                 
 <para>They only need to be emptied. This function does just that. </para>
 
             </section>
             <section xml:id="class_waveguide_1a6005bda52cf5adf9dc1ab8f0669b579d">
-                <title>void Waveguide::reinit_preconditioner_fast ()</title> <emphasis>Similar to the function reinit_for_rerun but focused on the data structures used by the preconditioner.</emphasis>
+                <title>void Waveguide::reinit_preconditioner_fast ()</title> <emphasis>Similar to the function reinit_for_rerun but focused on the data structures
+used by the preconditioner.</emphasis>
                 
             </section>
             <section xml:id="class_waveguide_1a7d1eb933d45991d5ee862cd682690cce">
@@ -1385,7 +1453,8 @@ IndexSet lower, IndexSet upper)</para>
 
             </section>
             <section xml:id="class_waveguide_1a2b1181fe82eeef848a95ac11b700f5f5">
-                <title>std::complex&lt;double&gt; Waveguide::gauss_product_2D_sphere (double z, int n, double R, double Xc, double Yc)</title> <emphasis>This function encapsulates a library call for 2D numeric integration over a circle with given properties.</emphasis>
+                <title>std::complex&lt;double&gt; Waveguide::gauss_product_2D_sphere (double z, int n, double R, double Xc, double Yc)</title> <emphasis>This function encapsulates a library call for 2D numeric integration over a
+circle with given properties.</emphasis>
                 
 <para>It is included that this function calls evaluate_for_Position(x,y,z) </para>
 
@@ -1408,6 +1477,10 @@ IndexSet lower, IndexSet upper)</para>
             </section>
             <section xml:id="class_waveguide_1a477acc7900984f59f89860354cce20c5">
                 <title>IndexSet Waveguide::combine_indexes (IndexSet lower, IndexSet upper) const</title> <emphasis></emphasis>
+                
+            </section>
+            <section xml:id="class_waveguide_1a57678fa2d373134db51e918e87e1785e">
+                <title>std::vector&lt; unsigned int &gt; Waveguide::Add_Zero_Restraint (dealii::ConstraintMatrix *, dealii::DoFHandler&lt; 3 &gt;::active_cell_iterator &amp;, unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet)</title> <emphasis></emphasis>
                 
             </section>
 </section>

@@ -359,6 +359,13 @@
             <para>
                 <itemizedlist>
                     <listitem>
+                        <para>double So_PreconditionerDampening</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
                         <para>int So_ElementOrder</para>
                     </listitem>
                 </itemizedlist>
@@ -597,7 +604,7 @@
 <para>: 28.11.2016 </para>
 </formalpara>
 </para>
-                <para>Definition at line 83 of file Parameters.h</para>
+                <para>Definition at line 77 of file Parameters.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>Parameters.h</para></listitem></itemizedlist></para>
         </simplesect>

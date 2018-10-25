@@ -29,29 +29,27 @@
 10 
 11 <emphasis class="preprocessor">#include&#32;&quot;PointVal.h&quot;</emphasis>
 12 
-13 PointVal::PointVal():Ex(0.0,0.0),Ey(0.0,0.0),Ez(0.0,0.0)&#32;{
+13 PointVal::PointVal()&#32;:&#32;Ex(0.0,&#32;0.0),&#32;Ey(0.0,&#32;0.0),&#32;Ez(0.0,&#32;0.0)&#32;{}
 14 
-15 }
-16 
-17 PointVal::PointVal(<emphasis class="keywordtype">double</emphasis>&#32;rx,&#32;<emphasis class="keywordtype">double</emphasis>&#32;ry,&#32;<emphasis class="keywordtype">double</emphasis>&#32;rz,&#32;<emphasis class="keywordtype">double</emphasis>&#32;ix,&#32;<emphasis class="keywordtype">double</emphasis>&#32;iy,&#32;<emphasis class="keywordtype">double</emphasis>&#32;iz):Ex(rx,ix),&#32;Ey(ry,iy),&#32;Ez(rz,iz)&#32;{
+15 PointVal::PointVal(<emphasis class="keywordtype">double</emphasis>&#32;rx,&#32;<emphasis class="keywordtype">double</emphasis>&#32;ry,&#32;<emphasis class="keywordtype">double</emphasis>&#32;rz,&#32;<emphasis class="keywordtype">double</emphasis>&#32;ix,&#32;<emphasis class="keywordtype">double</emphasis>&#32;iy,
+16 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;iz)
+17 &#32;&#32;&#32;&#32;:&#32;Ex(rx,&#32;ix),&#32;Ey(ry,&#32;iy),&#32;Ez(rz,&#32;iz)&#32;{}
 18 
-19 }
-20 
-21 <emphasis class="keywordtype">void</emphasis>&#32;PointVal::set(<emphasis class="keywordtype">double</emphasis>&#32;rx,&#32;<emphasis class="keywordtype">double</emphasis>&#32;ry,&#32;<emphasis class="keywordtype">double</emphasis>&#32;rz,&#32;<emphasis class="keywordtype">double</emphasis>&#32;ix,&#32;<emphasis class="keywordtype">double</emphasis>&#32;iy,&#32;<emphasis class="keywordtype">double</emphasis>&#32;iz)&#32;{
-22 &#32;&#32;Ex.real(rx);
-23 &#32;&#32;Ex.imag(ix);
-24 &#32;&#32;Ey.real(ry);
-25 &#32;&#32;Ey.imag(iy);
-26 &#32;&#32;Ez.real(rz);
-27 &#32;&#32;Ez.imag(iz);
-28 }
-29 
-30 <emphasis class="keywordtype">void</emphasis>&#32;PointVal::rescale(<emphasis class="keywordtype">double</emphasis>&#32;inp)&#32;{
-31 &#32;&#32;Ex&#32;=&#32;Ex*inp;
-32 &#32;&#32;Ey&#32;=&#32;Ey*inp;
-33 &#32;&#32;Ez&#32;=&#32;Ez*inp;
-34 }
-35 <emphasis class="preprocessor">#endif</emphasis>
-36 
+19 <emphasis class="keywordtype">void</emphasis>&#32;PointVal::set(<emphasis class="keywordtype">double</emphasis>&#32;rx,&#32;<emphasis class="keywordtype">double</emphasis>&#32;ry,&#32;<emphasis class="keywordtype">double</emphasis>&#32;rz,&#32;<emphasis class="keywordtype">double</emphasis>&#32;ix,&#32;<emphasis class="keywordtype">double</emphasis>&#32;iy,
+20 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;iz)&#32;{
+21 &#32;&#32;Ex.real(rx);
+22 &#32;&#32;Ex.imag(ix);
+23 &#32;&#32;Ey.real(ry);
+24 &#32;&#32;Ey.imag(iy);
+25 &#32;&#32;Ez.real(rz);
+26 &#32;&#32;Ez.imag(iz);
+27 }
+28 
+29 <emphasis class="keywordtype">void</emphasis>&#32;PointVal::rescale(<emphasis class="keywordtype">double</emphasis>&#32;inp)&#32;{
+30 &#32;&#32;Ex&#32;=&#32;Ex&#32;*&#32;inp;
+31 &#32;&#32;Ey&#32;=&#32;Ey&#32;*&#32;inp;
+32 &#32;&#32;Ez&#32;=&#32;Ez&#32;*&#32;inp;
+33 }
+34 <emphasis class="preprocessor">#endif</emphasis>
     </computeroutput></literallayout>
 </section>

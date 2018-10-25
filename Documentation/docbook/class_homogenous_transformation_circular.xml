@@ -51,28 +51,32 @@
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>std::vector&lt; Sector&lt; 3 &gt; &gt; case_sectors<para><emphasis>This member contains all the Sectors who, as a sum, form the complete Waveguide.</emphasis></para></para>
+                        <para>std::vector&lt; Sector&lt; 3 &gt; &gt; case_sectors<para><emphasis>This member contains all the Sectors who, as a sum, form the complete
+Waveguide.</emphasis></para></para>
                     </listitem>
                 </itemizedlist>
             </para>
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>const double epsilon_K<para><emphasis>The material-property \form#38 has a different value inside and outside of the waveguides core.</emphasis></para></para>
+                        <para>const double epsilon_K<para><emphasis>The material-property \form#41 has a different value inside and
+outside of the waveguides core.</emphasis></para></para>
                     </listitem>
                 </itemizedlist>
             </para>
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>const double epsilon_M<para><emphasis>The material-property \form#38 has a different value inside and outside of the waveguides core.</emphasis></para></para>
+                        <para>const double epsilon_M<para><emphasis>The material-property \form#41 has a different value inside and
+outside of the waveguides core.</emphasis></para></para>
                     </listitem>
                 </itemizedlist>
             </para>
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>const int sectors<para><emphasis>Since the computational domain is split into subdomains (called sectors), it is important to keep track of the amount of subdomains.</emphasis></para></para>
+                        <para>const int sectors<para><emphasis>Since the computational domain is split into subdomains (called sectors),
+it is important to keep track of the amount of subdomains.</emphasis></para></para>
                     </listitem>
                 </itemizedlist>
             </para>
@@ -86,7 +90,7 @@
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>Vector&lt; double &gt; InitialDofs<para><emphasis>This Method writes a comprehensive description of the current structure to the console.</emphasis></para></para>
+                        <para>Vector&lt; double &gt; InitialDofs<para><emphasis>This vector of values saves the initial configuration.</emphasis></para></para>
                     </listitem>
                 </itemizedlist>
             </para>
@@ -201,7 +205,9 @@ Point&lt; 3 &gt; &amp; coordinate)</para>
                 <itemizedlist>
                     <listitem>
                         <para>bool <link linkend="class_homogenous_transformation_circular_1a1dbcf7e3b6b7e15d470def1a38eb0398">PML_in_X</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+x-axis.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -210,7 +216,9 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determi
                 <itemizedlist>
                     <listitem>
                         <para>bool <link linkend="class_homogenous_transformation_circular_1a3411d710f6517b0362f2a77fad575a2d">PML_in_Y</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the y-axis.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+y-axis.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -219,7 +227,9 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determi
                 <itemizedlist>
                     <listitem>
                         <para>bool <link linkend="class_homogenous_transformation_circular_1a63d75536a44e85bbc7f230f3f6914527">PML_in_Z</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the z-axis.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+z-axis.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -228,7 +238,8 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determi
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_homogenous_transformation_circular_1a0104c2e9318d30c656a7c7bea2fe94c4">Preconditioner_PML_Z_Distance</link> (
-Point&lt; 3 &gt; &amp; p, unsigned int block)<para><emphasis>Similar to the PML_in_Z only this function is used to generate the artificial PML used in the Preconditioner.</emphasis></para>
+Point&lt; 3 &gt; &amp; p, unsigned int block)<para><emphasis>Similar to the PML_in_Z only this function is used to generate the
+artificial PML used in the Preconditioner.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -237,7 +248,8 @@ Point&lt; 3 &gt; &amp; p, unsigned int block)<para><emphasis>Similar to the PML_
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_homogenous_transformation_circular_1ad5c6cf15b68b9a33513041962fccbdd3">PML_X_Distance</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -246,7 +258,8 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a g
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_homogenous_transformation_circular_1a18ff543846986f7d07a7a73738918ce7">PML_Y_Distance</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -255,7 +268,8 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a g
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_homogenous_transformation_circular_1a64395825fffa38be12d3af9b4ad0278f">PML_Z_Distance</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -264,7 +278,8 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a g
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_homogenous_transformation_circular_1a932f48280bceabd75e620d4f16438c07">estimate_and_initialize</link> (
-)<para><emphasis>At the beginning (before the first solution of a system) only the boundary conditions for the shape of the waveguide are known.</emphasis></para>
+)<para><emphasis>At the beginning (before the first solution of a system) only the boundary
+conditions for the shape of the waveguide are known.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -273,7 +288,7 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a g
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_homogenous_transformation_circular_1ad79d59654f49c25c61973e278bc1a56d">get_Q1</link> (
-double z)<para><emphasis>This member calculates the value of Q1 for a provided \form#39-coordinate.</emphasis></para>
+double z)<para><emphasis>This member calculates the value of Q1 for a provided \form#42-coordinate.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -282,7 +297,7 @@ double z)<para><emphasis>This member calculates the value of Q1 for a provided \
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_homogenous_transformation_circular_1ac08c468fe99076644d2c6e14a850c9b2">get_Q2</link> (
-double z)<para><emphasis>This member calculates the value of Q2 for a provided \form#39-coordinate.</emphasis></para>
+double z)<para><emphasis>This member calculates the value of Q2 for a provided \form#42-coordinate.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -291,7 +306,7 @@ double z)<para><emphasis>This member calculates the value of Q2 for a provided \
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_homogenous_transformation_circular_1afe129f0508abe799ce731202a239a237">get_Q3</link> (
-double z)<para><emphasis>This member calculates the value of Q3 for a provided \form#39-coordinate.</emphasis></para>
+double z)<para><emphasis>This member calculates the value of Q3 for a provided \form#42-coordinate.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -336,7 +351,7 @@ int dof, double value)<para><emphasis>This function sets the value of the dof pr
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_homogenous_transformation_circular_1a3df7c303d771e33436d0f9a024c41d30">System_Length</link> (
-)<para><emphasis>Using this method unifies the usage of coordinates.</emphasis></para>
+)<para><emphasis>Returns the complete length of the computational domain.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -390,7 +405,8 @@ double in_z)<para><emphasis>Returns the tilt for a system-coordinate;.</emphasis
                 <itemizedlist>
                     <listitem>
                         <para>Vector&lt; double &gt; <link linkend="class_homogenous_transformation_circular_1a18dc7df7080e9bd0f47d7ae79fd61175">Dofs</link> (
-)<para><emphasis>Other objects can use this function to retrieve an array of the current values of the degrees of freedom of the functional we are optimizing.</emphasis></para>
+)<para><emphasis>Other objects can use this function to retrieve an array of the current
+values of the degrees of freedom of the functional we are optimizing.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -399,7 +415,8 @@ double in_z)<para><emphasis>Returns the tilt for a system-coordinate;.</emphasis
                 <itemizedlist>
                     <listitem>
                         <para>unsigned int <link linkend="class_homogenous_transformation_circular_1afd9c7a15e499b57e883470c1ce29ab02">NFreeDofs</link> (
-)<para><emphasis>This function returns the number of unrestrained degrees of freedom of the current optimization run.</emphasis></para>
+)<para><emphasis>This function returns the number of unrestrained degrees of freedom of the
+current optimization run.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -417,7 +434,9 @@ double in_z)<para><emphasis>Returns the tilt for a system-coordinate;.</emphasis
                 <itemizedlist>
                     <listitem>
                         <para>bool <link linkend="class_homogenous_transformation_circular_1a85d390538cb58935ae5bc8c964c5d2ab">IsDofFree</link> (
-int )<para><emphasis>Since Dofs() also returns restrained degrees of freedom, this function can be applied to determine if a degree of freedom is indeed free or restrained.</emphasis></para>
+int )<para><emphasis>Since Dofs() also returns restrained degrees of freedom, this function can
+be applied to determine if a degree of freedom is indeed free or
+restrained.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -435,7 +454,9 @@ int )<para><emphasis>Since Dofs() also returns restrained degrees of freedom, th
                 <itemizedlist>
                     <listitem>
                         <para>std::complex&lt; double &gt; <link linkend="class_homogenous_transformation_circular_1a0d5807202df151b9aeded89b9b644feb">evaluate_for_z</link> (
-double , <link linkend="class_waveguide">Waveguide</link> * )<para><emphasis>Since the Wavegudie itself may be circular or rectangular now, the evaluation routines should be moved to a point in the code where this information is included in the code.</emphasis></para>
+double , <link linkend="class_waveguide">Waveguide</link> * )<para><emphasis>Since the Wavegudie itself may be circular or rectangular now, the
+evaluation routines should be moved to a point in the code where this
+information is included in the code.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -473,7 +494,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 <para>28.11.2016 </para>
 </formalpara>
 </para>
-                <para>Definition at line 29 of file HomogenousTransformationCircular.h</para>
+                <para>Definition at line 33 of file HomogenousTransformationCircular.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>HomogenousTransformationCircular.h</para></listitem></itemizedlist></para>
         </simplesect>
@@ -483,7 +504,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                 <title>std::vector&lt;Sector&lt;3&gt; &gt; HomogenousTransformationCircular::case_sectors</title>                
 <para>These Sectors are a partition of the simulated domain. </para>
 
-                <para>Definition at line 111 of file HomogenousTransformationCircular.h</para>
+                <para>Definition at line 150 of file HomogenousTransformationCircular.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>HomogenousTransformationCircular.h</para></listitem></itemizedlist></para>
             </simplesect>
@@ -491,7 +512,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                 <title>const double HomogenousTransformationCircular::epsilon_K</title>                
 <para>This variable stores its value inside the core. </para>
 
-                <para>Definition at line 116 of file HomogenousTransformationCircular.h</para>
+                <para>Definition at line 157 of file HomogenousTransformationCircular.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>HomogenousTransformationCircular.h</para></listitem></itemizedlist></para>
             </simplesect>
@@ -499,7 +520,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                 <title>const double HomogenousTransformationCircular::epsilon_M</title>                
 <para>This variable stores its value outside the core. </para>
 
-                <para>Definition at line 120 of file HomogenousTransformationCircular.h</para>
+                <para>Definition at line 163 of file HomogenousTransformationCircular.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>HomogenousTransformationCircular.h</para></listitem></itemizedlist></para>
             </simplesect>
@@ -507,15 +528,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                 <title>const int HomogenousTransformationCircular::sectors</title>                
 <para>This member stores the number of Sectors the computational domain has been split into. </para>
 
-                <para>Definition at line 124 of file HomogenousTransformationCircular.h</para>
-                <para>The Documentation for this struct was generated from the following file: </para>
-                <para><itemizedlist><listitem><para>HomogenousTransformationCircular.h</para></listitem></itemizedlist></para>
-            </simplesect>
-            <simplesect>
-                <title>Vector&lt;double&gt; HomogenousTransformationCircular::InitialDofs</title>                
-<para>This vector of values saves the initial configuration </para>
-
-                <para>Definition at line 230 of file HomogenousTransformationCircular.h</para>
+                <para>Definition at line 169 of file HomogenousTransformationCircular.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>HomogenousTransformationCircular.h</para></listitem></itemizedlist></para>
             </simplesect>
@@ -573,7 +586,9 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1a1dbcf7e3b6b7e15d470def1a38eb0398">
-                <title>bool HomogenousTransformationCircular::PML_in_X (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis.</emphasis>
+                <title>bool HomogenousTransformationCircular::PML_in_X (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+x-axis.</emphasis>
                 
 <para>Since there are 3 blocks of PML-type material, there are 3 functions. 
                 <formalpara>
@@ -598,7 +613,9 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1a3411d710f6517b0362f2a77fad575a2d">
-                <title>bool HomogenousTransformationCircular::PML_in_Y (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the y-axis.</emphasis>
+                <title>bool HomogenousTransformationCircular::PML_in_Y (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+y-axis.</emphasis>
                 
 <para>Since there are 3 blocks of PML-type material, there are 3 functions. 
                 <formalpara>
@@ -623,7 +640,9 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1a63d75536a44e85bbc7f230f3f6914527">
-                <title>bool HomogenousTransformationCircular::PML_in_Z (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the z-axis.</emphasis>
+                <title>bool HomogenousTransformationCircular::PML_in_Z (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+z-axis.</emphasis>
                 
 <para>Since there are 3 blocks of PML-type material, there are 3 functions. 
                 <formalpara>
@@ -648,13 +667,15 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1a0104c2e9318d30c656a7c7bea2fe94c4">
-                <title>double HomogenousTransformationCircular::Preconditioner_PML_Z_Distance (Point&lt; 3 &gt; &amp;p, unsigned int block) const</title> <emphasis>Similar to the PML_in_Z only this function is used to generate the artificial PML used in the Preconditioner.</emphasis>
+                <title>double HomogenousTransformationCircular::Preconditioner_PML_Z_Distance (Point&lt; 3 &gt; &amp;p, unsigned int block) const</title> <emphasis>Similar to the PML_in_Z only this function is used to generate the
+artificial PML used in the Preconditioner.</emphasis>
                 
 <para>These Layers are not only situated at the surface of the computational domain but also inside it at the interfaces of Sectors. This function fulfills the same purpose as those with similar names but it is supposed to be used together with Preconditioner_PML_in_Z instead of the versions without &quot;Preconditioner&quot;. </para>
 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1ad5c6cf15b68b9a33513041962fccbdd3">
-                <title>double HomogenousTransformationCircular::PML_X_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis>
+                <title>double HomogenousTransformationCircular::PML_X_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis>
                 
 <para>This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction). 
                 <formalpara>
@@ -679,7 +700,8 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1a18ff543846986f7d07a7a73738918ce7">
-                <title>double HomogenousTransformationCircular::PML_Y_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis>
+                <title>double HomogenousTransformationCircular::PML_Y_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis>
                 
 <para>This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction). 
                 <formalpara>
@@ -704,7 +726,8 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1a64395825fffa38be12d3af9b4ad0278f">
-                <title>double HomogenousTransformationCircular::PML_Z_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis>
+                <title>double HomogenousTransformationCircular::PML_Z_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis>
                 
 <para>This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction). 
                 <formalpara>
@@ -729,13 +752,14 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1a932f48280bceabd75e620d4f16438c07">
-                <title>void HomogenousTransformationCircular::estimate_and_initialize ()</title> <emphasis>At the beginning (before the first solution of a system) only the boundary conditions for the shape of the waveguide are known.</emphasis>
+                <title>void HomogenousTransformationCircular::estimate_and_initialize ()</title> <emphasis>At the beginning (before the first solution of a system) only the boundary
+conditions for the shape of the waveguide are known.</emphasis>
                 
 <para>Therefore the values for the degrees of freedom need to be estimated. This function sets all variables to appropiate values and estimates an appropriate shape based on averages and a polynomial interpolation of the boundary conditions on the shape. </para>
 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1ad79d59654f49c25c61973e278bc1a56d">
-                <title>double HomogenousTransformationCircular::get_Q1 (double z) const</title> <emphasis>This member calculates the value of Q1 for a provided \form#39-coordinate.</emphasis>
+                <title>double HomogenousTransformationCircular::get_Q1 (double z) const</title> <emphasis>This member calculates the value of Q1 for a provided \form#42-coordinate.</emphasis>
                 
 <para>This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field). 
                 <formalpara>
@@ -749,7 +773,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                             <row>
                                 <entry>z</entry>
                                 <entry>
-<para>The value of Q1 is independent of <equation><title>form_40</title>$x$</equation> and <equation><title>form_41</title>$y$</equation>. Therefore only a <equation><title>form_39</title>$z$</equation>-coordinate is provided in a call to the function. </para>
+<para>The value of Q1 is independent of <equation><title>form_43</title>$x$</equation> and <equation><title>form_44</title>$y$</equation>. Therefore only a <equation><title>form_42</title>$z$</equation>-coordinate is provided in a call to the function. </para>
 </entry>
                             </row>
                         </tbody>
@@ -760,7 +784,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1ac08c468fe99076644d2c6e14a850c9b2">
-                <title>double HomogenousTransformationCircular::get_Q2 (double z) const</title> <emphasis>This member calculates the value of Q2 for a provided \form#39-coordinate.</emphasis>
+                <title>double HomogenousTransformationCircular::get_Q2 (double z) const</title> <emphasis>This member calculates the value of Q2 for a provided \form#42-coordinate.</emphasis>
                 
 <para>This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field). 
                 <formalpara>
@@ -774,7 +798,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                             <row>
                                 <entry>z</entry>
                                 <entry>
-<para>The value of Q2 is independent of <equation><title>form_40</title>$x$</equation> and <equation><title>form_41</title>$y$</equation>. Therefore only a <equation><title>form_39</title>$z$</equation>-coordinate is provided in a call to the function. </para>
+<para>The value of Q2 is independent of <equation><title>form_43</title>$x$</equation> and <equation><title>form_44</title>$y$</equation>. Therefore only a <equation><title>form_42</title>$z$</equation>-coordinate is provided in a call to the function. </para>
 </entry>
                             </row>
                         </tbody>
@@ -785,7 +809,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1afe129f0508abe799ce731202a239a237">
-                <title>double HomogenousTransformationCircular::get_Q3 (double z) const</title> <emphasis>This member calculates the value of Q3 for a provided \form#39-coordinate.</emphasis>
+                <title>double HomogenousTransformationCircular::get_Q3 (double z) const</title> <emphasis>This member calculates the value of Q3 for a provided \form#42-coordinate.</emphasis>
                 
 <para>This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field). 
                 <formalpara>
@@ -799,7 +823,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                             <row>
                                 <entry>z</entry>
                                 <entry>
-<para>The value of Q3 is independent of <equation><title>form_40</title>$x$</equation> and <equation><title>form_41</title>$y$</equation>. Therefore only a <equation><title>form_39</title>$z$</equation>-coordinate is provided in a call to the function. </para>
+<para>The value of Q3 is independent of <equation><title>form_43</title>$x$</equation> and <equation><title>form_44</title>$y$</equation>. Therefore only a <equation><title>form_42</title>$z$</equation>-coordinate is provided in a call to the function. </para>
 </entry>
                             </row>
                         </tbody>
@@ -930,29 +954,8 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1a3df7c303d771e33436d0f9a024c41d30">
-                <title>double HomogenousTransformationCircular::System_Length () const</title> <emphasis>Using this method unifies the usage of coordinates.</emphasis>
+                <title>double HomogenousTransformationCircular::System_Length () const</title> <emphasis>Returns the complete length of the computational domain.</emphasis>
                 
-<para>This function takes a global <equation><title>form_39</title>$z$</equation> coordinate (in the computational domain) and returns both a Sector-Index and an internal <equation><title>form_39</title>$z$</equation> coordinate indicating which sector this coordinate belongs to and how far along in the sector it is located. 
-                <formalpara>
-                    <title/>
-                    <table frame="all">
-                        <title>Parameters                        </title>
-                        <tgroup cols="2" align="left" colsep="1" rowsep="1">
-                        <colspec colwidth="1*"/>
-                        <colspec colwidth="4*"/>
-                        <tbody>
-                            <row>
-                                <entry>double</entry>
-                                <entry>
-<para>in_z global system <equation><title>form_39</title>$z$</equation> coordinate for the transformation. Returns the complete length of the computational domain. </para>
-</entry>
-                            </row>
-                        </tbody>
-                        </tgroup>
-                    </table>
-                </formalpara>
-                </para>
-
             </section>
             <section xml:id="class_homogenous_transformation_circular_1ac01f00a49d38f8bb7c65a6f5681653fc">
                 <title>double HomogenousTransformationCircular::Sector_Length () const</title> <emphasis>Returns the length of one sector.</emphasis>
@@ -975,13 +978,15 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1a18dc7df7080e9bd0f47d7ae79fd61175">
-                <title>Vector&lt; double &gt; HomogenousTransformationCircular::Dofs () const</title> <emphasis>Other objects can use this function to retrieve an array of the current values of the degrees of freedom of the functional we are optimizing.</emphasis>
+                <title>Vector&lt; double &gt; HomogenousTransformationCircular::Dofs () const</title> <emphasis>Other objects can use this function to retrieve an array of the current
+values of the degrees of freedom of the functional we are optimizing.</emphasis>
                 
 <para>This also includes restrained degrees of freedom and other functions can be used to determine this property. This has to be done because in different cases the number of restrained degrees of freedom can vary and we want no logic about this in other functions. </para>
 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1afd9c7a15e499b57e883470c1ce29ab02">
-                <title>unsigned int HomogenousTransformationCircular::NFreeDofs () const</title> <emphasis>This function returns the number of unrestrained degrees of freedom of the current optimization run.</emphasis>
+                <title>unsigned int HomogenousTransformationCircular::NFreeDofs () const</title> <emphasis>This function returns the number of unrestrained degrees of freedom of the
+current optimization run.</emphasis>
                 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1a4a8c29a84f21edaccaf249a4427928d7">
@@ -991,7 +996,9 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1a85d390538cb58935ae5bc8c964c5d2ab">
-                <title>bool HomogenousTransformationCircular::IsDofFree (int) const</title> <emphasis>Since Dofs() also returns restrained degrees of freedom, this function can be applied to determine if a degree of freedom is indeed free or restrained.</emphasis>
+                <title>bool HomogenousTransformationCircular::IsDofFree (int) const</title> <emphasis>Since Dofs() also returns restrained degrees of freedom, this function can
+be applied to determine if a degree of freedom is indeed free or
+restrained.</emphasis>
                 
 <para>&quot;restrained&quot; means that for example the DOF represents the radius at one of the connectors (input or output) and therefore we forbid the optimization scheme to vary this value. </para>
 
@@ -1001,7 +1008,9 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                 
             </section>
             <section xml:id="class_homogenous_transformation_circular_1a0d5807202df151b9aeded89b9b644feb">
-                <title>std::complex&lt; double &gt; HomogenousTransformationCircular::evaluate_for_z (double z_in, Waveguide *)</title> <emphasis>Since the Wavegudie itself may be circular or rectangular now, the evaluation routines should be moved to a point in the code where this information is included in the code.</emphasis>
+                <title>std::complex&lt; double &gt; HomogenousTransformationCircular::evaluate_for_z (double z_in, Waveguide *)</title> <emphasis>Since the Wavegudie itself may be circular or rectangular now, the
+evaluation routines should be moved to a point in the code where this
+information is included in the code.</emphasis>
                 
 <para>Since I dont want to create derived classes from waveguide (which I should do eventually) I will for now include this functionality into the space transformation which is shape-sensitive. The waveguide only offers the evaluation at a point. The quadrature-rule has to be imposed by the space transformation. </para>
 

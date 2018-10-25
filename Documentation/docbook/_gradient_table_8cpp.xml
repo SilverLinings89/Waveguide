@@ -2,8 +2,8 @@
 <section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_gradient_table_8cpp">
     <title>GradientTable.cpp File Reference</title>
     <programlisting>#include &quot;GradientTable.h&quot;</programlisting>
-    <programlisting>#include &lt;sys/ioctl.h&gt;</programlisting>
     <programlisting>#include &lt;stdio.h&gt;</programlisting>
+    <programlisting>#include &lt;sys/ioctl.h&gt;</programlisting>
     <programlisting>#include &lt;unistd.h&gt;</programlisting>
     <programlisting>#include &lt;iomanip&gt;</programlisting>
     <simplesect>
@@ -19,136 +19,134 @@
 6 <emphasis class="comment">&#32;*/</emphasis>
 7 
 8 <emphasis class="preprocessor">#include&#32;&quot;GradientTable.h&quot;</emphasis>
-9 <emphasis class="preprocessor">#include&#32;&lt;sys/ioctl.h&gt;</emphasis>
-10 <emphasis class="preprocessor">#include&#32;&lt;stdio.h&gt;</emphasis>
+9 <emphasis class="preprocessor">#include&#32;&lt;stdio.h&gt;</emphasis>
+10 <emphasis class="preprocessor">#include&#32;&lt;sys/ioctl.h&gt;</emphasis>
 11 <emphasis class="preprocessor">#include&#32;&lt;unistd.h&gt;</emphasis>
 12 <emphasis class="preprocessor">#include&#32;&lt;iomanip&gt;</emphasis>
 13 
-14 GradientTable::GradientTable(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_step&#32;,&#32;dealii::Vector&lt;double&gt;&#32;in_configuration,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_quality,&#32;dealii::Vector&lt;double&gt;&#32;in_last_configuration,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_last_quality):
-15 &#32;&#32;ndofs(100),
-16 &#32;&#32;nfreedofs(100),
-17 &#32;&#32;GlobalStep(in_step)
-18 {
-19 &#32;&#32;&#32;&#32;final_quality&#32;=&#32;0.0;
-20 &#32;&#32;&#32;&#32;initial_quality&#32;=&#32;in_quality;
-21 &#32;&#32;&#32;&#32;last_quality&#32;=&#32;in_last_quality;
-22 &#32;&#32;&#32;&#32;steps.reinit(nfreedofs);
-23 &#32;&#32;&#32;&#32;qualities.reinit(nfreedofs);
-24 &#32;&#32;&#32;&#32;last_configuration.reinit(nfreedofs);
-25 &#32;&#32;&#32;&#32;ref_configuration.reinit(nfreedofs);
-26 &#32;&#32;&#32;&#32;grad_step.reinit(nfreedofs);
-27 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0&#32;;&#32;i&#32;&lt;&#32;nfreedofs;&#32;i++)&#32;{
-28 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ref_configuration[i]&#32;=&#32;in_configuration[i];
-29 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;last_configuration[i]&#32;=&#32;in_last_configuration[i];
-30 &#32;&#32;&#32;&#32;}
-31 }
-32 
-33 GradientTable::~GradientTable()&#32;{
-34 
-35 }
-36 
-37 <emphasis class="keywordtype">void</emphasis>&#32;GradientTable::AddComputationResult(<emphasis class="keywordtype">int</emphasis>&#32;in_component,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_step,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_quality){
-38 &#32;&#32;&#32;&#32;steps[in_component]&#32;=&#32;in_step;
-39 &#32;&#32;&#32;&#32;qualities[in_component]&#32;=&#32;in_quality;
+14 GradientTable::GradientTable(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_step,
+15 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;dealii::Vector&lt;double&gt;&#32;in_configuration,
+16 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_quality,
+17 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;dealii::Vector&lt;double&gt;&#32;in_last_configuration,
+18 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_last_quality)
+19 &#32;&#32;&#32;&#32;:&#32;ndofs(100),&#32;nfreedofs(100),&#32;GlobalStep(in_step)&#32;{
+20 &#32;&#32;final_quality&#32;=&#32;0.0;
+21 &#32;&#32;initial_quality&#32;=&#32;in_quality;
+22 &#32;&#32;last_quality&#32;=&#32;in_last_quality;
+23 &#32;&#32;steps.reinit(nfreedofs);
+24 &#32;&#32;qualities.reinit(nfreedofs);
+25 &#32;&#32;last_configuration.reinit(nfreedofs);
+26 &#32;&#32;ref_configuration.reinit(nfreedofs);
+27 &#32;&#32;grad_step.reinit(nfreedofs);
+28 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;nfreedofs;&#32;i++)&#32;{
+29 &#32;&#32;&#32;&#32;ref_configuration[i]&#32;=&#32;in_configuration[i];
+30 &#32;&#32;&#32;&#32;last_configuration[i]&#32;=&#32;in_last_configuration[i];
+31 &#32;&#32;}
+32 }
+33 
+34 GradientTable::~GradientTable()&#32;{}
+35 
+36 <emphasis class="keywordtype">void</emphasis>&#32;GradientTable::AddComputationResult(<emphasis class="keywordtype">int</emphasis>&#32;in_component,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_step,
+37 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_quality)&#32;{
+38 &#32;&#32;steps[in_component]&#32;=&#32;in_step;
+39 &#32;&#32;qualities[in_component]&#32;=&#32;in_quality;
 40 }
 41 
-42 <emphasis class="keywordtype">void</emphasis>&#32;GradientTable::AddFullStepResult(dealii::Vector&lt;double&gt;&#32;in_step,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_quality)&#32;{
-43 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0&#32;;&#32;i&#32;&lt;&#32;nfreedofs;&#32;i++)&#32;{
-44 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;grad_step[i]&#32;=&#32;in_step[i];
-45 &#32;&#32;&#32;&#32;}
-46 &#32;&#32;&#32;&#32;final_quality&#32;=&#32;in_quality;
-47 }
-48 
-49 <emphasis class="keywordtype">void</emphasis>&#32;GradientTable::PrintFullLine()&#32;{
-50 
-51 &#32;&#32;&#32;&#32;<emphasis class="keyword">struct&#32;</emphasis>winsize&#32;w;
-52 &#32;&#32;&#32;&#32;ioctl(STDOUT_FILENO,&#32;TIOCGWINSZ,&#32;&amp;w);
-53 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(&#32;<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&lt;w.ws_col;&#32;i++)&#32;{
-54 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;-&quot;</emphasis>;
-55 &#32;&#32;&#32;&#32;}
-56 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::endl;
+42 <emphasis class="keywordtype">void</emphasis>&#32;GradientTable::AddFullStepResult(dealii::Vector&lt;double&gt;&#32;in_step,
+43 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_quality)&#32;{
+44 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;nfreedofs;&#32;i++)&#32;{
+45 &#32;&#32;&#32;&#32;grad_step[i]&#32;=&#32;in_step[i];
+46 &#32;&#32;}
+47 &#32;&#32;final_quality&#32;=&#32;in_quality;
+48 }
+49 
+50 <emphasis class="keywordtype">void</emphasis>&#32;GradientTable::PrintFullLine()&#32;{
+51 &#32;&#32;<emphasis class="keyword">struct&#32;</emphasis>winsize&#32;w;
+52 &#32;&#32;ioctl(STDOUT_FILENO,&#32;TIOCGWINSZ,&#32;&amp;w);
+53 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;w.ws_col;&#32;i++)&#32;{
+54 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;-&quot;</emphasis>;
+55 &#32;&#32;}
+56 &#32;&#32;std::cout&#32;&lt;&lt;&#32;std::endl;
 57 }
 58 
 59 <emphasis class="keywordtype">void</emphasis>&#32;GradientTable::PrintTable()&#32;{
-60 &#32;&#32;&#32;&#32;PrintFullLine();
-61 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Gradient&#32;Table&#32;for&#32;Step:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;&#32;GlobalStep&#32;&lt;&lt;&#32;std::endl;
-62 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(14)&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;-&quot;</emphasis>&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
-63 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=0;&#32;i&lt;&#32;nfreedofs;&#32;i++)&#32;{
-64 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(i%3&#32;==0)&#32;{
-65 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;m_&quot;</emphasis>&#32;&lt;&lt;&#32;std::setw(10)&#32;&lt;&lt;&#32;i/3&#32;+1;
-66 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-67 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(i%3&#32;==1)&#32;{
-68 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;r_&quot;</emphasis>&#32;&lt;&lt;&#32;std::setw(10)&#32;&lt;&lt;&#32;i/3&#32;+1;
-69 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-70 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(i%3&#32;==2)&#32;{
-71 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;v_&quot;</emphasis>&#32;&lt;&lt;&#32;std::setw(10)&#32;&lt;&lt;&#32;i/3&#32;+1;
-72 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-73 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
-74 &#32;&#32;&#32;&#32;}
-75 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Quality&#32;&#32;&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>&lt;&lt;std::endl;
-76 
-77 &#32;&#32;&#32;&#32;PrintFullLine();
+60 &#32;&#32;PrintFullLine();
+61 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Gradient&#32;Table&#32;for&#32;Step:&#32;&quot;</emphasis>&#32;&lt;&lt;&#32;GlobalStep&#32;&lt;&lt;&#32;std::endl;
+62 &#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(14)&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;-&quot;</emphasis>
+63 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
+64 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;nfreedofs;&#32;i++)&#32;{
+65 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(i&#32;%&#32;3&#32;==&#32;0)&#32;{
+66 &#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;m_&quot;</emphasis>&#32;&lt;&lt;&#32;std::setw(10)&#32;&lt;&lt;&#32;i&#32;/&#32;3&#32;+&#32;1;
+67 &#32;&#32;&#32;&#32;}
+68 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(i&#32;%&#32;3&#32;==&#32;1)&#32;{
+69 &#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;r_&quot;</emphasis>&#32;&lt;&lt;&#32;std::setw(10)&#32;&lt;&lt;&#32;i&#32;/&#32;3&#32;+&#32;1;
+70 &#32;&#32;&#32;&#32;}
+71 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(i&#32;%&#32;3&#32;==&#32;2)&#32;{
+72 &#32;&#32;&#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;v_&quot;</emphasis>&#32;&lt;&lt;&#32;std::setw(10)&#32;&lt;&lt;&#32;i&#32;/&#32;3&#32;+&#32;1;
+73 &#32;&#32;&#32;&#32;}
+74 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
+75 &#32;&#32;}
+76 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Quality&#32;&#32;&#32;&quot;</emphasis>
+77 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
 78 
-79 &#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Initial&#32;Config|&quot;</emphasis>;
-80 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=0;&#32;i&lt;nfreedofs;&#32;i++)&#32;{
-81 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;std::setw(12)&#32;&lt;&lt;&#32;ref_configuration[i];
-82 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&lt;&lt;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
-83 &#32;&#32;&#32;&#32;}
-84 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(10)&lt;&lt;&#32;initial_quality;
-85 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>&lt;&lt;std::endl;
-86 
-87 &#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;std::setw(14)&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Last&#32;Config&quot;</emphasis>;
-88 &#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
-89 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=0;&#32;i&lt;nfreedofs;&#32;i++)&#32;{
-90 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;std::setw(12)&#32;&lt;&lt;&#32;last_configuration[i];
-91 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&lt;&lt;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
-92 &#32;&#32;&#32;&#32;}
-93 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(10)&lt;&lt;&#32;last_quality;
-94 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>&lt;&lt;std::endl;
-95 
-96 &#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;std::setw(14)&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Delta&quot;</emphasis>;
-97 &#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
-98 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=0;&#32;i&lt;nfreedofs;&#32;i++)&#32;{
-99 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;std::setw(12)&#32;&lt;&lt;&#32;steps[i];
-100 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&lt;&lt;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
-101 &#32;&#32;&#32;&#32;}
-102 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(10)&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;&quot;</emphasis>;
-103 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>&lt;&lt;std::endl;
-104 
-105 &#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;std::setw(14)&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Quality&quot;</emphasis>;
-106 &#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
-107 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=0;&#32;i&lt;nfreedofs;&#32;i++)&#32;{
-108 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;std::setw(12)&#32;&lt;&lt;&#32;qualities[i];
-109 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&lt;&lt;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
-110 
-111 &#32;&#32;&#32;&#32;}
-112 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(10)&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;&quot;</emphasis>;
-113 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>&lt;&lt;std::endl;
-114 
-115 &#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;std::setw(14)&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Gradient&#32;Step&quot;</emphasis>;
-116 &#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
-117 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=0;&#32;i&lt;nfreedofs;&#32;i++)&#32;{
-118 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;std::setw(12)&#32;&lt;&lt;&#32;grad_step[i];
-119 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&lt;&lt;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
-120 &#32;&#32;&#32;&#32;}
-121 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(10)&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;&quot;</emphasis>;
-122 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>&lt;&lt;std::endl;
-123 
-124 &#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;std::setw(14)&lt;&lt;&#32;<emphasis class="stringliteral">&quot;New&#32;Config&quot;</emphasis>;
-125 &#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
-126 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=0;&#32;i&lt;nfreedofs;&#32;i++)&#32;{
-127 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&lt;&lt;&#32;std::setw(12)&#32;&lt;&lt;&#32;last_configuration[i]+&#32;grad_step[i];
-128 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::cout&lt;&lt;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
-129 &#32;&#32;&#32;&#32;}
-130 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(10)&lt;&lt;&#32;final_quality;
-131 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>&lt;&lt;std::endl;
-132 
-133 &#32;&#32;&#32;&#32;PrintFullLine();
-134 }
-135 
-136 <emphasis class="keywordtype">void</emphasis>&#32;GradientTable::WriteTableToFile(std::string&#32;){
-137 
-138 }
-139 
+79 &#32;&#32;PrintFullLine();
+80 
+81 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Initial&#32;Config|&quot;</emphasis>;
+82 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;nfreedofs;&#32;i++)&#32;{
+83 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(12)&#32;&lt;&lt;&#32;ref_configuration[i];
+84 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
+85 &#32;&#32;}
+86 &#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(10)&#32;&lt;&lt;&#32;initial_quality;
+87 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+88 
+89 &#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(14)&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Last&#32;Config&quot;</emphasis>;
+90 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
+91 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;nfreedofs;&#32;i++)&#32;{
+92 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(12)&#32;&lt;&lt;&#32;last_configuration[i];
+93 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
+94 &#32;&#32;}
+95 &#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(10)&#32;&lt;&lt;&#32;last_quality;
+96 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+97 
+98 &#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(14)&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Delta&quot;</emphasis>;
+99 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
+100 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;nfreedofs;&#32;i++)&#32;{
+101 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(12)&#32;&lt;&lt;&#32;steps[i];
+102 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
+103 &#32;&#32;}
+104 &#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(10)&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;&quot;</emphasis>;
+105 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+106 
+107 &#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(14)&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Quality&quot;</emphasis>;
+108 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
+109 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;nfreedofs;&#32;i++)&#32;{
+110 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(12)&#32;&lt;&lt;&#32;qualities[i];
+111 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
+112 &#32;&#32;}
+113 &#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(10)&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;&quot;</emphasis>;
+114 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+115 
+116 &#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(14)&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;Gradient&#32;Step&quot;</emphasis>;
+117 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
+118 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;nfreedofs;&#32;i++)&#32;{
+119 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(12)&#32;&lt;&lt;&#32;grad_step[i];
+120 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
+121 &#32;&#32;}
+122 &#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(10)&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;&#32;&quot;</emphasis>;
+123 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+124 
+125 &#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(14)&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;New&#32;Config&quot;</emphasis>;
+126 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
+127 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;nfreedofs;&#32;i++)&#32;{
+128 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(12)&#32;&lt;&lt;&#32;last_configuration[i]&#32;+&#32;grad_step[i];
+129 &#32;&#32;&#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>;
+130 &#32;&#32;}
+131 &#32;&#32;std::cout&#32;&lt;&lt;&#32;std::setw(10)&#32;&lt;&lt;&#32;final_quality;
+132 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;|&quot;</emphasis>&#32;&lt;&lt;&#32;std::endl;
+133 
+134 &#32;&#32;PrintFullLine();
+135 }
+136 
+137 <emphasis class="keywordtype">void</emphasis>&#32;GradientTable::WriteTableToFile(std::string)&#32;{}
     </computeroutput></literallayout>
 </section>

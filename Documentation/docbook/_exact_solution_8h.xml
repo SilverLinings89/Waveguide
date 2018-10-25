@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_exact_solution_8h">
     <title>ExactSolution.h File Reference</title>
-    <programlisting>#include &lt;vector&gt;</programlisting>
-    <programlisting>#include &lt;string&gt;</programlisting>
     <programlisting>#include &lt;deal.II/base/function.h&gt;</programlisting>
     <programlisting>#include &lt;deal.II/base/point.h&gt;</programlisting>
     <programlisting>#include &lt;deal.II/base/tensor.h&gt;</programlisting>
+    <programlisting>#include &lt;string&gt;</programlisting>
+    <programlisting>#include &lt;vector&gt;</programlisting>
     <programlisting>#include &quot;PointVal.h&quot;</programlisting>
         <section>
             <title> Classes </title>
@@ -13,7 +13,8 @@
                 <itemizedlist>
                     <listitem>
                         <para>struct <link linkend="class_exact_solution">ExactSolution</link></para>
-<para><emphasis>This class is derived from the Function class and can be used to estimate the L2-error for a straight waveguide.</emphasis></para>
+<para><emphasis>This class is derived from the Function class and can be used to
+estimate the L2-error for a straight waveguide.</emphasis></para>
                     </listitem>
                 </itemizedlist>
             </para>
@@ -26,57 +27,81 @@
 1 
 2 <emphasis class="preprocessor">#ifndef&#32;ExactSolutionFlag_H_</emphasis>
 3 <emphasis class="preprocessor">#define&#32;ExactSolutionFlag_H_</emphasis>
-4 <emphasis class="preprocessor">#include&#32;&lt;vector&gt;</emphasis>
-5 <emphasis class="preprocessor">#include&#32;&lt;string&gt;</emphasis>
-6 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/function.h&gt;</emphasis>
-7 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/point.h&gt;</emphasis>
-8 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/tensor.h&gt;</emphasis>
+4 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/function.h&gt;</emphasis>
+5 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/point.h&gt;</emphasis>
+6 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/tensor.h&gt;</emphasis>
+7 <emphasis class="preprocessor">#include&#32;&lt;string&gt;</emphasis>
+8 <emphasis class="preprocessor">#include&#32;&lt;vector&gt;</emphasis>
 9 <emphasis class="preprocessor">#include&#32;&quot;PointVal.h&quot;</emphasis>
 10 
 11 <emphasis class="keyword">using&#32;namespace&#32;</emphasis><link linkend="namespacedealii">dealii</link>;
 12 <emphasis class="comment"></emphasis>
 13 <emphasis class="comment">/**</emphasis>
 14 <emphasis class="comment">&#32;*&#32;\class&#32;ExactSolution</emphasis>
-15 <emphasis class="comment">&#32;*&#32;\brief&#32;This&#32;class&#32;is&#32;derived&#32;from&#32;the&#32;Function&#32;class&#32;and&#32;can&#32;be&#32;used&#32;to&#32;estimate&#32;the&#32;L2-error&#32;for&#32;a&#32;straight&#32;waveguide.&#32;In&#32;the&#32;case&#32;of&#32;a&#32;completely&#32;cylindrical&#32;waveguide,&#32;an&#32;analytic&#32;solution&#32;is&#32;known&#32;(the&#32;modes&#32;of&#32;the&#32;input-signal&#32;themselves)&#32;and&#32;this&#32;class&#32;offers&#32;a&#32;representation&#32;of&#32;this&#32;analytical&#32;solution.&#32;If&#32;the&#32;waveguide&#32;has&#32;any&#32;other&#32;shape,&#32;this&#32;solution&#32;does&#32;not&#32;lose&#32;its&#32;value&#32;completely&#32;-&#32;it&#32;can&#32;still&#32;be&#32;used&#32;as&#32;a&#32;starting-vector&#32;for&#32;iterative&#32;solvers.</emphasis>
-16 <emphasis class="comment">&#32;*</emphasis>
-17 <emphasis class="comment">&#32;*&#32;The&#32;structure&#32;of&#32;this&#32;class&#32;is&#32;defined&#32;by&#32;the&#32;properties&#32;of&#32;the&#32;Function-class&#32;meaning&#32;that&#32;we&#32;have&#32;two&#32;functions:</emphasis>
-18 <emphasis class="comment">&#32;*&#32;&#32;-#&#32;&#32;virtual&#32;double&#32;value&#32;(const&#32;Point&lt;dim&gt;&#32;&amp;p,&#32;const&#32;unsigned&#32;int&#32;component&#32;)&#32;calculates&#32;the&#32;value&#32;for&#32;a&#32;single&#32;component&#32;of&#32;the&#32;vector-valued&#32;return-value.</emphasis>
-19 <emphasis class="comment">&#32;*&#32;&#32;-#&#32;&#32;virtual&#32;void&#32;vector_value&#32;(const&#32;Point&lt;dim&gt;&#32;&amp;p,&#32;Vector&lt;double&gt;&#32;&amp;value)&#32;puts&#32;these&#32;individual&#32;components&#32;into&#32;the&#32;parameter&#32;value,&#32;which&#32;is&#32;a&#32;reference&#32;to&#32;a&#32;vector,&#32;handed&#32;over&#32;to&#32;store&#32;the&#32;result.</emphasis>
-20 <emphasis class="comment">&#32;*</emphasis>
-21 <emphasis class="comment">&#32;*&#32;\author&#32;Pascal&#32;Kraft</emphasis>
-22 <emphasis class="comment">&#32;*&#32;\date&#32;23.11.2015</emphasis>
-23 <emphasis class="comment">&#32;*/</emphasis>
-24 
-<link linkend="class_exact_solution">25 </link><emphasis class="keyword">class&#32;</emphasis><link linkend="class_exact_solution">ExactSolution</link>&#32;:&#32;<emphasis class="keyword">public</emphasis>&#32;Function&lt;3,&#32;double&gt;
-26 {
-27 <emphasis class="keyword">private</emphasis>:
-28 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;is_rectangular,&#32;is_dual;
-29 &#32;&#32;std::vector&lt;float&gt;&#32;mesh_points;
-30 &#32;&#32;<link linkend="class_point_val">PointVal</link>**&#32;vals;
-31 
-32 <emphasis class="keyword">public</emphasis>:
-33 &#32;&#32;<link linkend="class_exact_solution">ExactSolution</link>&#32;(<emphasis class="keywordtype">bool</emphasis>&#32;in_rectangular&#32;=&#32;<emphasis class="keyword">false</emphasis>,&#32;<emphasis class="keywordtype">bool</emphasis>&#32;in_dual&#32;=&#32;<emphasis class="keyword">false</emphasis>);
-34 <emphasis class="comment"></emphasis>
-35 <emphasis class="comment">&#32;&#32;/**</emphasis>
-36 <emphasis class="comment">&#32;&#32;&#32;*&#32;This&#32;function&#32;calculates&#32;one&#32;single&#32;component&#32;of&#32;the&#32;solution&#32;vector.&#32;To&#32;calculate&#32;this,&#32;we&#32;do&#32;the&#32;following:&#32;We&#32;know&#32;the&#32;input&#32;on&#32;the&#32;boundary&#32;of&#32;the&#32;computational&#32;domain&#32;for&#32;\f$z&#32;=&#32;z_{in}\f$.&#32;So&#32;for&#32;a&#32;given&#32;position&#32;\f$&#32;p&#32;=&#32;(x,y,z)\f$&#32;we&#32;calculate&#32;\f[&#32;f_c(x,y,z)&#32;=&#32;\sum_{j=0}^N&#32;\left(&#32;a_j&#32;\,&#32;\boldsymbol{\phi_j}(x,y,z_{in})&#32;\right)&#32;\cdot&#32;\boldsymbol{e_c}&#32;\,&#32;\mathrm{e}^{i&#32;\omega&#32;(z-z_{in})}.\f]</emphasis>
-37 <emphasis class="comment">&#32;&#32;&#32;*&#32;Here,&#32;\f$\boldsymbol{\phi_j}\f$&#32;is&#32;the&#32;j-th&#32;mode&#32;of&#32;the&#32;waveguide&#32;which&#32;is&#32;induced&#32;with&#32;the&#32;intensity&#32;\f$&#32;a_j\f$.&#32;\f$\boldsymbol{e_c}\f$&#32;is&#32;the&#32;c-th&#32;unit-vector&#32;with&#32;\f$c\f$&#32;being&#32;the&#32;index&#32;of&#32;the&#32;component&#32;we&#32;want&#32;to&#32;compute.</emphasis>
-38 <emphasis class="comment">&#32;&#32;&#32;*&#32;\param&#32;p&#32;This&#32;value&#32;contains&#32;the&#32;position&#32;for&#32;which&#32;we&#32;want&#32;to&#32;calculate&#32;the&#32;exact&#32;solution.</emphasis>
-39 <emphasis class="comment">&#32;&#32;&#32;*&#32;\param&#32;component&#32;This&#32;integer&#32;holds&#32;the&#32;index&#32;of&#32;the&#32;component&#32;we&#32;want&#32;to&#32;compute.&#32;Keep&#32;in&#32;mind&#32;that&#32;these&#32;are&#32;not&#32;coordinates&#32;in&#32;the&#32;physical&#32;sense.&#32;The&#32;components&#32;0&#32;to&#32;2&#32;are&#32;the&#32;real&#32;parts&#32;of&#32;the&#32;solution-vector&#32;and&#32;the&#32;components&#32;3-5&#32;are&#32;the&#32;imaginary&#32;parts.</emphasis>
-40 <emphasis class="comment">&#32;&#32;&#32;*/</emphasis>
-41 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;value&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3&gt;&#32;&amp;p,&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;component&#32;)&#32;<emphasis class="keyword">const</emphasis>;
-42 <emphasis class="comment"></emphasis>
-43 <emphasis class="comment">&#32;&#32;/**</emphasis>
-44 <emphasis class="comment">&#32;&#32;&#32;*&#32;This&#32;function&#32;is&#32;the&#32;one&#32;that&#32;gets&#32;called&#32;from&#32;external&#32;contexts&#32;and&#32;calls&#32;the&#32;value-function&#32;to&#32;calculate&#32;the&#32;individual&#32;components.&#32;The&#32;real&#32;solution&#32;looks&#32;as&#32;follows:</emphasis>
-45 <emphasis class="comment">&#32;&#32;&#32;*&#32;\f[&#32;f(x,y,z)&#32;=&#32;\begin{pmatrix}&#32;\operatorname{value}(x,y,z,0)&#32;\\&#32;\operatorname{value}(x,y,z,1)\\\operatorname{value}(x,y,z,2)&#32;\end{pmatrix}&#32;+&#32;i&#32;\begin{pmatrix}\operatorname{value}(x,y,z,3)\\\operatorname{value}(x,y,z,4)\\\operatorname{value}(x,y,z,5)\end{pmatrix}.\f]</emphasis>
-46 <emphasis class="comment">&#32;&#32;&#32;*/</emphasis>
-47 
-48 
-49 &#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;vector_value&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3&gt;&#32;&amp;p,&#32;Vector&lt;double&gt;&#32;&amp;value)&#32;<emphasis class="keyword">const</emphasis>;
-50 &#32;&#32;std::vector&lt;std::string&gt;&#32;split(std::string)&#32;<emphasis class="keyword">const</emphasis>;
-51 &#32;&#32;Tensor&lt;1,3,std::complex&lt;double&gt;&gt;&#32;curl(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3&gt;&#32;&amp;in_p)&#32;<emphasis class="keyword">const</emphasis>;
-52 &#32;&#32;Tensor&lt;1,3,std::complex&lt;double&gt;&gt;&#32;val(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3&gt;&#32;&amp;in_p)&#32;<emphasis class="keyword">const</emphasis>;
-53 };
-54 
-55 <emphasis class="preprocessor">#endif</emphasis>
+15 <emphasis class="comment">&#32;*&#32;\brief&#32;This&#32;class&#32;is&#32;derived&#32;from&#32;the&#32;Function&#32;class&#32;and&#32;can&#32;be&#32;used&#32;to</emphasis>
+16 <emphasis class="comment">&#32;*&#32;estimate&#32;the&#32;L2-error&#32;for&#32;a&#32;straight&#32;waveguide.&#32;In&#32;the&#32;case&#32;of&#32;a&#32;completely</emphasis>
+17 <emphasis class="comment">&#32;*&#32;cylindrical&#32;waveguide,&#32;an&#32;analytic&#32;solution&#32;is&#32;known&#32;(the&#32;modes&#32;of&#32;the</emphasis>
+18 <emphasis class="comment">&#32;*&#32;input-signal&#32;themselves)&#32;and&#32;this&#32;class&#32;offers&#32;a&#32;representation&#32;of&#32;this</emphasis>
+19 <emphasis class="comment">&#32;*&#32;analytical&#32;solution.&#32;If&#32;the&#32;waveguide&#32;has&#32;any&#32;other&#32;shape,&#32;this&#32;solution&#32;does</emphasis>
+20 <emphasis class="comment">&#32;*&#32;not&#32;lose&#32;its&#32;value&#32;completely&#32;-&#32;it&#32;can&#32;still&#32;be&#32;used&#32;as&#32;a&#32;starting-vector&#32;for</emphasis>
+21 <emphasis class="comment">&#32;*&#32;iterative&#32;solvers.</emphasis>
+22 <emphasis class="comment">&#32;*</emphasis>
+23 <emphasis class="comment">&#32;*&#32;The&#32;structure&#32;of&#32;this&#32;class&#32;is&#32;defined&#32;by&#32;the&#32;properties&#32;of&#32;the</emphasis>
+24 <emphasis class="comment">&#32;*&#32;Function-class&#32;meaning&#32;that&#32;we&#32;have&#32;two&#32;functions:</emphasis>
+25 <emphasis class="comment">&#32;*&#32;&#32;-#&#32;&#32;virtual&#32;double&#32;value&#32;(const&#32;Point&lt;dim&gt;&#32;&amp;p,&#32;const&#32;unsigned&#32;int&#32;component</emphasis>
+26 <emphasis class="comment">&#32;*&#32;)&#32;calculates&#32;the&#32;value&#32;for&#32;a&#32;single&#32;component&#32;of&#32;the&#32;vector-valued</emphasis>
+27 <emphasis class="comment">&#32;*&#32;return-value.</emphasis>
+28 <emphasis class="comment">&#32;*&#32;&#32;-#&#32;&#32;virtual&#32;void&#32;vector_value&#32;(const&#32;Point&lt;dim&gt;&#32;&amp;p,&#32;Vector&lt;double&gt;&#32;&amp;value)</emphasis>
+29 <emphasis class="comment">&#32;*&#32;puts&#32;these&#32;individual&#32;components&#32;into&#32;the&#32;parameter&#32;value,&#32;which&#32;is&#32;a</emphasis>
+30 <emphasis class="comment">&#32;*&#32;reference&#32;to&#32;a&#32;vector,&#32;handed&#32;over&#32;to&#32;store&#32;the&#32;result.</emphasis>
+31 <emphasis class="comment">&#32;*</emphasis>
+32 <emphasis class="comment">&#32;*&#32;\author&#32;Pascal&#32;Kraft</emphasis>
+33 <emphasis class="comment">&#32;*&#32;\date&#32;23.11.2015</emphasis>
+34 <emphasis class="comment">&#32;*/</emphasis>
+35 
+<link linkend="class_exact_solution">36 </link><emphasis class="keyword">class&#32;</emphasis><link linkend="class_exact_solution">ExactSolution</link>&#32;:&#32;<emphasis class="keyword">public</emphasis>&#32;Function&lt;3,&#32;double&gt;&#32;{
+37 &#32;<emphasis class="keyword">private</emphasis>:
+38 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;is_rectangular,&#32;is_dual;
+39 &#32;&#32;std::vector&lt;float&gt;&#32;mesh_points;
+40 &#32;&#32;<link linkend="class_point_val">PointVal</link>&#32;**vals;
+41 
+42 &#32;<emphasis class="keyword">public</emphasis>:
+43 &#32;&#32;<link linkend="class_exact_solution">ExactSolution</link>(<emphasis class="keywordtype">bool</emphasis>&#32;in_rectangular&#32;=&#32;<emphasis class="keyword">false</emphasis>,&#32;<emphasis class="keywordtype">bool</emphasis>&#32;in_dual&#32;=&#32;<emphasis class="keyword">false</emphasis>);
+44 <emphasis class="comment"></emphasis>
+45 <emphasis class="comment">&#32;&#32;/**</emphasis>
+46 <emphasis class="comment">&#32;&#32;&#32;*&#32;This&#32;function&#32;calculates&#32;one&#32;single&#32;component&#32;of&#32;the&#32;solution&#32;vector.&#32;To</emphasis>
+47 <emphasis class="comment">&#32;&#32;&#32;*&#32;calculate&#32;this,&#32;we&#32;do&#32;the&#32;following:&#32;We&#32;know&#32;the&#32;input&#32;on&#32;the&#32;boundary&#32;of</emphasis>
+48 <emphasis class="comment">&#32;&#32;&#32;*&#32;the&#32;computational&#32;domain&#32;for&#32;\f$z&#32;=&#32;z_{in}\f$.&#32;So&#32;for&#32;a&#32;given&#32;position&#32;\f$</emphasis>
+49 <emphasis class="comment">&#32;&#32;&#32;*&#32;p&#32;=&#32;(x,y,z)\f$&#32;we&#32;calculate&#32;\f[&#32;f_c(x,y,z)&#32;=&#32;\sum_{j=0}^N&#32;\left(&#32;a_j&#32;\,</emphasis>
+50 <emphasis class="comment">&#32;&#32;&#32;*&#32;\boldsymbol{\phi_j}(x,y,z_{in})&#32;\right)&#32;\cdot&#32;\boldsymbol{e_c}&#32;\,</emphasis>
+51 <emphasis class="comment">&#32;&#32;&#32;*&#32;\mathrm{e}^{i&#32;\omega&#32;(z-z_{in})}.\f]&#32;Here,&#32;\f$\boldsymbol{\phi_j}\f$&#32;is&#32;the</emphasis>
+52 <emphasis class="comment">&#32;&#32;&#32;*&#32;j-th&#32;mode&#32;of&#32;the&#32;waveguide&#32;which&#32;is&#32;induced&#32;with&#32;the&#32;intensity&#32;\f$&#32;a_j\f$.</emphasis>
+53 <emphasis class="comment">&#32;&#32;&#32;*&#32;\f$\boldsymbol{e_c}\f$&#32;is&#32;the&#32;c-th&#32;unit-vector&#32;with&#32;\f$c\f$&#32;being&#32;the&#32;index</emphasis>
+54 <emphasis class="comment">&#32;&#32;&#32;*&#32;of&#32;the&#32;component&#32;we&#32;want&#32;to&#32;compute.&#32;\param&#32;p&#32;This&#32;value&#32;contains&#32;the</emphasis>
+55 <emphasis class="comment">&#32;&#32;&#32;*&#32;position&#32;for&#32;which&#32;we&#32;want&#32;to&#32;calculate&#32;the&#32;exact&#32;solution.&#32;\param</emphasis>
+56 <emphasis class="comment">&#32;&#32;&#32;*&#32;component&#32;This&#32;integer&#32;holds&#32;the&#32;index&#32;of&#32;the&#32;component&#32;we&#32;want&#32;to&#32;compute.</emphasis>
+57 <emphasis class="comment">&#32;&#32;&#32;*&#32;Keep&#32;in&#32;mind&#32;that&#32;these&#32;are&#32;not&#32;coordinates&#32;in&#32;the&#32;physical&#32;sense.&#32;The</emphasis>
+58 <emphasis class="comment">&#32;&#32;&#32;*&#32;components&#32;0&#32;to&#32;2&#32;are&#32;the&#32;real&#32;parts&#32;of&#32;the&#32;solution-vector&#32;and&#32;the</emphasis>
+59 <emphasis class="comment">&#32;&#32;&#32;*&#32;components&#32;3-5&#32;are&#32;the&#32;imaginary&#32;parts.</emphasis>
+60 <emphasis class="comment">&#32;&#32;&#32;*/</emphasis>
+61 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;value(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3&gt;&#32;&amp;p,&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;component)&#32;<emphasis class="keyword">const</emphasis>;
+62 <emphasis class="comment"></emphasis>
+63 <emphasis class="comment">&#32;&#32;/**</emphasis>
+64 <emphasis class="comment">&#32;&#32;&#32;*&#32;This&#32;function&#32;is&#32;the&#32;one&#32;that&#32;gets&#32;called&#32;from&#32;external&#32;contexts&#32;and&#32;calls</emphasis>
+65 <emphasis class="comment">&#32;&#32;&#32;*&#32;the&#32;value-function&#32;to&#32;calculate&#32;the&#32;individual&#32;components.&#32;The&#32;real</emphasis>
+66 <emphasis class="comment">&#32;&#32;&#32;*&#32;solution&#32;looks&#32;as&#32;follows:&#32;\f[&#32;f(x,y,z)&#32;=&#32;\begin{pmatrix}</emphasis>
+67 <emphasis class="comment">&#32;&#32;&#32;*&#32;\operatorname{value}(x,y,z,0)&#32;\\</emphasis>
+68 <emphasis class="comment">&#32;&#32;&#32;*&#32;\operatorname{value}(x,y,z,1)\\\operatorname{value}(x,y,z,2)&#32;\end{pmatrix}</emphasis>
+69 <emphasis class="comment">&#32;&#32;&#32;*&#32;+&#32;i</emphasis>
+70 <emphasis class="comment">&#32;&#32;&#32;*&#32;\begin{pmatrix}\operatorname{value}(x,y,z,3)\\\operatorname{value}(x,y,z,4)\\\operatorname{value}(x,y,z,5)\end{pmatrix}.\f]</emphasis>
+71 <emphasis class="comment">&#32;&#32;&#32;*/</emphasis>
+72 
+73 &#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;vector_value(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3&gt;&#32;&amp;p,&#32;Vector&lt;double&gt;&#32;&amp;value)&#32;<emphasis class="keyword">const</emphasis>;
+74 &#32;&#32;std::vector&lt;std::string&gt;&#32;split(std::string)&#32;<emphasis class="keyword">const</emphasis>;
+75 &#32;&#32;Tensor&lt;1,&#32;3,&#32;std::complex&lt;double&gt;&gt;&#32;curl(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3&gt;&#32;&amp;in_p)&#32;<emphasis class="keyword">const</emphasis>;
+76 &#32;&#32;Tensor&lt;1,&#32;3,&#32;std::complex&lt;double&gt;&gt;&#32;val(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3&gt;&#32;&amp;in_p)&#32;<emphasis class="keyword">const</emphasis>;
+77 };
+78 
+79 <emphasis class="preprocessor">#endif</emphasis>
     </computeroutput></literallayout>
 </section>

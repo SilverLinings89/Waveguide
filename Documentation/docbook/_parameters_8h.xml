@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_parameters_8h">
     <title>Parameters.h File Reference</title>
-    <programlisting>#include &lt;string&gt;</programlisting>
     <programlisting>#include &lt;mpi.h&gt;</programlisting>
+    <programlisting>#include &lt;string&gt;</programlisting>
     <programlisting>#include &quot;ShapeDescription.h&quot;</programlisting>
         <section>
             <title> Classes </title>
@@ -10,7 +10,8 @@
                 <itemizedlist>
                     <listitem>
                         <para>struct <link linkend="struct_parameters">Parameters</link></para>
-<para><emphasis>This structure contains all information contained in the input file and some values that can simply be computed from it.</emphasis></para>
+<para><emphasis>This structure contains all information contained in the input file
+and some values that can simply be computed from it.</emphasis></para>
                     </listitem>
                 </itemizedlist>
             </para>
@@ -113,16 +114,9 @@
                     <listitem>
                             <para><literallayout>enum <link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80e">PreconditionerOptions</link> {
 <link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea7645a9d15ef8528f989bb5c335c2e87b">Sweeping</link>,
-<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea9617f95c7d7135334791feeac4d8f3e6">Amesos_Lapack</link>,
-<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea0d5569e9a7045120d300ad622c0b5580">Amesos_Scalapack</link>,
-<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea31ea93a566b2366b000ca1df42c4fd64">Amesos_Klu</link>,
-<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea7a440cdcf7edbdde607c9fefa67c38b3">Amesos_Umfpack</link>,
-<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80eaa92e4c6f57f8945e6eedd1d5deced090">Amesos_Pardiso</link>,
-<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea7842abf3f184390078c0e0b00c602fb7">Amesos_Taucs</link>,
-<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80eaf0643ffc6382e7b4a93e760fad6a5699">Amesos_Superlu</link>,
-<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea8a063ec858fcc94f5a6c6cf1075934c5">Amesos_Superludist</link>,
-<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea59bcf72a577b03995ace6c4c46685161">Amesos_Dscpack</link>,
-<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80eadfbd12116bb18aa7ec4df3152e8bb609">Amesos_Mumps</link>
+<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea69c043c7e2ef8639b8f920a430e3e17b">FastSweeping</link>,
+<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80eabf8c45865f725a29caf163a29987d635">HSIESweeping</link>,
+<link linkend="_parameters_8h_1ae1a44370b47a887e6ace99fde20ac80ea0e1283895802ee84fd773f5d15bdafae">HSIEFastSweeping</link>
 }</literallayout>
 </para>
                     </listitem>
@@ -160,253 +154,247 @@
 2 <emphasis class="preprocessor">#ifndef&#32;ParametersFlag</emphasis>
 3 <emphasis class="preprocessor">#define&#32;ParametersFlag</emphasis>
 4 
-5 <emphasis class="preprocessor">#include&#32;&lt;string&gt;</emphasis>
-6 <emphasis class="preprocessor">#include&#32;&lt;mpi.h&gt;</emphasis>
+5 <emphasis class="preprocessor">#include&#32;&lt;mpi.h&gt;</emphasis>
+6 <emphasis class="preprocessor">#include&#32;&lt;string&gt;</emphasis>
 7 <emphasis class="preprocessor">#include&#32;&quot;ShapeDescription.h&quot;</emphasis><emphasis class="comment"></emphasis>
 8 <emphasis class="comment">/**</emphasis>
 9 <emphasis class="comment">&#32;*&#32;\class&#32;Parameters</emphasis>
-10 <emphasis class="comment">&#32;*&#32;\brief&#32;This&#32;structure&#32;contains&#32;all&#32;information&#32;contained&#32;in&#32;the&#32;input&#32;file&#32;and&#32;some&#32;values&#32;that&#32;can&#32;simply&#32;be&#32;computed&#32;from&#32;it.</emphasis>
-11 <emphasis class="comment">&#32;*</emphasis>
-12 <emphasis class="comment">&#32;*&#32;In&#32;the&#32;application,&#32;static&#32;Variable&#32;of&#32;this&#32;type&#32;makes&#32;the&#32;input&#32;parameters&#32;available&#32;globally.</emphasis>
-13 <emphasis class="comment">&#32;*&#32;\author:&#32;Pascal&#32;Kraft</emphasis>
-14 <emphasis class="comment">&#32;*&#32;\date:&#32;28.11.2016</emphasis>
+10 <emphasis class="comment">&#32;*&#32;\brief&#32;This&#32;structure&#32;contains&#32;all&#32;information&#32;contained&#32;in&#32;the&#32;input&#32;file</emphasis>
+11 <emphasis class="comment">&#32;*&#32;and&#32;some&#32;values&#32;that&#32;can&#32;simply&#32;be&#32;computed&#32;from&#32;it.</emphasis>
+12 <emphasis class="comment">&#32;*</emphasis>
+13 <emphasis class="comment">&#32;*&#32;In&#32;the&#32;application,&#32;static&#32;Variable&#32;of&#32;this&#32;type&#32;makes&#32;the&#32;input&#32;parameters</emphasis>
+14 <emphasis class="comment">&#32;*&#32;available&#32;globally.&#32;\author:&#32;Pascal&#32;Kraft&#32;\date:&#32;28.11.2016</emphasis>
 15 <emphasis class="comment">&#32;*/</emphasis>
 16 
-17 <emphasis class="keyword">enum</emphasis>&#32;ConnectorType{
-18 &#32;&#32;&#32;&#32;Circle,&#32;Rectangle
-19 };
+17 <emphasis class="keyword">enum</emphasis>&#32;ConnectorType&#32;{&#32;Circle,&#32;Rectangle&#32;};
+18 
+19 <emphasis class="keyword">enum</emphasis>&#32;BoundaryConditionType&#32;{&#32;PML,&#32;HSIE&#32;};
 20 
-21 <emphasis class="keyword">enum</emphasis>&#32;BoundaryConditionType{
-22 &#32;&#32;&#32;&#32;PML,&#32;HSIE
-23 };
-24 
-25 <emphasis class="keyword">enum</emphasis>&#32;SpecialCase{
-26 &#32;&#32;&#32;&#32;none,
-27 &#32;&#32;&#32;&#32;reference_bond_nr_0,
-28 &#32;&#32;&#32;&#32;reference_bond_nr_1,
-29 &#32;&#32;&#32;&#32;reference_bond_nr_2,
-30 &#32;&#32;&#32;&#32;reference_bond_nr_40,
-31 &#32;&#32;&#32;&#32;reference_bond_nr_41,
-32 &#32;&#32;&#32;&#32;reference_bond_nr_42,
-33 &#32;&#32;&#32;&#32;reference_bond_nr_43,
-34 &#32;&#32;&#32;&#32;reference_bond_nr_44,
-35 &#32;&#32;&#32;&#32;reference_bond_nr_45,
-36 &#32;&#32;&#32;&#32;reference_bond_nr_46,
-37 &#32;&#32;&#32;&#32;reference_bond_nr_47,
-38 &#32;&#32;&#32;&#32;reference_bond_nr_48,
-39 &#32;&#32;&#32;&#32;reference_bond_nr_49,
-40 &#32;&#32;&#32;&#32;reference_bond_nr_50,
-41 &#32;&#32;&#32;&#32;reference_bond_nr_51,
-42 &#32;&#32;&#32;&#32;reference_bond_nr_52,
-43 &#32;&#32;&#32;&#32;reference_bond_nr_53,
-44 &#32;&#32;&#32;&#32;reference_bond_nr_54,
-45 &#32;&#32;&#32;&#32;reference_bond_nr_55,
-46 &#32;&#32;&#32;&#32;reference_bond_nr_56,
-47 &#32;&#32;&#32;&#32;reference_bond_nr_57,
-48 &#32;&#32;&#32;&#32;reference_bond_nr_58,
-49 &#32;&#32;&#32;&#32;reference_bond_nr_59,
-50 &#32;&#32;&#32;&#32;reference_bond_nr_60,
-51 &#32;&#32;&#32;&#32;reference_bond_nr_61,
-52 &#32;&#32;&#32;&#32;reference_bond_nr_62,
-53 &#32;&#32;&#32;&#32;reference_bond_nr_63,
-54 &#32;&#32;&#32;&#32;reference_bond_nr_64,
-55 &#32;&#32;&#32;&#32;reference_bond_nr_65,
-56 &#32;&#32;&#32;&#32;reference_bond_nr_66,
-57 &#32;&#32;&#32;&#32;reference_bond_nr_67,
-58 &#32;&#32;&#32;&#32;reference_bond_nr_68,
-59 &#32;&#32;&#32;&#32;reference_bond_nr_69,
-60 &#32;&#32;&#32;&#32;reference_bond_nr_70,
-61 &#32;&#32;&#32;&#32;reference_bond_nr_71,
-62 &#32;&#32;&#32;&#32;reference_bond_nr_72
-63 };
+21 <emphasis class="keyword">enum</emphasis>&#32;SpecialCase&#32;{
+22 &#32;&#32;none,
+23 &#32;&#32;reference_bond_nr_0,
+24 &#32;&#32;reference_bond_nr_1,
+25 &#32;&#32;reference_bond_nr_2,
+26 &#32;&#32;reference_bond_nr_40,
+27 &#32;&#32;reference_bond_nr_41,
+28 &#32;&#32;reference_bond_nr_42,
+29 &#32;&#32;reference_bond_nr_43,
+30 &#32;&#32;reference_bond_nr_44,
+31 &#32;&#32;reference_bond_nr_45,
+32 &#32;&#32;reference_bond_nr_46,
+33 &#32;&#32;reference_bond_nr_47,
+34 &#32;&#32;reference_bond_nr_48,
+35 &#32;&#32;reference_bond_nr_49,
+36 &#32;&#32;reference_bond_nr_50,
+37 &#32;&#32;reference_bond_nr_51,
+38 &#32;&#32;reference_bond_nr_52,
+39 &#32;&#32;reference_bond_nr_53,
+40 &#32;&#32;reference_bond_nr_54,
+41 &#32;&#32;reference_bond_nr_55,
+42 &#32;&#32;reference_bond_nr_56,
+43 &#32;&#32;reference_bond_nr_57,
+44 &#32;&#32;reference_bond_nr_58,
+45 &#32;&#32;reference_bond_nr_59,
+46 &#32;&#32;reference_bond_nr_60,
+47 &#32;&#32;reference_bond_nr_61,
+48 &#32;&#32;reference_bond_nr_62,
+49 &#32;&#32;reference_bond_nr_63,
+50 &#32;&#32;reference_bond_nr_64,
+51 &#32;&#32;reference_bond_nr_65,
+52 &#32;&#32;reference_bond_nr_66,
+53 &#32;&#32;reference_bond_nr_67,
+54 &#32;&#32;reference_bond_nr_68,
+55 &#32;&#32;reference_bond_nr_69,
+56 &#32;&#32;reference_bond_nr_70,
+57 &#32;&#32;reference_bond_nr_71,
+58 &#32;&#32;reference_bond_nr_72
+59 };
+60 
+61 <emphasis class="keyword">enum</emphasis>&#32;OptimizationSchema&#32;{&#32;FD,&#32;Adjoint&#32;};
+62 
+63 <emphasis class="keyword">enum</emphasis>&#32;SolverOptions&#32;{&#32;GMRES,&#32;MINRES,&#32;UMFPACK&#32;};
 64 
-65 <emphasis class="keyword">enum</emphasis>&#32;OptimizationSchema{
-66 &#32;&#32;&#32;&#32;FD,&#32;Adjoint
-67 };
-68 
-69 <emphasis class="keyword">enum</emphasis>&#32;SolverOptions&#32;{
-70 &#32;&#32;&#32;&#32;GMRES,&#32;MINRES,&#32;UMFPACK
-71 };
-72 
-73 <emphasis class="keyword">const</emphasis>&#32;<emphasis class="keyword">static</emphasis>&#32;std::string&#32;PrecOptionNames[]&#32;=&#32;{<emphasis class="stringliteral">&quot;Sweeping&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Lapack&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Scalapack&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Klu&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Umfpack&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Pardiso&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Taucs&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Superlu&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Superludist&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Dscpack&quot;</emphasis>,<emphasis class="stringliteral">&quot;Amesos_Mumps&quot;</emphasis>};
+65 <emphasis class="keyword">const</emphasis>&#32;<emphasis class="keyword">static</emphasis>&#32;std::string&#32;PrecOptionNames[]&#32;=&#32;{
+66 &#32;&#32;&#32;&#32;<emphasis class="stringliteral">&quot;Sweeping&quot;</emphasis>,&#32;<emphasis class="stringliteral">&quot;FastSweeping&quot;</emphasis>,&#32;<emphasis class="stringliteral">&quot;HSIESweeping&quot;</emphasis>,&#32;<emphasis class="stringliteral">&quot;HSIEFastSweeping&quot;</emphasis>};
+67 
+68 <emphasis class="keyword">enum</emphasis>&#32;PreconditionerOptions&#32;{
+69 &#32;&#32;Sweeping,
+70 &#32;&#32;FastSweeping,
+71 &#32;&#32;HSIESweeping,
+72 &#32;&#32;HSIEFastSweeping
+73 };
 74 
-75 <emphasis class="keyword">enum</emphasis>&#32;PreconditionerOptions&#32;{
-76 &#32;&#32;Sweeping,Amesos_Lapack,Amesos_Scalapack,Amesos_Klu,Amesos_Umfpack,Amesos_Pardiso,Amesos_Taucs,Amesos_Superlu,Amesos_Superludist,Amesos_Dscpack,Amesos_Mumps
-77 };
-78 
-79 <emphasis class="keyword">enum</emphasis>&#32;SteppingMethod&#32;{
-80 &#32;&#32;&#32;&#32;Steepest,&#32;CG,&#32;LineSearch
-81 };
-82 
-<link linkend="struct_parameters">83 </link><emphasis class="keyword">struct&#32;</emphasis><link linkend="struct_parameters">Parameters</link>&#32;{
-84 &#32;&#32;&#32;&#32;
-85 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_G_HistoryLive;
-86 &#32;&#32;&#32;&#32;
-87 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_G_HistoryShapes;
-88 &#32;&#32;&#32;&#32;
-89 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_G_History;
-90 &#32;&#32;&#32;&#32;
-91 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_T_TransformationWeightsAll;
-92 &#32;&#32;&#32;&#32;
-93 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_T_TransformationWeightsFirst;
-94 &#32;&#32;&#32;&#32;
-95 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_T_TransformationWeightsLast;
-96 &#32;&#32;&#32;&#32;
-97 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_S_SolutionAll;
-98 &#32;&#32;&#32;&#32;
-99 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_S_SolutionFirst;
-100 &#32;&#32;&#32;&#32;
-101 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_S_SolutionLast;
-102 &#32;&#32;&#32;&#32;
-103 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_D_ConvergenceAll&#32;;
-104 &#32;&#32;&#32;&#32;
-105 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_D_ConvergenceFirst&#32;;
-106 &#32;&#32;&#32;&#32;
-107 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_D_ConvergenceLast&#32;;
-108 &#32;&#32;&#32;&#32;
-109 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_P_ConvergenceAll&#32;;
-110 &#32;&#32;&#32;&#32;
-111 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_P_ConvergenceFirst&#32;;
-112 &#32;&#32;&#32;&#32;
-113 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_P_ConvergenceLast&#32;;
-114 &#32;&#32;&#32;&#32;
-115 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_G_Summary;
-116 &#32;&#32;&#32;&#32;
-117 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_G_Log;
-118 &#32;&#32;&#32;&#32;
-119 &#32;&#32;&#32;&#32;ConnectorType&#32;M_C_Shape;
-120 &#32;&#32;&#32;&#32;
-121 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_C_Dim1In;
-122 &#32;&#32;&#32;&#32;
-123 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_C_Dim2In;
-124 &#32;&#32;&#32;&#32;
-125 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_C_Dim1Out;
-126 &#32;&#32;&#32;&#32;
-127 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_C_Dim2Out;
-128 &#32;&#32;&#32;&#32;
-129 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_R_XLength;
-130 &#32;&#32;&#32;&#32;
-131 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_R_YLength;
-132 &#32;&#32;&#32;&#32;
-133 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_R_ZLength;
-134 &#32;&#32;&#32;&#32;
-135 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_W_Delta;
-136 &#32;&#32;&#32;&#32;
-137 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_W_epsilonin;
-138 &#32;&#32;&#32;&#32;
-139 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_W_epsilonout;
-140 &#32;&#32;&#32;&#32;
-141 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;M_W_Sectors;
-142 &#32;&#32;&#32;&#32;
-143 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_W_Lambda;
-144 &#32;&#32;&#32;&#32;
-145 &#32;&#32;&#32;&#32;BoundaryConditionType&#32;M_BC_Type;
-146 &#32;&#32;&#32;&#32;
-147 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_Zminus;
-148 &#32;&#32;&#32;&#32;
-149 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_Zplus;
-150 &#32;&#32;&#32;&#32;
-151 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_XMinus;
-152 &#32;&#32;&#32;&#32;
-153 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_XPlus;
-154 &#32;&#32;&#32;&#32;
-155 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_YMinus;
-156 &#32;&#32;&#32;&#32;
-157 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_YPlus;
-158 &#32;&#32;&#32;&#32;
-159 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_KappaXMax;
-160 &#32;&#32;&#32;&#32;
-161 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_KappaZMax;
-162 &#32;&#32;&#32;&#32;
-163 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_KappaYMax;
-164 &#32;&#32;&#32;&#32;
-165 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_SigmaXMax;
-166 &#32;&#32;&#32;&#32;
-167 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_SigmaZMax;
-168 &#32;&#32;&#32;&#32;
-169 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_SigmaYMax;
-170 &#32;&#32;&#32;&#32;
-171 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_DampeningExponent;
-172 &#32;&#32;&#32;&#32;
-173 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;Sc_Homogeneity;
-174 &#32;&#32;&#32;&#32;
-175 &#32;&#32;&#32;&#32;OptimizationSchema&#32;Sc_Schema;
-176 &#32;&#32;&#32;&#32;
-177 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;Sc_OptimizationSteps;
-178 &#32;&#32;&#32;&#32;
-179 &#32;&#32;&#32;&#32;SteppingMethod&#32;Sc_SteppingMethod;
-180 
-181 &#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;StepWidth&#32;Sc_StepWidth;</emphasis>
-182 
-183 &#32;&#32;&#32;&#32;SolverOptions&#32;So_Solver;
-184 &#32;&#32;&#32;&#32;
-185 &#32;&#32;&#32;&#32;PreconditionerOptions&#32;So_Preconditioner;
-186 
-187 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;So_ElementOrder;
-188 
-189 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;So_RestartSteps;
-190 &#32;&#32;&#32;&#32;
-191 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;So_TotalSteps;
-192 &#32;&#32;&#32;&#32;
-193 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;So_Precision;
-194 &#32;&#32;&#32;&#32;
-195 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;C_AllOne;
-196 &#32;&#32;&#32;&#32;
-197 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_Mu;
-198 &#32;&#32;&#32;&#32;
-199 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_Epsilon;
-200 &#32;&#32;&#32;&#32;
-201 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_Pi;
-202 &#32;&#32;&#32;&#32;
-203 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_c;
-204 
-205 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_f0;
-206 
-207 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_k0;
-208 
-209 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_omega;
-210 
-211 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;R_Global;
-212 &#32;&#32;&#32;&#32;
-213 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;R_Local;
-214 &#32;&#32;&#32;&#32;
-215 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;R_Interior;
-216 &#32;&#32;&#32;&#32;
-217 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;LayerThickness;
-218 &#32;&#32;&#32;&#32;
-219 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;SectorThickness;
-220 
-221 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;&#32;&#32;&#32;MPI_Rank;
-222 
-223 &#32;&#32;&#32;&#32;MPI_Comm&#32;&#32;&#32;&#32;MPIC_World;
-224 
-225 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;PMLLayer;
-226 
-227 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;LayersPerSector;
-228 
-229 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;NumberProcesses;
-230 
-231 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;Head&#32;=&#32;<emphasis class="keyword">false</emphasis>;
-232 
-233 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;SystemLength;
-234 
-235 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;Maximum_Z;
-236 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;Minimum_Z;
-237 &#32;&#32;&#32;&#32;<emphasis class="comment">//&#32;unsigned&#32;int&#32;MPI_Size;</emphasis>
+75 <emphasis class="keyword">enum</emphasis>&#32;SteppingMethod&#32;{&#32;Steepest,&#32;CG,&#32;LineSearch&#32;};
+76 
+<link linkend="struct_parameters">77 </link><emphasis class="keyword">struct&#32;</emphasis><link linkend="struct_parameters">Parameters</link>&#32;{
+78 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_G_HistoryLive;
+79 
+80 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_G_HistoryShapes;
+81 
+82 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_G_History;
+83 
+84 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_T_TransformationWeightsAll;
+85 
+86 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_T_TransformationWeightsFirst;
+87 
+88 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_T_TransformationWeightsLast;
+89 
+90 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_S_SolutionAll;
+91 
+92 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_S_SolutionFirst;
+93 
+94 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_O_V_S_SolutionLast;
+95 
+96 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_D_ConvergenceAll;
+97 
+98 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_D_ConvergenceFirst;
+99 
+100 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_D_ConvergenceLast;
+101 
+102 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_P_ConvergenceAll;
+103 
+104 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_P_ConvergenceFirst;
+105 
+106 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_C_P_ConvergenceLast;
+107 
+108 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_G_Summary;
+109 
+110 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;O_G_Log;
+111 
+112 &#32;&#32;ConnectorType&#32;M_C_Shape;
+113 
+114 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_C_Dim1In;
+115 
+116 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_C_Dim2In;
+117 
+118 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_C_Dim1Out;
+119 
+120 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_C_Dim2Out;
+121 
+122 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_R_XLength;
+123 
+124 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_R_YLength;
+125 
+126 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_R_ZLength;
+127 
+128 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_W_Delta;
+129 
+130 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_W_epsilonin;
+131 
+132 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_W_epsilonout;
+133 
+134 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;M_W_Sectors;
+135 
+136 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_W_Lambda;
+137 
+138 &#32;&#32;BoundaryConditionType&#32;M_BC_Type;
+139 
+140 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_Zminus;
+141 
+142 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_Zplus;
+143 
+144 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_XMinus;
+145 
+146 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_XPlus;
+147 
+148 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_YMinus;
+149 
+150 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_YPlus;
+151 
+152 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_KappaXMax;
+153 
+154 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_KappaZMax;
+155 
+156 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_KappaYMax;
+157 
+158 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_SigmaXMax;
+159 
+160 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_SigmaZMax;
+161 
+162 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_SigmaYMax;
+163 
+164 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;M_BC_DampeningExponent;
+165 
+166 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;Sc_Homogeneity;
+167 
+168 &#32;&#32;OptimizationSchema&#32;Sc_Schema;
+169 
+170 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;Sc_OptimizationSteps;
+171 
+172 &#32;&#32;SteppingMethod&#32;Sc_SteppingMethod;
+173 
+174 &#32;&#32;<emphasis class="comment">//&#32;StepWidth&#32;Sc_StepWidth;</emphasis>
+175 
+176 &#32;&#32;SolverOptions&#32;So_Solver;
+177 
+178 &#32;&#32;PreconditionerOptions&#32;So_Preconditioner;
+179 
+180 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;So_PreconditionerDampening;
+181 
+182 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;So_ElementOrder;
+183 
+184 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;So_RestartSteps;
+185 
+186 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;So_TotalSteps;
+187 
+188 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;So_Precision;
+189 
+190 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;C_AllOne;
+191 
+192 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_Mu;
+193 
+194 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_Epsilon;
+195 
+196 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_Pi;
+197 
+198 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_c;
+199 
+200 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_f0;
+201 
+202 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_k0;
+203 
+204 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;C_omega;
+205 
+206 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;R_Global;
+207 
+208 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;R_Local;
+209 
+210 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;R_Interior;
+211 
+212 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;LayerThickness;
+213 
+214 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;SectorThickness;
+215 
+216 &#32;&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;MPI_Rank;
+217 
+218 &#32;&#32;MPI_Comm&#32;MPIC_World;
+219 
+220 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;PMLLayer;
+221 
+222 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;LayersPerSector;
+223 
+224 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;NumberProcesses;
+225 
+226 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;Head&#32;=&#32;<emphasis class="keyword">false</emphasis>;
+227 
+228 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;SystemLength;
+229 
+230 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;Maximum_Z;
+231 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;Minimum_Z;
+232 &#32;&#32;<emphasis class="comment">//&#32;unsigned&#32;int&#32;MPI_Size;</emphasis>
+233 
+234 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;Phys_V;
+235 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;Phys_SpotRadius;
+236 
+237 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;StepWidth;
 238 
-239 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;Phys_V;
-240 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;Phys_SpotRadius;
-241 
-242 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;StepWidth;
-243 
-244 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;M_PC_Use;
+239 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;M_PC_Use;
+240 
+241 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;M_PC_Case;
+242 
+243 &#32;&#32;<link linkend="class_shape_description">ShapeDescription</link>&#32;sd;
+244 };
 245 
-246 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;M_PC_Case;
-247 
-248 &#32;&#32;&#32;&#32;<link linkend="class_shape_description">ShapeDescription</link>&#32;sd;
-249 
-250 };
-251 
-252 <emphasis class="preprocessor">#endif</emphasis>
+246 <emphasis class="preprocessor">#endif</emphasis>
     </computeroutput></literallayout>
 </section>

@@ -51,28 +51,32 @@
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>std::vector&lt; Sector&lt; 2 &gt; &gt; case_sectors<para><emphasis>This member contains all the Sectors who, as a sum, form the complete Waveguide.</emphasis></para></para>
+                        <para>std::vector&lt; Sector&lt; 2 &gt; &gt; case_sectors<para><emphasis>This member contains all the Sectors who, as a sum, form the complete
+Waveguide.</emphasis></para></para>
                     </listitem>
                 </itemizedlist>
             </para>
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>const double epsilon_K<para><emphasis>The material-property \form#38 has a different value inside and outside of the waveguides core.</emphasis></para></para>
+                        <para>const double epsilon_K<para><emphasis>The material-property \form#41 has a different value inside and
+outside of the waveguides core.</emphasis></para></para>
                     </listitem>
                 </itemizedlist>
             </para>
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>const double epsilon_M<para><emphasis>The material-property \form#38 has a different value inside and outside of the waveguides core.</emphasis></para></para>
+                        <para>const double epsilon_M<para><emphasis>The material-property \form#41 has a different value inside and
+outside of the waveguides core.</emphasis></para></para>
                     </listitem>
                 </itemizedlist>
             </para>
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>const int sectors<para><emphasis>Since the computational domain is split into subdomains (called sectors), it is important to keep track of the amount of subdomains.</emphasis></para></para>
+                        <para>const int sectors<para><emphasis>Since the computational domain is split into subdomains (called sectors),
+it is important to keep track of the amount of subdomains.</emphasis></para></para>
                     </listitem>
                 </itemizedlist>
             </para>
@@ -185,7 +189,9 @@ Point&lt; 3 &gt; &amp; coordinate)</para>
                 <itemizedlist>
                     <listitem>
                         <para>bool <link linkend="class_homogenous_transformation_rectangular_1a334838f6301d536104444359dd7e8fe6">PML_in_X</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+x-axis.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -194,7 +200,9 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determi
                 <itemizedlist>
                     <listitem>
                         <para>bool <link linkend="class_homogenous_transformation_rectangular_1a8dbc61c674d9f04f6569ba5106d3a8cc">PML_in_Y</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the y-axis.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+y-axis.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -203,7 +211,9 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determi
                 <itemizedlist>
                     <listitem>
                         <para>bool <link linkend="class_homogenous_transformation_rectangular_1a1d1b67c2ab4c738f83293f9fddda8119">PML_in_Z</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the z-axis.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+z-axis.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -212,7 +222,8 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determi
                 <itemizedlist>
                     <listitem>
                         <para>bool <link linkend="class_homogenous_transformation_rectangular_1a4d44b84bc02139e3f22f871c8688c3c9">Preconditioner_PML_in_Z</link> (
-Point&lt; 3 &gt; &amp; p, unsigned int block)<para><emphasis>Similar to the PML_in_Z only this function is used to generate the artificial PML used in the Preconditioner.</emphasis></para>
+Point&lt; 3 &gt; &amp; p, unsigned int block)<para><emphasis>Similar to the PML_in_Z only this function is used to generate the
+artificial PML used in the Preconditioner.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -221,7 +232,9 @@ Point&lt; 3 &gt; &amp; p, unsigned int block)<para><emphasis>Similar to the PML_
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_homogenous_transformation_rectangular_1ab5cc5b32d443c2d8ceead062480bab00">Preconditioner_PML_Z_Distance</link> (
-Point&lt; 3 &gt; &amp; p, unsigned int block)<para><emphasis>This function fulfills the same purpose as those with similar names but it is supposed to be used together with Preconditioner_PML_in_Z instead of the versions without &quot;Preconditioner&quot;.</emphasis></para>
+Point&lt; 3 &gt; &amp; p, unsigned int block)<para><emphasis>This function fulfills the same purpose as those with similar names but it
+is supposed to be used together with Preconditioner_PML_in_Z instead of the
+versions without &quot;Preconditioner&quot;.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -230,7 +243,8 @@ Point&lt; 3 &gt; &amp; p, unsigned int block)<para><emphasis>This function fulfi
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_homogenous_transformation_rectangular_1ae9b78461ebb9e788aacb47522076d3b5">PML_X_Distance</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -239,7 +253,8 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a g
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_homogenous_transformation_rectangular_1a125305f07aeb0d86e34eb2e06377be68">PML_Y_Distance</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -248,7 +263,8 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a g
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_homogenous_transformation_rectangular_1a608043303e86a44dfae8f36baf963d86">PML_Z_Distance</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -257,7 +273,8 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a g
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_homogenous_transformation_rectangular_1a3535990a0409755ae25b820bfb2adbc8">estimate_and_initialize</link> (
-)<para><emphasis>At the beginning (before the first solution of a system) only the boundary conditions for the shape of the waveguide are known.</emphasis></para>
+)<para><emphasis>At the beginning (before the first solution of a system) only the boundary
+conditions for the shape of the waveguide are known.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -266,7 +283,7 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a g
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_homogenous_transformation_rectangular_1ab4e01389b3c5a7ae6b7f72ec1005bdb0">get_Q1</link> (
-double z)<para><emphasis>This member calculates the value of Q1 for a provided \form#39-coordinate.</emphasis></para>
+double z)<para><emphasis>This member calculates the value of Q1 for a provided \form#42-coordinate.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -275,7 +292,7 @@ double z)<para><emphasis>This member calculates the value of Q1 for a provided \
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_homogenous_transformation_rectangular_1adf188a4be678bd1336fd3ba5a4f41812">get_Q2</link> (
-double z)<para><emphasis>This member calculates the value of Q2 for a provided \form#39-coordinate.</emphasis></para>
+double z)<para><emphasis>This member calculates the value of Q2 for a provided \form#42-coordinate.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -284,7 +301,7 @@ double z)<para><emphasis>This member calculates the value of Q2 for a provided \
                 <itemizedlist>
                     <listitem>
                         <para>double <link linkend="class_homogenous_transformation_rectangular_1a1fd6e2f15de3260d1094d889d8a75ecf">get_Q3</link> (
-double z)<para><emphasis>This member calculates the value of Q3 for a provided \form#39-coordinate.</emphasis></para>
+double z)<para><emphasis>This member calculates the value of Q3 for a provided \form#42-coordinate.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -391,7 +408,8 @@ double )</para>
                 <itemizedlist>
                     <listitem>
                         <para>Vector&lt; double &gt; <link linkend="class_homogenous_transformation_rectangular_1ab1469e6950d4831b3bd0f808be6adc4f">Dofs</link> (
-)<para><emphasis>Other objects can use this function to retrieve an array of the current values of the degrees of freedom of the functional we are optimizing.</emphasis></para>
+)<para><emphasis>Other objects can use this function to retrieve an array of the current
+values of the degrees of freedom of the functional we are optimizing.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -400,7 +418,8 @@ double )</para>
                 <itemizedlist>
                     <listitem>
                         <para>unsigned int <link linkend="class_homogenous_transformation_rectangular_1ac93f901b6918a7656b484537c72c5355">NFreeDofs</link> (
-)<para><emphasis>This function returns the number of unrestrained degrees of freedom of the current optimization run.</emphasis></para>
+)<para><emphasis>This function returns the number of unrestrained degrees of freedom of the
+current optimization run.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -418,7 +437,9 @@ double )</para>
                 <itemizedlist>
                     <listitem>
                         <para>bool <link linkend="class_homogenous_transformation_rectangular_1ac708707e024d6da1abb803ffeb86a2c3">IsDofFree</link> (
-int )<para><emphasis>Since Dofs() also returns restrained degrees of freedom, this function can be applied to determine if a degree of freedom is indeed free or restrained.</emphasis></para>
+int )<para><emphasis>Since Dofs() also returns restrained degrees of freedom, this function can
+be applied to determine if a degree of freedom is indeed free or
+restrained.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -436,7 +457,9 @@ int )<para><emphasis>Since Dofs() also returns restrained degrees of freedom, th
                 <itemizedlist>
                     <listitem>
                         <para>std::complex&lt; double &gt; <link linkend="class_homogenous_transformation_rectangular_1a80c1ce86635edce1227ab26fa2ae0008">evaluate_for_z</link> (
-double , <link linkend="class_waveguide">Waveguide</link> * )<para><emphasis>Since the Wavegudie itself may be circular or rectangular now, the evaluation routines should be moved to a point in the code where this information is included in the code.</emphasis></para>
+double , <link linkend="class_waveguide">Waveguide</link> * )<para><emphasis>Since the Wavegudie itself may be circular or rectangular now, the
+evaluation routines should be moved to a point in the code where this
+information is included in the code.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -466,7 +489,7 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
 <para>28.11.2016 </para>
 </formalpara>
 </para>
-                <para>Definition at line 24 of file HomogenousTransformationRectangular.h</para>
+                <para>Definition at line 28 of file HomogenousTransformationRectangular.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>HomogenousTransformationRectangular.h</para></listitem></itemizedlist></para>
         </simplesect>
@@ -476,7 +499,7 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
                 <title>std::vector&lt;Sector&lt;2&gt; &gt; HomogenousTransformationRectangular::case_sectors</title>                
 <para>These Sectors are a partition of the simulated domain. </para>
 
-                <para>Definition at line 101 of file HomogenousTransformationRectangular.h</para>
+                <para>Definition at line 141 of file HomogenousTransformationRectangular.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>HomogenousTransformationRectangular.h</para></listitem></itemizedlist></para>
             </simplesect>
@@ -484,7 +507,7 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
                 <title>const double HomogenousTransformationRectangular::epsilon_K</title>                
 <para>This variable stores its value inside the core. </para>
 
-                <para>Definition at line 106 of file HomogenousTransformationRectangular.h</para>
+                <para>Definition at line 148 of file HomogenousTransformationRectangular.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>HomogenousTransformationRectangular.h</para></listitem></itemizedlist></para>
             </simplesect>
@@ -492,7 +515,7 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
                 <title>const double HomogenousTransformationRectangular::epsilon_M</title>                
 <para>This variable stores its value outside the core. </para>
 
-                <para>Definition at line 110 of file HomogenousTransformationRectangular.h</para>
+                <para>Definition at line 154 of file HomogenousTransformationRectangular.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>HomogenousTransformationRectangular.h</para></listitem></itemizedlist></para>
             </simplesect>
@@ -500,7 +523,7 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
                 <title>const int HomogenousTransformationRectangular::sectors</title>                
 <para>This member stores the number of Sectors the computational domain has been split into. </para>
 
-                <para>Definition at line 114 of file HomogenousTransformationRectangular.h</para>
+                <para>Definition at line 160 of file HomogenousTransformationRectangular.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>HomogenousTransformationRectangular.h</para></listitem></itemizedlist></para>
             </simplesect>
@@ -550,7 +573,9 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
                 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1a334838f6301d536104444359dd7e8fe6">
-                <title>bool HomogenousTransformationRectangular::PML_in_X (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis.</emphasis>
+                <title>bool HomogenousTransformationRectangular::PML_in_X (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+x-axis.</emphasis>
                 
 <para>Since there are 3 blocks of PML-type material, there are 3 functions. 
                 <formalpara>
@@ -575,7 +600,9 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1a8dbc61c674d9f04f6569ba5106d3a8cc">
-                <title>bool HomogenousTransformationRectangular::PML_in_Y (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the y-axis.</emphasis>
+                <title>bool HomogenousTransformationRectangular::PML_in_Y (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+y-axis.</emphasis>
                 
 <para>Since there are 3 blocks of PML-type material, there are 3 functions. 
                 <formalpara>
@@ -600,7 +627,9 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1a1d1b67c2ab4c738f83293f9fddda8119">
-                <title>bool HomogenousTransformationRectangular::PML_in_Z (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the z-axis.</emphasis>
+                <title>bool HomogenousTransformationRectangular::PML_in_Z (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+z-axis.</emphasis>
                 
 <para>Since there are 3 blocks of PML-type material, there are 3 functions. 
                 <formalpara>
@@ -625,17 +654,21 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1a4d44b84bc02139e3f22f871c8688c3c9">
-                <title>bool HomogenousTransformationRectangular::Preconditioner_PML_in_Z (Point&lt; 3 &gt; &amp;p, unsigned int block) const</title> <emphasis>Similar to the PML_in_Z only this function is used to generate the artificial PML used in the Preconditioner.</emphasis>
+                <title>bool HomogenousTransformationRectangular::Preconditioner_PML_in_Z (Point&lt; 3 &gt; &amp;p, unsigned int block) const</title> <emphasis>Similar to the PML_in_Z only this function is used to generate the
+artificial PML used in the Preconditioner.</emphasis>
                 
 <para>These Layers are not only situated at the surface of the computational domain but also inside it at the interfaces of Sectors. </para>
 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1ab5cc5b32d443c2d8ceead062480bab00">
-                <title>double HomogenousTransformationRectangular::Preconditioner_PML_Z_Distance (Point&lt; 3 &gt; &amp;p, unsigned int block) const</title> <emphasis>This function fulfills the same purpose as those with similar names but it is supposed to be used together with Preconditioner_PML_in_Z instead of the versions without &quot;Preconditioner&quot;.</emphasis>
+                <title>double HomogenousTransformationRectangular::Preconditioner_PML_Z_Distance (Point&lt; 3 &gt; &amp;p, unsigned int block) const</title> <emphasis>This function fulfills the same purpose as those with similar names but it
+is supposed to be used together with Preconditioner_PML_in_Z instead of the
+versions without &quot;Preconditioner&quot;.</emphasis>
                 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1ae9b78461ebb9e788aacb47522076d3b5">
-                <title>double HomogenousTransformationRectangular::PML_X_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis>
+                <title>double HomogenousTransformationRectangular::PML_X_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis>
                 
 <para>This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction). 
                 <formalpara>
@@ -660,7 +693,8 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1a125305f07aeb0d86e34eb2e06377be68">
-                <title>double HomogenousTransformationRectangular::PML_Y_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis>
+                <title>double HomogenousTransformationRectangular::PML_Y_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis>
                 
 <para>This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction). 
                 <formalpara>
@@ -685,7 +719,8 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1a608043303e86a44dfae8f36baf963d86">
-                <title>double HomogenousTransformationRectangular::PML_Z_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis>
+                <title>double HomogenousTransformationRectangular::PML_Z_Distance (Point&lt; 3 &gt; &amp;position) const</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis>
                 
 <para>This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction). 
                 <formalpara>
@@ -710,13 +745,14 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1a3535990a0409755ae25b820bfb2adbc8">
-                <title>void HomogenousTransformationRectangular::estimate_and_initialize ()</title> <emphasis>At the beginning (before the first solution of a system) only the boundary conditions for the shape of the waveguide are known.</emphasis>
+                <title>void HomogenousTransformationRectangular::estimate_and_initialize ()</title> <emphasis>At the beginning (before the first solution of a system) only the boundary
+conditions for the shape of the waveguide are known.</emphasis>
                 
 <para>Therefore the values for the degrees of freedom need to be estimated. This function sets all variables to appropiate values and estimates an appropriate shape based on averages and a polynomial interpolation of the boundary conditions on the shape. </para>
 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1ab4e01389b3c5a7ae6b7f72ec1005bdb0">
-                <title>double HomogenousTransformationRectangular::get_Q1 (double z) const</title> <emphasis>This member calculates the value of Q1 for a provided \form#39-coordinate.</emphasis>
+                <title>double HomogenousTransformationRectangular::get_Q1 (double z) const</title> <emphasis>This member calculates the value of Q1 for a provided \form#42-coordinate.</emphasis>
                 
 <para>This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field). 
                 <formalpara>
@@ -730,7 +766,7 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
                             <row>
                                 <entry>z</entry>
                                 <entry>
-<para>The value of Q1 is independent of <equation><title>form_40</title>$x$</equation> and <equation><title>form_41</title>$y$</equation>. Therefore only a <equation><title>form_39</title>$z$</equation>-coordinate is provided in a call to the function. </para>
+<para>The value of Q1 is independent of <equation><title>form_43</title>$x$</equation> and <equation><title>form_44</title>$y$</equation>. Therefore only a <equation><title>form_42</title>$z$</equation>-coordinate is provided in a call to the function. </para>
 </entry>
                             </row>
                         </tbody>
@@ -741,7 +777,7 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1adf188a4be678bd1336fd3ba5a4f41812">
-                <title>double HomogenousTransformationRectangular::get_Q2 (double z) const</title> <emphasis>This member calculates the value of Q2 for a provided \form#39-coordinate.</emphasis>
+                <title>double HomogenousTransformationRectangular::get_Q2 (double z) const</title> <emphasis>This member calculates the value of Q2 for a provided \form#42-coordinate.</emphasis>
                 
 <para>This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field). 
                 <formalpara>
@@ -755,7 +791,7 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
                             <row>
                                 <entry>z</entry>
                                 <entry>
-<para>The value of Q2 is independent of <equation><title>form_40</title>$x$</equation> and <equation><title>form_41</title>$y$</equation>. Therefore only a <equation><title>form_39</title>$z$</equation>-coordinate is provided in a call to the function. </para>
+<para>The value of Q2 is independent of <equation><title>form_43</title>$x$</equation> and <equation><title>form_44</title>$y$</equation>. Therefore only a <equation><title>form_42</title>$z$</equation>-coordinate is provided in a call to the function. </para>
 </entry>
                             </row>
                         </tbody>
@@ -766,7 +802,7 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1a1fd6e2f15de3260d1094d889d8a75ecf">
-                <title>double HomogenousTransformationRectangular::get_Q3 (double z) const</title> <emphasis>This member calculates the value of Q3 for a provided \form#39-coordinate.</emphasis>
+                <title>double HomogenousTransformationRectangular::get_Q3 (double z) const</title> <emphasis>This member calculates the value of Q3 for a provided \form#42-coordinate.</emphasis>
                 
 <para>This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field). 
                 <formalpara>
@@ -780,7 +816,7 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
                             <row>
                                 <entry>z</entry>
                                 <entry>
-<para>The value of Q3 is independent of <equation><title>form_40</title>$x$</equation> and <equation><title>form_41</title>$y$</equation>. Therefore only a <equation><title>form_39</title>$z$</equation>-coordinate is provided in a call to the function. </para>
+<para>The value of Q3 is independent of <equation><title>form_43</title>$x$</equation> and <equation><title>form_44</title>$y$</equation>. Therefore only a <equation><title>form_42</title>$z$</equation>-coordinate is provided in a call to the function. </para>
 </entry>
                             </row>
                         </tbody>
@@ -939,13 +975,15 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
                 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1ab1469e6950d4831b3bd0f808be6adc4f">
-                <title>Vector&lt; double &gt; HomogenousTransformationRectangular::Dofs () const</title> <emphasis>Other objects can use this function to retrieve an array of the current values of the degrees of freedom of the functional we are optimizing.</emphasis>
+                <title>Vector&lt; double &gt; HomogenousTransformationRectangular::Dofs () const</title> <emphasis>Other objects can use this function to retrieve an array of the current
+values of the degrees of freedom of the functional we are optimizing.</emphasis>
                 
 <para>This also includes restrained degrees of freedom and other functions can be used to determine this property. This has to be done because in different cases the number of restrained degrees of freedom can vary and we want no logic about this in other functions. </para>
 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1ac93f901b6918a7656b484537c72c5355">
-                <title>unsigned int HomogenousTransformationRectangular::NFreeDofs () const</title> <emphasis>This function returns the number of unrestrained degrees of freedom of the current optimization run.</emphasis>
+                <title>unsigned int HomogenousTransformationRectangular::NFreeDofs () const</title> <emphasis>This function returns the number of unrestrained degrees of freedom of the
+current optimization run.</emphasis>
                 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1a4460090bfb1dcd2ab2c44f2f4561a0d0">
@@ -955,7 +993,9 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1ac708707e024d6da1abb803ffeb86a2c3">
-                <title>bool HomogenousTransformationRectangular::IsDofFree (int) const</title> <emphasis>Since Dofs() also returns restrained degrees of freedom, this function can be applied to determine if a degree of freedom is indeed free or restrained.</emphasis>
+                <title>bool HomogenousTransformationRectangular::IsDofFree (int) const</title> <emphasis>Since Dofs() also returns restrained degrees of freedom, this function can
+be applied to determine if a degree of freedom is indeed free or
+restrained.</emphasis>
                 
 <para>&quot;restrained&quot; means that for example the DOF represents the radius at one of the connectors (input or output) and therefore we forbid the optimization scheme to vary this value. </para>
 
@@ -965,7 +1005,9 @@ double , double , <link linkend="class_waveguide">Waveguide</link> * )</para>
                 
             </section>
             <section xml:id="class_homogenous_transformation_rectangular_1a80c1ce86635edce1227ab26fa2ae0008">
-                <title>std::complex&lt; double &gt; HomogenousTransformationRectangular::evaluate_for_z (double z_in, Waveguide *)</title> <emphasis>Since the Wavegudie itself may be circular or rectangular now, the evaluation routines should be moved to a point in the code where this information is included in the code.</emphasis>
+                <title>std::complex&lt; double &gt; HomogenousTransformationRectangular::evaluate_for_z (double z_in, Waveguide *)</title> <emphasis>Since the Wavegudie itself may be circular or rectangular now, the
+evaluation routines should be moved to a point in the code where this
+information is included in the code.</emphasis>
                 
 <para>Since I dont want to create derived classes from waveguide (which I should do eventually) I will for now include this functionality into the space transformation which is shape-sensitive. The waveguide only offers the evaluation at a point. The quadrature-rule has to be imposed by the space transformation. </para>
 

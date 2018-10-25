@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="staticfunctions_8h">
     <title>staticfunctions.h File Reference</title>
-    <programlisting>#include &lt;fstream&gt;</programlisting>
     <programlisting>#include &lt;deal.II/base/point.h&gt;</programlisting>
     <programlisting>#include &lt;deal.II/base/tensor.h&gt;</programlisting>
     <programlisting>#include &lt;deal.II/distributed/tria.h&gt;</programlisting>
-    <programlisting>#include &lt;deal.II/lac/constraint_matrix.h&gt;</programlisting>
     <programlisting>#include &lt;deal.II/dofs/dof_handler.h&gt;</programlisting>
+    <programlisting>#include &lt;deal.II/lac/constraint_matrix.h&gt;</programlisting>
+    <programlisting>#include &lt;fstream&gt;</programlisting>
     <programlisting>#include &quot;../Core/Waveguide.h&quot;</programlisting>
     <programlisting>#include &quot;../SpaceTransformations/SpaceTransformation.h&quot;</programlisting>
         <section>
@@ -101,10 +101,18 @@
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>Tensor&lt; 1, 3, double &gt; <link linkend="staticfunctions_8h_1a6c3a0f029fd8951d44470c8d97160020">crossproduct</link> (
-Tensor&lt; 1, 3, double &gt; , Tensor&lt; 1, 3, double &gt; )<para><emphasis>For given vectors \form#32, this function calculates the following crossproduct:
- \form#33.</emphasis></para>
+                        <para>Tensor&lt; 1, 3, double &gt; <link linkend="staticfunctions_8h_1ac1c83faaeeed5e2e4728f579acaa29a6">crossproduct</link> (
+Tensor&lt; 1, 3, double &gt; , Tensor&lt; 1, 3, double &gt; )<para><emphasis>For given vectors \form#33, this
+function calculates the following crossproduct: \form#34@_fakenl@_fakenl.</emphasis></para>
 </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>std::complex&lt; double &gt; <link linkend="staticfunctions_8h_1a8ff836a6d1fdc521e2259282ec1eaab5">matrixD</link> (
+int in_row, int in_column, double in_k0)</para>
                     </listitem>
                 </itemizedlist>
             </para>
@@ -287,16 +295,8 @@ const Point&lt; 3, double &gt; &amp; )</para>
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>std::vector&lt; types::global_dof_index &gt; <link linkend="staticfunctions_8h_1a7b86b39bbd4faa86763b8f37771b696b">Add_Zero_Restraint</link> (
-dealii::ConstraintMatrix * , DoFHandler&lt; 3 &gt;::active_cell_iterator , unsigned int, unsigned int, unsigned int, bool , dealii::IndexSet * )</para>
-                    </listitem>
-                </itemizedlist>
-            </para>
-            <para>
-                <itemizedlist>
-                    <listitem>
-                        <para>std::vector&lt; types::global_dof_index &gt; <link linkend="staticfunctions_8h_1a14cf1e65ce0e9e88b2c3599cb6e1c5d3">Add_Zero_Restraint_test</link> (
-dealii::ConstraintMatrix * , DoFHandler&lt; 3 &gt;::active_cell_iterator , unsigned int, unsigned int, unsigned int, bool , dealii::IndexSet * )</para>
+                        <para>std::vector&lt; types::global_dof_index &gt; <link linkend="staticfunctions_8h_1ac3f7f6220c1089d2ec21ecff645f8e8f">Add_Zero_Restraint</link> (
+dealii::ConstraintMatrix * , dealii::DoFHandler&lt; 3 &gt;::active_cell_iterator &amp; , unsigned int, unsigned int, unsigned int, bool , dealii::IndexSet )</para>
                     </listitem>
                 </itemizedlist>
             </para>
@@ -318,12 +318,12 @@ dealii::IndexSet * , std::vector&lt; types::global_dof_index &gt; )</para>
 2 <emphasis class="preprocessor">#ifndef&#32;STATICFUNCTIONS_H_</emphasis>
 3 <emphasis class="preprocessor">#define&#32;STATICFUNCTIONS_H_</emphasis>
 4 
-5 <emphasis class="preprocessor">#include&#32;&lt;fstream&gt;</emphasis>
-6 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/point.h&gt;</emphasis>
-7 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/tensor.h&gt;</emphasis>
-8 <emphasis class="preprocessor">#include&#32;&lt;deal.II/distributed/tria.h&gt;</emphasis>
+5 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/point.h&gt;</emphasis>
+6 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/tensor.h&gt;</emphasis>
+7 <emphasis class="preprocessor">#include&#32;&lt;deal.II/distributed/tria.h&gt;</emphasis>
+8 <emphasis class="preprocessor">#include&#32;&lt;deal.II/dofs/dof_handler.h&gt;</emphasis>
 9 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/constraint_matrix.h&gt;</emphasis>
-10 <emphasis class="preprocessor">#include&#32;&lt;deal.II/dofs/dof_handler.h&gt;</emphasis>
+10 <emphasis class="preprocessor">#include&#32;&lt;fstream&gt;</emphasis>
 11 <emphasis class="preprocessor">#include&#32;&quot;../Core/Waveguide.h&quot;</emphasis>
 12 <emphasis class="preprocessor">#include&#32;&quot;../SpaceTransformations/SpaceTransformation.h&quot;</emphasis>
 13 <emphasis class="keyword">using&#32;namespace&#32;</emphasis><link linkend="namespacedealii">dealii</link>;
@@ -335,68 +335,78 @@ dealii::IndexSet * , std::vector&lt; types::global_dof_index &gt; )</para>
 19 <emphasis class="keyword">extern</emphasis>&#32;std::string&#32;precondition_filename;
 20 <emphasis class="keyword">extern</emphasis>&#32;std::string&#32;solver_filename;
 21 <emphasis class="keyword">extern</emphasis>&#32;std::string&#32;total_filename;
-22 <emphasis class="keyword">extern</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;&#32;StepsR;
-23 <emphasis class="keyword">extern</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;&#32;StepsPhi;
+22 <emphasis class="keyword">extern</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;StepsR;
+23 <emphasis class="keyword">extern</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;StepsPhi;
 24 <emphasis class="keyword">extern</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;alert_counter;
 25 <emphasis class="keyword">extern</emphasis>&#32;std::string&#32;input_file_name;
-26 <emphasis class="keyword">extern</emphasis>&#32;<link linkend="class_space_transformation">SpaceTransformation</link>*&#32;the_st;<emphasis class="comment"></emphasis>
+26 <emphasis class="keyword">extern</emphasis>&#32;<link linkend="class_space_transformation">SpaceTransformation</link>&#32;*the_st;<emphasis class="comment"></emphasis>
 27 <emphasis class="comment">/**</emphasis>
-28 <emphasis class="comment">&#32;*&#32;For&#32;given&#32;vectors&#32;\f$\boldsymbol{a},\boldsymbol{b}&#32;\in&#32;\mathbb{R}^3\f$,&#32;this&#32;function&#32;calculates&#32;the&#32;following&#32;crossproduct:</emphasis>
-29 <emphasis class="comment">&#32;*&#32;\f[\boldsymbol{a}&#32;\&#32;times&#32;\boldsymbol{b}&#32;=&#32;\begin{pmatrix}&#32;a_2&#32;b_3&#32;-&#32;a_3b_2&#32;\\&#32;a_3b_1&#32;-&#32;a_1b_3&#32;\\&#32;a_1b_2&#32;-&#32;a_2b_1\end{pmatrix}\f]</emphasis>
-30 <emphasis class="comment">&#32;*/</emphasis>
-31 Tensor&lt;1,&#32;3&#32;,&#32;double&gt;&#32;crossproduct(Tensor&lt;1,&#32;3,&#32;double&gt;&#32;,&#32;Tensor&lt;1,&#32;3,&#32;double&gt;&#32;);
-32 
-33 <emphasis class="keywordtype">void</emphasis>&#32;set_the_st(<link linkend="class_space_transformation">SpaceTransformation</link>*&#32;);
+28 <emphasis class="comment">&#32;*&#32;For&#32;given&#32;vectors&#32;\f$\boldsymbol{a},\boldsymbol{b}&#32;\in&#32;\mathbb{R}^3\f$,&#32;this</emphasis>
+29 <emphasis class="comment">&#32;*&#32;function&#32;calculates&#32;the&#32;following&#32;crossproduct:&#32;\f[\boldsymbol{a}&#32;\&#32;times</emphasis>
+30 <emphasis class="comment">&#32;*&#32;\boldsymbol{b}&#32;=&#32;\begin{pmatrix}&#32;a_2&#32;b_3&#32;-&#32;a_3b_2&#32;\\&#32;a_3b_1&#32;-&#32;a_1b_3&#32;\\</emphasis>
+31 <emphasis class="comment">&#32;*&#32;a_1b_2&#32;-&#32;a_2b_1\end{pmatrix}\f]</emphasis>
+32 <emphasis class="comment">&#32;*/</emphasis>
+33 Tensor&lt;1,&#32;3,&#32;double&gt;&#32;crossproduct(Tensor&lt;1,&#32;3,&#32;double&gt;,&#32;Tensor&lt;1,&#32;3,&#32;double&gt;);
 34 
-35 <emphasis class="keywordtype">double</emphasis>&#32;dotproduct(Tensor&lt;1,&#32;3,&#32;double&gt;,&#32;Tensor&lt;1,&#32;3,&#32;double&gt;);
+35 std::complex&lt;double&gt;&#32;matrixD(<emphasis class="keywordtype">int</emphasis>&#32;in_row,&#32;<emphasis class="keywordtype">int</emphasis>&#32;in_column,&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_k0);
 36 
-37 <emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">int</emphasis>&#32;dim&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;mesh_info(<emphasis class="keyword">const</emphasis>&#32;parallel::distributed::Triangulation&lt;dim&gt;&#32;,&#32;<emphasis class="keyword">const</emphasis>&#32;std::string&#32;);
+37 <emphasis class="keywordtype">void</emphasis>&#32;set_the_st(<link linkend="class_space_transformation">SpaceTransformation</link>&#32;*);
 38 
-39 <emphasis class="keyword">template</emphasis>&lt;<emphasis class="keywordtype">int</emphasis>&#32;dim&gt;&#32;<emphasis class="keywordtype">void</emphasis>&#32;mesh_info(<emphasis class="keyword">const</emphasis>&#32;parallel::distributed::Triangulation&lt;dim&gt;&#32;);
+39 <emphasis class="keywordtype">double</emphasis>&#32;dotproduct(Tensor&lt;1,&#32;3,&#32;double&gt;,&#32;Tensor&lt;1,&#32;3,&#32;double&gt;);
 40 
-41 <emphasis class="keywordtype">double</emphasis>&#32;my_inter&#32;(<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>);
-42 
-43 <link linkend="struct_parameters">Parameters</link>&#32;GetParameters();
+41 <emphasis class="keyword">template</emphasis>&#32;&lt;<emphasis class="keywordtype">int</emphasis>&#32;dim&gt;
+42 <emphasis class="keywordtype">void</emphasis>&#32;mesh_info(<emphasis class="keyword">const</emphasis>&#32;parallel::distributed::Triangulation&lt;dim&gt;,
+43 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;std::string);
 44 
-45 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_X&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p);
-46 
-47 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_Y&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p);
-48 
-49 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_Z&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p);
-50 
-51 <emphasis class="keyword">inline</emphasis>&#32;<emphasis class="keywordtype">bool</emphasis>&#32;file_exists&#32;(<emphasis class="keyword">const</emphasis>&#32;std::string&amp;&#32;name);
-52 
-53 <emphasis class="keywordtype">double</emphasis>&#32;TEMode00&#32;(&#32;dealii::Point&lt;3,&#32;double&gt;&#32;&#32;,&#32;<emphasis class="keywordtype">int</emphasis>&#32;);
-54 
-55 <emphasis class="keywordtype">double</emphasis>&#32;sigma&#32;(<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>&#32;,&#32;<emphasis class="keywordtype">double</emphasis>&#32;);
-56 
-57 <emphasis class="keywordtype">double</emphasis>&#32;InterpolationPolynomial(<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>);
-58 
-59 <emphasis class="keywordtype">double</emphasis>&#32;InterpolationPolynomialDerivative(<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>);
-60 
-61 <emphasis class="keywordtype">double</emphasis>&#32;InterpolationPolynomialZeroDerivative(<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>);
-62 
-63 <emphasis class="keywordtype">void</emphasis>&#32;PrepareStreams();
-64 
-65 <emphasis class="keywordtype">double</emphasis>&#32;Distance2D&#32;(Point&lt;3,&#32;double&gt;,&#32;Point&lt;3,&#32;double&gt;&#32;=&#32;Point&lt;3,&#32;double&gt;()&#32;);
-66 
-67 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_to_circle&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;&#32;);
+45 <emphasis class="keyword">template</emphasis>&#32;&lt;<emphasis class="keywordtype">int</emphasis>&#32;dim&gt;
+46 <emphasis class="keywordtype">void</emphasis>&#32;mesh_info(<emphasis class="keyword">const</emphasis>&#32;parallel::distributed::Triangulation&lt;dim&gt;);
+47 
+48 <emphasis class="keywordtype">double</emphasis>&#32;my_inter(<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>);
+49 
+50 <link linkend="struct_parameters">Parameters</link>&#32;GetParameters();
+51 
+52 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_X(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p);
+53 
+54 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_Y(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p);
+55 
+56 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_Z(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;p);
+57 
+58 <emphasis class="keyword">inline</emphasis>&#32;<emphasis class="keywordtype">bool</emphasis>&#32;file_exists(<emphasis class="keyword">const</emphasis>&#32;std::string&#32;&amp;name);
+59 
+60 <emphasis class="keywordtype">double</emphasis>&#32;TEMode00(dealii::Point&lt;3,&#32;double&gt;,&#32;<emphasis class="keywordtype">int</emphasis>);
+61 
+62 <emphasis class="keywordtype">double</emphasis>&#32;sigma(<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>);
+63 
+64 <emphasis class="keywordtype">double</emphasis>&#32;InterpolationPolynomial(<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>);
+65 
+66 <emphasis class="keywordtype">double</emphasis>&#32;InterpolationPolynomialDerivative(<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,
+67 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>);
 68 
-69 Point&lt;3,&#32;double&gt;&#32;Triangulation_Shift_Z&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;);
+69 <emphasis class="keywordtype">double</emphasis>&#32;InterpolationPolynomialZeroDerivative(<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>);
 70 
-71 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_Computational_Radius&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;);
+71 <emphasis class="keywordtype">void</emphasis>&#32;PrepareStreams();
 72 
-73 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_Computational_Rectangle&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;);
+73 <emphasis class="keywordtype">double</emphasis>&#32;Distance2D(Point&lt;3,&#32;double&gt;,&#32;Point&lt;3,&#32;double&gt;&#32;=&#32;Point&lt;3,&#32;double&gt;());
 74 
-75 Point&lt;3,&#32;double&gt;&#32;Triangulation_Transform_to_physical&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;);
+75 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_to_circle(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;);
 76 
-77 std::vector&lt;types::global_dof_index&gt;&#32;Add_Zero_Restraint(dealii::ConstraintMatrix&#32;*,&#32;DoFHandler&lt;3&gt;::active_cell_iterator,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>,&#32;<emphasis class="keywordtype">bool</emphasis>&#32;,&#32;dealii::IndexSet&#32;*&#32;);
+77 Point&lt;3,&#32;double&gt;&#32;Triangulation_Shift_Z(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;);
 78 
-79 std::vector&lt;types::global_dof_index&gt;&#32;Add_Zero_Restraint_test(dealii::ConstraintMatrix&#32;*,&#32;DoFHandler&lt;3&gt;::active_cell_iterator,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>,&#32;<emphasis class="keywordtype">bool</emphasis>&#32;,&#32;dealii::IndexSet&#32;*&#32;);
-80 
-81 <emphasis class="keywordtype">void</emphasis>&#32;add_vector_of_indices(dealii::IndexSet&#32;*,&#32;std::vector&lt;types::global_dof_index&gt;);
-82 
-83 
-84 <emphasis class="preprocessor">#endif&#32;</emphasis><emphasis class="comment">/*&#32;STATICFUNCTIONS_H_&#32;*/</emphasis><emphasis class="preprocessor"></emphasis>
+79 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_Computational_Radius(
+80 &#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;);
+81 
+82 Point&lt;3,&#32;double&gt;&#32;Triangulation_Stretch_Computational_Rectangle(
+83 &#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;);
+84 
+85 Point&lt;3,&#32;double&gt;&#32;Triangulation_Transform_to_physical(<emphasis class="keyword">const</emphasis>&#32;Point&lt;3,&#32;double&gt;&#32;&amp;);
+86 
+87 std::vector&lt;types::global_dof_index&gt;&#32;Add_Zero_Restraint(
+88 &#32;&#32;&#32;&#32;dealii::ConstraintMatrix&#32;*,&#32;dealii::DoFHandler&lt;3&gt;::active_cell_iterator&#32;&amp;,
+89 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>,&#32;<emphasis class="keywordtype">bool</emphasis>,&#32;dealii::IndexSet);
+90 
+91 <emphasis class="keywordtype">void</emphasis>&#32;add_vector_of_indices(dealii::IndexSet&#32;*,
+92 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;std::vector&lt;types::global_dof_index&gt;);
+93 
+94 <emphasis class="preprocessor">#endif&#32;</emphasis><emphasis class="comment">/*&#32;STATICFUNCTIONS_H_&#32;*/</emphasis><emphasis class="preprocessor"></emphasis>
     </computeroutput></literallayout>
 </section>

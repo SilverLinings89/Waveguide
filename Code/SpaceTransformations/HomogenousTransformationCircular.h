@@ -254,15 +254,6 @@ class HomogenousTransformationCircular : public SpaceTransformation {
   void set_free_dof(int dof, double value);
 
   /**
-   * Using this method unifies the usage of coordinates. This function takes a
-   * global \f$z\f$ coordinate (in the computational domain) and returns both a
-   * Sector-Index and an internal \f$z\f$ coordinate indicating which sector
-   * this coordinate belongs to and how far along in the sector it is located.
-   * \param double in_z global system \f$z\f$ coordinate for the transformation.
-   */
-  // std::pair<int, double> Z_to_Sector_and_local_z(double in_z);
-
-  /**
    * Returns the complete length of the computational domain.
    */
   double System_Length() const;
@@ -291,14 +282,6 @@ class HomogenousTransformationCircular : public SpaceTransformation {
    * Returns the tilt for a system-coordinate;
    */
   double get_v(double in_z) const;
-
-  /**
-   * This Method writes a comprehensive description of the current structure to
-   * the console.
-   */
-  // void WriteConfigurationToConsole();
-
-  // int Z_to_Layer(double);
 
   /**
    * This vector of values saves the initial configuration

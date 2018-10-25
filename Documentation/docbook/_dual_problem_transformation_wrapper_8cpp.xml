@@ -1,14 +1,14 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_dual_problem_transformation_wrapper_8cpp">
     <title>DualProblemTransformationWrapper.cpp File Reference</title>
-    <programlisting>#include &quot;../Helpers/QuadratureFormulaCircle.cpp&quot;</programlisting>
     <programlisting>#include &quot;DualProblemTransformationWrapper.h&quot;</programlisting>
+    <programlisting>#include &lt;deal.II/base/point.h&gt;</programlisting>
     <programlisting>#include &lt;deal.II/base/tensor.h&gt;</programlisting>
     <programlisting>#include &lt;deal.II/lac/vector.h&gt;</programlisting>
-    <programlisting>#include &lt;deal.II/base/point.h&gt;</programlisting>
     <programlisting>#include &quot;../Core/Sector.h&quot;</programlisting>
-    <programlisting>#include &quot;SpaceTransformation.h&quot;</programlisting>
+    <programlisting>#include &quot;../Helpers/QuadratureFormulaCircle.cpp&quot;</programlisting>
     <programlisting>#include &quot;../Helpers/staticfunctions.h&quot;</programlisting>
+    <programlisting>#include &quot;SpaceTransformation.h&quot;</programlisting>
         <section>
             <title>Macros</title>
             <para>
@@ -24,7 +24,7 @@
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>dealii::Point&lt; 3, double &gt; <link linkend="_dual_problem_transformation_wrapper_8cpp_1a49d05ab491f71e119dafac4273f66092">transform_position</link> (
+                        <para>dealii::Point&lt; 3, double &gt; <link linkend="_dual_problem_transformation_wrapper_8cpp_1a5059c0d1b3e7ee2fddfb398f2f5253e5">transform_position</link> (
 Point&lt; 3 &gt; in_position)</para>
                     </listitem>
                 </itemizedlist>
@@ -45,30 +45,30 @@ Point&lt; 3 &gt; in_position)</para>
 8 <emphasis class="preprocessor">#ifndef&#32;DualTransformationWrapper_CPP</emphasis>
 9 <emphasis class="preprocessor">#define&#32;DualTransformationWrapper_CPP</emphasis>
 10 
-11 <emphasis class="preprocessor">#include&#32;&quot;../Helpers/QuadratureFormulaCircle.cpp&quot;</emphasis>
-12 <emphasis class="preprocessor">#include&#32;&quot;DualProblemTransformationWrapper.h&quot;</emphasis>
+11 <emphasis class="preprocessor">#include&#32;&quot;DualProblemTransformationWrapper.h&quot;</emphasis>
+12 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/point.h&gt;</emphasis>
 13 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/tensor.h&gt;</emphasis>
 14 <emphasis class="preprocessor">#include&#32;&lt;deal.II/lac/vector.h&gt;</emphasis>
-15 <emphasis class="preprocessor">#include&#32;&lt;deal.II/base/point.h&gt;</emphasis>
-16 <emphasis class="preprocessor">#include&#32;&quot;../Core/Sector.h&quot;</emphasis>
-17 <emphasis class="preprocessor">#include&#32;&quot;SpaceTransformation.h&quot;</emphasis>
-18 <emphasis class="preprocessor">#include&#32;&quot;../Helpers/staticfunctions.h&quot;</emphasis>
+15 <emphasis class="preprocessor">#include&#32;&quot;../Core/Sector.h&quot;</emphasis>
+16 <emphasis class="preprocessor">#include&#32;&quot;../Helpers/QuadratureFormulaCircle.cpp&quot;</emphasis>
+17 <emphasis class="preprocessor">#include&#32;&quot;../Helpers/staticfunctions.h&quot;</emphasis>
+18 <emphasis class="preprocessor">#include&#32;&quot;SpaceTransformation.h&quot;</emphasis>
 19 
 20 <emphasis class="keyword">using&#32;namespace&#32;</emphasis><link linkend="namespacedealii">dealii</link>;
 21 
-<link linkend="class_dual_problem_transformation_wrapper_1a1d2648b23d41e2b6e37143ee90635466">22 </link><link linkend="class_dual_problem_transformation_wrapper_1a1d2648b23d41e2b6e37143ee90635466">DualProblemTransformationWrapper::DualProblemTransformationWrapper</link>&#32;(<link linkend="class_space_transformation">SpaceTransformation</link>&#32;*&#32;in_st,&#32;<emphasis class="keywordtype">int</emphasis>&#32;inner_rank):
-23 &#32;&#32;&#32;&#32;<link linkend="class_space_transformation">SpaceTransformation</link>(3,&#32;inner_rank),
-24 &#32;&#32;XMinus(&#32;-(GlobalParams.M_R_XLength&#32;*0.5&#32;-&#32;GlobalParams.M_BC_XMinus)),
-25 &#32;&#32;XPlus(&#32;GlobalParams.M_R_XLength&#32;*0.5&#32;-&#32;GlobalParams.M_BC_XPlus),
-26 &#32;&#32;YMinus(&#32;-(GlobalParams.M_R_YLength&#32;*0.5&#32;-&#32;GlobalParams.M_BC_YMinus)),
-27 &#32;&#32;YPlus(&#32;GlobalParams.M_R_YLength&#32;*0.5&#32;-&#32;GlobalParams.M_BC_YPlus),
-28 &#32;&#32;ZMinus(&#32;-&#32;GlobalParams.M_R_ZLength&#32;*0.5&#32;),
-29 &#32;&#32;ZPlus(&#32;GlobalParams.M_R_ZLength&#32;*0.5&#32;),
-30 &#32;&#32;epsilon_K(GlobalParams.M_W_epsilonin),
-31 &#32;&#32;epsilon_M(GlobalParams.M_W_epsilonout),
-32 &#32;&#32;sectors(GlobalParams.M_W_Sectors),
-33 &#32;&#32;deltaY(GlobalParams.M_W_Delta)
-34 {
+<link linkend="class_dual_problem_transformation_wrapper_1a1d2648b23d41e2b6e37143ee90635466">22 </link><link linkend="class_dual_problem_transformation_wrapper_1a1d2648b23d41e2b6e37143ee90635466">DualProblemTransformationWrapper::DualProblemTransformationWrapper</link>(
+23 &#32;&#32;&#32;&#32;<link linkend="class_space_transformation">SpaceTransformation</link>&#32;*in_st,&#32;<emphasis class="keywordtype">int</emphasis>&#32;inner_rank)
+24 &#32;&#32;&#32;&#32;:&#32;<link linkend="class_space_transformation">SpaceTransformation</link>(3,&#32;inner_rank),
+25 &#32;&#32;&#32;&#32;&#32;&#32;XMinus(-(GlobalParams.M_R_XLength&#32;*&#32;0.5&#32;-&#32;GlobalParams.M_BC_XMinus)),
+26 &#32;&#32;&#32;&#32;&#32;&#32;XPlus(GlobalParams.M_R_XLength&#32;*&#32;0.5&#32;-&#32;GlobalParams.M_BC_XPlus),
+27 &#32;&#32;&#32;&#32;&#32;&#32;YMinus(-(GlobalParams.M_R_YLength&#32;*&#32;0.5&#32;-&#32;GlobalParams.M_BC_YMinus)),
+28 &#32;&#32;&#32;&#32;&#32;&#32;YPlus(GlobalParams.M_R_YLength&#32;*&#32;0.5&#32;-&#32;GlobalParams.M_BC_YPlus),
+29 &#32;&#32;&#32;&#32;&#32;&#32;ZMinus(-GlobalParams.M_R_ZLength&#32;*&#32;0.5),
+30 &#32;&#32;&#32;&#32;&#32;&#32;ZPlus(GlobalParams.M_R_ZLength&#32;*&#32;0.5),
+31 &#32;&#32;&#32;&#32;&#32;&#32;epsilon_K(GlobalParams.M_W_epsilonin),
+32 &#32;&#32;&#32;&#32;&#32;&#32;epsilon_M(GlobalParams.M_W_epsilonout),
+33 &#32;&#32;&#32;&#32;&#32;&#32;sectors(GlobalParams.M_W_Sectors),
+34 &#32;&#32;&#32;&#32;&#32;&#32;deltaY(GlobalParams.M_W_Delta)&#32;{
 35 &#32;&#32;st&#32;=&#32;in_st;
 36 &#32;&#32;homogenized&#32;=&#32;st-&gt;homogenized;
 37 }
@@ -93,191 +93,211 @@ Point&lt; 3 &gt; in_position)</para>
 56 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1aec6d6a8c0392bceb95ea9a66c04d78c9">PML_in_Z</link>(p);
 57 }
 58 
-<link linkend="class_dual_problem_transformation_wrapper_1ac3ee8ebbc8076b7f26625c277e0438a9">59 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1ac3ee8ebbc8076b7f26625c277e0438a9">DualProblemTransformationWrapper::Preconditioner_PML_Z_Distance</link>(Point&lt;3&gt;&#32;&amp;p,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;block&#32;)<emphasis class="keyword">&#32;const</emphasis>{
-60 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1af345da810526549468581af1060d1c5f">Preconditioner_PML_Z_Distance</link>(p,&#32;block);
-61 }
-62 
-<link linkend="class_dual_problem_transformation_wrapper_1af794a155978190a27867aded190e7cf1">63 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1af794a155978190a27867aded190e7cf1">DualProblemTransformationWrapper::PML_X_Distance</link>(Point&lt;3&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const</emphasis>{
-64 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a6dc9fa5cac54e8dfea7b4e88f76ee5d8">PML_X_Distance</link>(p);
-65 }
-66 
-<link linkend="class_dual_problem_transformation_wrapper_1aed8dcf1d8ad07a76075950ab850d8134">67 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1aed8dcf1d8ad07a76075950ab850d8134">DualProblemTransformationWrapper::PML_Y_Distance</link>(Point&lt;3&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const</emphasis>{
-68 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1ad3e51c31b7aeb1837063bf0d946d4754">PML_Y_Distance</link>(p);
-69 }
-70 
-<link linkend="class_dual_problem_transformation_wrapper_1ac51b240160996ecbdd5126e3ca026d4c">71 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1ac51b240160996ecbdd5126e3ca026d4c">DualProblemTransformationWrapper::PML_Z_Distance</link>(Point&lt;3&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const</emphasis>{
-72 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a4d73c8cbea006a2309857645eb98cfae">PML_Z_Distance</link>(p);
-73 }
-74 
-75 dealii::Point&lt;3,double&gt;&#32;transform_position(&#32;Point&lt;3&gt;&#32;in_position)&#32;{
-76 &#32;&#32;Point&lt;3&gt;&#32;ret&#32;=&#32;in_position;
-77 &#32;&#32;ret[2]&#32;=&#32;-&#32;ret[2];
-78 &#32;&#32;<emphasis class="comment">//&#32;ret[2]&#32;+=&#32;GlobalParams.M_BC_Zplus*GlobalParams.SectorThickness;</emphasis>
-79 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
-80 }
-81 
-82 Tensor&lt;2,3,double&gt;&#32;DualProblemTransformationWrapper::get_Space_Transformation_Tensor_Homogenized(Point&lt;3&gt;&#32;&amp;&#32;position)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-83 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;This&#32;should&#32;never&#32;be&#32;called:&#32;DualProblemTransformationWrapper::get_Space_Transformation_Tensor_Homogenized&quot;</emphasis>&#32;&lt;&lt;std::endl;
-84 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;get_Space_Transformation_Tensor_Homogenized(position);
-85 }
-86 
-87 Tensor&lt;2,3,double&gt;&#32;DualProblemTransformationWrapper::get_Space_Transformation_Tensor(Point&lt;3&gt;&#32;&amp;&#32;position)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-88 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;This&#32;should&#32;never&#32;be&#32;called:&#32;DualProblemTransformationWrapper::get_Space_Transformation_Tensor&quot;</emphasis>&#32;&lt;&lt;std::endl;
-89 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;get_Space_Transformation_Tensor(position);
-90 }
-91 
+<link linkend="class_dual_problem_transformation_wrapper_1ac3ee8ebbc8076b7f26625c277e0438a9">59 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1ac3ee8ebbc8076b7f26625c277e0438a9">DualProblemTransformationWrapper::Preconditioner_PML_Z_Distance</link>(
+60 &#32;&#32;&#32;&#32;Point&lt;3&gt;&#32;&amp;p,&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;block)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+61 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1af345da810526549468581af1060d1c5f">Preconditioner_PML_Z_Distance</link>(p,&#32;block);
+62 }
+63 
+<link linkend="class_dual_problem_transformation_wrapper_1af794a155978190a27867aded190e7cf1">64 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1af794a155978190a27867aded190e7cf1">DualProblemTransformationWrapper::PML_X_Distance</link>(Point&lt;3&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+65 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a6dc9fa5cac54e8dfea7b4e88f76ee5d8">PML_X_Distance</link>(p);
+66 }
+67 
+<link linkend="class_dual_problem_transformation_wrapper_1aed8dcf1d8ad07a76075950ab850d8134">68 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1aed8dcf1d8ad07a76075950ab850d8134">DualProblemTransformationWrapper::PML_Y_Distance</link>(Point&lt;3&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+69 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1ad3e51c31b7aeb1837063bf0d946d4754">PML_Y_Distance</link>(p);
+70 }
+71 
+<link linkend="class_dual_problem_transformation_wrapper_1ac51b240160996ecbdd5126e3ca026d4c">72 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1ac51b240160996ecbdd5126e3ca026d4c">DualProblemTransformationWrapper::PML_Z_Distance</link>(Point&lt;3&gt;&#32;&amp;p)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+73 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a4d73c8cbea006a2309857645eb98cfae">PML_Z_Distance</link>(p);
+74 }
+75 
+76 dealii::Point&lt;3,&#32;double&gt;&#32;transform_position(Point&lt;3&gt;&#32;in_position)&#32;{
+77 &#32;&#32;Point&lt;3&gt;&#32;ret&#32;=&#32;in_position;
+78 &#32;&#32;ret[2]&#32;=&#32;-ret[2];
+79 &#32;&#32;<emphasis class="comment">//&#32;ret[2]&#32;+=&#32;GlobalParams.M_BC_Zplus*GlobalParams.SectorThickness;</emphasis>
+80 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+81 }
+82 
+83 Tensor&lt;2,&#32;3,&#32;double&gt;
+84 DualProblemTransformationWrapper::get_Space_Transformation_Tensor_Homogenized(
+85 &#32;&#32;&#32;&#32;Point&lt;3&gt;&#32;&amp;position)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+86 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;This&#32;should&#32;never&#32;be&#32;called:&#32;&quot;</emphasis>
+87 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="stringliteral">&quot;DualProblemTransformationWrapper::get_Space_Transformation_&quot;</emphasis>
+88 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="stringliteral">&quot;Tensor_Homogenized&quot;</emphasis>
+89 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;std::endl;
+90 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;get_Space_Transformation_Tensor_Homogenized(position);
+91 }
 92 
-93 Tensor&lt;2,3,&#32;std::complex&lt;double&gt;&gt;&#32;DualProblemTransformationWrapper::Apply_PML_To_Tensor(Point&lt;3&gt;&#32;&amp;&#32;,&#32;Tensor&lt;2,3,double&gt;&#32;transformation)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-94 
-95 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;This&#32;function&#32;should&#32;never&#32;be&#32;called:&#32;DualProblemTransformationWrapper::Apply_PML_To_Tensor&quot;</emphasis>&#32;&lt;&lt;std::endl;
-96 
-97 &#32;&#32;Tensor&lt;2,3,&#32;std::complex&lt;double&gt;&gt;&#32;ret2;
-98 
-99 &#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;3;&#32;i++)&#32;{
-100 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&#32;&lt;&#32;3;&#32;j++)&#32;{
-101 &#32;&#32;&#32;&#32;&#32;&#32;ret2[i][j]&#32;=&#32;transformation[i][j]*&#32;std::complex&lt;double&gt;(1.0,&#32;0.0);
-102 &#32;&#32;&#32;&#32;}
-103 &#32;&#32;}
-104 
-105 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret2;
-106 }
-107 
-108 Tensor&lt;2,3,&#32;std::complex&lt;double&gt;&gt;&#32;DualProblemTransformationWrapper::Apply_PML_To_Tensor_For_Preconditioner(Point&lt;3&gt;&#32;&amp;&#32;,&#32;Tensor&lt;2,3,double&gt;&#32;transformation,&#32;<emphasis class="keywordtype">int</emphasis>&#32;)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-109 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;This&#32;function&#32;should&#32;never&#32;be&#32;called:&#32;DualProblemTransformationWrapper::Apply_PML_To_Tensor_For_Preconditioner&quot;</emphasis>&#32;&lt;&lt;std::endl;
-110 
-111 &#32;&#32;&#32;&#32;Tensor&lt;2,3,&#32;std::complex&lt;double&gt;&gt;&#32;ret2;
-112 
-113 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;3;&#32;i++)&#32;{
-114 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>(<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&#32;&lt;&#32;3;&#32;j++)&#32;{
-115 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;ret2[i][j]&#32;=&#32;transformation[i][j]*&#32;std::complex&lt;double&gt;(1.0,&#32;0.0);
-116 &#32;&#32;&#32;&#32;&#32;&#32;}
-117 &#32;&#32;&#32;&#32;}
-118 
-119 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret2;
-120 }
-121 
-122 
-123 Tensor&lt;2,3,&#32;std::complex&lt;double&gt;&gt;&#32;DualProblemTransformationWrapper::get_Tensor(Point&lt;3&gt;&#32;&amp;&#32;position)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-124 &#32;&#32;Point&lt;3&gt;&#32;p&#32;=&#32;transform_position(position);
-125 
-126 &#32;&#32;Tensor&lt;2,3,double&gt;&#32;transformation;
-127 
-128 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(homogenized)&#32;{
-129 &#32;&#32;&#32;&#32;transformation&#32;=&#32;st-&gt;get_Space_Transformation_Tensor_Homogenized(p);
-130 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-131 &#32;&#32;&#32;&#32;transformation&#32;=&#32;st-&gt;get_Space_Transformation_Tensor(p);
-132 &#32;&#32;}
-133 
-134 &#32;&#32;Tensor&lt;2,3,&#32;std::complex&lt;double&gt;&gt;&#32;ret&#32;=&#32;st-&gt;Apply_PML_To_Tensor(position,&#32;transformation);
-135 
-136 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
-137 }
-138 
-139 Tensor&lt;2,3,&#32;std::complex&lt;double&gt;&gt;&#32;DualProblemTransformationWrapper::get_Preconditioner_Tensor(Point&lt;3&gt;&#32;&amp;&#32;position,&#32;<emphasis class="keywordtype">int</emphasis>&#32;block)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-140 &#32;&#32;Point&lt;3&gt;&#32;p&#32;=&#32;transform_position(position);
-141 
-142 &#32;&#32;Tensor&lt;2,3,double&gt;&#32;transformation;
+93 Tensor&lt;2,&#32;3,&#32;double&gt;
+94 DualProblemTransformationWrapper::get_Space_Transformation_Tensor(
+95 &#32;&#32;&#32;&#32;Point&lt;3&gt;&#32;&amp;position)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+96 &#32;&#32;std::cout
+97 &#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;This&#32;should&#32;never&#32;be&#32;called:&#32;&quot;</emphasis>
+98 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="stringliteral">&quot;DualProblemTransformationWrapper::get_Space_Transformation_Tensor&quot;</emphasis>
+99 &#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;std::endl;
+100 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;get_Space_Transformation_Tensor(position);
+101 }
+102 
+103 Tensor&lt;2,&#32;3,&#32;std::complex&lt;double&gt;&gt;
+104 DualProblemTransformationWrapper::Apply_PML_To_Tensor(
+105 &#32;&#32;&#32;&#32;Point&lt;3&gt;&#32;&amp;,&#32;Tensor&lt;2,&#32;3,&#32;double&gt;&#32;transformation)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+106 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;This&#32;function&#32;should&#32;never&#32;be&#32;called:&#32;&quot;</emphasis>
+107 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="stringliteral">&quot;DualProblemTransformationWrapper::Apply_PML_To_Tensor&quot;</emphasis>
+108 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;std::endl;
+109 
+110 &#32;&#32;Tensor&lt;2,&#32;3,&#32;std::complex&lt;double&gt;&gt;&#32;ret2;
+111 
+112 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;3;&#32;i++)&#32;{
+113 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&#32;&lt;&#32;3;&#32;j++)&#32;{
+114 &#32;&#32;&#32;&#32;&#32;&#32;ret2[i][j]&#32;=&#32;transformation[i][j]&#32;*&#32;std::complex&lt;double&gt;(1.0,&#32;0.0);
+115 &#32;&#32;&#32;&#32;}
+116 &#32;&#32;}
+117 
+118 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret2;
+119 }
+120 
+121 Tensor&lt;2,&#32;3,&#32;std::complex&lt;double&gt;&gt;
+122 DualProblemTransformationWrapper::Apply_PML_To_Tensor_For_Preconditioner(
+123 &#32;&#32;&#32;&#32;Point&lt;3&gt;&#32;&amp;,&#32;Tensor&lt;2,&#32;3,&#32;double&gt;&#32;transformation,&#32;<emphasis class="keywordtype">int</emphasis>)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+124 &#32;&#32;std::cout&#32;&lt;&lt;&#32;<emphasis class="stringliteral">&quot;This&#32;function&#32;should&#32;never&#32;be&#32;called:&#32;&quot;</emphasis>
+125 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="stringliteral">&quot;DualProblemTransformationWrapper::Apply_PML_To_Tensor_For_&quot;</emphasis>
+126 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="stringliteral">&quot;Preconditioner&quot;</emphasis>
+127 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&lt;&lt;&#32;std::endl;
+128 
+129 &#32;&#32;Tensor&lt;2,&#32;3,&#32;std::complex&lt;double&gt;&gt;&#32;ret2;
+130 
+131 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;i&#32;=&#32;0;&#32;i&#32;&lt;&#32;3;&#32;i++)&#32;{
+132 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">int</emphasis>&#32;j&#32;=&#32;0;&#32;j&#32;&lt;&#32;3;&#32;j++)&#32;{
+133 &#32;&#32;&#32;&#32;&#32;&#32;ret2[i][j]&#32;=&#32;transformation[i][j]&#32;*&#32;std::complex&lt;double&gt;(1.0,&#32;0.0);
+134 &#32;&#32;&#32;&#32;}
+135 &#32;&#32;}
+136 
+137 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret2;
+138 }
+139 
+140 Tensor&lt;2,&#32;3,&#32;std::complex&lt;double&gt;&gt;&#32;DualProblemTransformationWrapper::get_Tensor(
+141 &#32;&#32;&#32;&#32;Point&lt;3&gt;&#32;&amp;position)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+142 &#32;&#32;Point&lt;3&gt;&#32;p&#32;=&#32;transform_position(position);
 143 
-144 &#32;&#32;<emphasis class="keywordflow">if</emphasis>(homogenized)&#32;{
-145 &#32;&#32;&#32;&#32;transformation&#32;=&#32;st-&gt;get_Space_Transformation_Tensor_Homogenized(p);
-146 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-147 &#32;&#32;&#32;&#32;transformation&#32;=&#32;st-&gt;get_Space_Transformation_Tensor(p);
-148 &#32;&#32;}
-149 
-150 &#32;&#32;Tensor&lt;2,3,&#32;std::complex&lt;double&gt;&gt;&#32;ret&#32;=&#32;st-&gt;Apply_PML_To_Tensor_For_Preconditioner(position,&#32;transformation,&#32;block);
+144 &#32;&#32;Tensor&lt;2,&#32;3,&#32;double&gt;&#32;transformation;
+145 
+146 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(homogenized)&#32;{
+147 &#32;&#32;&#32;&#32;transformation&#32;=&#32;st-&gt;get_Space_Transformation_Tensor_Homogenized(p);
+148 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+149 &#32;&#32;&#32;&#32;transformation&#32;=&#32;st-&gt;get_Space_Transformation_Tensor(p);
+150 &#32;&#32;}
 151 
-152 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
-153 }
+152 &#32;&#32;Tensor&lt;2,&#32;3,&#32;std::complex&lt;double&gt;&gt;&#32;ret&#32;=
+153 &#32;&#32;&#32;&#32;&#32;&#32;st-&gt;Apply_PML_To_Tensor(position,&#32;transformation);
 154 
-155 std::complex&lt;double&gt;&#32;DualProblemTransformationWrapper::gauss_product_2D_sphere(<emphasis class="keywordtype">double</emphasis>&#32;z,&#32;<emphasis class="keywordtype">int</emphasis>&#32;n,&#32;<emphasis class="keywordtype">double</emphasis>&#32;R,&#32;<emphasis class="keywordtype">double</emphasis>&#32;Xc,&#32;<emphasis class="keywordtype">double</emphasis>&#32;Yc,&#32;<link linkend="class_waveguide">Waveguide</link>&#32;*&#32;in_w)
-156 {
-157 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;gauss_product_2D_sphere(z,n,R,&#32;Xc,&#32;Yc,&#32;in_w);
-158 }
-159 
-<link linkend="class_dual_problem_transformation_wrapper_1a5f744cc44e1193289c1e3ef9f72b91fe">160 </link>std::complex&lt;double&gt;&#32;<link linkend="class_dual_problem_transformation_wrapper_1a5f744cc44e1193289c1e3ef9f72b91fe">DualProblemTransformationWrapper::evaluate_for_z</link>(<emphasis class="keywordtype">double</emphasis>&#32;in_z,&#32;<link linkend="class_waveguide">Waveguide</link>&#32;*&#32;in_w)&#32;{
-161 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a9d2f74d35f0d2cf01d9c143f9710522f">evaluate_for_z</link>(in_z,&#32;in_w);
-162 }
-163 
-<link linkend="class_dual_problem_transformation_wrapper_1a2e1f0e551e73ade4d59c9f74ab04db6f">164 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a2e1f0e551e73ade4d59c9f74ab04db6f">DualProblemTransformationWrapper::estimate_and_initialize</link>()&#32;{
-165 &#32;&#32;st-&gt;<link linkend="class_space_transformation_1a471e592764d717c88f8f8e083b848255">estimate_and_initialize</link>();
-166 &#32;&#32;<emphasis class="keywordflow">return</emphasis>;
-167 }
-168 
-<link linkend="class_dual_problem_transformation_wrapper_1a4b78dd8311616a69c95f0b23ff17dea7">169 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a4b78dd8311616a69c95f0b23ff17dea7">DualProblemTransformationWrapper::get_Q1</link>&#32;(<emphasis class="keywordtype">double</emphasis>&#32;z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-170 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1ae8f47777626abc9fdd229c52f7f30c5e">get_Q1</link>(z);
-171 }
-172 
-<link linkend="class_dual_problem_transformation_wrapper_1a5fb013593a2be7b05cad9d2fd881a471">173 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a5fb013593a2be7b05cad9d2fd881a471">DualProblemTransformationWrapper::get_Q2</link>&#32;(<emphasis class="keywordtype">double</emphasis>&#32;z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-174 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1ac938a474eb72c14b7e934563458bce1f">get_Q2</link>(z);
-175 }
-176 
-<link linkend="class_dual_problem_transformation_wrapper_1a8ef6b10638782b2b0bbf3e5d8e75c700">177 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a8ef6b10638782b2b0bbf3e5d8e75c700">DualProblemTransformationWrapper::get_Q3</link>&#32;(<emphasis class="keywordtype">double</emphasis>&#32;z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-178 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a85db668db183d2b09157ef8351a198e1">get_Q3</link>(z);
-179 }
-180 
-<link linkend="class_dual_problem_transformation_wrapper_1afb68509aedf69ca86444bfa803b87786">181 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1afb68509aedf69ca86444bfa803b87786">DualProblemTransformationWrapper::get_dof</link>(&#32;<emphasis class="keywordtype">int</emphasis>&#32;dof)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-182 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a7d3a0e5a6084d3ed2c11772147eb1297">get_dof</link>(dof);
-183 }
-184 
-<link linkend="class_dual_problem_transformation_wrapper_1a80f70f69858d7d099ab33c8967ec8ff1">185 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a80f70f69858d7d099ab33c8967ec8ff1">DualProblemTransformationWrapper::set_dof</link>(<emphasis class="keywordtype">int</emphasis>&#32;dof,&#32;<emphasis class="keywordtype">double</emphasis>&#32;value)&#32;{
-186 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1ae459d3c6f53143ec86773b87088cffcf">set_dof</link>(dof,&#32;value);
-187 }
-188 
-<link linkend="class_dual_problem_transformation_wrapper_1a6bffcebf18db8637aa5137a0f5c9776b">189 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a6bffcebf18db8637aa5137a0f5c9776b">DualProblemTransformationWrapper::get_free_dof</link>(&#32;<emphasis class="keywordtype">int</emphasis>&#32;dof)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-190 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1ace8f3af9e8d918297e1ffd67cd4046b9">get_free_dof</link>(dof);
+155 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+156 }
+157 
+158 Tensor&lt;2,&#32;3,&#32;std::complex&lt;double&gt;&gt;
+159 DualProblemTransformationWrapper::get_Preconditioner_Tensor(Point&lt;3&gt;&#32;&amp;position,
+160 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;block)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+161 &#32;&#32;Point&lt;3&gt;&#32;p&#32;=&#32;transform_position(position);
+162 
+163 &#32;&#32;Tensor&lt;2,&#32;3,&#32;double&gt;&#32;transformation;
+164 
+165 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(homogenized)&#32;{
+166 &#32;&#32;&#32;&#32;transformation&#32;=&#32;st-&gt;get_Space_Transformation_Tensor_Homogenized(p);
+167 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+168 &#32;&#32;&#32;&#32;transformation&#32;=&#32;st-&gt;get_Space_Transformation_Tensor(p);
+169 &#32;&#32;}
+170 
+171 &#32;&#32;Tensor&lt;2,&#32;3,&#32;std::complex&lt;double&gt;&gt;&#32;ret&#32;=
+172 &#32;&#32;&#32;&#32;&#32;&#32;st-&gt;Apply_PML_To_Tensor_For_Preconditioner(position,&#32;transformation,
+173 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;block);
+174 
+175 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;ret;
+176 }
+177 
+178 std::complex&lt;double&gt;&#32;DualProblemTransformationWrapper::gauss_product_2D_sphere(
+179 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;z,&#32;<emphasis class="keywordtype">int</emphasis>&#32;n,&#32;<emphasis class="keywordtype">double</emphasis>&#32;R,&#32;<emphasis class="keywordtype">double</emphasis>&#32;Xc,&#32;<emphasis class="keywordtype">double</emphasis>&#32;Yc,&#32;<link linkend="class_waveguide">Waveguide</link>&#32;*in_w)&#32;{
+180 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;gauss_product_2D_sphere(z,&#32;n,&#32;R,&#32;Xc,&#32;Yc,&#32;in_w);
+181 }
+182 
+<link linkend="class_dual_problem_transformation_wrapper_1a5f744cc44e1193289c1e3ef9f72b91fe">183 </link>std::complex&lt;double&gt;&#32;<link linkend="class_dual_problem_transformation_wrapper_1a5f744cc44e1193289c1e3ef9f72b91fe">DualProblemTransformationWrapper::evaluate_for_z</link>(
+184 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;in_z,&#32;<link linkend="class_waveguide">Waveguide</link>&#32;*in_w)&#32;{
+185 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a9d2f74d35f0d2cf01d9c143f9710522f">evaluate_for_z</link>(in_z,&#32;in_w);
+186 }
+187 
+<link linkend="class_dual_problem_transformation_wrapper_1a2e1f0e551e73ade4d59c9f74ab04db6f">188 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a2e1f0e551e73ade4d59c9f74ab04db6f">DualProblemTransformationWrapper::estimate_and_initialize</link>()&#32;{
+189 &#32;&#32;st-&gt;<link linkend="class_space_transformation_1a471e592764d717c88f8f8e083b848255">estimate_and_initialize</link>();
+190 &#32;&#32;<emphasis class="keywordflow">return</emphasis>;
 191 }
 192 
-<link linkend="class_dual_problem_transformation_wrapper_1a99850a3e741eb1ae36555da9c0bd32a7">193 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a99850a3e741eb1ae36555da9c0bd32a7">DualProblemTransformationWrapper::set_free_dof</link>(<emphasis class="keywordtype">int</emphasis>&#32;dof,&#32;<emphasis class="keywordtype">double</emphasis>&#32;value)&#32;{
-194 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a18738ddf530fe1e109fd6f01b3021105">set_free_dof</link>(dof,&#32;value);
+<link linkend="class_dual_problem_transformation_wrapper_1a4b78dd8311616a69c95f0b23ff17dea7">193 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a4b78dd8311616a69c95f0b23ff17dea7">DualProblemTransformationWrapper::get_Q1</link>(<emphasis class="keywordtype">double</emphasis>&#32;z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+194 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1ae8f47777626abc9fdd229c52f7f30c5e">get_Q1</link>(z);
 195 }
 196 
-<link linkend="class_dual_problem_transformation_wrapper_1ab2847eaf645962d538d754bf384ba6e7">197 </link>std::pair&lt;int,&#32;double&gt;&#32;<link linkend="class_dual_problem_transformation_wrapper_1ab2847eaf645962d538d754bf384ba6e7">DualProblemTransformationWrapper::Z_to_Sector_and_local_z</link>(<emphasis class="keywordtype">double</emphasis>&#32;in_z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-198 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(in_z);
+<link linkend="class_dual_problem_transformation_wrapper_1a5fb013593a2be7b05cad9d2fd881a471">197 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a5fb013593a2be7b05cad9d2fd881a471">DualProblemTransformationWrapper::get_Q2</link>(<emphasis class="keywordtype">double</emphasis>&#32;z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+198 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1ac938a474eb72c14b7e934563458bce1f">get_Q2</link>(z);
 199 }
 200 
-<link linkend="class_dual_problem_transformation_wrapper_1a702704a446a3c7f4c8fdaca5c3e657a6">201 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a702704a446a3c7f4c8fdaca5c3e657a6">DualProblemTransformationWrapper::Sector_Length</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
-202 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a4719286bbc0bba23dcfa96badfb53ef1">Sector_Length</link>();
+<link linkend="class_dual_problem_transformation_wrapper_1a8ef6b10638782b2b0bbf3e5d8e75c700">201 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a8ef6b10638782b2b0bbf3e5d8e75c700">DualProblemTransformationWrapper::get_Q3</link>(<emphasis class="keywordtype">double</emphasis>&#32;z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+202 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a85db668db183d2b09157ef8351a198e1">get_Q3</link>(z);
 203 }
 204 
-<link linkend="class_dual_problem_transformation_wrapper_1aecdb825d49428ed9902c369e58f39e60">205 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1aecdb825d49428ed9902c369e58f39e60">DualProblemTransformationWrapper::get_r</link>(<emphasis class="keywordtype">double</emphasis>&#32;in_z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-206 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a15a36cfba06f1242c243d3f92c79b3d8">get_r</link>(in_z);
+<link linkend="class_dual_problem_transformation_wrapper_1afb68509aedf69ca86444bfa803b87786">205 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1afb68509aedf69ca86444bfa803b87786">DualProblemTransformationWrapper::get_dof</link>(<emphasis class="keywordtype">int</emphasis>&#32;dof)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+206 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a7d3a0e5a6084d3ed2c11772147eb1297">get_dof</link>(dof);
 207 }
 208 
-<link linkend="class_dual_problem_transformation_wrapper_1a7287bf478379812a2ed66036f25369ff">209 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a7287bf478379812a2ed66036f25369ff">DualProblemTransformationWrapper::get_m</link>(<emphasis class="keywordtype">double</emphasis>&#32;in_z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-210 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a164857fcea7bbad31325ee26705f8e0b">get_m</link>(in_z);
+<link linkend="class_dual_problem_transformation_wrapper_1a80f70f69858d7d099ab33c8967ec8ff1">209 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a80f70f69858d7d099ab33c8967ec8ff1">DualProblemTransformationWrapper::set_dof</link>(<emphasis class="keywordtype">int</emphasis>&#32;dof,&#32;<emphasis class="keywordtype">double</emphasis>&#32;value)&#32;{
+210 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1ae459d3c6f53143ec86773b87088cffcf">set_dof</link>(dof,&#32;value);
 211 }
 212 
-<link linkend="class_dual_problem_transformation_wrapper_1a522e6ffb1b6d95c82cc3aa1754a37938">213 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a522e6ffb1b6d95c82cc3aa1754a37938">DualProblemTransformationWrapper::get_v</link>(<emphasis class="keywordtype">double</emphasis>&#32;in_z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-214 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a6f2c4e565e1e394155969f500abc188d">get_v</link>(in_z);
+<link linkend="class_dual_problem_transformation_wrapper_1a6bffcebf18db8637aa5137a0f5c9776b">213 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a6bffcebf18db8637aa5137a0f5c9776b">DualProblemTransformationWrapper::get_free_dof</link>(<emphasis class="keywordtype">int</emphasis>&#32;dof)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+214 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1ace8f3af9e8d918297e1ffd67cd4046b9">get_free_dof</link>(dof);
 215 }
 216 
-217 <emphasis class="keywordtype">int</emphasis>&#32;DualProblemTransformationWrapper::Z_to_Layer(&#32;<emphasis class="keywordtype">double</emphasis>&#32;z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-218 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a5c01731c41adb0a9e7881f890a838a0c">Z_to_Layer</link>(z);
+<link linkend="class_dual_problem_transformation_wrapper_1a99850a3e741eb1ae36555da9c0bd32a7">217 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a99850a3e741eb1ae36555da9c0bd32a7">DualProblemTransformationWrapper::set_free_dof</link>(<emphasis class="keywordtype">int</emphasis>&#32;dof,&#32;<emphasis class="keywordtype">double</emphasis>&#32;value)&#32;{
+218 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a18738ddf530fe1e109fd6f01b3021105">set_free_dof</link>(dof,&#32;value);
 219 }
 220 
-<link linkend="class_dual_problem_transformation_wrapper_1ac54096a316092fdeca64a1b5d59247a4">221 </link>Vector&lt;double&gt;&#32;<link linkend="class_dual_problem_transformation_wrapper_1ac54096a316092fdeca64a1b5d59247a4">DualProblemTransformationWrapper::Dofs</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
-222 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1ab003b1737784c1750121dd8c03b98f52">Dofs</link>();
-223 }
-224 
-<link linkend="class_dual_problem_transformation_wrapper_1aa107c5fb31f7161339e40a52b2cf080c">225 </link><emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1aa107c5fb31f7161339e40a52b2cf080c">DualProblemTransformationWrapper::NFreeDofs</link>()<emphasis class="keyword">&#32;&#32;const</emphasis>{
-226 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a49bffd597593d0911edbafff13214195">NFreeDofs</link>();
-227 }
-228 
-<link linkend="class_dual_problem_transformation_wrapper_1aacdefda799c91102c06be95b42702cd7">229 </link><emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1aacdefda799c91102c06be95b42702cd7">DualProblemTransformationWrapper::NDofs</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
-230 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a463f0141c194724575bdcdb23168fdec">NDofs</link>();
-231 }
-232 
-<link linkend="class_dual_problem_transformation_wrapper_1a916e000000913063601cd3935d6ed257">233 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a916e000000913063601cd3935d6ed257">DualProblemTransformationWrapper::IsDofFree</link>(<emphasis class="keywordtype">int</emphasis>&#32;input)<emphasis class="keyword">&#32;const&#32;</emphasis>{
-234 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a487c356afef667763e244f3a93df4c8a">IsDofFree</link>(input);
-235 }
-236 
-<link linkend="class_dual_problem_transformation_wrapper_1a113fb6e5d2b64bda4dbd20c3399be7e5">237 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a113fb6e5d2b64bda4dbd20c3399be7e5">DualProblemTransformationWrapper::Print</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
-238 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a89e0b73d7b7303342fdcb4372e26b0a9">Print</link>();
-239 }
-240 
-241 <emphasis class="preprocessor">#endif</emphasis>
-242 
-243 
-244 
+221 std::pair&lt;int,&#32;double&gt;
+<link linkend="class_dual_problem_transformation_wrapper_1ab2847eaf645962d538d754bf384ba6e7">222 </link><link linkend="class_dual_problem_transformation_wrapper_1ab2847eaf645962d538d754bf384ba6e7">DualProblemTransformationWrapper::Z_to_Sector_and_local_z</link>(<emphasis class="keywordtype">double</emphasis>&#32;in_z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+223 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">Z_to_Sector_and_local_z</link>(in_z);
+224 }
+225 
+<link linkend="class_dual_problem_transformation_wrapper_1a702704a446a3c7f4c8fdaca5c3e657a6">226 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a702704a446a3c7f4c8fdaca5c3e657a6">DualProblemTransformationWrapper::Sector_Length</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
+227 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a4719286bbc0bba23dcfa96badfb53ef1">Sector_Length</link>();
+228 }
+229 
+<link linkend="class_dual_problem_transformation_wrapper_1aecdb825d49428ed9902c369e58f39e60">230 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1aecdb825d49428ed9902c369e58f39e60">DualProblemTransformationWrapper::get_r</link>(<emphasis class="keywordtype">double</emphasis>&#32;in_z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+231 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a15a36cfba06f1242c243d3f92c79b3d8">get_r</link>(in_z);
+232 }
+233 
+<link linkend="class_dual_problem_transformation_wrapper_1a7287bf478379812a2ed66036f25369ff">234 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a7287bf478379812a2ed66036f25369ff">DualProblemTransformationWrapper::get_m</link>(<emphasis class="keywordtype">double</emphasis>&#32;in_z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+235 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a164857fcea7bbad31325ee26705f8e0b">get_m</link>(in_z);
+236 }
+237 
+<link linkend="class_dual_problem_transformation_wrapper_1a522e6ffb1b6d95c82cc3aa1754a37938">238 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a522e6ffb1b6d95c82cc3aa1754a37938">DualProblemTransformationWrapper::get_v</link>(<emphasis class="keywordtype">double</emphasis>&#32;in_z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+239 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a6f2c4e565e1e394155969f500abc188d">get_v</link>(in_z);
+240 }
+241 
+242 <emphasis class="keywordtype">int</emphasis>&#32;DualProblemTransformationWrapper::Z_to_Layer(<emphasis class="keywordtype">double</emphasis>&#32;z)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+243 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a5c01731c41adb0a9e7881f890a838a0c">Z_to_Layer</link>(z);
+244 }
+245 
+<link linkend="class_dual_problem_transformation_wrapper_1ac54096a316092fdeca64a1b5d59247a4">246 </link>Vector&lt;double&gt;&#32;<link linkend="class_dual_problem_transformation_wrapper_1ac54096a316092fdeca64a1b5d59247a4">DualProblemTransformationWrapper::Dofs</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
+247 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1ab003b1737784c1750121dd8c03b98f52">Dofs</link>();
+248 }
+249 
+<link linkend="class_dual_problem_transformation_wrapper_1aa107c5fb31f7161339e40a52b2cf080c">250 </link><emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1aa107c5fb31f7161339e40a52b2cf080c">DualProblemTransformationWrapper::NFreeDofs</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
+251 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a49bffd597593d0911edbafff13214195">NFreeDofs</link>();
+252 }
+253 
+<link linkend="class_dual_problem_transformation_wrapper_1aacdefda799c91102c06be95b42702cd7">254 </link><emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1aacdefda799c91102c06be95b42702cd7">DualProblemTransformationWrapper::NDofs</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{
+255 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a463f0141c194724575bdcdb23168fdec">NDofs</link>();
+256 }
+257 
+<link linkend="class_dual_problem_transformation_wrapper_1a916e000000913063601cd3935d6ed257">258 </link><emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a916e000000913063601cd3935d6ed257">DualProblemTransformationWrapper::IsDofFree</link>(<emphasis class="keywordtype">int</emphasis>&#32;input)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+259 &#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a487c356afef667763e244f3a93df4c8a">IsDofFree</link>(input);
+260 }
+261 
+<link linkend="class_dual_problem_transformation_wrapper_1a113fb6e5d2b64bda4dbd20c3399be7e5">262 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_dual_problem_transformation_wrapper_1a113fb6e5d2b64bda4dbd20c3399be7e5">DualProblemTransformationWrapper::Print</link>()<emphasis class="keyword">&#32;const&#32;</emphasis>{&#32;<emphasis class="keywordflow">return</emphasis>&#32;st-&gt;<link linkend="class_space_transformation_1a89e0b73d7b7303342fdcb4372e26b0a9">Print</link>();&#32;}
+263 
+264 <emphasis class="preprocessor">#endif</emphasis>
     </computeroutput></literallayout>
 </section>

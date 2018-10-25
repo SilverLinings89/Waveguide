@@ -3,6 +3,7 @@
 #include "HSIE_Preconditioner_Base.h"
 #include <complex.h>
 #include <deal.II/base/quadrature_lib.h>
+#include <deal.II/lac/trilinos_sparse_matrix.h>
 #include <vector>
 #include "FaceSurfaceComparator.h"
 #include "FaceSurfaceComparatorZ.h"
@@ -13,15 +14,6 @@
  *
  *  Created on: Jul 11, 2018
  *      Author: kraft
- */
-
-/**
- * Implement:
- * - a(u,v)
- * - g(j,k)
- * - A_C,T
- * - (28)
- *
  */
 
 const unsigned int S1IntegrationPoints = 100;
@@ -205,13 +197,31 @@ HSIEPreconditionerBase<hsie_order>::HSIEPreconditionerBase(
   surface_edges = surf_tria.n_active_lines();
   surface_faces = surf_tria.n_active_faces();
   surface_vertices = surf_tria.n_vertices();
-  HSIE_dofs_type_1 = surface_edges * 2;
-  HSIE_dofs_type_3 = surface_edges * 2 * (hsie_order + 1);
-  HSIE_dofs_type_2 = surface_vertices * 2.0 * (hsie_order + 1);
+  HSIE_dofs_type_1_factor = dealii::GeometryInfo<2>::lines_per_face * 2;
+  HSIE_dofs_type_3_factor =
+      dealii::GeometryInfo<2>::lines_per_face * 2 * (hsie_order + 1);
+  HSIE_dofs_type_2_factor =
+      dealii::GeometryInfo<2>::vertices_per_face * 2 * (hsie_order + 1);
   HSIE_degree = hsie_order;
   fe_nedelec(GlobalParams.So_ElementOrder);
   fe_q(1);
+  quadrature_formula(2);
   hsie_dof_handler(surf_tria);
+  FEValues<3> fev_nedelec(fe_nedelec, quadrature_formula,
+                          update_values | update_gradients | update_JxW_values |
+                              update_quadrature_points);
+  FEValues<3> fev_q(fe_q, quadrature_formula,
+                    update_values | update_gradients | update_JxW_values |
+                        update_quadrature_points);
+}
+
+template <int hsie_order>
+void HSIEPreconditionerBase<hsie_order>::setup_system() {
+  const unsigned int n_total_dofs = n_dofs();
+  // IndexSet dofs(n_dofs);
+  // dofs.add_range(0, n_dofs - 1);
+  const int max_couplings = 4 * n_dofs_per_face();
+  system_matrix(n_total_dofs, n_total_dofs, max_couplings);
 }
 
 dealii::Point<3, std::complex<double>> base_fun(int i, int j,
@@ -272,7 +282,22 @@ int count_HSIE_dofs(dealii::parallel::distributed::Triangulation<3> *tria,
 }
 
 template <int hsie_order>
-unsigned int HSIEPreconditionerBase<hsie_order>::compute_number_of_dofs() {}
+unsigned int HSIEPreconditionerBase<hsie_order>::n_dofs() {
+  unsigned int ret = 0;
+  ret += surface_edges * HSIE_dofs_type_1_factor;
+  ret += surface_vertices * HSIE_dofs_type_2_factor;
+  ret += surface_edges * HSIE_dofs_type_3_factor;
+  return ret;
+}
+
+template <int hsie_order>
+unsigned int HSIEPreconditionerBase<hsie_order>::n_dofs_per_face() {
+  unsigned int ret = 0;
+  ret += 4 * HSIE_dofs_type_1_factor;
+  ret += 4 * HSIE_dofs_type_2_factor;
+  ret += 4 * HSIE_dofs_type_3_factor;
+  return ret;
+}
 
 template <int hsie_order>
 std::complex<double> HSIEPreconditionerBase<hsie_order>::a(

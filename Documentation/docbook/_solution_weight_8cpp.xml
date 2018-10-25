@@ -25,31 +25,29 @@
 5 <emphasis class="preprocessor">#include&#32;&quot;../Core/Waveguide.h&quot;</emphasis>
 6 
 7 <emphasis class="keyword">template</emphasis>&#32;&lt;<emphasis class="keywordtype">int</emphasis>&#32;dim&gt;
-<link linkend="class_solution_weight_1ad3e7356174ef64b75596c26a8e225dbb">8 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_solution_weight_1ad3e7356174ef64b75596c26a8e225dbb">SolutionWeight&lt;dim&gt;::value</link>&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;dim&gt;&#32;&amp;p,&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;)<emphasis class="keyword">&#32;const</emphasis>
-9 <emphasis class="keyword"></emphasis>{
-10 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;value&#32;=&#32;Distance2D(p);
-11 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(value&#32;&lt;&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)/2.0){
-12 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>(p[2]&#32;&lt;&#32;GlobalParams.M_R_ZLength/2.0)
-13 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;{
-14 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;1.0;
-15 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
-16 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
-17 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;}
-18 &#32;&#32;&#32;&#32;}
-19 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">else</emphasis>&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
-20 }
-21 
-22 <emphasis class="keyword">template</emphasis>&#32;&lt;<emphasis class="keywordtype">int</emphasis>&#32;dim&gt;
-<link linkend="class_solution_weight_1a3282e4b166920b4deaeb174824893aea">23 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_solution_weight_1a3282e4b166920b4deaeb174824893aea">SolutionWeight&lt;dim&gt;::vector_value</link>&#32;(<emphasis class="keyword">const</emphasis>&#32;Point&lt;dim&gt;&#32;&amp;p,&#32;&#32;&#32;&#32;Vector&lt;double&gt;&#32;&amp;values)<emphasis class="keyword">&#32;const</emphasis>
-24 <emphasis class="keyword"></emphasis>{
-25 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;c=0;&#32;c&lt;6;&#32;++c)&#32;values[c]&#32;=&#32;SolutionWeight&lt;dim&gt;::value&#32;(p,&#32;c);
+<link linkend="class_solution_weight_1ad3e7356174ef64b75596c26a8e225dbb">8 </link><emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_solution_weight_1ad3e7356174ef64b75596c26a8e225dbb">SolutionWeight&lt;dim&gt;::value</link>(<emphasis class="keyword">const</emphasis>&#32;Point&lt;dim&gt;&#32;&amp;p,
+9 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keyword">const</emphasis>&#32;<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+10 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;value&#32;=&#32;Distance2D(p);
+11 &#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(value&#32;&lt;&#32;(GlobalParams.M_C_Dim1In&#32;+&#32;GlobalParams.M_C_Dim1Out)&#32;/&#32;2.0)&#32;{
+12 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">if</emphasis>&#32;(p[2]&#32;&lt;&#32;GlobalParams.M_R_ZLength&#32;/&#32;2.0)&#32;{
+13 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;1.0;
+14 &#32;&#32;&#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>&#32;{
+15 &#32;&#32;&#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
+16 &#32;&#32;&#32;&#32;}
+17 &#32;&#32;}&#32;<emphasis class="keywordflow">else</emphasis>
+18 &#32;&#32;&#32;&#32;<emphasis class="keywordflow">return</emphasis>&#32;0.0;
+19 }
+20 
+21 <emphasis class="keyword">template</emphasis>&#32;&lt;<emphasis class="keywordtype">int</emphasis>&#32;dim&gt;
+<link linkend="class_solution_weight_1a3282e4b166920b4deaeb174824893aea">22 </link><emphasis class="keywordtype">void</emphasis>&#32;<link linkend="class_solution_weight_1a3282e4b166920b4deaeb174824893aea">SolutionWeight&lt;dim&gt;::vector_value</link>(<emphasis class="keyword">const</emphasis>&#32;Point&lt;dim&gt;&#32;&amp;p,
+23 &#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;Vector&lt;double&gt;&#32;&amp;values)<emphasis class="keyword">&#32;const&#32;</emphasis>{
+24 &#32;&#32;<emphasis class="keywordflow">for</emphasis>&#32;(<emphasis class="keywordtype">unsigned</emphasis>&#32;<emphasis class="keywordtype">int</emphasis>&#32;c&#32;=&#32;0;&#32;c&#32;&lt;&#32;6;&#32;++c)
+25 &#32;&#32;&#32;&#32;values[c]&#32;=&#32;<link linkend="class_solution_weight">SolutionWeight&lt;dim&gt;::value</link>(p,&#32;c);
 26 }
 27 
 28 <emphasis class="keyword">template</emphasis>&#32;&lt;<emphasis class="keywordtype">int</emphasis>&#32;dim&gt;
-<link linkend="class_solution_weight_1a7d7b99c10df9c392d4aa061429b3cb22">29 </link><link linkend="class_solution_weight_1a7d7b99c10df9c392d4aa061429b3cb22">SolutionWeight&lt;dim&gt;::SolutionWeight</link>():&#32;Function&lt;dim&gt;(6)&#32;{
+<link linkend="class_solution_weight_1a7d7b99c10df9c392d4aa061429b3cb22">29 </link><link linkend="class_solution_weight_1a7d7b99c10df9c392d4aa061429b3cb22">SolutionWeight&lt;dim&gt;::SolutionWeight</link>()&#32;:&#32;Function&lt;dim&gt;(6)&#32;{}
 30 
-31 }
-32 
-33 <emphasis class="preprocessor">#endif</emphasis>
+31 <emphasis class="preprocessor">#endif</emphasis>
     </computeroutput></literallayout>
 </section>

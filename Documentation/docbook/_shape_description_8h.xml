@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_shape_description_8h">
     <title>ShapeDescription.h File Reference</title>
-    <programlisting>#include &lt;vector&gt;</programlisting>
     <programlisting>#include &lt;string&gt;</programlisting>
+    <programlisting>#include &lt;vector&gt;</programlisting>
         <section>
             <title> Classes </title>
             <para>
@@ -28,20 +28,18 @@
 8 <emphasis class="preprocessor">#ifndef&#32;CODE_HELPERS_SHAPEDESCRIPTION_H_</emphasis>
 9 <emphasis class="preprocessor">#define&#32;CODE_HELPERS_SHAPEDESCRIPTION_H_</emphasis>
 10 
-11 <emphasis class="preprocessor">#include&#32;&lt;vector&gt;</emphasis>
-12 <emphasis class="preprocessor">#include&#32;&lt;string&gt;</emphasis>
+11 <emphasis class="preprocessor">#include&#32;&lt;string&gt;</emphasis>
+12 <emphasis class="preprocessor">#include&#32;&lt;vector&gt;</emphasis>
 13 
 <link linkend="class_shape_description">14 </link><emphasis class="keyword">class&#32;</emphasis><link linkend="class_shape_description">ShapeDescription</link>&#32;{
-15 <emphasis class="keyword">public</emphasis>:
-16 &#32;&#32;&#32;&#32;<link linkend="class_shape_description">ShapeDescription</link>();
-17 &#32;&#32;&#32;&#32;~<link linkend="class_shape_description">ShapeDescription</link>();
-18 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;SetByString(std::string);
-19 &#32;&#32;&#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;Sectors;
-20 &#32;&#32;&#32;&#32;std::vector&lt;double&gt;&#32;m,v,z;
-21 
-22 };
-23 
-24 
-25 <emphasis class="preprocessor">#endif&#32;</emphasis><emphasis class="comment">/*&#32;CODE_HELPERS_SHAPEDESCRIPTION_H_&#32;*/</emphasis><emphasis class="preprocessor"></emphasis>
+15 &#32;<emphasis class="keyword">public</emphasis>:
+16 &#32;&#32;<link linkend="class_shape_description">ShapeDescription</link>();
+17 &#32;&#32;~<link linkend="class_shape_description">ShapeDescription</link>();
+18 &#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;SetByString(std::string);
+19 &#32;&#32;<emphasis class="keywordtype">int</emphasis>&#32;Sectors;
+20 &#32;&#32;std::vector&lt;double&gt;&#32;m,&#32;v,&#32;z;
+21 };
+22 
+23 <emphasis class="preprocessor">#endif&#32;</emphasis><emphasis class="comment">/*&#32;CODE_HELPERS_SHAPEDESCRIPTION_H_&#32;*/</emphasis><emphasis class="preprocessor"></emphasis>
     </computeroutput></literallayout>
 </section>

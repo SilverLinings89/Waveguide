@@ -1,15 +1,16 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_optimization1_d_8h">
     <title>Optimization1D.h File Reference</title>
-    <programlisting>#include &quot;OptimizationAlgorithm.h&quot;</programlisting>
     <programlisting>#include &quot;../Core/Waveguide.h&quot;</programlisting>
+    <programlisting>#include &quot;OptimizationAlgorithm.h&quot;</programlisting>
         <section>
             <title> Classes </title>
             <para>
                 <itemizedlist>
                     <listitem>
                         <para>struct <link linkend="class_optimization1_d">Optimization1D</link></para>
-<para><emphasis>This class implements the computation of an optimization step by doing 1D optimization based on an adjoint scheme.</emphasis></para>
+<para><emphasis>This class implements the computation of an optimization step by doing
+1D optimization based on an adjoint scheme.</emphasis></para>
                     </listitem>
                 </itemizedlist>
             </para>
@@ -22,33 +23,33 @@
 1 <emphasis class="preprocessor">#ifndef&#32;Optimization1D_H_</emphasis>
 2 <emphasis class="preprocessor">#define&#32;Optimization1D_H_</emphasis>
 3 
-4 <emphasis class="preprocessor">#include&#32;&quot;OptimizationAlgorithm.h&quot;</emphasis>
-5 <emphasis class="preprocessor">#include&#32;&quot;../Core/Waveguide.h&quot;</emphasis><emphasis class="comment"></emphasis>
+4 <emphasis class="preprocessor">#include&#32;&quot;../Core/Waveguide.h&quot;</emphasis>
+5 <emphasis class="preprocessor">#include&#32;&quot;OptimizationAlgorithm.h&quot;</emphasis><emphasis class="comment"></emphasis>
 6 <emphasis class="comment">/**</emphasis>
 7 <emphasis class="comment">&#32;*&#32;\class&#32;Optimization1D</emphasis>
-8 <emphasis class="comment">&#32;*&#32;\brief&#32;This&#32;class&#32;implements&#32;the&#32;computation&#32;of&#32;an&#32;optimization&#32;step&#32;by&#32;doing&#32;1D&#32;optimization&#32;based&#32;on&#32;an&#32;adjoint&#32;scheme.</emphasis>
-9 <emphasis class="comment">&#32;*</emphasis>
-10 <emphasis class="comment">&#32;*&#32;Objects&#32;of&#32;the&#32;Type&#32;OptimizationAlgorithm&#32;are&#32;used&#32;by&#32;the&#32;class&#32;OptimizationStrategy&#32;to&#32;compute&#32;the&#32;next&#32;viable&#32;configuration&#32;based&#32;on&#32;former&#32;results.&#32;Its&#32;is&#32;encapsulated&#32;in&#32;it&apos;s&#32;own&#32;class&#32;to&#32;offer&#32;comparison&#32;and&#32;easy&#32;changing&#32;between&#32;differenct&#32;schemes.</emphasis>
-11 <emphasis class="comment">&#32;*&#32;\author&#32;Pascal&#32;Kraft</emphasis>
-12 <emphasis class="comment">&#32;*&#32;\date&#32;9.1.2017</emphasis>
-13 <emphasis class="comment">&#32;*/</emphasis>
-<link linkend="class_optimization1_d">14 </link><emphasis class="keyword">class&#32;</emphasis><link linkend="class_optimization1_d">Optimization1D</link>&#32;:&#32;<emphasis class="keyword">public</emphasis>&#32;<link linkend="class_optimization_algorithm">OptimizationAlgorithm</link>&lt;std::complex&lt;double&gt;&gt;&#32;{
-15 
-16 &#32;<emphasis class="keyword">public</emphasis>:
-17 &#32;&#32;<link linkend="class_optimization1_d">Optimization1D</link>(&#32;);
-18 
-19 &#32;&#32;~<link linkend="class_optimization1_d">Optimization1D</link>();
-20 
-21 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_optimization1_d_1ad5dd75f9d24d681050f471fbfb8b74e2">perform_small_step_next</link>(<emphasis class="keywordtype">int</emphasis>&#32;small_steps_before&#32;);
-22 
-23 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_optimization1_d_1ad458c8235115a9a8dac013afe6b8d484">get_small_step_step_width</link>(<emphasis class="keywordtype">int</emphasis>&#32;small_steps_before&#32;);
-24 
-25 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_optimization1_d_1a2084077506e3b4a7432c74406f6598f1">perform_big_step_next</link>(<emphasis class="keywordtype">int</emphasis>&#32;small_steps_before&#32;);
-26 
-27 &#32;&#32;std::vector&lt;double&gt;&#32;<link linkend="class_optimization1_d_1ae6a70b42abbe7231ddc7974f3cf42837">get_big_step_configuration</link>();
-28 
-29 &#32;&#32;<emphasis class="comment">//double&#32;*&#32;steps_widths;</emphasis>
-30 
+8 <emphasis class="comment">&#32;*&#32;\brief&#32;This&#32;class&#32;implements&#32;the&#32;computation&#32;of&#32;an&#32;optimization&#32;step&#32;by&#32;doing</emphasis>
+9 <emphasis class="comment">&#32;*&#32;1D&#32;optimization&#32;based&#32;on&#32;an&#32;adjoint&#32;scheme.</emphasis>
+10 <emphasis class="comment">&#32;*</emphasis>
+11 <emphasis class="comment">&#32;*&#32;Objects&#32;of&#32;the&#32;Type&#32;OptimizationAlgorithm&#32;are&#32;used&#32;by&#32;the&#32;class</emphasis>
+12 <emphasis class="comment">&#32;*&#32;OptimizationStrategy&#32;to&#32;compute&#32;the&#32;next&#32;viable&#32;configuration&#32;based&#32;on&#32;former</emphasis>
+13 <emphasis class="comment">&#32;*&#32;results.&#32;Its&#32;is&#32;encapsulated&#32;in&#32;it&apos;s&#32;own&#32;class&#32;to&#32;offer&#32;comparison&#32;and&#32;easy</emphasis>
+14 <emphasis class="comment">&#32;*&#32;changing&#32;between&#32;differenct&#32;schemes.&#32;\author&#32;Pascal&#32;Kraft&#32;\date&#32;9.1.2017</emphasis>
+15 <emphasis class="comment">&#32;*/</emphasis>
+<link linkend="class_optimization1_d">16 </link><emphasis class="keyword">class&#32;</emphasis><link linkend="class_optimization1_d">Optimization1D</link>&#32;:&#32;<emphasis class="keyword">public</emphasis>&#32;<link linkend="class_optimization_algorithm">OptimizationAlgorithm</link>&lt;std::complex&lt;double&gt;&gt;&#32;{
+17 &#32;<emphasis class="keyword">public</emphasis>:
+18 &#32;&#32;<link linkend="class_optimization1_d">Optimization1D</link>();
+19 
+20 &#32;&#32;~<link linkend="class_optimization1_d">Optimization1D</link>();
+21 
+22 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_optimization1_d_1ad5dd75f9d24d681050f471fbfb8b74e2">perform_small_step_next</link>(<emphasis class="keywordtype">int</emphasis>&#32;small_steps_before);
+23 
+24 &#32;&#32;<emphasis class="keywordtype">double</emphasis>&#32;<link linkend="class_optimization1_d_1ad458c8235115a9a8dac013afe6b8d484">get_small_step_step_width</link>(<emphasis class="keywordtype">int</emphasis>&#32;small_steps_before);
+25 
+26 &#32;&#32;<emphasis class="keywordtype">bool</emphasis>&#32;<link linkend="class_optimization1_d_1a2084077506e3b4a7432c74406f6598f1">perform_big_step_next</link>(<emphasis class="keywordtype">int</emphasis>&#32;small_steps_before);
+27 
+28 &#32;&#32;std::vector&lt;double&gt;&#32;<link linkend="class_optimization1_d_1ae6a70b42abbe7231ddc7974f3cf42837">get_big_step_configuration</link>();
+29 
+30 &#32;&#32;<emphasis class="comment">//&#32;double&#32;*&#32;steps_widths;</emphasis>
 31 };
 32 
 33 <emphasis class="preprocessor">#endif</emphasis>

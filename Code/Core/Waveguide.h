@@ -128,14 +128,13 @@ class Waveguide {
   void run();
 
   /**
-   * The assemble_part(unsigned int in_part) function is a part of the
+   * The assemble_part function is a part of the
    * assemble_system() functionality. It builds a part of the system-matrix.
    * assemble_system() creates the global system matrix. After splitting the
-   * degrees of freedom into several block, this method takes one block
+   * degrees of freedom into several blocks, this method takes one block
    * (identified by the integer passed as an argument) and calculates all
    * matrix-entries that reference it.
-   * @param in_part Numerical identifier of the part of the system.
-   * @date 13.11.2015
+   * @date 25.10.2018
    * @author Pascal Kraft
    */
   void assemble_part();

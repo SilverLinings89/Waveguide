@@ -28,16 +28,10 @@
 7 
 8 <emphasis class="keyword">using&#32;namespace&#32;</emphasis><link linkend="namespacedealii">dealii</link>;
 9 
-10 Optimization::Optimization():
-11 &#32;&#32;&#32;&#32;pout(<link linkend="namespacestd">std</link>::cout,&#32;GlobalParams.MPI_Rank==0)&#32;{
-12 
-13 }
-14 
-15 Optimization::~Optimization()&#32;{
-16 
-17 }
-18 
-19 <emphasis class="preprocessor">#endif</emphasis>
-20 
+10 Optimization::Optimization()&#32;:&#32;pout(<link linkend="namespacestd">std</link>::cout,&#32;GlobalParams.MPI_Rank&#32;==&#32;0)&#32;{}
+11 
+12 Optimization::~Optimization()&#32;{}
+13 
+14 <emphasis class="preprocessor">#endif</emphasis>
     </computeroutput></literallayout>
 </section>

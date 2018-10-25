@@ -21,14 +21,10 @@
 2 <emphasis class="preprocessor">#define&#32;MESHGENERATOR_CPP</emphasis>
 3 <emphasis class="preprocessor">#include&#32;&quot;MeshGenerator.h&quot;</emphasis>
 4 
-5 MeshGenerator::MeshGenerator()&#32;{
+5 MeshGenerator::MeshGenerator()&#32;{}
 6 
-7 }
+7 MeshGenerator::~MeshGenerator()&#32;{}
 8 
-9 MeshGenerator::~MeshGenerator()&#32;{
-10 
-11 }
-12 
-13 <emphasis class="preprocessor">#endif</emphasis>
+9 <emphasis class="preprocessor">#endif</emphasis>
     </computeroutput></literallayout>
 </section>

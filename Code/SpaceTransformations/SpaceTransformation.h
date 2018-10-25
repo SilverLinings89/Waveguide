@@ -93,15 +93,6 @@ class SpaceTransformation {
   virtual bool PML_in_Z(Point<3> &position) const = 0;
 
   /**
-   * Similar to the PML_in_Z only this function is used to generate the
-   * artificial PML used in the Preconditioner. These Layers are not only
-   * situated at the surface of the computational domain but also inside it at
-   * the interfaces of Sectors.
-   */
-  // virtual bool Preconditioner_PML_in_Z(Point<3> &p, unsigned int block)
-  // const=0;
-
-  /**
    * This function fulfills the same purpose as those with similar names but it
    * is supposed to be used together with Preconditioner_PML_in_Z instead of the
    * versions without "Preconditioner".
@@ -143,12 +134,6 @@ class SpaceTransformation {
    * PML-surface.
    */
   virtual double PML_Z_Distance(Point<3> &position) const = 0;
-
-  /**
-   * This member contains all the Sectors who, as a sum, form the complete
-   * Waveguide. These Sectors are a partition of the simulated domain.
-   */
-  // std::vector<Sector> case_sectors;
 
   /**
    * The material-property \f$\epsilon_r\f$ has a different value inside and
@@ -221,7 +206,7 @@ class SpaceTransformation {
    * the domain of possible cases. \param dof The index of the degree of freedom
    * to be retrieved from the structure of the modelled waveguide. \return This
    * function returns the value of the requested degree of freedom. Should this
-   * dof not exist, 0 will be returnd.
+   * dof not exist, 0 will be returned.
    */
   virtual double get_dof(int dof) const = 0;
 

@@ -24,12 +24,12 @@
 5 
 <link linkend="class_point_val">6 </link><emphasis class="keyword">class&#32;</emphasis><link linkend="class_point_val">PointVal</link>&#32;{
 7 &#32;<emphasis class="keyword">public</emphasis>:
-8 &#32;&#32;std::complex&lt;double&gt;&#32;Ex,Ey,Ez;
+8 &#32;&#32;std::complex&lt;double&gt;&#32;Ex,&#32;Ey,&#32;Ez;
 9 
 10 &#32;&#32;<link linkend="class_point_val">PointVal</link>();
 11 &#32;&#32;<link linkend="class_point_val">PointVal</link>(<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>,&#32;<emphasis class="keywordtype">double</emphasis>);
 12 &#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;<emphasis class="keyword">set</emphasis>(double,&#32;double,&#32;double,&#32;double,&#32;double,&#32;double);
-13 &#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;rescale&#32;(<emphasis class="keywordtype">double</emphasis>);
+13 &#32;&#32;<emphasis class="keywordtype">void</emphasis>&#32;rescale(<emphasis class="keywordtype">double</emphasis>);
 14 };
 15 
 16 <emphasis class="preprocessor">#endif</emphasis>

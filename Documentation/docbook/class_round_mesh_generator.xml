@@ -110,7 +110,8 @@ parallel::distributed::Triangulation&lt; 3 &gt; * in_tria, unsigned int times)<p
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_round_mesh_generator_1a9bdb7b90cc1988eb80c441ee8f85b0a0">refine_proximity</link> (
-parallel::distributed::Triangulation&lt; 3 &gt; * in_tria, unsigned int times, double factor)<para><emphasis>This function is intended to execute a refinement inside and near the waveguide boundary.</emphasis></para>
+parallel::distributed::Triangulation&lt; 3 &gt; * in_tria, unsigned int times, double factor)<para><emphasis>This function is intended to execute a refinement inside and near the
+waveguide boundary.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -119,7 +120,8 @@ parallel::distributed::Triangulation&lt; 3 &gt; * in_tria, unsigned int times, d
                 <itemizedlist>
                     <listitem>
                         <para>bool <link linkend="class_round_mesh_generator_1ae28b3d9461233b9de1ce366c0f2458bd">math_coordinate_in_waveguide</link> (
-Point&lt; 3 &gt; position)<para><emphasis>This function checks if the given coordinate is inside the waveguide or not.</emphasis></para>
+Point&lt; 3 &gt; position)<para><emphasis>This function checks if the given coordinate is inside the waveguide or
+not.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -128,7 +130,8 @@ Point&lt; 3 &gt; position)<para><emphasis>This function checks if the given coor
                 <itemizedlist>
                     <listitem>
                         <para>bool <link linkend="class_round_mesh_generator_1aba31fbd62ab56899c0cd06c5257420c7">phys_coordinate_in_waveguide</link> (
-Point&lt; 3 &gt; position)<para><emphasis>This function checks if the given coordinate is inside the waveguide or not.</emphasis></para>
+Point&lt; 3 &gt; position)<para><emphasis>This function checks if the given coordinate is inside the waveguide or
+not.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -146,7 +149,8 @@ parallel::distributed::Triangulation&lt; 3 &gt; &amp; tria)<para><emphasis>This 
                 <itemizedlist>
                     <listitem>
                         <para>void <link linkend="class_round_mesh_generator_1a7940ac54d22af156b3cc10d490264171">prepare_triangulation</link> (
-parallel::distributed::Triangulation&lt; 3 &gt; * in_tria)<para><emphasis>This function takes a triangulation object and prepares it for the further computations.</emphasis></para>
+parallel::distributed::Triangulation&lt; 3 &gt; * in_tria)<para><emphasis>This function takes a triangulation object and prepares it for the further
+computations.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -170,7 +174,7 @@ parallel::distributed::Triangulation&lt; 3 &gt; * in_tria)<para><emphasis>This f
 <para>28.11.2016 </para>
 </formalpara>
 </para>
-                <para>Definition at line 19 of file RoundMeshGenerator.h</para>
+                <para>Definition at line 21 of file RoundMeshGenerator.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>RoundMeshGenerator.h</para></listitem></itemizedlist></para>
         </simplesect>
@@ -200,7 +204,7 @@ parallel::distributed::Triangulation&lt; 3 &gt; * in_tria)<para><emphasis>This f
                             <row>
                                 <entry>times</entry>
                                 <entry>
-<para>Number of refinement steps to be performed (gives us a multiplication of the number of degrees of freedom by <equation><title>form_35</title>$8^{times}$</equation>. </para>
+<para>Number of refinement steps to be performed (gives us a multiplication of the number of degrees of freedom by <equation><title>form_38</title>$8^{times}$</equation>. </para>
 </entry>
                             </row>
                         </tbody>
@@ -236,7 +240,8 @@ parallel::distributed::Triangulation&lt; 3 &gt; * in_tria)<para><emphasis>This f
 
             </section>
             <section xml:id="class_round_mesh_generator_1a9bdb7b90cc1988eb80c441ee8f85b0a0">
-                <title>void RoundMeshGenerator::refine_proximity (parallel::distributed::Triangulation&lt; 3 &gt; *in_tria, unsigned int times, double factor)</title> <emphasis>This function is intended to execute a refinement inside and near the waveguide boundary.</emphasis>
+                <title>void RoundMeshGenerator::refine_proximity (parallel::distributed::Triangulation&lt; 3 &gt; *in_tria, unsigned int times, double factor)</title> <emphasis>This function is intended to execute a refinement inside and near the
+waveguide boundary.</emphasis>
                 
 <para>
                 <formalpara>
@@ -261,15 +266,17 @@ parallel::distributed::Triangulation&lt; 3 &gt; * in_tria)<para><emphasis>This f
 
             </section>
             <section xml:id="class_round_mesh_generator_1ae28b3d9461233b9de1ce366c0f2458bd">
-                <title>bool RoundMeshGenerator::math_coordinate_in_waveguide (Point&lt; 3 &gt; position) const</title> <emphasis>This function checks if the given coordinate is inside the waveguide or not.</emphasis>
+                <title>bool RoundMeshGenerator::math_coordinate_in_waveguide (Point&lt; 3 &gt; position) const</title> <emphasis>This function checks if the given coordinate is inside the waveguide or
+not.</emphasis>
                 
 <para>The naming convention of physical and mathematical system find application. In this version, the waveguide has been transformed and the check for a tubal waveguide for example only checks if the radius of a given vector is below the average of input and output radius.  position This value gives us the location to check for. </para>
 
             </section>
             <section xml:id="class_round_mesh_generator_1aba31fbd62ab56899c0cd06c5257420c7">
-                <title>bool RoundMeshGenerator::phys_coordinate_in_waveguide (Point&lt; 3 &gt; position) const</title> <emphasis>This function checks if the given coordinate is inside the waveguide or not.</emphasis>
+                <title>bool RoundMeshGenerator::phys_coordinate_in_waveguide (Point&lt; 3 &gt; position) const</title> <emphasis>This function checks if the given coordinate is inside the waveguide or
+not.</emphasis>
                 
-<para>The naming convention of physical and mathematical system find application. In this version, the waveguide is bent. If we are using a space transformation <equation><title>form_36</title>$f$</equation> then this function is equal to math_coordinate_in_waveguide(f(x,y,z)).  position This value gives us the location to check for. </para>
+<para>The naming convention of physical and mathematical system find application. In this version, the waveguide is bent. If we are using a space transformation <equation><title>form_39</title>$f$</equation> then this function is equal to math_coordinate_in_waveguide(f(x,y,z)).  position This value gives us the location to check for. </para>
 
             </section>
             <section xml:id="class_round_mesh_generator_1accafc85e0b02823ef5cd12c384080aad">
@@ -277,7 +284,8 @@ parallel::distributed::Triangulation&lt; 3 &gt; * in_tria)<para><emphasis>This f
                 
             </section>
             <section xml:id="class_round_mesh_generator_1a7940ac54d22af156b3cc10d490264171">
-                <title>void RoundMeshGenerator::prepare_triangulation (parallel::distributed::Triangulation&lt; 3 &gt; *in_tria)</title> <emphasis>This function takes a triangulation object and prepares it for the further computations.</emphasis>
+                <title>void RoundMeshGenerator::prepare_triangulation (parallel::distributed::Triangulation&lt; 3 &gt; *in_tria)</title> <emphasis>This function takes a triangulation object and prepares it for the further
+computations.</emphasis>
                 
 <para>It is intended to encapsulate all related work and is explicitely not const. 
                 <formalpara>

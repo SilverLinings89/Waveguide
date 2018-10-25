@@ -109,7 +109,7 @@ std::vector&lt; double &gt; step)</para>
 <para>29.11.2016 </para>
 </formalpara>
 </para>
-                <para>Definition at line 18 of file AdjointOptimization.h</para>
+                <para>Definition at line 20 of file AdjointOptimization.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>AdjointOptimization.h</para></listitem></itemizedlist></para>
         </simplesect>

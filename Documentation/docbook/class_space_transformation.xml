@@ -37,21 +37,24 @@
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>const double epsilon_K<para><emphasis>This member contains all the Sectors who, as a sum, form the complete Waveguide.</emphasis></para></para>
+                        <para>const double epsilon_K<para><emphasis>The material-property \form#41 has a different value inside and
+outside of the waveguides core.</emphasis></para></para>
                     </listitem>
                 </itemizedlist>
             </para>
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>const double epsilon_M<para><emphasis>The material-property \form#38 has a different value inside and outside of the waveguides core.</emphasis></para></para>
+                        <para>const double epsilon_M<para><emphasis>The material-property \form#41 has a different value inside and
+outside of the waveguides core.</emphasis></para></para>
                     </listitem>
                 </itemizedlist>
             </para>
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>const int sectors<para><emphasis>Since the computational domain is split into subdomains (called sectors), it is important to keep track of the amount of subdomains.</emphasis></para></para>
+                        <para>const int sectors<para><emphasis>Since the computational domain is split into subdomains (called sectors),
+it is important to keep track of the amount of subdomains.</emphasis></para></para>
                     </listitem>
                 </itemizedlist>
             </para>
@@ -121,7 +124,7 @@ Point&lt; 3 &gt; coord)</para>
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>virtual Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_space_transformation_1a654c4ef065319712423c32c7a06009ed">get_Tensor</link> (
+                        <para>virtual Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_space_transformation_1a7bc6ea68baecd9029e4c6d6d812dfc28">get_Tensor</link> (
 Point&lt; 3 &gt; &amp; coordinate)</para>
                     </listitem>
                 </itemizedlist>
@@ -129,7 +132,7 @@ Point&lt; 3 &gt; &amp; coordinate)</para>
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>virtual Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_space_transformation_1a800570cc10d1cf4003832f770f078c46">get_Preconditioner_Tensor</link> (
+                        <para>virtual Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_space_transformation_1a1a491090e9913fe0fc3ae1c3b0bff48a">get_Preconditioner_Tensor</link> (
 Point&lt; 3 &gt; &amp; coordinate, int block)</para>
                     </listitem>
                 </itemizedlist>
@@ -137,7 +140,7 @@ Point&lt; 3 &gt; &amp; coordinate, int block)</para>
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>virtual Tensor&lt; 2, 3, double &gt; <link linkend="class_space_transformation_1aac738c5f301d4c2df6357223daa798b0">get_Space_Transformation_Tensor</link> (
+                        <para>virtual Tensor&lt; 2, 3, double &gt; <link linkend="class_space_transformation_1ac533381400b2f89e5d8a2012514a2f92">get_Space_Transformation_Tensor</link> (
 Point&lt; 3 &gt; &amp; coordinate)</para>
                     </listitem>
                 </itemizedlist>
@@ -145,7 +148,7 @@ Point&lt; 3 &gt; &amp; coordinate)</para>
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>virtual Tensor&lt; 2, 3, double &gt; <link linkend="class_space_transformation_1a36bb83958935c49880d037f76b1112c1">get_Space_Transformation_Tensor_Homogenized</link> (
+                        <para>virtual Tensor&lt; 2, 3, double &gt; <link linkend="class_space_transformation_1a42424f15250388934d3bc7f774a25db4">get_Space_Transformation_Tensor_Homogenized</link> (
 Point&lt; 3 &gt; &amp; coordinate)</para>
                     </listitem>
                 </itemizedlist>
@@ -153,7 +156,7 @@ Point&lt; 3 &gt; &amp; coordinate)</para>
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>virtual Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_space_transformation_1ac41de8cb91689cfbb20a9134b81bdb8a">Apply_PML_To_Tensor</link> (
+                        <para>virtual Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_space_transformation_1a88ed87026dec9cbc7d296ef6cd1d0b2a">Apply_PML_To_Tensor</link> (
 Point&lt; 3 &gt; &amp; coordinate, Tensor&lt; 2, 3, double &gt; Tensor_input)</para>
                     </listitem>
                 </itemizedlist>
@@ -161,7 +164,7 @@ Point&lt; 3 &gt; &amp; coordinate, Tensor&lt; 2, 3, double &gt; Tensor_input)</p
             <para>
                 <itemizedlist>
                     <listitem>
-                        <para>virtual Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_space_transformation_1a9c360b8fb110d5883ad08c472bd9d3ab">Apply_PML_To_Tensor_For_Preconditioner</link> (
+                        <para>virtual Tensor&lt; 2, 3, std::complex&lt; double &gt; &gt; <link linkend="class_space_transformation_1ada637316b495b703eb5202c65a587bb7">Apply_PML_To_Tensor_For_Preconditioner</link> (
 Point&lt; 3 &gt; &amp; coordinate, Tensor&lt; 2, 3, double &gt; Tensor_input, int block)</para>
                     </listitem>
                 </itemizedlist>
@@ -178,7 +181,9 @@ Point&lt; 3 &gt; &amp; coordinate, unsigned int dof, double step_width)</para>
                 <itemizedlist>
                     <listitem>
                         <para>virtual bool <link linkend="class_space_transformation_1ab3ec2ac4eeb67d6a1cb3b02b0024d78b">PML_in_X</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+x-axis.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -187,7 +192,9 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determi
                 <itemizedlist>
                     <listitem>
                         <para>virtual bool <link linkend="class_space_transformation_1a4128f6833e1b14992b6e6712fdf63d6c">PML_in_Y</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the y-axis.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+y-axis.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -196,7 +203,9 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determi
                 <itemizedlist>
                     <listitem>
                         <para>virtual bool <link linkend="class_space_transformation_1aec6d6a8c0392bceb95ea9a66c04d78c9">PML_in_Z</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the z-axis.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+z-axis.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -205,7 +214,9 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function is used to determi
                 <itemizedlist>
                     <listitem>
                         <para>virtual double <link linkend="class_space_transformation_1af345da810526549468581af1060d1c5f">Preconditioner_PML_Z_Distance</link> (
-Point&lt; 3 &gt; &amp; p, unsigned int block)<para><emphasis>Similar to the PML_in_Z only this function is used to generate the artificial PML used in the Preconditioner.</emphasis></para>
+Point&lt; 3 &gt; &amp; p, unsigned int block)<para><emphasis>This function fulfills the same purpose as those with similar names but it
+is supposed to be used together with Preconditioner_PML_in_Z instead of the
+versions without &quot;Preconditioner&quot;.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -214,7 +225,8 @@ Point&lt; 3 &gt; &amp; p, unsigned int block)<para><emphasis>Similar to the PML_
                 <itemizedlist>
                     <listitem>
                         <para>virtual double <link linkend="class_space_transformation_1a6dc9fa5cac54e8dfea7b4e88f76ee5d8">PML_X_Distance</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -223,7 +235,8 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a g
                 <itemizedlist>
                     <listitem>
                         <para>virtual double <link linkend="class_space_transformation_1ad3e51c31b7aeb1837063bf0d946d4754">PML_Y_Distance</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -232,7 +245,8 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a g
                 <itemizedlist>
                     <listitem>
                         <para>virtual double <link linkend="class_space_transformation_1a4d73c8cbea006a2309857645eb98cfae">PML_Z_Distance</link> (
-Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis></para>
+Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -241,7 +255,8 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a g
                 <itemizedlist>
                     <listitem>
                         <para>virtual void <link linkend="class_space_transformation_1a471e592764d717c88f8f8e083b848255">estimate_and_initialize</link> (
-)<para><emphasis>At the beginning (before the first solution of a system) only the boundary conditions for the shape of the waveguide are known.</emphasis></para>
+)<para><emphasis>At the beginning (before the first solution of a system) only the boundary
+conditions for the shape of the waveguide are known.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -250,7 +265,7 @@ Point&lt; 3 &gt; &amp; position)<para><emphasis>This function calculates for a g
                 <itemizedlist>
                     <listitem>
                         <para>virtual double <link linkend="class_space_transformation_1ae8f47777626abc9fdd229c52f7f30c5e">get_Q1</link> (
-double z)<para><emphasis>This member calculates the value of Q1 for a provided \form#39-coordinate.</emphasis></para>
+double z)<para><emphasis>This member calculates the value of Q1 for a provided \form#42-coordinate.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -259,7 +274,7 @@ double z)<para><emphasis>This member calculates the value of Q1 for a provided \
                 <itemizedlist>
                     <listitem>
                         <para>virtual double <link linkend="class_space_transformation_1ac938a474eb72c14b7e934563458bce1f">get_Q2</link> (
-double z)<para><emphasis>This member calculates the value of Q2 for a provided \form#39-coordinate.</emphasis></para>
+double z)<para><emphasis>This member calculates the value of Q2 for a provided \form#42-coordinate.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -268,7 +283,7 @@ double z)<para><emphasis>This member calculates the value of Q2 for a provided \
                 <itemizedlist>
                     <listitem>
                         <para>virtual double <link linkend="class_space_transformation_1a85db668db183d2b09157ef8351a198e1">get_Q3</link> (
-double z)<para><emphasis>This member calculates the value of Q3 for a provided \form#39-coordinate.</emphasis></para>
+double z)<para><emphasis>This member calculates the value of Q3 for a provided \form#42-coordinate.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -374,7 +389,8 @@ double in_z)<para><emphasis>Returns the tilt for a system-coordinate;.</emphasis
                 <itemizedlist>
                     <listitem>
                         <para>int <link linkend="class_space_transformation_1a5c01731c41adb0a9e7881f890a838a0c">Z_to_Layer</link> (
-double )<para><emphasis>This Method writes a comprehensive description of the current structure to the console.</emphasis></para>
+double )<para><emphasis>This Method writes a comprehensive description of the current structure to
+the console.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -383,7 +399,8 @@ double )<para><emphasis>This Method writes a comprehensive description of the cu
                 <itemizedlist>
                     <listitem>
                         <para>virtual Vector&lt; double &gt; <link linkend="class_space_transformation_1ab003b1737784c1750121dd8c03b98f52">Dofs</link> (
-)<para><emphasis>Other objects can use this function to retrieve an array of the current values of the degrees of freedom of the functional we are optimizing.</emphasis></para>
+)<para><emphasis>Other objects can use this function to retrieve an array of the current
+values of the degrees of freedom of the functional we are optimizing.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -392,7 +409,8 @@ double )<para><emphasis>This Method writes a comprehensive description of the cu
                 <itemizedlist>
                     <listitem>
                         <para>virtual unsigned int <link linkend="class_space_transformation_1a49bffd597593d0911edbafff13214195">NFreeDofs</link> (
-)<para><emphasis>This function returns the number of unrestrained degrees of freedom of the current optimization run.</emphasis></para>
+)<para><emphasis>This function returns the number of unrestrained degrees of freedom of the
+current optimization run.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -410,7 +428,9 @@ double )<para><emphasis>This Method writes a comprehensive description of the cu
                 <itemizedlist>
                     <listitem>
                         <para>virtual bool <link linkend="class_space_transformation_1a487c356afef667763e244f3a93df4c8a">IsDofFree</link> (
-int )<para><emphasis>Since Dofs() also returns restrained degrees of freedom, this function can be applied to determine if a degree of freedom is indeed free or restrained.</emphasis></para>
+int )<para><emphasis>Since Dofs() also returns restrained degrees of freedom, this function can
+be applied to determine if a degree of freedom is indeed free or
+restrained.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -428,7 +448,9 @@ int )<para><emphasis>Since Dofs() also returns restrained degrees of freedom, th
                 <itemizedlist>
                     <listitem>
                         <para>virtual std::complex&lt; double &gt; <link linkend="class_space_transformation_1a9d2f74d35f0d2cf01d9c143f9710522f">evaluate_for_z</link> (
-double , <link linkend="class_waveguide">Waveguide</link> * )<para><emphasis>Since the Wavegudie itself may be circular or rectangular now, the evaluation routines should be moved to a point in the code where this information is included in the code.</emphasis></para>
+double , <link linkend="class_waveguide">Waveguide</link> * )<para><emphasis>Since the Wavegudie itself may be circular or rectangular now, the
+evaluation routines should be moved to a point in the code where this
+information is included in the code.</emphasis></para>
 </para>
                     </listitem>
                 </itemizedlist>
@@ -457,7 +479,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
         <simplesect>
             <title>Detailed Description</title>
 
-<para>Two important decisions have to be made in the computation: Which shape should be used for the waveguide? This can either be rectangular or tubular. Should the coordinate-transformation always be equal to identity in any domain where PML is applied? (yes or no). However, the space transformation is the only information required to compute the Tensor <equation><title>form_42</title>$g$</equation> which is a 3x3 matrix whilch (multiplied by the material value of the untransfomred coordinate either inside or outside the waveguide) gives us the value of <equation><title>form_43</title>$\epsilon$</equation> and <equation><title>form_44</title>$\mu$</equation>. From this class we derive several different classes which then specify the interface specified in this class. <formalpara><title>Author: </title>
+<para>Two important decisions have to be made in the computation: Which shape should be used for the waveguide? This can either be rectangular or tubular. Should the coordinate-transformation always be equal to identity in any domain where PML is applied? (yes or no). However, the space transformation is the only information required to compute the Tensor <equation><title>form_45</title>$g$</equation> which is a 3x3 matrix whilch (multiplied by the material value of the untransfomred coordinate either inside or outside the waveguide) gives us the value of <equation><title>form_46</title>$\epsilon$</equation> and <equation><title>form_47</title>$\mu$</equation>. From this class we derive several different classes which then specify the interface specified in this class. <formalpara><title>Author: </title>
 
 <para>Pascal Kraft </para>
 </formalpara>
@@ -466,7 +488,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 <para>17.12.2015 </para>
 </formalpara>
 </para>
-                <para>Definition at line 24 of file SpaceTransformation.h</para>
+                <para>Definition at line 29 of file SpaceTransformation.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>SpaceTransformation.h</para></listitem></itemizedlist></para>
         </simplesect>
@@ -474,9 +496,9 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
             <title>Member Data Documentation</title>
             <simplesect>
                 <title>const double SpaceTransformation::epsilon_K</title>                
-<para>These Sectors are a partition of the simulated domain. The material-property <equation><title>form_38</title>$\epsilon_r$</equation> has a different value inside and outside of the waveguides core. This variable stores its value inside the core. </para>
+<para>This variable stores its value inside the core. </para>
 
-                <para>Definition at line 109 of file SpaceTransformation.h</para>
+                <para>Definition at line 143 of file SpaceTransformation.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>SpaceTransformation.h</para></listitem></itemizedlist></para>
             </simplesect>
@@ -484,7 +506,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                 <title>const double SpaceTransformation::epsilon_M</title>                
 <para>This variable stores its value outside the core. </para>
 
-                <para>Definition at line 113 of file SpaceTransformation.h</para>
+                <para>Definition at line 149 of file SpaceTransformation.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>SpaceTransformation.h</para></listitem></itemizedlist></para>
             </simplesect>
@@ -492,7 +514,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                 <title>const int SpaceTransformation::sectors</title>                
 <para>This member stores the number of Sectors the computational domain has been split into. </para>
 
-                <para>Definition at line 117 of file SpaceTransformation.h</para>
+                <para>Definition at line 155 of file SpaceTransformation.h</para>
                 <para>The Documentation for this struct was generated from the following file: </para>
                 <para><itemizedlist><listitem><para>SpaceTransformation.h</para></listitem></itemizedlist></para>
             </simplesect>
@@ -513,28 +535,28 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                 <title>bool SpaceTransformation::is_identity (Point&lt; 3 &gt; coord) const</title> <emphasis></emphasis>
                 
             </section>
-            <section xml:id="class_space_transformation_1a654c4ef065319712423c32c7a06009ed">
-                <title>virtual Tensor&lt;2,3, std::complex&lt;double&gt; &gt; SpaceTransformation::get_Tensor (Point&lt; 3 &gt; &amp;coordinate) const =0</title> <emphasis></emphasis>
+            <section xml:id="class_space_transformation_1a7bc6ea68baecd9029e4c6d6d812dfc28">
+                <title>virtual Tensor&lt;2, 3, std::complex&lt;double&gt; &gt; SpaceTransformation::get_Tensor (Point&lt; 3 &gt; &amp;coordinate) const =0</title> <emphasis></emphasis>
                 
             </section>
-            <section xml:id="class_space_transformation_1a800570cc10d1cf4003832f770f078c46">
-                <title>virtual Tensor&lt;2,3, std::complex&lt;double&gt; &gt; SpaceTransformation::get_Preconditioner_Tensor (Point&lt; 3 &gt; &amp;coordinate, int block) const =0</title> <emphasis></emphasis>
+            <section xml:id="class_space_transformation_1a1a491090e9913fe0fc3ae1c3b0bff48a">
+                <title>virtual Tensor&lt;2, 3, std::complex&lt;double&gt; &gt; SpaceTransformation::get_Preconditioner_Tensor (Point&lt; 3 &gt; &amp;coordinate, int block) const =0</title> <emphasis></emphasis>
                 
             </section>
-            <section xml:id="class_space_transformation_1aac738c5f301d4c2df6357223daa798b0">
-                <title>virtual Tensor&lt;2,3,double&gt; SpaceTransformation::get_Space_Transformation_Tensor (Point&lt; 3 &gt; &amp;coordinate) const =0</title> <emphasis></emphasis>
+            <section xml:id="class_space_transformation_1ac533381400b2f89e5d8a2012514a2f92">
+                <title>virtual Tensor&lt;2, 3, double&gt; SpaceTransformation::get_Space_Transformation_Tensor (Point&lt; 3 &gt; &amp;coordinate) const =0</title> <emphasis></emphasis>
                 
             </section>
-            <section xml:id="class_space_transformation_1a36bb83958935c49880d037f76b1112c1">
-                <title>virtual Tensor&lt;2,3,double&gt; SpaceTransformation::get_Space_Transformation_Tensor_Homogenized (Point&lt; 3 &gt; &amp;coordinate) const =0</title> <emphasis></emphasis>
+            <section xml:id="class_space_transformation_1a42424f15250388934d3bc7f774a25db4">
+                <title>virtual Tensor&lt;2, 3, double&gt; SpaceTransformation::get_Space_Transformation_Tensor_Homogenized (Point&lt; 3 &gt; &amp;coordinate) const =0</title> <emphasis></emphasis>
                 
             </section>
-            <section xml:id="class_space_transformation_1ac41de8cb91689cfbb20a9134b81bdb8a">
-                <title>virtual Tensor&lt;2,3,std::complex&lt;double&gt; &gt; SpaceTransformation::Apply_PML_To_Tensor (Point&lt; 3 &gt; &amp;coordinate, Tensor&lt; 2, 3, double &gt; Tensor_input) const =0</title> <emphasis></emphasis>
+            <section xml:id="class_space_transformation_1a88ed87026dec9cbc7d296ef6cd1d0b2a">
+                <title>virtual Tensor&lt;2, 3, std::complex&lt;double&gt; &gt; SpaceTransformation::Apply_PML_To_Tensor (Point&lt; 3 &gt; &amp;coordinate, Tensor&lt; 2, 3, double &gt; Tensor_input) const =0</title> <emphasis></emphasis>
                 
             </section>
-            <section xml:id="class_space_transformation_1a9c360b8fb110d5883ad08c472bd9d3ab">
-                <title>virtual Tensor&lt;2,3,std::complex&lt;double&gt; &gt; SpaceTransformation::Apply_PML_To_Tensor_For_Preconditioner (Point&lt; 3 &gt; &amp;coordinate, Tensor&lt; 2, 3, double &gt; Tensor_input, int block) const =0</title> <emphasis></emphasis>
+            <section xml:id="class_space_transformation_1ada637316b495b703eb5202c65a587bb7">
+                <title>virtual Tensor&lt;2, 3, std::complex&lt;double&gt; &gt; SpaceTransformation::Apply_PML_To_Tensor_For_Preconditioner (Point&lt; 3 &gt; &amp;coordinate, Tensor&lt; 2, 3, double &gt; Tensor_input, int block) const =0</title> <emphasis></emphasis>
                 
             </section>
             <section xml:id="class_space_transformation_1abff7c68f82131fefadb3d5bcef0e2958">
@@ -542,7 +564,9 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                 
             </section>
             <section xml:id="class_space_transformation_1ab3ec2ac4eeb67d6a1cb3b02b0024d78b">
-                <title>virtual bool SpaceTransformation::PML_in_X (Point&lt; 3 &gt; &amp;position) const =0</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the x-axis.</emphasis>
+                <title>virtual bool SpaceTransformation::PML_in_X (Point&lt; 3 &gt; &amp;position) const =0</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+x-axis.</emphasis>
                 
 <para>Since there are 3 blocks of PML-type material, there are 3 functions. 
                 <formalpara>
@@ -567,7 +591,9 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_space_transformation_1a4128f6833e1b14992b6e6712fdf63d6c">
-                <title>virtual bool SpaceTransformation::PML_in_Y (Point&lt; 3 &gt; &amp;position) const =0</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the y-axis.</emphasis>
+                <title>virtual bool SpaceTransformation::PML_in_Y (Point&lt; 3 &gt; &amp;position) const =0</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+y-axis.</emphasis>
                 
 <para>Since there are 3 blocks of PML-type material, there are 3 functions. 
                 <formalpara>
@@ -592,7 +618,9 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_space_transformation_1aec6d6a8c0392bceb95ea9a66c04d78c9">
-                <title>virtual bool SpaceTransformation::PML_in_Z (Point&lt; 3 &gt; &amp;position) const =0</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a PML-region for the PML that limits the computational domain along the z-axis.</emphasis>
+                <title>virtual bool SpaceTransformation::PML_in_Z (Point&lt; 3 &gt; &amp;position) const =0</title> <emphasis>This function is used to determine, if a system-coordinate belongs to a
+PML-region for the PML that limits the computational domain along the
+z-axis.</emphasis>
                 
 <para>Since there are 3 blocks of PML-type material, there are 3 functions. 
                 <formalpara>
@@ -617,13 +645,14 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_space_transformation_1af345da810526549468581af1060d1c5f">
-                <title>virtual double SpaceTransformation::Preconditioner_PML_Z_Distance (Point&lt; 3 &gt; &amp;p, unsigned int block) const =0</title> <emphasis>Similar to the PML_in_Z only this function is used to generate the artificial PML used in the Preconditioner.</emphasis>
+                <title>virtual double SpaceTransformation::Preconditioner_PML_Z_Distance (Point&lt; 3 &gt; &amp;p, unsigned int block) const =0</title> <emphasis>This function fulfills the same purpose as those with similar names but it
+is supposed to be used together with Preconditioner_PML_in_Z instead of the
+versions without &quot;Preconditioner&quot;.</emphasis>
                 
-<para>These Layers are not only situated at the surface of the computational domain but also inside it at the interfaces of Sectors. This function fulfills the same purpose as those with similar names but it is supposed to be used together with Preconditioner_PML_in_Z instead of the versions without &quot;Preconditioner&quot;. </para>
-
             </section>
             <section xml:id="class_space_transformation_1a6dc9fa5cac54e8dfea7b4e88f76ee5d8">
-                <title>virtual double SpaceTransformation::PML_X_Distance (Point&lt; 3 &gt; &amp;position) const =0</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis>
+                <title>virtual double SpaceTransformation::PML_X_Distance (Point&lt; 3 &gt; &amp;position) const =0</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis>
                 
 <para>This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction). 
                 <formalpara>
@@ -648,7 +677,8 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_space_transformation_1ad3e51c31b7aeb1837063bf0d946d4754">
-                <title>virtual double SpaceTransformation::PML_Y_Distance (Point&lt; 3 &gt; &amp;position) const =0</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis>
+                <title>virtual double SpaceTransformation::PML_Y_Distance (Point&lt; 3 &gt; &amp;position) const =0</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis>
                 
 <para>This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction). 
                 <formalpara>
@@ -673,7 +703,8 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_space_transformation_1a4d73c8cbea006a2309857645eb98cfae">
-                <title>virtual double SpaceTransformation::PML_Z_Distance (Point&lt; 3 &gt; &amp;position) const =0</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary limiting the computational domain.</emphasis>
+                <title>virtual double SpaceTransformation::PML_Z_Distance (Point&lt; 3 &gt; &amp;position) const =0</title> <emphasis>This function calculates for a given point, its distance to a PML-boundary
+limiting the computational domain.</emphasis>
                 
 <para>This function is used merely to make code more readable. There is a function for every one of the dimensions since the normal vectors of PML-regions in this implementation are the coordinate-axis. This value is set to zero outside the PML and positive inside both PML-domains (only one for the z-direction). 
                 <formalpara>
@@ -698,13 +729,14 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_space_transformation_1a471e592764d717c88f8f8e083b848255">
-                <title>virtual void SpaceTransformation::estimate_and_initialize ()=0</title> <emphasis>At the beginning (before the first solution of a system) only the boundary conditions for the shape of the waveguide are known.</emphasis>
+                <title>virtual void SpaceTransformation::estimate_and_initialize ()=0</title> <emphasis>At the beginning (before the first solution of a system) only the boundary
+conditions for the shape of the waveguide are known.</emphasis>
                 
 <para>Therefore the values for the degrees of freedom need to be estimated. This function sets all variables to appropiate values and estimates an appropriate shape based on averages and a polynomial interpolation of the boundary conditions on the shape. </para>
 
             </section>
             <section xml:id="class_space_transformation_1ae8f47777626abc9fdd229c52f7f30c5e">
-                <title>virtual double SpaceTransformation::get_Q1 (double z) const =0</title> <emphasis>This member calculates the value of Q1 for a provided \form#39-coordinate.</emphasis>
+                <title>virtual double SpaceTransformation::get_Q1 (double z) const =0</title> <emphasis>This member calculates the value of Q1 for a provided \form#42-coordinate.</emphasis>
                 
 <para>This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field). 
                 <formalpara>
@@ -718,7 +750,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                             <row>
                                 <entry>z</entry>
                                 <entry>
-<para>The value of Q1 is independent of <equation><title>form_40</title>$x$</equation> and <equation><title>form_41</title>$y$</equation>. Therefore only a <equation><title>form_39</title>$z$</equation>-coordinate is provided in a call to the function. </para>
+<para>The value of Q1 is independent of <equation><title>form_43</title>$x$</equation> and <equation><title>form_44</title>$y$</equation>. Therefore only a <equation><title>form_42</title>$z$</equation>-coordinate is provided in a call to the function. </para>
 </entry>
                             </row>
                         </tbody>
@@ -729,7 +761,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_space_transformation_1ac938a474eb72c14b7e934563458bce1f">
-                <title>virtual double SpaceTransformation::get_Q2 (double z) const =0</title> <emphasis>This member calculates the value of Q2 for a provided \form#39-coordinate.</emphasis>
+                <title>virtual double SpaceTransformation::get_Q2 (double z) const =0</title> <emphasis>This member calculates the value of Q2 for a provided \form#42-coordinate.</emphasis>
                 
 <para>This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field). 
                 <formalpara>
@@ -743,7 +775,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                             <row>
                                 <entry>z</entry>
                                 <entry>
-<para>The value of Q2 is independent of <equation><title>form_40</title>$x$</equation> and <equation><title>form_41</title>$y$</equation>. Therefore only a <equation><title>form_39</title>$z$</equation>-coordinate is provided in a call to the function. </para>
+<para>The value of Q2 is independent of <equation><title>form_43</title>$x$</equation> and <equation><title>form_44</title>$y$</equation>. Therefore only a <equation><title>form_42</title>$z$</equation>-coordinate is provided in a call to the function. </para>
 </entry>
                             </row>
                         </tbody>
@@ -754,7 +786,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_space_transformation_1a85db668db183d2b09157ef8351a198e1">
-                <title>virtual double SpaceTransformation::get_Q3 (double z) const =0</title> <emphasis>This member calculates the value of Q3 for a provided \form#39-coordinate.</emphasis>
+                <title>virtual double SpaceTransformation::get_Q3 (double z) const =0</title> <emphasis>This member calculates the value of Q3 for a provided \form#42-coordinate.</emphasis>
                 
 <para>This value is used in the transformation of the solution-vector in transformed coordinates (solution of the system-matrix) to real coordinates (physical field). 
                 <formalpara>
@@ -768,7 +800,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                             <row>
                                 <entry>z</entry>
                                 <entry>
-<para>The value of Q3 is independent of <equation><title>form_40</title>$x$</equation> and <equation><title>form_41</title>$y$</equation>. Therefore only a <equation><title>form_39</title>$z$</equation>-coordinate is provided in a call to the function. </para>
+<para>The value of Q3 is independent of <equation><title>form_43</title>$x$</equation> and <equation><title>form_44</title>$y$</equation>. Therefore only a <equation><title>form_42</title>$z$</equation>-coordinate is provided in a call to the function. </para>
 </entry>
                             </row>
                         </tbody>
@@ -802,7 +834,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                 </formalpara>
                 <formalpara><title>Returns: </title>
 
-<para>This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returnd. </para>
+<para>This function returns the value of the requested degree of freedom. Should this dof not exist, 0 will be returned. </para>
 </formalpara>
 </para>
 
@@ -909,7 +941,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
             <section xml:id="class_space_transformation_1af9803c5e0dc6947ae08e428d3953e914">
                 <title>std::pair&lt; int, double &gt; SpaceTransformation::Z_to_Sector_and_local_z (double in_z) const</title> <emphasis>Using this method unifies the usage of coordinates.</emphasis>
                 
-<para>This function takes a global <equation><title>form_39</title>$z$</equation> coordinate (in the computational domain) and returns both a Sector-Index and an internal <equation><title>form_39</title>$z$</equation> coordinate indicating which sector this coordinate belongs to and how far along in the sector it is located. 
+<para>This function takes a global <equation><title>form_42</title>$z$</equation> coordinate (in the computational domain) and returns both a Sector-Index and an internal <equation><title>form_42</title>$z$</equation> coordinate indicating which sector this coordinate belongs to and how far along in the sector it is located. 
                 <formalpara>
                     <title/>
                     <table frame="all">
@@ -921,7 +953,7 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                             <row>
                                 <entry>double</entry>
                                 <entry>
-<para>in_z global system <equation><title>form_39</title>$z$</equation> coordinate for the transformation. </para>
+<para>in_z global system <equation><title>form_42</title>$z$</equation> coordinate for the transformation. </para>
 </entry>
                             </row>
                         </tbody>
@@ -948,17 +980,20 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                 
             </section>
             <section xml:id="class_space_transformation_1a5c01731c41adb0a9e7881f890a838a0c">
-                <title>int SpaceTransformation::Z_to_Layer (double) const</title> <emphasis>This Method writes a comprehensive description of the current structure to the console.</emphasis>
+                <title>int SpaceTransformation::Z_to_Layer (double) const</title> <emphasis>This Method writes a comprehensive description of the current structure to
+the console.</emphasis>
                 
             </section>
             <section xml:id="class_space_transformation_1ab003b1737784c1750121dd8c03b98f52">
-                <title>virtual Vector&lt;double&gt; SpaceTransformation::Dofs () const =0</title> <emphasis>Other objects can use this function to retrieve an array of the current values of the degrees of freedom of the functional we are optimizing.</emphasis>
+                <title>virtual Vector&lt;double&gt; SpaceTransformation::Dofs () const =0</title> <emphasis>Other objects can use this function to retrieve an array of the current
+values of the degrees of freedom of the functional we are optimizing.</emphasis>
                 
 <para>This also includes restrained degrees of freedom and other functions can be used to determine this property. This has to be done because in different cases the number of restrained degrees of freedom can vary and we want no logic about this in other functions. </para>
 
             </section>
             <section xml:id="class_space_transformation_1a49bffd597593d0911edbafff13214195">
-                <title>virtual unsigned int SpaceTransformation::NFreeDofs () const =0</title> <emphasis>This function returns the number of unrestrained degrees of freedom of the current optimization run.</emphasis>
+                <title>virtual unsigned int SpaceTransformation::NFreeDofs () const =0</title> <emphasis>This function returns the number of unrestrained degrees of freedom of the
+current optimization run.</emphasis>
                 
             </section>
             <section xml:id="class_space_transformation_1a463f0141c194724575bdcdb23168fdec">
@@ -968,7 +1003,9 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
 
             </section>
             <section xml:id="class_space_transformation_1a487c356afef667763e244f3a93df4c8a">
-                <title>virtual bool SpaceTransformation::IsDofFree (int) const =0</title> <emphasis>Since Dofs() also returns restrained degrees of freedom, this function can be applied to determine if a degree of freedom is indeed free or restrained.</emphasis>
+                <title>virtual bool SpaceTransformation::IsDofFree (int) const =0</title> <emphasis>Since Dofs() also returns restrained degrees of freedom, this function can
+be applied to determine if a degree of freedom is indeed free or
+restrained.</emphasis>
                 
 <para>&quot;restrained&quot; means that for example the DOF represents the radius at one of the connectors (input or output) and therefore we forbid the optimization scheme to vary this value. </para>
 
@@ -978,7 +1015,9 @@ double z, int n, double R, double Xc, double Yc, <link linkend="class_waveguide"
                 
             </section>
             <section xml:id="class_space_transformation_1a9d2f74d35f0d2cf01d9c143f9710522f">
-                <title>virtual std::complex&lt;double&gt; SpaceTransformation::evaluate_for_z (double, Waveguide *)=0</title> <emphasis>Since the Wavegudie itself may be circular or rectangular now, the evaluation routines should be moved to a point in the code where this information is included in the code.</emphasis>
+                <title>virtual std::complex&lt;double&gt; SpaceTransformation::evaluate_for_z (double, Waveguide *)=0</title> <emphasis>Since the Wavegudie itself may be circular or rectangular now, the
+evaluation routines should be moved to a point in the code where this
+information is included in the code.</emphasis>
                 
 <para>Since I dont want to create derived classes from waveguide (which I should do eventually) I will for now include this functionality into the space transformation which is shape-sensitive. The waveguide only offers the evaluation at a point. The quadrature-rule has to be imposed by the space transformation. </para>
 
