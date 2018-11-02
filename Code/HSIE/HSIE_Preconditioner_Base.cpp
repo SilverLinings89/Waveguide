@@ -189,9 +189,14 @@ extract_surface_mesh_at_z(
 }
 
 template <int hsie_order>
+HSIEPreconditionerBase<hsie_order>::~HSIEPreconditionerBase() {
+  delete system_matrix;
+}
+
+template <int hsie_order>
 HSIEPreconditionerBase<hsie_order>::HSIEPreconditionerBase(
     const dealii::parallel::distributed::Triangulation<3, 3> *in_tria,
-    double in_z) {
+    double in_z): fe_nedelec(GlobalParams.So_ElementOrder),fe_q(1),quadrature_formula(2) {
   FaceSurfaceComparatorZ fscz = new FaceSurfaceComparatorZ(in_z, 0.00001);
   association = extract_surface_mesh_at_z(in_tria, &surf_tria, fscz);
   surface_edges = surf_tria.n_active_lines();
@@ -203,10 +208,7 @@ HSIEPreconditionerBase<hsie_order>::HSIEPreconditionerBase(
   HSIE_dofs_type_2_factor =
       dealii::GeometryInfo<2>::vertices_per_face * 2 * (hsie_order + 1);
   HSIE_degree = hsie_order;
-  fe_nedelec(GlobalParams.So_ElementOrder);
-  fe_q(1);
-  quadrature_formula(2);
-  hsie_dof_handler(surf_tria);
+  hsie_dof_handler = dealii::DoFHandler<3>(surf_tria);
   FEValues<3> fev_nedelec(fe_nedelec, quadrature_formula,
                           update_values | update_gradients | update_JxW_values |
                               update_quadrature_points);
@@ -221,7 +223,7 @@ void HSIEPreconditionerBase<hsie_order>::setup_system() {
   // IndexSet dofs(n_dofs);
   // dofs.add_range(0, n_dofs - 1);
   const int max_couplings = 4 * n_dofs_per_face();
-  system_matrix(n_total_dofs, n_total_dofs, max_couplings);
+  system_matrix = new dealii::TrilinosWrappers::SparseMatrix(n_total_dofs, n_total_dofs, max_couplings);
 }
 
 dealii::Point<3, std::complex<double>> base_fun(int i, int j,

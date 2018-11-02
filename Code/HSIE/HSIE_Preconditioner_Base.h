@@ -120,7 +120,7 @@ class HSIEPreconditionerBase : dealii::TrilinosWrappers::PreconditionBase {
    * This matrix contains the couplings between all HSIE-dofs. This also
    * contains the Nedelec-Elements of the surface triangulation.
    */
-  dealii::TrilinosWrappers::SparseMatrix system_matrix;
+  dealii::TrilinosWrappers::SparseMatrix* system_matrix;
 };
 
 #endif
