@@ -7,7 +7,7 @@
 #include <vector>
 #include "FaceSurfaceComparator.h"
 #include "FaceSurfaceComparatorZ.h"
-#include "Waveguide.h"
+#include "../Core/Waveguide.h"
 
 /*
  * HSIE_Preconditioner_Base.cpp
