@@ -1,6 +1,7 @@
 #ifndef HSIEPRECONDITIONERBASE_H
 #define HSIEPRECONDITIONERBASE_H
 
+#include <complex>
 #include <deal.II/base/config.h>
 #include <deal.II/base/index_set.h>
 #include <deal.II/base/quadrature.h>

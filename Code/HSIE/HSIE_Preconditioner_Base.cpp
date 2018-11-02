@@ -1,7 +1,7 @@
 #ifndef HSIEPRECONDITIONERBASE_CPP
 #define HSIEPRECONDITIONERBASE_CPP
 #include "HSIE_Preconditioner_Base.h"
-#include <complex.h>
+#include <complex>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 #include <vector>
