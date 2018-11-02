@@ -869,7 +869,7 @@ void Waveguide::assemble_system() {
             cell_matrix_prec_odd[i][j] += pre2.real();
           }
           if (compute_rhs &&
-              quadrature_points[q_index][2] < -GlobalParams.M_R_ZLength / 2.0) {
+              quadrature_points[q_index][2] > -GlobalParams.M_R_ZLength / 2.0) {
             std::complex<double> rhs2 =
                 (mu * I_Curl) *
                     Conjugate_Vector(es.curl(quadrature_points[q_index])) *
