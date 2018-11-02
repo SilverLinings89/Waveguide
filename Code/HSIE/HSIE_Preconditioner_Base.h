@@ -30,7 +30,7 @@ class HSIEPreconditionerBase : dealii::TrilinosWrappers::PreconditionBase {
   int surface_edges;
   int surface_faces;
   int HSIE_degree;
-  dealii::DoFHandler hsie_dof_handler;
+  dealii::DoFHandler<3> hsie_dof_handler;
   dealii::FE_Nedelec<2> fe_nedelec;
   dealii::FE_Q<2> fe_q;
   dealii::QGauss<3> quadrature_formula;
