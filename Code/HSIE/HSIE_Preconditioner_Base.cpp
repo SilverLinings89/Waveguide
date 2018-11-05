@@ -28,7 +28,7 @@ extract_surface_mesh_at_z(
   const int dim = 3;
   const int spacedim = 3;
   Assert((dynamic_cast<const parallel::distributed::Triangulation<dim, spacedim>
-                           *>(&volume_mesh.get_triangulation()) == 0),
+                           *>(volume_mesh.get_triangulation()) == 0),
          ExcNotImplemented());
 
   // This function works using the following assumption:
