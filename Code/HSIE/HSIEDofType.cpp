@@ -63,7 +63,7 @@ inline void HSIE_Dof_Type<hsie_order>::set_base_point(unsigned int in_bp) {
 template <int hsie_order>
 void HSIE_Dof_Type<hsie_order>::prepare_for_quadrature_points(
     std::vector<dealii::Point<2, double>> q_points) {
-  dealii::MappingQ1 temp_mapping(1);
+  dealii::MappingQ1<2> temp_mapping(1);
   PolynomialsNedelec<2> temp = new PolynomialsNedelec<2>(0);
   std::vector<Tensor<1, 2>> v_k_storage = new std::vector<Tensor<1, 2>>();
   std::vector<Tensor<2, 2>> v_k_n_2 = new std::vector<Tensor<2, 2>>();
