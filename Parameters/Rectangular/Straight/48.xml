@@ -400,11 +400,11 @@
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </GMRESSteps>
         <Preconditioner>
-            <value>Amesos_Umfpack</value>
-            <default_value>Amesos_Lapack</default_value>
+            <value>Sweeping</value>
+            <default_value>Sweeping</default_value>
             <documentation>Which preconditioner to use</documentation>
             <pattern>52</pattern>
-            <pattern_description>[Selection Sweeping|Amesos_Lapack|Amesos_Scalapack|Amesos_Klu|Amesos_Umfpack|Amesos_Pardiso|Amesos_Taucs|Amesos_Superlu|Amesos_Superludist|Amesos_Dscpack|Amesos_Mumps ]</pattern_description>
+            <pattern_description>[Selection Sweeping|FastSweeping|HSIESweeping|HSIEFastSweeping]</pattern_description>
         </Preconditioner>
         <Steps>
             <value>200</value>

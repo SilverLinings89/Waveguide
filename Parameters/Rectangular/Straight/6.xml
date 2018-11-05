@@ -401,10 +401,10 @@
         </GMRESSteps>
         <Preconditioner>
             <value>Sweeping</value>
-            <default_value>Amesos_Lapack</default_value>
+            <default_value>Sweeping</default_value>
             <documentation>Which preconditioner to use</documentation>
             <pattern>52</pattern>
-            <pattern_description>[Selection Sweeping|FastSweeping|HSIESweeping|HSIEFastSweeping ]</pattern_description>
+            <pattern_description>[Selection Sweeping|FastSweeping|HSIESweeping|HSIEFastSweeping]</pattern_description>
         </Preconditioner>
 	<PreconditionerDampening>
             <value>0.0</value>

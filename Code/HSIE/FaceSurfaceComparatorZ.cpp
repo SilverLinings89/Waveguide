@@ -19,7 +19,5 @@ FaceSurfaceComparatorZ::~FaceSurfaceComparatorZ() {}
 bool FaceSurfaceComparatorZ::check_face(
     const dealii::parallel::distributed::Triangulation<3, 3>::face_iterator
         face_iterator) {
-  Assert(spacedim >= 3, dealii::StandardExceptions::ExcMessage(
-                            "Incompatible FaceComparator. Spacedim < 3"));
   return (std::abs(face_iterator->center()[2] - z) <= tolerance);
 }
