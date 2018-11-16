@@ -154,6 +154,17 @@ class Waveguide {
   std::complex<double> evaluate_for_Position(double x, double y, double z);
 
   /**
+   * This function is an alternat Version of evaluate_for_Position() which
+   * doesn't project the E-Field onto the Modes of the waveguide but rather
+   * computes the Poynting-Vector Type Energy stored in the wavegudie,
+   * Specifically this computes \epsilon(x) * E(x) * \bar{E(x)} where x is the
+   * vector passed as individual parameters. \param x gives the x-coordinate.
+   * \param y gives the y-coordinate. \param z gives the z-coordinate.
+   */
+  std::complex<double> evaluate_Energy_for_Position(double x, double y,
+                                                    double z);
+
+  /**
    * To compute the output quality of the signal and it's transmition along the
    * waveguid-axis, this function performs a comparison of the fundamental mode
    * of a waveguide and the actual situation. For this purpose we integrate the

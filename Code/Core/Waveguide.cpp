@@ -102,11 +102,33 @@ std::complex<double> Waveguide::evaluate_for_Position(double x, double y,
   std::complex<double> c1(result(0), result(3));
   std::complex<double> c2(result(1), result(4));
   std::complex<double> c3(result(2), result(5));
-  std::complex<double> m1(mode(0), mode(3));
-  std::complex<double> m2(mode(1), mode(4));
-  std::complex<double> m3(mode(2), mode(5));
+  std::complex<double> m1(mode(0), -mode(3));
+  std::complex<double> m2(mode(1), -mode(4));
+  std::complex<double> m3(mode(2), -mode(5));
 
   return m1 * c1 + m2 * c2 + m3 * c3;
+}
+
+std::complex<double> Waveguide::evaluate_Energy_for_Position(double x, double y,
+                                                             double z) {
+  dealii::Point<3, double> position(x, y, z);
+  Vector<double> result(6);
+  if (primal) {
+    VectorTools::point_value(dof_handler, primal_with_relevant, position,
+                             result);
+  } else {
+    VectorTools::point_value(dof_handler, primal_solution, position, result);
+  }
+  std::complex<double> c1(result(0), result(3));
+  std::complex<double> c2(result(1), result(4));
+  std::complex<double> c3(result(2), result(5));
+  double eps = 1.0;
+  if (this->mg->math_coordinate_in_waveguide(position)) {
+    eps = GlobalParams.M_W_epsilonin;
+  } else {
+    eps = GlobalParams.M_W_epsilonout;
+  }
+  return eps * (std::abs(c1) + std::abs(c2) + std::abs(c3));
 }
 
 void Waveguide::estimate_solution() {
