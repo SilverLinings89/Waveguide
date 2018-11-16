@@ -258,12 +258,6 @@ InhomogenousTransformationRectangular::Apply_PML_To_Tensor_For_Preconditioner(
   return MaterialTensor;
 }
 
-std::complex<double> InhomogenousTransformationRectangular::evaluate_for_z(
-    double in_z, Waveguide *in_w) {
-  double r = GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out;
-  return gauss_product_2D_sphere(in_z, 10, r, 0, 0, in_w);
-}
-
 double InhomogenousTransformationRectangular::get_dof(int dof) const {
   if (dof < (int)NDofs() && dof >= 0) {
     int sector = floor(dof / 2);

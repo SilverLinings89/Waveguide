@@ -25,18 +25,21 @@ FDOptimization::~FDOptimization() {}
 
 double FDOptimization::evaluate() {
   double quality = 0;
-  double q_in =
-      std::abs(st->evaluate_for_z(-GlobalParams.M_R_ZLength / 2.0, waveguide));
-  double q_out = std::abs(
-      st->evaluate_for_z(GlobalParams.M_R_ZLength / 2.0 - 0.0001, waveguide));
+  double q_in = std::abs(st->evaluate_for_z_with_sum(
+      -GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_CLOSE,
+      Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide));
+  double q_out = std::abs(st->evaluate_for_z_with_sum(
+      GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_CLOSE,
+      Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide));
   quality = q_out / q_in;
   return quality;
 }
 
 std::vector<double> FDOptimization::compute_small_step(double step) {
   unsigned int ndofs = st->NDofs();
-  std::complex<double> global_a_out =
-      st->evaluate_for_z(GlobalParams.M_R_ZLength / 2.0 - 0.0001, waveguide);
+  std::complex<double> global_a_out = st->evaluate_for_z_with_sum(
+      GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_CLOSE,
+      Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide);
   std::vector<double> ret;
   ret.resize(ndofs);
   double q_old = evaluate();
@@ -47,10 +50,12 @@ std::vector<double> FDOptimization::compute_small_step(double step) {
       waveguide->run();
       ret[i] = (evaluate() - q_old) / step;
 
-      std::complex<double> a_in =
-          st->evaluate_for_z(-GlobalParams.M_R_ZLength / 2.0, waveguide);
-      std::complex<double> a_out = st->evaluate_for_z(
-          GlobalParams.M_R_ZLength / 2.0 - 0.0001, waveguide);
+      std::complex<double> a_in = st->evaluate_for_z_with_sum(
+          -GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_CLOSE,
+          Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide);
+      std::complex<double> a_out = st->evaluate_for_z_with_sum(
+          GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_CLOSE,
+          Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide);
       deallog << "Phase in: " << a_in;
       deallog << " Phase out: " << a_out;
       deallog << " Quality derivative: " << ret[i];

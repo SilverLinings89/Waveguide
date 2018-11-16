@@ -324,8 +324,6 @@ class HomogenousTransformationCircular : public SpaceTransformation {
    */
   void Print() const;
 
-  std::complex<double> evaluate_for_z(double z_in, Waveguide *);
-
   std::complex<double> evaluate_for_z_with_sum(double, double, Waveguide *);
 
   std::complex<double> gauss_product_2D_sphere_primal(double z, int n, double R,

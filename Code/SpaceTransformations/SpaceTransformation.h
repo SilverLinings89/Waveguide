@@ -9,6 +9,10 @@
 
 using namespace dealii;
 
+enum Evaluation_Domain { CIRCLE_CLOSE, CIRCLE_MAX, RECTANGLE_INNER };
+
+enum Evaluation_Metric { FUNDAMENTAL_MODE_EXCITATION, POYNTING_TYPE_ENERGY };
+
 class Waveguide;
 /**
  * \class SpaceTransformation
@@ -326,22 +330,17 @@ class SpaceTransformation {
    */
   virtual void Print() const = 0;
 
-  /**
-   * Since the Wavegudie itself may be circular or rectangular now, the
-   * evaluation routines should be moved to a point in the code where this
-   * information is included in the code. Since I dont want to create derived
-   * classes from waveguide (which I should do eventually) I will for now
-   * include this functionality into the space transformation which is
-   * shape-sensitive. The waveguide only offers the evaluation at a point. The
-   * quadrature-rule has to be imposed by the space transformation.
-   */
-  virtual std::complex<double> evaluate_for_z(double, Waveguide *) = 0;
-
-  std::complex<double> evaluate_for_z_with_sum(double, double, Waveguide *);
+  std::complex<double> evaluate_for_z_with_sum(double, Evaluation_Domain,
+                                               Evaluation_Metric, Waveguide *);
 
   std::complex<double> gauss_product_2D_sphere(double z, int n, double R,
                                                double Xc, double Yc,
-                                               Waveguide *in_w);
+                                               Waveguide *in_w,
+                                               Evaluation_Metric in_m);
+
+  std::complex<double> integrate_Waveguide_Core_2D(double z, int n,
+                                                   Waveguide *in_w,
+                                                   Evaluation_Metric in_m);
 
   const int rank;
 };

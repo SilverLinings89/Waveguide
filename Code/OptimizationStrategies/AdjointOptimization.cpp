@@ -29,8 +29,9 @@ AdjointOptimization::~AdjointOptimization() {}
 std::vector<std::complex<double>> AdjointOptimization::compute_small_step(
     double step) {
   waveguide->switch_to_primal(primal_st);
-  std::complex<double> global_a_out = primal_st->evaluate_for_z(
-      GlobalParams.M_R_ZLength / 2.0 - 0.0001, waveguide);
+  std::complex<double> global_a_out = primal_st->evaluate_for_z_with_sum(
+      GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_MAX,
+      Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide);
   std::vector<std::complex<double>> grad =
       waveguide->assemble_adjoint_local_contribution(step);
   for (unsigned int i = 0; i < grad.size(); i++) {
@@ -64,10 +65,11 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   MPI_Barrier(MPI_COMM_WORLD);
   double quality = 0;
   std::complex<double> a_in = primal_st->evaluate_for_z_with_sum(
-      -GlobalParams.M_R_ZLength / 2.0, 2.0 * GlobalParams.M_C_Dim1In,
-      waveguide);
+      -GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_MAX,
+      Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide);
   std::complex<double> a_out = primal_st->evaluate_for_z_with_sum(
-      GlobalParams.M_R_ZLength / 2.0, 2.0 * GlobalParams.M_C_Dim1In, waveguide);
+      GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_MAX,
+      Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide);
   deallog << "Phase in (@ " << -GlobalParams.M_R_ZLength / 2.0 << ": " << a_in
           << std::endl;
   deallog << "Phase out(@ " << GlobalParams.M_R_ZLength / 2.0 << ": " << a_out
@@ -75,6 +77,54 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   quality = std::abs(a_out / a_in);
   deallog << "Computed primal quality " << quality << std::endl;
   // New starts here
+  // Refined output starting here:
+  deallog << "Computing Rectangular Energy levels:" << std::endl;
+  std::complex<double> refined_in = primal_st->evaluate_for_z_with_sum(
+      -GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::RECTANGLE_INNER,
+      Evaluation_Metric::POYNTING_TYPE_ENERGY, waveguide);
+  std::complex<double> refined_out = primal_st->evaluate_for_z_with_sum(
+      GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::RECTANGLE_INNER,
+      Evaluation_Metric::POYNTING_TYPE_ENERGY, waveguide);
+  double e_s = std::abs(refined_out / refined_in);
+  refined_in = primal_st->evaluate_for_z_with_sum(
+      -GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::RECTANGLE_INNER,
+      Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide);
+  refined_out = primal_st->evaluate_for_z_with_sum(
+      GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::RECTANGLE_INNER,
+      Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide);
+  double m_s = std::abs(refined_out / refined_in);
+  refined_in = primal_st->evaluate_for_z_with_sum(
+      -GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_CLOSE,
+      Evaluation_Metric::POYNTING_TYPE_ENERGY, waveguide);
+  refined_out = primal_st->evaluate_for_z_with_sum(
+      GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_CLOSE,
+      Evaluation_Metric::POYNTING_TYPE_ENERGY, waveguide);
+  double e_i = std::abs(refined_out / refined_in);
+  refined_in = primal_st->evaluate_for_z_with_sum(
+      -GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_CLOSE,
+      Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide);
+  refined_out = primal_st->evaluate_for_z_with_sum(
+      GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_CLOSE,
+      Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide);
+  double m_i = std::abs(refined_out / refined_in);
+  refined_in = primal_st->evaluate_for_z_with_sum(
+      -GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_MAX,
+      Evaluation_Metric::POYNTING_TYPE_ENERGY, waveguide);
+  refined_out = primal_st->evaluate_for_z_with_sum(
+      GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_MAX,
+      Evaluation_Metric::POYNTING_TYPE_ENERGY, waveguide);
+  double e_o = std::abs(refined_out / refined_in);
+  refined_in = primal_st->evaluate_for_z_with_sum(
+      -GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_MAX,
+      Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide);
+  refined_out = primal_st->evaluate_for_z_with_sum(
+      GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_MAX,
+      Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide);
+  double m_o = std::abs(refined_out / refined_in);
+  deallog << "###" << GlobalParams.M_PC_Case + 37 << e_s << "\t" << m_s << "\t"
+          << e_i << "\t" << m_i << "\t" << e_o << "\t" << m_o << "\t"
+          << std::endl;
+
   const double step_width = 0.01;
   unsigned int cnt_steps = 0;
   double z_temp = GlobalParams.Minimum_Z;
@@ -118,7 +168,9 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
     std::complex<double> l_val(0, 0);
     try {
       deallog << "Executing for " << z_temp << std::endl;
-      l_val = primal_st->evaluate_for_z(z_temp, waveguide);
+      l_val = primal_st->evaluate_for_z_with_sum(
+          z_temp, Evaluation_Domain::CIRCLE_CLOSE,
+          Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide);
     } catch (...) {
       std::cout << "In Process " << GlobalParams.MPI_Rank << ": Broke for "
                 << z_temp << std::endl;
@@ -185,10 +237,12 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   waveguide->run();
   MPI_Barrier(MPI_COMM_WORLD);
   double dual_quality = 0;
-  std::complex<double> d_a_in =
-      primal_st->evaluate_for_z(-GlobalParams.M_R_ZLength / 2.0, waveguide);
-  std::complex<double> d_a_out =
-      primal_st->evaluate_for_z(GlobalParams.M_R_ZLength / 2.0, waveguide);
+  std::complex<double> d_a_in = primal_st->evaluate_for_z_with_sum(
+      -GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_MAX,
+      Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide);
+  std::complex<double> d_a_out = primal_st->evaluate_for_z_with_sum(
+      GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_MAX,
+      Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide);
   dual_quality = std::abs(d_a_out / d_a_in);
   deallog << "Phase in: " << d_a_in << std::endl;
   deallog << "Phase out: " << d_a_out << std::endl;
@@ -222,8 +276,9 @@ void AdjointOptimization::run() {
       }
       deallog << std::endl;
       quality = compute_big_step(step);
-      oa->pass_result_big_step(
-          primal_st->evaluate_for_z(GlobalParams.M_R_ZLength / 2.0, waveguide));
+      oa->pass_result_big_step(primal_st->evaluate_for_z_with_sum(
+          GlobalParams.M_R_ZLength / 2.0, Evaluation_Domain::CIRCLE_CLOSE,
+          Evaluation_Metric::FUNDAMENTAL_MODE_EXCITATION, waveguide));
     }
 
     counter++;
