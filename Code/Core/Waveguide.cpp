@@ -119,16 +119,20 @@ std::complex<double> Waveguide::evaluate_Energy_for_Position(double x, double y,
   } else {
     VectorTools::point_value(dof_handler, primal_solution, position, result);
   }
-  std::complex<double> c1(result(0), result(3));
-  std::complex<double> c2(result(1), result(4));
-  std::complex<double> c3(result(2), result(5));
+  double val = result(0) * result(0) + result(1) * result(1) +
+               result(2) * result(2) + result(3) * result(3) +
+               result(4) * result(4) + result(5) * result(5);
+  val = std::sqrt(val);
+  std::complex<double> ret;
+  ret.real(val);
+  ret.imag(0);
   double eps = 1.0;
   if (this->mg->math_coordinate_in_waveguide(position)) {
     eps = GlobalParams.M_W_epsilonin;
   } else {
     eps = GlobalParams.M_W_epsilonout;
   }
-  return eps * (std::abs(c1) + std::abs(c2) + std::abs(c3));
+  return eps * ret;
 }
 
 void Waveguide::estimate_solution() {
@@ -788,20 +792,43 @@ void Waveguide::assemble_system() {
   for (; cell != endc; ++cell) {
     unsigned int subdomain_id = cell->subdomain_id();
     if (subdomain_id == rank) {
+      cell->get_dof_indices(local_dof_indices);
       cell_rhs.reinit(dofs_per_cell, false);
       fe_values.reinit(cell);
       quadrature_points = fe_values.get_quadrature_points();
       bool has_left = false;
       bool has_right = false;
       for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
-        if (cell->face(i)->center(true, false)[2] <=
-            -GlobalParams.M_R_ZLength / 2.0)
+        if (cell->face(i)->center(true, false)[2] - cell_layer_z < 0.0001)
           has_left = true;
-        if (cell->face(i)->center(true, false)[2] >=
-            -GlobalParams.M_R_ZLength / 2.0)
+        if (cell->face(i)->center(true, false)[2] > cell_layer_z)
           has_right = true;
       }
       bool compute_rhs = has_left && has_right;
+      std::vector<types::global_dof_index> input_dofs(fe.dofs_per_line);
+      IndexSet input_dofs_local_set(fe.dofs_per_cell);
+      std::vector<Point<3, double>> input_dof_centers(fe.dofs_per_cell);
+      std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
+
+      if (compute_rhs) {
+        for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+          if (cell->face(i)->center(true, false)[2] - cell_layer_z < 0.0001) {
+            for (unsigned int e = 0; e < GeometryInfo<3>::lines_per_face; e++) {
+              (cell->face(i)->line(e))->get_dof_indices(input_dofs);
+              for (unsigned int j = 0; j < fe.dofs_per_cell; j++) {
+                for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
+                  if (local_dof_indices[j] == input_dofs[k]) {
+                    input_dofs_local_set.add_index(j);
+                    input_dof_centers[j] = cell->face(i)->line(e)->center();
+                    input_dof_dirs[j] = cell->face(i)->line(e)->vertex(1) -
+                                        cell->face(i)->line(e)->vertex(0);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
       cell_matrix_real = 0;
       cell_matrix_prec_odd = 0;
       cell_matrix_prec_even = 0;
@@ -872,39 +899,50 @@ void Waveguide::assemble_system() {
               J_Val[k].real(fe_values[real].value(j, q_index)[k]);
             }
 
+            double i_f = .0;
+            double j_f = .0;
+            if (compute_rhs) {
+              if (input_dofs_local_set.is_element(i)) {
+                Tensor<1, 3, std::complex<double>> temp =
+                    es.val(input_dof_centers[i]);
+                i_f = (temp[0].real() * input_dof_dirs[i][0] +
+                       temp[1].real() * input_dof_dirs[i][1] +
+                       temp[2].real() * input_dof_dirs[i][2]);              }
+              if (input_dofs_local_set.is_element(j)) {
+                Tensor<1, 3, std::complex<double>> temp =
+                    es.val(input_dof_centers[j]);
+                j_f = (temp[0].real() * input_dof_dirs[j][0] +
+                       temp[1].real() * input_dof_dirs[j][1] +
+                       temp[2].real() * input_dof_dirs[j][2]);
+              }
+            }
+            i_f += 1.0;
+            j_f += 1.0;
             std::complex<double> x =
-                (mu * I_Curl) * Conjugate_Vector(J_Curl) * JxW -
-                ((epsilon * I_Val) * Conjugate_Vector(J_Val)) * JxW *
-                    GlobalParams.C_omega * GlobalParams.C_omega;
+                (mu * (I_Curl * i_f)) * Conjugate_Vector((J_Curl * j_f)) * JxW -
+                ((epsilon * (I_Val * i_f)) * Conjugate_Vector((J_Val * j_f))) *
+                    JxW * GlobalParams.C_omega * GlobalParams.C_omega;
             cell_matrix_real[i][j] += x.real();
 
-            std::complex<double> pre1 =
-                (mu_prec1 * I_Curl) * Conjugate_Vector(J_Curl) * JxW -
-                ((epsilon_pre1 * I_Val) * Conjugate_Vector(J_Val)) * JxW *
-                    k_a_sqr;
+            std::complex<double> pre1 = (mu_prec1 * (I_Curl * i_f)) *
+                                            Conjugate_Vector((J_Curl * j_f)) *
+                                            JxW -
+                                        ((epsilon_pre1 * (I_Val * i_f)) *
+                                         Conjugate_Vector((J_Val * j_f))) *
+                                            JxW * k_a_sqr;
             cell_matrix_prec_even[i][j] += pre1.real();
 
-            std::complex<double> pre2 =
-                (mu_prec2 * I_Curl) * Conjugate_Vector(J_Curl) * JxW -
-                ((epsilon_pre2 * I_Val) * Conjugate_Vector(J_Val)) * JxW *
-                    k_a_sqr;
+            std::complex<double> pre2 = (mu_prec2 * (I_Curl * i_f)) *
+                                            Conjugate_Vector((J_Curl * j_f)) *
+                                            JxW -
+                                        ((epsilon_pre2 * (I_Val * i_f)) *
+                                         Conjugate_Vector((J_Val * j_f))) *
+                                            JxW * k_a_sqr;
             cell_matrix_prec_odd[i][j] += pre2.real();
-          }
-          if (compute_rhs &&
-              quadrature_points[q_index][2] > -GlobalParams.M_R_ZLength / 2.0) {
-            std::complex<double> rhs2 =
-                (mu * I_Curl) *
-                    Conjugate_Vector(es.curl(quadrature_points[q_index])) *
-                    JxW -
-                ((epsilon * I_Val)) *
-                    Conjugate_Vector(es.val(quadrature_points[q_index])) * JxW *
-                    GlobalParams.C_omega * GlobalParams.C_omega;
-            cell_rhs[i] -= rhs2.real();
           }
         }
       }
 
-      cell->get_dof_indices(local_dof_indices);
       cm.distribute_local_to_global(cell_matrix_real, cell_rhs,
                                     local_dof_indices, system_matrix,
                                     system_rhs, false);
@@ -976,7 +1014,7 @@ void Waveguide::MakeBoundaryConditions() {
       }
     }
   }
-  cell_layer_z = Utilities::MPI::sum(cell_layer_z, MPI_COMM_WORLD);
+  cell_layer_z = Utilities::MPI::min(cell_layer_z, MPI_COMM_WORLD);
   deallog << "The input cell interface layer is located at " << cell_layer_z
           << std::endl;
   MPI_Barrier(MPI_COMM_WORLD);
