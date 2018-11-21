@@ -140,21 +140,21 @@
         </General>
     </Output>
     <Measures>
-        <PredefinedCases>
-            <ComputeCase>
-                <value>true</value>
-                <default_value>false</default_value>
-                <documentation>Do you want to compute a predefined case?</documentation>
-                <pattern>17</pattern>
-                <pattern_description>[Bool]</pattern_description>
-            </ComputeCase>
-            <SelectCase>
-                <value>5</value>
-                <default_value>0</default_value>
-                <documentation>Which Case to compute (see numbers in hdf5 files).</documentation>
-                <pattern>18</pattern>
-                <pattern_description>[Integer range 0...72 (inclusive)]</pattern_description>
-            </SelectCase>
+	<PredefinedCases>
+                <ComputeCase>
+                    <value>false</value>
+                    <default_value>false</default_value>
+                    <documentation>Do you want to compute a predefined case?</documentation>
+                    <pattern>17</pattern>
+                    <pattern_description>[Bool]</pattern_description>
+                </ComputeCase>
+                <SelectCase>
+                    <value>5</value>
+                    <default_value>0</default_value>
+                    <documentation>Which Case to compute (see numbers in hdf5 files).</documentation>
+                    <pattern>18</pattern>
+                    <pattern_description>[Integer range 0...72 (inclusive)]</pattern_description>
+                </SelectCase>
         </PredefinedCases>
         <Connectors>
             <Shape>
@@ -195,14 +195,14 @@
         </Connectors>
         <Region>
             <XLength>
-                <value>20</value>
+                <value>10</value>
                 <default_value>10.0</default_value>
                 <documentation>Length of the system in x-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
                 <pattern>24</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </XLength>
             <YLength>
-                <value>20</value>
+                <value>10</value>
                 <default_value>10.0</default_value>
                 <documentation>Length of the system in y-Direction (Connectors lie in the XY-plane and the offset lies in the y-direction. Measured in micrometres</documentation>
                 <pattern>25</pattern>
@@ -225,21 +225,21 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </Delta>
             <epsilon_20in>
-                <value>1.53</value>
+                <value>1.56</value>
                 <default_value>2.2</default_value>
                 <documentation>Material-Property of the optical fiber (optical thickness).</documentation>
                 <pattern>28</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </epsilon_20in>
             <epsilon_20out>
-                <value>1.36</value>
+                <value>1.34</value>
                 <default_value>1.0</default_value>
                 <documentation>Material-Property of environment of the fiber (optical thickness).</documentation>
                 <pattern>29</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </epsilon_20out>
             <Lambda>
-                <value>1.550</value>
+                <value>1.55</value>
                 <default_value>5.6328</default_value>
                 <documentation>Vacuum-wavelength of the incoming wave.</documentation>
                 <pattern>30</pattern>
@@ -269,7 +269,7 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </ZMinus>
             <ZPlus>
-                <value>5</value>
+                <value>20</value>
                 <default_value>1</default_value>
                 <documentation>Thickness of the PML area on the side of the output connector.</documentation>
                 <pattern>34</pattern>
@@ -325,21 +325,21 @@
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </KappaZMax>
             <SigmaXMax>
-                <value>5</value>
+                <value>10</value>
                 <default_value>10.0</default_value>
                 <documentation>PML Tuning Parameter</documentation>
                 <pattern>42</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </SigmaXMax>
             <SigmaYMax>
-                <value>5</value>
+                <value>10</value>
                 <default_value>10.0</default_value>
                 <documentation>PML Tuning Parameter</documentation>
                 <pattern>43</pattern>
                 <pattern_description>[Double 0...1.79769e+308 (inclusive)]</pattern_description>
             </SigmaYMax>
             <SigmaZMax>
-                <value>5</value>
+                <value>10</value>
                 <default_value>10.0</default_value>
                 <documentation>PML Tuning Parameter</documentation>
                 <pattern>44</pattern>
@@ -356,7 +356,7 @@
     </Measures>
     <Schema>
         <Homogeneity>
-            <value>false</value>
+            <value>true</value>
             <default_value>true</default_value>
             <documentation>If this is enabled, a space transformation is used which is equal the identity on the PML-region for the dampening along the x and y axis.</documentation>
             <pattern>46</pattern>
@@ -400,11 +400,11 @@
             <pattern_description>[Integer range 1...2147483647 (inclusive)]</pattern_description>
         </GMRESSteps>
         <Preconditioner>
-            <value>Sweeping</value>
-            <default_value>Sweeping</default_value>
+            <value>Amesos_Umfpack</value>
+            <default_value>Amesos_Lapack</default_value>
             <documentation>Which preconditioner to use</documentation>
             <pattern>52</pattern>
-            <pattern_description>[Selection Sweeping|FastSweeping|HSIESweeping|HSIEFastSweeping]</pattern_description>
+            <pattern_description>[Selection Sweeping|Amesos_Lapack|Amesos_Scalapack|Amesos_Klu|Amesos_Umfpack|Amesos_Pardiso|Amesos_Taucs|Amesos_Superlu|Amesos_Superludist|Amesos_Dscpack|Amesos_Mumps ]</pattern_description>
         </Preconditioner>
         <Steps>
             <value>200</value>
@@ -460,14 +460,14 @@
             <pattern_description>[Integer range 0...2147483647 (inclusive)]</pattern_description>
         </Global>
         <SemiGlobal>
-            <value>1</value>
+            <value>0</value>
             <default_value>1</default_value>
             <documentation>Semi-Global refinement-steps (close to the Waveguide-boundary and inside).</documentation>
             <pattern>60</pattern>
             <pattern_description>[Integer range 0...2147483647 (inclusive)]</pattern_description>
         </SemiGlobal>
         <Internal>
-            <value>0</value>
+            <value>1</value>
             <default_value>1</default_value>
             <documentation>Internal refinement-steps.</documentation>
             <pattern>61</pattern>
