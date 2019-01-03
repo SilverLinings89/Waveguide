@@ -18,7 +18,9 @@ bool HSIE_Dof_Type<hsie_order>::D_and_I_initialized = false;
 template <int hsie_order>
 HSIE_Dof_Type<hsie_order>::HSIE_Dof_Type(unsigned int in_type,
                                          unsigned int in_order,
-                                         unsigned int in_q_count) {
+                                         unsigned int in_q_count,
+                                         HSIE_Infinite_Direction in_dir)
+    : dir(in_dir) {
   this->v_k = new std::vector<Tensor<1, 2>>();
   this->w_k = new std::vector<double>();
   v_k.resize(in_q_count);
@@ -43,7 +45,6 @@ HSIE_Dof_Type<hsie_order>::HSIE_Dof_Type(unsigned int in_type,
     this->D = new dealii::Tensor<2, hsie_order + 1, std::complex<double>>();
     for (int i = 0; i < hsie_order + 1; i++) {
       for (int j = i; j < hsie_order + 1; j++) {
-        this->D[i, j] = 0;
         this->D[i, j] = matrixD(i, j, k0);
         this->D[j, i] = matrixD(i, j, k0);
       }

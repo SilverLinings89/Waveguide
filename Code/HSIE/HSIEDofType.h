@@ -1,8 +1,12 @@
 /*
  * HSIEDofType.h
- *
- *  Created on: Oct 8, 2018
- *      Author: kraft
+ *  Important remark. I always consider the infinite direction to be the third
+ * one internally and then rotate vectors accordingly. I get a 2D surface
+ * triangulation and the "infinite" direction is orthogonal to those. It is
+ * therefore important to notice the differences to the paper, where x is the
+ * direction which is removed. I want to be able to also use this implementation
+ * for boundaries in the x and y direction. Created on: Oct 8, 2018 Author:
+ * kraft
  */
 
 #ifndef CODE_HSIE_HSIEDOFTYPE_H_
@@ -12,9 +16,12 @@
 #include <complex>
 #include <vector>
 
+enum HSIE_Infinite_Direction : std::string { x = 0, y = 1, z = 2, general = 3 };
+
 template <int hsie_order>
 class HSIE_Dof_Type {
  private:
+  const HSIE_Infinite_Direction dir;
   static bool D_and_I_initialized;
   static dealii::Tensor<2, hsie_order + 1, std::complex<double>> D;
   static dealii::Tensor<2, hsie_order + 1, std::complex<double>> I;
@@ -31,7 +38,7 @@ class HSIE_Dof_Type {
 
  public:
   HSIE_Dof_Type(unsigned int in_type, unsigned int in_order,
-                unsigned int q_count);
+                unsigned int q_count, HSIE_Infinite_Direction dir);
   virtual ~HSIE_Dof_Type();
   /**
    * Base Points are numbered:
