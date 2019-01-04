@@ -1,6 +1,7 @@
 #!/bin/bash
 StepWidth=1
 val=35 #The first computed Case is val + StepWidth and Zerobased so the line computed from the shapelist is linenumber = val+stepwidth-1
+SaveVal=${val}
 NumberOfCases=21
 for value in {1..$NumberOfCases}
 do 
@@ -19,7 +20,7 @@ do
 	chmod a+x ./case_${val}.sh
 done
 
-val=3
+val=${SaveVal}
 for value in {1..$NumberOfCases}
 do 
 	val=$(expr $val + $StepWidth)
