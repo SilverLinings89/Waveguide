@@ -9,7 +9,7 @@ do
 	rm ./case_${val}.sh
 	rm Parameters/Rectangular/PWB/hom/PWB_Case_${val}.xml
 	touch Parameters/Rectangular/PWB/hom/PWB_Case_${val}.xml
-	sed "s/#CASENUMBER#/${val}/g" Parameters/Rectangular/PWB/hom/PWB_Case_${val}.xml >> Parameters/Rectangular/PWB/hom/PWB_Case_${val}.xml
+	sed "s/#CASENUMBER#/${val}/g" Parameters/Rectangular/PWB/hom/PWB_Case_${val}.xml > Parameters/Rectangular/PWB/hom/PWB_Case_${val}.xml
 	echo "#!/bin/bash" >> ./case_${val}.sh
 	echo "module load lib/boost/1.56.0" >> ./case_${val}.sh
 	echo "module load compiler/gnu/5.2" >> ./case_${val}.sh
