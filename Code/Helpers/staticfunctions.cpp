@@ -349,8 +349,8 @@ Parameters GetParameters() {
     std::string line;
     int counter = 0;
     bool case_found = false;
-    if (ret.M_PC_Case >= 0 && ret.M_PC_Case < 36) {
-      while (std::getline(input, line) && counter < 36) {
+    if (ret.M_PC_Case >= 0 && ret.M_PC_Case < 57) {
+      while (std::getline(input, line) && counter < 57) {
         if (counter == ret.M_PC_Case) {
           ret.sd.SetByString(line);
           case_found = true;
