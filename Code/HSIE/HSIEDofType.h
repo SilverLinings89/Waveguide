@@ -16,7 +16,7 @@
 #include <complex>
 #include <vector>
 
-enum HSIE_Infinite_Direction : std::string { x = 0, y = 1, z = 2, general = 3 };
+enum HSIE_Infinite_Direction { x = 0, y = 1, z = 2, general = 3 };
 
 template <int hsie_order>
 class HSIE_Dof_Type {
