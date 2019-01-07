@@ -85,8 +85,8 @@ double ExactSolution::value(const Point<3> &in_p,
         }
       }
       double n;
-      if (abs(p(0)) <= GlobalParams.M_C_Dim1In / 2.0 &&
-          abs(p(1)) <= GlobalParams.M_C_Dim2In / 2.0) {
+      if (abs(p(0)) <= GlobalParams.M_C_Dim1In &&
+          abs(p(1)) <= GlobalParams.M_C_Dim2In) {
         n = std::sqrt(GlobalParams.M_W_epsilonin);
       } else {
         n = std::sqrt(GlobalParams.M_W_epsilonout);
@@ -172,8 +172,8 @@ void ExactSolution::vector_value(const Point<3> &in_p,
                     m1m1 * vals[ix - 1][iy - 1].Ez.imag() +
                     m1p1 * vals[ix - 1][iy].Ez.imag();
         double n;
-        if (abs(p(0)) <= GlobalParams.M_C_Dim1In / 2.0 &&
-            abs(p(1)) <= GlobalParams.M_C_Dim2In / 2.0) {
+        if (abs(p(0)) <= GlobalParams.M_C_Dim1In &&
+            abs(p(1)) <= GlobalParams.M_C_Dim2In) {
           n = std::sqrt(GlobalParams.M_W_epsilonin);
         } else {
           n = std::sqrt(GlobalParams.M_W_epsilonout);

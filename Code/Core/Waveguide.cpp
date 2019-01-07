@@ -801,7 +801,7 @@ void Waveguide::assemble_system() {
       for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
         if (cell->face(i)->center(true, false)[2] - cell_layer_z < 0.0001)
           has_left = true;
-        if (cell->face(i)->center(true, false)[2] > cell_layer_z)
+        if (cell->face(i)->center(true, false)[2] + 0.0001 > cell_layer_z)
           has_right = true;
       }
       bool compute_rhs = has_left && has_right;
@@ -899,46 +899,42 @@ void Waveguide::assemble_system() {
               J_Val[k].real(fe_values[real].value(j, q_index)[k]);
             }
 
-            double i_f = .0;
-            double j_f = .0;
-            if (compute_rhs) {
-              if (input_dofs_local_set.is_element(i)) {
-                Tensor<1, 3, std::complex<double>> temp =
-                    es.val(input_dof_centers[i]);
-                i_f = (temp[0].real() * input_dof_dirs[i][0] +
-                       temp[1].real() * input_dof_dirs[i][1] +
-                       temp[2].real() * input_dof_dirs[i][2]);              }
-              if (input_dofs_local_set.is_element(j)) {
-                Tensor<1, 3, std::complex<double>> temp =
-                    es.val(input_dof_centers[j]);
-                j_f = (temp[0].real() * input_dof_dirs[j][0] +
-                       temp[1].real() * input_dof_dirs[j][1] +
-                       temp[2].real() * input_dof_dirs[j][2]);
-              }
-            }
-            i_f += 1.0;
-            j_f += 1.0;
             std::complex<double> x =
-                (mu * (I_Curl * i_f)) * Conjugate_Vector((J_Curl * j_f)) * JxW -
-                ((epsilon * (I_Val * i_f)) * Conjugate_Vector((J_Val * j_f))) *
+                (mu * I_Curl ) * Conjugate_Vector(J_Curl ) * JxW -
+                ((epsilon * I_Val ) * Conjugate_Vector(J_Val )) *
                     JxW * GlobalParams.C_omega * GlobalParams.C_omega;
             cell_matrix_real[i][j] += x.real();
 
-            std::complex<double> pre1 = (mu_prec1 * (I_Curl * i_f)) *
-                                            Conjugate_Vector((J_Curl * j_f)) *
+            std::complex<double> pre1 = (mu_prec1 * I_Curl ) *
+                                            Conjugate_Vector(J_Curl ) *
                                             JxW -
-                                        ((epsilon_pre1 * (I_Val * i_f)) *
-                                         Conjugate_Vector((J_Val * j_f))) *
+                                        ((epsilon_pre1 * I_Val ) *
+                                         Conjugate_Vector(J_Val)) *
                                             JxW * k_a_sqr;
             cell_matrix_prec_even[i][j] += pre1.real();
 
-            std::complex<double> pre2 = (mu_prec2 * (I_Curl * i_f)) *
-                                            Conjugate_Vector((J_Curl * j_f)) *
+            std::complex<double> pre2 = (mu_prec2 * I_Curl ) *
+                                            Conjugate_Vector(J_Curl ) *
                                             JxW -
-                                        ((epsilon_pre2 * (I_Val * i_f)) *
-                                         Conjugate_Vector((J_Val * j_f))) *
+                                        ((epsilon_pre2 * I_Val ) *
+                                         Conjugate_Vector(J_Val )) *
                                             JxW * k_a_sqr;
             cell_matrix_prec_odd[i][j] += pre2.real();
+          }
+          if (compute_rhs) {
+            if(quadrature_points[q_index][2] > cell_layer_z) {
+              if(!InputInterfaceDofs.is_element(local_dof_indices[i])){
+                std::complex<double> rhs2 =
+                                (mu * I_Curl) *
+                                    Conjugate_Vector(es.curl(quadrature_points[q_index])) *
+                                    JxW -
+                                ((epsilon * I_Val)) *
+                                    Conjugate_Vector(es.val(quadrature_points[q_index])) * JxW *
+                                    GlobalParams.C_omega * GlobalParams.C_omega;
+                cell_rhs[i] += rhs2.real();
+              }
+            }
+            
           }
         }
       }
