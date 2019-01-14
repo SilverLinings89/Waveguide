@@ -921,20 +921,15 @@ void Waveguide::assemble_system() {
                                             JxW * k_a_sqr;
             cell_matrix_prec_odd[i][j] += pre2.real();
           }
-          if (compute_rhs) {
-            if(quadrature_points[q_index][2] > cell_layer_z) {
-              if(!InputInterfaceDofs.is_element(local_dof_indices[i])){
-                std::complex<double> rhs2 =
-                                (mu * I_Curl) *
-                                    Conjugate_Vector(es.curl(quadrature_points[q_index])) *
-                                    JxW -
-                                ((epsilon * I_Val)) *
-                                    Conjugate_Vector(es.val(quadrature_points[q_index])) * JxW *
-                                    GlobalParams.C_omega * GlobalParams.C_omega;
-                cell_rhs[i] += rhs2.real();
-              }
-            }
-            
+          if (compute_rhs && quadrature_points[q_index][2] > cell_layer_z) {
+            std::complex<double> rhs2 =
+                (mu * I_Curl) *
+                    Conjugate_Vector(es.curl(quadrature_points[q_index])) *
+                    JxW -
+                ((epsilon * I_Val)) *
+                    Conjugate_Vector(es.val(quadrature_points[q_index])) * JxW *
+                    GlobalParams.C_omega * GlobalParams.C_omega;
+            cell_rhs[i] -= rhs2.real();
           }
         }
       }

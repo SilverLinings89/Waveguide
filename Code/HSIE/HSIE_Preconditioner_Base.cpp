@@ -193,7 +193,7 @@ HSIEPreconditionerBase<hsie_order>::~HSIEPreconditionerBase() {
 template <int hsie_order>
 HSIEPreconditionerBase<hsie_order>::HSIEPreconditionerBase(
     const dealii::parallel::distributed::Triangulation<3, 3> *in_tria,
-    double in_z): fe_nedelec(GlobalParams.So_ElementOrder),fe_q(1),quadrature_formula(2) {
+    double in_z) {
   FaceSurfaceComparatorZ fscz = new FaceSurfaceComparatorZ(in_z, 0.00001);
   association = extract_surface_mesh_at_z(in_tria, &surf_tria, fscz);
   surface_edges = surf_tria.n_active_lines();
@@ -206,12 +206,6 @@ HSIEPreconditionerBase<hsie_order>::HSIEPreconditionerBase(
       dealii::GeometryInfo<2>::vertices_per_face * 2 * (hsie_order + 1);
   HSIE_degree = hsie_order;
   hsie_dof_handler = dealii::DoFHandler<3>(surf_tria);
-  FEValues<3> fev_nedelec(fe_nedelec, quadrature_formula,
-                          update_values | update_gradients | update_JxW_values |
-                              update_quadrature_points);
-  FEValues<3> fev_q(fe_q, quadrature_formula,
-                    update_values | update_gradients | update_JxW_values |
-                        update_quadrature_points);
 }
 
 template <int hsie_order>
@@ -320,6 +314,76 @@ std::complex<double> HSIEPreconditionerBase<hsie_order>::A(
     }
   }
   return ret;
+}
+
+template <int hsie_order>
+void HSIEPreconditionerBase<hsie_order>::assemble_block() {
+  QGauss<2> quadrature_formula(2);
+  dealii::FE_Nedelec<2> fe_nedelec;
+  dealii::FE_Q<2> fe_q;
+  FEValues<2, 3> ned_fe_values(fe_nedelec, quadrature_formula,
+                               update_values | update_gradients |
+                                   update_JxW_values |
+                                   update_quadrature_points);
+  FEValues<2, 3> q_fe_values(fe_q, quadrature_formula,
+                             update_values | update_gradients |
+                                 update_JxW_values | update_quadrature_points);
+  std::vector<Point<3>> quadrature_points;
+  const unsigned int n_q_points = quadrature_formula.size();
+  const unsigned int dofs_per_cell = this->n_dofs_per_face();
+  deallog << "Starting Assemblation process" << std::endl;
+
+  FullMatrix<double> cell_matrix_real(dofs_per_cell, dofs_per_cell);
+  Vector<double> cell_rhs(dofs_per_cell);
+
+  std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+  DoFHandler<2, 3>::active_cell_iterator cell, endc;
+  cell = hsie_dof_handler.begin_active(), endc = hsie_dof_handler.end();
+  for (; cell != endc; ++cell) {
+    ned_fe_values.reinit(cell);
+    quadrature_points = ned_fe_values.get_quadrature_points();
+    q_fe_values.reinit(cell);
+    cell_matrix_real = 0;
+    for (unsigned int q_index = 0; q_index < n_q_points; ++q_index) {
+      Point<2, double> current_point_2D;
+      current_point_2D[0] = quadrature_points[q_index][0];
+      current_point_2D[1] = quadrature_points[q_index][1];
+      const unsigned int n_nodal_functions = 4;
+      const unsigned int n_nedelec_functions = 4;
+      FullMatrix<double> shape_functions(
+          n_nodal_functions + n_nedelec_functions, 3);
+      FullMatrix<double> gradients(n_nodal_functions + n_nedelec_functions,
+                                   3 + 3);
+      for (unsigned int i = 0; i < n_nodal_functions; i++) {
+        for (unsigned int j = 0; j < 3; j++) {
+          shape_functions[i, j] =
+              fe_q.shape_value_component(i, current_point_2D, j);
+        }
+      }
+      for (unsigned int i = 0; i < n_nedelec_functions; i++) {
+        for (unsigned int j = 0; j < 3; j++) {
+          shape_functions[i + n_nodal_functions, j] =
+              fe_nedelec.shape_value_component(i, current_point_2D, j);
+        }
+      }
+      for (unsigned int i = 0; i < n_nodal_functions; i++) {
+        for (unsigned int j = 0; j < 3; j++) {
+          const Tensor<1, 2, double> temp =
+              fe_q.shape_grad_component(i, current_point_2D, j);
+          gradients[i, j] = temp[0];
+          gradients[i + 3, j] = temp[1];
+        }
+      }
+      for (unsigned int i = 0; i < n_nedelec_functions; i++) {
+        for (unsigned int j = 0; j < 3; j++) {
+          const Tensor<1, 2, double> temp =
+              fe_nedelec.shape_grad_component(i, current_point_2D, j);
+          gradients[i + n_nodal_functions, j] = temp[0];
+          gradients[i + n_nodal_functions, j + 3] = temp[1];
+        }
+      }
+    }
+  }
 }
 
 #endif
