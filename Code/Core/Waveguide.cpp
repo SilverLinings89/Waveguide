@@ -44,11 +44,7 @@ double *steps_widths;
 Waveguide::Waveguide(MPI_Comm in_mpi_comm, MeshGenerator *in_mg,
                      SpaceTransformation *in_st)
     : fe(FE_Nedelec<3>(GlobalParams.So_ElementOrder), 2),
-      triangulation(in_mpi_comm,
-                    parallel::distributed::Triangulation<3>::MeshSmoothing(
-                        parallel::distributed::Triangulation<3>::none),
-                    parallel::distributed::Triangulation<
-                        3>::Settings::no_automatic_repartitioning),
+      triangulation(Triangulation<3>::MeshSmoothing(Triangulation<3>::none)),
       even(Utilities::MPI::this_mpi_process(in_mpi_comm) % 2 == 0),
       rank(Utilities::MPI::this_mpi_process(in_mpi_comm)),
       real(0),
@@ -81,6 +77,7 @@ Waveguide::Waveguide(MPI_Comm in_mpi_comm, MeshGenerator *in_mg,
   execute_recomputation = false;
   mkdir((solutionpath + "/" + "primal").c_str(), ACCESSPERMS);
   mkdir((solutionpath + "/" + "dual").c_str(), ACCESSPERMS);
+  cell_layer_z = 0;
 }
 
 Waveguide::~Waveguide() {}
@@ -211,9 +208,8 @@ Tensor<1, 3, std::complex<double>> Waveguide::Conjugate_Vector(
 void Waveguide::make_grid() {
   mg->prepare_triangulation(&triangulation);
   dof_handler.distribute_dofs(fe);
-  parallel::distributed::Triangulation<3>::active_cell_iterator
-      cell = triangulation.begin_active(),
-      endc = triangulation.end();
+  Triangulation<3>::active_cell_iterator cell = triangulation.begin_active(),
+                                         endc = triangulation.end();
   minimum_local_z = 2.0 * GlobalParams.M_R_ZLength;
   maximum_local_z = -2.0 * GlobalParams.M_R_ZLength;
   for (; cell != endc; ++cell) {
@@ -790,8 +786,6 @@ void Waveguide::assemble_system() {
                                GlobalParams.So_PreconditionerDampening);
   k_a_sqr = k_a_sqr * k_a_sqr;
   for (; cell != endc; ++cell) {
-    unsigned int subdomain_id = cell->subdomain_id();
-    if (subdomain_id == rank) {
       cell->get_dof_indices(local_dof_indices);
       cell_rhs.reinit(dofs_per_cell, false);
       fe_values.reinit(cell);
@@ -932,7 +926,6 @@ void Waveguide::assemble_system() {
             cell_rhs[i] -= rhs2.real();
           }
         }
-      }
 
       cm.distribute_local_to_global(cell_matrix_real, cell_rhs,
                                     local_dof_indices, system_matrix,
@@ -1643,10 +1636,10 @@ void Waveguide::output_results(bool) {
   }
   MPI_Barrier(mpi_comm);
   if (GlobalParams.O_O_V_S_SolutionFirst) {
-    // parallel::distributed::Triangulation<3>
+    // Triangulation<3>
     // temp_for_transformation(MPI_COMM_WORLD,
-    // parallel::distributed::Triangulation<3>::MeshSmoothing(parallel::distributed::Triangulation<3>::none),
-    // parallel::distributed::Triangulation<3>::Settings::no_automatic_repartitioning);
+    // Triangulation<3>::MeshSmoothing(Triangulation<3>::none),
+    // Triangulation<3>::Settings::no_automatic_repartitioning);
     // temp_for_transformation.copy_triangulation(triangulation);
 
     set_the_st(this->st);

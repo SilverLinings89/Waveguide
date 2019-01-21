@@ -465,16 +465,15 @@ double dotproduct(Tensor<1, 3, double> a, Tensor<1, 3, double> b) {
 }
 
 template <int dim>
-void mesh_info(const parallel::distributed::Triangulation<dim> &tria,
-               const std::string &filename) {
+void mesh_info(const Triangulation<dim> &tria, const std::string &filename) {
   std::cout << "Mesh info:" << std::endl
             << " dimension: " << dim << std::endl
             << " no. of cells: " << tria.n_active_cells() << std::endl;
   {
     std::map<unsigned int, unsigned int> boundary_count;
-    typename parallel::distributed::Triangulation<dim>::active_cell_iterator
-        cell = tria.begin_active(),
-        endc = tria.end();
+    typename Triangulation<dim>::active_cell_iterator cell =
+                                                          tria.begin_active(),
+                                                      endc = tria.end();
     for (; cell != endc; ++cell) {
       for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell;
            ++face) {
@@ -498,15 +497,15 @@ void mesh_info(const parallel::distributed::Triangulation<dim> &tria,
 }
 
 template <int dim>
-void mesh_info(const parallel::distributed::Triangulation<dim> &tria) {
+void mesh_info(const Triangulation<dim> &tria) {
   std::cout << "Mesh info:" << std::endl
             << " dimension: " << dim << std::endl
             << " no. of cells: " << tria.n_active_cells() << std::endl;
   {
     std::map<unsigned int, unsigned int> boundary_count;
-    typename parallel::distributed::Triangulation<dim>::active_cell_iterator
-        cell = tria.begin_active(),
-        endc = tria.end();
+    typename Triangulation<dim>::active_cell_iterator cell =
+                                                          tria.begin_active(),
+                                                      endc = tria.end();
     for (; cell != endc; ++cell) {
       for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell;
            ++face) {
@@ -607,25 +606,28 @@ double my_inter(double x, double l, double w) {
   return a + b * x + c * x * x;
 }
 
-Point<3, double> Triangulation_Stretch_Computational_Rectangle(
-    const Point<3, double> &p) {
+Point<2, double> Triangulation_Stretch_Computational_Rectangle(
+    const Point<2, double> &p) {
   double d1_goal = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / 2.0;
   double d2_goal = (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out) / 2.0;
 
-  Point<3, double> q = p;
-  if (abs(p[0]) <= 0.2501) {
-    q[0] = q[0] * 3.0 * d1_goal;
-  } else {
-    q[0] = my_inter(std::abs(p[0]), GlobalParams.M_R_XLength / 2.0, d1_goal);
-    if (p[0] < 0.0) q[0] *= -1.0;
+  Point<2, double> q = p;
+
+  if (abs(p[0]) < GlobalParams.M_R_XLength / 2.0 - 0.0001) {
+    if (p[0] < 0) {
+      q[0] = -1.0 * GlobalParams.M_C_Dim1In;
+    } else {
+      q[0] = GlobalParams.M_C_Dim1In;
+    }
   }
-  if (abs(p[1]) <= 0.2501) {
-    q[1] = q[1] * 3.0 * d2_goal;
-  } else {
-    q[1] = my_inter(std::abs(p[1]), GlobalParams.M_R_YLength / 2.0, d2_goal);
-    if (p[1] < 0) q[1] *= -1.0;
+
+  if (abs(p[1]) < GlobalParams.M_R_YLength / 2.0 - 0.0001) {
+    if (p[1] < 0) {
+      q[1] = -1.0 * GlobalParams.M_C_Dim2In;
+    } else {
+      q[1] = GlobalParams.M_C_Dim2In;
+    }
   }
-  q[2] = p[2];
   return q;
 }
 

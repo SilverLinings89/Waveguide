@@ -22,9 +22,9 @@ const double k0 = 0.5;
 
 std::map<
     dealii::Triangulation<2, 3>::cell_iterator,
-    typename dealii::parallel::distributed::Triangulation<3, 3>::face_iterator>
+    typename dealii::Triangulation<3, 3>::face_iterator>
 extract_surface_mesh_at_z(
-    const dealii::parallel::distributed::Triangulation<3, 3> *volume_mesh,
+    const dealii::Triangulation<3, 3> *volume_mesh,
     dealii::Triangulation<2, 3> *surface_mesh, FaceSurfaceComparator &comp) {
   const int dim = 3;
   const int spacedim = 3;
@@ -35,14 +35,14 @@ extract_surface_mesh_at_z(
   //    that it will not reorder the vertices.
 
   std::map<typename dealii::Triangulation<2,3>::cell_iterator,
-           typename dealii::parallel::distributed::Triangulation<3,3>::face_iterator>
+           typename dealii::Triangulation<3,3>::face_iterator>
       surface_to_volume_mapping;
 
   const unsigned int boundary_dim = 2;  // dimension of the boundary mesh
 
   // First create surface mesh and mapping
   // from only level(0) cells of volume_mesh
-  std::vector<typename dealii::parallel::distributed::Triangulation<3,3>::face_iterator>
+  std::vector<typename dealii::Triangulation<3,3>::face_iterator>
       mapping;  // temporary map for level==0
 
   std::vector<bool> touched(volume_mesh->get_triangulation().n_vertices(),
@@ -54,12 +54,12 @@ extract_surface_mesh_at_z(
   std::map<unsigned int, unsigned int>
       map_vert_index;  // volume vertex indices to surf ones
 
-  for (typename dealii::parallel::distributed::Triangulation<
+  for (typename dealii::Triangulation<
            3, 3>::cell_iterator cell = volume_mesh->begin(0);
        cell != volume_mesh->end(0); ++cell)
     for (unsigned int i = 0; i < dealii::GeometryInfo<dim>::faces_per_cell;
          ++i) {
-      const typename dealii::parallel::distributed::Triangulation<3,3>::face_iterator face =
+      const typename dealii::Triangulation<3,3>::face_iterator face =
           cell->face(i);
 
       if (comp.check_face(face)) {
@@ -193,7 +193,7 @@ HSIEPreconditionerBase<hsie_order>::~HSIEPreconditionerBase() {
 
 template <int hsie_order>
 HSIEPreconditionerBase<hsie_order>::HSIEPreconditionerBase(
-    const dealii::parallel::distributed::Triangulation<3, 3> *in_tria,
+    const dealii::Triangulation<3, 3> *in_tria,
     double in_z) {
   FaceSurfaceComparatorZ fscz = new FaceSurfaceComparatorZ(in_z, 0.00001);
   association = extract_surface_mesh_at_z(in_tria, &surf_tria, fscz);
@@ -243,11 +243,11 @@ std::complex<double> a(int in_i, int in_j) {
   return ret;
 }
 
-int count_HSIE_dofs(dealii::parallel::distributed::Triangulation<3> *tria,
+int count_HSIE_dofs(dealii::Triangulation<3> *tria,
                     unsigned int degree, double in_z) {
   dealii::IndexSet interfacevertices(tria->n_vertices());
   dealii::IndexSet interfaceedges(tria->n_active_lines());
-  dealii::parallel::distributed::Triangulation<3>::active_cell_iterator
+  dealii::Triangulation<3>::active_cell_iterator
       cell = tria->begin_active(),
       endc = tria->end();
   for (; cell != endc; ++cell) {
@@ -318,8 +318,6 @@ std::complex<double> HSIEPreconditionerBase<hsie_order>::A(
 }
 
 template <int hsie_order>
-
-template <int hsie_order>
 void HSIEPreconditionerBase<hsie_order>::assemble_block() {
   QGauss<2> quadrature_formula(2);
   dealii::FE_Nedelec<2> fe_nedelec;
@@ -349,7 +347,8 @@ void HSIEPreconditionerBase<hsie_order>::assemble_block() {
   HSIE_Dof_Type<hsie_order> *hsie_dofs =
       new HSIE_Dof_Type<hsie_order>[dofs_per_cell];
   for (unsigned int i = 0; i < dofs_per_cell; i++) {
-    hsie_dofs[i] = new HSIE_Dof_Type<hsie_order>()
+    hsie_dofs[i] = new HSIE_Dof_Type<hsie_order>(
+        0, 0, 0, HSIE_Infinite_Direction::z, &shape_funs, &gradients);
   }
   for (; cell != endc; ++cell) {
     ned_fe_values.reinit(cell);

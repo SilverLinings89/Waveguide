@@ -18,8 +18,6 @@
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/thread_management.h>
 #include <deal.II/base/timer.h>
-#include <deal.II/distributed/grid_refinement.h>
-#include <deal.II/distributed/tria.h>
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_renumbering.h>
@@ -33,6 +31,7 @@
 #include <deal.II/grid/grid_out.h>
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/grid/manifold_lib.h>
+#include <deal.II/grid/tria.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_boundary_lib.h>
 #include <deal.II/grid/tria_iterator.h>
@@ -484,11 +483,11 @@ class Waveguide {
 
   MPI_Comm mpi_comm;
 
-  parallel::distributed::Triangulation<3>::active_cell_iterator cell, endc;
+  Triangulation<3>::active_cell_iterator cell, endc;
 
   FESystem<3> fe;
 
-  parallel::distributed::Triangulation<3> triangulation;
+  Triangulation<3> triangulation;
 
   TrilinosWrappers::MPI::BlockVector system_rhs;
 
@@ -534,7 +533,6 @@ class Waveguide {
   std::vector<IndexSet> locally_relevant_dofs_all_processors;
   IndexSet UpperDofs, LowerDofs;
   IndexSet JumpDofs;
-  double JumpCoordinate;
   int run_number;
 
   int condition_file_counter, eigenvalue_file_counter;

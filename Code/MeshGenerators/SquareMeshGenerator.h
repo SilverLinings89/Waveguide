@@ -2,7 +2,7 @@
 #define SquareMeshGenerator_h_
 
 #include <deal.II/base/point.h>
-#include <deal.II/distributed/tria.h>
+#include <deal.II/grid/tria.h>
 #include <array>
 #include <vector>
 #include "../SpaceTransformations/SpaceTransformation.h"
@@ -43,8 +43,7 @@ class SquareMeshGenerator : public MeshGenerator {
    * refinement steps to be performed (gives us a multiplication of the number
    * of degrees of freedom by \f$8^{times}\f$.
    */
-  void refine_global(parallel::distributed::Triangulation<3>* in_tria,
-                     unsigned int times);
+  void refine_global(Triangulation<3>* in_tria, unsigned int times);
 
   /**
    * This function is intended to execute an internal refinement of the mesh.
@@ -54,16 +53,15 @@ class SquareMeshGenerator : public MeshGenerator {
    * reduce numerical errors. \param times Number of refinement steps to be
    * performed.
    */
-  void refine_internal(parallel::distributed::Triangulation<3>* in_tria,
-                       unsigned int times);
+  void refine_internal(Triangulation<3>* in_tria, unsigned int times);
 
   /**
    * This function is intended to execute a refinement inside and near the
    * waveguide boundary. \param times Number of refinement steps to be
    * performed.
    */
-  void refine_proximity(parallel::distributed::Triangulation<3>* in_tria,
-                        unsigned int times, double factor);
+  void refine_proximity(Triangulation<3>* in_tria, unsigned int times,
+                        double factor);
 
   /**
    * This function checks if the given coordinate is inside the waveguide or
@@ -92,11 +90,11 @@ class SquareMeshGenerator : public MeshGenerator {
    * be prepared. All further information is derived from the parameter file and
    * not given by parameters.
    */
-  void prepare_triangulation(parallel::distributed::Triangulation<3>* in_tria);
+  void prepare_triangulation(Triangulation<3>* in_tria);
 
-  void set_boundary_ids(parallel::distributed::Triangulation<3>& tria) const;
+  void set_boundary_ids(Triangulation<3>& tria) const;
 
-  parallel::distributed::Triangulation<3>::active_cell_iterator cell, endc;
+  Triangulation<3>::active_cell_iterator cell, endc;
 };
 
 #endif

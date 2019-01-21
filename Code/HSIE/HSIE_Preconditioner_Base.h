@@ -20,9 +20,9 @@
 template <int hsie_order>
 class HSIEPreconditionerBase : dealii::TrilinosWrappers::PreconditionBase {
   using dealii::TrilinosWrappers::PreconditionBase::vmult;
-  dealii::parallel::distributed::Triangulation<2, 3> surf_tria;
-  std::map<dealii::parallel::distributed::Triangulation<2, 3>::cell_iterator,
-           dealii::parallel::distributed::Triangulation<3, 3>::face_iterator>
+  dealii::Triangulation<2, 3> surf_tria;
+  std::map<dealii::Triangulation<2, 3>::cell_iterator,
+           dealii::Triangulation<3, 3>::face_iterator>
       association;
   int HSIE_dofs_type_1_factor;  // HSIE paper p.13 1.
   int HSIE_dofs_type_2_factor;  // HSIE paper p.13 3.
@@ -44,9 +44,7 @@ class HSIEPreconditionerBase : dealii::TrilinosWrappers::PreconditionBase {
    * \param in_tria A handle to the triangulation which contains the surface.
    * \param in_z the z-coordinate at which to attach the infinite Elements.
    */
-  HSIEPreconditionerBase(
-      const dealii::parallel::distributed::Triangulation<3> *in_tria,
-      double in_z);
+  HSIEPreconditionerBase(const dealii::Triangulation<3>* in_tria, double in_z);
   ~HSIEPreconditionerBase();
 
   /**

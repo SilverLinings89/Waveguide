@@ -3,7 +3,7 @@
 
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
-#include <deal.II/distributed/tria.h>
+#include <deal.II/grid/tria.h>
 #include <deal.II/grid/tria_boundary_lib.h>
 #include "../Helpers/Parameters.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
@@ -31,7 +31,7 @@ using namespace dealii;
  */
 class MeshGenerator {
  public:
-  parallel::distributed::Triangulation<3>::active_cell_iterator cell, endc;
+  Triangulation<3>::active_cell_iterator cell, endc;
   SpaceTransformation* ct;
   unsigned int Layers;
   Point<3> origin, p1, p2;
@@ -61,8 +61,7 @@ class MeshGenerator {
    * refinement steps to be performed (gives us a multiplication of the number
    * of degrees of freedom by \f$8^{times}\f$.
    */
-  virtual void refine_global(parallel::distributed::Triangulation<3>* in_tria,
-                             unsigned int times) = 0;
+  virtual void refine_global(Triangulation<3>* in_tria, unsigned int times) = 0;
 
   /**
    * This function is intended to execute an internal refinement of the mesh.
@@ -72,7 +71,7 @@ class MeshGenerator {
    * reduce numerical errors. \param times Number of refinement steps to be
    * performed.
    */
-  virtual void refine_internal(parallel::distributed::Triangulation<3>* in_tria,
+  virtual void refine_internal(Triangulation<3>* in_tria,
                                unsigned int times) = 0;
 
   /**
@@ -80,9 +79,8 @@ class MeshGenerator {
    * waveguide boundary. \param times Number of refinement steps to be
    * performed.
    */
-  virtual void refine_proximity(
-      parallel::distributed::Triangulation<3>* in_tria, unsigned int times,
-      double factor) = 0;
+  virtual void refine_proximity(Triangulation<3>* in_tria, unsigned int times,
+                                double factor) = 0;
 
   /**
    * This function checks if the given coordinate is inside the waveguide or
@@ -111,8 +109,7 @@ class MeshGenerator {
    * be prepared. All further information is derived from the parameter file and
    * not given by parameters.
    */
-  virtual void prepare_triangulation(
-      parallel::distributed::Triangulation<3>* in_tria) = 0;
+  virtual void prepare_triangulation(Triangulation<3>* in_tria) = 0;
 };
 
 #endif
