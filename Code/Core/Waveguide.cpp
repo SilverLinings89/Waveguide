@@ -8,6 +8,7 @@
 #include <deal.II/distributed/shared_tria.h>
 #include <deal.II/distributed/tria.h>
 #include <deal.II/dofs/dof_handler.h>
+#include <deal.II/dofs/dof_renumbering.h>
 #include <deal.II/grid/tria_boundary_lib.h>
 #include <deal.II/lac/block_matrix_array.h>
 #include <deal.II/lac/block_sparsity_pattern.h>
@@ -78,6 +79,8 @@ Waveguide::Waveguide(MPI_Comm in_mpi_comm, MeshGenerator *in_mg,
   mkdir((solutionpath + "/" + "primal").c_str(), ACCESSPERMS);
   mkdir((solutionpath + "/" + "dual").c_str(), ACCESSPERMS);
   cell_layer_z = 0;
+  interface_dof_count = 0;
+  n_dofs = 0;
 }
 
 Waveguide::~Waveguide() {}
@@ -182,6 +185,10 @@ void Waveguide::estimate_solution() {
   deallog.pop();
 }
 
+bool compareConstraintPairs(ConstraintPair v1, ConstraintPair v2) {
+  return (v1.left < v2.left);
+}
+
 Tensor<2, 3, std::complex<double>> Waveguide::Conjugate_Tensor(
     Tensor<2, 3, std::complex<double>> input) {
   Tensor<2, 3, std::complex<double>> ret;
@@ -205,9 +212,29 @@ Tensor<1, 3, std::complex<double>> Waveguide::Conjugate_Vector(
   return ret;
 }
 
+unsigned int Waveguide::local_to_global_index(unsigned int local_index) {
+  if (GlobalParams.MPI_Rank == 0) {
+    return local_index;
+  } else {
+    if (local_index < interface_dof_count) {
+      return periodicity_constraints[local_index].right +
+             (GlobalParams.MPI_Rank - 1) * (n_dofs - interface_dof_count);
+    } else {
+      return local_index +
+             GlobalParams.MPI_Rank * (n_dofs - interface_dof_count);
+    }
+  }
+}
+
 void Waveguide::make_grid() {
   mg->prepare_triangulation(&triangulation);
   dof_handler.distribute_dofs(fe);
+  dealii::Tensor<1, 3, double> dir;
+  dir[0] = 0;
+  dir[1] = 0;
+  dir[2] = 1;
+  deallog << "Number of dofs: " << n_global_dofs << std::endl;
+  // dealii::DoFRenumbering::downstream(dof_handler, dir, true);
   Triangulation<3>::active_cell_iterator cell = triangulation.begin_active(),
                                          endc = triangulation.end();
   minimum_local_z = 2.0 * GlobalParams.M_R_ZLength;
@@ -228,11 +255,21 @@ void Waveguide::make_grid() {
 }
 
 void Waveguide::Compute_Dof_Numbers() {
+  n_dofs = dof_handler.n_dofs();
+  DoFTools::make_periodicity_constraints(dof_handler, 0, 2,
+                                         periodic_constraints);
+  interface_dof_count = periodic_constraints.n_constraints();
+  n_global_dofs = GlobalParams.NumberProcesses * n_dofs -
+                  (GlobalParams.NumberProcesses - 1) * interface_dof_count;
+  deallog << "Total Dof Count per block: " << n_dofs << " interface dof count "
+          << interface_dof_count << std::endl;
   std::vector<types::global_dof_index> dof_indices(fe.dofs_per_face);
   std::vector<types::global_dof_index> DofsPerSubdomain(Layers);
   std::vector<int> InternalBoundaryDofs(Layers);
-
-  DofsPerSubdomain = dof_handler.n_locally_owned_dofs_per_processor();
+  DofsPerSubdomain[0] = n_dofs;
+  for (unsigned int i = 1; i < Layers; i++) {
+    DofsPerSubdomain[i] = n_dofs - interface_dof_count;
+  }
   for (unsigned int i = 0; i < Layers; i++) {
     Block_Sizes[i] = DofsPerSubdomain[i];
   }
@@ -248,7 +285,7 @@ void Waveguide::Compute_Dof_Numbers() {
   }
 
   for (unsigned int i = 0; i < Layers; i++) {
-    IndexSet temp(dof_handler.n_dofs());
+    IndexSet temp(n_global_dofs);
     temp.clear();
     deallog << "Adding Block " << i + 1 << " from " << Dofs_Below_Subdomain[i]
             << " to " << Dofs_Below_Subdomain[i] + Block_Sizes[i] - 1
@@ -283,16 +320,52 @@ void Waveguide::switch_to_dual(SpaceTransformation *dual_st) {
 void Waveguide::setup_system() {
   deallog.push("setup_system");
   deallog << "Assembling IndexSets" << std::endl;
-  locally_owned_dofs = dof_handler.locally_owned_dofs();
-  DoFTools::extract_locally_active_dofs(dof_handler, locally_active_dofs);
-  DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
-  std::vector<unsigned int> n_neighboring =
-      dof_handler.n_locally_owned_dofs_per_processor();
-  extended_relevant_dofs = locally_relevant_dofs;
-  if (rank > 0) {
-    extended_relevant_dofs.add_range(
-        locally_owned_dofs.nth_index_in_set(0) - n_neighboring[rank - 1],
-        locally_owned_dofs.nth_index_in_set(0));
+  for (unsigned int i = 0; i < n_dofs; i++) {
+    if (periodic_constraints.is_constrained(i)) {
+      unsigned int l = 0;
+      unsigned int r = 0;
+      std::pair<unsigned int, double> entry =
+          periodic_constraints.get_constraint_entries(i)->operator[](0);
+      if (entry.first < i) {
+        l = entry.first;
+        r = i;
+      } else {
+        r = entry.first;
+        l = i;
+      }
+      ConstraintPair temp;
+      temp.left = l;
+      temp.right = r;
+      temp.sign = entry.second > 0;
+      periodicity_constraints.push_back(temp);
+    }
+  }
+  std::sort(periodicity_constraints.begin(), periodicity_constraints.end(),
+            compareConstraintPairs);
+  unsigned int global_dof_count =
+      GlobalParams.NumberProcesses * n_dofs -
+      (GlobalParams.NumberProcesses - 1) * interface_dof_count;
+  locally_owned_dofs.set_size(global_dof_count);
+  if (GlobalParams.MPI_Rank == 0) {
+    locally_owned_dofs.add_range(0, n_dofs);
+  } else {
+    locally_owned_dofs.add_range(
+        GlobalParams.MPI_Rank * n_dofs -
+            GlobalParams.MPI_Rank * interface_dof_count,
+        (GlobalParams.MPI_Rank + 1) * n_dofs -
+            (GlobalParams.MPI_Rank + 1) * interface_dof_count);
+  }
+  locally_relevant_dofs.set_size(global_dof_count);
+  if (GlobalParams.MPI_Rank == 0) {
+    locally_owned_dofs.add_range(0, n_dofs + 2 * interface_dof_count);
+  } else {
+    locally_owned_dofs.add_range(
+        GlobalParams.MPI_Rank * n_dofs -
+            GlobalParams.MPI_Rank * interface_dof_count -
+            (2 * interface_dof_count),
+        (GlobalParams.MPI_Rank + 1) * n_dofs -
+            (GlobalParams.MPI_Rank + 1) * interface_dof_count +
+            2 * interface_dof_count);
   }
 
   deallog << "Computing block counts" << std::endl;
@@ -518,7 +591,7 @@ void Waveguide::setup_system() {
     char *temp = &all_names[displs[i]];
     ss.rdbuf()->pubsetbuf(temp, strlen(temp));
     locally_relevant_dofs_all_processors[i].clear();
-    locally_relevant_dofs_all_processors[i].set_size(dof_handler.n_dofs());
+    locally_relevant_dofs_all_processors[i].set_size(n_global_dofs);
     locally_relevant_dofs_all_processors[i].read(ss);
   }
 
@@ -675,7 +748,7 @@ void Waveguide::reinit_systemmatrix() {
 void Waveguide::reinit_rhs() {
   system_rhs.reinit(i_sys_owned, MPI_COMM_WORLD);
 
-  preconditioner_rhs.reinit(dof_handler.n_dofs());
+  preconditioner_rhs.reinit(n_global_dofs);
 }
 
 void Waveguide::reinit_solution() {
@@ -779,7 +852,7 @@ void Waveguide::assemble_system() {
   Tensor<2, 3, std::complex<double>> transformation, epsilon, epsilon_pre1,
       epsilon_pre2, mu, mu_prec1, mu_prec2;
   std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-
+  std::vector<types::global_dof_index> local_dof_indices_global(dofs_per_cell);
   DoFHandler<3>::active_cell_iterator cell, endc;
   cell = dof_handler.begin_active(), endc = dof_handler.end();
   std::complex<double> k_a_sqr(GlobalParams.C_omega,
@@ -787,6 +860,9 @@ void Waveguide::assemble_system() {
   k_a_sqr = k_a_sqr * k_a_sqr;
   for (; cell != endc; ++cell) {
       cell->get_dof_indices(local_dof_indices);
+      for(unsigned int i = 0; i < dofs_per_cell; i++) {
+        local_dof_indices_global[i] = local_to_global_index(local_dof_indices[i]);
+      }
       cell_rhs.reinit(dofs_per_cell, false);
       fe_values.reinit(cell);
       quadrature_points = fe_values.get_quadrature_points();
@@ -809,6 +885,9 @@ void Waveguide::assemble_system() {
           if (cell->face(i)->center(true, false)[2] - cell_layer_z < 0.0001) {
             for (unsigned int e = 0; e < GeometryInfo<3>::lines_per_face; e++) {
               (cell->face(i)->line(e))->get_dof_indices(input_dofs);
+              for (unsigned int i = 0; i < dofs_per_cell; i++) {
+                input_dofs[i] = local_to_global_index(input_dofs[i]);
+              }
               for (unsigned int j = 0; j < fe.dofs_per_cell; j++) {
                 for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
                   if (local_dof_indices[j] == input_dofs[k]) {
@@ -928,13 +1007,13 @@ void Waveguide::assemble_system() {
         }
 
       cm.distribute_local_to_global(cell_matrix_real, cell_rhs,
-                                    local_dof_indices, system_matrix,
+          local_dof_indices_global, system_matrix,
                                     system_rhs, false);
       cm_prec_odd.distribute_local_to_global(cell_matrix_prec_odd, cell_rhs,
-                                             local_dof_indices, prec_matrix_odd,
+          local_dof_indices_global, prec_matrix_odd,
                                              preconditioner_rhs, false);
       cm_prec_even.distribute_local_to_global(
-          cell_matrix_prec_even, cell_rhs, local_dof_indices, prec_matrix_even,
+          cell_matrix_prec_even, cell_rhs, local_dof_indices_global, prec_matrix_even,
           preconditioner_rhs, false);
     }
   }
@@ -969,7 +1048,7 @@ void Waveguide::MakeBoundaryConditions() {
   std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
   double input_search_x = 0.45 * GlobalParams.M_R_XLength;
   double input_search_y = 0.45 * GlobalParams.M_R_YLength;
-  InputInterfaceDofs = IndexSet(dof_handler.n_dofs());
+  InputInterfaceDofs = IndexSet(n_global_dofs);
   cell_layer_z = 0.0;
 
   for (; cell != endc; ++cell) {
@@ -1010,6 +1089,9 @@ void Waveguide::MakeBoundaryConditions() {
         if (abs(pos[2] - cell_layer_z) < 0.0001) {
           for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
             ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
+            for (unsigned int i = 0; i < fe.dofs_per_line; i++) {
+              local_line_dofs[i] = local_to_global_index(local_line_dofs[i]);
+            }
             for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
               InputInterfaceDofs.add_index(local_line_dofs[k]);
             }
@@ -1042,7 +1124,7 @@ void Waveguide::MakeBoundaryConditions() {
   deallog << "Dofs per cell: " << fe.dofs_per_cell
           << ". Own: " << cell_own_count << "." << std::endl;
   if (run_number == 0) {
-    fixed_dofs.set_size(dof_handler.n_dofs());
+    fixed_dofs.set_size(n_global_dofs);
   }
 
   for (; cell != endc; ++cell) {
@@ -1178,10 +1260,10 @@ void Waveguide::MakePreconditionerBoundaryConditions() {
                                                        cm_prec_odd);
 
   double layer_length = GlobalParams.LayerThickness;
-  IndexSet own(dof_handler.n_dofs());
+  IndexSet own(n_global_dofs);
   own.add_indices(locally_owned_dofs);
   if (run_number == 0) {
-    sweepable.set_size(dof_handler.n_dofs());
+    sweepable.set_size(n_global_dofs);
     sweepable.add_indices(locally_owned_dofs);
   }
   if (rank != 0) {
@@ -1612,23 +1694,22 @@ void Waveguide::output_results(bool) {
       patternscript << "set style line 1000 lw 1 lc \"black\"" << std::endl;
       for (int i = 0; i < GlobalParams.M_W_Sectors; i++) {
         patternscript << "set arrow " << 1000 + 2 * i << " from 0,-"
-                      << Dofs_Below_Subdomain[i] << " to "
-                      << dof_handler.n_dofs() << ",-" << Dofs_Below_Subdomain[i]
+                      << Dofs_Below_Subdomain[i] << " to " << n_global_dofs
+                      << ",-" << Dofs_Below_Subdomain[i]
                       << " nohead ls 1000 front" << std::endl;
         patternscript << "set arrow " << 1001 + 2 * i << " from "
                       << Dofs_Below_Subdomain[i] << ",0 to "
-                      << Dofs_Below_Subdomain[i] << ", -"
-                      << dof_handler.n_dofs() << " nohead ls 1000 front"
-                      << std::endl;
+                      << Dofs_Below_Subdomain[i] << ", -" << n_global_dofs
+                      << " nohead ls 1000 front" << std::endl;
       }
       patternscript << "set arrow " << 1000 + 2 * GlobalParams.M_W_Sectors
-                    << " from 0,-" << dof_handler.n_dofs() << " to "
-                    << dof_handler.n_dofs() << ",-" << dof_handler.n_dofs()
-                    << " nohead ls 1000 front" << std::endl;
+                    << " from 0,-" << n_global_dofs << " to " << n_global_dofs
+                    << ",-" << n_global_dofs << " nohead ls 1000 front"
+                    << std::endl;
       patternscript << "set arrow " << 1001 + 2 * GlobalParams.M_W_Sectors
-                    << " from " << dof_handler.n_dofs() << ",0 to "
-                    << dof_handler.n_dofs() << ", -" << dof_handler.n_dofs()
-                    << " nohead ls 1000 front" << std::endl;
+                    << " from " << n_global_dofs << ",0 to " << n_global_dofs
+                    << ", -" << n_global_dofs << " nohead ls 1000 front"
+                    << std::endl;
 
       patternscript << "plot \"pattern.gnu\" with dots" << std::endl;
       patternscript.flush();

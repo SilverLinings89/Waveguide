@@ -81,6 +81,11 @@ const int STEPS_PER_DOFS = 11;
 
 extern double *steps_widths;
 
+struct ConstraintPair {
+  unsigned int left, right;
+  bool sign;
+};
+
 /**
  * \class Waveguide
  * \brief This class encapsulates all important mechanism for solving a FEM
@@ -477,6 +482,8 @@ class Waveguide {
       dealii::ConstraintMatrix *, dealii::DoFHandler<3>::active_cell_iterator &,
       unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet);
 
+  unsigned int local_to_global_index(unsigned int local_index);
+
   // HIER BEGINNT DIE NEUE VERSION...
 
   SpaceTransformation *st;
@@ -503,8 +510,10 @@ class Waveguide {
 
   SolverControl solver_control;
 
-  ConstraintMatrix cm, cm_prec_even, cm_prec_odd;
-
+  ConstraintMatrix cm, cm_prec_even, cm_prec_odd, periodic_constraints;
+  unsigned int interface_dof_count;
+  unsigned int n_dofs;
+  unsigned int n_global_dofs;
   DoFHandler<3> dof_handler;
 
   std::vector<IndexSet> i_prec_even_owned_row;
@@ -521,8 +530,7 @@ class Waveguide {
   TrilinosWrappers::MPI::BlockVector *solution;
 
   TrilinosWrappers::MPI::BlockVector EstimatedSolution, ErrorOfSolution;
-  IndexSet locally_owned_dofs, locally_relevant_dofs, locally_active_dofs,
-      extended_relevant_dofs;
+  IndexSet locally_owned_dofs, locally_relevant_dofs, extended_relevant_dofs;
   std::vector<IndexSet> locally_relevant_dofs_per_subdomain;
 
   Vector<double> preconditioner_rhs;
@@ -577,6 +585,7 @@ class Waveguide {
   IndexSet locally_owned_cells, sweepable;
   IndexSet InputInterfaceDofs;
   double cell_layer_z;
+  std::vector<ConstraintPair> periodicity_constraints;
 };
 
 #endif
