@@ -13,6 +13,7 @@
 #define CODE_HSIE_HSIEDOFTYPE_H_
 
 #include <deal.II/base/tensor.h>
+#include <deal.II/lac/full_matrix.h>
 #include <complex>
 #include <vector>
 
@@ -27,36 +28,18 @@ class HSIE_Dof_Type {
   static dealii::Tensor<2, hsie_order + 1, std::complex<double>> I;
   unsigned int type;
   unsigned int order;
-  double x_length;
-  double y_length;
   std::vector<std::complex<double>> hardy_monomial_base;
   std::vector<std::complex<double>> IPsiK;
   std::vector<std::complex<double>> dxiPsiK;
-  std::vector<double> w_k;
-  std::vector<double> v_k;
-  int base_point, base_edge;
+  dealii::FullMatrix<double>* shape_functions;
+  dealii::FullMatrix<double>* gradients;
 
  public:
   HSIE_Dof_Type(unsigned int in_type, unsigned int in_order,
-                unsigned int q_count, HSIE_Infinite_Direction dir);
+                unsigned int q_count, HSIE_Infinite_Direction dir,
+                dealii::FullMatrix<double>* shape_functions,
+                dealii::FullMatrix<double>* gradients);
   virtual ~HSIE_Dof_Type();
-  /**
-   * Base Points are numbered:
-   * 0: low x, low y;
-   * 1: low x, high y;
-   * 2: high x, high y;
-   * 3: high x, low y;
-   */
-  void set_base_point(unsigned int);
-
-  /**
-   * Edges are numbered:
-   * 0: y edge from point 0;
-   * 1: x edge from point 1;
-   * 2: y edge from point 2;
-   * 3: x edge from point 3;
-   */
-  void set_base_edge(unsigned int);
 
   std::complex<double> eval_base(std::vector<std::complex<double>>* in_base,
                                  std::complex<double> in_x);
@@ -74,8 +57,6 @@ for exterior Maxwell problems". Possible types are:
    */
   unsigned int get_type();
 
-  void set_x_length(double in_length);
-  void set_y_length(double in_length);
   /*
    * returns the order of the dof.
    */

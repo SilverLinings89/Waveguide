@@ -19,16 +19,12 @@ template <int hsie_order>
 HSIE_Dof_Type<hsie_order>::HSIE_Dof_Type(unsigned int in_type,
                                          unsigned int in_order,
                                          unsigned int in_q_count,
-                                         HSIE_Infinite_Direction in_dir)
+                                         HSIE_Infinite_Direction in_dir,
+                                         FullMatrix<double>* in_shape_functions,
+                                         FullMatrix<double>* in_gradients)
     : dir(in_dir) {
-  this->v_k = new std::vector<Tensor<1, 2>>();
-  this->w_k = new std::vector<double>();
-  v_k.resize(in_q_count);
-  w_k.resize(in_q_count);
   type = in_type;
   order = in_order;
-  base_point = -1;
-  base_edge = -1;
   this->hardy_monomial_base = new std::vector<std::complex<double>>();
   this->IPsiK = new std::vector<std::complex<double>>();
   this->dxiPsiK = new std::vector<std::complex<double>>();
@@ -52,36 +48,8 @@ HSIE_Dof_Type<hsie_order>::HSIE_Dof_Type(unsigned int in_type,
     this->I = invert(this->D);
     this->D_and_I_initialized = true;
   }
-  this->y_length = 1.0;
-  this->x_length = 1.0;
-}
-
-template <int hsie_order>
-inline void HSIE_Dof_Type<hsie_order>::set_base_point(unsigned int in_bp) {
-  if (in_bp < 4 && in_bp > -1) this->base_point = in_bp;
-}
-
-template <int hsie_order>
-void HSIE_Dof_Type<hsie_order>::prepare_for_quadrature_points(
-    std::vector<dealii::Point<2, double>> q_points) {
-  dealii::MappingQ1<2> temp_mapping(1);
-  PolynomialsNedelec<2> temp = new PolynomialsNedelec<2>(0);
-  std::vector<Tensor<1, 2>> v_k_storage = new std::vector<Tensor<1, 2>>();
-  std::vector<Tensor<2, 2>> v_k_n_2 = new std::vector<Tensor<2, 2>>();
-  std::vector<Tensor<3, 2>> v_k_n_3 = new std::vector<Tensor<3, 2>>();
-  std::vector<Tensor<4, 2>> v_k_n_4 = new std::vector<Tensor<4, 2>>();
-  std::vector<Tensor<5, 2>> v_k_n_5 = new std::vector<Tensor<5, 2>>();
-  v_k_storage.resize(1);
-  for (unsigned int i = 0; i < q_points.size(); i++) {
-    temp.compute(q_points[i], v_k_storage, v_k_n_2, v_k_n_3, v_k_n_4, v_k_n_5);
-    this->v_k[i] = v_k_storage[0];
-    this->w_k[i] = (1.0 - q_points[i][0]) * (1.0 - q_points[i][1]);
-  }
-}
-
-template <int hsie_order>
-inline void HSIE_Dof_Type<hsie_order>::set_base_edge(unsigned int in_bp) {
-  if (in_bp < 4 && in_bp > -1) this->base_edge = in_bp;
+  this->shape_functions = in_shape_functions;
+  this->gradients = in_gradients;
 }
 
 template <int hsie_order>
@@ -201,15 +169,6 @@ std::complex<double> HSIE_Dof_Type<hsie_order>::component_1a(
     return ret;
   }
   if (type == 2) {
-    double dy = 1 / this->y_length;
-    if (this->base_point == 0 || this->base_point == 3) {
-      dy *= -1.0;
-    }
-    if (this->base_point == 0 || this->base_point == 1) {
-      dy *= x / x_length;
-    } else {
-      dy *= (x_length - x) / x_length;
-    }
     std::vector<std::complex<double>> temp_vec =
         this->apply_T_plus(this->hardy_monomial_base, 0.0);
     ret = eval_base(&temp_vec, xhi);
@@ -261,15 +220,6 @@ std::complex<double> HSIE_Dof_Type<hsie_order>::component_2b(
     return ret;
   }
   if (type == 2) {
-    double dx = 1 / this->x_length;
-    if (this->base_point == 0 || this->base_point == 1) {
-      dx *= -1.0;
-    }
-    if (this->base_point == 0 || this->base_point == 3) {
-      dx *= y / y_length;
-    } else {
-      dx *= (y_length - y) / y_length;
-    }
     std::vector<std::complex<double>> temp_vec =
         this->apply_T_plus(this->hardy_monomial_base, 0.0);
     ret = eval_base(&temp_vec, xhi);

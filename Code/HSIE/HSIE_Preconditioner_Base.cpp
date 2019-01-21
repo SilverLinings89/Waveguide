@@ -1,13 +1,14 @@
 #ifndef HSIEPRECONDITIONERBASE_CPP
 #define HSIEPRECONDITIONERBASE_CPP
 #include "HSIE_Preconditioner_Base.h"
-#include <complex>
 #include <deal.II/base/quadrature_lib.h>
+#include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
+#include <complex>
 #include <vector>
+#include "../Core/Waveguide.h"
 #include "FaceSurfaceComparator.h"
 #include "FaceSurfaceComparatorZ.h"
-#include "../Core/Waveguide.h"
 
 /*
  * HSIE_Preconditioner_Base.cpp
@@ -317,6 +318,8 @@ std::complex<double> HSIEPreconditionerBase<hsie_order>::A(
 }
 
 template <int hsie_order>
+
+template <int hsie_order>
 void HSIEPreconditionerBase<hsie_order>::assemble_block() {
   QGauss<2> quadrature_formula(2);
   dealii::FE_Nedelec<2> fe_nedelec;
@@ -339,6 +342,15 @@ void HSIEPreconditionerBase<hsie_order>::assemble_block() {
   std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
   DoFHandler<2, 3>::active_cell_iterator cell, endc;
   cell = hsie_dof_handler.begin_active(), endc = hsie_dof_handler.end();
+  const unsigned int n_nodal_functions = 4;
+  const unsigned int n_nedelec_functions = 4;
+  FullMatrix<double> shape_funs(n_nodal_functions + n_nedelec_functions, 3);
+  FullMatrix<double> gradients(n_nodal_functions + n_nedelec_functions, 3 + 3);
+  HSIE_Dof_Type<hsie_order> *hsie_dofs =
+      new HSIE_Dof_Type<hsie_order>[dofs_per_cell];
+  for (unsigned int i = 0; i < dofs_per_cell; i++) {
+    hsie_dofs[i] = new HSIE_Dof_Type<hsie_order>()
+  }
   for (; cell != endc; ++cell) {
     ned_fe_values.reinit(cell);
     quadrature_points = ned_fe_values.get_quadrature_points();
@@ -348,21 +360,15 @@ void HSIEPreconditionerBase<hsie_order>::assemble_block() {
       Point<2, double> current_point_2D;
       current_point_2D[0] = quadrature_points[q_index][0];
       current_point_2D[1] = quadrature_points[q_index][1];
-      const unsigned int n_nodal_functions = 4;
-      const unsigned int n_nedelec_functions = 4;
-      FullMatrix<double> shape_functions(
-          n_nodal_functions + n_nedelec_functions, 3);
-      FullMatrix<double> gradients(n_nodal_functions + n_nedelec_functions,
-                                   3 + 3);
+
       for (unsigned int i = 0; i < n_nodal_functions; i++) {
         for (unsigned int j = 0; j < 3; j++) {
-          shape_functions[i, j] =
-              fe_q.shape_value_component(i, current_point_2D, j);
+          shape_funs[i, j] = fe_q.shape_value_component(i, current_point_2D, j);
         }
       }
       for (unsigned int i = 0; i < n_nedelec_functions; i++) {
         for (unsigned int j = 0; j < 3; j++) {
-          shape_functions[i + n_nodal_functions, j] =
+          shape_funs[i + n_nodal_functions, j] =
               fe_nedelec.shape_value_component(i, current_point_2D, j);
         }
       }
