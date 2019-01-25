@@ -64,22 +64,38 @@ void SquareMeshGenerator::set_boundary_ids(Triangulation<3> &tria) const {
   Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
                                          endc2 = tria.end();
   tria.set_all_manifold_ids(0);
+  double local_lower_bound =
+      GlobalParams.Minimum_Z +
+      ((double)GlobalParams.MPI_Rank) * GlobalParams.LayerThickness;
+  double local_upper_bound = local_lower_bound + GlobalParams.LayerThickness;
+  int lower_faces = 0;
+  int upper_faces = 0;
   for (; cell2 != endc2; ++cell2) {
     if (cell2->at_boundary()) {
       for (int j = 0; j < 6; j++) {
         Point<3> ctr = cell2->face(j)->center();
         if (cell2->face(j)->at_boundary()) {
-          cell2->face(j)->set_all_boundary_ids(1);
+          cell2->face(j)->set_all_boundary_ids(0);
 
-          if (std::abs(ctr(2) - GlobalParams.Minimum_Z) < 0.00001) {
-            cell2->face(j)->set_all_boundary_ids(2);
+          if (std::abs(ctr(2) - local_lower_bound) < 0.00001) {
+            cell2->face(j)->set_all_boundary_ids(1);
+            lower_faces++;
           }
-          if (std::abs(ctr(2) - GlobalParams.Maximum_Z) < 0.00001) {
-            cell2->face(j)->set_all_boundary_ids(3);
+          if (std::abs(ctr(2) - local_upper_bound) < 0.00001) {
+            cell2->face(j)->set_all_boundary_ids(2);
+            upper_faces++;
           }
         }
       }
     }
+  }
+  if (lower_faces <= 0 || upper_faces <= 0 || lower_faces != upper_faces) {
+    deallog << "There was an error in mesh generation. The faces don't match "
+               "the requirements. Check mesh generation code in squaremesh "
+               "generator - set_boundary_ids."
+            << std::endl;
+  } else {
+    deallog << "There are " << upper_faces << " boundary faces." << std::endl;
   }
 }
 
@@ -99,8 +115,8 @@ void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
       endc = surface.end();
 
   double len = 2.0 / Layers;
-  const double outside_max_edge_length = 1.0;
-  const double inside_max_edge_length = 0.5;
+  const double outside_max_edge_length = 5.0;
+  const double inside_max_edge_length = 2.0;
   bool found_one = true;
   int refinements = 0;
   while (found_one) {
@@ -161,8 +177,10 @@ void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
     surface.execute_coarsening_and_refinement();
     refinements++;
   }
-  unsigned int layers = (unsigned int)std::round(10 * floor(GlobalParams.SystemLength / GlobalParams.NumberProcesses) /
-      GlobalParams.M_W_Lambda);
+  // unsigned int layers = (unsigned int)std::round(10 *
+  // floor(GlobalParams.SystemLength / GlobalParams.NumberProcesses) /
+  //    GlobalParams.M_W_Lambda);
+  unsigned int layers = 3;
   double length = GlobalParams.LayerThickness / (double)layers;
   deallog << "Concluded in " << refinements
           << " refinement steps. Extruding mesh. Building " << layers

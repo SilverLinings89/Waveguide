@@ -152,6 +152,9 @@ void Waveguide::estimate_solution() {
             fe.dofs_per_line);
         for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
           ((cell->face(i))->line(j))->get_dof_indices(local_dof_indices);
+          for (unsigned int i = 0; i < fe.dofs_per_line; i++) {
+            local_dof_indices[i] = local_to_global_index(local_dof_indices[i]);
+          }
           Tensor<1, 3, double> ptemp =
               ((cell->face(i))->line(j))->center(true, false);
           if (std::abs(ptemp[2] - GlobalParams.Minimum_Z) > 0.0001) {
@@ -229,6 +232,107 @@ unsigned int Waveguide::local_to_global_index(unsigned int local_index) {
 void Waveguide::make_grid() {
   mg->prepare_triangulation(&triangulation);
   dof_handler.distribute_dofs(fe);
+  SortDofsDownstream();
+  n_dofs = dof_handler.n_dofs();
+  DoFTools::make_periodicity_constraints(dof_handler, 1, 2, 2,
+                                         periodic_constraints);
+  interface_dof_count = periodic_constraints.n_constraints();
+  n_global_dofs = GlobalParams.NumberProcesses * n_dofs -
+                  (GlobalParams.NumberProcesses - 1) * interface_dof_count;
+  int diff = 0;
+  bool touched = false;
+  bool mismatch = false;
+  double match_value;
+  bool match_value_touched = false;
+  bool match_value_mismatch = false;
+  if (GlobalParams.MPI_Rank == 0) {
+    for (unsigned int i = 0; i < n_dofs; i++) {
+      if (periodic_constraints.is_constrained(i)) {
+        for (unsigned int j = 0;
+             j < periodic_constraints.get_constraint_entries(i)->size(); j++) {
+          std::cout << "Current dof " << i << " is constrained to: "
+                    << periodic_constraints.get_constraint_entries(i)
+                           ->
+                           operator[](j)
+                           .first
+                    << " with coupling value "
+                    << periodic_constraints.get_constraint_entries(i)
+                           ->
+                           operator[](j)
+                           .second
+                    << std::endl;
+        }
+      }
+    }
+  }
+  for (unsigned int i = 0; i < n_dofs; i++) {
+    if (periodic_constraints.is_constrained(i)) {
+      if (!touched) {
+        diff = periodic_constraints.get_constraint_entries(i)
+                   ->
+                   operator[](0)
+                   .first -
+               i;
+        touched = true;
+      } else {
+        if (periodic_constraints.get_constraint_entries(i)
+                    ->
+                    operator[](0)
+                    .first -
+                i !=
+            diff) {
+          mismatch = true;
+          deallog << "Index shift mismatch: Diff was " << diff
+                  << " but indices were "
+                  << periodic_constraints.get_constraint_entries(i)
+                         ->
+                         operator[](0)
+                         .first
+                  << " and " << i << std::endl;
+        }
+      }
+      if (!match_value_touched) {
+        match_value = periodic_constraints.get_constraint_entries(i)
+                          ->
+                          operator[](0)
+                          .second;
+      match_value_touched = true;
+    } else {
+      if (periodic_constraints.get_constraint_entries(i)->operator[](0).second <
+          match_value) {
+        deallog << "There was a constraint value change. Old: " << match_value
+                << " new: "
+                << periodic_constraints.get_constraint_entries(i)
+                       ->
+                       operator[](0)
+                       .second
+                << std::endl;
+        match_value = periodic_constraints.get_constraint_entries(i)
+                          ->
+                          operator[](0)
+                          .second;
+        match_value_mismatch = true;
+      }
+    }
+    }
+  }
+  if (mismatch) {
+    deallog << "There was an Index mismatch. See above." << std::endl;
+  } else {
+    deallog << "There were no mismatching indices. The periodicity is an exact "
+               "shift-match."
+            << std::endl;
+  }
+  if (match_value_mismatch) {
+    deallog << "There were match_value_mismatches (wrong face orientations). "
+               "See above."
+            << std::endl;
+  } else {
+    deallog << "There were no match_value_mismatches (the face orientations "
+               "are well-alighned."
+            << std::endl;
+  }
+
   dealii::Tensor<1, 3, double> dir;
   dir[0] = 0;
   dir[1] = 0;
@@ -254,13 +358,64 @@ void Waveguide::make_grid() {
           << maximum_local_z << "]" << std::endl;
 }
 
+bool compareIndexCenterPairs(std::pair<int, double> c1,
+                             std::pair<int, double> c2) {
+  return c1.second < c2.second;
+}
+
+void Waveguide::SortDofsDownstream() {
+  std::vector<std::pair<int, double>> current;
+  DoFHandler<3>::active_cell_iterator cell = dof_handler.begin_active(),
+                                      endc = dof_handler.end();
+  std::vector<unsigned int> lines_touched;
+  std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
+  for (; cell != endc; ++cell) {
+    for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+      for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
+        if (!(std::find(lines_touched.begin(), lines_touched.end(),
+                       cell->face(i)->line(j)->index()) !=
+            lines_touched.end())) {
+          ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
+          for (unsigned k = 0; k < local_line_dofs.size(); k++) {
+            current.push_back(std::pair<int, double>(
+                local_line_dofs[k], (cell->face(i))->line(j)->center()[2]));
+          }
+          lines_touched.push_back(cell->face(i)->line(j)->index());
+        }
+      }
+    }
+  }
+  std::sort(current.begin(), current.end(), compareIndexCenterPairs);
+  std::vector<unsigned int> new_numbering;
+  new_numbering.resize(current.size());
+  for (unsigned int i = 0; i < current.size(); i++) {
+    new_numbering[current[i].first] = i;
+  }
+  dof_handler.renumber_dofs(new_numbering);
+}
+
+void Waveguide::Shift_Constraint_Matrix(ConstraintMatrix *in_cm) {
+  ConstraintMatrix new_global;
+  new_global.reinit(locally_relevant_dofs);
+  dealii::ConstraintMatrix::LineRange lr = in_cm->get_lines();
+  dealii::ConstraintMatrix::const_iterator it = lr.begin();
+  for (unsigned int i = 0; i < n_dofs; i++) {
+    if (in_cm->is_constrained(i)) {
+      const std::vector<std::pair<unsigned int, double>> *curr_line =
+          in_cm->get_constraint_entries(i);
+      for (unsigned int j = 0; j < curr_line->size(); j++) {
+        new_global.add_entry(
+            local_to_global_index(i),
+            local_to_global_index(curr_line->operator[](j).first),
+            curr_line->operator[](j).second);
+      }
+    }
+  }
+  in_cm->clear();
+  in_cm->copy_from(new_global);
+}
+
 void Waveguide::Compute_Dof_Numbers() {
-  n_dofs = dof_handler.n_dofs();
-  DoFTools::make_periodicity_constraints(dof_handler, 0, 2,
-                                         periodic_constraints);
-  interface_dof_count = periodic_constraints.n_constraints();
-  n_global_dofs = GlobalParams.NumberProcesses * n_dofs -
-                  (GlobalParams.NumberProcesses - 1) * interface_dof_count;
   deallog << "Total Dof Count per block: " << n_dofs << " interface dof count "
           << interface_dof_count << std::endl;
   std::vector<types::global_dof_index> dof_indices(fe.dofs_per_face);
@@ -342,6 +497,11 @@ void Waveguide::setup_system() {
   }
   std::sort(periodicity_constraints.begin(), periodicity_constraints.end(),
             compareConstraintPairs);
+  for (unsigned int i = 0; i < periodicity_constraints.size(); i++) {
+    deallog << "Constraint pair: l: " << periodicity_constraints[i].left
+            << " r: " << periodicity_constraints[i].right << std::endl;
+    ;
+  }
   unsigned int global_dof_count =
       GlobalParams.NumberProcesses * n_dofs -
       (GlobalParams.NumberProcesses - 1) * interface_dof_count;
@@ -627,6 +787,10 @@ void Waveguide::Prepare_Boundary_Constraints() {
   DoFTools::make_hanging_node_constraints(dof_handler, cm);
   DoFTools::make_hanging_node_constraints(dof_handler, cm_prec_even);
   DoFTools::make_hanging_node_constraints(dof_handler, cm_prec_odd);
+
+  Shift_Constraint_Matrix(&cm);
+  Shift_Constraint_Matrix(&cm_prec_even);
+  Shift_Constraint_Matrix(&cm_prec_odd);
 
   MakeBoundaryConditions();
   MakePreconditionerBoundaryConditions();
@@ -1103,13 +1267,14 @@ void Waveguide::MakeBoundaryConditions() {
 
   cell = dof_handler.begin_active();
   dealii::ZeroFunction<3, double> zf(6);
+  /**
   VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 3,
                                                        cm);
   VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1,
                                                        cm);
   VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2,
                                                        cm);
-
+  **/
   const unsigned int face_own_count = std::max(
       static_cast<unsigned int>(0),
       fe.dofs_per_face - GeometryInfo<3>::lines_per_face * fe.dofs_per_line);
@@ -1126,17 +1291,20 @@ void Waveguide::MakeBoundaryConditions() {
   if (run_number == 0) {
     fixed_dofs.set_size(n_global_dofs);
   }
-
+  std::cout << "I am " << GlobalParams.MPI_Rank << " i am at 1" << std::endl;
   for (; cell != endc; ++cell) {
-    if (cell->is_locally_owned()) {
       for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
         Point<3, double> center = (cell->face(i))->center(true, false);
         if (center[0] < 0) center[0] *= (-1.0);
         if (center[1] < 0) center[1] *= (-1.0);
-
+        std::cout << "I am " << GlobalParams.MPI_Rank << " i am at 3"
+                  << std::endl;
         if (std::abs(center[0] - GlobalParams.M_R_XLength / 2.0) < 0.0001) {
           for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
             ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
+            for (unsigned int i = 0; i < fe.dofs_per_line; i++) {
+              local_line_dofs[i] = local_to_global_index(local_line_dofs[i]);
+            }
             for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
               if (locally_owned_dofs.is_element(local_line_dofs[k])) {
                 cm.add_line(local_line_dofs[k]);
@@ -1147,6 +1315,9 @@ void Waveguide::MakeBoundaryConditions() {
           }
           if (face_own_count > 0) {
             cell->face(i)->get_dof_indices(local_face_dofs);
+            for (unsigned int i = 0; i < fe.dofs_per_face; i++) {
+              local_face_dofs[i] = local_to_global_index(local_face_dofs[i]);
+            }
             for (unsigned int j =
                      GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
                  j < fe.dofs_per_face; j++) {
@@ -1162,6 +1333,9 @@ void Waveguide::MakeBoundaryConditions() {
         if (std::abs(center[1] - GlobalParams.M_R_YLength / 2.0) < 0.0001) {
           for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
             ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
+            for (unsigned int i = 0; i < fe.dofs_per_line; i++) {
+              local_line_dofs[i] = local_to_global_index(local_line_dofs[i]);
+            }
             for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
               if (locally_owned_dofs.is_element(local_line_dofs[k])) {
                 cm.add_line(local_line_dofs[k]);
@@ -1172,6 +1346,9 @@ void Waveguide::MakeBoundaryConditions() {
           }
           if (face_own_count > 0) {
             cell->face(i)->get_dof_indices(local_face_dofs);
+            for (unsigned int i = 0; i < fe.dofs_per_face; i++) {
+              local_face_dofs[i] = local_to_global_index(local_face_dofs[i]);
+            }
             for (unsigned int j =
                      GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
                  j < fe.dofs_per_face; j++) {
@@ -1188,6 +1365,9 @@ void Waveguide::MakeBoundaryConditions() {
           for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
             if ((cell->face(i))->line(j)->at_boundary()) {
               ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
+              for (unsigned int i = 0; i < fe.dofs_per_line; i++) {
+                local_line_dofs[i] = local_to_global_index(local_line_dofs[i]);
+              }
               for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
                 if (locally_owned_dofs.is_element(local_line_dofs[k])) {
                   fixed_dofs.add_index(local_line_dofs[k]);
@@ -1201,6 +1381,9 @@ void Waveguide::MakeBoundaryConditions() {
           }
           if (face_own_count > 0) {
             cell->face(i)->get_dof_indices(local_face_dofs);
+            for (unsigned int i = 0; i < fe.dofs_per_face; i++) {
+              local_face_dofs[i] = local_to_global_index(local_face_dofs[i]);
+            }
             for (unsigned int j =
                      GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
                  j < fe.dofs_per_face; j++) {
@@ -1214,6 +1397,9 @@ void Waveguide::MakeBoundaryConditions() {
         if (std::abs(center[2] - GlobalParams.Maximum_Z) < 0.0001) {
           for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
             ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
+            for (unsigned int i = 0; i < fe.dofs_per_line; i++) {
+              local_line_dofs[i] = local_to_global_index(local_line_dofs[i]);
+            }
             for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
               if (locally_owned_dofs.is_element(local_line_dofs[k])) {
                 cm.add_line(local_line_dofs[k]);
@@ -1224,6 +1410,9 @@ void Waveguide::MakeBoundaryConditions() {
           }
           if (face_own_count > 0) {
             cell->face(i)->get_dof_indices(local_face_dofs);
+            for (unsigned int i = 0; i < fe.dofs_per_face; i++) {
+              local_face_dofs[i] = local_to_global_index(local_face_dofs[i]);
+            }
             for (unsigned int j =
                      GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
                  j < fe.dofs_per_face; j++) {
@@ -1237,14 +1426,14 @@ void Waveguide::MakeBoundaryConditions() {
         }
       }
     }
-  }
+  std::cout << "I am " << GlobalParams.MPI_Rank << " i am at 2" << std::endl;
 }
 
 void Waveguide::MakePreconditionerBoundaryConditions() {
   dealii::DoFHandler<3>::active_cell_iterator cell_loc, endc;
   cell_loc = dof_handler.begin_active();
   endc = dof_handler.end();
-
+  /**
   dealii::ZeroFunction<3, double> zf(6);
   VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 3,
                                                        cm_prec_even);
@@ -1258,7 +1447,7 @@ void Waveguide::MakePreconditionerBoundaryConditions() {
                                                        cm_prec_even);
   VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2,
                                                        cm_prec_odd);
-
+   **/
   double layer_length = GlobalParams.LayerThickness;
   IndexSet own(n_global_dofs);
   own.add_indices(locally_owned_dofs);
@@ -1374,12 +1563,15 @@ std::vector<unsigned int> Waveguide::Add_Zero_Restraint(
     dealii::ConstraintMatrix *in_cm,
     dealii::DoFHandler<3>::active_cell_iterator &in_cell, unsigned int in_face,
     unsigned int DofsPerLine, unsigned int DofsPerFace, bool in_non_face_dofs,
-    IndexSet locally_owned_dofs) {
+    dealii::IndexSet locally_owned_dofs) {
   std::vector<types::global_dof_index> local_line_dofs(DofsPerLine);
   std::vector<types::global_dof_index> local_face_dofs(DofsPerFace);
   std::vector<types::global_dof_index> ret;
   for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
     ((in_cell->face(in_face))->line(j))->get_dof_indices(local_line_dofs);
+    for (unsigned int i = 0; i < fe.dofs_per_line; i++) {
+      local_line_dofs[i] = local_to_global_index(local_line_dofs[i]);
+    }
     for (unsigned int k = 0; k < DofsPerLine; k++) {
       if (locally_owned_dofs.is_element(local_line_dofs[k])) {
         in_cm->add_line(local_line_dofs[k]);
@@ -1390,6 +1582,9 @@ std::vector<unsigned int> Waveguide::Add_Zero_Restraint(
   }
   if (in_non_face_dofs) {
     in_cell->face(in_face)->get_dof_indices(local_face_dofs);
+    for (unsigned int i = 0; i < fe.dofs_per_face; i++) {
+      local_face_dofs[i] = local_to_global_index(local_face_dofs[i]);
+    }
     for (unsigned int j = GeometryInfo<3>::lines_per_face * DofsPerLine;
          j < DofsPerFace; j++) {
       if (locally_owned_dofs.is_element(local_face_dofs[j])) {

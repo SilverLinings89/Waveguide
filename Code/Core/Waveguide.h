@@ -484,6 +484,10 @@ class Waveguide {
 
   unsigned int local_to_global_index(unsigned int local_index);
 
+  void SortDofsDownstream();
+
+  void Shift_Constraint_Matrix(ConstraintMatrix *in_cm);
+
   // HIER BEGINNT DIE NEUE VERSION...
 
   SpaceTransformation *st;
