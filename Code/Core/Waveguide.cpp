@@ -1301,8 +1301,8 @@ void Waveguide::MakeBoundaryConditions() {
         if (std::abs(center[0] - GlobalParams.M_R_XLength / 2.0) < 0.0001) {
           for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
             ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
-            for (unsigned int i = 0; i < fe.dofs_per_line; i++) {
-              local_line_dofs[i] = local_to_global_index(local_line_dofs[i]);
+            for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
+              local_line_dofs[k] = local_to_global_index(local_line_dofs[k]);
             }
             for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
               if (locally_owned_dofs.is_element(local_line_dofs[k])) {
@@ -1314,8 +1314,8 @@ void Waveguide::MakeBoundaryConditions() {
           }
           if (face_own_count > 0) {
             cell->face(i)->get_dof_indices(local_face_dofs);
-            for (unsigned int i = 0; i < fe.dofs_per_face; i++) {
-              local_face_dofs[i] = local_to_global_index(local_face_dofs[i]);
+            for (unsigned int k = 0; k < fe.dofs_per_face; k++) {
+              local_face_dofs[k] = local_to_global_index(local_face_dofs[k]);
             }
             for (unsigned int j =
                      GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
@@ -1332,8 +1332,8 @@ void Waveguide::MakeBoundaryConditions() {
         if (std::abs(center[1] - GlobalParams.M_R_YLength / 2.0) < 0.0001) {
           for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
             ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
-            for (unsigned int i = 0; i < fe.dofs_per_line; i++) {
-              local_line_dofs[i] = local_to_global_index(local_line_dofs[i]);
+            for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
+              local_line_dofs[k] = local_to_global_index(local_line_dofs[k]);
             }
             for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
               if (locally_owned_dofs.is_element(local_line_dofs[k])) {
@@ -1345,8 +1345,8 @@ void Waveguide::MakeBoundaryConditions() {
           }
           if (face_own_count > 0) {
             cell->face(i)->get_dof_indices(local_face_dofs);
-            for (unsigned int i = 0; i < fe.dofs_per_face; i++) {
-              local_face_dofs[i] = local_to_global_index(local_face_dofs[i]);
+            for (unsigned int k = 0; k < fe.dofs_per_face; k++) {
+              local_face_dofs[k] = local_to_global_index(local_face_dofs[k]);
             }
             for (unsigned int j =
                      GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
@@ -1364,8 +1364,8 @@ void Waveguide::MakeBoundaryConditions() {
           for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
             if ((cell->face(i))->line(j)->at_boundary()) {
               ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
-              for (unsigned int i = 0; i < fe.dofs_per_line; i++) {
-                local_line_dofs[i] = local_to_global_index(local_line_dofs[i]);
+              for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
+                local_line_dofs[k] = local_to_global_index(local_line_dofs[k]);
               }
               for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
                 if (locally_owned_dofs.is_element(local_line_dofs[k])) {
@@ -1380,8 +1380,8 @@ void Waveguide::MakeBoundaryConditions() {
           }
           if (face_own_count > 0) {
             cell->face(i)->get_dof_indices(local_face_dofs);
-            for (unsigned int i = 0; i < fe.dofs_per_face; i++) {
-              local_face_dofs[i] = local_to_global_index(local_face_dofs[i]);
+            for (unsigned int k = 0; k < fe.dofs_per_face; k++) {
+              local_face_dofs[k] = local_to_global_index(local_face_dofs[k]);
             }
             for (unsigned int j =
                      GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
@@ -1396,8 +1396,8 @@ void Waveguide::MakeBoundaryConditions() {
         if (std::abs(center[2] - GlobalParams.Maximum_Z) < 0.0001) {
           for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
             ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
-            for (unsigned int i = 0; i < fe.dofs_per_line; i++) {
-              local_line_dofs[i] = local_to_global_index(local_line_dofs[i]);
+            for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
+              local_line_dofs[k] = local_to_global_index(local_line_dofs[k]);
             }
             for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
               if (locally_owned_dofs.is_element(local_line_dofs[k])) {
@@ -1409,8 +1409,8 @@ void Waveguide::MakeBoundaryConditions() {
           }
           if (face_own_count > 0) {
             cell->face(i)->get_dof_indices(local_face_dofs);
-            for (unsigned int i = 0; i < fe.dofs_per_face; i++) {
-              local_face_dofs[i] = local_to_global_index(local_face_dofs[i]);
+            for (unsigned int k = 0; k < fe.dofs_per_face; k++) {
+              local_face_dofs[k] = local_to_global_index(local_face_dofs[k]);
             }
             for (unsigned int j =
                      GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
