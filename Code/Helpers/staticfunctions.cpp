@@ -608,9 +608,6 @@ double my_inter(double x, double l, double w) {
 
 Point<2, double> Triangulation_Stretch_Computational_Rectangle(
     const Point<2, double> &p) {
-  double d1_goal = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / 2.0;
-  double d2_goal = (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out) / 2.0;
-
   Point<2, double> q = p;
 
   if (abs(p[0]) < GlobalParams.M_R_XLength / 2.0 - 0.0001) {

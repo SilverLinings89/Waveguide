@@ -114,7 +114,6 @@ void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
       cell = surface.begin_active(),
       endc = surface.end();
 
-  double len = 2.0 / Layers;
   const double outside_max_edge_length = 5.0;
   const double inside_max_edge_length = 2.0;
   bool found_one = true;

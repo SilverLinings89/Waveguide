@@ -265,7 +265,7 @@ void Waveguide::make_grid() {
       }
     }
   }
-  for (unsigned int i = 0; i < n_dofs; i++) {
+  for (int i = 0; i < n_dofs; i++) {
     if (periodic_constraints.is_constrained(i)) {
       if (!touched) {
         diff = periodic_constraints.get_constraint_entries(i)
@@ -398,7 +398,6 @@ void Waveguide::Shift_Constraint_Matrix(ConstraintMatrix *in_cm) {
   ConstraintMatrix new_global;
   new_global.reinit(locally_relevant_dofs);
   dealii::ConstraintMatrix::LineRange lr = in_cm->get_lines();
-  dealii::ConstraintMatrix::const_iterator it = lr.begin();
   for (unsigned int i = 0; i < n_dofs; i++) {
     if (in_cm->is_constrained(i)) {
       const std::vector<std::pair<unsigned int, double>> *curr_line =
@@ -1874,7 +1873,7 @@ void Waveguide::output_results(bool) {
                                "/solution-run" + std::to_string(run_number) +
                                ".pvtu");
       std::vector<std::string> filenames;
-      for (unsigned int i = 0; i < GlobalParams.NumberProcesses; i++) {
+      for (int i = 0; i < GlobalParams.NumberProcesses; i++) {
         filenames.push_back("solution-run" + std::to_string(run_number) + "-P" +
                             std::to_string(i) + ".vtu");
       }

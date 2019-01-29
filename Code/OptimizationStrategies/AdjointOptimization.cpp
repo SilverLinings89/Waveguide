@@ -182,7 +182,7 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
     z_temp += step_width;
   }
   std::cout << "I am " << GlobalParams.MPI_Rank << ". My dofs are ";
-  for (int i = 0; i < cnt_steps; i++) {
+  for (unsigned int i = 0; i < cnt_steps; i++) {
     if (mine[i]) {
       std::cout << i << " ";
     }
@@ -200,7 +200,7 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
     all_absolutes = new double[cnt_steps];
     cnt_recv = new int[GlobalParams.NumberProcesses];
     cnt_recv[0] = own_cnt;
-    for (unsigned int i = 1; i < GlobalParams.NumberProcesses - 1; i++) {
+    for (int i = 1; i < GlobalParams.NumberProcesses - 1; i++) {
       cnt_recv[i] = displs[i + 1] - displs[i];
     }
     cnt_recv[GlobalParams.NumberProcesses - 1] =
