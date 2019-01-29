@@ -906,7 +906,7 @@ void Waveguide::reinit_systemmatrix() {
 
   sp.collect_sizes();
 
-  Trilinos:Wrappers::SparsityPattern sp_temp(n_dofs, n_dofs, dof_handler.max_couplings_between_dofs());
+  TrilinosWrappers::SparsityPattern sp_temp(n_dofs, n_dofs, dof_handler.max_couplings_between_dofs());
   deallog << "Making BSP ..." << std::endl;
   DoFTools::make_sparsity_pattern(dof_handler, sp_temp, cm_temp, false);
   for(const_iterator it = sp_temp.begin(); it != sp_temp.end(); it++){
