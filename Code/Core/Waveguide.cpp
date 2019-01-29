@@ -1197,12 +1197,14 @@ void Waveguide::assemble_system() {
       cm.distribute_local_to_global(cell_matrix_real, cell_rhs,
           local_dof_indices_global, system_matrix,
                                     system_rhs, false);
+                                    /**
       cm_prec_odd.distribute_local_to_global(cell_matrix_prec_odd, cell_rhs,
           local_dof_indices_global, prec_matrix_odd,
                                              preconditioner_rhs, false);
       cm_prec_even.distribute_local_to_global(
           cell_matrix_prec_even, cell_rhs, local_dof_indices_global, prec_matrix_even,
           preconditioner_rhs, false);
+          **/
     }
   }
   locals_set = true;
