@@ -476,14 +476,14 @@ class Waveguide {
                                                double Xc, double Yc);
 
   /**
-   * Once a solution has been computed, this function can be used to evaluate it at a point position. 
+   * Once a solution has been computed, this function can be used to evaluate it at a point position.
    */
   Tensor<1, 3, std::complex<double>> solution_evaluation(
       Point<3, double> position) const;
 /**
    * Once a solution has been computed, this function can be used to evaluate it at a point position. This function is similar to the other version but it doesn't return the solution but stores it in the pointer given as an argument.
    */
-  
+
   void solution_evaluation(Point<3, double> position, double *solution) const;
 
   /**
@@ -504,6 +504,8 @@ class Waveguide {
       unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet);
 
   unsigned int local_to_global_index(unsigned int local_index);
+
+  unsigned int global_to_local_index(unsigned int local_index);
 
   void SortDofsDownstream();
 

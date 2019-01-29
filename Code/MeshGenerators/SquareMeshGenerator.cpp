@@ -114,8 +114,8 @@ void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
       cell = surface.begin_active(),
       endc = surface.end();
 
-  const double outside_max_edge_length = 5.0;
-  const double inside_max_edge_length = 2.0;
+  const double outside_max_edge_length = 1.5;
+  const double inside_max_edge_length = 0.4;
   bool found_one = true;
   int refinements = 0;
   while (found_one) {
@@ -176,10 +176,9 @@ void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
     surface.execute_coarsening_and_refinement();
     refinements++;
   }
-  // unsigned int layers = (unsigned int)std::round(10 *
-  // floor(GlobalParams.SystemLength / GlobalParams.NumberProcesses) /
-  //    GlobalParams.M_W_Lambda);
-  unsigned int layers = 3;
+  unsigned int layers = (unsigned int)std::round(
+      10 * floor(GlobalParams.SystemLength / GlobalParams.NumberProcesses) /
+      GlobalParams.M_W_Lambda);
   double length = GlobalParams.LayerThickness / (double)layers;
   deallog << "Concluded in " << refinements
           << " refinement steps. Extruding mesh. Building " << layers
@@ -204,7 +203,7 @@ void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
   set_boundary_ids(*in_tria);
   deallog << "Done" << std::endl;
   deallog.pop();
-  mesh_i(*in_tria, "grid_out.vtk");
+  // if (GlobalParams.MPI_Rank == 0) mesh_i(*in_tria, "grid_out.vtk");
 }
 
 bool SquareMeshGenerator::math_coordinate_in_waveguide(

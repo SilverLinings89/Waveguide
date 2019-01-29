@@ -229,6 +229,28 @@ unsigned int Waveguide::local_to_global_index(unsigned int local_index) {
   }
 }
 
+unsigned int Waveguide::global_to_local_index(unsigned int local_index) {
+  if (GlobalParams.MPI_Rank == 0) {
+    return local_index;
+  } else {
+    int temp =
+        local_index - GlobalParams.MPI_Rank * (n_dofs - interface_dof_count);
+    if (temp < (int)interface_dof_count) {
+      temp += n_dofs - interface_dof_count;
+      for (unsigned int i = 0; i < periodicity_constraints.size(); i++) {
+        if ((int)periodicity_constraints[i].right == temp)
+          return periodicity_constraints[i].left;
+      }
+      std::cout
+          << "Error in computation of local index. Out of bounds? Index was "
+          << local_index << std::endl;
+      return n_dofs - 1;
+    } else {
+      return temp;
+    }
+  }
+}
+
 void Waveguide::make_grid() {
   mg->prepare_triangulation(&triangulation);
   dof_handler.distribute_dofs(fe);
@@ -239,100 +261,6 @@ void Waveguide::make_grid() {
   interface_dof_count = periodic_constraints.n_constraints();
   n_global_dofs = GlobalParams.NumberProcesses * n_dofs -
                   (GlobalParams.NumberProcesses - 1) * interface_dof_count;
-  int diff = 0;
-  bool touched = false;
-  bool mismatch = false;
-  double match_value;
-  bool match_value_touched = false;
-  bool match_value_mismatch = false;
-  if (GlobalParams.MPI_Rank == 0) {
-    for (unsigned int i = 0; i < n_dofs; i++) {
-      if (periodic_constraints.is_constrained(i)) {
-        for (unsigned int j = 0;
-             j < periodic_constraints.get_constraint_entries(i)->size(); j++) {
-          std::cout << "Current dof " << i << " is constrained to: "
-                    << periodic_constraints.get_constraint_entries(i)
-                           ->
-                           operator[](j)
-                           .first
-                    << " with coupling value "
-                    << periodic_constraints.get_constraint_entries(i)
-                           ->
-                           operator[](j)
-                           .second
-                    << std::endl;
-        }
-      }
-    }
-  }
-  for (int i = 0; i < n_dofs; i++) {
-    if (periodic_constraints.is_constrained(i)) {
-      if (!touched) {
-        diff = periodic_constraints.get_constraint_entries(i)
-                   ->
-                   operator[](0)
-                   .first -
-               i;
-        touched = true;
-      } else {
-        if (periodic_constraints.get_constraint_entries(i)
-                    ->
-                    operator[](0)
-                    .first -
-                i !=
-            diff) {
-          mismatch = true;
-          deallog << "Index shift mismatch: Diff was " << diff
-                  << " but indices were "
-                  << periodic_constraints.get_constraint_entries(i)
-                         ->
-                         operator[](0)
-                         .first
-                  << " and " << i << std::endl;
-        }
-      }
-      if (!match_value_touched) {
-        match_value = periodic_constraints.get_constraint_entries(i)
-                          ->
-                          operator[](0)
-                          .second;
-      match_value_touched = true;
-    } else {
-      if (periodic_constraints.get_constraint_entries(i)->operator[](0).second <
-          match_value) {
-        deallog << "There was a constraint value change. Old: " << match_value
-                << " new: "
-                << periodic_constraints.get_constraint_entries(i)
-                       ->
-                       operator[](0)
-                       .second
-                << std::endl;
-        match_value = periodic_constraints.get_constraint_entries(i)
-                          ->
-                          operator[](0)
-                          .second;
-        match_value_mismatch = true;
-      }
-    }
-    }
-  }
-  if (mismatch) {
-    deallog << "There was an Index mismatch. See above." << std::endl;
-  } else {
-    deallog << "There were no mismatching indices. The periodicity is an exact "
-               "shift-match."
-            << std::endl;
-  }
-  if (match_value_mismatch) {
-    deallog << "There were match_value_mismatches (wrong face orientations). "
-               "See above."
-            << std::endl;
-  } else {
-    deallog << "There were no match_value_mismatches (the face orientations "
-               "are well-alighned."
-            << std::endl;
-  }
-
   dealii::Tensor<1, 3, double> dir;
   dir[0] = 0;
   dir[1] = 0;
@@ -397,7 +325,6 @@ void Waveguide::SortDofsDownstream() {
 void Waveguide::Shift_Constraint_Matrix(ConstraintMatrix *in_cm) {
   ConstraintMatrix new_global;
   new_global.reinit(locally_relevant_dofs);
-  dealii::ConstraintMatrix::LineRange lr = in_cm->get_lines();
   for (unsigned int i = 0; i < n_dofs; i++) {
     if (in_cm->is_constrained(i)) {
       const std::vector<std::pair<unsigned int, double>> *curr_line =
@@ -496,11 +423,7 @@ void Waveguide::setup_system() {
   }
   std::sort(periodicity_constraints.begin(), periodicity_constraints.end(),
             compareConstraintPairs);
-  for (unsigned int i = 0; i < periodicity_constraints.size(); i++) {
-    deallog << "Constraint pair: l: " << periodicity_constraints[i].left
-            << " r: " << periodicity_constraints[i].right << std::endl;
-    ;
-  }
+
   unsigned int global_dof_count =
       GlobalParams.NumberProcesses * n_dofs -
       (GlobalParams.NumberProcesses - 1) * interface_dof_count;
@@ -895,9 +818,9 @@ void Waveguide::reinit_systemmatrix() {
   cm_temp.reinit(locally_relevant_dofs);
 
   DoFTools::make_hanging_node_constraints(dof_handler, cm_temp);
-  
+
   cm_temp.close();
- 
+
   deallog << "Generating BSP" << std::endl;
 
   TrilinosWrappers::BlockSparsityPattern sp(i_sys_owned, MPI_COMM_WORLD);
@@ -951,9 +874,9 @@ void Waveguide::reinit_preconditioner() {
   cm_temp.reinit(locally_relevant_dofs);
 
   DoFTools::make_hanging_node_constraints(dof_handler, cm_temp);
-  
+
   cm_temp.close();
- 
+
 
   deallog << "Started" << std::endl;
 
@@ -976,11 +899,11 @@ void Waveguide::reinit_preconditioner() {
   opsp.collect_sizes();
 
   deallog.push("Making BSP");
-  
+
   TrilinosWrappers::SparsityPattern sp_temp(n_dofs, n_dofs, dof_handler.max_couplings_between_dofs());
   deallog << "Making temporary BSP ..." << std::endl;
   DoFTools::make_sparsity_pattern(dof_handler, sp_temp, cm_temp, false);
-  
+
   deallog << "Copying entries to global structure..." << std::endl;
   for(TrilinosWrappers::SparsityPatternIterators::Iterator it = sp_temp.begin(); it != sp_temp.end(); it++){
     unsigned int row = local_to_global_index(it->row());
@@ -990,7 +913,7 @@ void Waveguide::reinit_preconditioner() {
   }
   epsp.compress();
   opsp.compress();
-  
+
   deallog << "Done" << std::endl;
 
   deallog.pop();
@@ -1201,14 +1124,14 @@ void Waveguide::assemble_system() {
       cm.distribute_local_to_global(cell_matrix_real, cell_rhs,
           local_dof_indices_global, system_matrix,
                                     system_rhs, false);
-      
+
       cm_prec_odd.distribute_local_to_global(cell_matrix_prec_odd, cell_rhs,
           local_dof_indices_global, prec_matrix_odd,
                                              preconditioner_rhs, false);
       cm_prec_even.distribute_local_to_global(
           cell_matrix_prec_even, cell_rhs, local_dof_indices_global, prec_matrix_even,
           preconditioner_rhs, false);
-      
+
     }
   }
   locals_set = true;
@@ -1321,14 +1244,11 @@ void Waveguide::MakeBoundaryConditions() {
   if (run_number == 0) {
     fixed_dofs.set_size(n_global_dofs);
   }
-  std::cout << "I am " << GlobalParams.MPI_Rank << " i am at 1" << std::endl;
   for (; cell != endc; ++cell) {
       for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
         Point<3, double> center = (cell->face(i))->center(true, false);
         if (center[0] < 0) center[0] *= (-1.0);
         if (center[1] < 0) center[1] *= (-1.0);
-        std::cout << "I am " << GlobalParams.MPI_Rank << " i am at 3"
-                  << std::endl;
         if (std::abs(center[0] - GlobalParams.M_R_XLength / 2.0) < 0.0001) {
           for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
             ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
@@ -1456,7 +1376,6 @@ void Waveguide::MakeBoundaryConditions() {
         }
       }
     }
-  std::cout << "I am " << GlobalParams.MPI_Rank << " i am at 2" << std::endl;
 }
 
 void Waveguide::MakePreconditionerBoundaryConditions() {
@@ -1782,24 +1701,21 @@ void Waveguide::solve() {
                  false, PrecOptionNames[GlobalParams.So_Preconditioner]));
     // temp_s.solve(system_matrix, solution, system_rhs);
   }
-
+  deallog << "Building local vector:" << std::endl;
   if (primal) {
-    primal_with_relevant.reinit(locally_owned_dofs, locally_relevant_dofs,
-                                mpi_comm);
-    for (unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {
-      int index = locally_owned_dofs.nth_index_in_set(i);
-      primal_with_relevant[index] = primal_solution[index];
+    primal_with_relevant.reinit(n_dofs);
+    for (unsigned int i = 0; i < n_dofs; i++) {
+      int index = local_to_global_index(i);
+      primal_with_relevant[i] = solution->operator[](index);
     }
-    primal_with_relevant.update_ghost_values();
   } else {
-    dual_with_relevant.reinit(locally_owned_dofs, locally_relevant_dofs,
-                              mpi_comm);
-    for (unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {
-      int index = locally_owned_dofs.nth_index_in_set(i);
-      dual_with_relevant[index] = dual_solution[index];
+    dual_with_relevant.reinit(n_dofs);
+    for (unsigned int i = 0; i < n_dofs; i++) {
+      int index = local_to_global_index(i);
+      dual_with_relevant[i] = solution->operator[](index);
     }
-    dual_with_relevant.update_ghost_values();
   }
+  deallog << "Done." << std::endl;
 
   GrowingVectorMemory<
       TrilinosWrappers::MPI::BlockVector>::release_unused_memory();
@@ -1817,6 +1733,7 @@ void Waveguide::store() {
 }
 
 void Waveguide::output_results(bool) {
+  /**
   for (unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {
     unsigned int index = locally_owned_dofs.nth_index_in_set(i);
     ErrorOfSolution[index] = (*solution)[index] - EstimatedSolution[index];
@@ -1869,7 +1786,7 @@ void Waveguide::output_results(bool) {
   error_output = ErrorOfSolution;
 
   MPI_Barrier(mpi_comm);
-
+  **/
   // std::cout << rank << ": " <<locally_owned_dofs.n_elements()<< ","
   // <<locally_owned_dofs.nth_index_in_set(0) << "," <<
   // locally_owned_dofs.nth_index_in_set(locally_owned_dofs.n_elements()-1)
@@ -1878,10 +1795,18 @@ void Waveguide::output_results(bool) {
     DataOut<3> data_out;
 
     data_out.attach_dof_handler(dof_handler);
+    if(primal){
     data_out.add_data_vector(
-        solution_output, "Solution",
+        primal_with_relevant, "Solution",
         dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
                                 3>::DataVectorType::type_dof_data);
+    } else {
+      data_out.add_data_vector(
+          dual_with_relevant, "Solution",
+              dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
+                                      3>::DataVectorType::type_dof_data);
+    }
+    /**
     data_out.add_data_vector(
         error_output, "Error_Of_Estimated_Solution",
         dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
@@ -1891,7 +1816,7 @@ void Waveguide::output_results(bool) {
         dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
                                 3>::DataVectorType::type_dof_data);
     // data_out.add_data_vector(differences, "L2error");
-
+**/
     data_out.build_patches();
 
     std::ofstream outputvtu(solutionpath + "/" + path_prefix + "/solution-run" +
@@ -1957,11 +1882,17 @@ void Waveguide::output_results(bool) {
     DataOut<3> data_out;
 
     data_out.attach_dof_handler(dof_handler);
+    if(primal) {
     data_out.add_data_vector(
-        solution_output, "Solution",
+        primal_with_relevant, "Solution",
         dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
                                 3>::DataVectorType::type_dof_data);
-
+    } else {
+      data_out.add_data_vector(
+              dual_with_relevant, "Solution",
+              dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
+                                      3>::DataVectorType::type_dof_data);
+    }
     data_out.build_patches();
 
     std::ofstream outputvtu(
