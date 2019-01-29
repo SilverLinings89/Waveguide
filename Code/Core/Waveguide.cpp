@@ -909,11 +909,22 @@ void Waveguide::reinit_systemmatrix() {
   TrilinosWrappers::SparsityPattern sp_temp(n_dofs, n_dofs, dof_handler.max_couplings_between_dofs());
   deallog << "Making BSP ..." << std::endl;
   DoFTools::make_sparsity_pattern(dof_handler, sp_temp, cm_temp, false);
+  int cnt = 0;
+  int min_r = n_global_dofs;
+  int min_c = n_global_dofs;
+  int max_r = 0;
+  int max_c = 0;
   for(TrilinosWrappers::SparsityPatternIterators::Iterator it = sp_temp.begin(); it != sp_temp.end(); it++){
     unsigned int row = local_to_global_index(it->row());
     unsigned int col = local_to_global_index(it->column());
     sp.add(row,col);
+    if(col > max_c) max_c = col;
+    if(col < min_c) min_c = col;
+    if(row > max_r) max_r = row;
+    if(row < min_r) min_r = row;
+    cnt++;
   }
+  std::cout << "This is " << GlobalParams.MPI_Rank << ": min_c:" << min_c << " max_c:" << max_c << " min_r:" << min_r << " max_r:" << max_r << " cnt:" << cnt << std::endl;
   MPI_Barrier(mpi_comm);
   sp.compress();
 
