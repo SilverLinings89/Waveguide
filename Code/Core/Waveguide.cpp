@@ -891,6 +891,13 @@ void Waveguide::reinit_for_rerun() {
 void Waveguide::reinit_systemmatrix() {
   deallog.push("reinit_systemmatrix");
 
+  ConstraintMatrix cm_temp;
+  cm_temp.reinit(locally_relevant_dofs);
+
+  DoFTools::make_hanging_node_constraints(dof_handler, cm_temp);
+  
+  cm_temp.close();
+ 
   deallog << "Generating BSP" << std::endl;
 
   TrilinosWrappers::BlockSparsityPattern sp(i_sys_owned, MPI_COMM_WORLD);
@@ -899,8 +906,15 @@ void Waveguide::reinit_systemmatrix() {
 
   sp.collect_sizes();
 
+  Trilinos:Wrappers::SparsityPattern sp_temp(n_dofs, n_dofs, dof_handler.max_couplings_between_dofs());
   deallog << "Making BSP ..." << std::endl;
-  DoFTools::make_sparsity_pattern(dof_handler, sp, cm, false, rank);
+  DoFTools::make_sparsity_pattern(dof_handler, sp_temp, cm_temp, false);
+  for(const_iterator it = sp_temp.begin(); it != sp_temp.end(); it++){
+    unsigned int row = local_to_global_index(it->row());
+    unsigned int col = local_to_global_index(it->column());
+    sp.add(row,col);
+  }
+  MPI_Barrier(mpi_comm);
   sp.compress();
 
   deallog << "Initializing system_matrix ..." << std::endl;
