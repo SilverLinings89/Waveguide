@@ -217,11 +217,21 @@ class Waveguide {
    */
   void estimate_solution();
 
+  /**
+   * Having computed both primal and dual solution, this function computes the contribution of the local mesh to the components of the shape gradient.
+   * It requires a run of solve() for both the primal and dual problem, i.e. solve() , switch_to_dual() and solve() again.
+   */
   std::vector<std::complex<double>> assemble_adjoint_local_contribution(
       double stepwidth);
 
+  /**
+   * This chages the SpaceTransformation object used to compute the material-tensors epsilon and mu. The primal version uses the physical representation of the system, whereas the dual version switches to the coordinates to always send the signal backwards through the waveguide configuration.
+   */
   void switch_to_primal(SpaceTransformation *primal_st);
 
+/**
+   * This chages the SpaceTransformation object used to compute the material-tensors epsilon and mu. The primal version uses the physical representation of the system, whereas the dual version switches to the coordinates to always send the signal backwards through the waveguide configuration.
+   */
   void switch_to_dual(SpaceTransformation *dual_st);
 
   Point<3, double> transform_coordinate(const Point<3, double>);
@@ -465,14 +475,25 @@ class Waveguide {
   std::complex<double> gauss_product_2D_sphere(double z, int n, double R,
                                                double Xc, double Yc);
 
+  /**
+   * Once a solution has been computed, this function can be used to evaluate it at a point position. 
+   */
   Tensor<1, 3, std::complex<double>> solution_evaluation(
       Point<3, double> position) const;
-
+/**
+   * Once a solution has been computed, this function can be used to evaluate it at a point position. This function is similar to the other version but it doesn't return the solution but stores it in the pointer given as an argument.
+   */
+  
   void solution_evaluation(Point<3, double> position, double *solution) const;
 
+  /**
+   * Same as solution_evaluation but transforms the coordinate to the dual system first, so if you passed in a coordinate on the input interface, it would return the solution evaluation on the output interface.
+   */
   Tensor<1, 3, std::complex<double>> adjoint_solution_evaluation(
       Point<3, double> position) const;
-
+/**
+   * Same as solution_evaluation but transforms the coordinate to the dual system first, so if you passed in a coordinate on the input interface, it would return the solution evaluation on the output interface.
+   */
   void adjoint_solution_evaluation(Point<3, double> position,
                                    double *solution) const;
 
