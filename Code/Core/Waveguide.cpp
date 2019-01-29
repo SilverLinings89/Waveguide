@@ -516,9 +516,9 @@ void Waveguide::setup_system() {
   }
   locally_relevant_dofs.set_size(global_dof_count);
   if (GlobalParams.MPI_Rank == 0) {
-    locally_owned_dofs.add_range(0, n_dofs + 2 * interface_dof_count);
+    locally_relevant_dofs.add_range(0, n_dofs + 2 * interface_dof_count);
   } else {
-    locally_owned_dofs.add_range(
+    locally_relevant_dofs.add_range(
         GlobalParams.MPI_Rank * n_dofs -
             GlobalParams.MPI_Rank * interface_dof_count -
             (2 * interface_dof_count),
