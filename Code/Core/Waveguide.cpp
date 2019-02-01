@@ -433,21 +433,29 @@ void Waveguide::setup_system() {
   } else {
     locally_owned_dofs.add_range(
         GlobalParams.MPI_Rank * n_dofs -
-            GlobalParams.MPI_Rank * interface_dof_count,
+            (GlobalParams.MPI_Rank-1) * interface_dof_count,
         (GlobalParams.MPI_Rank + 1) * n_dofs -
-            (GlobalParams.MPI_Rank + 1) * interface_dof_count);
+            (GlobalParams.MPI_Rank) * interface_dof_count);
   }
   locally_relevant_dofs.set_size(global_dof_count);
   if (GlobalParams.MPI_Rank == 0) {
     locally_relevant_dofs.add_range(0, n_dofs + 2 * interface_dof_count);
   } else {
-    locally_relevant_dofs.add_range(
-        GlobalParams.MPI_Rank * n_dofs -
-            GlobalParams.MPI_Rank * interface_dof_count -
-            (2 * interface_dof_count),
-        (GlobalParams.MPI_Rank + 1) * n_dofs -
-            (GlobalParams.MPI_Rank + 1) * interface_dof_count +
-            2 * interface_dof_count);
+    if (GlobalParams.MPI_Rank < GlobalParams.NumberProcesses - 1) {
+      locally_relevant_dofs.add_range(
+          GlobalParams.MPI_Rank * n_dofs -
+              (GlobalParams.MPI_Rank - 1) * interface_dof_count -
+              (2 * interface_dof_count),
+          (GlobalParams.MPI_Rank + 1) * n_dofs -
+              (GlobalParams.MPI_Rank) * interface_dof_count +
+              2 * interface_dof_count);
+    } else {
+      locally_relevant_dofs.add_range(
+          GlobalParams.MPI_Rank * n_dofs -
+              (GlobalParams.MPI_Rank - 1) * interface_dof_count -
+              (2 * interface_dof_count),
+          global_dof_count);
+    }
   }
 
   deallog << "Computing block counts" << std::endl;
@@ -466,14 +474,18 @@ void Waveguide::setup_system() {
   for (unsigned int i = 0; i < Layers; i++) {
     int size = Block_Sizes[i];
     bool local = (i == rank);
-    bool readable = (i == rank) || (i == rank + 1);
+    bool readable = (i == rank) || (i == rank - 1);
     IndexSet temp(size);
     if (local) {
       temp.add_range(0, size);
     }
     IndexSet temp2(size);
     if (readable) {
-      temp2.add_range(0, size);
+      if (i == rank) {
+        temp2.add_range(0, size);
+      } else {
+        temp2.add_range(size-interface_dof_count, size);
+      }
     }
 
     i_sys_owned[i] = temp;
@@ -1702,13 +1714,47 @@ void Waveguide::solve() {
     // temp_s.solve(system_matrix, solution, system_rhs);
   }
   deallog << "Building local vector:" << std::endl;
+  solution->update_ghost_values();
+  deallog << "Locally owned dofs:" << std::endl;
+  locally_owned_dofs.print(deallog);
+  deallog << "Locally relevant dofs:" << std::endl;
+  locally_relevant_dofs.print(deallog);
+  unsigned int i;
+  for (i = 0; i < Layers; ++i) {
+    deallog << "Block " << i << " of i_sys_owned: " << std::endl;
+    i_sys_owned[i].print(deallog);
+  }
+  for (i = 0; i < Layers; ++i) {
+    deallog << "Block " << i << " of i_sys_readable: " << std::endl;
+    i_sys_readable[i].print(deallog);
+  }
   if (primal) {
-    primal_with_relevant.reinit(n_dofs);
-    for (unsigned int i = 0; i < n_dofs; i++) {
-      int index = local_to_global_index(i);
-      primal_with_relevant[i] = solution->operator[](index);
+    deallog << "Primal case:" << std::endl;
+    try {
+      primal_with_relevant.reinit(n_dofs);
+    } catch (...) {
+      std::cout << "Error 1." << std::endl;
+    }
+    for (unsigned int i = n_dofs - 1; i >= 0; i--) {
+      int index = 0;
+      try {
+        index = local_to_global_index(i);
+      } catch (...) {
+        std::cout << "Error 2." << std::endl;
+      }
+      try {
+        primal_with_relevant[i] = solution->operator[](index);
+      } catch (...) {
+        std::cout << "Error detected." << std::endl;
+        std::cout.flush();
+        deallog << "Broke for Current local index: " << i
+                << " and global index: " << index << std::endl;
+        deallog << "Shutting down due to error." << std::endl;
+        exit(0);
+      }
     }
   } else {
+    deallog << "Dual case:" << std::endl;
     dual_with_relevant.reinit(n_dofs);
     for (unsigned int i = 0; i < n_dofs; i++) {
       int index = local_to_global_index(i);

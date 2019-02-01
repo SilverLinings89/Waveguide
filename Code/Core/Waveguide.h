@@ -562,8 +562,8 @@ class Waveguide {
 
   Vector<double> preconditioner_rhs;
 
-  LinearAlgebra::distributed::Vector<double> primal_with_relevant;
-  LinearAlgebra::distributed::Vector<double> dual_with_relevant;
+  dealii::Vector<double> primal_with_relevant;
+  dealii::Vector<double> dual_with_relevant;
 
   std::vector<IndexSet> locally_relevant_dofs_all_processors;
   IndexSet UpperDofs, LowerDofs;
@@ -613,6 +613,7 @@ class Waveguide {
   IndexSet InputInterfaceDofs;
   double cell_layer_z;
   std::vector<ConstraintPair> periodicity_constraints;
+  std::vector<unsigned int> l2g;
 };
 
 #endif
