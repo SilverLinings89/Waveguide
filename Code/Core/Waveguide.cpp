@@ -718,6 +718,8 @@ void Waveguide::Prepare_Boundary_Constraints() {
   cm_prec_even.reinit(locally_relevant_dofs);
   cm_prec_odd.reinit(locally_relevant_dofs);
 
+  ProjectBoundaryConditions();
+
   DoFTools::make_hanging_node_constraints(dof_handler, cm);
   DoFTools::make_hanging_node_constraints(dof_handler, cm_prec_even);
   DoFTools::make_hanging_node_constraints(dof_handler, cm_prec_odd);
@@ -863,7 +865,13 @@ void Waveguide::reinit_rhs() {
 }
 
 void Waveguide::reinit_solution() {
-  solution->reinit(i_sys_owned, i_sys_readable, mpi_comm, true);
+  std::vector<IndexSet> ghost;
+  for (unsigned int i = 0; i < i_sys_owned.size(); i++) {
+    IndexSet temp = i_sys_readable[i];
+    temp.subtract_set(i_sys_owned[i]);
+    ghost.push_back(temp);
+  }
+  solution->reinit(i_sys_owned, ghost, mpi_comm, true);
   EstimatedSolution.reinit(i_sys_owned, mpi_comm);
   ErrorOfSolution.reinit(i_sys_owned, mpi_comm);
 }
@@ -1232,14 +1240,6 @@ void Waveguide::MakeBoundaryConditions() {
 
   cell = dof_handler.begin_active();
   dealii::ZeroFunction<3, double> zf(6);
-  /**
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 3,
-                                                       cm);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1,
-                                                       cm);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2,
-                                                       cm);
-  **/
   const unsigned int face_own_count = std::max(
       static_cast<unsigned int>(0),
       fe.dofs_per_face - GeometryInfo<3>::lines_per_face * fe.dofs_per_line);
@@ -1253,9 +1253,7 @@ void Waveguide::MakeBoundaryConditions() {
           << ". Own: " << face_own_count << "." << std::endl;
   deallog << "Dofs per cell: " << fe.dofs_per_cell
           << ". Own: " << cell_own_count << "." << std::endl;
-  if (run_number == 0) {
-    fixed_dofs.set_size(n_global_dofs);
-  }
+
   for (; cell != endc; ++cell) {
       for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
         Point<3, double> center = (cell->face(i))->center(true, false);
@@ -1269,9 +1267,9 @@ void Waveguide::MakeBoundaryConditions() {
             }
             for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
               if (locally_owned_dofs.is_element(local_line_dofs[k])) {
-                cm.add_line(local_line_dofs[k]);
-                cm.set_inhomogeneity(local_line_dofs[k], 0.0);
-                fixed_dofs.add_index(local_line_dofs[k]);
+                // cm.add_line(local_line_dofs[k]);
+                // cm.set_inhomogeneity(local_line_dofs[k], 0.0);
+                // fixed_dofs.add_index(local_line_dofs[k]);
               }
             }
           }
@@ -1284,9 +1282,9 @@ void Waveguide::MakeBoundaryConditions() {
                      GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
                  j < fe.dofs_per_face; j++) {
               if (locally_owned_dofs.is_element(local_face_dofs[j])) {
-                cm.add_line(local_face_dofs[j]);
-                cm.set_inhomogeneity(local_face_dofs[j], 0.0);
-                fixed_dofs.add_index(local_face_dofs[j]);
+                // cm.add_line(local_face_dofs[j]);
+                // cm.set_inhomogeneity(local_face_dofs[j], 0.0);
+                // fixed_dofs.add_index(local_face_dofs[j]);
               }
             }
           }
@@ -1300,9 +1298,9 @@ void Waveguide::MakeBoundaryConditions() {
             }
             for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
               if (locally_owned_dofs.is_element(local_line_dofs[k])) {
-                cm.add_line(local_line_dofs[k]);
-                cm.set_inhomogeneity(local_line_dofs[k], 0.0);
-                fixed_dofs.add_index(local_line_dofs[k]);
+                // cm.add_line(local_line_dofs[k]);
+                // cm.set_inhomogeneity(local_line_dofs[k], 0.0);
+                // fixed_dofs.add_index(local_line_dofs[k]);
               }
             }
           }
@@ -1315,9 +1313,9 @@ void Waveguide::MakeBoundaryConditions() {
                      GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
                  j < fe.dofs_per_face; j++) {
               if (locally_owned_dofs.is_element(local_face_dofs[j])) {
-                cm.add_line(local_face_dofs[j]);
-                cm.set_inhomogeneity(local_face_dofs[j], 0.0);
-                fixed_dofs.add_index(local_face_dofs[j]);
+                // cm.add_line(local_face_dofs[j]);
+                // cm.set_inhomogeneity(local_face_dofs[j], 0.0);
+                // fixed_dofs.add_index(local_face_dofs[j]);
               }
             }
           }
@@ -1332,12 +1330,12 @@ void Waveguide::MakeBoundaryConditions() {
               }
               for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
                 if (locally_owned_dofs.is_element(local_line_dofs[k])) {
-                  fixed_dofs.add_index(local_line_dofs[k]);
+                  // fixed_dofs.add_index(local_line_dofs[k]);
                 }
               }
               if (fe.dofs_per_line >= 2) {
-                cm.add_line(local_line_dofs[1]);
-                cm.set_inhomogeneity(local_line_dofs[1], 0.0);
+                // cm.add_line(local_line_dofs[1]);
+                // cm.set_inhomogeneity(local_line_dofs[1], 0.0);
               }
             }
           }
@@ -1350,7 +1348,7 @@ void Waveguide::MakeBoundaryConditions() {
                      GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
                  j < fe.dofs_per_face; j++) {
               if (locally_owned_dofs.is_element(local_face_dofs[j])) {
-                fixed_dofs.add_index(local_face_dofs[j]);
+                // fixed_dofs.add_index(local_face_dofs[j]);
               }
             }
           }
@@ -1364,9 +1362,9 @@ void Waveguide::MakeBoundaryConditions() {
             }
             for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
               if (locally_owned_dofs.is_element(local_line_dofs[k])) {
-                cm.add_line(local_line_dofs[k]);
-                cm.set_inhomogeneity(local_line_dofs[k], 0.0);
-                fixed_dofs.add_index(local_line_dofs[k]);
+                // cm.add_line(local_line_dofs[k]);
+                // cm.set_inhomogeneity(local_line_dofs[k], 0.0);
+                // fixed_dofs.add_index(local_line_dofs[k]);
               }
             }
           }
@@ -1379,55 +1377,91 @@ void Waveguide::MakeBoundaryConditions() {
                      GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
                  j < fe.dofs_per_face; j++) {
               if (locally_owned_dofs.is_element(local_face_dofs[j])) {
-                cm.add_line(local_face_dofs[j]);
-                cm.set_inhomogeneity(local_face_dofs[j], 0.0);
-                fixed_dofs.add_index(local_face_dofs[j]);
+                // cm.add_line(local_face_dofs[j]);
+                // cm.set_inhomogeneity(local_face_dofs[j], 0.0);
+                // fixed_dofs.add_index(local_face_dofs[j]);
               }
             }
           }
         }
       }
     }
+    // fixed_dofs.clear();
+}
+
+void Waveguide::ProjectBoundaryConditions() {
+  // Index 0 is mantle, 1 is the lower interface (-z), 2 is the upper interface
+  // (+z).
+  dealii::ZeroFunction<3, double> zf(6);
+  fixed_dofs.set_size(n_global_dofs);
+  bool one_done = false;
+  bool two_done = false;
+  // Mantle is set 0 for every process.
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 0,
+                                                       cm_prec_odd);
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 0,
+                                                       cm_prec_even);
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 0,
+                                                       cm);
+  if (rank == 0) {
+    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1,
+                                                         cm);
+    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1,
+                                                         cm_prec_even);
+    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1,
+                                                         cm_prec_odd);
+    one_done = true;
+  }
+
+  if (rank == GlobalParams.NumberProcesses - 1) {
+    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2,
+                                                         cm);
+    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2,
+                                                         cm_prec_even);
+    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2,
+                                                         cm_prec_odd);
+    two_done = true;
+  }
+
+  if (even) {
+    if (!one_done) {
+      VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf,
+                                                           1, cm_prec_even);
+    }
+    if (!two_done) {
+      VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf,
+                                                           2, cm_prec_odd);
+    }
+  } else {
+    if (!two_done) {
+      VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf,
+                                                           2, cm_prec_even);
+    }
+    if (!one_done) {
+      VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf,
+                                                           1, cm_prec_odd);
+    }
+  }
+
+  for (unsigned int i = 0; i < n_dofs; i++) {
+    if (cm.is_constrained(i)) {
+      fixed_dofs.add_index(local_to_global_index(i));
+    }
+  }
 }
 
 void Waveguide::MakePreconditionerBoundaryConditions() {
   dealii::DoFHandler<3>::active_cell_iterator cell_loc, endc;
   cell_loc = dof_handler.begin_active();
   endc = dof_handler.end();
-  /**
-  dealii::ZeroFunction<3, double> zf(6);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 3,
-                                                       cm_prec_even);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 3,
-                                                       cm_prec_odd);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1,
-                                                       cm_prec_even);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1,
-                                                       cm_prec_odd);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2,
-                                                       cm_prec_even);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2,
-                                                       cm_prec_odd);
-   **/
+
   double layer_length = GlobalParams.LayerThickness;
   IndexSet own(n_global_dofs);
   own.add_indices(locally_owned_dofs);
-  if (run_number == 0) {
-    sweepable.set_size(n_global_dofs);
-    sweepable.add_indices(locally_owned_dofs);
-  }
   if (rank != 0) {
     own.add_indices(LowerDofs);
   }
 
-  const int face_own_count =
-      fe.dofs_per_face - GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
-  const bool has_non_edge_dofs = (face_own_count > 0);
-
-  std::vector<types::global_dof_index> local_face_dofs(fe.dofs_per_face);
-
-  std::vector<types::global_dof_index> local_dof_indices(fe.dofs_per_line);
-  std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
 
   cm_prec_even.merge(
       cm, dealii::ConstraintMatrix::MergeConflictBehavior::right_object_wins,
@@ -1435,7 +1469,7 @@ void Waveguide::MakePreconditionerBoundaryConditions() {
   cm_prec_odd.merge(
       cm, dealii::ConstraintMatrix::MergeConflictBehavior::right_object_wins,
       true);
-
+/**
   for (; cell_loc != endc; ++cell_loc) {
     if (std::abs(static_cast<int>((cell_loc->subdomain_id() - rank))) < 3) {
       for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
@@ -1518,8 +1552,10 @@ void Waveguide::MakePreconditionerBoundaryConditions() {
       }
     }
   }
+  **/
 }
 
+/**
 std::vector<unsigned int> Waveguide::Add_Zero_Restraint(
     dealii::ConstraintMatrix *in_cm,
     dealii::DoFHandler<3>::active_cell_iterator &in_cell, unsigned int in_face,
@@ -1557,6 +1593,7 @@ std::vector<unsigned int> Waveguide::Add_Zero_Restraint(
   }
   return ret;
 }
+**/
 
 void Waveguide::solve() {
   SolverControl lsc =
@@ -1603,8 +1640,11 @@ void Waveguide::solve() {
       below = locally_relevant_dofs_all_processors[rank - 1].n_elements();
     }
 
+    deallog << "Initializing Preconditioner. Locally owned dofs: "
+            << locally_owned_dofs.n_elements() << " above: " << above
+            << " below: " << below << std::endl;
     PreconditionerSweeping sweep(mpi_comm, locally_owned_dofs.n_elements(),
-                                 above, below,
+                                 above, below, interface_dof_count,
                                  dof_handler.max_couplings_between_dofs(),
                                  locally_owned_dofs, &fixed_dofs, rank, false);
 
@@ -1730,29 +1770,20 @@ void Waveguide::solve() {
   }
   if (primal) {
     deallog << "Primal case:" << std::endl;
-    try {
-      primal_with_relevant.reinit(n_dofs);
-    } catch (...) {
-      std::cout << "Error 1." << std::endl;
-    }
-    for (unsigned int i = n_dofs - 1; i >= 0; i--) {
-      int index = 0;
-      try {
-        index = local_to_global_index(i);
-      } catch (...) {
-        std::cout << "Error 2." << std::endl;
+    primal_with_relevant.reinit(n_dofs);
+    for (int i = n_dofs - 1; i >= 0; i--) {
+      int index = local_to_global_index(i);
+        if (GlobalParams.MPI_Rank == 0) {
+          primal_with_relevant[i] = solution->operator[](i);
+        } else {
+          if (i < interface_dof_count) {
+            primal_with_relevant[i] = 0;
+          } else {
+            primal_with_relevant[i] = solution->operator[](index);
+          }
+        }
+
       }
-      try {
-        primal_with_relevant[i] = solution->operator[](index);
-      } catch (...) {
-        std::cout << "Error detected." << std::endl;
-        std::cout.flush();
-        deallog << "Broke for Current local index: " << i
-                << " and global index: " << index << std::endl;
-        deallog << "Shutting down due to error." << std::endl;
-        exit(0);
-      }
-    }
   } else {
     deallog << "Dual case:" << std::endl;
     dual_with_relevant.reinit(n_dofs);

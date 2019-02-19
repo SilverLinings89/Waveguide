@@ -79,8 +79,8 @@ class PreconditionerSweeping : dealii::TrilinosWrappers::PreconditionBase {
    * \tilde{\epsilon}\boldsymbol{E} = 0 \f]
    */
   PreconditionerSweeping(MPI_Comm in_mpi_comm, int in_own, int in_others,
-                         int in_above, int bandwidth,
-                         dealii::IndexSet locally_owned,
+                         int in_above, unsigned int interface_count,
+                         int bandwidth, dealii::IndexSet locally_owned,
                          dealii::IndexSet *in_fixed_dofs, int rank, bool fast);
 
   ~PreconditionerSweeping();
@@ -153,6 +153,7 @@ class PreconditionerSweeping : dealii::TrilinosWrappers::PreconditionBase {
   int bandwidth;
   MPI_Comm mpi_comm;
   int above;
+  unsigned int interface_dof_count;
 };
 
 #endif  //  CODE_CORE_PRECONDITIONERSWEEPING_H_

@@ -24,12 +24,11 @@ dealii::SparsityPattern off_diag_block_lower, off_diag_block_upper;
 
 PreconditionerSweeping::~PreconditionerSweeping() { delete solver; }
 
-PreconditionerSweeping::PreconditionerSweeping(MPI_Comm in_mpi_comm, int in_own,
-                                               int in_others, int in_above,
-                                               int in_bandwidth,
-                                               IndexSet in_locally_owned_dofs,
-                                               IndexSet *in_fixed_dofs,
-                                               int in_rank, bool in_fast) {
+PreconditionerSweeping::PreconditionerSweeping(
+    MPI_Comm in_mpi_comm, int in_own, int in_others, int in_above,
+    unsigned int interface, int in_bandwidth, IndexSet in_locally_owned_dofs,
+    IndexSet *in_fixed_dofs, int in_rank, bool in_fast) {
+  interface_dof_count = interface;
   locally_owned_dofs = in_locally_owned_dofs;
   own = in_own;
   others = in_others;
@@ -54,9 +53,8 @@ PreconditionerSweeping::PreconditionerSweeping(MPI_Comm in_mpi_comm, int in_own,
 void PreconditionerSweeping::Prepare(TrilinosWrappers::MPI::BlockVector &inp) {
   boundary.reinit(own, false);
   for (int i = 0; i < own; i++) {
-    boundary[i] = inp[i];
+    // boundary[i] = inp[i];
   }
-  return;
 }
 
 void PreconditionerSweeping::vmult(
@@ -231,6 +229,7 @@ void PreconditionerSweeping::init(
   deallog << "Prepare Objects" << std::endl;
   solver = new SparseDirectUMFPACK();
   IndexSet local(matrix->m());
+  deallog << "Found m = " << matrix->m() << std::endl;
   local.add_range(0, matrix->m());
   dealii::SparsityPattern sparsity_pattern;
   dealii::SparseMatrix<double> *temp;
@@ -239,11 +238,13 @@ void PreconditionerSweeping::init(
   sparsity_pattern.reinit(own + others, own + others, bandwidth);
   TrilinosWrappers::SparseMatrix::iterator it = matrix->begin();
   TrilinosWrappers::SparseMatrix::iterator end = matrix->end();
+  int cnt = 0;
   for (; it != end; it++) {
     sparsity_pattern.add(it->row(), it->column());
+    cnt++;
   }
   sparsity_pattern.compress();
-
+  deallog << "Added " << cnt << " entries to sp." << std::endl;
   temp = new dealii::SparseMatrix<double>(sparsity_pattern);
   deallog << "Copy Matrix" << std::endl;
   temp->copy_from(*matrix);

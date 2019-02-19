@@ -367,6 +367,14 @@ class Waveguide {
   void MakePreconditionerBoundaryConditions();
 
   /**
+   * This function projects the boundary conditions for all matrices i.e. the
+   * preconditioner matrices as well as the system matrix. This has to be used
+   * BEFORE the matrices are shifted since it uses functions that derive indices
+   * from the dof_handler functions.
+   */
+  void ProjectBoundaryConditions();
+
+  /**
    * This function executes refined downstream ordering of degrees of freedom.
    */
   void Compute_Dof_Numbers();
@@ -499,9 +507,11 @@ class Waveguide {
 
   IndexSet combine_indexes(IndexSet lower, IndexSet upper) const;
 
+  /**
   std::vector<unsigned int> Add_Zero_Restraint(
       dealii::ConstraintMatrix *, dealii::DoFHandler<3>::active_cell_iterator &,
       unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet);
+      **/
 
   unsigned int local_to_global_index(unsigned int local_index);
 
