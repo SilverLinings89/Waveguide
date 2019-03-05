@@ -575,7 +575,7 @@ class Waveguide {
   dealii::Vector<double> primal_with_relevant;
   dealii::Vector<double> dual_with_relevant;
 
-  std::vector<IndexSet> locally_relevant_dofs_all_processors;
+  std::vector<IndexSet> locally_owned_dofs_all_processors;
   IndexSet UpperDofs, LowerDofs;
   IndexSet JumpDofs;
   int run_number;
