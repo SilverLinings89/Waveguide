@@ -68,34 +68,32 @@ void SquareMeshGenerator::set_boundary_ids(Triangulation<3> &tria) const {
       GlobalParams.Minimum_Z +
       ((double)GlobalParams.MPI_Rank) * GlobalParams.LayerThickness;
   double local_upper_bound = local_lower_bound + GlobalParams.LayerThickness;
-  int lower_faces = 0;
-  int upper_faces = 0;
   for (; cell2 != endc2; ++cell2) {
     if (cell2->at_boundary()) {
       for (int j = 0; j < 6; j++) {
         Point<3> ctr = cell2->face(j)->center();
         if (cell2->face(j)->at_boundary()) {
-          cell2->face(j)->set_all_boundary_ids(0);
-
-          if (std::abs(ctr(2) - local_lower_bound) < 0.00001) {
+          if (std::abs(ctr(0) - GlobalParams.M_R_XLength / 2.0) < 0.00001) {
+            cell2->face(j)->set_all_boundary_ids(0);
+          }
+          if (std::abs(ctr(0) + GlobalParams.M_R_XLength / 2.0) < 0.00001) {
             cell2->face(j)->set_all_boundary_ids(1);
-            lower_faces++;
+          }
+          if (std::abs(ctr(1) - GlobalParams.M_R_YLength / 2.0) < 0.00001) {
+            cell2->face(j)->set_all_boundary_ids(2);
+          }
+          if (std::abs(ctr(1) + GlobalParams.M_R_YLength / 2.0) < 0.00001) {
+            cell2->face(j)->set_all_boundary_ids(3);
+          }
+          if (std::abs(ctr(2) - local_lower_bound) < 0.00001) {
+            cell2->face(j)->set_all_boundary_ids(4);
           }
           if (std::abs(ctr(2) - local_upper_bound) < 0.00001) {
-            cell2->face(j)->set_all_boundary_ids(2);
-            upper_faces++;
+            cell2->face(j)->set_all_boundary_ids(5);
           }
         }
       }
     }
-  }
-  if (lower_faces <= 0 || upper_faces <= 0 || lower_faces != upper_faces) {
-    deallog << "There was an error in mesh generation. The faces don't match "
-               "the requirements. Check mesh generation code in squaremesh "
-               "generator - set_boundary_ids."
-            << std::endl;
-  } else {
-    deallog << "There are " << upper_faces << " boundary faces." << std::endl;
   }
 }
 

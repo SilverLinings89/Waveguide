@@ -236,6 +236,12 @@ class Waveguide {
 
   Point<3, double> transform_coordinate(const Point<3, double>);
 
+  void Add_Zero_Restraint(ConstraintMatrix *in_cm,
+                          DoFHandler<3>::active_cell_iterator &in_cell,
+                          unsigned int in_face, unsigned int DofsPerLine,
+                          unsigned int DofsPerFace, bool in_non_face_dofs,
+                          IndexSet locally_owned_dofs);
+
   MeshGenerator *mg;
 
  private:
@@ -527,7 +533,7 @@ class Waveguide {
 
   MPI_Comm mpi_comm;
 
-  Triangulation<3>::active_cell_iterator cell, endc;
+  DoFHandler<3>::active_cell_iterator cell, endc;
 
   FESystem<3> fe;
 

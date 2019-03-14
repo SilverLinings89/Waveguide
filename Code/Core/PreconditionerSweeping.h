@@ -128,6 +128,9 @@ class PreconditionerSweeping : dealii::TrilinosWrappers::PreconditionBase {
 
   dealii::SparseMatrix<double> *prec_matrix_lower;
 
+  dealii::SparseMatrix<double> *p_upper;
+  dealii::SparseMatrix<double> *p_lower;
+
   void Prepare(dealii::TrilinosWrappers::MPI::BlockVector &src);
 
   void init(dealii::SolverControl in_sc,
