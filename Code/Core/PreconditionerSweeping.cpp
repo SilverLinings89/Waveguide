@@ -69,14 +69,12 @@ void PreconditionerSweeping::vmult(
   deallog << "N1: " << input.l2_norm() << std::endl;
   if ((int)rank + 1 == GlobalParams.NumberProcesses) {
     solver->solve(input);
-    deallog << "N2a: " << input.l2_norm() << std::endl;
     MPI_Send(&input[0], own, MPI_DOUBLE, rank - 1, 0, mpi_comm);
   } else {
     MPI_Recv(&recv_buffer_below[0], others, MPI_DOUBLE, rank + 1, 0, mpi_comm,
              MPI_STATUS_IGNORE);
     UpperProduct(recv_buffer_below, temp_own);
     input -= temp_own;
-    deallog << "N2b: " << input.l2_norm() << std::endl;
     if (rank != 0) {
       Hinv(input, temp_own);
       MPI_Send(&temp_own[0], own, MPI_DOUBLE, rank - 1, 0, mpi_comm);
@@ -88,7 +86,6 @@ void PreconditionerSweeping::vmult(
     }
     Hinv(temp_own, input);
   }
-  deallog << "N3: " << input.l2_norm() << std::endl;
   if (rank == 0) {
     MPI_Send(&input[0], own, MPI_DOUBLE, rank + 1, 0, mpi_comm);
   } else {
@@ -98,13 +95,9 @@ void PreconditionerSweeping::vmult(
     for (unsigned int i = 0; i < above; i++) {
       recv_norm += std::abs(recv_buffer_above[i]);
     }
-    deallog << "Recv_Norm: " << recv_norm << std::endl;
     LowerProduct(recv_buffer_above, temp_own);
-    deallog << "After L Product: " << temp_own.l2_norm() << std::endl;
     Hinv(temp_own, temp_own_2);
-    deallog << "After Hinv: " << temp_own_2.l2_norm() << std::endl;
     input -= temp_own_2;
-    deallog << "N4: " << input.l2_norm() << std::endl;
     if ((int)rank + 1 < GlobalParams.NumberProcesses) {
       MPI_Send(&input[0], own, MPI_DOUBLE, rank + 1, 0, mpi_comm);
     }
@@ -122,8 +115,6 @@ void PreconditionerSweeping::vmult(
       delta += std::abs(dst[indices[i]] - src[indices[i]]);
     }
   }
-  std::cout << "Delta: " << delta << " from " << GlobalParams.MPI_Rank
-            << std::endl;
 }
 
 void PreconditionerSweeping::Hinv(const dealii::Vector<double> &src,
@@ -138,6 +129,50 @@ void PreconditionerSweeping::Hinv(const dealii::Vector<double> &src,
   for (int i = 0; i < own; i++) {
     dst[i] = inputb[i];
   }
+}
+
+void PreconditionerSweeping::init(SolverControl,
+                                  dealii::SparseMatrix<double> *in_prec_upper,
+                                  dealii::SparseMatrix<double> *in_prec_lower) {
+  deallog.push("Init Preconditioner");
+  deallog << "Prepare Objects" << std::endl;
+  solver = new SparseDirectUMFPACK();
+  IndexSet local(matrix->m());
+  deallog << "Found m = " << matrix->m() << std::endl;
+  local.add_range(0, matrix->m());
+  dealii::DynamicSparsityPattern sparsity_pattern;
+  dealii::SparseMatrix<double> *temp;
+  // Main Matrix Preparation
+
+  sparsity_pattern.reinit(own + others, own + others);
+  TrilinosWrappers::SparseMatrix::iterator it = matrix->begin();
+  TrilinosWrappers::SparseMatrix::iterator end = matrix->end();
+  int cnt = 0;
+  for (; it != end; it++) {
+    sparsity_pattern.add(it->row(), it->column());
+    cnt++;
+  }
+  sparsity_pattern.compress();
+  deallog << "Added " << cnt << " entries to sp." << std::endl;
+  SparsityPattern tsp;
+  tsp.copy_from(sparsity_pattern);
+  temp = new dealii::SparseMatrix<double>(tsp);
+  deallog << "Copy Matrix" << std::endl;
+  temp->copy_from(*matrix);
+  deallog << "Factorize Matrix" << std::endl;
+  solver->factorize(*temp);
+  temp->clear();
+  temp = 0;
+
+  prec_matrix_lower = in_prec_lower;
+  prec_matrix_upper = in_prec_upper;
+  std::ofstream matrix_data1(
+      "temp/Process" + std::to_string(rank) + "-upper.dat", std::ofstream::out);
+  prec_matrix_upper->print(matrix_data1);
+  std::ofstream matrix_data2(
+      "temp/Process" + std::to_string(rank) + "-lower.dat", std::ofstream::out);
+  prec_matrix_lower->print(matrix_data2);
+  deallog.pop();
 }
 
 void PreconditionerSweeping::init(
@@ -171,12 +206,12 @@ void PreconditionerSweeping::init(
   temp->clear();
   temp = 0;
 
-  //   Prec Matrix lower Preparation
+  // Prec Matrix lower Preparation
   deallog << "Prepare Lower Block" << std::endl;
   if (above != 0) {
     off_diag_block_lower.reinit(own, above, bandwidth);
   } else {
-    off_diag_block_lower.reinit(own, own, 120);
+    off_diag_block_lower.reinit(own, own, bandwidth);
   }
 
   it = in_prec_lower->begin();
@@ -193,6 +228,7 @@ void PreconditionerSweeping::init(
     prec_matrix_lower->set(it->row(), it->column(),
                            it->value().operator double());
   }
+  prec_matrix_lower->compress(dealii::VectorOperation::unknown);
   deallog << "Norm of lower: " << prec_matrix_lower->l1_norm() << std::endl;
 
   // Prec Matrix upper Preparation
@@ -205,7 +241,7 @@ void PreconditionerSweeping::init(
       off_diag_block_upper.add(it->row(), it->column());
     }
   } else {
-    off_diag_block_upper.reinit(own, own, 120);
+    off_diag_block_upper.reinit(own, own, bandwidth);
     it = in_prec_upper->begin();
     end = in_prec_upper->end();
     for (; it != end; it++) {
@@ -221,8 +257,8 @@ void PreconditionerSweeping::init(
     prec_matrix_upper->set(it->row(), it->column(),
                            it->value().operator double());
   }
+  prec_matrix_upper->compress(dealii::VectorOperation::unknown);
   deallog << "Norm of upper: " << prec_matrix_upper->l1_norm() << std::endl;
-
   deallog.pop();
 }
 
@@ -231,18 +267,7 @@ void PreconditionerSweeping::UpperProduct(const dealii::Vector<double> &src,
   if ((int)rank + 1 == GlobalParams.NumberProcesses) {
     std::cout << "ERROR!" << std::endl;
   }
-
   prec_matrix_upper->vmult(dst, src);
-  deallog << "Computed upper product with result " << dst.l2_norm()
-          << " input norm was " << src.l2_norm() << std::endl;
-
-  deallog << "src smallest index: " << src.locally_owned_elements().nth_index_in_set(0)<< std::endl;
-  deallog << "src largest index: " << src.locally_owned_elements().nth_index_in_set(src.locally_owned_elements().n_elements()-1)<< std::endl;
-  deallog << "dst smallest index: " << dst.locally_owned_elements().nth_index_in_set(0)<< std::endl;
-  deallog << "dst largest index: " << dst.locally_owned_elements().nth_index_in_set(dst.locally_owned_elements().n_elements()-1)<< std::endl;
-  deallog << "Matrix first entry: Col: " << prec_matrix_upper->begin()->column()
-          << " Row: " << prec_matrix_upper->begin()->row() << " Value "
-          << prec_matrix_upper->begin()->value() << std::endl;
 }
 
 void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> &src,
@@ -250,18 +275,7 @@ void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> &src,
   if ((int)rank == 0) {
     std::cout << "ERROR!" << std::endl;
   }
-
   prec_matrix_lower->vmult(dst, src);
-  deallog << "Computed lower product with result " << dst.l2_norm()
-          << " input norm was " << src.l2_norm() << std::endl;
-  deallog << "src smallest index: " << src.locally_owned_elements().nth_index_in_set(0)<< std::endl;
-    deallog << "src largest index: " << src.locally_owned_elements().nth_index_in_set(src.locally_owned_elements().n_elements()-1)<< std::endl;
-    deallog << "dst smallest index: " << dst.locally_owned_elements().nth_index_in_set(0)<< std::endl;
-    deallog << "dst largest index: " << dst.locally_owned_elements().nth_index_in_set(dst.locally_owned_elements().n_elements()-1)<< std::endl;
-    deallog << "Matrix first entry: Col: "
-            << prec_matrix_lower->begin()->column()
-            << " Row: " << prec_matrix_lower->begin()->row() << " Value "
-            << prec_matrix_lower->begin()->value() << std::endl;
 }
 
 #endif

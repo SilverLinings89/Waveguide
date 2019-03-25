@@ -137,6 +137,9 @@ class PreconditionerSweeping : dealii::TrilinosWrappers::PreconditionBase {
             dealii::TrilinosWrappers::SparseMatrix *,
             dealii::TrilinosWrappers::SparseMatrix *);
 
+  void init(dealii::SolverControl in_sc, dealii::SparseMatrix<double> *,
+            dealii::SparseMatrix<double> *);
+
  private:
   int *indices;
   int own, others;

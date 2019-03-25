@@ -814,27 +814,20 @@ void Waveguide::reinit_systemmatrix() {
   deallog << "Collecting sizes ..." << std::endl;
 
   sp.collect_sizes();
-  std::vector<unsigned int> coupl_vec;
-  const int max_couplings = dof_handler.max_couplings_between_dofs();
-  for (unsigned int i = 0; i < n_global_dofs; i++) {
-    if (locally_owned_dofs.is_element(i)) {
-      coupl_vec.push_back(max_couplings);
-    } else {
-      coupl_vec.push_back(0);
-    }
-  }
-  TrilinosWrappers::SparsityPattern sp_temp(n_global_dofs, n_global_dofs,
-                                            coupl_vec);
+
   deallog << "Making BSP ..." << std::endl;
-  DoFTools::make_sparsity_pattern(dof_handler, sp, cm_temp, false);
-  //  for(TrilinosWrappers::SparsityPatternIterators::Iterator it =
-  //  sp_temp.begin(); it != sp_temp.end(); it++){
-  //    // unsigned int row = local_to_global_index(it->row());
-  //    // unsigned int col = local_to_global_index(it->column());
+  DoFTools::make_sparsity_pattern(dof_handler, sp, cm_temp, true);
+  //  for (TrilinosWrappers::SparsityPatternIterators::Iterator it =
+  //           sp_temp.begin();
+  //       it != sp_temp.end(); it++) {
+  //    unsigned int row = it->row();
+  //    unsigned int col = it->column();
+  //    deallog << "Row: " << row << std::endl;
+  //    deallog << "Col: " << col << std::endl;
   //    sp.add(it->row(), it->column());
   //  }
-  //  sp.compress();
-
+  sp.compress();
+  deallog << "Non-zero entries in sp: " << sp.n_nonzero_elements() << std::endl;
   deallog << "Initializing system_matrix ..." << std::endl;
   sp.compress();
   system_matrix.reinit(sp);
@@ -1555,8 +1548,11 @@ void Waveguide::Add_Zero_Restraint(
 }
 
 void Waveguide::solve() {
+  // SolverControl lsc =
+  //    SolverControl(GlobalParams.So_TotalSteps, 1.e-5, true, true);
+  
   SolverControl lsc =
-      SolverControl(GlobalParams.So_TotalSteps, 1.e-5, true, true);
+      SolverControl(30, 1.e-5, true, true);
 
   lsc.log_frequency(1);
 
@@ -1585,10 +1581,11 @@ void Waveguide::solve() {
       }
     }
 
-    dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(
+    
+     dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector> solver(
         lsc, dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::
                  AdditionalData(GlobalParams.So_RestartSteps));
-
+    
     int above = 0;
     if (static_cast<int>(rank) != GlobalParams.NumberProcesses - 1) {
       above = locally_owned_dofs_all_processors[rank + 1].n_elements();
@@ -1624,21 +1621,51 @@ void Waveguide::solve() {
     }
 
     deallog << "Initializing the Preconditioner..." << std::endl;
+    int upper =
+        std::min((int)(GlobalParams.NumberProcesses - 1), (int)(rank + 1));
+    int lower = std::max((int)(rank - 1), 0);
 
-    timer.enter_subsection("Preconditioner Initialization");
-    if (static_cast<int>(rank) < GlobalParams.NumberProcesses - 1 &&
-        static_cast<int>(rank) > 0) {
-      sweep.init(solver_control, &system_matrix.block(rank, rank + 1),
-                 &system_matrix.block(rank, rank - 1));
-    } else {
-      if (static_cast<int>(rank) == GlobalParams.NumberProcesses - 1) {
-        sweep.init(solver_control, &system_matrix.block(rank, rank),
-                   &system_matrix.block(rank, rank - 1));
-      } else {
-        sweep.init(solver_control, &system_matrix.block(rank, rank + 1),
-                   &system_matrix.block(rank, rank));
+    dealii::DynamicSparsityPattern upper_block_sp(
+        system_matrix.block(rank, upper).m(),
+        system_matrix.block(rank, upper).n());
+    dealii::DynamicSparsityPattern lower_block_sp(
+        system_matrix.block(rank, lower).m(),
+        system_matrix.block(rank, lower).n());
+
+    if (GlobalParams.NumberProcesses != rank + 1) {
+      for (auto it = system_matrix.block(rank, upper).begin();
+           it != system_matrix.block(rank, upper).end(); it++) {
+        upper_block_sp.add(it->row(), it->column());
       }
     }
+    SparsityPattern usp;
+    usp.copy_from(upper_block_sp);
+    dealii::SparseMatrix<double> upper_block(usp);
+    if (GlobalParams.NumberProcesses != rank + 1) {
+      for (auto it = system_matrix.block(rank, upper).begin();
+           it != system_matrix.block(rank, upper).end(); it++) {
+        upper_block.set(it->row(), it->column(), it->value());
+      }
+    }
+
+    if (rank != 0) {
+      for (auto it = system_matrix.block(rank, lower).begin();
+           it != system_matrix.block(rank, lower).end(); it++) {
+        lower_block_sp.add(it->row(), it->column());
+      }
+    }
+    SparsityPattern lsp;
+    lsp.copy_from(lower_block_sp);
+    dealii::SparseMatrix<double> lower_block(lsp);
+    if (rank != 0) {
+      for (auto it = system_matrix.block(rank, lower).begin();
+           it != system_matrix.block(rank, lower).end(); it++) {
+        lower_block.set(it->row(), it->column(), it->value());
+      }
+    }
+    timer.enter_subsection("Preconditioner Initialization");
+
+    sweep.init(solver_control, &upper_block, &lower_block);
 
     solver.connect(std_cxx11::bind(&Waveguide::residual_tracker, this,
                                    std_cxx11::_1, std_cxx11::_2,
@@ -1729,16 +1756,16 @@ void Waveguide::solve() {
   }
   if (primal) {
     deallog << "Primal case:" << std::endl;
-    primal_with_relevant.reinit(n_dofs);
-    for (int i = 0; i < n_dofs; i++) {
+    primal_with_relevant.reinit(n_global_dofs);
+    for (unsigned int i = 0; i < n_dofs; i++) {
       unsigned int index = local_to_global_index(i);
       if (GlobalParams.MPI_Rank == 0) {
         primal_with_relevant[i] = solution->operator[](i);
       } else {
         if (i < interface_dof_count) {
-          primal_with_relevant[i] = 0;
+          primal_with_relevant[index] = 0;
         } else {
-          primal_with_relevant[i] = solution->operator[](index);
+          primal_with_relevant[index] = solution->operator[](index);
         }
       }
     }
@@ -1768,64 +1795,6 @@ void Waveguide::store() {
 }
 
 void Waveguide::output_results(bool) {
-  /**
-  for (unsigned int i = 0; i < locally_owned_dofs.n_elements(); i++) {
-    unsigned int index = locally_owned_dofs.nth_index_in_set(i);
-    ErrorOfSolution[index] = (*solution)[index] - EstimatedSolution[index];
-  }
-
-  double sol_real, sol_imag;
-  for (unsigned int i = 0; i < locally_owned_dofs.n_elements(); i += 2) {
-    unsigned int index = locally_owned_dofs.nth_index_in_set(i);
-    unsigned int index2 = locally_owned_dofs.nth_index_in_set(i + 1);
-    if (index != index2 - 1)
-      std::cout << "WEIRD EVENT IN OUTPUT RESULTS" << std::endl;
-    sol_real = (*solution)[index];
-    sol_real = sol_real * sol_real;
-    sol_imag = (*solution)[index2];
-    sol_imag = sol_imag * sol_imag;
-    ErrorOfSolution[index] = std::sqrt(sol_real + sol_imag);
-  }
-
-  MPI_Barrier(mpi_comm);
-
-  std::vector<IndexSet> i_sys_relevant;
-  i_sys_relevant.resize(GlobalParams.NumberProcesses);
-  int below = 0;
-  for (int i = 0; i < GlobalParams.NumberProcesses; i++) {
-    IndexSet local(Block_Sizes[i]);
-    if (i != static_cast<int>(rank)) {
-      for (unsigned int j = 0; j < locally_relevant_dofs.n_elements(); j++) {
-        int idx = locally_relevant_dofs.nth_index_in_set(j);
-        if (idx >= below && idx < below + Block_Sizes[i]) {
-          local.add_index(idx - below);
-        }
-      }
-    } else {
-      local = i_sys_owned[i];
-    }
-    below += Block_Sizes[i];
-    i_sys_relevant[i] = local;
-  }
-
-  TrilinosWrappers::MPI::BlockVector solution_output(i_sys_owned,
-                                                     i_sys_relevant, mpi_comm);
-  solution_output = *solution;
-
-  TrilinosWrappers::MPI::BlockVector estimate_output(i_sys_owned,
-                                                     i_sys_relevant, mpi_comm);
-  estimate_output = EstimatedSolution;
-
-  TrilinosWrappers::MPI::BlockVector error_output(i_sys_owned, i_sys_relevant,
-                                                  mpi_comm);
-  error_output = ErrorOfSolution;
-
-  MPI_Barrier(mpi_comm);
-  **/
-  // std::cout << rank << ": " <<locally_owned_dofs.n_elements()<< ","
-  // <<locally_owned_dofs.nth_index_in_set(0) << "," <<
-  // locally_owned_dofs.nth_index_in_set(locally_owned_dofs.n_elements()-1)
-  // <<std::endl; evaluate_overall();
   if (true) {
     DataOut<3> data_out;
 
@@ -1841,17 +1810,7 @@ void Waveguide::output_results(bool) {
           dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
                                   3>::DataVectorType::type_dof_data);
     }
-    /**
-    data_out.add_data_vector(
-        error_output, "Error_Of_Estimated_Solution",
-        dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
-                                3>::DataVectorType::type_dof_data);
-    data_out.add_data_vector(
-        estimate_output, "Estimated_Solution",
-        dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
-                                3>::DataVectorType::type_dof_data);
-    // data_out.add_data_vector(differences, "L2error");
-**/
+
     data_out.build_patches();
 
     std::ofstream outputvtu(solutionpath + "/" + path_prefix + "/solution-run" +
