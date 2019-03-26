@@ -630,6 +630,7 @@ class Waveguide {
   double cell_layer_z;
   std::vector<ConstraintPair> periodicity_constraints;
   std::vector<unsigned int> l2g;
+  IndexSet ZeroBoundaryDofs;
 };
 
 #endif

@@ -66,7 +66,6 @@ void PreconditionerSweeping::vmult(
   for (unsigned int i = 0; i < sweepable; i++) {
     input[i] = src[indices[i]];
   }
-  deallog << "N1: " << input.l2_norm() << std::endl;
   if ((int)rank + 1 == GlobalParams.NumberProcesses) {
     solver->solve(input);
     MPI_Send(&input[0], own, MPI_DOUBLE, rank - 1, 0, mpi_comm);
