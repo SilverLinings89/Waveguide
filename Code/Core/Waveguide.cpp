@@ -632,10 +632,10 @@ void Waveguide::setup_system() {
     i_prec_even_owned_col.push_back(temp1[GlobalParams.NumberProcesses - 1]);
     i_prec_even_writable.push_back(temp2[GlobalParams.NumberProcesses - 1]);
   }
-
-  Prepare_Boundary_Constraints();
-
-  deallog << "Boundaryconditions prepared." << std::endl;
+  //
+  //  Prepare_Boundary_Constraints();
+  //
+  //  deallog << "Boundaryconditions prepared." << std::endl;
 
   locally_owned_dofs_all_processors.resize(Layers);
 
@@ -677,6 +677,9 @@ void Waveguide::setup_system() {
 
   dof_handler.renumber_dofs(final_numbering);
 
+  Prepare_Boundary_Constraints();
+
+  deallog << "Boundaryconditions prepared." << std::endl;
   reinit_all();
 
   deallog << "Done" << std::endl;
@@ -1211,13 +1214,14 @@ void Waveguide::MakeBoundaryConditions() {
   deallog << "Dofs per cell: " << fe.dofs_per_cell
           << ". Own: " << cell_own_count << "." << std::endl;
   ZeroBoundaryDofs.set_size(n_global_dofs);
+  ZeroBoundaryDofs.clear();
   for (cell = dof_handler.begin_active(); cell != endc; cell++) {
     if (cell->at_boundary()) {
       for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
         if (cell->face(i)->at_boundary()) {
           int b_id = cell->face(i)->boundary_id();
           if ((b_id >= 0 && b_id <= 3) || (rank == 0 && b_id == 4) ||
-              (rank == GlobalParams.NumberProcesses - 1 && b_id == 5)) {
+              ((rank == GlobalParams.NumberProcesses - 1) && b_id == 5)) {
             cell->face(i)->get_dof_indices(local_face_dofs);
             for (unsigned int k = 0; k < fe.dofs_per_face; k++) {
               ZeroBoundaryDofs.add_index(local_face_dofs[k]);
@@ -1228,94 +1232,48 @@ void Waveguide::MakeBoundaryConditions() {
     }
   }
 
-  fixed_dofs.add_indices(ZeroBoundaryDofs);
+  deallog << "Boundary Dofs: " << std::to_string(ZeroBoundaryDofs.n_elements())
+          << std::endl;
+  deallog << "Lowest Index: "
+          << std::to_string(ZeroBoundaryDofs.nth_index_in_set(0))
+          << " Highest: "
+          << std::to_string(ZeroBoundaryDofs.nth_index_in_set(
+                 ZeroBoundaryDofs.n_elements() - 1))
+          << std::endl;
+
   for (unsigned int i = 0; i < ZeroBoundaryDofs.n_elements(); i++) {
     const int idx = ZeroBoundaryDofs.nth_index_in_set(i);
-    deallog << "Adding index " << std::to_string(idx) << std::endl;
     cm.add_line(idx);
     cm.set_inhomogeneity(idx, 0.0);
+    cm_prec_even.add_line(idx);
+    cm_prec_even.set_inhomogeneity(idx, 0.0);
+    cm_prec_odd.add_line(idx);
+    cm_prec_odd.set_inhomogeneity(idx, 0.0);
     fixed_dofs.add_index(idx);
   }
 }
 
 void Waveguide::ProjectBoundaryConditions() {
   dealii::ZeroFunction<3, double> zf(6);
-  fixed_dofs.set_size(n_global_dofs);
-  bool one_done = false;
-  bool two_done = false;
-  // Mantle is set 0 for every process.
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 0,
-                                                       cm_prec_odd);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 0,
-                                                       cm_prec_even);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 0,
-                                                       cm);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1,
-                                                       cm_prec_odd);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1,
-                                                       cm_prec_even);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1,
-                                                       cm);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2,
-                                                       cm_prec_odd);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2,
-                                                       cm_prec_even);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2,
-                                                       cm);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 3,
-                                                       cm_prec_odd);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 3,
-                                                       cm_prec_even);
-  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 3,
-                                                       cm);
-
-
-  if (rank == 0) {
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 4,
-                                                         cm);
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 4,
-                                                         cm_prec_even);
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 4,
-                                                         cm_prec_odd);
-    one_done = true;
-  }
-
-  if (rank == GlobalParams.NumberProcesses - 1) {
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 5,
-                                                         cm);
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 5,
-                                                         cm_prec_even);
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 5,
-                                                         cm_prec_odd);
-    two_done = true;
-  }
 
   if (even) {
-    if (!one_done) {
-      VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf,
-                                                           4, cm_prec_even);
-      VectorTools::project_boundary_values_curl_conforming(dof_handler, 3, zf,
-                                                           4, cm_prec_even);
-    }
-    if (!two_done) {
-      VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf,
-                                                           5, cm_prec_odd);
-      VectorTools::project_boundary_values_curl_conforming(dof_handler, 3, zf,
-                                                           5, cm_prec_odd);
-    }
+    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 4,
+                                                         cm_prec_even);
+    VectorTools::project_boundary_values_curl_conforming(dof_handler, 3, zf, 4,
+                                                         cm_prec_even);
+    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 5,
+                                                         cm_prec_odd);
+    VectorTools::project_boundary_values_curl_conforming(dof_handler, 3, zf, 5,
+                                                         cm_prec_odd);
   } else {
-    if (!two_done) {
       VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf,
                                                            5, cm_prec_even);
       VectorTools::project_boundary_values_curl_conforming(dof_handler, 3, zf,
                                                            5, cm_prec_even);
-    }
-    if (!one_done) {
       VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf,
                                                            4, cm_prec_odd);
       VectorTools::project_boundary_values_curl_conforming(dof_handler, 3, zf,
                                                            4, cm_prec_odd);
-    }
   }
 }
 
@@ -1334,38 +1292,9 @@ void Waveguide::MakePreconditionerBoundaryConditions() {
   bool has_non_edge_dofs = false;
   if (fe.dofs_per_line > 1) has_non_edge_dofs = true;
 
-  cm_prec_even.merge(
-      cm, dealii::ConstraintMatrix::MergeConflictBehavior::right_object_wins,
-      true);
-  cm_prec_odd.merge(
-      cm, dealii::ConstraintMatrix::MergeConflictBehavior::right_object_wins,
-      true);
-
   for (; cell_loc != endc; ++cell_loc) {
     for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
       Point<3, double> center = (cell_loc->face(i))->center(true, false);
-      if (center[0] < 0) center[0] *= (-1.0);
-      if (center[1] < 0) center[1] *= (-1.0);
-
-      // Set x-boundary values
-      if (std::abs(center[0] - GlobalParams.M_R_XLength / 2.0) < 0.0001) {
-        Add_Zero_Restraint(&cm_prec_odd, cell_loc, i, fe.dofs_per_line,
-                           fe.dofs_per_face, has_non_edge_dofs,
-                           locally_owned_dofs);
-        Add_Zero_Restraint(&cm_prec_even, cell_loc, i, fe.dofs_per_line,
-                           fe.dofs_per_face, has_non_edge_dofs,
-                           locally_owned_dofs);
-      }
-
-      // Set y-boundary values
-      if (std::abs(center[1] - GlobalParams.M_R_YLength / 2.0) < 0.0001) {
-        Add_Zero_Restraint(&cm_prec_odd, cell_loc, i, fe.dofs_per_line,
-                           fe.dofs_per_face, has_non_edge_dofs,
-                           locally_owned_dofs);
-        Add_Zero_Restraint(&cm_prec_even, cell_loc, i, fe.dofs_per_line,
-                           fe.dofs_per_face, has_non_edge_dofs,
-                           locally_owned_dofs);
-      }
 
       if (even) {
         if (rank != 0) {
