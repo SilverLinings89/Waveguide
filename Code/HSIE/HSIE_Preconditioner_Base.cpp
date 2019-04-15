@@ -318,8 +318,6 @@ std::complex<double> HSIEPreconditionerBase<hsie_order>::A(
 }
 
 template <int hsie_order>
-
-template <int hsie_order>
 void HSIEPreconditionerBase<hsie_order>::assemble_block() {
   QGauss<2> quadrature_formula(2);
   dealii::FE_Nedelec<2> fe_nedelec;
@@ -349,7 +347,7 @@ void HSIEPreconditionerBase<hsie_order>::assemble_block() {
   HSIE_Dof_Type<hsie_order> *hsie_dofs =
       new HSIE_Dof_Type<hsie_order>[dofs_per_cell];
   for (unsigned int i = 0; i < dofs_per_cell; i++) {
-    hsie_dofs[i] = new HSIE_Dof_Type<hsie_order>()
+    //    hsie_dofs[i] = new HSIE_Dof_Type<hsie_order>()
   }
   for (; cell != endc; ++cell) {
     ned_fe_values.reinit(cell);
