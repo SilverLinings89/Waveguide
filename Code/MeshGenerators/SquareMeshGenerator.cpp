@@ -105,15 +105,17 @@ void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
 
   GridGenerator::hyper_cube(*in_tria, -1.0, 1.0, false);
 
+  GridTools::transform(&Triangulation_Stretch_Single_Part_Z, *in_tria);
+  GridTools::transform(&Triangulation_Stretch_Computational_Rectangle,
+                       *in_tria);
+
+  set_boundary_ids(*in_tria);
+
   in_tria->signals.post_refinement.connect(
       std_cxx11::bind(&SquareMeshGenerator::set_boundary_ids,
                       std_cxx11::cref(*this), std_cxx11::ref(*in_tria)));
 
   in_tria->refine_global(3);
-  GridTools::transform(&Triangulation_Stretch_Single_Part_Z, *in_tria);
-  GridTools::transform(&Triangulation_Stretch_Computational_Rectangle,
-                       *in_tria);
-
   parallel::distributed::Triangulation<3>::active_cell_iterator
 
       cell = in_tria->begin_active(),
@@ -121,10 +123,6 @@ void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
 
   double len = 2.0 / Layers;
 
-  cell = in_tria->begin_active();
-  for (; cell != endc; ++cell) {
-    int temp = (int)std::floor((cell->center()[2] + 1.0) / len);
-  }
   if (GlobalParams.R_Global > 0) {
     in_tria->refine_global(GlobalParams.R_Global);
     }

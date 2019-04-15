@@ -842,13 +842,24 @@ void Waveguide::reinit_rhs() {
 }
 
 void Waveguide::reinit_solution() {
-  std::vector<IndexSet> ghost;
+  std::vector<IndexSet> ghost, partitioning;
+
   for (unsigned int i = 0; i < i_sys_owned.size(); i++) {
-    IndexSet temp = i_sys_readable[i];
-    temp.subtract_set(i_sys_owned[i]);
-    ghost.push_back(temp);
+    IndexSet all = IndexSet(i_sys_owned[i].size());
+    all.add_range(0, i_sys_owned[i].size());
+    IndexSet none = IndexSet(i_sys_owned[i].size());
+    if (i == GlobalParams.MPI_Rank) {
+      partitioning.push_back(all);
+    } else {
+      partitioning.push_back(none);
+    }
+    if (i == GlobalParams.MPI_Rank - 1) {
+      ghost.push_back(all);
+    } else {
+      ghost.push_back(none);
+    }
   }
-  solution->reinit(i_sys_owned, ghost, mpi_comm, true);
+  solution->reinit(partitioning, ghost, mpi_comm, true);
   EstimatedSolution.reinit(i_sys_owned, mpi_comm);
   ErrorOfSolution.reinit(i_sys_owned, mpi_comm);
 }
@@ -895,10 +906,10 @@ void Waveguide::reinit_preconditioner() {
   opsp.collect_sizes();
 
   deallog << "Even Preconditioner Matrices ..." << std::endl;
-  DoFTools::make_sparsity_pattern(dof_handler, epsp, cm_prec_even, false);
+  DoFTools::make_sparsity_pattern(dof_handler, epsp, cm_prec_even, true);
   epsp.compress();
   deallog << "Odd Preconditioner Matrices ..." << std::endl;
-  DoFTools::make_sparsity_pattern(dof_handler, opsp, cm_prec_odd, false);
+  DoFTools::make_sparsity_pattern(dof_handler, opsp, cm_prec_odd, true);
   opsp.compress();
 
   deallog << "Done" << std::endl;
@@ -1593,16 +1604,47 @@ void Waveguide::solve() {
     deallog << "Block " << i << " of i_sys_readable: " << std::endl;
     i_sys_readable[i].print(deallog);
   }
+  double *interface_vals = new double[interface_dof_count];
+  if (GlobalParams.MPI_Rank < GlobalParams.NumberProcesses - 1) {
+    for (unsigned int i = 0; i < interface_dof_count; i++) {
+      interface_vals[i] = locally_owned_dofs.nth_index_in_set(
+          locally_relevant_dofs.n_elements() - interface_dof_count + i);
+    }
+  }
+  double *interface_vals_received = new double[interface_dof_count];
+  if (GlobalParams.MPI_Rank == 0) {
+    MPI_Send(interface_vals, interface_dof_count, MPI_DOUBLE, 1, 1,
+             MPI_COMM_WORLD);
+  }
+  if (GlobalParams.MPI_Rank > 0 &&
+      GlobalParams.MPI_Rank < GlobalParams.NumberProcesses - 1) {
+    MPI_Recv(interface_vals_received, interface_dof_count, MPI_DOUBLE,
+             GlobalParams.MPI_Rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Send(interface_vals, interface_dof_count, MPI_DOUBLE,
+             GlobalParams.MPI_Rank + 1, 1, MPI_COMM_WORLD);
+  }
+  if (GlobalParams.MPI_Rank == GlobalParams.NumberProcesses - 1) {
+    MPI_Recv(interface_vals_received, interface_dof_count, MPI_DOUBLE,
+             GlobalParams.MPI_Rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  }
   if (primal) {
     deallog << "Primal case:" << std::endl;
     primal_with_relevant.reinit(n_global_dofs);
     for (unsigned int i = 0; i < n_dofs; i++) {
       unsigned int index = local_to_global_index(i);
+
       if (GlobalParams.MPI_Rank == 0) {
-        primal_with_relevant[i] = solution->operator[](i);
+        primal_with_relevant[i] = solution->operator[](index);
       } else {
         if (i < interface_dof_count) {
-          primal_with_relevant[index] = 0;
+          if (GlobalParams.MPI_Rank >= 2) {
+            index -= n_dofs;
+          }
+          if (GlobalParams.MPI_Rank > 2) {
+            index -=
+                (n_dofs - interface_dof_count) * (GlobalParams.MPI_Rank - 2);
+          }
+          primal_with_relevant[index] = interface_vals_received[index];
         } else {
           primal_with_relevant[index] = solution->operator[](index);
         }
