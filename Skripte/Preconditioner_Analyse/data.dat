@@ -9,3 +9,4 @@ N_Procs	N_Steps Assemble	Init_Prec	Solve
 36	7	357	382	1580
 40	9	413	443	2430
 56	10	438	442	3480
+80	24	496	457	10600

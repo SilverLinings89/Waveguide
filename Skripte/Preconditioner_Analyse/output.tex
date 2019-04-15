@@ -1,0 +1,78 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.00000,0.44700,0.74100}%
+\definecolor{mycolor2}{rgb}{0.85000,0.32500,0.09800}%
+\definecolor{mycolor3}{rgb}{0.92900,0.69400,0.12500}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=0.476\fwidth,
+height=0.33\fwidth,
+at={(0\fwidth,0\fwidth)},
+scale only axis,
+xmin=7,
+xmax=81,
+xlabel style={font=\color{white!15!black}},
+xlabel={Number of Processors},
+ymin=0,
+ymax=12000,
+ylabel style={font=\color{white!15!black}},
+ylabel={Time [s]},
+axis background/.style={fill=white},
+legend style={at={(0.4,0.801)}, anchor=south west, legend cell align=left, align=left, draw=white!15!black}
+]
+\addplot [color=mycolor1, mark=+, mark options={solid, mycolor1}]
+  table[row sep=crcr]{%
+8	1170\\
+12	1230\\
+16	2850\\
+20	2410\\
+24	1550\\
+28	1570\\
+32	1650\\
+36	1580\\
+40	2430\\
+56	3480\\
+80	10600\\
+};
+\addlegendentry{Solve}
+
+\addplot [color=mycolor2, mark=asterisk, mark options={solid, mycolor2}]
+  table[row sep=crcr]{%
+8	457\\
+12	409\\
+16	440\\
+20	436\\
+24	408\\
+28	425\\
+32	441\\
+36	382\\
+40	443\\
+56	442\\
+80	457\\
+};
+\addlegendentry{Init Preconditioner}
+
+\addplot [color=mycolor3, mark=o, mark options={solid, mycolor3}]
+  table[row sep=crcr]{%
+8	360\\
+12	363\\
+16	392\\
+20	410\\
+24	424\\
+28	437\\
+32	408\\
+36	357\\
+40	413\\
+56	438\\
+80	496\\
+};
+\addlegendentry{Assemble}
+
+\end{axis}
+\end{tikzpicture}%
