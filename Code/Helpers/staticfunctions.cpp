@@ -372,7 +372,7 @@ Parameters GetParameters() {
     deallog << "Not using case." << std::endl;
   }
 
-  ret.SectorThickness = ret.SystemLength / ret.M_W_Sectors;
+  ret.SectorThickness = ret.M_R_ZLength / ret.M_W_Sectors;
 
   ret.LayersPerSector = ret.SectorThickness / ret.LayerThickness;
 
@@ -610,10 +610,10 @@ Point<3, double> Triangulation_Stretch_Single_Part_Z(
     const Point<3, double> &p) {
   Point<3, double> q = p;
   double z_min = GlobalParams.Minimum_Z +
-                 (GlobalParams.MPI_Rank * GlobalParams.SectorThickness);
+                 (GlobalParams.MPI_Rank * GlobalParams.LayerThickness);
   q[2] += 1.0;
   q[2] /= 2.0;
-  q[2] *= GlobalParams.SectorThickness;
+  q[2] *= GlobalParams.LayerThickness;
   q[2] += z_min;
   return q;
 }

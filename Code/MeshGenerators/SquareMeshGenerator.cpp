@@ -124,9 +124,9 @@ void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
   cell = in_tria->begin_active();
   for (; cell != endc; ++cell) {
     int temp = (int)std::floor((cell->center()[2] + 1.0) / len);
-
-    if (GlobalParams.R_Global > 0) {
-      in_tria->refine_global(GlobalParams.R_Global);
+  }
+  if (GlobalParams.R_Global > 0) {
+    in_tria->refine_global(GlobalParams.R_Global);
     }
 
     double MaxDistX =
