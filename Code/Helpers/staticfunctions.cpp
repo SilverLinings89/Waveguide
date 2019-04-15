@@ -372,7 +372,7 @@ Parameters GetParameters() {
     deallog << "Not using case." << std::endl;
   }
 
-  ret.SectorThickness = ret.M_R_ZLength / ret.M_W_Sectors;
+  ret.SectorThickness = ret.SystemLength / ret.M_W_Sectors;
 
   ret.LayersPerSector = ret.SectorThickness / ret.LayerThickness;
 
@@ -606,25 +606,37 @@ double my_inter(double x, double l, double w) {
   return a + b * x + c * x * x;
 }
 
-Point<2, double> Triangulation_Stretch_Computational_Rectangle(
-    const Point<2, double> &p) {
-  Point<2, double> q = p;
+Point<3, double> Triangulation_Stretch_Single_Part_Z(
+    const Point<3, double> &p) {
+  Point<3, double> q = p;
+  double z_min = GlobalParams.Minimum_Z +
+                 (GlobalParams.MPI_Rank * GlobalParams.SectorThickness);
+  q[2] += 1.0;
+  q[2] /= 2.0;
+  q[2] *= GlobalParams.SectorThickness;
+  q[2] += z_min;
+  return q;
+}
 
-  if (abs(p[0]) < GlobalParams.M_R_XLength / 2.0 - 0.0001) {
-    if (p[0] < 0) {
-      q[0] = -1.0 * GlobalParams.M_C_Dim1In;
-    } else {
-      q[0] = GlobalParams.M_C_Dim1In;
-    }
-  }
+Point<3, double> Triangulation_Stretch_Computational_Rectangle(
+    const Point<3, double> &p) {
+  double d1_goal = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / 2.0;
+  double d2_goal = (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out) / 2.0;
 
-  if (abs(p[1]) < GlobalParams.M_R_YLength / 2.0 - 0.0001) {
-    if (p[1] < 0) {
-      q[1] = -1.0 * GlobalParams.M_C_Dim2In;
-    } else {
-      q[1] = GlobalParams.M_C_Dim2In;
-    }
+  Point<3, double> q = p;
+  if (abs(p[0]) <= 0.2501) {
+    q[0] = q[0] * 3.0 * d1_goal;
+  } else {
+    q[0] = my_inter(std::abs(p[0]), GlobalParams.M_R_XLength / 2.0, d1_goal);
+    if (p[0] < 0.0) q[0] *= -1.0;
   }
+  if (abs(p[1]) <= 0.2501) {
+    q[1] = q[1] * 3.0 * d2_goal;
+  } else {
+    q[1] = my_inter(std::abs(p[1]), GlobalParams.M_R_YLength / 2.0, d2_goal);
+    if (p[1] < 0) q[1] *= -1.0;
+  }
+  q[2] = p[2];
   return q;
 }
 

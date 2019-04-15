@@ -77,9 +77,10 @@ Point<3, double> Triangulation_Shift_Z(const Point<3, double> &);
 
 Point<3, double> Triangulation_Stretch_Computational_Radius(
     const Point<3, double> &);
+Point<3, double> Triangulation_Stretch_Single_Part_Z(const Point<3, double> &);
 
-Point<2, double> Triangulation_Stretch_Computational_Rectangle(
-    const Point<2, double> &);
+Point<3, double> Triangulation_Stretch_Computational_Rectangle(
+    const Point<3, double> &);
 
 Point<3, double> Triangulation_Transform_to_physical(const Point<3, double> &);
 
