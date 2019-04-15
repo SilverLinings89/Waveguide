@@ -1,0 +1,50 @@
+// Geladene Pakete:
+
+compiler/intel/17.0
+mpi/openmpi/3.1-intel-17.0
+numlib/mkl/2017
+lib/boost/1.69.0
+lib/hdf5/1.10-openmpi-3.1-intel-17.0
+
+// Trilinos Build:
+EXTRA_ARGS=$@
+
+cmake \
+-D Trilinos_ENABLE_Sacado=ON \
+-D Trilinos_ENABLE_MueLu:BOOL=ON \
+-D Trilinos_ENABLE_Stratimikos=ON \
+-D CMAKE_BUILD_TYPE=RELEASE \
+-D CMAKE_CXX_FLAGS="-g -O3" \
+-D CMAKE_C_FLAGS="-g -O3" \
+-D CMAKE_FORTRAN_FLAGS="-g -O5" \
+-D Trilinos_EXTRA_LINK_FLAGS="-lgfortran" \
+-D CMAKE_VERBOSE_MAKEFILE=FALSE \
+-D Trilinos_VERBOSE_CONFIGURE=FALSE \
+-D TPL_ENABLE_MPI=ON \
+-D BUILD_SHARED_LIBS=ON \
+-D CMAKE_INSTALL_PREFIX:PATH=$HOME/trilinos \
+-D TPL_ENABLE_UMFPACK:BOOL=ON \
+-D TPL_ENABLE_MUMPS:BOOL=OFF \
+-D TPL_ENABLE_SCALAPACK:BOOL=OFF \
+-D TPL_UMFPACK_INCLUDE_DIRS=$HOME/SuiteSparse/include \
+-DUMFPACK_LIBRARY_DIRS=$HOME/SuiteSparse/lib \
+$EXTRA_ARGS \
+../
+
+
+// Deal Build: 
+cmake \
+-DCMAKE_INSTALL_PREFIX=$HOME/dealii \
+-DDEAL_II_WITH_MPI=ON \
+-DDEAL_II_WITH_PETSC=OFF \
+-DDEAL_II_WITH_SLEPC=OFF \
+-DDEAL_II_WITH_TRILINOS=ON \
+-DDEAL_II_WITH_HDF5=ON \
+-DDEAL_II_WITH_METIS=ON \
+-DDEAL_II_WITH_P4EST=ON \
+-DDEAL_II_WITH_OPENCASCADE=OFF \
+-DTRILINOS_DIR=$HOME/trilinos \
+-DMETIS_DIR=$HOME/SuiteSparse \
+-DP4EST_DIR=$HOME/p4est \
+-DHDF5_DIR=/opt/hdf5/1.10-openmpi-3.1-intel-17.0 \
+../dealii-9.0.1
