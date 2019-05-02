@@ -60,6 +60,34 @@ SquareMeshGenerator::SquareMeshGenerator(SpaceTransformation *in_ct)
 
 SquareMeshGenerator::~SquareMeshGenerator() {}
 
+unsigned int SquareMeshGenerator::getDominantComponentAndDirection(
+    Point<3> in_dir) const {
+  unsigned int comp = 0;
+  if (std::abs(in_dir[0]) >= std::abs(in_dir[1]) &&
+      std::abs(in_dir[0]) >= std::abs(in_dir[2])) {
+    if (in_dir[0] < 0) {
+      comp = 0;
+    } else {
+      comp = 1;
+    }
+  } else {
+    if (std::abs(in_dir[1]) >= std::abs(in_dir[2])) {
+      if (in_dir[1] < 0) {
+        comp = 2;
+      } else {
+        comp = 3;
+      }
+    } else {
+      if (in_dir[2] < 0) {
+        comp = 4;
+      } else {
+        comp = 5;
+      }
+    }
+  }
+  return comp;
+}
+
 void SquareMeshGenerator::set_boundary_ids(Triangulation<3> &tria) const {
   Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
                                          endc2 = tria.end();
@@ -73,24 +101,10 @@ void SquareMeshGenerator::set_boundary_ids(Triangulation<3> &tria) const {
       for (int j = 0; j < 6; j++) {
         Point<3> ctr = cell2->face(j)->center();
         if (cell2->face(j)->at_boundary()) {
-          if (std::abs(ctr(0) - GlobalParams.M_R_XLength / 2.0) < 0.00001) {
-            cell2->face(j)->set_all_boundary_ids(0);
-          }
-          if (std::abs(ctr(0) + GlobalParams.M_R_XLength / 2.0) < 0.00001) {
-            cell2->face(j)->set_all_boundary_ids(1);
-          }
-          if (std::abs(ctr(1) - GlobalParams.M_R_YLength / 2.0) < 0.00001) {
-            cell2->face(j)->set_all_boundary_ids(2);
-          }
-          if (std::abs(ctr(1) + GlobalParams.M_R_YLength / 2.0) < 0.00001) {
-            cell2->face(j)->set_all_boundary_ids(3);
-          }
-          if (std::abs(ctr(2) - local_lower_bound) < 0.00001) {
-            cell2->face(j)->set_all_boundary_ids(4);
-          }
-          if (std::abs(ctr(2) - local_upper_bound) < 0.00001) {
-            cell2->face(j)->set_all_boundary_ids(5);
-          }
+          dealii::Point<3, double> d2 = -cell2->center() + ctr;
+          unsigned int dominant_direction =
+              getDominantComponentAndDirection(d2);
+          cell2->face(j)->set_all_boundary_ids(dominant_direction);
         }
       }
     }
@@ -105,10 +119,6 @@ void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
 
   GridGenerator::hyper_cube(*in_tria, -1.0, 1.0, false);
 
-  GridTools::transform(&Triangulation_Stretch_Single_Part_Z, *in_tria);
-  GridTools::transform(&Triangulation_Stretch_Computational_Rectangle,
-                       *in_tria);
-
   set_boundary_ids(*in_tria);
 
   in_tria->signals.post_refinement.connect(
@@ -116,6 +126,10 @@ void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
                       std_cxx11::cref(*this), std_cxx11::ref(*in_tria)));
 
   in_tria->refine_global(3);
+
+  GridTools::transform(&Triangulation_Stretch_Computational_Rectangle,
+                       *in_tria);
+
   parallel::distributed::Triangulation<3>::active_cell_iterator
 
       cell = in_tria->begin_active(),
@@ -158,6 +172,8 @@ void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
       }
       in_tria->execute_coarsening_and_refinement();
     }
+
+    GridTools::transform(&Triangulation_Stretch_Single_Part_Z, *in_tria);
 
     // GridTools::transform(&Triangulation_Stretch_Z, *in_tria);
 

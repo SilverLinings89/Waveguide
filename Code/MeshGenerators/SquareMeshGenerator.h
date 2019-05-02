@@ -92,6 +92,9 @@ class SquareMeshGenerator : public MeshGenerator {
    */
   void prepare_triangulation(Triangulation<3>* in_tria);
 
+  unsigned int getDominantComponentAndDirection(
+      dealii::Point<3, double> in_dir) const;
+
   void set_boundary_ids(Triangulation<3>& tria) const;
 
   Triangulation<3>::active_cell_iterator cell, endc;

@@ -1164,29 +1164,16 @@ void Waveguide::MakeBoundaryConditions() {
   cell_layer_z = 0.0;
 
   for (; cell != endc; ++cell) {
-    double cell_min_x = GlobalParams.M_R_XLength;
-    double cell_max_x = -GlobalParams.M_R_XLength;
-    double cell_min_y = GlobalParams.M_R_YLength;
-    double cell_max_y = -GlobalParams.M_R_YLength;
     double cell_min_z = GlobalParams.M_R_ZLength;
     double cell_max_z = -GlobalParams.M_R_ZLength;
-    if (cell->is_locally_owned()) {
-      for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
-        Point<3, double> pos = cell->face(i)->center(true, true);
-        if (pos[0] < cell_min_x) cell_min_x = pos[0];
-        if (pos[0] > cell_max_x) cell_max_x = pos[0];
-        if (pos[1] < cell_min_y) cell_min_y = pos[1];
-        if (pos[1] > cell_max_y) cell_max_y = pos[1];
-        if (pos[2] < cell_min_z) cell_min_z = pos[2];
-        if (pos[2] > cell_max_z) cell_max_z = pos[2];
-      }
-      if (cell_min_x < input_search_x && cell_max_x > input_search_x &&
-          cell_min_y < input_search_y && cell_max_y > input_search_y) {
-        if (cell_min_z < -GlobalParams.M_R_ZLength / 2.0 &&
-            cell_max_z < -GlobalParams.M_R_ZLength / 2.0) {
-          cell_layer_z = cell_min_z;
-        }
-      }
+    for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+      Point<3, double> pos = cell->face(i)->center(true, true);
+      if (pos[2] < cell_min_z) cell_min_z = pos[2];
+      if (pos[2] > cell_max_z) cell_max_z = pos[2];
+    }
+    if (cell_min_z < -GlobalParams.M_R_ZLength / 2.0 &&
+        cell_max_z >= -GlobalParams.M_R_ZLength / 2.0) {
+      if (cell_min_z < cell_layer_z) cell_layer_z = cell_min_z;
     }
   }
   cell_layer_z = Utilities::MPI::min(cell_layer_z, MPI_COMM_WORLD);
@@ -1628,26 +1615,25 @@ void Waveguide::solve() {
              GlobalParams.MPI_Rank - 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   }
   if (primal) {
-    deallog << "Primal case:" << std::endl;
     primal_with_relevant.reinit(n_global_dofs);
-    for (unsigned int i = 0; i < n_dofs; i++) {
-      unsigned int index = local_to_global_index(i);
-
-      if (GlobalParams.MPI_Rank == 0) {
-        primal_with_relevant[i] = solution->operator[](index);
-      } else {
+    deallog << "Primal case:" << std::endl;
+    if (GlobalParams.MPI_Rank > 0) {
+      for (unsigned int i = 0; i < n_dofs; i++) {
         if (i < interface_dof_count) {
-          if (GlobalParams.MPI_Rank >= 2) {
-            index -= n_dofs;
-          }
-          if (GlobalParams.MPI_Rank > 2) {
-            index -=
-                (n_dofs - interface_dof_count) * (GlobalParams.MPI_Rank - 2);
-          }
-          primal_with_relevant[index] = interface_vals_received[index];
+          int idx2 = i + (n_dofs - interface_dof_count);
+          idx2 = local_to_global_index(idx2);
+          idx2 -= (n_dofs - interface_dof_count);
+          primal_with_relevant[local_to_global_index(i)] = 0;
+
         } else {
-          primal_with_relevant[index] = solution->operator[](index);
+          int temp = local_to_global_index(i);
+          primal_with_relevant[temp] = solution->operator[](temp);
         }
+      }
+
+    } else {
+      for (unsigned int i = 0; i < n_dofs; i++) {
+        primal_with_relevant[i] = solution->operator[](i);
       }
     }
   } else {
