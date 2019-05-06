@@ -698,11 +698,8 @@ void Waveguide::Prepare_Boundary_Constraints() {
   DoFTools::make_hanging_node_constraints(dof_handler, cm);
   DoFTools::make_hanging_node_constraints(dof_handler, cm_prec_even);
   DoFTools::make_hanging_node_constraints(dof_handler, cm_prec_odd);
-  ProjectBoundaryConditions();
-  // Shift_Constraint_Matrix(&cm);
-  // Shift_Constraint_Matrix(&cm_prec_even);
-  // Shift_Constraint_Matrix(&cm_prec_odd);
 
+  ProjectBoundaryConditions();
   MakeBoundaryConditions();
   MakePreconditionerBoundaryConditions();
 
@@ -1254,23 +1251,34 @@ void Waveguide::MakeBoundaryConditions() {
 void Waveguide::ProjectBoundaryConditions() {
   dealii::ZeroFunction<3, double> zf(6);
 
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 0,
+                                                       cm);
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1,
+                                                       cm);
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2,
+                                                       cm);
+  VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 3,
+                                                       cm);
+
+  if (GlobalParams.MPI_Rank == 0) {
+    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 4,
+                                                         cm);
+  }
+
+  if (GlobalParams.MPI_Rank == GlobalParams.NumberProcesses - 1) {
+    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 5,
+                                                         cm);
+  }
+
   if (even) {
     VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 4,
                                                          cm_prec_even);
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 3, zf, 4,
-                                                         cm_prec_even);
     VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 5,
-                                                         cm_prec_odd);
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 3, zf, 5,
                                                          cm_prec_odd);
   } else {
       VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf,
                                                            5, cm_prec_even);
-      VectorTools::project_boundary_values_curl_conforming(dof_handler, 3, zf,
-                                                           5, cm_prec_even);
       VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf,
-                                                           4, cm_prec_odd);
-      VectorTools::project_boundary_values_curl_conforming(dof_handler, 3, zf,
                                                            4, cm_prec_odd);
   }
 }
@@ -2063,10 +2071,6 @@ Tensor<1, 3, std::complex<double>> Waveguide::solution_evaluation(
 
 void Waveguide::solution_evaluation(Point<3, double> position,
                                     double *sol) const {
-  // deallog << "Process " << GlobalParams.MPI_Rank << " as " << rank << "
-  // evaluating at(" << position[0] << "," << position[1] << "," << position[2]
-  // << "). The local range is ["<< minimum_local_z<<","<<maximum_local_z<<"]"<<
-  // std::endl;
   Tensor<1, 3, std::complex<double>> ret;
   Vector<double> result(6);
   VectorTools::point_value(dof_handler, primal_with_relevant, position, result);
@@ -2077,10 +2081,6 @@ void Waveguide::solution_evaluation(Point<3, double> position,
 
 Tensor<1, 3, std::complex<double>> Waveguide::adjoint_solution_evaluation(
     Point<3, double> position) const {
-  // deallog << "Process " << GlobalParams.MPI_Rank << " as " << rank << "
-  // evaluating at(" << position[0] << "," << position[1] << "," << position[2]
-  // << "). The local range is ["<< minimum_local_z<<","<<maximum_local_z<<"]"<<
-  // std::endl;
   Tensor<1, 3, std::complex<double>> ret;
   Vector<double> result(6);
   position[2] = -position[2];
