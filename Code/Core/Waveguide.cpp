@@ -971,10 +971,6 @@ void Waveguide::assemble_system() {
   k_a_sqr = k_a_sqr * k_a_sqr;
   for (; cell != endc; ++cell) {
     cell->get_dof_indices(local_dof_indices);
-    //      for(unsigned int i = 0; i < dofs_per_cell; i++) {
-    //        local_dof_indices_global[i] =
-    //        local_to_global_index(local_dof_indices[i]);
-    //      }
     cell_rhs.reinit(dofs_per_cell, false);
     fe_values.reinit(cell);
     quadrature_points = fe_values.get_quadrature_points();
@@ -997,10 +993,6 @@ void Waveguide::assemble_system() {
         if (cell->face(i)->center(true, false)[2] - cell_layer_z < 0.0001) {
           for (unsigned int e = 0; e < GeometryInfo<3>::lines_per_face; e++) {
             (cell->face(i)->line(e))->get_dof_indices(input_dofs);
-            //              for (unsigned int i = 0; i < dofs_per_cell; i++) {
-            //                input_dofs[i] =
-            //                local_to_global_index(input_dofs[i]);
-            //              }
             for (unsigned int j = 0; j < fe.dofs_per_cell; j++) {
               for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
                 if (local_dof_indices[j] == input_dofs[k]) {
@@ -1179,76 +1171,19 @@ void Waveguide::MakeBoundaryConditions() {
   MPI_Barrier(MPI_COMM_WORLD);
 
   for (; cell != endc; ++cell) {
-    if (cell->is_locally_owned()) {
-      for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
-        Point<3, double> pos = cell->face(i)->center(true, true);
-        if (abs(pos[2] - cell_layer_z) < 0.0001) {
-          for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
-            ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
-            for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
-              InputInterfaceDofs.add_index(local_line_dofs[k]);
-            }
+    for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+      Point<3, double> pos = cell->face(i)->center(true, true);
+      if (abs(pos[2] - cell_layer_z) < 0.0001) {
+        for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
+          ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
+          for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
+            InputInterfaceDofs.add_index(local_line_dofs[k]);
           }
         }
       }
     }
   }
 
-  cell = dof_handler.begin_active();
-  const unsigned int face_own_count = std::max(
-      static_cast<unsigned int>(0),
-      fe.dofs_per_face - GeometryInfo<3>::lines_per_face * fe.dofs_per_line);
-  const unsigned int cell_own_count = std::max(
-      static_cast<unsigned int>(0),
-      fe.dofs_per_cell - GeometryInfo<3>::faces_per_cell * fe.dofs_per_face +
-          GeometryInfo<3>::lines_per_cell * fe.dofs_per_line);
-  std::vector<types::global_dof_index> local_face_dofs(fe.dofs_per_face);
-  deallog << "Dofs per line: " << fe.dofs_per_line << "." << std::endl;
-  deallog << "Dofs per face: " << fe.dofs_per_face
-          << ". Own: " << face_own_count << "." << std::endl;
-  deallog << "Dofs per cell: " << fe.dofs_per_cell
-          << ". Own: " << cell_own_count << "." << std::endl;
-  ZeroBoundaryDofs.set_size(n_global_dofs);
-  ZeroBoundaryDofs.clear();
-  for (cell = dof_handler.begin_active(); cell != endc; cell++) {
-    if (cell->at_boundary()) {
-      for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
-        if (cell->face(i)->at_boundary()) {
-          int b_id = cell->face(i)->boundary_id();
-          if ((b_id >= 0 && b_id <= 3) || (rank == 0 && b_id == 4) ||
-              ((rank == GlobalParams.NumberProcesses - 1) && b_id == 5)) {
-            cell->face(i)->get_dof_indices(local_face_dofs);
-            for (unsigned int k = 0; k < fe.dofs_per_face; k++) {
-              ZeroBoundaryDofs.add_index(local_face_dofs[k]);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  deallog << "Boundary Dofs: " << std::to_string(ZeroBoundaryDofs.n_elements())
-          << std::endl;
-  deallog << "Lowest Index: "
-          << std::to_string(ZeroBoundaryDofs.nth_index_in_set(0))
-          << " Highest: "
-          << std::to_string(ZeroBoundaryDofs.nth_index_in_set(
-                 ZeroBoundaryDofs.n_elements() - 1))
-          << std::endl;
-
-  for (unsigned int i = 0; i < ZeroBoundaryDofs.n_elements(); i++) {
-    const int idx = ZeroBoundaryDofs.nth_index_in_set(i);
-    cm.add_line(idx);
-    cm.set_inhomogeneity(idx, 0.0);
-    cm_prec_even.add_line(idx);
-    cm_prec_even.set_inhomogeneity(idx, 0.0);
-    cm_prec_odd.add_line(idx);
-    cm_prec_odd.set_inhomogeneity(idx, 0.0);
-    fixed_dofs.add_index(idx);
-  }
-}
-
-void Waveguide::ProjectBoundaryConditions() {
   dealii::ZeroFunction<3, double> zf(6);
 
   VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 0,
@@ -1269,6 +1204,138 @@ void Waveguide::ProjectBoundaryConditions() {
     VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 5,
                                                          cm);
   }
+
+  cell = dof_handler.begin_active();
+  const unsigned int face_own_count = std::max(
+      static_cast<unsigned int>(0),
+      fe.dofs_per_face - GeometryInfo<3>::lines_per_face * fe.dofs_per_line);
+  const unsigned int cell_own_count = std::max(
+      static_cast<unsigned int>(0),
+      fe.dofs_per_cell - GeometryInfo<3>::faces_per_cell * fe.dofs_per_face +
+          GeometryInfo<3>::lines_per_cell * fe.dofs_per_line);
+  std::vector<types::global_dof_index> local_face_dofs(fe.dofs_per_face);
+  deallog << "Dofs per line: " << fe.dofs_per_line << "." << std::endl;
+  deallog << "Dofs per face: " << fe.dofs_per_face
+          << ". Own: " << face_own_count << "." << std::endl;
+  deallog << "Dofs per cell: " << fe.dofs_per_cell
+          << ". Own: " << cell_own_count << "." << std::endl;
+  if (run_number == 0) {
+    fixed_dofs.set_size(dof_handler.n_dofs());
+  }
+
+  for (; cell != endc; ++cell) {
+    for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+      Point<3, double> center = (cell->face(i))->center(true, false);
+      if (center[0] < 0) center[0] *= (-1.0);
+      if (center[1] < 0) center[1] *= (-1.0);
+
+      if (std::abs(center[0] - GlobalParams.M_R_XLength / 2.0) < 0.0001) {
+        for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
+          ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
+          for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
+            if (locally_owned_dofs.is_element(local_line_dofs[k])) {
+              cm.add_line(local_line_dofs[k]);
+              cm.set_inhomogeneity(local_line_dofs[k], 0.0);
+              fixed_dofs.add_index(local_line_dofs[k]);
+            }
+          }
+        }
+        if (face_own_count > 0) {
+          cell->face(i)->get_dof_indices(local_face_dofs);
+          for (unsigned int j =
+                   GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
+               j < fe.dofs_per_face; j++) {
+            if (locally_owned_dofs.is_element(local_face_dofs[j])) {
+              cm.add_line(local_face_dofs[j]);
+              cm.set_inhomogeneity(local_face_dofs[j], 0.0);
+              fixed_dofs.add_index(local_face_dofs[j]);
+            }
+          }
+        }
+      }
+
+      if (std::abs(center[1] - GlobalParams.M_R_YLength / 2.0) < 0.0001) {
+        for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
+          ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
+          for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
+            if (locally_owned_dofs.is_element(local_line_dofs[k])) {
+              cm.add_line(local_line_dofs[k]);
+              cm.set_inhomogeneity(local_line_dofs[k], 0.0);
+              fixed_dofs.add_index(local_line_dofs[k]);
+            }
+          }
+        }
+        if (face_own_count > 0) {
+          cell->face(i)->get_dof_indices(local_face_dofs);
+          for (unsigned int j =
+                   GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
+               j < fe.dofs_per_face; j++) {
+            if (locally_owned_dofs.is_element(local_face_dofs[j])) {
+              cm.add_line(local_face_dofs[j]);
+              cm.set_inhomogeneity(local_face_dofs[j], 0.0);
+              fixed_dofs.add_index(local_face_dofs[j]);
+            }
+          }
+        }
+      }
+
+      if (std::abs(center[2] - GlobalParams.Minimum_Z) < 0.0001) {
+        for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
+          if ((cell->face(i))->line(j)->at_boundary()) {
+            ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
+            for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
+              if (locally_owned_dofs.is_element(local_line_dofs[k])) {
+                fixed_dofs.add_index(local_line_dofs[k]);
+              }
+            }
+            if (fe.dofs_per_line >= 2) {
+              cm.add_line(local_line_dofs[1]);
+              cm.set_inhomogeneity(local_line_dofs[1], 0.0);
+            }
+          }
+        }
+        if (face_own_count > 0) {
+          cell->face(i)->get_dof_indices(local_face_dofs);
+          for (unsigned int j =
+                   GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
+               j < fe.dofs_per_face; j++) {
+            if (locally_owned_dofs.is_element(local_face_dofs[j])) {
+              fixed_dofs.add_index(local_face_dofs[j]);
+            }
+          }
+        }
+      }
+
+      if (std::abs(center[2] - GlobalParams.Maximum_Z) < 0.0001) {
+        for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
+          ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
+          for (unsigned int k = 0; k < fe.dofs_per_line; k++) {
+            if (locally_owned_dofs.is_element(local_line_dofs[k])) {
+              cm.add_line(local_line_dofs[k]);
+              cm.set_inhomogeneity(local_line_dofs[k], 0.0);
+              fixed_dofs.add_index(local_line_dofs[k]);
+            }
+          }
+        }
+        if (face_own_count > 0) {
+          cell->face(i)->get_dof_indices(local_face_dofs);
+          for (unsigned int j =
+                   GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
+               j < fe.dofs_per_face; j++) {
+            if (locally_owned_dofs.is_element(local_face_dofs[j])) {
+              cm.add_line(local_face_dofs[j]);
+              cm.set_inhomogeneity(local_face_dofs[j], 0.0);
+              fixed_dofs.add_index(local_face_dofs[j]);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+void Waveguide::ProjectBoundaryConditions() {
+  dealii::ZeroFunction<3, double> zf(6);
 
   if (even) {
     VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 4,
@@ -1291,17 +1358,50 @@ void Waveguide::MakePreconditionerBoundaryConditions() {
   double layer_length = GlobalParams.LayerThickness;
   IndexSet own(n_global_dofs);
   own.add_indices(locally_owned_dofs);
+  if (run_number == 0) {
+    sweepable.set_size(dof_handler.n_dofs());
+    sweepable.add_indices(locally_owned_dofs);
+  }
   if (rank != 0) {
     own.add_indices(LowerDofs);
   }
 
-  bool has_non_edge_dofs = false;
-  if (fe.dofs_per_line > 1) has_non_edge_dofs = true;
+  const int face_own_count =
+      fe.dofs_per_face - GeometryInfo<3>::lines_per_face * fe.dofs_per_line;
+  const bool has_non_edge_dofs = (face_own_count > 0);
+
+  cm_prec_even.merge(
+      cm, dealii::ConstraintMatrix::MergeConflictBehavior::right_object_wins,
+      true);
+  cm_prec_odd.merge(
+      cm, dealii::ConstraintMatrix::MergeConflictBehavior::right_object_wins,
+      true);
 
   for (; cell_loc != endc; ++cell_loc) {
     for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
       Point<3, double> center = (cell_loc->face(i))->center(true, false);
+      if (center[0] < 0) center[0] *= (-1.0);
+      if (center[1] < 0) center[1] *= (-1.0);
 
+      // Set x-boundary values
+      if (std::abs(center[0] - GlobalParams.M_R_XLength / 2.0) < 0.0001) {
+        Add_Zero_Restraint(&cm_prec_odd, cell_loc, i, fe.dofs_per_line,
+                           fe.dofs_per_face, has_non_edge_dofs,
+                           locally_owned_dofs);
+        Add_Zero_Restraint(&cm_prec_even, cell_loc, i, fe.dofs_per_line,
+                           fe.dofs_per_face, has_non_edge_dofs,
+                           locally_owned_dofs);
+      }
+
+      // Set y-boundary values
+      if (std::abs(center[1] - GlobalParams.M_R_YLength / 2.0) < 0.0001) {
+        Add_Zero_Restraint(&cm_prec_odd, cell_loc, i, fe.dofs_per_line,
+                           fe.dofs_per_face, has_non_edge_dofs,
+                           locally_owned_dofs);
+        Add_Zero_Restraint(&cm_prec_even, cell_loc, i, fe.dofs_per_line,
+                           fe.dofs_per_face, has_non_edge_dofs,
+                           locally_owned_dofs);
+      }
       if (even) {
         if (rank != 0) {
           if (std::abs(center[2] - GlobalParams.Minimum_Z -
