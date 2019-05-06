@@ -63,6 +63,8 @@ Waveguide
 temp
 Solutions/
 Efficiency/
+
+.settings/language.settings.xml
 Performance_Results/
 routes_*
 job_uc1_*

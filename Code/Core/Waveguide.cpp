@@ -980,28 +980,17 @@ void Waveguide::MakeBoundaryConditions() {
   cell_layer_z = 0.0;
 
   for (; cell != endc; ++cell) {
-    double cell_min_x = GlobalParams.M_R_XLength;
-    double cell_max_x = -GlobalParams.M_R_XLength;
-    double cell_min_y = GlobalParams.M_R_YLength;
-    double cell_max_y = -GlobalParams.M_R_YLength;
-    double cell_min_z = GlobalParams.M_R_ZLength;
-    double cell_max_z = -GlobalParams.M_R_ZLength;
     if (cell->is_locally_owned()) {
+      double cell_min_z = GlobalParams.M_R_ZLength;
+      double cell_max_z = -GlobalParams.M_R_ZLength;
       for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
         Point<3, double> pos = cell->face(i)->center(true, true);
-        if (pos[0] < cell_min_x) cell_min_x = pos[0];
-        if (pos[0] > cell_max_x) cell_max_x = pos[0];
-        if (pos[1] < cell_min_y) cell_min_y = pos[1];
-        if (pos[1] > cell_max_y) cell_max_y = pos[1];
         if (pos[2] < cell_min_z) cell_min_z = pos[2];
         if (pos[2] > cell_max_z) cell_max_z = pos[2];
       }
-      if (cell_min_x < input_search_x && cell_max_x > input_search_x &&
-          cell_min_y < input_search_y && cell_max_y > input_search_y) {
-        if (cell_min_z < -GlobalParams.M_R_ZLength / 2.0 &&
-            cell_max_z < -GlobalParams.M_R_ZLength / 2.0) {
-          cell_layer_z = cell_min_z;
-        }
+      if (cell_min_z < -GlobalParams.M_R_ZLength / 2.0 &&
+          cell_max_z >= -GlobalParams.M_R_ZLength / 2.0) {
+        if (cell_min_z < cell_layer_z) cell_layer_z = cell_min_z;
       }
     }
   }
