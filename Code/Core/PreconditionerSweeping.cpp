@@ -159,6 +159,7 @@ void PreconditionerSweeping::vmult_fast(
 void PreconditionerSweeping::vmult_slow(
     TrilinosWrappers::MPI::BlockVector &dst,
     const TrilinosWrappers::MPI::BlockVector &src) const {
+  std::cout << "L2 norm before vmult:" << src.l2_norm() << std::endl;
   dealii::Vector<double> recv_buffer_above(above);
   dealii::Vector<double> recv_buffer_below(others);
   dealii::Vector<double> temp_own(own);
@@ -182,14 +183,15 @@ void PreconditionerSweeping::vmult_slow(
       MPI_Send(&temp_own[0], own, MPI_DOUBLE, rank - 1, 0, mpi_comm);
     }
   }
-
+  std::cout << "L2 after sweep 1:" << input.l2_norm() << std::endl;
   if ((int)rank + 1 != GlobalParams.NumberProcesses) {
     for (int i = 0; i < own; i++) {
       temp_own[i] = input[i];
     }
     Hinv(temp_own, input);
   }
-
+  std::cout << "L2 after application of inverse:" << input.l2_norm()
+            << std::endl;
   if (rank == 0) {
     MPI_Send(&input[0], own, MPI_DOUBLE, rank + 1, 0, mpi_comm);
   } else {
@@ -208,6 +210,7 @@ void PreconditionerSweeping::vmult_slow(
       dst[indices[i]] = input[i];
     }
   }
+  std::cout << "L2 norm after vmult:" << dst.l2_norm() << std::endl;
 }
 
 void PreconditionerSweeping::Hinv(const dealii::Vector<double> &src,
