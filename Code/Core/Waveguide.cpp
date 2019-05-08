@@ -1247,7 +1247,7 @@ void Waveguide::MakeBoundaryConditions() {
   deallog << "Dofs per cell: " << fe.dofs_per_cell
       << ". Own: " << cell_own_count << "." << std::endl;
   if (run_number == 0) {
-    fixed_dofs.set_size(dof_handler.n_dofs());
+    fixed_dofs.set_size(n_global_dofs);
   }
 
   for (; cell != endc; ++cell) {
@@ -1424,7 +1424,7 @@ void Waveguide::MakePreconditionerBoundaryConditions() {
   IndexSet own(n_global_dofs);
   own.add_indices(locally_owned_dofs);
   if (run_number == 0) {
-    sweepable.set_size(dof_handler.n_dofs());
+    sweepable.set_size(n_global_dofs);
     sweepable.add_indices(locally_owned_dofs);
   }
   if (rank != 0) {
