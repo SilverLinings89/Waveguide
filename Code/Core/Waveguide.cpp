@@ -1532,9 +1532,6 @@ void Waveguide::Add_Zero_Restraint(
   std::vector<types::global_dof_index> local_face_dofs(DofsPerFace);
   for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
     ((in_cell->face(in_face))->line(j))->get_dof_indices(local_line_dofs);
-    for (unsigned int i = 0; i < fe.dofs_per_line; i++) {
-      local_line_dofs[i] = local_to_global_index(local_line_dofs[i]);
-    }
     for (unsigned int k = 0; k < DofsPerLine; k++) {
       if (locally_owned_dofs.is_element(local_line_dofs[k])) {
         in_cm->add_line(local_line_dofs[k]);
