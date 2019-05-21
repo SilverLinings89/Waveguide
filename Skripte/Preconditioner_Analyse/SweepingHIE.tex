@@ -1,0 +1,145 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=0.951\fwidth,
+height=0.75\fwidth,
+at={(0\fwidth,0\fwidth)},
+scale only axis,
+xmin=0,
+xmax=1,
+ymin=-0.5,
+ymax=1.5,
+axis background/.style={fill=white},
+axis x line*=bottom,
+axis y line*=left,
+legend style={legend cell align=left, align=left, draw=white!15!black}
+]
+
+\addplot[area legend, draw=black, fill=white!85!black]
+table[row sep=crcr] {%
+x	y\\
+0.95	-0.5\\
+1	-0.5\\
+1	1.5\\
+0.95	1.5\\
+0.95	-0.5\\
+}--cycle;
+\addlegendentry{data1}
+
+
+\addplot[area legend, draw=black, fill=white!90!black]
+table[row sep=crcr] {%
+x	y\\
+-0.05	0\\
+0.95	0\\
+0.95	1\\
+0	1\\
+}--cycle;
+\addlegendentry{data2}
+
+\addplot [color=black, line width=2.0pt]
+  table[row sep=crcr]{%
+0	0\\
+1	0\\
+};
+\addlegendentry{data3}
+
+\addplot [color=black, line width=2.0pt]
+  table[row sep=crcr]{%
+0	1\\
+1	1\\
+};
+\addlegendentry{data4}
+
+\addplot [color=black, dotted, line width=2.0pt]
+  table[row sep=crcr]{%
+0.4	-0.5\\
+0.4	1.5\\
+};
+\addlegendentry{data5}
+
+\addplot [color=black, dotted, line width=2.0pt]
+  table[row sep=crcr]{%
+0.6	-0.5\\
+0.6	1.5\\
+};
+\addlegendentry{data6}
+
+\addplot [color=black, dotted, line width=2.0pt]
+  table[row sep=crcr]{%
+0.8	-0.5\\
+0.8	1.5\\
+};
+\addlegendentry{data7}
+
+\addplot [color=black, line width=2.0pt]
+  table[row sep=crcr]{%
+1	-0.5\\
+1	1.5\\
+};
+\addlegendentry{data8}
+
+\addplot [color=black, dotted, line width=1.0pt]
+  table[row sep=crcr]{%
+0.85	-0.5\\
+0.85	1.5\\
+};
+\addlegendentry{data9}
+
+\addplot [color=black, dotted, line width=1.0pt]
+  table[row sep=crcr]{%
+0.65	-0.5\\
+0.65	1.5\\
+};
+\addlegendentry{data10}
+
+\node[right, align=left]
+at (axis cs:0,0.2) {Waveguide ...};
+\node[right, align=left]
+at (axis cs:0.96,-0.2) {H};
+\node[right, align=left]
+at (axis cs:0.96,-0.3) {I};
+\node[right, align=left]
+at (axis cs:0.96,-0.4) {E};
+\node[right, align=left]
+at (axis cs:0.81,1.4) {H};
+\node[right, align=left]
+at (axis cs:0.81,1.3) {I};
+\node[right, align=left]
+at (axis cs:0.81,1.2) {E};
+\node[right, align=left]
+at (axis cs:0.81,1.1) {1};
+\node[right, align=left]
+at (axis cs:0.61,1.4) {H};
+\node[right, align=left]
+at (axis cs:0.61,1.3) {I};
+\node[right, align=left]
+at (axis cs:0.61,1.2) {E};
+\node[right, align=left]
+at (axis cs:0.61,1.1) {2};
+\addplot [color=red]
+  table[row sep=crcr]{%
+0.8	0.7\\
+1	0.7\\
+};
+\addlegendentry{data11}
+
+\node[right, align=left]
+at (axis cs:0.85,0.65) {step 1};
+\addplot [color=red]
+  table[row sep=crcr]{%
+0.6	0.35\\
+0.8	0.35\\
+};
+\addlegendentry{data12}
+
+\node[right, align=left]
+at (axis cs:0.65,0.3) {step 2};
+\end{axis}
+\end{tikzpicture}%

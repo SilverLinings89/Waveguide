@@ -79,9 +79,9 @@ class PreconditionerSweeping : dealii::TrilinosWrappers::PreconditionBase {
    * \tilde{\epsilon}\boldsymbol{E} = 0 \f]
    */
   PreconditionerSweeping(MPI_Comm in_mpi_comm, int in_own, int in_others,
-                         int in_above, int bandwidth,
-                         dealii::IndexSet locally_owned,
-                         dealii::IndexSet *in_fixed_dofs, int rank, bool fast);
+                         int in_above, unsigned int interface_count,
+                         int bandwidth, dealii::IndexSet locally_owned,
+                         dealii::IndexSet *in_fixed_dofs, int rank);
 
   ~PreconditionerSweeping();
 
@@ -122,17 +122,14 @@ class PreconditionerSweeping : dealii::TrilinosWrappers::PreconditionBase {
   virtual void vmult(
       dealii::TrilinosWrappers::MPI::BlockVector &dst,
       const dealii::TrilinosWrappers::MPI::BlockVector &src) const;
-  virtual void vmult_fast(
-      dealii::TrilinosWrappers::MPI::BlockVector &dst,
-      const dealii::TrilinosWrappers::MPI::BlockVector &src) const;
-  virtual void vmult_slow(
-      dealii::TrilinosWrappers::MPI::BlockVector &dst,
-      const dealii::TrilinosWrappers::MPI::BlockVector &src) const;
 
   dealii::TrilinosWrappers::SparseMatrix *matrix;
   dealii::SparseMatrix<double> *prec_matrix_upper;
 
   dealii::SparseMatrix<double> *prec_matrix_lower;
+
+  dealii::SparseMatrix<double> *p_upper;
+  dealii::SparseMatrix<double> *p_lower;
 
   void Prepare(dealii::TrilinosWrappers::MPI::BlockVector &src);
 
@@ -140,8 +137,10 @@ class PreconditionerSweeping : dealii::TrilinosWrappers::PreconditionBase {
             dealii::TrilinosWrappers::SparseMatrix *,
             dealii::TrilinosWrappers::SparseMatrix *);
 
+  void init(dealii::SolverControl in_sc, dealii::SparseMatrix<double> *,
+            dealii::SparseMatrix<double> *);
+
  private:
-  bool fast;
   int *indices;
   int own, others;
   dealii::TrilinosWrappers::MPI::Vector itmp, otmp;
@@ -153,6 +152,7 @@ class PreconditionerSweeping : dealii::TrilinosWrappers::PreconditionBase {
   int bandwidth;
   MPI_Comm mpi_comm;
   int above;
+  unsigned int interface_dof_count;
 };
 
 #endif  //  CODE_CORE_PRECONDITIONERSWEEPING_H_

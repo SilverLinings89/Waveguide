@@ -7,16 +7,29 @@
 #include <deal.II/base/std_cxx11/bind.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/thread_management.h>
-#include <deal.II/distributed/tria.h>
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_out.h>
+#include <deal.II/grid/grid_refinement.h>
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/grid/manifold_lib.h>
+#include <deal.II/grid/tria.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
 #include "../Helpers/staticfunctions.h"
 
 using namespace dealii;
+
+void mesh_i(const Triangulation<3, 3> &tria, const std::string &filename) {
+  std::cout << "Mesh info:" << std::endl
+            << " dimension: " << 3 << std::endl
+            << " no. of cells: " << tria.n_active_cells() << std::endl;
+
+  std::ofstream out(filename.c_str());
+  GridOut grid_out;
+  grid_out.write_vtk(tria, out);
+  out.close();
+  std::cout << " written to " << filename << std::endl << std::endl;
+}
 
 SquareMeshGenerator::SquareMeshGenerator(SpaceTransformation *in_ct)
     : MaxDistX((GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In) * 1.4 /
@@ -47,60 +60,66 @@ SquareMeshGenerator::SquareMeshGenerator(SpaceTransformation *in_ct)
 
 SquareMeshGenerator::~SquareMeshGenerator() {}
 
-void SquareMeshGenerator::set_boundary_ids(
-    parallel::distributed::Triangulation<3> &tria) const {
-  parallel::distributed::Triangulation<3>::active_cell_iterator
-      cell2 = tria.begin_active(),
-      endc2 = tria.end();
-  tria.set_all_manifold_ids(0);
-  double min_z = 100000.0;
-  double max_z = -100000.0;
-  parallel::distributed::Triangulation<3>::cell_iterator
-      boundary_searcher_begin = tria.begin();
-  parallel::distributed::Triangulation<3>::cell_iterator boundary_searcher_end =
-      tria.end();
-  for (; boundary_searcher_begin != boundary_searcher_end;
-       boundary_searcher_begin++) {
-    for (unsigned int i = 0; i < GeometryInfo<3>::vertices_per_cell; ++i) {
-      Point<3> &v = boundary_searcher_begin->vertex(i);
-      if (v(2) < min_z) {
-        min_z = v(2);
+unsigned int SquareMeshGenerator::getDominantComponentAndDirection(
+    Point<3> in_dir) const {
+  unsigned int comp = 0;
+  if (std::abs(in_dir[0]) >= std::abs(in_dir[1]) &&
+      std::abs(in_dir[0]) >= std::abs(in_dir[2])) {
+    if (in_dir[0] < 0) {
+      comp = 0;
+    } else {
+      comp = 1;
+    }
+  } else {
+    if (std::abs(in_dir[1]) >= std::abs(in_dir[2])) {
+      if (in_dir[1] < 0) {
+        comp = 2;
+      } else {
+        comp = 3;
       }
-      if (v(2) > max_z) {
-        max_z = v(2);
+    } else {
+      if (in_dir[2] < 0) {
+        comp = 4;
+      } else {
+        comp = 5;
       }
     }
   }
+  return comp;
+}
+
+void SquareMeshGenerator::set_boundary_ids(Triangulation<3> &tria) const {
+  Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
+                                         endc2 = tria.end();
+  tria.set_all_manifold_ids(0);
+  double local_lower_bound =
+      GlobalParams.Minimum_Z +
+      ((double)GlobalParams.MPI_Rank) * GlobalParams.LayerThickness;
+  double local_upper_bound = local_lower_bound + GlobalParams.LayerThickness;
   for (; cell2 != endc2; ++cell2) {
     if (cell2->at_boundary()) {
       for (int j = 0; j < 6; j++) {
         Point<3> ctr = cell2->face(j)->center();
         if (cell2->face(j)->at_boundary()) {
-          cell2->face(j)->set_all_boundary_ids(1);
-
-          if (std::abs(ctr(2) - max_z) < 0.00001) {
-            cell2->face(j)->set_all_boundary_ids(2);
-          }
-          if (std::abs(ctr(2) - min_z) < 0.00001) {
-            cell2->face(j)->set_all_boundary_ids(3);
-          }
+          dealii::Point<3, double> d2 = -cell2->center() + ctr;
+          unsigned int dominant_direction =
+              getDominantComponentAndDirection(d2);
+          cell2->face(j)->set_all_boundary_ids(dominant_direction);
         }
       }
     }
   }
 }
 
-void SquareMeshGenerator::prepare_triangulation(
-    parallel::distributed::Triangulation<3> *in_tria) {
+void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
   deallog.push("SquareMeshGenerator:prepare_triangulation");
   deallog << "Starting Mesh preparation" << std::endl;
 
   const std_cxx11::array<Tensor<1, 3>, 3> edges2(edges);
 
-  GridGenerator::subdivided_parallelepiped<3, 3>(*in_tria, origin, edges2, subs,
-                                                 false);
+  GridGenerator::hyper_cube(*in_tria, -1.0, 1.0, false);
 
-  in_tria->repartition();
+  set_boundary_ids(*in_tria);
 
   in_tria->signals.post_refinement.connect(
       std_cxx11::bind(&SquareMeshGenerator::set_boundary_ids,
@@ -118,74 +137,69 @@ void SquareMeshGenerator::prepare_triangulation(
 
   double len = 2.0 / Layers;
 
-  cell = in_tria->begin_active();
-  for (; cell != endc; ++cell) {
-    int temp = (int)std::floor((cell->center()[2] + 1.0) / len);
-    if (temp >= (int)Layers || temp < 0)
-      std::cout << "Critical Error in Mesh partitioning. See make_grid! "
-                   "Solvers might not work."
-                << std::endl;
-  }
-
   if (GlobalParams.R_Global > 0) {
     in_tria->refine_global(GlobalParams.R_Global);
-  }
+    }
 
-  double MaxDistX =
-      (GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In) * 1.4 / 2.0;
-  double MaxDistY =
-      (GlobalParams.M_C_Dim2Out + GlobalParams.M_C_Dim2In) * 1.4 / 2.0;
-  for (int i = 0; i < GlobalParams.R_Local; i++) {
+    double MaxDistX =
+        (GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In) * 1.4 / 2.0;
+    double MaxDistY =
+        (GlobalParams.M_C_Dim2Out + GlobalParams.M_C_Dim2In) * 1.4 / 2.0;
+    for (int i = 0; i < GlobalParams.R_Local; i++) {
+      cell = in_tria->begin_active();
+      for (; cell != endc; ++cell) {
+        if (std::abs(cell->center()[0]) < MaxDistX &&
+            std::abs(cell->center()[1]) < MaxDistY) {
+          cell->set_refine_flag();
+        }
+      }
+      in_tria->execute_coarsening_and_refinement();
+      MaxDistX =
+          (GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In) * 1.4 / 2.0;
+      MaxDistY =
+          (GlobalParams.M_C_Dim2Out + GlobalParams.M_C_Dim2In) * 1.4 / 2.0;
+    }
+
+    for (int i = 0; i < GlobalParams.R_Interior; i++) {
+      cell = in_tria->begin_active();
+      for (; cell != endc; ++cell) {
+        if (std::abs(cell->center()[0]) <
+                (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / 2.0 &&
+            std::abs(cell->center()[1]) <
+                (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out) / 2.0) {
+          cell->set_refine_flag();
+        }
+      }
+      in_tria->execute_coarsening_and_refinement();
+    }
+
+    GridTools::transform(&Triangulation_Stretch_Single_Part_Z, *in_tria);
+
+    // GridTools::transform(&Triangulation_Stretch_Z, *in_tria);
+
+    // GridTools::transform(&Triangulation_Shift_Z, *in_tria);
+
+    z_min = 10000000.0;
+    z_max = -10000000.0;
     cell = in_tria->begin_active();
+    endc = in_tria->end();
+
     for (; cell != endc; ++cell) {
-      if (std::abs(cell->center()[0]) < MaxDistX &&
-          std::abs(cell->center()[1]) < MaxDistY) {
-        cell->set_refine_flag();
+      if (cell->is_locally_owned()) {
+        for (int face = 0; face < 6; face++) {
+          z_min = std::min(z_min, cell->face(face)->center()[2]);
+          z_max = std::max(z_max, cell->face(face)->center()[2]);
+        }
       }
     }
-    in_tria->execute_coarsening_and_refinement();
-    MaxDistX = (GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In) * 1.4 / 2.0;
-    MaxDistY = (GlobalParams.M_C_Dim2Out + GlobalParams.M_C_Dim2In) * 1.4 / 2.0;
-  }
 
-  for (int i = 0; i < GlobalParams.R_Interior; i++) {
     cell = in_tria->begin_active();
-    for (; cell != endc; ++cell) {
-      if (std::abs(cell->center()[0]) <
-              (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / 2.0 &&
-          std::abs(cell->center()[1]) <
-              (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out) / 2.0) {
-        cell->set_refine_flag();
-      }
-    }
-    in_tria->execute_coarsening_and_refinement();
-  }
+    endc = in_tria->end();
 
-  GridTools::transform(&Triangulation_Stretch_Z, *in_tria);
+    set_boundary_ids(*in_tria);
 
-  GridTools::transform(&Triangulation_Shift_Z, *in_tria);
-
-  z_min = 10000000.0;
-  z_max = -10000000.0;
-  cell = in_tria->begin_active();
-  endc = in_tria->end();
-
-  for (; cell != endc; ++cell) {
-    if (cell->is_locally_owned()) {
-      for (int face = 0; face < 6; face++) {
-        z_min = std::min(z_min, cell->face(face)->center()[2]);
-        z_max = std::max(z_max, cell->face(face)->center()[2]);
-      }
-    }
-  }
-
-  cell = in_tria->begin_active();
-  endc = in_tria->end();
-
-  set_boundary_ids(*in_tria);
-
-  deallog << "Done" << std::endl;
-  deallog.pop();
+    deallog << "Done" << std::endl;
+    deallog.pop();
 }
 
 bool SquareMeshGenerator::math_coordinate_in_waveguide(
@@ -208,14 +222,13 @@ bool SquareMeshGenerator::phys_coordinate_in_waveguide(
   return false;
 }
 
-void SquareMeshGenerator::refine_global(
-    parallel::distributed::Triangulation<3> *in_tria, unsigned int times) {
+void SquareMeshGenerator::refine_global(Triangulation<3> *in_tria,
+                                        unsigned int times) {
   in_tria->refine_global(times);
 }
 
-void SquareMeshGenerator::refine_proximity(
-    parallel::distributed::Triangulation<3> *in_tria, unsigned int times,
-    double factor) {
+void SquareMeshGenerator::refine_proximity(Triangulation<3> *in_tria,
+                                           unsigned int times, double factor) {
   double X = (GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In) *
              (1.0 + factor) / 2.0;
   double Y = (GlobalParams.M_C_Dim2Out + GlobalParams.M_C_Dim2In) *
@@ -231,8 +244,8 @@ void SquareMeshGenerator::refine_proximity(
   }
 }
 
-void SquareMeshGenerator::refine_internal(
-    parallel::distributed::Triangulation<3> *in_tria, unsigned int times) {
+void SquareMeshGenerator::refine_internal(Triangulation<3> *in_tria,
+                                          unsigned int times) {
   for (unsigned int i = 0; i < times; i++) {
     cell = in_tria->begin_active();
     for (; cell != endc; ++cell) {

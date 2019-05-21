@@ -39,11 +39,10 @@ void set_the_st(SpaceTransformation *);
 double dotproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 
 template <int dim>
-void mesh_info(const parallel::distributed::Triangulation<dim>,
-               const std::string);
+void mesh_info(const Triangulation<dim>, const std::string);
 
 template <int dim>
-void mesh_info(const parallel::distributed::Triangulation<dim>);
+void mesh_info(const Triangulation<dim>);
 
 double my_inter(double, double, double);
 
@@ -78,6 +77,7 @@ Point<3, double> Triangulation_Shift_Z(const Point<3, double> &);
 
 Point<3, double> Triangulation_Stretch_Computational_Radius(
     const Point<3, double> &);
+Point<3, double> Triangulation_Stretch_Single_Part_Z(const Point<3, double> &);
 
 Point<3, double> Triangulation_Stretch_Computational_Rectangle(
     const Point<3, double> &);

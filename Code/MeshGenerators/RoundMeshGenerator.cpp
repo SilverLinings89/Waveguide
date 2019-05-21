@@ -46,11 +46,9 @@ RoundMeshGenerator::RoundMeshGenerator(SpaceTransformation *in_ct)
 
 RoundMeshGenerator::~RoundMeshGenerator() {}
 
-void RoundMeshGenerator::set_boundary_ids(
-    parallel::distributed::Triangulation<3> &tria) const {
-  parallel::distributed::Triangulation<3>::active_cell_iterator
-      cell2 = tria.begin_active(),
-      endc2 = tria.end();
+void RoundMeshGenerator::set_boundary_ids(Triangulation<3> &tria) const {
+  Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
+                                         endc2 = tria.end();
   tria.set_all_manifold_ids(0);
   for (; cell2 != endc2; ++cell2) {
     if (Distance2D(cell2->center()) < 0.25) {
@@ -62,10 +60,8 @@ void RoundMeshGenerator::set_boundary_ids(
 
   double min_z = 100000.0;
   double max_z = -100000.0;
-  parallel::distributed::Triangulation<3>::cell_iterator
-      boundary_searcher_begin = tria.begin();
-  parallel::distributed::Triangulation<3>::cell_iterator boundary_searcher_end =
-      tria.end();
+  Triangulation<3>::cell_iterator boundary_searcher_begin = tria.begin();
+  Triangulation<3>::cell_iterator boundary_searcher_end = tria.end();
   for (; boundary_searcher_begin != boundary_searcher_end;
        boundary_searcher_begin++) {
     for (unsigned int i = 0; i < GeometryInfo<3>::vertices_per_cell; ++i) {
@@ -104,8 +100,7 @@ void RoundMeshGenerator::set_boundary_ids(
   }
 }
 
-void RoundMeshGenerator::prepare_triangulation(
-    parallel::distributed::Triangulation<3> *in_tria) {
+void RoundMeshGenerator::prepare_triangulation(Triangulation<3> *in_tria) {
   deallog.push("RoundMeshGenerator:prepare_triangulation");
   deallog << "Starting Mesh preparation" << std::endl;
 
@@ -113,8 +108,6 @@ void RoundMeshGenerator::prepare_triangulation(
 
   GridGenerator::subdivided_parallelepiped<3, 3>(*in_tria, origin, edges2, subs,
                                                  false);
-
-  in_tria->repartition();
 
   in_tria->signals.post_refinement.connect(
       std_cxx11::bind(&RoundMeshGenerator::set_boundary_ids,
@@ -154,9 +147,8 @@ void RoundMeshGenerator::prepare_triangulation(
   }
 
   in_tria->set_manifold(man, round_description);
-  parallel::distributed::Triangulation<3>::active_cell_iterator
-      cell = in_tria->begin_active(),
-      endc = in_tria->end();
+  Triangulation<3>::active_cell_iterator cell = in_tria->begin_active(),
+                                         endc = in_tria->end();
 
   double len = 2.0 / Layers;
 
@@ -206,10 +198,6 @@ void RoundMeshGenerator::prepare_triangulation(
     in_tria->execute_coarsening_and_refinement();
   }
 
-  // mesh_info(triangulation, solutionpath + "/grid" +
-  // static_cast<std::ostringstream*>( &(std::ostringstream() <<
-  // GlobalParams.MPI_Rank) )->str() + ".vtk");
-
   GridTools::transform(&Triangulation_Stretch_Z, *in_tria);
 
   GridTools::transform(&Triangulation_Shift_Z, *in_tria);
@@ -254,14 +242,13 @@ bool RoundMeshGenerator::phys_coordinate_in_waveguide(
   return (abs(temp[0]) < r && abs(temp[1]) < r);
 }
 
-void RoundMeshGenerator::refine_global(
-    parallel::distributed::Triangulation<3> *in_tria, unsigned int times) {
+void RoundMeshGenerator::refine_global(Triangulation<3> *in_tria,
+                                       unsigned int times) {
   in_tria->refine_global(times);
 }
 
-void RoundMeshGenerator::refine_proximity(
-    parallel::distributed::Triangulation<3> *in_tria, unsigned int times,
-    double factor) {
+void RoundMeshGenerator::refine_proximity(Triangulation<3> *in_tria,
+                                          unsigned int times, double factor) {
   for (unsigned int t = 0; t < times; t++) {
     double R = (GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In) *
                (1.0 + factor) / 2.0;
@@ -275,8 +262,8 @@ void RoundMeshGenerator::refine_proximity(
   }
 }
 
-void RoundMeshGenerator::refine_internal(
-    parallel::distributed::Triangulation<3> *in_tria, unsigned int times) {
+void RoundMeshGenerator::refine_internal(Triangulation<3> *in_tria,
+                                         unsigned int times) {
   for (unsigned int i = 0; i < times; i++) {
     cell = in_tria->begin_active();
     for (; cell != endc; ++cell) {

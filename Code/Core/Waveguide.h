@@ -18,8 +18,6 @@
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/thread_management.h>
 #include <deal.II/base/timer.h>
-#include <deal.II/distributed/grid_refinement.h>
-#include <deal.II/distributed/tria.h>
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_renumbering.h>
@@ -33,6 +31,7 @@
 #include <deal.II/grid/grid_out.h>
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/grid/manifold_lib.h>
+#include <deal.II/grid/tria.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_boundary_lib.h>
 #include <deal.II/grid/tria_iterator.h>
@@ -81,6 +80,11 @@ static const CylindricalManifold<3, 3> round_description(2);
 const int STEPS_PER_DOFS = 11;
 
 extern double *steps_widths;
+
+struct ConstraintPair {
+  unsigned int left, right;
+  bool sign;
+};
 
 /**
  * \class Waveguide
@@ -213,14 +217,30 @@ class Waveguide {
    */
   void estimate_solution();
 
+  /**
+   * Having computed both primal and dual solution, this function computes the contribution of the local mesh to the components of the shape gradient.
+   * It requires a run of solve() for both the primal and dual problem, i.e. solve() , switch_to_dual() and solve() again.
+   */
   std::vector<std::complex<double>> assemble_adjoint_local_contribution(
       double stepwidth);
 
+  /**
+   * This chages the SpaceTransformation object used to compute the material-tensors epsilon and mu. The primal version uses the physical representation of the system, whereas the dual version switches to the coordinates to always send the signal backwards through the waveguide configuration.
+   */
   void switch_to_primal(SpaceTransformation *primal_st);
 
+/**
+   * This chages the SpaceTransformation object used to compute the material-tensors epsilon and mu. The primal version uses the physical representation of the system, whereas the dual version switches to the coordinates to always send the signal backwards through the waveguide configuration.
+   */
   void switch_to_dual(SpaceTransformation *dual_st);
 
   Point<3, double> transform_coordinate(const Point<3, double>);
+
+  void Add_Zero_Restraint(ConstraintMatrix *in_cm,
+                          DoFHandler<3>::active_cell_iterator &in_cell,
+                          unsigned int in_face, unsigned int DofsPerLine,
+                          unsigned int DofsPerFace, bool in_non_face_dofs,
+                          IndexSet locally_owned_dofs);
 
   MeshGenerator *mg;
 
@@ -353,6 +373,14 @@ class Waveguide {
   void MakePreconditionerBoundaryConditions();
 
   /**
+   * This function projects the boundary conditions for all matrices i.e. the
+   * preconditioner matrices as well as the system matrix. This has to be used
+   * BEFORE the matrices are shifted since it uses functions that derive indices
+   * from the dof_handler functions.
+   */
+  void ProjectBoundaryConditions();
+
+  /**
    * This function executes refined downstream ordering of degrees of freedom.
    */
   void Compute_Dof_Numbers();
@@ -461,22 +489,43 @@ class Waveguide {
   std::complex<double> gauss_product_2D_sphere(double z, int n, double R,
                                                double Xc, double Yc);
 
+  /**
+   * Once a solution has been computed, this function can be used to evaluate it at a point position.
+   */
   Tensor<1, 3, std::complex<double>> solution_evaluation(
       Point<3, double> position) const;
+/**
+   * Once a solution has been computed, this function can be used to evaluate it at a point position. This function is similar to the other version but it doesn't return the solution but stores it in the pointer given as an argument.
+   */
 
   void solution_evaluation(Point<3, double> position, double *solution) const;
 
+  /**
+   * Same as solution_evaluation but transforms the coordinate to the dual system first, so if you passed in a coordinate on the input interface, it would return the solution evaluation on the output interface.
+   */
   Tensor<1, 3, std::complex<double>> adjoint_solution_evaluation(
       Point<3, double> position) const;
-
+/**
+   * Same as solution_evaluation but transforms the coordinate to the dual system first, so if you passed in a coordinate on the input interface, it would return the solution evaluation on the output interface.
+   */
   void adjoint_solution_evaluation(Point<3, double> position,
                                    double *solution) const;
 
   IndexSet combine_indexes(IndexSet lower, IndexSet upper) const;
 
+  /**
   std::vector<unsigned int> Add_Zero_Restraint(
       dealii::ConstraintMatrix *, dealii::DoFHandler<3>::active_cell_iterator &,
       unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet);
+      **/
+
+  unsigned int local_to_global_index(unsigned int local_index);
+
+  unsigned int global_to_local_index(unsigned int local_index);
+
+  void SortDofsDownstream();
+
+  void Shift_Constraint_Matrix(ConstraintMatrix *in_cm);
 
   // HIER BEGINNT DIE NEUE VERSION...
 
@@ -484,11 +533,11 @@ class Waveguide {
 
   MPI_Comm mpi_comm;
 
-  parallel::distributed::Triangulation<3>::active_cell_iterator cell, endc;
+  DoFHandler<3>::active_cell_iterator cell, endc;
 
   FESystem<3> fe;
 
-  parallel::distributed::Triangulation<3> triangulation;
+  Triangulation<3> triangulation;
 
   TrilinosWrappers::MPI::BlockVector system_rhs;
 
@@ -504,8 +553,10 @@ class Waveguide {
 
   SolverControl solver_control;
 
-  ConstraintMatrix cm, cm_prec_even, cm_prec_odd;
-
+  ConstraintMatrix cm, cm_prec_even, cm_prec_odd, periodic_constraints;
+  unsigned int interface_dof_count;
+  unsigned int n_dofs;
+  unsigned int n_global_dofs;
   DoFHandler<3> dof_handler;
 
   std::vector<IndexSet> i_prec_even_owned_row;
@@ -522,19 +573,17 @@ class Waveguide {
   TrilinosWrappers::MPI::BlockVector *solution;
 
   TrilinosWrappers::MPI::BlockVector EstimatedSolution, ErrorOfSolution;
-  IndexSet locally_owned_dofs, locally_relevant_dofs, locally_active_dofs,
-      extended_relevant_dofs;
+  IndexSet locally_owned_dofs, locally_relevant_dofs, extended_relevant_dofs;
   std::vector<IndexSet> locally_relevant_dofs_per_subdomain;
 
   Vector<double> preconditioner_rhs;
 
-  LinearAlgebra::distributed::Vector<double> primal_with_relevant;
-  LinearAlgebra::distributed::Vector<double> dual_with_relevant;
+  dealii::Vector<double> primal_with_relevant;
+  dealii::Vector<double> dual_with_relevant;
 
-  std::vector<IndexSet> locally_relevant_dofs_all_processors;
+  std::vector<IndexSet> locally_owned_dofs_all_processors;
   IndexSet UpperDofs, LowerDofs;
   IndexSet JumpDofs;
-  double JumpCoordinate;
   int run_number;
 
   int condition_file_counter, eigenvalue_file_counter;
@@ -579,6 +628,9 @@ class Waveguide {
   IndexSet locally_owned_cells, sweepable;
   IndexSet InputInterfaceDofs;
   double cell_layer_z;
+  std::vector<ConstraintPair> periodicity_constraints;
+  std::vector<unsigned int> l2g;
+  IndexSet ZeroBoundaryDofs;
 };
 
 #endif

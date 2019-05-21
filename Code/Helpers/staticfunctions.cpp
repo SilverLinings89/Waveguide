@@ -465,16 +465,15 @@ double dotproduct(Tensor<1, 3, double> a, Tensor<1, 3, double> b) {
 }
 
 template <int dim>
-void mesh_info(const parallel::distributed::Triangulation<dim> &tria,
-               const std::string &filename) {
+void mesh_info(const Triangulation<dim> &tria, const std::string &filename) {
   std::cout << "Mesh info:" << std::endl
             << " dimension: " << dim << std::endl
             << " no. of cells: " << tria.n_active_cells() << std::endl;
   {
     std::map<unsigned int, unsigned int> boundary_count;
-    typename parallel::distributed::Triangulation<dim>::active_cell_iterator
-        cell = tria.begin_active(),
-        endc = tria.end();
+    typename Triangulation<dim>::active_cell_iterator cell =
+                                                          tria.begin_active(),
+                                                      endc = tria.end();
     for (; cell != endc; ++cell) {
       for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell;
            ++face) {
@@ -498,15 +497,15 @@ void mesh_info(const parallel::distributed::Triangulation<dim> &tria,
 }
 
 template <int dim>
-void mesh_info(const parallel::distributed::Triangulation<dim> &tria) {
+void mesh_info(const Triangulation<dim> &tria) {
   std::cout << "Mesh info:" << std::endl
             << " dimension: " << dim << std::endl
             << " no. of cells: " << tria.n_active_cells() << std::endl;
   {
     std::map<unsigned int, unsigned int> boundary_count;
-    typename parallel::distributed::Triangulation<dim>::active_cell_iterator
-        cell = tria.begin_active(),
-        endc = tria.end();
+    typename Triangulation<dim>::active_cell_iterator cell =
+                                                          tria.begin_active(),
+                                                      endc = tria.end();
     for (; cell != endc; ++cell) {
       for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell;
            ++face) {
@@ -605,6 +604,18 @@ double my_inter(double x, double l, double w) {
   double c = (16.0 / 9.0) * (l - w);
   double b = -(8.0 / 9.0) * (l - w);
   return a + b * x + c * x * x;
+}
+
+Point<3, double> Triangulation_Stretch_Single_Part_Z(
+    const Point<3, double> &p) {
+  Point<3, double> q = p;
+  double z_min = GlobalParams.Minimum_Z +
+                 (GlobalParams.MPI_Rank * GlobalParams.LayerThickness);
+  q[2] += 1.0;
+  q[2] /= 2.0;
+  q[2] *= GlobalParams.LayerThickness;
+  q[2] += z_min;
+  return q;
 }
 
 Point<3, double> Triangulation_Stretch_Computational_Rectangle(

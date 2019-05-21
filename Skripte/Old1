@@ -1,0 +1,6 @@
+compiler/intel/17.0
+mpi/openmpi/3.1-intel-17.0
+numlib/mkl/2017
+lib/boost/1.69.0
+lib/hdf5/1.10-openmpi-3.1-intel-17.0
+
