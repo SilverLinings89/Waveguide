@@ -1555,8 +1555,6 @@ void Waveguide::Add_Zero_Restraint(
 }
 
 void Waveguide::solve() {
-  // SolverControl lsc =
-  //    SolverControl(GlobalParams.So_TotalSteps, 1.e-5, true, true);
 
   SolverControl lsc =
       SolverControl(30, 1.e-5, true, true);
@@ -1744,7 +1742,6 @@ void Waveguide::solve() {
     TrilinosWrappers::SolverDirect temp_s(
         sc2, TrilinosWrappers::SolverDirect::AdditionalData(
             false, PrecOptionNames[GlobalParams.So_Preconditioner]));
-    // temp_s.solve(system_matrix, solution, system_rhs);
   }
   deallog << "Building local vector:" << std::endl;
   solution->update_ghost_values();
