@@ -69,3 +69,4 @@ Performance_Results/
 routes_*
 job_uc1_*
 Code/.vscode/c_cpp_properties.json
+Code/.vscode/ipch

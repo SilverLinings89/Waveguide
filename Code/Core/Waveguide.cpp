@@ -632,11 +632,7 @@ void Waveguide::setup_system() {
     i_prec_even_owned_col.push_back(temp1[GlobalParams.NumberProcesses - 1]);
     i_prec_even_writable.push_back(temp2[GlobalParams.NumberProcesses - 1]);
   }
-  //
-  //  Prepare_Boundary_Constraints();
-  //
-  //  deallog << "Boundaryconditions prepared." << std::endl;
-
+ 
   locally_owned_dofs_all_processors.resize(Layers);
 
   for (unsigned int i = 0; i < Layers; i++) {
@@ -644,7 +640,7 @@ void Waveguide::setup_system() {
     locally_owned_dofs_all_processors[i].set_size(n_global_dofs);
   }
 
-  for (int i = 0; i < GlobalParams.NumberProcesses; i++) {
+  for (unsigned int i = 0; i < GlobalParams.NumberProcesses; i++) {
     if (i == 0) {
       locally_owned_dofs_all_processors[i].add_range(0, n_dofs);
     } else {
@@ -1588,13 +1584,13 @@ void Waveguide::solve() {
         lsc, dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::BlockVector>::
         AdditionalData(GlobalParams.So_RestartSteps));
 
-    int above = 0;
-    if (static_cast<int>(rank) != GlobalParams.NumberProcesses - 1) {
+    unsigned int above = 0;
+    if ( rank + 1 != GlobalParams.NumberProcesses ) {
       above = locally_owned_dofs_all_processors[rank + 1].n_elements();
     }
 
-    int below = 0;
-    if (static_cast<int>(rank) != 0) {
+    unsigned int below = 0;
+    if (rank != 0) {
       below = locally_owned_dofs_all_processors[rank - 1].n_elements();
     }
 
@@ -1618,7 +1614,7 @@ void Waveguide::solve() {
       sweep.matrix = &prec_matrix_odd.block((rank + 1) / 2, (rank + 1) / 2);
     }
 
-    if (static_cast<int>(rank) == GlobalParams.NumberProcesses - 1) {
+    if ( rank + 1 == GlobalParams.NumberProcesses ) {
       sweep.matrix = &system_matrix.block(rank, rank);
     }
 

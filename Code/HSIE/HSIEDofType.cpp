@@ -273,6 +273,7 @@ std::vector<std::complex<double>> HSIE_Dof_Type<hsie_order>::apply_T_plus(
   for (unsigned int i = 1; i <= hsie_order; i++) {
     ret[i] = in_base_vector[i - 1] + in_base_vector[i];
   }
+  return ret;
 }
 
 template <int hsie_order>
@@ -285,4 +286,5 @@ std::vector<std::complex<double>> HSIE_Dof_Type<hsie_order>::apply_T_minus(
   for (unsigned int i = 1; i <= hsie_order; i++) {
     ret[i] = in_base_vector[i - 1] - in_base_vector[i];
   }
+  return ret;
 }

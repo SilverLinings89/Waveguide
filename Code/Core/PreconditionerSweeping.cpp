@@ -49,7 +49,7 @@ PreconditionerSweeping::PreconditionerSweeping(
 
 void PreconditionerSweeping::Prepare(TrilinosWrappers::MPI::BlockVector &inp) {
   boundary.reinit(own, false);
-  for (int i = 0; i < own; i++) {
+  for (unsigned int i = 0; i < own; i++) {
     boundary[i] = inp[i];
   }
 }
@@ -66,7 +66,7 @@ void PreconditionerSweeping::vmult(
   for (unsigned int i = 0; i < sweepable; i++) {
     input[i] = src[indices[i]];
   }
-  if ((int)rank + 1 == GlobalParams.NumberProcesses) {
+  if (rank + 1 == GlobalParams.NumberProcesses) {
     solver->solve(input);
     MPI_Send(&input[0], own, MPI_DOUBLE, rank - 1, 0, mpi_comm);
   } else {
@@ -79,8 +79,8 @@ void PreconditionerSweeping::vmult(
       MPI_Send(&temp_own[0], own, MPI_DOUBLE, rank - 1, 0, mpi_comm);
     }
   }
-  if ((int)rank + 1 != GlobalParams.NumberProcesses) {
-    for (int i = 0; i < own; i++) {
+  if (rank + 1 != GlobalParams.NumberProcesses) {
+    for (unsigned int i = 0; i < own; i++) {
       temp_own[i] = input[i];
     }
     Hinv(temp_own, input);
@@ -97,12 +97,12 @@ void PreconditionerSweeping::vmult(
     LowerProduct(recv_buffer_above, temp_own);
     Hinv(temp_own, temp_own_2);
     input -= temp_own_2;
-    if ((int)rank + 1 < GlobalParams.NumberProcesses) {
+    if (rank + 1 < GlobalParams.NumberProcesses) {
       MPI_Send(&input[0], own, MPI_DOUBLE, rank + 1, 0, mpi_comm);
     }
   }
 
-  for (int i = 0; i < own; i++) {
+  for (unsigned int i = 0; i < own; i++) {
     if (!fixed_dofs->is_element(indices[i])) {
       dst[indices[i]] = input[i];
     }
@@ -119,13 +119,13 @@ void PreconditionerSweeping::vmult(
 void PreconditionerSweeping::Hinv(const dealii::Vector<double> &src,
                                   dealii::Vector<double> &dst) const {
   dealii::Vector<double> inputb(own + others);
-  for (int i = 0; i < own; i++) {
+  for (unsigned int i = 0; i < own; i++) {
     inputb[i] = src(i);
   }
 
   solver->solve(inputb);
 
-  for (int i = 0; i < own; i++) {
+  for (unsigned int i = 0; i < own; i++) {
     dst[i] = inputb[i];
   }
 }
@@ -141,8 +141,6 @@ void PreconditionerSweeping::init(SolverControl,
   local.add_range(0, matrix->m());
   dealii::DynamicSparsityPattern sparsity_pattern;
   dealii::SparseMatrix<double> *temp;
-  // Main Matrix Preparation
-
   sparsity_pattern.reinit(own + others, own + others);
   TrilinosWrappers::SparseMatrix::iterator it = matrix->begin();
   TrilinosWrappers::SparseMatrix::iterator end = matrix->end();
@@ -185,8 +183,6 @@ void PreconditionerSweeping::init(
   local.add_range(0, matrix->m());
   dealii::SparsityPattern sparsity_pattern;
   dealii::SparseMatrix<double> *temp;
-  // Main Matrix Preparation
-
   sparsity_pattern.reinit(own + others, own + others, bandwidth);
   TrilinosWrappers::SparseMatrix::iterator it = matrix->begin();
   TrilinosWrappers::SparseMatrix::iterator end = matrix->end();
@@ -263,7 +259,7 @@ void PreconditionerSweeping::init(
 
 void PreconditionerSweeping::UpperProduct(const dealii::Vector<double> &src,
                                           dealii::Vector<double> &dst) const {
-  if ((int)rank + 1 == GlobalParams.NumberProcesses) {
+  if (rank + 1 == GlobalParams.NumberProcesses) {
     std::cout << "ERROR!" << std::endl;
   }
   prec_matrix_upper->vmult(dst, src);
@@ -271,7 +267,7 @@ void PreconditionerSweeping::UpperProduct(const dealii::Vector<double> &src,
 
 void PreconditionerSweeping::LowerProduct(const dealii::Vector<double> &src,
                                           dealii::Vector<double> &dst) const {
-  if ((int)rank == 0) {
+  if (rank == 0) {
     std::cout << "ERROR!" << std::endl;
   }
   prec_matrix_lower->vmult(dst, src);

@@ -87,8 +87,8 @@ bool InhomogenousTransformationCircular::PML_in_Z(Point<3> &p) const {
 
 bool InhomogenousTransformationCircular::Preconditioner_PML_in_Z(
     Point<3> &, unsigned int block) const {
-  if ((int)block == GlobalParams.NumberProcesses - 2) return false;
-  if ((int)block == (int)GlobalParams.MPI_Rank - 1) {
+  if (block + 2 == GlobalParams.NumberProcesses ) return false;
+  if (block + 1 == GlobalParams.MPI_Rank) {
     return true;
   } else {
     return false;
