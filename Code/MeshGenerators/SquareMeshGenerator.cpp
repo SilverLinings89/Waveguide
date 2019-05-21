@@ -92,9 +92,6 @@ void SquareMeshGenerator::set_boundary_ids(Triangulation<3> &tria) const {
   Triangulation<3>::active_cell_iterator cell2 = tria.begin_active(),
                                          endc2 = tria.end();
   tria.set_all_manifold_ids(0);
-  double local_lower_bound =
-      GlobalParams.Minimum_Z +
-      ((double)GlobalParams.MPI_Rank) * GlobalParams.LayerThickness;
   for (; cell2 != endc2; ++cell2) {
     if (cell2->at_boundary()) {
       for (int j = 0; j < 6; j++) {

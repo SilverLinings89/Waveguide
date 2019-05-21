@@ -1850,7 +1850,7 @@ void Waveguide::output_results(bool) {
           "/solution-run" + std::to_string(run_number) +
           ".pvtu");
       std::vector<std::string> filenames;
-      for (int i = 0; i < GlobalParams.NumberProcesses; i++) {
+      for (unsigned int i = 0; i < GlobalParams.NumberProcesses; i++) {
         filenames.push_back("solution-run" + std::to_string(run_number) + "-P" +
             std::to_string(i) + ".vtu");
       }
@@ -2050,7 +2050,7 @@ Waveguide::assemble_adjoint_local_contribution(double stepwidth) {
   double *returned_vector = new double[6];
   for (unsigned int temp_counter = 0; temp_counter < 2; temp_counter++) {
     if (((GlobalParams.NumberProcesses % 2 == 1) &&
-        (static_cast<int>(rank) == GlobalParams.NumberProcesses / 2 - 1) &&
+        (rank + 1 == GlobalParams.NumberProcesses / 2 ) &&
         temp_counter == 0)) {
       deallog.push("middle phase");
       deallog << "This process is now computing its own contributions to the "
