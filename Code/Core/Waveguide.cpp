@@ -437,7 +437,7 @@ void Waveguide::setup_system() {
   if (GlobalParams.MPI_Rank == 0) {
     locally_relevant_dofs.add_range(0, n_dofs + 2 * interface_dof_count);
   } else {
-    if (GlobalParams.MPI_Rank < GlobalParams.NumberProcesses - 1) {
+    if (GlobalParams.MPI_Rank + 1 < GlobalParams.NumberProcesses) {
       locally_relevant_dofs.add_range(
           GlobalParams.MPI_Rank * n_dofs -
           (GlobalParams.MPI_Rank - 1) * interface_dof_count -
@@ -1148,34 +1148,31 @@ void Waveguide::assemble_system() {
   locals_set = true;
 
   MPI_Barrier(mpi_comm);
-  if (!is_stored)
-    deallog << "Assembling done. L2-Norm of RHS: " << system_rhs.l2_norm()
-    << std::endl;
 
-    system_matrix.compress(VectorOperation::add);
-    system_rhs.compress(VectorOperation::add);
+  deallog << "Assembling done. L2-Norm of RHS: " << system_rhs.l2_norm() << std::endl;
 
-    prec_matrix_even.compress(VectorOperation::add);
-    prec_matrix_odd.compress(VectorOperation::add);
+  system_matrix.compress(VectorOperation::add);
+  system_rhs.compress(VectorOperation::add);
 
-    if (primal) {
-      cm.distribute(primal_solution);
-    } else {
-      cm.distribute(dual_solution);
-    }
-    cm.distribute(EstimatedSolution);
-    cm.distribute(ErrorOfSolution);
-    MPI_Barrier(mpi_comm);
-    deallog << "Distributing solution done." << std::endl;
-    estimate_solution();
+  prec_matrix_even.compress(VectorOperation::add);
+  prec_matrix_odd.compress(VectorOperation::add);
+
+  if (primal) {
+    cm.distribute(primal_solution);
+  } else {
+    cm.distribute(dual_solution);
+  }
+  cm.distribute(EstimatedSolution);
+  cm.distribute(ErrorOfSolution);
+  MPI_Barrier(mpi_comm);
+  deallog << "Distributing solution done." << std::endl;
+  estimate_solution();
 }
 
 void Waveguide::MakeBoundaryConditions() {
   DoFHandler<3>::active_cell_iterator cell, endc;
   cell = dof_handler.begin_active(), endc = dof_handler.end();
   std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
-  double input_search_x = 0.45 * GlobalParams.M_R_XLength;
-  double input_search_y = 0.45 * GlobalParams.M_R_YLength;
   InputInterfaceDofs = IndexSet(n_global_dofs);
   cell_layer_z = 0.0;
 
@@ -1227,7 +1224,7 @@ void Waveguide::MakeBoundaryConditions() {
         cm);
   }
 
-  if (GlobalParams.MPI_Rank == GlobalParams.NumberProcesses - 1) {
+  if ( GlobalParams.MPI_Rank + 1 == GlobalParams.NumberProcesses) {
     VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 5,
         cm);
   }
@@ -1396,7 +1393,7 @@ void Waveguide::MakePreconditionerBoundaryConditions() {
         cm_prec_even);
   }
 
-  if (GlobalParams.MPI_Rank == GlobalParams.NumberProcesses - 1) {
+  if (GlobalParams.MPI_Rank + 1 == GlobalParams.NumberProcesses) {
     VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 5,
         cm_prec_even);
   }
@@ -1415,7 +1412,7 @@ void Waveguide::MakePreconditionerBoundaryConditions() {
         cm_prec_odd);
   }
 
-  if (GlobalParams.MPI_Rank == GlobalParams.NumberProcesses - 1) {
+  if (GlobalParams.MPI_Rank + 1 == GlobalParams.NumberProcesses) {
     VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 5,
         cm_prec_odd);
   }

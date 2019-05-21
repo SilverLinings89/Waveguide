@@ -221,7 +221,7 @@ struct Parameters {
 
   double LayersPerSector;
 
-  int NumberProcesses;
+  unsigned int NumberProcesses;
 
   bool Head = false;
 
