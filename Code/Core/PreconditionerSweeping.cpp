@@ -25,8 +25,8 @@ dealii::SparsityPattern off_diag_block_lower, off_diag_block_upper;
 PreconditionerSweeping::~PreconditionerSweeping() { delete solver; }
 
 PreconditionerSweeping::PreconditionerSweeping(
-    MPI_Comm in_mpi_comm, int in_own, int in_others, int in_above,
-    unsigned int interface, int in_bandwidth, IndexSet in_locally_owned_dofs,
+    MPI_Comm in_mpi_comm, unsigned int in_own, unsigned int in_others, unsigned int in_above,
+    unsigned int interface, unsigned int in_bandwidth, IndexSet in_locally_owned_dofs,
     IndexSet *in_fixed_dofs, int in_rank) {
   interface_dof_count = interface;
   locally_owned_dofs = in_locally_owned_dofs;
