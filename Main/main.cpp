@@ -24,13 +24,10 @@
 
 #include "../Code/SpaceTransformations/SpaceTransformation.h"
 #include "../Code/SpaceTransformations/InhomogenousTransformationRectangular.h"
-#include "../Code/SpaceTransformations/InhomogenousTransformationCircular.h"
-#include "../Code/SpaceTransformations/HomogenousTransformationCircular.h"
 #include "../Code/SpaceTransformations/HomogenousTransformationRectangular.h"
 #include "../Code/SpaceTransformations/DualProblemTransformationWrapper.h"
 
 #include "../Code/MeshGenerators/MeshGenerator.h"
-#include "../Code/MeshGenerators/RoundMeshGenerator.h"
 #include "../Code/MeshGenerators/SquareMeshGenerator.h"
 
 #include "../Code/OptimizationStrategies/AdjointOptimization.h"
@@ -70,35 +67,19 @@ int main (int argc, char *argv[])
 
 	ModeMan.load();
 
-	deallog << "Parameters loaded. Preparing Space Transformations..." <<std::endl;
-
 	SpaceTransformation * st;
 
-	if(GlobalParams.M_C_Shape == ConnectorType::Circle){
-    if(GlobalParams.Sc_Homogeneity) {
-      st = new HomogenousTransformationCircular(GlobalParams.MPI_Rank);
-    } else {
-      st = new InhomogenousTransformationCircular(GlobalParams.MPI_Rank);
-    }
-  } else {
-    if(GlobalParams.Sc_Homogeneity) {
-     st = new HomogenousTransformationRectangular(GlobalParams.MPI_Rank);
-    } else {
-     st = new InhomogenousTransformationRectangular(GlobalParams.MPI_Rank);
-    }
-  }
+	if(GlobalParams.Sc_Homogeneity) {
+		st = new HomogenousTransformationRectangular(GlobalParams.MPI_Rank);
+	} else {
+		st = new InhomogenousTransformationRectangular(GlobalParams.MPI_Rank);
+	}
 
 	st->estimate_and_initialize();
 
-	deallog << "Done. Preparing Mesh Generators..." <<std::endl;
-
 	MeshGenerator * mg;
-	if(GlobalParams.M_C_Shape == ConnectorType::Circle ){
-	  mg = new RoundMeshGenerator(st);
-	} else {
-	  mg = new SquareMeshGenerator(st);
-	}
-
+	mg = new SquareMeshGenerator(st);
+	
 	SpaceTransformation * dst;
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint ) {
 	  dst = new DualProblemTransformationWrapper(st,  GlobalParams.MPI_Rank);
@@ -109,8 +90,6 @@ int main (int argc, char *argv[])
 		dst->estimate_and_initialize();
 	}
 
-	deallog << "Done. Building Waveguides." <<std::endl;
-
 	Waveguide * waveguide;
 	std::string prefix = "";
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
@@ -120,8 +99,6 @@ int main (int argc, char *argv[])
 	}
 
 	waveguide = new Waveguide(MPI_COMM_WORLD, mg, st);
-
-	deallog << "Done. Loading Schema..." <<std::endl;
 
 	Optimization * opt;
 
@@ -135,63 +112,13 @@ int main (int argc, char *argv[])
 		opt = new FDOptimization(waveguide, mg, st, Oa_d);
 	}
 
-  deallog << "Done." <<std::endl;
-
-  deallog.push("Configuration");
-	if(GlobalParams.MPI_Rank == 0) {
-	  deallog << "Prepared for the following setup: " <<std::endl;
-	  deallog << "Mesh Generator:";
-	  if(GlobalParams.M_C_Shape == ConnectorType::Circle ){
-	    deallog << "Round Mesh Generator";
-	  } else {
-	    deallog << "Rectangular Mesh Generator";
-	  }
-
-	  deallog << std::endl <<"Space Transformation: ";
-
-	  if(GlobalParams.M_C_Shape == ConnectorType::Circle){
-	      if(GlobalParams.Sc_Homogeneity) {
-	        deallog << "Homogenous Transformation Circular" ;
-	      } else {
-	        deallog << "Inhomogenous Transformation Circular" ;
-	      }
-	    } else {
-	      if(GlobalParams.Sc_Homogeneity) {
-	        deallog << "Homogenous Transformation Rectangular" ;
-	      } else {
-	        deallog << "Inhomogenous Transformation Rectangular" ;
-	      }
-	    }
-
-	  deallog << std::endl << "Optimization Schema:" ;
-
-	  if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
-	    deallog << "Adjoint Schema" ;
-	  } else {
-	    deallog << "Finite Differences" ;
-	  }
-
-	  deallog << std::endl << "Stepping Method:" ;
-
-	  if(GlobalParams.Sc_SteppingMethod == SteppingMethod::CG) {
-	    deallog << "Conjugate  Gradient";
-	  } else if (GlobalParams.Sc_SteppingMethod == SteppingMethod::Steepest){
-	    deallog << "Steepest Descend";
-	  } else {
-	    deallog << "1D search";
-	  }
-	  deallog << " with step width " << GlobalParams.StepWidth << std::endl;
-	}
-
+  
 	deallog.pop();
-
-	deallog << "Starting optimization run..." << std::endl;
 
 	deallog.push("Run");
 
 	opt->run();
 
-	deallog.pop();
 
 	deallog.pop();
 	return 0;

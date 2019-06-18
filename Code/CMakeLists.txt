@@ -14,7 +14,6 @@ ADD_LIBRARY(Code
 	Helpers/staticfunctions.cpp
 	Helpers/ShapeDescription.cpp
 	MeshGenerators/MeshGenerator.cpp
-	MeshGenerators/RoundMeshGenerator.cpp
 	MeshGenerators/SquareMeshGenerator.cpp
 	OptimizationAlgorithm/Optimization1D.cpp
 	OptimizationAlgorithm/OptimizationAlgorithm.cpp
@@ -24,9 +23,7 @@ ADD_LIBRARY(Code
 	OptimizationStrategies/FDOptimization.cpp
 	OptimizationStrategies/Optimization.cpp
 	SpaceTransformations/DualProblemTransformationWrapper.cpp
-	SpaceTransformations/HomogenousTransformationCircular.cpp
 	SpaceTransformations/HomogenousTransformationRectangular.cpp
-	SpaceTransformations/InhomogenousTransformationCircular.cpp
 	SpaceTransformations/InhomogenousTransformationRectangular.cpp
 	SpaceTransformations/SpaceTransformation.cpp
 	HSIE/FaceSurfaceComparator.cpp

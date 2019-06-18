@@ -27,9 +27,7 @@
 #include <vector>
 #include "../Helpers/ExactSolution.h"
 #include "../Helpers/staticfunctions.h"
-#include "../SpaceTransformations/HomogenousTransformationCircular.h"
 #include "../SpaceTransformations/HomogenousTransformationRectangular.h"
-#include "../SpaceTransformations/InhomogenousTransformationCircular.h"
 #include "../SpaceTransformations/InhomogenousTransformationRectangular.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
 #include "PreconditionerSweeping.h"
@@ -138,9 +136,7 @@ std::complex<double> Waveguide::evaluate_Energy_for_Position(double x, double y,
 void Waveguide::estimate_solution() {
   MPI_Barrier(mpi_comm);
   deallog.push("estimate_solution");
-  deallog << "Starting solution estimation..." << std::endl;
   DoFHandler<3>::active_cell_iterator cell, endc;
-  deallog << "Lambda: " << GlobalParams.M_W_Lambda << std::endl;
   unsigned int min_dof = locally_owned_dofs.nth_index_in_set(0);
   unsigned int max_dof =
       locally_owned_dofs.nth_index_in_set(locally_owned_dofs.n_elements() - 1);
@@ -185,7 +181,6 @@ void Waveguide::estimate_solution() {
   }
   MPI_Barrier(mpi_comm);
   EstimatedSolution.compress(VectorOperation::insert);
-  deallog << "Done." << std::endl;
   deallog.pop();
 }
 
@@ -276,10 +271,6 @@ void Waveguide::make_grid() {
       }
     }
   }
-
-  deallog << "Process " << GlobalParams.MPI_Rank << " as " << rank
-      << ". The local range is [" << minimum_local_z << ","
-      << maximum_local_z << "]" << std::endl;
 }
 
 bool compareIndexCenterPairs(std::pair<int, double> c1,
@@ -396,7 +387,6 @@ void Waveguide::switch_to_dual(SpaceTransformation *dual_st) {
 
 void Waveguide::setup_system() {
   deallog.push("setup_system");
-  deallog << "Assembling IndexSets" << std::endl;
   for (unsigned int i = 0; i < n_dofs; i++) {
     if (periodic_constraints.is_constrained(i)) {
       unsigned int l = 0;
@@ -454,7 +444,6 @@ void Waveguide::setup_system() {
     }
   }
 
-  deallog << "Computing block counts" << std::endl;
   // Here we start computing the distribution of entries(indices thereof) to the
   // specific blocks of the 3 matrices(system matrix and the 2 preconditioner
   // matrices.)
@@ -664,8 +653,6 @@ void Waveguide::setup_system() {
     UpperDofs.add_indices(locally_owned_dofs_all_processors[rank + 1], 0);
   }
 
-  deallog << "Done computing Index Sets. Calling for reinit now." << std::endl;
-
   std::vector<unsigned int> final_numbering;
   for (unsigned int i = 0; i < n_dofs; i++) {
     final_numbering.push_back(local_to_global_index(i));
@@ -678,7 +665,6 @@ void Waveguide::setup_system() {
   deallog << "Boundaryconditions prepared." << std::endl;
   reinit_all();
 
-  deallog << "Done" << std::endl;
   deallog.pop();
 }
 
@@ -702,86 +688,6 @@ void Waveguide::Prepare_Boundary_Constraints() {
   cm.close();
   cm_prec_even.close();
   cm_prec_odd.close();
-
-  deallog << "Number of constraints in cm:" << cm.n_constraints() << std::endl;
-  deallog << "Minimun: " << cm.get_local_lines().nth_index_in_set(0)
-          << " Maximum: "
-          << cm.get_local_lines().nth_index_in_set(
-                 cm.get_local_lines().n_elements() - 1)
-          << std::endl;
-  deallog << "Number of constraints in cm_prec_even:" << cm_prec_even.n_constraints() << std::endl;
-  deallog << "Minimun: " << cm_prec_even.get_local_lines().nth_index_in_set(0)
-          << " Maximum: "
-          << cm_prec_even.get_local_lines().nth_index_in_set(
-                 cm_prec_even.get_local_lines().n_elements() - 1)
-          << std::endl;
-  deallog << "Number of constraints in cm_prec_odd:" << cm_prec_odd.n_constraints() << std::endl;
-  deallog << "Minimun: " << cm_prec_odd.get_local_lines().nth_index_in_set(0)
-          << " Maximum: "
-          << cm_prec_odd.get_local_lines().nth_index_in_set(
-                 cm_prec_odd.get_local_lines().n_elements() - 1)
-          << std::endl;
-  deallog << "Number of dofs in sweepable: " << sweepable.n_elements() << std::endl;
-  deallog << "Minimun: " << sweepable.nth_index_in_set(0) << " Maximum: "
-          << sweepable.nth_index_in_set(sweepable.n_elements() - 1)
-          << std::endl;
-  deallog << "Number of dofs in fixed: " << fixed_dofs.n_elements() << std::endl;
-  deallog << "Minimun: " << fixed_dofs.nth_index_in_set(0) << " Maximum: "
-          << fixed_dofs.nth_index_in_set(fixed_dofs.n_elements() - 1)
-          << std::endl;
-}
-
-void Waveguide::calculate_cell_weights() {
-  deallog.push("Computing cell weights");
-  deallog << "Iterating cells and computing local norm of material tensor."
-      << std::endl;
-  cell = dof_handler.begin_active();
-  endc = dof_handler.end();
-
-  for (; cell != endc; ++cell) {
-    Tensor<2, 3, std::complex<double>> tens, epsilon_pre2, epsilon_pre1;
-    Point<3> pos = cell->center();
-    if (even) {
-      epsilon_pre1 = st->get_Tensor(pos);
-      epsilon_pre2 = st->get_Preconditioner_Tensor(pos, rank);
-
-    } else {
-      epsilon_pre2 = st->get_Tensor(pos);
-      epsilon_pre1 = st->get_Preconditioner_Tensor(pos, rank);
-    }
-    tens = st->get_Tensor(pos);
-
-    cell_weights(cell->active_cell_index()) = tens.norm();
-
-    cell_weights_prec_1(cell->active_cell_index()) = epsilon_pre1.norm();
-
-    cell_weights_prec_2(cell->active_cell_index()) = epsilon_pre2.norm();
-  }
-
-  DataOut<3> data_out_cells;
-  data_out_cells.attach_dof_handler(dof_handler);
-  data_out_cells.add_data_vector(
-      cell_weights, "Material_Tensor_Norm",
-      dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
-      3>::DataVectorType::type_cell_data);
-  data_out_cells.add_data_vector(
-      cell_weights_prec_1, "Material_Tensor_Prec_Low",
-      dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
-      3>::DataVectorType::type_cell_data);
-  data_out_cells.add_data_vector(
-      cell_weights_prec_2, "Material_Tensor_Prec_Up",
-      dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
-      3>::DataVectorType::type_cell_data);
-  data_out_cells.build_patches();
-
-  std::string path = solutionpath + "/" + path_prefix + "/cell-weights" +
-      std::to_string(run_number) + "-" + std::to_string(rank) +
-      ".vtu";
-  deallog << "Writing vtu file: " << path << std::endl;
-  std::ofstream outputvtu2(path);
-  data_out_cells.write_vtu(outputvtu2);
-  deallog << "Done." << std::endl;
-  deallog.pop();
 }
 
 void Waveguide::reinit_all() {
@@ -789,15 +695,6 @@ void Waveguide::reinit_all() {
 
   deallog << "reinitializing right-hand side" << std::endl;
   reinit_rhs();
-
-  if (GlobalParams.O_O_V_T_TransformationWeightsAll) {
-    deallog << "reinitializing cell weights" << std::endl;
-    reinit_cell_weights();
-  }
-  if (GlobalParams.O_O_V_T_TransformationWeightsFirst && run_number == 0) {
-    deallog << "reinitializing cell weights" << std::endl;
-    reinit_cell_weights();
-  }
 
   deallog << "reinitializing solutiuon" << std::endl;
   reinit_solution();
@@ -882,13 +779,6 @@ void Waveguide::reinit_solution() {
   solution->reinit(partitioning, ghost, mpi_comm, true);
   EstimatedSolution.reinit(i_sys_owned, mpi_comm);
   ErrorOfSolution.reinit(i_sys_owned, mpi_comm);
-}
-
-void Waveguide::reinit_cell_weights() {
-  cell_weights.reinit(triangulation.n_active_cells());
-  cell_weights_prec_1.reinit(triangulation.n_active_cells());
-  cell_weights_prec_2.reinit(triangulation.n_active_cells());
-  calculate_cell_weights();
 }
 
 void Waveguide::reinit_storage() { storage.reinit(i_sys_owned, mpi_comm); }
@@ -1234,11 +1124,9 @@ void Waveguide::MakeBoundaryConditions() {
       fe.dofs_per_cell - GeometryInfo<3>::faces_per_cell * fe.dofs_per_face +
       GeometryInfo<3>::lines_per_cell * fe.dofs_per_line);
   std::vector<types::global_dof_index> local_face_dofs(fe.dofs_per_face);
-  deallog << "Dofs per line: " << fe.dofs_per_line << "." << std::endl;
-  deallog << "Dofs per face: " << fe.dofs_per_face
-      << ". Own: " << face_own_count << "." << std::endl;
-  deallog << "Dofs per cell: " << fe.dofs_per_cell
-      << ". Own: " << cell_own_count << "." << std::endl;
+  deallog << "Dofs per line: " << fe.dofs_per_line << std::endl;
+  deallog << "Dofs per face: " << fe.dofs_per_face << std::endl;
+  deallog << "Dofs per cell: " << fe.dofs_per_cell << std::endl;
   if (run_number == 0) {
     fixed_dofs.set_size(n_global_dofs);
   }
@@ -1618,7 +1506,6 @@ void Waveguide::solve() {
       sweep.matrix = &system_matrix.block(rank, rank);
     }
 
-    deallog << "Initializing the Preconditioner..." << std::endl;
     int upper =
         std::min((int)(GlobalParams.NumberProcesses - 1), (int)(rank + 1));
     int lower = std::max((int)(rank - 1), 0);
@@ -1719,8 +1606,6 @@ void Waveguide::solve() {
           ConvergenceTable::RateMode::reduction_rate);
     }
 
-    deallog << "Done." << std::endl;
-
     deallog << "Norm of the solution: " << solution->l2_norm() << std::endl;
   }
 
@@ -1736,21 +1621,9 @@ void Waveguide::solve() {
         sc2, TrilinosWrappers::SolverDirect::AdditionalData(
             false, PrecOptionNames[GlobalParams.So_Preconditioner]));
   }
-  deallog << "Building local vector:" << std::endl;
+  
   solution->update_ghost_values();
-  deallog << "Locally owned dofs:" << std::endl;
-  locally_owned_dofs.print(deallog);
-  deallog << "Locally relevant dofs:" << std::endl;
-  locally_relevant_dofs.print(deallog);
-  unsigned int i;
-  for (i = 0; i < Layers; ++i) {
-    deallog << "Block " << i << " of i_sys_owned: " << std::endl;
-    i_sys_owned[i].print(deallog);
-  }
-  for (i = 0; i < Layers; ++i) {
-    deallog << "Block " << i << " of i_sys_readable: " << std::endl;
-    i_sys_readable[i].print(deallog);
-  }
+  
   double *interface_vals = new double[interface_dof_count];
   if (GlobalParams.MPI_Rank < GlobalParams.NumberProcesses - 1) {
     for (unsigned int i = 0; i < interface_dof_count; i++) {
@@ -1776,36 +1649,43 @@ void Waveguide::solve() {
   }
   if (primal) {
     primal_with_relevant.reinit(n_global_dofs);
-    deallog << "Primal case:" << std::endl;
-    if (GlobalParams.MPI_Rank > 0) {
-      for (unsigned int i = 0; i < n_dofs; i++) {
-        if (i < interface_dof_count) {
-          int idx2 = i + (n_dofs - interface_dof_count);
-          idx2 = local_to_global_index(idx2);
-          idx2 -= (n_dofs - interface_dof_count);
+  } else {
+    dual_with_relevant.reinit(n_global_dofs);
+  }
+  if (GlobalParams.MPI_Rank > 0) {
+    for (unsigned int i = 0; i < n_dofs; i++) {
+      if (i < interface_dof_count) {
+        int idx2 = i + (n_dofs - interface_dof_count);
+        idx2 = local_to_global_index(idx2);
+        idx2 -= (n_dofs - interface_dof_count);
+        if (primal){
           primal_with_relevant[local_to_global_index(i)] = 0;
-
         } else {
-          int temp = local_to_global_index(i);
+          dual_with_relevant[local_to_global_index(i)] = 0;
+        }
+
+      } else {
+        int temp = local_to_global_index(i);
+        if (primal) {
           primal_with_relevant[temp] = solution->operator[](temp);
+        } else {
+          dual_with_relevant[temp] = solution->operator[](temp);
         }
       }
+    }
 
-    } else {
+  } else {
+    if (primal) {
       for (unsigned int i = 0; i < n_dofs; i++) {
         primal_with_relevant[i] = solution->operator[](i);
       }
-    }
-  } else {
-    deallog << "Dual case:" << std::endl;
-    dual_with_relevant.reinit(n_dofs);
-    for (unsigned int i = 0; i < n_dofs; i++) {
-      int index = local_to_global_index(i);
-      dual_with_relevant[i] = solution->operator[](index);
+    } else {
+      for (unsigned int i = 0; i < n_dofs; i++) {
+        dual_with_relevant[i] = solution->operator[](i);
+      }
     }
   }
-  deallog << "Done." << std::endl;
-
+  
   GrowingVectorMemory<
   TrilinosWrappers::MPI::BlockVector>::release_unused_memory();
 }
@@ -1888,11 +1768,6 @@ void Waveguide::output_results(bool) {
   }
   MPI_Barrier(mpi_comm);
   if (GlobalParams.O_O_V_S_SolutionFirst) {
-    // Triangulation<3>
-    // temp_for_transformation(MPI_COMM_WORLD,
-    // Triangulation<3>::MeshSmoothing(Triangulation<3>::none),
-    // Triangulation<3>::Settings::no_automatic_repartitioning);
-    // temp_for_transformation.copy_triangulation(triangulation);
 
     set_the_st(this->st);
 
@@ -1921,7 +1796,6 @@ void Waveguide::output_results(bool) {
         std::to_string(run_number) + "-P" + std::to_string(rank) + ".vtu");
     data_out.write_vtu(outputvtu);
     MPI_Barrier(mpi_comm);
-    // triangulation.copy_triangulation(temp_for_transformation);
   }
 }
 

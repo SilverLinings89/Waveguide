@@ -49,7 +49,6 @@
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/vector_tools.h>
 
-// Trilinos Headers
 #include <deal.II/lac/la_parallel_vector.h>
 #include <deal.II/lac/trilinos_block_sparse_matrix.h>
 #include <deal.II/lac/trilinos_precondition.h>
@@ -434,21 +433,6 @@ class Waveguide {
   void reinit_systemmatrix();
 
   /**
-   * The cell weights can be used to store any scalar information about each
-   * cell of the mesh. This reinit-function prepares the data structures for its
-   * usage.
-   */
-  void reinit_cell_weights();
-
-  /**
-   * In calculate cell weights an arbitrary value for each cell can be computed
-   * and then this value can be sent to the output to generate a plot of it. An
-   * example for this procedure is the computation of the norm of the material
-   * tensor to check it's validity across the mesh.
-   */
-  void calculate_cell_weights();
-
-  /**
    * Reinit only the solution vector.
    */
   void reinit_solution();
@@ -513,12 +497,6 @@ class Waveguide {
 
   IndexSet combine_indexes(IndexSet lower, IndexSet upper) const;
 
-  /**
-  std::vector<unsigned int> Add_Zero_Restraint(
-      dealii::ConstraintMatrix *, dealii::DoFHandler<3>::active_cell_iterator &,
-      unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet);
-      **/
-
   unsigned int local_to_global_index(unsigned int local_index);
 
   unsigned int global_to_local_index(unsigned int local_index);
@@ -526,8 +504,6 @@ class Waveguide {
   void SortDofsDownstream();
 
   void Shift_Constraint_Matrix(ConstraintMatrix *in_cm);
-
-  // HIER BEGINNT DIE NEUE VERSION...
 
   SpaceTransformation *st;
 
@@ -622,9 +598,6 @@ class Waveguide {
   std::vector<IndexSet> set;
 
   bool execute_recomputation;
-  Vector<float> cell_weights;
-  Vector<float> cell_weights_prec_1;
-  Vector<float> cell_weights_prec_2;
   IndexSet locally_owned_cells, sweepable;
   IndexSet InputInterfaceDofs;
   double cell_layer_z;
