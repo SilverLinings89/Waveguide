@@ -6,7 +6,7 @@
 #include <complex>
 #include <string>
 #include <vector>
-#include "../Core/Waveguide.h"
+#include "../Core/NumericProblem.h"
 #include "../MeshGenerators/MeshGenerator.h"
 #include "../OptimizationAlgorithm/OptimizationAlgorithm.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
@@ -14,7 +14,7 @@
 using namespace dealii;
 
 AdjointOptimization::AdjointOptimization(
-    Waveguide* in_waveguide_primal, MeshGenerator* in_mg,
+    NumericProblem* in_waveguide_primal, MeshGenerator* in_mg,
     SpaceTransformation* in_st_primal, SpaceTransformation* in_st_dual,
     OptimizationAlgorithm<std::complex<double>>* in_Oa) {
   waveguide = in_waveguide_primal;

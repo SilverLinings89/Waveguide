@@ -6,7 +6,8 @@
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 #include <complex>
 #include <vector>
-#include "../Core/Waveguide.h"
+
+#include "../Core/NumericProblem.h"
 #include "FaceSurfaceComparator.h"
 #include "FaceSurfaceComparatorZ.h"
 

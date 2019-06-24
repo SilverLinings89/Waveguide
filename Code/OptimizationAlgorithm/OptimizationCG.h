@@ -1,7 +1,7 @@
 #ifndef OptimizationCG_H_
 #define OptimizationCG_H_
 
-#include "../Core/Waveguide.h"
+#include "../Core/NumericProblem.h"
 #include "OptimizationAlgorithm.h"
 
 /**

@@ -1,7 +1,7 @@
 #ifndef OptimizationSD_H_
 #define OptimizationSD_H_
 
-#include "../Core/Waveguide.h"
+#include "../Core/NumericProblem.h"
 #include "OptimizationAlgorithm.h"
 /**
  * \class OptimizationSteepestDescent

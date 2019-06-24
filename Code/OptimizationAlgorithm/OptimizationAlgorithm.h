@@ -1,7 +1,7 @@
 #ifndef OptimizationAlgorithm_H_
 #define OptimizationAlgorithm_H_
 
-#include "../Core/Waveguide.h"
+#include "../Core/NumericProblem.h"
 
 /**
  * \class OptimizationAlgorithm

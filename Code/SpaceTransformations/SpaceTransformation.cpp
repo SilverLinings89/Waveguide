@@ -109,7 +109,7 @@ Tensor<2, 3, std::complex<double>> SpaceTransformation::get_Tensor_for_step(
 }
 
 std::complex<double> SpaceTransformation::integrate_Waveguide_Core_2D(
-    double z, int n, Waveguide* in_w, Evaluation_Metric in_m) {
+    double z, int n, NumericProblem* in_w, Evaluation_Metric in_m) {
   QGauss<2> quad(n);
   std::vector<Point<2>> points = quad.get_points();
   std::vector<double> weights = quad.get_weights();
@@ -130,7 +130,7 @@ std::complex<double> SpaceTransformation::integrate_Waveguide_Core_2D(
 }
 
 std::complex<double> SpaceTransformation::gauss_product_2D_sphere(
-    double z, int n, double R, double Xc, double Yc, Waveguide* in_w,
+    double z, int n, double R, double Xc, double Yc, NumericProblem* in_w,
     Evaluation_Metric in_m) {
   double* r = NULL;
   double* t = NULL;
@@ -183,7 +183,7 @@ std::complex<double> SpaceTransformation::gauss_product_2D_sphere(
 
 std::complex<double> SpaceTransformation::evaluate_for_z_with_sum(
     double in_z, Evaluation_Domain in_e_dom, Evaluation_Metric in_e_met,
-    Waveguide* in_w) {
+    NumericProblem* in_w) {
   std::complex<double> ret = 0;
   if (in_e_dom == Evaluation_Domain::RECTANGLE_INNER) {
     try {

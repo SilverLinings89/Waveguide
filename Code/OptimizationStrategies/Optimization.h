@@ -5,7 +5,7 @@
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
 
-#include "../Core/Waveguide.h"
+#include "../Core/NumericProblem.h"
 #include "../Helpers/Parameters.h"
 #include "../MeshGenerators/MeshGenerator.h"
 #include "../OptimizationAlgorithm/OptimizationAlgorithm.h"

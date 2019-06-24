@@ -1,6 +1,6 @@
 // Copyright 2018 Pascal Kraft
-#ifndef CODE_CORE_WAVEGUIDE_H_
-#define CODE_CORE_WAVEGUIDE_H_
+#ifndef CODE_CORE_NUMERICPROBLEM_H_
+#define CODE_CORE_NUMERICPROBLEM_H_
 #include <math.h>
 #include <mpi.h>
 #include <sys/stat.h>
@@ -102,7 +102,7 @@ struct ConstraintPair {
  * \author Pascal Kraft
  * \date 03.07.2016
  */
-class Waveguide {
+class NumericProblem {
  public:
   /**
    * This is the constructor that should be used to initialize objects of this
@@ -115,10 +115,10 @@ class Waveguide {
    * is purely structure-dependent.
    */
 
-  Waveguide(MPI_Comm in_mpi_comm, MeshGenerator *in_mg,
-            SpaceTransformation *in_st);
+  NumericProblem(MPI_Comm in_mpi_comm, MeshGenerator *in_mg,
+                 SpaceTransformation *in_st);
 
-  ~Waveguide();
+  ~NumericProblem();
 
   /**
    * This method as well as the rerun() method, are used by the
@@ -129,18 +129,6 @@ class Waveguide {
    * work.
    */
   void run();
-
-  /**
-   * The assemble_part function is a part of the
-   * assemble_system() functionality. It builds a part of the system-matrix.
-   * assemble_system() creates the global system matrix. After splitting the
-   * degrees of freedom into several blocks, this method takes one block
-   * (identified by the integer passed as an argument) and calculates all
-   * matrix-entries that reference it.
-   * @date 25.10.2018
-   * @author Pascal Kraft
-   */
-  void assemble_part();
 
   /**
    * To compute the output quality of the signal and it's transmition along
@@ -317,15 +305,6 @@ class Waveguide {
   void solve();
 
   /**
-   * In case no differential implementation is used (this means, that in every
-   * step of both the optimization and the calculation of the gradient, the
-   * system-matrix and all other elements are completely rebuilt) this function
-   * is used, to clear all values out of the data-objects.
-   *
-   */
-  void reset_changes();
-
-  /**
    * This function takes the Waveguides solution-vector member and exports it in
    * a .vtk-file along with the mesh-structure to make the results visible.
    */
@@ -357,10 +336,10 @@ class Waveguide {
       const dealii::TrilinosWrappers::MPI::Vector &);
 
   /**
-   * This function fills the ConstraintMatrix-object of the Waveguide-object
-   * with all constraints needed for condensation into the szstem-matrix. It's
-   * properties are derived from the Waveguide itself and the
-   * Waveguide-Structure-object available to it, therefore there are no
+   * This function fills the ConstraintMatrix-object of the
+   * NumericProblem-object with all constraints needed for condensation into the
+   * szstem-matrix. It's properties are derived from the Waveguide itself and
+   * the Waveguide-Structure-object available to it, therefore there are no
    * parameters but those members need to be prepared accordingly..
    */
   void MakeBoundaryConditions();
@@ -449,12 +428,6 @@ class Waveguide {
    * just that.
    */
   void reinit_for_rerun();
-
-  /**
-   * Similar to the function reinit_for_rerun but focused on the data structures
-   * used by the preconditioner.
-   */
-  void reinit_preconditioner_fast();
 
   /**
    * While the solver runs, this function performs an action on the residual. In

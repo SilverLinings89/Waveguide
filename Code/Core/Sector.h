@@ -2,9 +2,9 @@
 #define SectorFlagH
 
 #include <deal.II/base/tensor.h>
-#include "../Core/Waveguide.h"
-
 #include <deal.II/base/tensor.h>
+
+#include "NumericProblem.h"
 using namespace dealii;
 
 /**

@@ -5,14 +5,14 @@
 #include <deal.II/base/point.h>
 #include <complex>
 #include <vector>
-#include "../Core/Waveguide.h"
+#include "../Core/NumericProblem.h"
 #include "../MeshGenerators/MeshGenerator.h"
 #include "../OptimizationAlgorithm/OptimizationAlgorithm.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
 
 using namespace dealii;
 
-FDOptimization::FDOptimization(Waveguide* in_waveguide, MeshGenerator* in_mg,
+FDOptimization::FDOptimization(NumericProblem* in_waveguide, MeshGenerator* in_mg,
                                SpaceTransformation* in_st,
                                OptimizationAlgorithm<double>* in_Oa) {
   waveguide = in_waveguide;

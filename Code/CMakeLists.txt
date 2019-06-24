@@ -4,7 +4,7 @@ ADD_LIBRARY(Code
 	Core/PreconditionerSweeping.cpp
 	Core/Sector.cpp
 	Core/SolutionWeight.cpp
-	Core/Waveguide.cpp
+	Core/NumericProblem.cpp
 	Helpers/ExactSolution.cpp
 	Helpers/ModeManager.cpp
 	Helpers/ParameterReader.cpp

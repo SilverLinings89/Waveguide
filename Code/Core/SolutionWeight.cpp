@@ -2,7 +2,8 @@
 #define CODE_CORE_SOLUTIONWEIGHT_CPP_
 
 #include "SolutionWeight.h"
-#include "../Core/Waveguide.h"
+
+#include "NumericProblem.h"
 
 template <int dim>
 double SolutionWeight<dim>::value(const Point<dim> &p,

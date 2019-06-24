@@ -1,7 +1,7 @@
 #ifndef FDOptimization_H_
 #define FDOptimization_H_
 
-#include "../Core/Waveguide.h"
+#include "../Core/NumericProblem.h"
 #include "../OptimizationAlgorithm/OptimizationAlgorithm.h"
 #include "Optimization.h"
 
@@ -26,7 +26,7 @@ class FDOptimization : public Optimization {
 
   OptimizationAlgorithm<double>* oa;
 
-  FDOptimization(Waveguide* waveguide_primal, MeshGenerator* mg,
+  FDOptimization(NumericProblem* waveguide_primal, MeshGenerator* mg,
                  SpaceTransformation* st_primal,
                  OptimizationAlgorithm<double>* oa);
 
@@ -46,7 +46,7 @@ class FDOptimization : public Optimization {
    */
   virtual void run();
 
-  Waveguide* waveguide;
+  NumericProblem* waveguide;
 
   MeshGenerator* mg;
 

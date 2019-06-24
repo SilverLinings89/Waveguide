@@ -13,7 +13,7 @@ enum Evaluation_Domain { CIRCLE_CLOSE, CIRCLE_MAX, RECTANGLE_INNER };
 
 enum Evaluation_Metric { FUNDAMENTAL_MODE_EXCITATION, POYNTING_TYPE_ENERGY };
 
-class Waveguide;
+class NumericProblem;
 /**
  * \class SpaceTransformation
  * \brief The SpaceTransformation class encapsulates the coordinate
@@ -331,15 +331,15 @@ class SpaceTransformation {
   virtual void Print() const = 0;
 
   std::complex<double> evaluate_for_z_with_sum(double, Evaluation_Domain,
-                                               Evaluation_Metric, Waveguide *);
+                                               Evaluation_Metric, NumericProblem *);
 
   std::complex<double> gauss_product_2D_sphere(double z, int n, double R,
                                                double Xc, double Yc,
-                                               Waveguide *in_w,
+                                               NumericProblem *in_w,
                                                Evaluation_Metric in_m);
 
   std::complex<double> integrate_Waveguide_Core_2D(double z, int n,
-                                                   Waveguide *in_w,
+                                                   NumericProblem *in_w,
                                                    Evaluation_Metric in_m);
 
   const int rank;

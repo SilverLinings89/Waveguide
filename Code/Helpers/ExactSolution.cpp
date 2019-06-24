@@ -7,7 +7,8 @@
 #include <complex>
 #include <string>
 #include <vector>
-#include "../Core/Waveguide.h"
+
+#include "../Core/NumericProblem.h"
 #include "PointVal.h"
 
 double ExactSolution::value(const Point<3> &in_p,

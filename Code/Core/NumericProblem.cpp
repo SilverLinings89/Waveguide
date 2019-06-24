@@ -2,7 +2,8 @@
 #ifndef WaveguideCppFlag
 #define WaveguideCppFlag
 
-#include "Waveguide.h"
+#include "NumericProblem.h"
+
 #include <deal.II/base/std_cxx11/bind.h>
 #include <deal.II/base/timer.h>
 #include <deal.II/distributed/shared_tria.h>
@@ -40,7 +41,7 @@ dealii::ConvergenceTable Convergence_Table;
 dealii::TableHandler Optimization_Steps;
 double *steps_widths;
 
-Waveguide::Waveguide(MPI_Comm in_mpi_comm, MeshGenerator *in_mg,
+NumericProblem::NumericProblem(MPI_Comm in_mpi_comm, MeshGenerator *in_mg,
     SpaceTransformation *in_st)
 : fe(FE_Nedelec<3>(GlobalParams.So_ElementOrder), 2),
   triangulation(Triangulation<3>::MeshSmoothing(Triangulation<3>::none)),
@@ -81,9 +82,9 @@ Waveguide::Waveguide(MPI_Comm in_mpi_comm, MeshGenerator *in_mg,
   n_dofs = 0;
 }
 
-Waveguide::~Waveguide() {}
+NumericProblem::~NumericProblem() {}
 
-std::complex<double> Waveguide::evaluate_for_Position(double x, double y,
+std::complex<double> NumericProblem::evaluate_for_Position(double x, double y,
     double z) {
   dealii::Point<3, double> position(x, y, z);
   Vector<double> result(6);
@@ -107,7 +108,7 @@ std::complex<double> Waveguide::evaluate_for_Position(double x, double y,
   return m1 * c1 + m2 * c2 + m3 * c3;
 }
 
-std::complex<double> Waveguide::evaluate_Energy_for_Position(double x, double y,
+std::complex<double> NumericProblem::evaluate_Energy_for_Position(double x, double y,
     double z) {
   dealii::Point<3, double> position(x, y, z);
   Vector<double> result(6);
@@ -133,7 +134,7 @@ std::complex<double> Waveguide::evaluate_Energy_for_Position(double x, double y,
   return eps * ret;
 }
 
-void Waveguide::estimate_solution() {
+void NumericProblem::estimate_solution() {
   MPI_Barrier(mpi_comm);
   deallog.push("estimate_solution");
   DoFHandler<3>::active_cell_iterator cell, endc;
@@ -188,7 +189,7 @@ bool compareConstraintPairs(ConstraintPair v1, ConstraintPair v2) {
   return (v1.left < v2.left);
 }
 
-Tensor<2, 3, std::complex<double>> Waveguide::Conjugate_Tensor(
+Tensor<2, 3, std::complex<double>> NumericProblem::Conjugate_Tensor(
     Tensor<2, 3, std::complex<double>> input) {
   Tensor<2, 3, std::complex<double>> ret;
   for (int i = 0; i < 3; i++) {
@@ -200,7 +201,7 @@ Tensor<2, 3, std::complex<double>> Waveguide::Conjugate_Tensor(
   return ret;
 }
 
-Tensor<1, 3, std::complex<double>> Waveguide::Conjugate_Vector(
+Tensor<1, 3, std::complex<double>> NumericProblem::Conjugate_Vector(
     Tensor<1, 3, std::complex<double>> input) {
   Tensor<1, 3, std::complex<double>> ret;
 
@@ -211,7 +212,7 @@ Tensor<1, 3, std::complex<double>> Waveguide::Conjugate_Vector(
   return ret;
 }
 
-unsigned int Waveguide::local_to_global_index(unsigned int local_index) {
+unsigned int NumericProblem::local_to_global_index(unsigned int local_index) {
   if (GlobalParams.MPI_Rank == 0) {
     return local_index;
   } else {
@@ -225,7 +226,7 @@ unsigned int Waveguide::local_to_global_index(unsigned int local_index) {
   }
 }
 
-unsigned int Waveguide::global_to_local_index(unsigned int local_index) {
+unsigned int NumericProblem::global_to_local_index(unsigned int local_index) {
   if (GlobalParams.MPI_Rank == 0) {
     return local_index;
   } else {
@@ -247,7 +248,7 @@ unsigned int Waveguide::global_to_local_index(unsigned int local_index) {
   }
 }
 
-void Waveguide::make_grid() {
+void NumericProblem::make_grid() {
   mg->prepare_triangulation(&triangulation);
   dof_handler.distribute_dofs(fe);
   SortDofsDownstream();
@@ -278,7 +279,7 @@ bool compareIndexCenterPairs(std::pair<int, double> c1,
   return c1.second < c2.second;
 }
 
-void Waveguide::SortDofsDownstream() {
+void NumericProblem::SortDofsDownstream() {
   std::vector<std::pair<int, double>> current;
   DoFHandler<3>::active_cell_iterator cell = dof_handler.begin_active(),
       endc = dof_handler.end();
@@ -309,7 +310,7 @@ void Waveguide::SortDofsDownstream() {
   dof_handler.renumber_dofs(new_numbering);
 }
 
-void Waveguide::Shift_Constraint_Matrix(ConstraintMatrix *in_cm) {
+void NumericProblem::Shift_Constraint_Matrix(ConstraintMatrix *in_cm) {
   ConstraintMatrix new_global;
   new_global.reinit(locally_relevant_dofs);
   for (unsigned int i = 0; i < n_dofs; i++) {
@@ -328,7 +329,7 @@ void Waveguide::Shift_Constraint_Matrix(ConstraintMatrix *in_cm) {
   in_cm->copy_from(new_global);
 }
 
-void Waveguide::Compute_Dof_Numbers() {
+void NumericProblem::Compute_Dof_Numbers() {
   deallog << "Total Dof Count per block: " << n_dofs << " interface dof count "
       << interface_dof_count << std::endl;
   std::vector<types::global_dof_index> dof_indices(fe.dofs_per_face);
@@ -364,28 +365,28 @@ void Waveguide::Compute_Dof_Numbers() {
   }
 }
 
-IndexSet Waveguide::combine_indexes(IndexSet lower, IndexSet upper) const {
+IndexSet NumericProblem::combine_indexes(IndexSet lower, IndexSet upper) const {
   IndexSet ret(lower.size() + upper.size());
   ret.add_indices(lower);
   ret.add_indices(upper, lower.size());
   return ret;
 }
 
-void Waveguide::switch_to_primal(SpaceTransformation *primal_st) {
+void NumericProblem::switch_to_primal(SpaceTransformation *primal_st) {
   st = primal_st;
   solution = &primal_solution;
   primal = true;
   path_prefix = "primal";
 }
 
-void Waveguide::switch_to_dual(SpaceTransformation *dual_st) {
+void NumericProblem::switch_to_dual(SpaceTransformation *dual_st) {
   st = dual_st;
   solution = &dual_solution;
   primal = false;
   path_prefix = "dual";
 }
 
-void Waveguide::setup_system() {
+void NumericProblem::setup_system() {
   deallog.push("setup_system");
   for (unsigned int i = 0; i < n_dofs; i++) {
     if (periodic_constraints.is_constrained(i)) {
@@ -621,7 +622,7 @@ void Waveguide::setup_system() {
     i_prec_even_owned_col.push_back(temp1[GlobalParams.NumberProcesses - 1]);
     i_prec_even_writable.push_back(temp2[GlobalParams.NumberProcesses - 1]);
   }
- 
+
   locally_owned_dofs_all_processors.resize(Layers);
 
   for (unsigned int i = 0; i < Layers; i++) {
@@ -668,7 +669,7 @@ void Waveguide::setup_system() {
   deallog.pop();
 }
 
-void Waveguide::Prepare_Boundary_Constraints() {
+void NumericProblem::Prepare_Boundary_Constraints() {
   cm.clear();
   cm.reinit(locally_relevant_dofs);
 
@@ -690,7 +691,7 @@ void Waveguide::Prepare_Boundary_Constraints() {
   cm_prec_odd.close();
 }
 
-void Waveguide::reinit_all() {
+void NumericProblem::reinit_all() {
   deallog.push("reinit_all");
 
   deallog << "reinitializing right-hand side" << std::endl;
@@ -709,13 +710,12 @@ void Waveguide::reinit_all() {
   deallog.pop();
 }
 
-void Waveguide::reinit_for_rerun() {
+void NumericProblem::reinit_for_rerun() {
   reinit_rhs();
-  reinit_preconditioner_fast();
   reinit_systemmatrix();
 }
 
-void Waveguide::reinit_systemmatrix() {
+void NumericProblem::reinit_systemmatrix() {
   deallog.push("reinit_systemmatrix");
 
   ConstraintMatrix cm_temp;
@@ -752,13 +752,13 @@ void Waveguide::reinit_systemmatrix() {
   deallog.pop();
 }
 
-void Waveguide::reinit_rhs() {
+void NumericProblem::reinit_rhs() {
   system_rhs.reinit(i_sys_owned, MPI_COMM_WORLD);
 
   preconditioner_rhs.reinit(n_global_dofs);
 }
 
-void Waveguide::reinit_solution() {
+void NumericProblem::reinit_solution() {
   std::vector<IndexSet> ghost, partitioning;
 
   for (unsigned int i = 0; i < i_sys_owned.size(); i++) {
@@ -781,9 +781,9 @@ void Waveguide::reinit_solution() {
   ErrorOfSolution.reinit(i_sys_owned, mpi_comm);
 }
 
-void Waveguide::reinit_storage() { storage.reinit(i_sys_owned, mpi_comm); }
+void NumericProblem::reinit_storage() { storage.reinit(i_sys_owned, mpi_comm); }
 
-void Waveguide::reinit_preconditioner() {
+void NumericProblem::reinit_preconditioner() {
   deallog.push("reinit_preconditioner");
 
   deallog.push("Generating BSP");
@@ -836,9 +836,7 @@ void Waveguide::reinit_preconditioner() {
   deallog.pop();
 }
 
-void Waveguide::reinit_preconditioner_fast() {}
-
-void Waveguide::assemble_system() {
+void NumericProblem::assemble_system() {
   reinit_rhs();
 
   QGauss<3> quadrature_formula(2);
@@ -1055,7 +1053,7 @@ void Waveguide::assemble_system() {
   estimate_solution();
 }
 
-void Waveguide::MakeBoundaryConditions() {
+void NumericProblem::MakeBoundaryConditions() {
   DoFHandler<3>::active_cell_iterator cell, endc;
   cell = dof_handler.begin_active(), endc = dof_handler.end();
   std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
@@ -1242,7 +1240,7 @@ void Waveguide::MakeBoundaryConditions() {
   }
 }
 
-void Waveguide::ProjectBoundaryConditions() {
+void NumericProblem::ProjectBoundaryConditions() {
   dealii::ZeroFunction<3, double> zf(6);
 
   if (even) {
@@ -1258,7 +1256,7 @@ void Waveguide::ProjectBoundaryConditions() {
   }
 }
 
-void Waveguide::MakePreconditionerBoundaryConditions() {
+void NumericProblem::MakePreconditionerBoundaryConditions() {
   dealii::DoFHandler<3>::active_cell_iterator cell_loc, endc;
   cell_loc = dof_handler.begin_active();
   endc = dof_handler.end();
@@ -1404,7 +1402,7 @@ void Waveguide::MakePreconditionerBoundaryConditions() {
   }
 }
 
-void Waveguide::Add_Zero_Restraint(
+void NumericProblem::Add_Zero_Restraint(
     ConstraintMatrix *in_cm,
     DoFHandler<3>::active_cell_iterator &in_cell, unsigned int in_face,
     unsigned int DofsPerLine, unsigned int DofsPerFace, bool in_non_face_dofs,
@@ -1435,7 +1433,7 @@ void Waveguide::Add_Zero_Restraint(
   }
 }
 
-void Waveguide::solve() {
+void NumericProblem::solve() {
 
   SolverControl lsc =
       SolverControl(30, 1.e-5, true, true);
@@ -1552,7 +1550,7 @@ void Waveguide::solve() {
 
     sweep.init(solver_control, &upper_block, &lower_block);
 
-    solver.connect(std_cxx11::bind(&Waveguide::residual_tracker, this,
+    solver.connect(std_cxx11::bind(&NumericProblem::residual_tracker, this,
         std_cxx11::_1, std_cxx11::_2,
         std_cxx11::_3));
     timer.leave_subsection();
@@ -1621,9 +1619,9 @@ void Waveguide::solve() {
         sc2, TrilinosWrappers::SolverDirect::AdditionalData(
             false, PrecOptionNames[GlobalParams.So_Preconditioner]));
   }
-  
+
   solution->update_ghost_values();
-  
+
   double *interface_vals = new double[interface_dof_count];
   if (GlobalParams.MPI_Rank < GlobalParams.NumberProcesses - 1) {
     for (unsigned int i = 0; i < interface_dof_count; i++) {
@@ -1685,12 +1683,12 @@ void Waveguide::solve() {
       }
     }
   }
-  
+
   GrowingVectorMemory<
   TrilinosWrappers::MPI::BlockVector>::release_unused_memory();
 }
 
-void Waveguide::store() {
+void NumericProblem::store() {
   reinit_storage();
   // storage.reinit(dof_handler.n_dofs());
   if (primal) {
@@ -1701,7 +1699,7 @@ void Waveguide::store() {
   is_stored = true;
 }
 
-void Waveguide::output_results(bool) {
+void NumericProblem::output_results(bool) {
   if (true) {
     DataOut<3> data_out;
 
@@ -1799,11 +1797,11 @@ void Waveguide::output_results(bool) {
   }
 }
 
-Point<3, double> Waveguide::transform_coordinate(const Point<3, double> in_p) {
+Point<3, double> NumericProblem::transform_coordinate(const Point<3, double> in_p) {
   return st->math_to_phys(in_p);
 }
 
-void Waveguide::run() {
+void NumericProblem::run() {
   deallog.push("Waveguide_" + path_prefix + "_run");
 
   if (run_number == 0) {
@@ -1858,7 +1856,7 @@ void Waveguide::run() {
   run_number++;
 }
 
-void Waveguide::print_eigenvalues(
+void NumericProblem::print_eigenvalues(
     const std::vector<std::complex<double>> &input) {
   for (unsigned int i = 0; i < input.size(); i++) {
     eigenvalue_file << input.at(i).real() << "  " << input.at(i).imag()
@@ -1867,12 +1865,12 @@ void Waveguide::print_eigenvalues(
   eigenvalue_file << std::endl;
 }
 
-void Waveguide::print_condition(double condition) {
+void NumericProblem::print_condition(double condition) {
   condition_file << condition << std::endl;
 }
 
 std::vector<std::complex<double>>
-Waveguide::assemble_adjoint_local_contribution(double stepwidth) {
+NumericProblem::assemble_adjoint_local_contribution(double stepwidth) {
   deallog.push("Waveguide:adj_local");
 
   deallog << "Computing adjoint based shape derivative contributions..."
@@ -2082,7 +2080,7 @@ Waveguide::assemble_adjoint_local_contribution(double stepwidth) {
   return ret;
 }
 
-Tensor<1, 3, std::complex<double>> Waveguide::solution_evaluation(
+Tensor<1, 3, std::complex<double>> NumericProblem::solution_evaluation(
     Point<3, double> position) const {
   Tensor<1, 3, std::complex<double>> ret;
   Vector<double> result(6);
@@ -2095,7 +2093,7 @@ Tensor<1, 3, std::complex<double>> Waveguide::solution_evaluation(
   return ret;
 }
 
-void Waveguide::solution_evaluation(Point<3, double> position,
+void NumericProblem::solution_evaluation(Point<3, double> position,
     double *sol) const {
   Tensor<1, 3, std::complex<double>> ret;
   Vector<double> result(6);
@@ -2105,7 +2103,7 @@ void Waveguide::solution_evaluation(Point<3, double> position,
   }
 }
 
-Tensor<1, 3, std::complex<double>> Waveguide::adjoint_solution_evaluation(
+Tensor<1, 3, std::complex<double>> NumericProblem::adjoint_solution_evaluation(
     Point<3, double> position) const {
   Tensor<1, 3, std::complex<double>> ret;
   Vector<double> result(6);
@@ -2117,7 +2115,7 @@ Tensor<1, 3, std::complex<double>> Waveguide::adjoint_solution_evaluation(
   return ret;
 }
 
-void Waveguide::adjoint_solution_evaluation(Point<3, double> position,
+void NumericProblem::adjoint_solution_evaluation(Point<3, double> position,
     double *sol) const {
   Tensor<1, 3, std::complex<double>> ret;
   Vector<double> result(6);
@@ -2130,9 +2128,7 @@ void Waveguide::adjoint_solution_evaluation(Point<3, double> position,
   sol[1] *= -1;
 }
 
-void Waveguide::reset_changes() { reinit_all(); }
-
-SolverControl::State Waveguide::residual_tracker(
+SolverControl::State NumericProblem::residual_tracker(
     unsigned int Iteration, double residual,
     dealii::TrilinosWrappers::MPI::BlockVector) {
   if ((GlobalParams.O_C_D_ConvergenceFirst && run_number == 0) ||

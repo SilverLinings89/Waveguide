@@ -8,7 +8,8 @@
 #include <deal.II/lac/trilinos_parallel_block_vector.h>
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/vector.h>
-#include "Waveguide.h"
+
+#include "NumericProblem.h"
 
 extern dealii::SolverControl s;
 extern dealii::SparseDirectUMFPACK *solver;

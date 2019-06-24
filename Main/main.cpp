@@ -10,7 +10,7 @@
 #include <string>
 #include <sstream>
 
-#include "../Code/Core/Waveguide.h"
+#include "../Code/Core/NumericProblem.h"
 #include "../Code/Helpers/Parameters.h"
 #include "../Code/Helpers/ParameterReader.h"
 #include "../Code/Helpers/staticfunctions.h"
@@ -90,7 +90,7 @@ int main (int argc, char *argv[])
 		dst->estimate_and_initialize();
 	}
 
-	Waveguide * waveguide;
+	NumericProblem * waveguide;
 	std::string prefix = "";
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
 	  prefix = "primal";
@@ -98,7 +98,7 @@ int main (int argc, char *argv[])
 	  prefix = ".";
 	}
 
-	waveguide = new Waveguide(MPI_COMM_WORLD, mg, st);
+	waveguide = new NumericProblem(MPI_COMM_WORLD, mg, st);
 
 	Optimization * opt;
 

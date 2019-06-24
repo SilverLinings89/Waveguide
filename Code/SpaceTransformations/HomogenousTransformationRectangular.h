@@ -7,8 +7,8 @@
 #include <math.h>
 #include <vector>
 
+#include "../Core/NumericProblem.h"
 #include "../Core/Sector.h"
-#include "../Core/Waveguide.h"
 
 using namespace dealii;
 
@@ -317,7 +317,7 @@ class HomogenousTransformationRectangular : public SpaceTransformation {
    */
   void Print() const;
 
-  std::complex<double> evaluate_for_z_with_sum(double, double, Waveguide *);
+  std::complex<double> evaluate_for_z_with_sum(double, double, NumericProblem *);
 };
 
 #endif

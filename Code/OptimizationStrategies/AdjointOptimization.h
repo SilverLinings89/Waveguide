@@ -1,7 +1,7 @@
 #ifndef AdjointOptimization_H_
 #define AdjointOptimization_H_
 
-#include "../Core/Waveguide.h"
+#include "../Core/NumericProblem.h"
 #include "../OptimizationAlgorithm/OptimizationAlgorithm.h"
 #include "Optimization.h"
 
@@ -22,7 +22,7 @@ class AdjointOptimization : public Optimization {
   const int type =
       1;  // Allows callers to identify the exact type easily. 0 = FD, 1 = Adj.
 
-  AdjointOptimization(Waveguide* waveguide_primal, MeshGenerator* mg,
+  AdjointOptimization(NumericProblem* waveguide_primal, MeshGenerator* mg,
                       SpaceTransformation* st_primal,
                       SpaceTransformation* st_dual,
                       OptimizationAlgorithm<std::complex<double>>* Oa);
@@ -35,7 +35,7 @@ class AdjointOptimization : public Optimization {
 
   void run();
 
-  Waveguide* waveguide;
+  NumericProblem* waveguide;
 
   SpaceTransformation* primal_st;
   SpaceTransformation* dual_st;

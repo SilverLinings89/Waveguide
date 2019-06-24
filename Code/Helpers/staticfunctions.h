@@ -8,7 +8,7 @@
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/lac/constraint_matrix.h>
 #include <fstream>
-#include "../Core/Waveguide.h"
+#include "../Core/NumericProblem.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
 using namespace dealii;
 
