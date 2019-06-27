@@ -20,6 +20,12 @@ class AuxiliaryProblem : public NumericProblem {
  public:
   AuxiliaryProblem();
   virtual ~AuxiliaryProblem();
+
+  void PrepareMesh();
+  void PrepareBoundaryConstraints();
+  void AssembleMatricesAndRHS();
+  void Solve();
+  void reset();
 };
 
 #endif /* CODE_CORE_AUXILIARYPROBLEM_H_ */

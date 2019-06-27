@@ -5,6 +5,9 @@ ADD_LIBRARY(Code
 	Core/Sector.cpp
 	Core/SolutionWeight.cpp
 	Core/NumericProblem.cpp
+	Core/AuxiliaryProblem.cpp
+	Core/MainProblem.cpp
+	Core/Simulation.cpp
 	Helpers/ExactSolution.cpp
 	Helpers/ModeManager.cpp
 	Helpers/ParameterReader.cpp

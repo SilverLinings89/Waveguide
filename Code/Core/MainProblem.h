@@ -11,12 +11,20 @@
 #ifndef CODE_CORE_MAINPROBLEM_H_
 #define CODE_CORE_MAINPROBLEM_H_
 
+#include "AuxiliaryProblem.h"
 #include "NumericProblem.h"
 
 class MainProblem : public NumericProblem {
  public:
-  MainProblem();
+  MainProblem(AuxiliaryProblem *);
   virtual ~MainProblem();
+
+  void PrepareMesh();
+  void PrepareBoundaryConstraints();
+  void AssembleMatricesAndRHS();
+  void Solve();
+  void WriteOutputs();
+  void reset();
 };
 
 #endif /* CODE_CORE_MAINPROBLEM_H_ */
