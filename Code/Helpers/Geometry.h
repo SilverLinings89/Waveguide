@@ -28,6 +28,17 @@ class Geometry {
   virtual ~Geometry();
 
   void initialize(Parameters parameters);
+  std::pair<double, double> x_range;
+  std::pair<double, double> y_range;
+  std::pair<double, double> z_range;
+
+  std::pair<double, double> compute_x_range(Parameters parameters);
+  std::pair<double, double> compute_y_range(Parameters parameters);
+  std::pair<double, double> compute_z_range(Parameters parameters);
+
+  void set_x_range(std::pair<double, double>);
+  void set_y_range(std::pair<double, double>);
+  void set_z_range(std::pair<double, double>);
 };
 
 #endif /* CODE_HELPERS_GEOMETRY_H_ */

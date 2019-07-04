@@ -241,6 +241,12 @@ struct Parameters {
   int M_PC_Case;
 
   ShapeDescription sd;
+
+  unsigned int Blocks_in_z_direction;
+
+  unsigned int Blocks_in_x_direction;
+
+  unsigned int Blocks_in_y_direction;
 };
 
 #endif
