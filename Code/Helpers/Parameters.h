@@ -247,6 +247,14 @@ struct Parameters {
   unsigned int Blocks_in_x_direction;
 
   unsigned int Blocks_in_y_direction;
+
+  unsigned int Index_in_x_direction;
+
+  unsigned int Index_in_y_direction;
+
+  unsigned int Index_in_z_direction;
+
+  Geometry geometry;
 };
 
 #endif

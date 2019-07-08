@@ -13,6 +13,7 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/distributed/tria.h>
 #include <deal.II/dofs/dof_handler.h>
+#include "./Geometry.h"
 #include "ParameterReader.h"
 #include "Parameters.h"
 #include "ShapeDescription.h"
@@ -405,45 +406,21 @@ Parameters GetParameters() {
 
   deallog << "Spot Radius omega: " << ret.Phys_SpotRadius << std::endl;
 
+  // Computing block_location for this process:
+
+  ret.Index_in_x_direction =
+      ret.MPI_Rank % (ret.Blocks_in_y_direction * ret.Blocks_in_z_direction);
+  ret.Index_in_z_direction =
+      ret.MPI_Rank / (ret.Blocks_in_x_direction * ret.Blocks_in_y_direction);
+  ret.Index_in_y_direction =
+      (ret.MPI_Rank % (ret.Blocks_in_x_direction * ret.Blocks_in_y_direction)) /
+      ret.Blocks_in_z_direction;
+  Geometry temp = new Geometry();
+  temp.initialize(ret);
+  ret.geometry = temp;
   deallog.pop();
 
   return ret;
-}
-
-double InterpolationPolynomial(double in_z, double in_val_zero,
-                               double in_val_one, double in_derivative_zero,
-                               double in_derivative_one) {
-  if (in_z < 0.0) return in_val_zero;
-  if (in_z > 1.0) return in_val_one;
-  return (2 * (in_val_zero - in_val_one) + in_derivative_zero +
-          in_derivative_one) *
-             pow(in_z, 3) +
-         (3 * (in_val_one - in_val_zero) - (2 * in_derivative_zero) -
-          in_derivative_one) *
-             pow(in_z, 2) +
-         in_derivative_zero * in_z + in_val_zero;
-}
-
-double InterpolationPolynomialDerivative(double in_z, double in_val_zero,
-                                         double in_val_one,
-                                         double in_derivative_zero,
-                                         double in_derivative_one) {
-  if (in_z < 0.0) return in_derivative_zero;
-  if (in_z > 1.0) return in_derivative_one;
-  return 3 *
-             (2 * (in_val_zero - in_val_one) + in_derivative_zero +
-              in_derivative_one) *
-             pow(in_z, 2) +
-         2 *
-             (3 * (in_val_one - in_val_zero) - (2 * in_derivative_zero) -
-              in_derivative_one) *
-             in_z +
-         in_derivative_zero;
-}
-
-double InterpolationPolynomialZeroDerivative(double in_z, double in_val_zero,
-                                             double in_val_one) {
-  return InterpolationPolynomial(in_z, in_val_zero, in_val_one, 0.0, 0.0);
 }
 
 double Distance2D(Point<3, double> position, Point<3, double> to) {
@@ -523,134 +500,27 @@ void mesh_info(const Triangulation<dim> &tria) {
   }
 }
 
-double sigma(double in_z, double min, double max) {
-  if (min == max) return (in_z < min) ? 0.0 : 1.0;
-  if (in_z < min) return 0.0;
-  if (in_z > max) return 1.0;
-  double ret = 0;
-  ret = (in_z - min) / (max - min);
-  if (ret < 0.0) ret = 0.0;
-  if (ret > 1.0) ret = 1.0;
-  return ret;
-}
-
-Point<3, double> Triangulation_Stretch_X(const Point<3, double> &p) {
-  Point<3, double> q = p;
-  q[0] *= GlobalParams.M_R_XLength / 2.0;
-  return q;
-}
-
-Point<3, double> Triangulation_Stretch_Y(const Point<3, double> &p) {
-  Point<3, double> q = p;
-  q[1] *= GlobalParams.M_R_YLength / 2.0;
-  return q;
-}
-
-Point<3, double> Triangulation_Stretch_Z(const Point<3, double> &p) {
-  Point<3, double> q = p;
-  double total_length = GlobalParams.SystemLength;
-  q[2] *= total_length / 2.0;
-  q[1] = p[1];
-  q[0] = p[0];
-  return q;
-}
-
-Point<3, double> Triangulation_Shift_Z(const Point<3, double> &p) {
-  Point<3, double> q = p;
-  q[2] += (GlobalParams.M_BC_Zplus - GlobalParams.M_BC_Zminus) / 2.0;
-  q[1] = p[1];
-  q[0] = p[0];
-  return q;
-}
-
-Point<3, double> Triangulation_Stretch_to_circle(const Point<3, double> &p) {
-  Point<3, double> q = p;
-  if (abs(q[0]) < 0.01 && abs(q[1]) - 0.25 < 0.01) {
-    q[1] *= sqrt(2);
-  }
-  if (abs(q[1]) < 0.01 && abs(q[0]) - 0.25 < 0.01) {
-    q[0] *= sqrt(2);
-  }
-  return q;
-}
-
-Point<3, double> Triangulation_Transform_to_physical(
+Point<3, double> Triangulation_Shit_To_Local_Geometry(
     const Point<3, double> &p) {
-  if (the_st != 0) {
-    return the_st->math_to_phys(p);
+  Point<3, double> q = p;
+  Geometry geom = GlobalParams.geometry;
+
+  if (q[0] < 0) {
+    q[0] = geom.x_range.first;
   } else {
-    return Point<3, double>(0, 0, 0);
+    q[0] = geom.x_range.second;
   }
-}
-
-Point<3, double> Triangulation_Stretch_Computational_Radius(
-    const Point<3, double> &p) {
-  double r_goal = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / 2.0;
-  // double r_current = (GlobalParams.PRM_M_R_XLength ) / 7.12644;
-  double r_current = (GlobalParams.M_R_XLength) / 5.65;
-  double r_max = (GlobalParams.M_R_XLength / 2.0) *
-                 (1.0 - (2.0 * GlobalParams.M_BC_XMinus));
-  double r_point = sqrt(p[0] * p[0] + p[1] * p[1]);
-  double factor = InterpolationPolynomialZeroDerivative(
-      sigma(r_point, r_current, r_max), r_goal / r_current, 1.0);
-  Point<3, double> q = p;
-  q[0] *= factor;
-  q[1] *= factor;
-  return q;
-}
-
-double my_inter(double x, double l, double w) {
-  double a = 1.0 / 9.0 * (l + 8.0 * w);
-  double c = (16.0 / 9.0) * (l - w);
-  double b = -(8.0 / 9.0) * (l - w);
-  return a + b * x + c * x * x;
-}
-
-Point<3, double> Triangulation_Stretch_Single_Part_Z(
-    const Point<3, double> &p) {
-  Point<3, double> q = p;
-  double z_min = GlobalParams.Minimum_Z +
-                 (GlobalParams.MPI_Rank * GlobalParams.LayerThickness);
-  q[2] += 1.0;
-  q[2] /= 2.0;
-  q[2] *= GlobalParams.LayerThickness;
-  q[2] += z_min;
-  return q;
-}
-
-Point<3, double> Triangulation_Stretch_Computational_Rectangle(
-    const Point<3, double> &p) {
-  double d1_goal = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / 2.0;
-  double d2_goal = (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out) / 2.0;
-
-  Point<3, double> q = p;
-  if (abs(p[0]) <= 0.2501) {
-    q[0] = q[0] * 3.0 * d1_goal;
+  if (q[1] < 0) {
+    q[1] = geom.y_range.first;
   } else {
-    q[0] = my_inter(std::abs(p[0]), GlobalParams.M_R_XLength / 2.0, d1_goal);
-    if (p[0] < 0.0) q[0] *= -1.0;
+    q[1] = geom.y_range.second;
   }
-  if (abs(p[1]) <= 0.2501) {
-    q[1] = q[1] * 3.0 * d2_goal;
+  if (q[2] < 0) {
+    q[3] = geom.z_range.first;
   } else {
-    q[1] = my_inter(std::abs(p[1]), GlobalParams.M_R_YLength / 2.0, d2_goal);
-    if (p[1] < 0) q[1] *= -1.0;
+    q[3] = geom.z_range.second;
   }
-  q[2] = p[2];
   return q;
-}
-
-double TEMode00(dealii::Point<3, double> p, int component) {
-  if (component == 0) {
-    // double d2 = (2* Distance2D(p)) / (GlobalParams.M_C_Dim1In +
-    // GlobalParams.M_C_Dim1Out) ;
-    double d2 = Distance2D(p);
-    // return exp(-d2*d2 / (GlobalParams.Phys_SpotRadius *
-    // GlobalParams.Phys_SpotRadius));
-    return exp(-d2 * d2 / 2.25);
-    // return 1.0;
-  }
-  return 0.0;
 }
 
 inline bool file_exists(const std::string &name) {
@@ -692,6 +562,18 @@ void add_vector_of_indices(dealii::IndexSet *in_index_set,
                            std::vector<types::global_dof_index> in_indices) {
   for (unsigned int i = 0; i < in_indices.size(); i++) {
     in_index_set->add_index(in_indices[i]);
+  }
+}
+
+double hmax_for_cell_center(Point<3, double> in_center) {
+  double h_max_in = 0.05;
+  double h_max_out = 0.1;
+  // TODO:
+  // Should check if a coordinate is in the waveguide or not.
+  if (true) {
+    return h_max_in;
+  } else {
+    return h_max_out;
   }
 }
 

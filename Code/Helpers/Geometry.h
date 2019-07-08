@@ -39,6 +39,11 @@ class Geometry {
   void set_x_range(std::pair<double, double>);
   void set_y_range(std::pair<double, double>);
   void set_z_range(std::pair<double, double>);
+
+  // This function returns false in the first return value if the neighbour is
+  // not a process but an outside boundary. Otherwise it returns the MPI Rank of
+  // the neighboring process in the that direction.
+  std::pair<bool, unsigned int> get_neighbor_for_interface(Direction);
 };
 
 #endif /* CODE_HELPERS_GEOMETRY_H_ */

@@ -44,45 +44,16 @@ void mesh_info(const Triangulation<dim>, const std::string);
 template <int dim>
 void mesh_info(const Triangulation<dim>);
 
-double my_inter(double, double, double);
-
 Parameters GetParameters();
 
-Point<3, double> Triangulation_Stretch_X(const Point<3, double> &p);
-
-Point<3, double> Triangulation_Stretch_Y(const Point<3, double> &p);
-
-Point<3, double> Triangulation_Stretch_Z(const Point<3, double> &p);
+Point<3, double> Triangulation_Shit_To_Local_Geometry(
+    const Point<3, double> &p);
 
 inline bool file_exists(const std::string &name);
-
-double TEMode00(dealii::Point<3, double>, int);
-
-double sigma(double, double, double);
-
-double InterpolationPolynomial(double, double, double, double, double);
-
-double InterpolationPolynomialDerivative(double, double, double, double,
-                                         double);
-
-double InterpolationPolynomialZeroDerivative(double, double, double);
 
 void PrepareStreams();
 
 double Distance2D(Point<3, double>, Point<3, double> = Point<3, double>());
-
-Point<3, double> Triangulation_Stretch_to_circle(const Point<3, double> &);
-
-Point<3, double> Triangulation_Shift_Z(const Point<3, double> &);
-
-Point<3, double> Triangulation_Stretch_Computational_Radius(
-    const Point<3, double> &);
-Point<3, double> Triangulation_Stretch_Single_Part_Z(const Point<3, double> &);
-
-Point<3, double> Triangulation_Stretch_Computational_Rectangle(
-    const Point<3, double> &);
-
-Point<3, double> Triangulation_Transform_to_physical(const Point<3, double> &);
 
 std::vector<types::global_dof_index> Add_Zero_Restraint(
     dealii::ConstraintMatrix *, dealii::DoFHandler<3>::active_cell_iterator &,
@@ -90,5 +61,7 @@ std::vector<types::global_dof_index> Add_Zero_Restraint(
 
 void add_vector_of_indices(dealii::IndexSet *,
                            std::vector<types::global_dof_index>);
+
+double hmax_for_cell_center(dealii::Point<3, double>);
 
 #endif /* STATICFUNCTIONS_H_ */
