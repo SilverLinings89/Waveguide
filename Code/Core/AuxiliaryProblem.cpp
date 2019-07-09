@@ -9,9 +9,9 @@
 
 AuxiliaryProblem::AuxiliaryProblem(MPI_Comm inMpiComm, SquareMeshGenerator *inMg, SpaceTransformation *inSt)
         : NumericProblem(inMpiComm, inMg, inSt) {
-  // TODO Auto-generated constructor stub
+    // TODO Auto-generated constructor stub
 }
 
 AuxiliaryProblem::~AuxiliaryProblem() {
-  // TODO Auto-generated destructor stub
+    // TODO Auto-generated destructor stub
 }

@@ -33,42 +33,42 @@ using namespace dealii;
  */
 
 class Optimization {
- public:
-  Optimization();
+public:
+    Optimization();
 
-  virtual ~Optimization();
+    virtual ~Optimization();
 
-  const int type = -1;  // This means that this is not actually an
-                        // Optimization-implementation. 0 = FD, 1 = Adj.
+    const int type = -1;  // This means that this is not actually an
+    // Optimization-implementation. 0 = FD, 1 = Adj.
 
-  ConditionalOStream pout;
+    ConditionalOStream pout;
 
-  const int dofs = 1;
+    const int dofs = 1;
 
-  const int freedofs = 0;
+    const int freedofs = 0;
 
-  // Waveguide * waveguide;
+    // Waveguide * waveguide;
 
-  SpaceTransformation* st;
+    SpaceTransformation *st;
 
-  SquareMeshGenerator* mg;
+    SquareMeshGenerator *mg;
 
-  // OptimizationAlgorithm<std::complex<double>> * oa;
+    // OptimizationAlgorithm<std::complex<double>> * oa;
 
-  /**
-   * This function is the core implementation of an optimization algorithm.
-   * Currently it is very fundamental in its technical prowess which can be
-   * improved upon in later versions. Essentially, it calculates the signal
-   * quality for a configurations and for small steps in every one of the dofs.
-   * After that, the optimization-step is estimated based on
-   * difference-quotients. Following this step, a large step is computed based
-   * upon the approximation of the gradient of the signal-quality functional and
-   * the iteration starts anew. If a decrease in quality is detected, the
-   * optimization-step is undone and the step-width is reduced. This function
-   * controls both the Waveguide- and the Waveguide-structure object.
-   */
+    /**
+     * This function is the core implementation of an optimization algorithm.
+     * Currently it is very fundamental in its technical prowess which can be
+     * improved upon in later versions. Essentially, it calculates the signal
+     * quality for a configurations and for small steps in every one of the dofs.
+     * After that, the optimization-step is estimated based on
+     * difference-quotients. Following this step, a large step is computed based
+     * upon the approximation of the gradient of the signal-quality functional and
+     * the iteration starts anew. If a decrease in quality is detected, the
+     * optimization-step is undone and the step-width is reduced. This function
+     * controls both the Waveguide- and the Waveguide-structure object.
+     */
 
-  virtual void run() = 0;
+    virtual void run() = 0;
 };
 
 #endif

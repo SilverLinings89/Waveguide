@@ -1,6 +1,7 @@
 // Copyright 2018 Pascal Kraft
 #ifndef CODE_CORE_NUMERICPROBLEM_H_
 #define CODE_CORE_NUMERICPROBLEM_H_
+
 #include <cmath>
 #include <mpi.h>
 #include <sys/stat.h>
@@ -81,12 +82,12 @@ const int STEPS_PER_DOFS = 11;
 extern double *steps_widths;
 
 struct ConstraintPair {
-  unsigned int left, right;
-  bool sign;
+    unsigned int left, right;
+    bool sign;
 };
 
 /**
- * \class Waveguide
+ * \class NumericProblem
  * \brief This class encapsulates all important mechanism for solving a FEM
  * problem. In earlier versions this also included space transformation and
  * computation of materials. Now it only includes FEM essentials and solving the
@@ -103,480 +104,482 @@ struct ConstraintPair {
  * \date 03.07.2016
  */
 class NumericProblem {
- public:
-  /**
-   * This is the constructor that should be used to initialize objects of this
-   * type.
-   *
-   * \param param This is a reference to a parsed form of the input-file.
-   * \param structure This parameter gives a reference to the structure of the
-   * real Waveguide. This is necessary since during matrix-assembly it is
-   * required to call a function which generates the transformation tensor which
-   * is purely structure-dependent.
-   */
+public:
+    /**
+     * This is the constructor that should be used to initialize objects of this
+     * type.
+     *
+     * \param param This is a reference to a parsed form of the input-file.
+     * \param structure This parameter gives a reference to the structure of the
+     * real Waveguide. This is necessary since during matrix-assembly it is
+     * required to call a function which generates the transformation tensor which
+     * is purely structure-dependent.
+     */
 
-  NumericProblem(MPI_Comm in_mpi_comm, SquareMeshGenerator *in_mg,
-                 SpaceTransformation *in_st);
+    NumericProblem(MPI_Comm in_mpi_comm, SquareMeshGenerator *in_mg,
+                   SpaceTransformation *in_st);
 
-  ~NumericProblem();
+    ~NumericProblem();
 
-  /**
-   * This method as well as the rerun() method, are used by the
-   * optimization-algorithm to use and reuse the Waveguide-object. Since the
-   * system-matrix consumes a lot of memory it makes sense to reuse it, rather
-   * then creating a new one for every optimization step. All properties of
-   * position[2]the object have to be created properly for this function to
-   * work.
-   */
-  void run();
+    /**
+     * This method as well as the rerun() method, are used by the
+     * optimization-algorithm to use and reuse the Waveguide-object. Since the
+     * system-matrix consumes a lot of memory it makes sense to reuse it, rather
+     * then creating a new one for every optimization step. All properties of
+     * position[2]the object have to be created properly for this function to
+     * work.
+     */
+    void run();
 
-  /**
-   * To compute the output quality of the signal and it's transmition along
-   * the waveguid-axis, this function performs a comparison of the fundamental
-   * mode of a waveguide and the actual situation. For this purpose we
-   * integrate the product of the two functions over a cross-section of the
-   * waveguide in transformed coordinates. To perform this action we need to
-   * use numeric integration so the integral is decomposed into a sum over
-   * local evaluations. For this to be possible this function can be handed
-   * x,y and z coordinates and returns the according value. \param x gives the
-   * x-coordinate. \param y gives the y-coordinate. \param z gives the
-   * z-coordinate.
-   */
-  std::complex<double> evaluate_for_Position(double x, double y, double z);
+    /**
+     * To compute the output quality of the signal and it's transmition along
+     * the waveguid-axis, this function performs a comparison of the fundamental
+     * mode of a waveguide and the actual situation. For this purpose we
+     * integrate the product of the two functions over a cross-section of the
+     * waveguide in transformed coordinates. To perform this action we need to
+     * use numeric integration so the integral is decomposed into a sum over
+     * local evaluations. For this to be possible this function can be handed
+     * x,y and z coordinates and returns the according value. \param x gives the
+     * x-coordinate. \param y gives the y-coordinate. \param z gives the
+     * z-coordinate.
+     */
+    std::complex<double> evaluate_for_Position(double x, double y, double z);
 
-  /**
-   * This function is an alternat Version of evaluate_for_Position() which
-   * doesn't project the E-Field onto the Modes of the waveguide but rather
-   * computes the Poynting-Vector Type Energy stored in the wavegudie,
-   * Specifically this computes \epsilon(x) * E(x) * \bar{E(x)} where x is the
-   * vector passed as individual parameters. \param x gives the x-coordinate.
-   * \param y gives the y-coordinate. \param z gives the z-coordinate.
-   */
-  std::complex<double> evaluate_Energy_for_Position(double x, double y,
-                                                    double z);
+    /**
+     * This function is an alternat Version of evaluate_for_Position() which
+     * doesn't project the E-Field onto the Modes of the waveguide but rather
+     * computes the Poynting-Vector Type Energy stored in the wavegudie,
+     * Specifically this computes \epsilon(x) * E(x) * \bar{E(x)} where x is the
+     * vector passed as individual parameters. \param x gives the x-coordinate.
+     * \param y gives the y-coordinate. \param z gives the z-coordinate.
+     */
+    std::complex<double> evaluate_Energy_for_Position(double x, double y,
+                                                      double z);
 
-  /**
-   * To compute the output quality of the signal and it's transmition along the
-   * waveguid-axis, this function performs a comparison of the fundamental mode
-   * of a waveguide and the actual situation. For this purpose we integrate the
-   * product of the two functions over a cross-section of the waveguide in
-   * transformed coordinates. To perform this action we need to use numeric
-   * integration so the integral is decomposed into a sum over local
-   * evaluations. For this to be possible this function can be handed x,y and z
-   * coordinates and returns the according value. \param x gives the
-   * x-coordinate. \param y gives the y-coordinate. \param z gives the
-   * z-coordinate.
-   */
-  double evaluate_for_z(double);
+    /**
+     * To compute the output quality of the signal and it's transmition along the
+     * waveguid-axis, this function performs a comparison of the fundamental mode
+     * of a waveguide and the actual situation. For this purpose we integrate the
+     * product of the two functions over a cross-section of the waveguide in
+     * transformed coordinates. To perform this action we need to use numeric
+     * integration so the integral is decomposed into a sum over local
+     * evaluations. For this to be possible this function can be handed x,y and z
+     * coordinates and returns the according value. \param x gives the
+     * x-coordinate. \param y gives the y-coordinate. \param z gives the
+     * z-coordinate.
+     */
+    double evaluate_for_z(double);
 
-  /**
-   * This function has the purpose of filling the qualities array in every
-   * process with the appropriate Values from the other ones. Now it will become
-   * necessary to build an optimization-scheme ontop, which can handle this
-   * information on process one and then distribute a new shape to the others.
-   * The function will use the Waveguide-Property execute_rebuild to signal a
-   * need for recomputation.
-   */
-  void evaluate();
+    /**
+     * This function has the purpose of filling the qualities array in every
+     * process with the appropriate Values from the other ones. Now it will become
+     * necessary to build an optimization-scheme ontop, which can handle this
+     * information on process one and then distribute a new shape to the others.
+     * The function will use the Waveguide-Property execute_rebuild to signal a
+     * need for recomputation.
+     */
+    void evaluate();
 
-  /**
-   * The storage has the following purpose: Regarding the optimization-process
-   * there are two kinds of runs. The first one, taking place with no knowledge
-   * of appropriate starting values for the degrees of freedom, and the
-   * following steps, in which the prior results can be used to estimate
-   * appropriate starting values for iterative solvers as well as the
-   * preconditioner. This function switches the behaviour in the following way:
-   * Once it is called, it stores the current solution in a run-independent
-   * variable, making it available for later runs. Also it sets a flag,
-   * indicating, that prior solutions are now available for usage in the
-   * solution process.
-   */
-  void store();
+    /**
+     * The storage has the following purpose: Regarding the optimization-process
+     * there are two kinds of runs. The first one, taking place with no knowledge
+     * of appropriate starting values for the degrees of freedom, and the
+     * following steps, in which the prior results can be used to estimate
+     * appropriate starting values for iterative solvers as well as the
+     * preconditioner. This function switches the behaviour in the following way:
+     * Once it is called, it stores the current solution in a run-independent
+     * variable, making it available for later runs. Also it sets a flag,
+     * indicating, that prior solutions are now available for usage in the
+     * solution process.
+     */
+    void store();
 
-  double *qualities;
+    double *qualities;
 
-  /**
-   * This function is currently not in use. It is supposed to create a useful
-   * input-vector for the first step of the iteration. However currently this is
-   * not used, since current cases simply use a zero-vector for the first step
-   * and previous solutions in the subsequent steps.
-   *
-   */
-  void estimate_solution();
+    /**
+     * This function is currently not in use. It is supposed to create a useful
+     * input-vector for the first step of the iteration. However currently this is
+     * not used, since current cases simply use a zero-vector for the first step
+     * and previous solutions in the subsequent steps.
+     *
+     */
+    void estimate_solution();
 
-  /**
-   * Having computed both primal and dual solution, this function computes the contribution of the local mesh to the components of the shape gradient.
-   * It requires a run of solve() for both the primal and dual problem, i.e. solve() , switch_to_dual() and solve() again.
-   */
-  std::vector<std::complex<double>> assemble_adjoint_local_contribution(
-      double stepwidth);
+    /**
+     * Having computed both primal and dual solution, this function computes the contribution of the local mesh to the components of the shape gradient.
+     * It requires a run of solve() for both the primal and dual problem, i.e. solve() , switch_to_dual() and solve() again.
+     */
+    std::vector<std::complex<double>> assemble_adjoint_local_contribution(
+            double stepwidth);
 
-  /**
-   * This chages the SpaceTransformation object used to compute the material-tensors epsilon and mu. The primal version uses the physical representation of the system, whereas the dual version switches to the coordinates to always send the signal backwards through the waveguide configuration.
-   */
-  void switch_to_primal(SpaceTransformation *primal_st);
+    /**
+     * This chages the SpaceTransformation object used to compute the material-tensors epsilon and mu. The primal version uses the physical representation of the system, whereas the dual version switches to the coordinates to always send the signal backwards through the waveguide configuration.
+     */
+    void switch_to_primal(SpaceTransformation *primal_st);
 
 /**
    * This chages the SpaceTransformation object used to compute the material-tensors epsilon and mu. The primal version uses the physical representation of the system, whereas the dual version switches to the coordinates to always send the signal backwards through the waveguide configuration.
    */
-  void switch_to_dual(SpaceTransformation *dual_st);
+    void switch_to_dual(SpaceTransformation *dual_st);
 
-  Point<3, double> transform_coordinate(const Point<3, double>);
+    Point<3, double> transform_coordinate(const Point<3, double>);
 
-  void Add_Zero_Restraint(ConstraintMatrix *in_cm,
-                          DoFHandler<3>::active_cell_iterator &in_cell,
-                          unsigned int in_face, unsigned int DofsPerLine,
-                          unsigned int DofsPerFace, bool in_non_face_dofs,
-                          IndexSet locally_owned_dofs);
+    void Add_Zero_Restraint(ConstraintMatrix *in_cm,
+                            DoFHandler<3>::active_cell_iterator &in_cell,
+                            unsigned int in_face, unsigned int DofsPerLine,
+                            unsigned int DofsPerFace, bool in_non_face_dofs,
+                            IndexSet locally_owned_dofs);
 
-  SquareMeshGenerator *mg;
+    SquareMeshGenerator *mg;
 
- private:
-  /**
-   * Grid-generation is a crucial part of any FEM-Code. This function holds all
-   * functionality concerning that topic. In the current implementation we start
-   * with a cubic Mesh. That mesh originally is subdivided in 5 cells per
-   * dimension yielding a total of 5*5*5 = 125 cells. The central cells in the
-   * x-z planes are given a cylindrical manifold-description forcing them to
-   * interpolate the new points during global refinement using a circular shape
-   * rather than linear interpolation. This leads to the description of a
-   * cylinder included within a cube. There are currently three techniques for
-   * mesh-refinement:
-   * 	-# Global refinement: For such refinement-cases, any cell is subdivided
-   * in the middle of any dimension. In this case every cell is split into 8 new
-   * ones, increasing the number of cells massively. Pros: no hanging nodes.
-   * Cons: Very many new dofs that might be in areas, where the resolution of
-   * the mesh is already large enough.
-   * 	-# Inner refinement: In this case, only degrees that were in the
-   * original core-cells, will be refined. These are cells, which in the real
-   * physical simulation are part of the waveguide-core rather then the mantle.
-   * 	-# Boundary-refinement: In this case, cells are refined, that are close
-   * to the boundary of the waveguide (not close to the boundary of the
-   * computational domain!). To see the used definition of close, please see the
-   * code.
-   *
-   * 	Following the creation of the mesh, the dofs are distributed to it using
-   * the function setup_system(). This function only has to be used once even in
-   * optimization runs since the mesh can be reused for every run. This saves a
-   * lot of time especially for large cases and distributed calculations.
-   */
-  void make_grid();
+private:
+    /**
+     * Grid-generation is a crucial part of any FEM-Code. This function holds all
+     * functionality concerning that topic. In the current implementation we start
+     * with a cubic Mesh. That mesh originally is subdivided in 5 cells per
+     * dimension yielding a total of 5*5*5 = 125 cells. The central cells in the
+     * x-z planes are given a cylindrical manifold-description forcing them to
+     * interpolate the new points during global refinement using a circular shape
+     * rather than linear interpolation. This leads to the description of a
+     * cylinder included within a cube. There are currently three techniques for
+     * mesh-refinement:
+     * 	-# Global refinement: For such refinement-cases, any cell is subdivided
+     * in the middle of any dimension. In this case every cell is split into 8 new
+     * ones, increasing the number of cells massively. Pros: no hanging nodes.
+     * Cons: Very many new dofs that might be in areas, where the resolution of
+     * the mesh is already large enough.
+     * 	-# Inner refinement: In this case, only degrees that were in the
+     * original core-cells, will be refined. These are cells, which in the real
+     * physical simulation are part of the waveguide-core rather then the mantle.
+     * 	-# Boundary-refinement: In this case, cells are refined, that are close
+     * to the boundary of the waveguide (not close to the boundary of the
+     * computational domain!). To see the used definition of close, please see the
+     * code.
+     *
+     * 	Following the creation of the mesh, the dofs are distributed to it using
+     * the function setup_system(). This function only has to be used once even in
+     * optimization runs since the mesh can be reused for every run. This saves a
+     * lot of time especially for large cases and distributed calculations.
+     */
+    void make_grid();
 
-  /**
-   * In this function, the first case-specific data is used. First off we number
-   * the degrees of freedom. After completion of this task we start making
-   * boundary-conditions. The creation of appropriate boundary-conditions is
-   * twofold:
-   * 	#- Mathematical boundary conditions as described in the literature on
-   * this matter. In this case we use Dirichlet boundary values that are either
-   * zero-values or alternatively are calculated from the mode-distribution of
-   * the incoming signal.
-   * 	#- Numerical constraints from hanging nodes. The non-global refinement
-   * steps cause hanging-nodes that have to be constrained to their neighbors.
-   * This problem can be solved automatically by deal and uses the same
-   * mechanism (constraints) as mathematical boundary values do.
-   *
-   * 	Constraint Matrixes (as constructed in this function) can be used
-   * primarily in two ways. Documentation concerning this problem can be found
-   * at [Constraints On Degrees Of
-   * Freedom](https://www.dealii.org/developer/doxygen/deal.II/group__constraints.html).
-   */
-  void setup_system();
+    /**
+     * In this function, the first case-specific data is used. First off we number
+     * the degrees of freedom. After completion of this task we start making
+     * boundary-conditions. The creation of appropriate boundary-conditions is
+     * twofold:
+     * 	#- Mathematical boundary conditions as described in the literature on
+     * this matter. In this case we use Dirichlet boundary values that are either
+     * zero-values or alternatively are calculated from the mode-distribution of
+     * the incoming signal.
+     * 	#- Numerical constraints from hanging nodes. The non-global refinement
+     * steps cause hanging-nodes that have to be constrained to their neighbors.
+     * This problem can be solved automatically by deal and uses the same
+     * mechanism (constraints) as mathematical boundary values do.
+     *
+     * 	Constraint Matrixes (as constructed in this function) can be used
+     * primarily in two ways. Documentation concerning this problem can be found
+     * at [Constraints On Degrees Of
+     * Freedom](https://www.dealii.org/developer/doxygen/deal.II/group__constraints.html).
+     */
+    void setup_system();
 
-  /**
-   * Assemble system is the function to build a system-matrix. This can either
-   * happen incrementally or from scratch depending on if a solution has been
-   * stored before or not. Essentially it splits the system in blocks and then
-   * calls assemble_block(unsigned int index) for the individual blocks. This
-   * function will have to be improved for incremental building of the system
-   * matrix in order to proceed to upcoming versions. \author Pascal Kraft
-   * \date 16.11.2015
-   */
-  void assemble_system();
+    /**
+     * Assemble system is the function to build a system-matrix. This can either
+     * happen incrementally or from scratch depending on if a solution has been
+     * stored before or not. Essentially it splits the system in blocks and then
+     * calls assemble_block(unsigned int index) for the individual blocks. This
+     * function will have to be improved for incremental building of the system
+     * matrix in order to proceed to upcoming versions. \author Pascal Kraft
+     * \date 16.11.2015
+     */
+    void assemble_system();
 
-  /**
-   * Upon successful assembly of the system-matrix, the solution has to be
-   * calculated. This is done in this function. There are multiple Templates of
-   * this function for enabling switching between libraries. The Dealii
-   * implementation uses deal's native solvers as well as data-types. The other
-   * templated editions use the PETSc and Trilinos equivalents. The type of
-   * solver to be used and its parameters are specified via the parameter GYU
-   */
-  void solve();
+    /**
+     * Upon successful assembly of the system-matrix, the solution has to be
+     * calculated. This is done in this function. There are multiple Templates of
+     * this function for enabling switching between libraries. The Dealii
+     * implementation uses deal's native solvers as well as data-types. The other
+     * templated editions use the PETSc and Trilinos equivalents. The type of
+     * solver to be used and its parameters are specified via the parameter GYU
+     */
+    void solve();
 
-  /**
-   * This function takes the Waveguides solution-vector member and exports it in
-   * a .vtk-file along with the mesh-structure to make the results visible.
-   */
-  void output_results(bool details);
+    /**
+     * This function takes the Waveguides solution-vector member and exports it in
+     * a .vtk-file along with the mesh-structure to make the results visible.
+     */
+    void output_results(bool details);
 
-  /**
-   * This function is used bz the GMRE-solvers in deal. This solver uses the
-   * iteration-results to estimate the eigenvalues and this function is used via
-   * handle to use them. In this function, the eigenvalues are simply pushed
-   * into a file.
-   */
-  void print_eigenvalues(const std::vector<std::complex<double>> &);
+    /**
+     * This function is used bz the GMRE-solvers in deal. This solver uses the
+     * iteration-results to estimate the eigenvalues and this function is used via
+     * handle to use them. In this function, the eigenvalues are simply pushed
+     * into a file.
+     */
+    void print_eigenvalues(const std::vector<std::complex<double>> &);
 
-  /**
-   * Similar to the functio print_eigenvalues(const
-   * std::vector<std::complex<double>> &) , this function uses step-results of
-   * the GMRES-solver to make properties of the system-matrix available. In this
-   * case it is the condition number, estimated on the basis of said
-   * eigenvalues, that gets pushed to a file also.
-   */
-  void print_condition(double);
+    /**
+     * Similar to the functio print_eigenvalues(const
+     * std::vector<std::complex<double>> &) , this function uses step-results of
+     * the GMRES-solver to make properties of the system-matrix available. In this
+     * case it is the condition number, estimated on the basis of said
+     * eigenvalues, that gets pushed to a file also.
+     */
+    void print_condition(double);
 
-  /**
-   * This function occupies one slot of the Solver and will generate formatted
-   * output on the console and write the convergence history to a file.
-   */
-  SolverControl::State check_iteration_state(
-      const unsigned int, const double,
-      const dealii::TrilinosWrappers::MPI::Vector &);
+    /**
+     * This function occupies one slot of the Solver and will generate formatted
+     * output on the console and write the convergence history to a file.
+     */
+    SolverControl::State check_iteration_state(
+            const unsigned int, const double,
+            const dealii::TrilinosWrappers::MPI::Vector &);
 
-  /**
-   * This function fills the ConstraintMatrix-object of the
-   * NumericProblem-object with all constraints needed for condensation into the
-   * szstem-matrix. It's properties are derived from the Waveguide itself and
-   * the Waveguide-Structure-object available to it, therefore there are no
-   * parameters but those members need to be prepared accordingly..
-   */
-  void MakeBoundaryConditions();
+    /**
+     * This function fills the ConstraintMatrix-object of the
+     * NumericProblem-object with all constraints needed for condensation into the
+     * szstem-matrix. It's properties are derived from the Waveguide itself and
+     * the Waveguide-Structure-object available to it, therefore there are no
+     * parameters but those members need to be prepared accordingly..
+     */
+    void MakeBoundaryConditions();
 
-  /**
-   * This function generates the Constraint-Matrices for the two Preconditioner
-   * Matrices.
-   */
-  void MakePreconditionerBoundaryConditions();
+    /**
+     * This function generates the Constraint-Matrices for the two Preconditioner
+     * Matrices.
+     */
+    void MakePreconditionerBoundaryConditions();
 
-  /**
-   * This function projects the boundary conditions for all matrices i.e. the
-   * preconditioner matrices as well as the system matrix. This has to be used
-   * BEFORE the matrices are shifted since it uses functions that derive indices
-   * from the dof_handler functions.
-   */
-  void ProjectBoundaryConditions();
+    /**
+     * This function projects the boundary conditions for all matrices i.e. the
+     * preconditioner matrices as well as the system matrix. This has to be used
+     * BEFORE the matrices are shifted since it uses functions that derive indices
+     * from the dof_handler functions.
+     */
+    void ProjectBoundaryConditions();
 
-  /**
-   * This function executes refined downstream ordering of degrees of freedom.
-   */
-  void Compute_Dof_Numbers();
+    /**
+     * This function executes refined downstream ordering of degrees of freedom.
+     */
+    void Compute_Dof_Numbers();
 
-  void Prepare_Boundary_Constraints();
+    void Prepare_Boundary_Constraints();
 
-  /**
-   * DEPRECATED. SCHEDULED FOR REMOVAL.
-   */
-  double RHS_value(const Point<3> &, const unsigned int component);
+    /**
+     * DEPRECATED. SCHEDULED FOR REMOVAL.
+     */
+    double RHS_value(const Point<3> &, const unsigned int component);
 
-  /**
-   * This function returns the transposed and complex conjugated Matrix for the
-   * given Matrix. The function operates on a copy, it doesn't change the
-   * arguments value. \param input This is the order 2 Tensor (Matrix) to be
-   * transposed (\f$a_{ij} = a'{ji}\f$) and complex conjugated
-   * (\f$\operatorname{Im}(a_{ij}) = - \operatorname{Im}(a'_{ji})\f$)
-   */
-  Tensor<2, 3, std::complex<double>> Conjugate_Tensor(
-      Tensor<2, 3, std::complex<double>> input);
+    /**
+     * This function returns the transposed and complex conjugated Matrix for the
+     * given Matrix. The function operates on a copy, it doesn't change the
+     * arguments value. \param input This is the order 2 Tensor (Matrix) to be
+     * transposed (\f$a_{ij} = a'{ji}\f$) and complex conjugated
+     * (\f$\operatorname{Im}(a_{ij}) = - \operatorname{Im}(a'_{ji})\f$)
+     */
+    Tensor<2, 3, std::complex<double>> Conjugate_Tensor(
+            Tensor<2, 3, std::complex<double>> input);
 
-  /**
-   * This function calculates the complex conjugate of every vector entry and
-   * returns the result in a copy. Similar to Conjugate_Tensor(Tensor<2,3,
-   * std::complex<double>> input) this function does not operate in place - it
-   * operates on a copy and hence returns a new object.
-   */
-  Tensor<1, 3, std::complex<double>> Conjugate_Vector(
-      Tensor<1, 3, std::complex<double>> input);
+    /**
+     * This function calculates the complex conjugate of every vector entry and
+     * returns the result in a copy. Similar to Conjugate_Tensor(Tensor<2,3,
+     * std::complex<double>> input) this function does not operate in place - it
+     * operates on a copy and hence returns a new object.
+     */
+    Tensor<1, 3, std::complex<double>> Conjugate_Vector(
+            Tensor<1, 3, std::complex<double>> input);
 
-  /**
-   * Reinit all datastorage objects.
-   */
-  void reinit_all();
+    /**
+     * Reinit all datastorage objects.
+     */
+    void reinit_all();
 
-  /**
-   * Reinit only the right hand side vector.
-   */
-  void reinit_rhs();
+    /**
+     * Reinit only the right hand side vector.
+     */
+    void reinit_rhs();
 
-  /**
-   * Reinit only the PML-Matrix which is used in the construction of the
-   * Preconditioner. This should only be used if the need for space is there.
-   * Otherwise this matrix while being a temporary object, is very large.
-   */
-  void reinit_preconditioner();
+    /**
+     * Reinit only the PML-Matrix which is used in the construction of the
+     * Preconditioner. This should only be used if the need for space is there.
+     * Otherwise this matrix while being a temporary object, is very large.
+     */
+    void reinit_preconditioner();
 
-  /**
-   * Reinit only the system matrix.
-   */
-  void reinit_systemmatrix();
+    /**
+     * Reinit only the system matrix.
+     */
+    void reinit_systemmatrix();
 
-  /**
-   * Reinit only the solution vector.
-   */
-  void reinit_solution();
+    /**
+     * Reinit only the solution vector.
+     */
+    void reinit_solution();
 
-  /**
-   * This function only initializes the storage vector. Keep in mind, that a
-   * call to this function is *not* included in reinit_all().
-   */
-  void reinit_storage();
+    /**
+     * This function only initializes the storage vector. Keep in mind, that a
+     * call to this function is *not* included in reinit_all().
+     */
+    void reinit_storage();
 
-  /**
-   * When a run has already been completed, not all data structures need to be
-   * completely be rebuilt. They only need to be emptied. This function does
-   * just that.
-   */
-  void reinit_for_rerun();
+    /**
+     * When a run has already been completed, not all data structures need to be
+     * completely be rebuilt. They only need to be emptied. This function does
+     * just that.
+     */
+    void reinit_for_rerun();
 
-  /**
-   * While the solver runs, this function performs an action on the residual. In
-   * the most common use case this action is to print it to the console or to
-   * push it to some data stream.
-   */
-  SolverControl::State residual_tracker(
-      unsigned int Iteration, double resiudal,
-      dealii::TrilinosWrappers::MPI::BlockVector vec);
+    /**
+     * While the solver runs, this function performs an action on the residual. In
+     * the most common use case this action is to print it to the console or to
+     * push it to some data stream.
+     */
+    SolverControl::State residual_tracker(
+            unsigned int Iteration, double resiudal,
+            dealii::TrilinosWrappers::MPI::BlockVector vec);
 
-  /**
-   * This function encapsulates a library call for 2D numeric integration over a
-   * circle with given properties. It is included that this function calls
-   * evaluate_for_Position(x,y,z)
-   */
-  std::complex<double> gauss_product_2D_sphere(double z, int n, double R,
-                                               double Xc, double Yc);
+    /**
+     * This function encapsulates a library call for 2D numeric integration over a
+     * circle with given properties. It is included that this function calls
+     * evaluate_for_Position(x,y,z)
+     */
+    std::complex<double> gauss_product_2D_sphere(double z, int n, double R,
+                                                 double Xc, double Yc);
 
-  /**
-   * Once a solution has been computed, this function can be used to evaluate it at a point position.
-   */
-  Tensor<1, 3, std::complex<double>> solution_evaluation(
-      Point<3, double> position) const;
+    /**
+     * Once a solution has been computed, this function can be used to evaluate it at a point position.
+     */
+    Tensor<1, 3, std::complex<double>> solution_evaluation(
+            Point<3, double> position) const;
+
 /**
    * Once a solution has been computed, this function can be used to evaluate it at a point position. This function is similar to the other version but it doesn't return the solution but stores it in the pointer given as an argument.
    */
 
-  void solution_evaluation(Point<3, double> position, double *solution) const;
+    void solution_evaluation(Point<3, double> position, double *solution) const;
 
-  /**
-   * Same as solution_evaluation but transforms the coordinate to the dual system first, so if you passed in a coordinate on the input interface, it would return the solution evaluation on the output interface.
-   */
-  Tensor<1, 3, std::complex<double>> adjoint_solution_evaluation(
-      Point<3, double> position) const;
+    /**
+     * Same as solution_evaluation but transforms the coordinate to the dual system first, so if you passed in a coordinate on the input interface, it would return the solution evaluation on the output interface.
+     */
+    Tensor<1, 3, std::complex<double>> adjoint_solution_evaluation(
+            Point<3, double> position) const;
+
 /**
    * Same as solution_evaluation but transforms the coordinate to the dual system first, so if you passed in a coordinate on the input interface, it would return the solution evaluation on the output interface.
    */
-  void adjoint_solution_evaluation(Point<3, double> position,
-                                   double *solution) const;
+    void adjoint_solution_evaluation(Point<3, double> position,
+                                     double *solution) const;
 
-  IndexSet combine_indexes(IndexSet lower, IndexSet upper) const;
+    IndexSet combine_indexes(IndexSet lower, IndexSet upper) const;
 
-  unsigned int local_to_global_index(unsigned int local_index);
+    unsigned int local_to_global_index(unsigned int local_index);
 
-  unsigned int global_to_local_index(unsigned int local_index);
+    unsigned int global_to_local_index(unsigned int local_index);
 
-  void SortDofsDownstream();
+    void SortDofsDownstream();
 
-  void Shift_Constraint_Matrix(ConstraintMatrix *in_cm);
+    void Shift_Constraint_Matrix(ConstraintMatrix *in_cm);
 
-  SpaceTransformation *st;
+    SpaceTransformation *st;
 
-  MPI_Comm mpi_comm;
+    MPI_Comm mpi_comm;
 
-  DoFHandler<3>::active_cell_iterator cell, endc;
+    DoFHandler<3>::active_cell_iterator cell, endc;
 
-  FESystem<3> fe;
+    FESystem<3> fe;
 
-  Triangulation<3> triangulation;
+    Triangulation<3> triangulation;
 
-  TrilinosWrappers::MPI::BlockVector system_rhs;
+    TrilinosWrappers::MPI::BlockVector system_rhs;
 
-  TrilinosWrappers::BlockSparseMatrix system_matrix;
+    TrilinosWrappers::BlockSparseMatrix system_matrix;
 
-  TrilinosWrappers::BlockSparseMatrix prec_matrix_odd, prec_matrix_even;
+    TrilinosWrappers::BlockSparseMatrix prec_matrix_odd, prec_matrix_even;
 
-  const bool even;
+    const bool even;
 
-  unsigned int rank;
+    unsigned int rank;
 
-  FEValuesExtractors::Vector real, imag;
+    FEValuesExtractors::Vector real, imag;
 
-  SolverControl solver_control;
+    SolverControl solver_control;
 
-  ConstraintMatrix cm, cm_prec_even, cm_prec_odd, periodic_constraints;
-  unsigned int interface_dof_count;
-  unsigned int n_dofs;
-  unsigned int n_global_dofs;
-  DoFHandler<3> dof_handler;
+    ConstraintMatrix cm, cm_prec_even, cm_prec_odd, periodic_constraints;
+    unsigned int interface_dof_count;
+    unsigned int n_dofs;
+    unsigned int n_global_dofs;
+    DoFHandler<3> dof_handler;
 
-  std::vector<IndexSet> i_prec_even_owned_row;
-  std::vector<IndexSet> i_prec_even_owned_col;
-  std::vector<IndexSet> i_prec_even_writable;
-  std::vector<IndexSet> i_prec_odd_owned_row;
-  std::vector<IndexSet> i_prec_odd_owned_col;
-  std::vector<IndexSet> i_prec_odd_writable;
-  std::vector<IndexSet> i_sys_owned;
-  std::vector<IndexSet> i_sys_readable;
+    std::vector<IndexSet> i_prec_even_owned_row;
+    std::vector<IndexSet> i_prec_even_owned_col;
+    std::vector<IndexSet> i_prec_even_writable;
+    std::vector<IndexSet> i_prec_odd_owned_row;
+    std::vector<IndexSet> i_prec_odd_owned_col;
+    std::vector<IndexSet> i_prec_odd_writable;
+    std::vector<IndexSet> i_sys_owned;
+    std::vector<IndexSet> i_sys_readable;
 
-  TrilinosWrappers::MPI::BlockVector primal_solution, dual_solution;
+    TrilinosWrappers::MPI::BlockVector primal_solution, dual_solution;
 
-  TrilinosWrappers::MPI::BlockVector *solution;
+    TrilinosWrappers::MPI::BlockVector *solution;
 
-  TrilinosWrappers::MPI::BlockVector EstimatedSolution, ErrorOfSolution;
-  IndexSet locally_owned_dofs, locally_relevant_dofs, extended_relevant_dofs;
-  std::vector<IndexSet> locally_relevant_dofs_per_subdomain;
+    TrilinosWrappers::MPI::BlockVector EstimatedSolution, ErrorOfSolution;
+    IndexSet locally_owned_dofs, locally_relevant_dofs, extended_relevant_dofs;
+    std::vector<IndexSet> locally_relevant_dofs_per_subdomain;
 
-  Vector<double> preconditioner_rhs;
+    Vector<double> preconditioner_rhs;
 
-  dealii::Vector<double> primal_with_relevant;
-  dealii::Vector<double> dual_with_relevant;
+    dealii::Vector<double> primal_with_relevant;
+    dealii::Vector<double> dual_with_relevant;
 
-  std::vector<IndexSet> locally_owned_dofs_all_processors;
-  IndexSet UpperDofs, LowerDofs;
-  IndexSet JumpDofs;
-  int run_number;
+    std::vector<IndexSet> locally_owned_dofs_all_processors;
+    IndexSet UpperDofs, LowerDofs;
+    IndexSet JumpDofs;
+    int run_number;
 
-  int condition_file_counter, eigenvalue_file_counter;
-  const unsigned int Layers;
-  std::vector<int> Dofs_Below_Subdomain, Block_Sizes;
-  bool is_stored;
+    int condition_file_counter, eigenvalue_file_counter;
+    const unsigned int Layers;
+    std::vector<int> Dofs_Below_Subdomain, Block_Sizes;
+    bool is_stored;
 
-  const int Sectors;
+    const int Sectors;
 
-  double minimum_local_z;
-  double maximum_local_z;
-  double locals_set = false;
+    double minimum_local_z;
+    double maximum_local_z;
+    double locals_set = false;
 
-  std::string path_prefix;
+    std::string path_prefix;
 
-  IndexSet fixed_dofs;
+    IndexSet fixed_dofs;
 
-  long int solver_start_milis = 0;
+    long int solver_start_milis = 0;
 
-  bool primal = true;
+    bool primal = true;
 
-  ConditionalOStream pout;
-  TimerOutput timer;
-  ExactSolution es;
+    ConditionalOStream pout;
+    TimerOutput timer;
+    ExactSolution es;
 
-  std::map<types::global_dof_index, double> dirichlet_data,
-      preconditioner_dirichlet_data_even, preconditioner_dirichlet_data_odd;
-  ConstraintMatrix boundary_value_constraints_imaginary;
-  ConstraintMatrix boundary_value_constraints_real;
-  ConstraintMatrix hanging_global;
+    std::map<types::global_dof_index, double> dirichlet_data,
+            preconditioner_dirichlet_data_even, preconditioner_dirichlet_data_odd;
+    ConstraintMatrix boundary_value_constraints_imaginary;
+    ConstraintMatrix boundary_value_constraints_real;
+    ConstraintMatrix hanging_global;
 
-  TrilinosWrappers::MPI::BlockVector storage;
-  TrilinosWrappers::MPI::BlockVector temp_storage;
-  std::ofstream eigenvalue_file, condition_file, result_file, iteration_file;
+    TrilinosWrappers::MPI::BlockVector storage;
+    TrilinosWrappers::MPI::BlockVector temp_storage;
+    std::ofstream eigenvalue_file, condition_file, result_file, iteration_file;
 
-  std::vector<IndexSet> set;
+    std::vector<IndexSet> set;
 
-  bool execute_recomputation;
-  IndexSet locally_owned_cells, sweepable;
-  IndexSet InputInterfaceDofs;
-  double cell_layer_z;
-  std::vector<ConstraintPair> periodicity_constraints;
-  std::vector<unsigned int> l2g;
-  IndexSet ZeroBoundaryDofs;
+    bool execute_recomputation;
+    IndexSet locally_owned_cells, sweepable;
+    IndexSet InputInterfaceDofs;
+    double cell_layer_z;
+    std::vector<ConstraintPair> periodicity_constraints;
+    std::vector<unsigned int> l2g;
+    IndexSet ZeroBoundaryDofs;
 };
 
 #endif

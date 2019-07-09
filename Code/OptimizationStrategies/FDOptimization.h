@@ -20,37 +20,38 @@ using namespace dealii;
  * \date 29.11.2016
  */
 class FDOptimization : public Optimization {
- public:
-  const int type =
-      0;  // Allows callers to identify the exact type easily. 0 = FD, 1 = Adj.
+public:
+    const int type =
+            0;  // Allows callers to identify the exact type easily. 0 = FD, 1 = Adj.
 
-  OptimizationAlgorithm<double>* oa;
+    OptimizationAlgorithm<double> *oa;
 
-  FDOptimization(NumericProblem* waveguide_primal, SquareMeshGenerator* mg,
-                 SpaceTransformation* st_primal,
-                 OptimizationAlgorithm<double>* oa);
+    FDOptimization(NumericProblem *waveguide_primal, SquareMeshGenerator *mg,
+                   SpaceTransformation *st_primal,
+                   OptimizationAlgorithm<double> *oa);
 
-  ~FDOptimization();
+    ~FDOptimization();
 
-  std::vector<double> compute_small_step(double step);
+    std::vector<double> compute_small_step(double step);
 
-  double compute_big_step(std::vector<double> step);
+    double compute_big_step(std::vector<double> step);
 
-  double evaluate();
-  /**
-   * The advantage of this formulation is the fact, that we don't need to
-   * differentiate between a 'normal' forward problem and it's dual which (in a
-   * parallel computation) holds some difficulties. We can simply adapt the
-   * shape parameters to account for the change in one component and rerun the
-   * solver and assembly process.
-   */
-  virtual void run();
+    double evaluate();
 
-  NumericProblem* waveguide;
+    /**
+     * The advantage of this formulation is the fact, that we don't need to
+     * differentiate between a 'normal' forward problem and it's dual which (in a
+     * parallel computation) holds some difficulties. We can simply adapt the
+     * shape parameters to account for the change in one component and rerun the
+     * solver and assembly process.
+     */
+    virtual void run();
 
-  SquareMeshGenerator* mg;
+    NumericProblem *waveguide;
 
-  SpaceTransformation* st;
+    SquareMeshGenerator *mg;
+
+    SpaceTransformation *st;
 };
 
 #endif

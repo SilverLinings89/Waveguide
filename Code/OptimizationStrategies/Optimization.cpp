@@ -1,5 +1,6 @@
 #ifndef Optimization_CPP
 #define Optimization_CPP
+
 #include "../OptimizationStrategies/Optimization.h"
 
 using namespace dealii;

@@ -12,37 +12,38 @@ class GradientTable {
 
 private:
 
-	dealii::Vector<double> steps;
-	dealii::Vector<double> qualities;
-	dealii::Vector<double> grad_step;
-	dealii::Vector<double> ref_configuration;
-	dealii::Vector<double> last_configuration;
+    dealii::Vector<double> steps;
+    dealii::Vector<double> qualities;
+    dealii::Vector<double> grad_step;
+    dealii::Vector<double> ref_configuration;
+    dealii::Vector<double> last_configuration;
 
-	double final_quality;
-	double initial_quality;
-	double last_quality;
+    double final_quality;
+    double initial_quality;
+    double last_quality;
 public:
-	GradientTable( unsigned int in_step , dealii::Vector<double> in_configuration, double in_quality, dealii::Vector<double> in_last_configuration, double in_last_quality);
+    GradientTable(unsigned int in_step, dealii::Vector<double> in_configuration, double in_quality,
+                  dealii::Vector<double> in_last_configuration, double in_last_quality);
 
-    ~GradientTable ();
-        
-	const int ndofs;
+    ~GradientTable();
 
-	const int nfreedofs;
+    const int ndofs;
 
-	const unsigned int GlobalStep;
+    const int nfreedofs;
 
-	void SetInitialQuality(double in_quality);
+    const unsigned int GlobalStep;
 
-	void AddComputationResult(int in_component, double in_step, double in_quality);
+    void SetInitialQuality(double in_quality);
 
-	void AddFullStepResult(dealii::Vector<double> in_step, double in_quality);
+    void AddComputationResult(int in_component, double in_step, double in_quality);
 
-	void PrintFullLine();
+    void AddFullStepResult(dealii::Vector<double> in_step, double in_quality);
 
-	void PrintTable();
+    void PrintFullLine();
 
-	void WriteTableToFile(std::string in_filename);
+    void PrintTable();
+
+    void WriteTableToFile(std::string in_filename);
 };
 
 #endif /* GRADIENTTABLE_H_ */

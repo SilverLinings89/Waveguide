@@ -18,15 +18,20 @@
 #include "../MeshGenerators/SquareMeshGenerator.h"
 
 class AuxiliaryProblem : public NumericProblem {
- public:
-  AuxiliaryProblem(MPI_Comm inMpiComm, SquareMeshGenerator *inMg, SpaceTransformation *inSt);
-  virtual ~AuxiliaryProblem();
+public:
+    AuxiliaryProblem(MPI_Comm inMpiComm, SquareMeshGenerator *inMg, SpaceTransformation *inSt);
 
-  void PrepareMesh();
-  void PrepareBoundaryConstraints();
-  void AssembleMatricesAndRHS();
-  void Solve();
-  void reset();
+    virtual ~AuxiliaryProblem();
+
+    void PrepareMesh();
+
+    void PrepareBoundaryConstraints();
+
+    void AssembleMatricesAndRHS();
+
+    void Solve();
+
+    void reset();
 };
 
 #endif /* CODE_CORE_AUXILIARYPROBLEM_H_ */

@@ -10,6 +10,7 @@
 #include <fstream>
 #include "../Core/NumericProblem.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
+
 using namespace dealii;
 
 extern std::string solutionpath;
@@ -24,6 +25,7 @@ extern int StepsPhi;
 extern int alert_counter;
 extern std::string input_file_name;
 extern SpaceTransformation *the_st;
+
 /**
  * For given vectors \f$\boldsymbol{a},\boldsymbol{b} \in \mathbb{R}^3\f$, this
  * function calculates the following crossproduct: \f[\boldsymbol{a} \ times
@@ -38,16 +40,16 @@ void set_the_st(SpaceTransformation *);
 
 double dotproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 
-template <int dim>
+template<int dim>
 void mesh_info(const Triangulation<dim>, const std::string);
 
-template <int dim>
+template<int dim>
 void mesh_info(const Triangulation<dim>);
 
 Parameters GetParameters();
 
 Point<3, double> Triangulation_Shit_To_Local_Geometry(
-    const Point<3, double> &p);
+        const Point<3, double> &p);
 
 inline bool file_exists(const std::string &name);
 
@@ -56,8 +58,8 @@ void PrepareStreams();
 double Distance2D(Point<3, double>, Point<3, double> = Point<3, double>());
 
 std::vector<types::global_dof_index> Add_Zero_Restraint(
-    dealii::ConstraintMatrix *, dealii::DoFHandler<3>::active_cell_iterator &,
-    unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet);
+        dealii::ConstraintMatrix *, dealii::DoFHandler<3>::active_cell_iterator &,
+        unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet);
 
 void add_vector_of_indices(dealii::IndexSet *,
                            std::vector<types::global_dof_index>);

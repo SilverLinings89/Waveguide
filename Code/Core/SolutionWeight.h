@@ -36,35 +36,35 @@ using namespace dealii;
  * &\text{ else}\end{cases} \f], where \f$ \Omega_W\f$ is the set of all points
  * contained in the Waveguide.
  */
-template <int dim>
+template<int dim>
 class SolutionWeight : public Function<dim, double> {
- public:
-  /**
-   * The whole class contains no specific data. The only information it needs
-   * stem from the Parameters object parsed from the input file. This object
-   * gets initialized inside this constructor.
-   */
-  SolutionWeight();
+public:
+    /**
+     * The whole class contains no specific data. The only information it needs
+     * stem from the Parameters object parsed from the input file. This object
+     * gets initialized inside this constructor.
+     */
+    SolutionWeight();
 
-  /**
-   * This function returns 1, if the given component is inside the Waveguide and
-   * 0 otherwise. Since this method is intended also for vector-valued functions
-   * , this method also has to account for a component of the result which for
-   * scalar functions is 0. \param p This is the location in which the test
-   * should be executed. \param component Determines which component is to be
-   * evaluated. In this case that information does not have any further meaning.
-   */
-  virtual double value(const Point<dim> &p, const unsigned int component) const;
+    /**
+     * This function returns 1, if the given component is inside the Waveguide and
+     * 0 otherwise. Since this method is intended also for vector-valued functions
+     * , this method also has to account for a component of the result which for
+     * scalar functions is 0. \param p This is the location in which the test
+     * should be executed. \param component Determines which component is to be
+     * evaluated. In this case that information does not have any further meaning.
+     */
+    virtual double value(const Point<dim> &p, const unsigned int component) const;
 
-  /**
-   * This function gets called by the framework and calls value(const Point<dim>
-   * &p, const unsigned int component ) for all components and stores the
-   * results in value. \param p The location is given here and gets passed along
-   * to the individual value-calls. \param value This is a vector which returns
-   * the results in place. It is a reference that is edited in value(const
-   * Point<dim> &p, const unsigned int component ).
-   */
-  virtual void vector_value(const Point<dim> &p, Vector<double> &value) const;
+    /**
+     * This function gets called by the framework and calls value(const Point<dim>
+     * &p, const unsigned int component ) for all components and stores the
+     * results in value. \param p The location is given here and gets passed along
+     * to the individual value-calls. \param value This is a vector which returns
+     * the results in place. It is a reference that is edited in value(const
+     * Point<dim> &p, const unsigned int component ).
+     */
+    virtual void vector_value(const Point<dim> &p, Vector<double> &value) const;
 };
 
 #endif

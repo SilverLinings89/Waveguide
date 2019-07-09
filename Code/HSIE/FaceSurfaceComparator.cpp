@@ -8,15 +8,15 @@
 #include "./FaceSurfaceComparator.h"
 
 FaceSurfaceComparator::FaceSurfaceComparator() {
-  // TODO Auto-generated constructor stub
+    // TODO Auto-generated constructor stub
 }
 
 FaceSurfaceComparator::~FaceSurfaceComparator() {
-  // TODO Auto-generated destructor stub
+    // TODO Auto-generated destructor stub
 }
 
 bool FaceSurfaceComparator::check_face(
-    const dealii::parallel::distributed::Triangulation<3, 3>::face_iterator
+        const dealii::parallel::distributed::Triangulation<3, 3>::face_iterator
         face_iterator) {
-  return false;
+    return false;
 }

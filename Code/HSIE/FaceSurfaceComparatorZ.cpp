@@ -11,13 +11,14 @@
 #include <cmath>
 
 FaceSurfaceComparatorZ::FaceSurfaceComparatorZ(double in_z, double in_tol) {
-  z = in_z;
-  tolerance = in_tol;
+    z = in_z;
+    tolerance = in_tol;
 }
 
 FaceSurfaceComparatorZ::~FaceSurfaceComparatorZ() {}
+
 bool FaceSurfaceComparatorZ::check_face(
-    const dealii::parallel::distributed::Triangulation<3, 3>::face_iterator
+        const dealii::parallel::distributed::Triangulation<3, 3>::face_iterator
         face_iterator) {
-  return (std::abs(face_iterator->center()[2] - z) <= tolerance);
+    return (std::abs(face_iterator->center()[2] - z) <= tolerance);
 }

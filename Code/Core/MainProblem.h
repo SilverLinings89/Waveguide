@@ -15,19 +15,24 @@
 #include "NumericProblem.h"
 
 class MainProblem : public NumericProblem {
- public:
-  MainProblem(AuxiliaryProblem *);
+public:
+    MainProblem(AuxiliaryProblem *);
 
     MainProblem(MPI_Comm inMpiComm, SquareMeshGenerator *inMg, SpaceTransformation *inSt);
 
     virtual ~MainProblem();
 
-  void PrepareMesh();
-  void PrepareBoundaryConstraints();
-  void AssembleMatricesAndRHS();
-  void Solve();
-  void WriteOutputs();
-  void reset();
+    void PrepareMesh();
+
+    void PrepareBoundaryConstraints();
+
+    void AssembleMatricesAndRHS();
+
+    void Solve();
+
+    void WriteOutputs();
+
+    void reset();
 };
 
 #endif /* CODE_CORE_MAINPROBLEM_H_ */
