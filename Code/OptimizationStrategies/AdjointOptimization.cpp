@@ -7,14 +7,14 @@
 #include <string>
 #include <vector>
 #include "../Core/NumericProblem.h"
-#include "../MeshGenerators/MeshGenerator.h"
+#include "../MeshGenerators/SquareMeshGenerator.h"
 #include "../OptimizationAlgorithm/OptimizationAlgorithm.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
 
 using namespace dealii;
 
 AdjointOptimization::AdjointOptimization(
-    NumericProblem* in_waveguide_primal, MeshGenerator* in_mg,
+    NumericProblem* in_waveguide_primal, SquareMeshGenerator* in_mg,
     SpaceTransformation* in_st_primal, SpaceTransformation* in_st_dual,
     OptimizationAlgorithm<std::complex<double>>* in_Oa) {
   waveguide = in_waveguide_primal;
@@ -139,8 +139,8 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
   double lowest_own = GlobalParams.Minimum_Z - 10.0;
   int lowest_idx = 0;
   for (unsigned int i = 0; i < cnt_steps; i++) {
-    if (z_temp > this->waveguide->mg->z_min &&
-        z_temp < this->waveguide->mg->z_max) {
+    if (z_temp > GlobalParams.geometry.z_range.first &&
+        z_temp < GlobalParams.geometry.z_range.second) {
       mine[i] = true;
       if (own_cnt == 0) {
         lowest_own = z_temp;

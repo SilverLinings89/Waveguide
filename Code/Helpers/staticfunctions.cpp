@@ -415,7 +415,7 @@ Parameters GetParameters() {
   ret.Index_in_y_direction =
       (ret.MPI_Rank % (ret.Blocks_in_x_direction * ret.Blocks_in_y_direction)) /
       ret.Blocks_in_z_direction;
-  Geometry temp = new Geometry();
+  Geometry temp;
   temp.initialize(ret);
   ret.geometry = temp;
   deallog.pop();
@@ -575,6 +575,53 @@ double hmax_for_cell_center(Point<3, double> in_center) {
   } else {
     return h_max_out;
   }
+}
+
+double InterpolationPolynomial(double in_z, double in_val_zero,
+                               double in_val_one, double in_derivative_zero,
+                               double in_derivative_one) {
+    if (in_z < 0.0) return in_val_zero;
+    if (in_z > 1.0) return in_val_one;
+    return (2 * (in_val_zero - in_val_one) + in_derivative_zero +
+            in_derivative_one) *
+           pow(in_z, 3) +
+           (3 * (in_val_one - in_val_zero) - (2 * in_derivative_zero) -
+            in_derivative_one) *
+           pow(in_z, 2) +
+           in_derivative_zero * in_z + in_val_zero;
+}
+
+double InterpolationPolynomialDerivative(double in_z, double in_val_zero,
+                                         double in_val_one,
+                                         double in_derivative_zero,
+                                         double in_derivative_one) {
+    if (in_z < 0.0) return in_derivative_zero;
+    if (in_z > 1.0) return in_derivative_one;
+    return 3 *
+           (2 * (in_val_zero - in_val_one) + in_derivative_zero +
+            in_derivative_one) *
+           pow(in_z, 2) +
+           2 *
+           (3 * (in_val_one - in_val_zero) - (2 * in_derivative_zero) -
+            in_derivative_one) *
+           in_z +
+           in_derivative_zero;
+}
+
+double InterpolationPolynomialZeroDerivative(double in_z, double in_val_zero,
+                                             double in_val_one) {
+    return InterpolationPolynomial(in_z, in_val_zero, in_val_one, 0.0, 0.0);
+}
+
+double sigma(double in_z, double min, double max) {
+    if (min == max) return (in_z < min) ? 0.0 : 1.0;
+    if (in_z < min) return 0.0;
+    if (in_z > max) return 1.0;
+    double ret = 0;
+    ret = (in_z - min) / (max - min);
+    if (ret < 0.0) ret = 0.0;
+    if (ret > 1.0) ret = 1.0;
+    return ret;
 }
 
 #endif

@@ -5,6 +5,8 @@
 #include <mpi.h>
 #include <string>
 #include "ShapeDescription.h"
+#include "Geometry.h"
+
 /**
  * \class Parameters
  * \brief This structure contains all information contained in the input file
@@ -255,6 +257,8 @@ struct Parameters {
   unsigned int Index_in_z_direction;
 
   Geometry geometry;
+
+  int current_run_number;
 };
 
 #endif

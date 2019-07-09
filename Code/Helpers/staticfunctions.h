@@ -64,4 +64,13 @@ void add_vector_of_indices(dealii::IndexSet *,
 
 double hmax_for_cell_center(dealii::Point<3, double>);
 
+double InterpolationPolynomial(double, double, double, double, double);
+
+double InterpolationPolynomialDerivative(double, double, double, double,
+                                         double);
+
+double InterpolationPolynomialZeroDerivative(double, double, double);
+
+double sigma(double, double, double);
+
 #endif /* STATICFUNCTIONS_H_ */

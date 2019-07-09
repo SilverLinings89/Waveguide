@@ -27,7 +27,6 @@
 #include "../Code/SpaceTransformations/HomogenousTransformationRectangular.h"
 #include "../Code/SpaceTransformations/DualProblemTransformationWrapper.h"
 
-#include "../Code/MeshGenerators/MeshGenerator.h"
 #include "../Code/MeshGenerators/SquareMeshGenerator.h"
 
 #include "../Code/OptimizationStrategies/AdjointOptimization.h"
@@ -77,8 +76,8 @@ int main (int argc, char *argv[])
 
 	st->estimate_and_initialize();
 
-	MeshGenerator * mg;
-	mg = new SquareMeshGenerator(st);
+	SquareMeshGenerator * mg;
+	mg = new SquareMeshGenerator();
 	
 	SpaceTransformation * dst;
 	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint ) {

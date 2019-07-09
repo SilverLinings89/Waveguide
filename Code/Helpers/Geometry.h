@@ -11,7 +11,8 @@
 
 #ifndef CODE_HELPERS_GEOMETRY_H_
 #define CODE_HELPERS_GEOMETRY_H_
-#include "Parameters.h"
+
+#include <utility>
 
 enum Direction {
   MinusX = 0,
@@ -21,6 +22,8 @@ enum Direction {
   MinusZ = 4,
   PlusZ = 5
 };
+
+struct Parameters;
 
 class Geometry {
  public:

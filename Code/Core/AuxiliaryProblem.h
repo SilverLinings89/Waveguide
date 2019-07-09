@@ -15,10 +15,11 @@
 #define CODE_CORE_AUXILIARYPROBLEM_H_
 
 #include "NumericProblem.h"
+#include "../MeshGenerators/SquareMeshGenerator.h"
 
 class AuxiliaryProblem : public NumericProblem {
  public:
-  AuxiliaryProblem();
+  AuxiliaryProblem(MPI_Comm inMpiComm, SquareMeshGenerator *inMg, SpaceTransformation *inSt);
   virtual ~AuxiliaryProblem();
 
   void PrepareMesh();

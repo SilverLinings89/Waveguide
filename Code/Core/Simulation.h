@@ -30,6 +30,8 @@ class Simulation {
   void PrepareTransformedGeometry();
   void InitializeMainProblem();
   void InitializeAuxiliaryProblem();
+
+    void CreateOutputDirectory();
 };
 
 #endif /* CODE_CORE_SIMULATION_H_ */

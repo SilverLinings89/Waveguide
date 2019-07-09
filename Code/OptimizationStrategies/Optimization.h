@@ -7,7 +7,7 @@
 
 #include "../Core/NumericProblem.h"
 #include "../Helpers/Parameters.h"
-#include "../MeshGenerators/MeshGenerator.h"
+#include "../MeshGenerators/SquareMeshGenerator.h"
 #include "../OptimizationAlgorithm/OptimizationAlgorithm.h"
 #include "../OptimizationAlgorithm/OptimizationCG.h"
 #include "../OptimizationAlgorithm/OptimizationSteepestDescent.h"
@@ -51,7 +51,7 @@ class Optimization {
 
   SpaceTransformation* st;
 
-  MeshGenerator* mg;
+  SquareMeshGenerator* mg;
 
   // OptimizationAlgorithm<std::complex<double>> * oa;
 

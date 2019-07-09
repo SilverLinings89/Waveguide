@@ -31,32 +31,7 @@ void mesh_i(const Triangulation<3, 3> &tria, const std::string &filename) {
   std::cout << " written to " << filename << std::endl << std::endl;
 }
 
-SquareMeshGenerator::SquareMeshGenerator(SpaceTransformation *in_ct)
-    : MaxDistX((GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In) * 1.4 /
-               2.0),
-      MaxDistY((GlobalParams.M_C_Dim2Out + GlobalParams.M_C_Dim2In) * 1.4 /
-               2.0) {
-  ct = in_ct;
-  Layers = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
-  origin = Point<3>(-1, -1, -1);
-  p1 = Point<3>(-1, -1, -1);
-  p2 = Point<3>(1, 1, 1);
-  edges[0][0] = 2;
-  edges[0][1] = 0;
-  edges[0][2] = 0;
-
-  edges[1][0] = 0;
-  edges[1][1] = 2;
-  edges[1][2] = 0;
-
-  edges[2][0] = 0;
-  edges[2][1] = 0;
-  edges[2][2] = 2;
-
-  subs.push_back(1);
-  subs.push_back(1);
-  subs.push_back(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD));
-}
+SquareMeshGenerator::SquareMeshGenerator() {}
 
 SquareMeshGenerator::~SquareMeshGenerator() {}
 
@@ -122,45 +97,51 @@ void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
       std_cxx11::bind(&SquareMeshGenerator::set_boundary_ids,
                       std_cxx11::cref(*this), std_cxx11::ref(*in_tria)));
 
-  refine_triangulation_itteratively(in_tria);
+  refine_triangulation_iteratively(in_tria);
 
   set_boundary_ids(*in_tria);
 }
 
-void SquareMeshGenerator::refine_triangulation_itteratively(
-    Triangulation<3, 3> *in_tria) {
+void SquareMeshGenerator::refine_triangulation_iteratively(
+        Triangulation<3, 3> * in_tria) {
   bool refinement_required = true;
   Triangulation<3>::active_cell_iterator cell = in_tria->begin_active(),
                                          endc = in_tria->end();
   while (refinement_required && in_tria->n_active_cells() < 100000) {
     refinement_required = false;
     for (cell = in_tria->begin_active(); cell != endc; ++cell) {
-      double h_max = hmax_for_cell_center(cell->center());
-      for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
-        for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
-          Point<3, double> dir = cell->face(i)->line(j)->vertex(0) -
-                                 cell->face(i)->line(j)->vertex(1);
-          dir[0] = std::abs(dir[0]);
-          dir[1] = std::abs(dir[1]);
-          dir[2] = std::abs(dir[2]);
-          if (cell->face(i)->line(j)->measure() > h_max) {
-            refinement_required = true;
-            if (dir[0] > dir[1] && dir[0] > dir[2]) {
-              cell->set_refine_flag(RefinementCase<3>::cut_x);
-            } else {
-              if (dir[1] > dir[2]) {
-                cell->set_refine_flag(RefinementCase<3>::cut_y);
-              } else {
-                cell->set_refine_flag(RefinementCase<3>::cut_z);
-              }
-            }
+      refinement_required =  check_and_mark_one_cell_for_refinement(cell);
+    }
+    in_tria->execute_coarsening_and_refinement();
+  }
+}
+
+bool SquareMeshGenerator::check_and_mark_one_cell_for_refinement(Triangulation<3>::active_cell_iterator cell) {
+  bool found_refinable_cell = false;
+  double h_max = hmax_for_cell_center(cell->center());
+  for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+    for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
+      dealii::Tensor<1,3> dir =
+          cell->face(i)->line(j)->vertex(0) - cell->face(i)->line(j)->vertex(1);
+      dir[0] = std::abs(dir[0]);
+      dir[1] = std::abs(dir[1]);
+      dir[2] = std::abs(dir[2]);
+      if (cell->face(i)->line(j)->measure() > h_max) {
+        found_refinable_cell = true;
+        if (dir[0] > dir[1] && dir[0] > dir[2]) {
+          cell->set_refine_flag(RefinementCase<3>::cut_x);
+        } else {
+          if (dir[1] > dir[2]) {
+            cell->set_refine_flag(RefinementCase<3>::cut_y);
+          } else {
+            cell->set_refine_flag(RefinementCase<3>::cut_z);
           }
         }
       }
     }
-    in_tria->execute_coarsening_and_refinement();
-    }
+  }
 
+  return found_refinable_cell;
 }
 
 #endif

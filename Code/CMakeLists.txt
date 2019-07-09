@@ -8,6 +8,7 @@ ADD_LIBRARY(Code
 	Core/AuxiliaryProblem.cpp
 	Core/MainProblem.cpp
 	Core/Simulation.cpp
+	Helpers/Geometry.cpp
 	Helpers/ExactSolution.cpp
 	Helpers/ModeManager.cpp
 	Helpers/ParameterReader.cpp
@@ -16,7 +17,6 @@ ADD_LIBRARY(Code
 	Helpers/QuadratureFormulaCircle.cpp
 	Helpers/staticfunctions.cpp
 	Helpers/ShapeDescription.cpp
-	MeshGenerators/MeshGenerator.cpp
 	MeshGenerators/SquareMeshGenerator.cpp
 	OptimizationAlgorithm/Optimization1D.cpp
 	OptimizationAlgorithm/OptimizationAlgorithm.cpp

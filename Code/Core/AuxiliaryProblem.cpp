@@ -7,7 +7,8 @@
 
 #include "AuxiliaryProblem.h"
 
-AuxiliaryProblem::AuxiliaryProblem() {
+AuxiliaryProblem::AuxiliaryProblem(MPI_Comm inMpiComm, SquareMeshGenerator *inMg, SpaceTransformation *inSt)
+        : NumericProblem(inMpiComm, inMg, inSt) {
   // TODO Auto-generated constructor stub
 }
 

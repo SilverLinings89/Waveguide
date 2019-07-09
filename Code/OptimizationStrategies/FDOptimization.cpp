@@ -6,13 +6,13 @@
 #include <complex>
 #include <vector>
 #include "../Core/NumericProblem.h"
-#include "../MeshGenerators/MeshGenerator.h"
+#include "../MeshGenerators/SquareMeshGenerator.h"
 #include "../OptimizationAlgorithm/OptimizationAlgorithm.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
 
 using namespace dealii;
 
-FDOptimization::FDOptimization(NumericProblem* in_waveguide, MeshGenerator* in_mg,
+FDOptimization::FDOptimization(NumericProblem* in_waveguide, SquareMeshGenerator* in_mg,
                                SpaceTransformation* in_st,
                                OptimizationAlgorithm<double>* in_Oa) {
   waveguide = in_waveguide;

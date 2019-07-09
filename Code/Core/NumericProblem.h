@@ -1,7 +1,7 @@
 // Copyright 2018 Pascal Kraft
 #ifndef CODE_CORE_NUMERICPROBLEM_H_
 #define CODE_CORE_NUMERICPROBLEM_H_
-#include <math.h>
+#include <cmath>
 #include <mpi.h>
 #include <sys/stat.h>
 #include <cmath>
@@ -60,7 +60,7 @@
 #include "../Helpers/ParameterReader.h"
 #include "../Helpers/Parameters.h"
 #include "../Helpers/staticfunctions.h"
-#include "../MeshGenerators/MeshGenerator.h"
+#include "../MeshGenerators/SquareMeshGenerator.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
 #include "./PreconditionerSweeping.h"
 
@@ -115,7 +115,7 @@ class NumericProblem {
    * is purely structure-dependent.
    */
 
-  NumericProblem(MPI_Comm in_mpi_comm, MeshGenerator *in_mg,
+  NumericProblem(MPI_Comm in_mpi_comm, SquareMeshGenerator *in_mg,
                  SpaceTransformation *in_st);
 
   ~NumericProblem();
@@ -229,7 +229,7 @@ class NumericProblem {
                           unsigned int DofsPerFace, bool in_non_face_dofs,
                           IndexSet locally_owned_dofs);
 
-  MeshGenerator *mg;
+  SquareMeshGenerator *mg;
 
  private:
   /**

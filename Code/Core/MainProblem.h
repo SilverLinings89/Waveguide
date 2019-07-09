@@ -17,7 +17,10 @@
 class MainProblem : public NumericProblem {
  public:
   MainProblem(AuxiliaryProblem *);
-  virtual ~MainProblem();
+
+    MainProblem(MPI_Comm inMpiComm, SquareMeshGenerator *inMg, SpaceTransformation *inSt);
+
+    virtual ~MainProblem();
 
   void PrepareMesh();
   void PrepareBoundaryConstraints();

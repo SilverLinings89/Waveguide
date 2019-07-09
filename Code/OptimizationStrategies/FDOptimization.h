@@ -26,7 +26,7 @@ class FDOptimization : public Optimization {
 
   OptimizationAlgorithm<double>* oa;
 
-  FDOptimization(NumericProblem* waveguide_primal, MeshGenerator* mg,
+  FDOptimization(NumericProblem* waveguide_primal, SquareMeshGenerator* mg,
                  SpaceTransformation* st_primal,
                  OptimizationAlgorithm<double>* oa);
 
@@ -48,7 +48,7 @@ class FDOptimization : public Optimization {
 
   NumericProblem* waveguide;
 
-  MeshGenerator* mg;
+  SquareMeshGenerator* mg;
 
   SpaceTransformation* st;
 };

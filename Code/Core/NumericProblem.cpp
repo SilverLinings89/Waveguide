@@ -33,6 +33,7 @@
 #include "../SpaceTransformations/SpaceTransformation.h"
 #include "PreconditionerSweeping.h"
 #include "SolutionWeight.h"
+#include "../MeshGenerators/SquareMeshGenerator.h"
 
 int steps = 0;
 Parameters GlobalParams;
@@ -41,7 +42,7 @@ dealii::ConvergenceTable Convergence_Table;
 dealii::TableHandler Optimization_Steps;
 double *steps_widths;
 
-NumericProblem::NumericProblem(MPI_Comm in_mpi_comm, MeshGenerator *in_mg,
+NumericProblem::NumericProblem(MPI_Comm in_mpi_comm, SquareMeshGenerator *in_mg,
     SpaceTransformation *in_st)
 : fe(FE_Nedelec<3>(GlobalParams.So_ElementOrder), 2),
   triangulation(Triangulation<3>::MeshSmoothing(Triangulation<3>::none)),
@@ -189,18 +190,6 @@ bool compareConstraintPairs(ConstraintPair v1, ConstraintPair v2) {
   return (v1.left < v2.left);
 }
 
-Tensor<2, 3, std::complex<double>> NumericProblem::Conjugate_Tensor(
-    Tensor<2, 3, std::complex<double>> input) {
-  Tensor<2, 3, std::complex<double>> ret;
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
-      ret[i][j].real(input[i][j].real());
-      ret[i][j].imag(-input[i][j].imag());
-    }
-  }
-  return ret;
-}
-
 Tensor<1, 3, std::complex<double>> NumericProblem::Conjugate_Vector(
     Tensor<1, 3, std::complex<double>> input) {
   Tensor<1, 3, std::complex<double>> ret;
@@ -222,28 +211,6 @@ unsigned int NumericProblem::local_to_global_index(unsigned int local_index) {
     } else {
       return local_index +
           GlobalParams.MPI_Rank * (n_dofs - interface_dof_count);
-    }
-  }
-}
-
-unsigned int NumericProblem::global_to_local_index(unsigned int local_index) {
-  if (GlobalParams.MPI_Rank == 0) {
-    return local_index;
-  } else {
-    int temp =
-        local_index - GlobalParams.MPI_Rank * (n_dofs - interface_dof_count);
-    if (temp < (int)interface_dof_count) {
-      temp += n_dofs - interface_dof_count;
-      for (unsigned int i = 0; i < periodicity_constraints.size(); i++) {
-        if ((int)periodicity_constraints[i].right == temp)
-          return periodicity_constraints[i].left;
-      }
-      std::cout
-      << "Error in computation of local index. Out of bounds? Index was "
-      << local_index << std::endl;
-      return n_dofs - 1;
-    } else {
-      return temp;
     }
   }
 }
@@ -1768,8 +1735,6 @@ void NumericProblem::output_results(bool) {
   if (GlobalParams.O_O_V_S_SolutionFirst) {
 
     set_the_st(this->st);
-
-    GridTools::transform(&Triangulation_Transform_to_physical, triangulation);
 
     MPI_Barrier(mpi_comm);
 

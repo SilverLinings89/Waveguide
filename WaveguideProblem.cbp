@@ -238,6 +238,12 @@
 		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/Helpers/ExactSolution.h">
 			<Option target="Code"/>
 		</Unit>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/Helpers/Geometry.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/Helpers/Geometry.h">
+			<Option target="Code"/>
+		</Unit>
 		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/Helpers/ModeManager.cpp">
 			<Option target="Code"/>
 		</Unit>
@@ -275,12 +281,6 @@
 			<Option target="Code"/>
 		</Unit>
 		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/Helpers/staticfunctions.h">
-			<Option target="Code"/>
-		</Unit>
-		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/MeshGenerators/MeshGenerator.cpp">
-			<Option target="Code"/>
-		</Unit>
-		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/MeshGenerators/MeshGenerator.h">
 			<Option target="Code"/>
 		</Unit>
 		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/MeshGenerators/SquareMeshGenerator.cpp">

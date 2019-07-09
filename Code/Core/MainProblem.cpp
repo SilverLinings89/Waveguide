@@ -7,7 +7,7 @@
 
 #include "MainProblem.h"
 
-MainProblem::MainProblem() {
+MainProblem::MainProblem(MPI_Comm inMpiComm, SquareMeshGenerator *inMg, SpaceTransformation *inSt) : NumericProblem(inMpiComm, inMg, inSt) {
   // TODO Auto-generated constructor stub
 }
 

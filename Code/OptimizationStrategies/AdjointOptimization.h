@@ -22,7 +22,7 @@ class AdjointOptimization : public Optimization {
   const int type =
       1;  // Allows callers to identify the exact type easily. 0 = FD, 1 = Adj.
 
-  AdjointOptimization(NumericProblem* waveguide_primal, MeshGenerator* mg,
+  AdjointOptimization(NumericProblem* waveguide_primal, SquareMeshGenerator* mg,
                       SpaceTransformation* st_primal,
                       SpaceTransformation* st_dual,
                       OptimizationAlgorithm<std::complex<double>>* Oa);
@@ -40,7 +40,7 @@ class AdjointOptimization : public Optimization {
   SpaceTransformation* primal_st;
   SpaceTransformation* dual_st;
 
-  MeshGenerator* mg;
+  SquareMeshGenerator* mg;
 
   OptimizationAlgorithm<std::complex<double>>* oa;
 };
