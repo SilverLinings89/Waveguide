@@ -12,32 +12,12 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ad93b40a-2dca-4621-bc89-15d8a67662be" name="Default Changelist" comment="Removed MeshGenerator Base class. Currently not linking. Removed old code.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Code/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Core/AuxiliaryProblem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/AuxiliaryProblem.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Core/AuxiliaryProblem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/AuxiliaryProblem.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Core/MainProblem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/MainProblem.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Core/MainProblem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/MainProblem.h" afterDir="false" />
+    <list default="true" id="ad93b40a-2dca-4621-bc89-15d8a67662be" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/Code/Core/NumericProblem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/NumericProblem.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Core/NumericProblem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/NumericProblem.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/Core/Simulation.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/Simulation.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Core/Simulation.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/Simulation.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/HSIE/HSIE_Preconditioner_Base.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIE/HSIE_Preconditioner_Base.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Helpers/Geometry.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/Geometry.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/Helpers/Geometry.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/Geometry.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Helpers/Parameters.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/Parameters.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Helpers/staticfunctions.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/staticfunctions.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/MeshGenerators/MeshGenerator.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/MeshGenerators/MeshGenerator.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/MeshGenerators/SquareMeshGenerator.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/MeshGenerators/SquareMeshGenerator.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/MeshGenerators/SquareMeshGenerator.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/MeshGenerators/SquareMeshGenerator.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/OptimizationStrategies/AdjointOptimization.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/OptimizationStrategies/AdjointOptimization.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/OptimizationStrategies/AdjointOptimization.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/OptimizationStrategies/AdjointOptimization.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/OptimizationStrategies/FDOptimization.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/OptimizationStrategies/FDOptimization.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/OptimizationStrategies/FDOptimization.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/OptimizationStrategies/FDOptimization.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/OptimizationStrategies/Optimization.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/OptimizationStrategies/Optimization.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Main/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Main/main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WaveguideProblem.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/WaveguideProblem.cbp" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/CMakeFiles/" />
     <ignored path="$PROJECT_DIR$/Code/CMakeFiles/" />
@@ -73,13 +53,55 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Release" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="234">
-              <caret line="1767" selection-start-line="1764" selection-end-line="1767" />
+            <state relative-caret-position="164">
+              <caret line="921" column="38" selection-start-line="921" selection-start-column="38" selection-end-line="921" selection-end-column="38" />
               <folding>
                 <element signature="e#82#109#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Code/HSIE/HSIE_Preconditioner_Base.cpp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="174">
+              <caret line="198" column="24" selection-start-line="198" selection-start-column="24" selection-end-line="198" selection-end-column="24" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Code/Helpers/Geometry.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="464">
+              <caret line="52" column="66" selection-start-line="52" selection-start-column="66" selection-end-line="52" selection-end-column="66" />
+              <folding>
+                <element signature="e#484#502#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Code/Helpers/Geometry.cpp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="434">
+              <caret line="137" column="69" selection-start-line="137" selection-start-column="69" selection-end-line="137" selection-end-column="69" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="209">
+              <caret line="225" column="2" selection-start-line="225" selection-start-column="2" selection-end-line="225" selection-end-column="2" />
+              <folding>
+                <element signature="e#103#119#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -95,76 +117,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Code/OptimizationStrategies/Optimization.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="570">
-              <caret line="53" column="8" selection-start-line="53" selection-start-column="8" selection-end-line="53" selection-end-column="8" />
-              <folding>
-                <element signature="e#51#87#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Code/OptimizationStrategies/AdjointOptimization.cpp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2130">
-              <caret line="142" column="53" selection-start-line="142" selection-start-column="53" selection-end-line="142" selection-end-column="53" />
-              <folding>
-                <element signature="e#67#99#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Code/OptimizationStrategies/FDOptimization.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="389">
-              <caret line="50" column="8" selection-start-line="50" selection-start-column="8" selection-end-line="50" selection-end-column="8" />
-              <folding>
-                <element signature="e#53#88#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Code/OptimizationStrategies/FDOptimization.cpp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="120">
-              <caret line="8" column="34" selection-start-line="8" selection-start-column="34" selection-end-line="8" selection-end-column="34" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Code/OptimizationStrategies/AdjointOptimization.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="284">
-              <caret line="35" column="8" selection-start-line="35" selection-start-column="8" selection-end-line="35" selection-end-column="8" />
-              <folding>
-                <element signature="e#63#98#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-375">
-              <caret line="25" column="28" selection-start-line="25" selection-start-column="28" selection-end-line="25" selection-end-column="28" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Code/Core/MainProblem.h">
+        <entry file="file://$PROJECT_DIR$/Code/MeshGenerators/SquareMeshGenerator.cpp">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="285">
-              <caret line="20" column="42" selection-start-line="20" selection-start-column="42" selection-end-line="20" selection-end-column="42" />
+              <caret line="99" column="2" selection-start-line="99" selection-start-column="2" selection-end-line="99" selection-end-column="2" />
             </state>
           </provider>
         </entry>
@@ -174,6 +130,7 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>MeshGenerator</find>
+      <find>Point</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -187,10 +144,8 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/Code/Core/Simulation.cpp" />
         <option value="$PROJECT_DIR$/Code/Helpers/Parameters.h" />
         <option value="$PROJECT_DIR$/Code/Helpers/staticfunctions.h" />
-        <option value="$PROJECT_DIR$/Code/Helpers/Geometry.h" />
         <option value="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" />
         <option value="$PROJECT_DIR$/Code/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/Code/Core/AuxiliaryProblem.cpp" />
@@ -205,8 +160,12 @@
         <option value="$PROJECT_DIR$/Code/OptimizationStrategies/FDOptimization.h" />
         <option value="$PROJECT_DIR$/Main/main.cpp" />
         <option value="$PROJECT_DIR$/Code/OptimizationStrategies/AdjointOptimization.h" />
-        <option value="$PROJECT_DIR$/Code/Core/NumericProblem.cpp" />
+        <option value="$PROJECT_DIR$/Code/Core/Simulation.cpp" />
         <option value="$PROJECT_DIR$/Code/Core/NumericProblem.h" />
+        <option value="$PROJECT_DIR$/Code/HSIE/HSIE_Preconditioner_Base.cpp" />
+        <option value="$PROJECT_DIR$/Code/Helpers/Geometry.h" />
+        <option value="$PROJECT_DIR$/Code/Helpers/Geometry.cpp" />
+        <option value="$PROJECT_DIR$/Code/Core/NumericProblem.cpp" />
       </list>
     </option>
   </component>
@@ -262,6 +221,12 @@
               <item name="WaveguideProblem" type="b2602c69:ProjectViewProjectNode" />
               <item name="waveguideproblem" type="462c0819:PsiDirectoryNode" />
               <item name="Code" type="462c0819:PsiDirectoryNode" />
+              <item name="HSIE" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="WaveguideProblem" type="b2602c69:ProjectViewProjectNode" />
+              <item name="waveguideproblem" type="462c0819:PsiDirectoryNode" />
+              <item name="Code" type="462c0819:PsiDirectoryNode" />
               <item name="MeshGenerators" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -275,11 +240,6 @@
               <item name="waveguideproblem" type="462c0819:PsiDirectoryNode" />
               <item name="Code" type="462c0819:PsiDirectoryNode" />
               <item name="OptimizationStrategies" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="WaveguideProblem" type="b2602c69:ProjectViewProjectNode" />
-              <item name="waveguideproblem" type="462c0819:PsiDirectoryNode" />
-              <item name="Main" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -338,15 +298,24 @@
       <workItem from="1562675475896" duration="13000" />
       <workItem from="1562675520696" duration="95000" />
       <workItem from="1562675626820" duration="1503000" />
-      <workItem from="1562677517349" duration="3087000" />
+      <workItem from="1562677517349" duration="8448000" />
     </task>
+    <task id="LOCAL-00001" summary="Removed MeshGenerator Base class. Currently not linking. Removed old code.">
+      <created>1562681949813</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1562681949813</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="6037000" />
+    <option name="totallyTimeSpent" value="11398000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="67" y="25" width="1853" height="1055" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2717211" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -366,7 +335,7 @@
       <window_info active="true" anchor="bottom" id="Messages" order="12" visible="true" weight="0.32937366" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
-      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.24958494" />
       <window_info anchor="right" id="Database" order="3" />
     </layout>
     <layout-to-restore>
@@ -395,21 +364,12 @@
     <option name="version" value="1" />
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <MESSAGE value="Removed MeshGenerator Base class. Currently not linking. Removed old code." />
     <option name="LAST_COMMIT_MESSAGE" value="Removed MeshGenerator Base class. Currently not linking. Removed old code." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/Code/Core/Simulation.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="454">
-          <caret line="60" column="5" selection-start-line="60" selection-start-column="4" selection-end-line="60" selection-end-column="5" />
-          <folding>
-            <element signature="e#80#103#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Code/Helpers/Parameters.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3870">
@@ -417,13 +377,6 @@
           <folding>
             <element signature="e#48#64#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Helpers/Geometry.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="495">
-          <caret line="33" column="5" selection-start-line="33" selection-start-column="2" selection-end-line="33" selection-end-column="5" />
         </state>
       </provider>
     </entry>
@@ -485,24 +438,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Code/MeshGenerators/SquareMeshGenerator.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret line="99" column="2" selection-start-line="99" selection-start-column="2" selection-end-line="99" selection-end-column="2" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Code/Core/MainProblem.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="285">
           <caret line="20" column="42" selection-start-line="20" selection-start-column="42" selection-end-line="20" selection-end-column="42" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Core/MainProblem.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="16" selection-start-line="16" selection-end-line="16" />
         </state>
       </provider>
     </entry>
@@ -576,20 +515,105 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.cpp">
+    <entry file="file://$PROJECT_DIR$/Code/OptimizationAlgorithm/OptimizationAlgorithm.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="234">
-          <caret line="1767" selection-start-line="1764" selection-end-line="1767" />
+        <state relative-caret-position="189">
+          <caret line="21" column="6" selection-start-line="21" selection-start-column="6" selection-end-line="21" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/OptimizationAlgorithm/Optimization1D.cpp">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/OptimizationAlgorithm/Optimization1D.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="15" column="14" lean-forward="true" selection-start-line="15" selection-start-column="14" selection-end-line="15" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="uml://JavaScript-modules-diagram//home/kraft/workspace/waveguideproblem/Code">
+      <provider selected="true" editor-type-id="UmlEditorProvider">
+        <state>
+          <ID>JavaScript-modules-diagram</ID>
+          <OriginalElement>$PROJECT_DIR$/Code</OriginalElement>
+          <nodes />
+          <notes />
+          <edges />
+          <settings layout="Hierarchic Group" zoom="1.0" x="432.5" y="284.0" />
+          <SelectedNodes />
+          <Categories>
+            <Category>All</Category>
+          </Categories>
+          <VISIBILITY>Details</VISIBILITY>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/Core/Simulation.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="390">
+          <caret line="26" lean-forward="true" selection-start-line="26" selection-end-line="26" />
           <folding>
-            <element signature="e#82#109#0" expanded="true" />
+            <element signature="e#80#103#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/Core/MainProblem.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="16" selection-start-line="16" selection-end-line="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/MeshGenerators/SquareMeshGenerator.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="285">
+          <caret line="99" column="2" selection-start-line="99" selection-start-column="2" selection-end-line="99" selection-end-column="2" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-375">
-          <caret line="25" column="28" selection-start-line="25" selection-start-column="28" selection-end-line="25" selection-end-column="28" />
+        <state relative-caret-position="209">
+          <caret line="225" column="2" selection-start-line="225" selection-start-column="2" selection-end-line="225" selection-end-column="2" />
+          <folding>
+            <element signature="e#103#119#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/HSIE/HSIE_Preconditioner_Base.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="174">
+          <caret line="198" column="24" selection-start-line="198" selection-start-column="24" selection-end-line="198" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/Helpers/Geometry.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="464">
+          <caret line="52" column="66" selection-start-line="52" selection-start-column="66" selection-end-line="52" selection-end-column="66" />
+          <folding>
+            <element signature="e#484#502#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/Helpers/Geometry.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="434">
+          <caret line="137" column="69" selection-start-line="137" selection-start-column="69" selection-end-line="137" selection-end-column="69" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="164">
+          <caret line="921" column="38" selection-start-line="921" selection-start-column="38" selection-end-line="921" selection-end-column="38" />
+          <folding>
+            <element signature="e#82#109#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
