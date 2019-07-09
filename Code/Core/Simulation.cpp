@@ -15,11 +15,12 @@ Simulation::Simulation() = default;
 Simulation::~Simulation() = default;
 
 void Simulation::Run() {
-  LoadParameters();
-  PrepareGeometry();
-  PrepareTransformedGeometry();
-  InitializeMainProblem();
-  InitializeAuxiliaryProblem();
+    CreateOutputDirectory();
+    LoadParameters();
+    PrepareGeometry();
+    PrepareTransformedGeometry();
+    InitializeMainProblem();
+    InitializeAuxiliaryProblem();
 }
 
 void Simulation::LoadParameters() {

@@ -13,6 +13,8 @@
 #define CODE_HELPERS_GEOMETRY_H_
 
 #include <utility>
+#include <deal.II/base/point.h>
+
 
 enum Direction {
   MinusX = 0,
@@ -47,6 +49,9 @@ class Geometry {
   // not a process but an outside boundary. Otherwise it returns the MPI Rank of
   // the neighboring process in the that direction.
   std::pair<bool, unsigned int> get_neighbor_for_interface(Direction);
+
+    bool math_coordinate_in_waveguide(dealii::Point<3, double>) const;
+
 };
 
 #endif /* CODE_HELPERS_GEOMETRY_H_ */

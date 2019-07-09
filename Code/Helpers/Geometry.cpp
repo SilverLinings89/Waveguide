@@ -134,3 +134,10 @@ std::pair<bool, unsigned int> Geometry::get_neighbor_for_interface(
   }
   return ret;
 }
+
+bool Geometry::math_coordinate_in_waveguide(dealii::Point<3, double> in_position) const {
+    return std::abs(in_position[0]) <
+           (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / 2.0 &&
+           std::abs(in_position[1]) <
+           (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out) / 2.0;
+}

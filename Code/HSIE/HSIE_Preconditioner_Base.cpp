@@ -296,8 +296,8 @@ unsigned int HSIEPreconditionerBase<hsie_order>::n_dofs_per_face() {
 
 template <int hsie_order>
 std::complex<double> HSIEPreconditionerBase<hsie_order>::a(
-    HSIE_Dof_Type<hsie_order> u, HSIE_Dof_Type<hsie_order> v,
-    bool use_curl_fomulation, dealii::Point<2, double> x) {}
+        HSIE_Dof_Type<hsie_order> u, HSIE_Dof_Type<hsie_order> v,
+        bool use_curl_formulation, dealii::Point<2, double> x) {}
 
 template <int hsie_order>
 std::complex<double> HSIEPreconditionerBase<hsie_order>::A(
@@ -333,7 +333,7 @@ void HSIEPreconditionerBase<hsie_order>::assemble_block() {
   std::vector<Point<3>> quadrature_points;
   const unsigned int n_q_points = quadrature_formula.size();
   const unsigned int dofs_per_cell = this->n_dofs_per_face();
-  deallog << "Starting Assemblation process" << std::endl;
+    deallog << "Starting assembly process" << std::endl;
 
   FullMatrix<double> cell_matrix_real(dofs_per_cell, dofs_per_cell);
   Vector<double> cell_rhs(dofs_per_cell);
