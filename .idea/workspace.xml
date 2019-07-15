@@ -14,7 +14,7 @@
   <component name="ChangeListManager">
     <list default="true" id="ad93b40a-2dca-4621-bc89-15d8a67662be" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Helpers/QuadratureFormulaCircle.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/QuadratureFormulaCircle.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Main/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Main/main.cpp" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/CMakeFiles/" />
     <ignored path="$PROJECT_DIR$/Code/CMakeFiles/" />
@@ -28,45 +28,17 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="DockManager">
-    <window id="1">
-      <content type="file-editors">
-        <state>
-          <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-            <file pinned="false" current-in-tab="true">
-              <entry file="file://$PROJECT_DIR$/Main/main.cpp">
-                <provider selected="true" editor-type-id="text-editor">
-                  <state relative-caret-position="316">
-                    <caret line="29" selection-start-line="29" selection-end-line="29" />
-                  </state>
-                </provider>
-              </entry>
-            </file>
-          </leaf>
-        </state>
-      </content>
-    </window>
-  </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Release" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="13470">
+            <state relative-caret-position="3566">
               <caret line="922" column="38" selection-start-line="922" selection-start-column="38" selection-end-line="922" selection-end-column="38" />
               <folding>
                 <element signature="e#82#109#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Code/Helpers/QuadratureFormulaCircle.cpp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-60">
-              <caret line="59" column="9" selection-start-line="59" selection-start-column="9" selection-end-line="59" selection-end-column="9" />
             </state>
           </provider>
         </entry>
@@ -81,13 +53,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Code/Core/AuxiliaryProblem.h">
+        <entry file="file://$PROJECT_DIR$/Main/main.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="240">
-              <caret line="17" column="50" selection-start-line="17" selection-start-column="50" selection-end-line="17" selection-end-column="50" />
-              <folding>
-                <element signature="e#784#811#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="510">
+              <caret line="34" selection-start-line="34" selection-end-line="34" />
             </state>
           </provider>
         </entry>
@@ -126,7 +95,6 @@
         <option value="$PROJECT_DIR$/Code/OptimizationStrategies/AdjointOptimization.cpp" />
         <option value="$PROJECT_DIR$/Code/OptimizationStrategies/FDOptimization.cpp" />
         <option value="$PROJECT_DIR$/Code/OptimizationStrategies/FDOptimization.h" />
-        <option value="$PROJECT_DIR$/Main/main.cpp" />
         <option value="$PROJECT_DIR$/Code/OptimizationStrategies/AdjointOptimization.h" />
         <option value="$PROJECT_DIR$/Code/Core/Simulation.cpp" />
         <option value="$PROJECT_DIR$/Code/HSIE/HSIE_Preconditioner_Base.cpp" />
@@ -135,6 +103,7 @@
         <option value="$PROJECT_DIR$/Code/Core/NumericProblem.cpp" />
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/Code/Core/NumericProblem.h" />
+        <option value="$PROJECT_DIR$/Main/main.cpp" />
         <option value="$PROJECT_DIR$/Code/Helpers/QuadratureFormulaCircle.cpp" />
       </list>
     </option>
@@ -153,16 +122,17 @@
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="-85" />
-    <option name="y" value="27" />
-    <option name="width" value="1833" />
-    <option name="height" value="789" />
+    <option name="x" value="67" />
+    <option name="y" value="25" />
+    <option name="width" value="1853" />
+    <option name="height" value="1055" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -191,7 +161,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -244,7 +213,8 @@
       <workItem from="1562675475896" duration="13000" />
       <workItem from="1562675520696" duration="95000" />
       <workItem from="1562675626820" duration="1503000" />
-      <workItem from="1562677517349" duration="9051000" />
+      <workItem from="1562677517349" duration="10274000" />
+      <workItem from="1563192288753" duration="2075000" />
     </task>
     <task id="LOCAL-00001" summary="Removed MeshGenerator Base class. Currently not linking. Removed old code.">
       <created>1562681949813</created>
@@ -281,17 +251,24 @@
       <option name="project" value="LOCAL" />
       <updated>1562688431613</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Bugfix. Builds again.">
+      <created>1562688594192</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1562688594192</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="12001000" />
+    <option name="totallyTimeSpent" value="15299000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="67" y="25" width="1853" height="1055" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2717211" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2750415" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -344,7 +321,8 @@
     <MESSAGE value="Now linking again." />
     <MESSAGE value="Ammended gitignore to hide .idea subfolder from now on." />
     <MESSAGE value="Import reorganized. Code aligned. No programming." />
-    <option name="LAST_COMMIT_MESSAGE" value="Import reorganized. Code aligned. No programming." />
+    <MESSAGE value="Bugfix. Builds again." />
+    <option name="LAST_COMMIT_MESSAGE" value="Bugfix. Builds again." />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
   <component name="editorHistoryManager">
@@ -446,13 +424,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Main/main.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="316">
-          <caret line="29" selection-start-line="29" selection-end-line="29" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Code/OptimizationStrategies/AdjointOptimization.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="284">
@@ -501,11 +472,12 @@
           <nodes />
           <notes />
           <edges />
-          <settings layout="Hierarchic Group" zoom="1.0" x="432.5" y="284.0" />
+          <settings layout="Hierarchic Group" zoom="1.0" x="433.0" y="284.0" />
           <SelectedNodes />
           <Categories>
             <Category>All</Category>
           </Categories>
+          <SCOPE>All</SCOPE>
           <VISIBILITY>Details</VISIBILITY>
         </state>
       </provider>
@@ -575,6 +547,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Code/Helpers/QuadratureFormulaCircle.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="165">
+          <caret line="54" column="2" lean-forward="true" selection-start-line="54" selection-start-column="2" selection-end-line="54" selection-end-column="2" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Main/main.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="510">
+          <caret line="34" selection-start-line="34" selection-end-line="34" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Code/Core/AuxiliaryProblem.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="240">
@@ -594,18 +580,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="13470">
+        <state relative-caret-position="3566">
           <caret line="922" column="38" selection-start-line="922" selection-start-column="38" selection-end-line="922" selection-end-column="38" />
           <folding>
             <element signature="e#82#109#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Helpers/QuadratureFormulaCircle.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-60">
-          <caret line="59" column="9" selection-start-line="59" selection-start-column="9" selection-end-line="59" selection-end-column="9" />
         </state>
       </provider>
     </entry>

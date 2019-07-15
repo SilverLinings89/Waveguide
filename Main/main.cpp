@@ -21,106 +21,98 @@
 #include "../Code/Helpers/ExactSolution.h"
 #include "../Code/Core/SolutionWeight.h"
 #include "../Code/OutputGenerators/Console/GradientTable.h"
-
 #include "../Code/SpaceTransformations/SpaceTransformation.h"
 #include "../Code/SpaceTransformations/InhomogenousTransformationRectangular.h"
 #include "../Code/SpaceTransformations/HomogenousTransformationRectangular.h"
 #include "../Code/SpaceTransformations/DualProblemTransformationWrapper.h"
-
 #include "../Code/MeshGenerators/SquareMeshGenerator.h"
-
 #include "../Code/OptimizationStrategies/AdjointOptimization.h"
 #include "../Code/OptimizationStrategies/FDOptimization.h"
-
 #include "../Code/OptimizationAlgorithm/OptimizationAlgorithm.h"
 #include "../Code/OptimizationAlgorithm/OptimizationCG.h"
 #include "../Code/OptimizationAlgorithm/OptimizationSteepestDescent.h"
 #include "../Code/OptimizationAlgorithm/Optimization1D.h"
-
 #include "../Code/Helpers/ShapeDescription.h"
 
-int main (int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 
-  if(argc > 1) {
-    input_file_name = argv[1];
-  } else {
-    input_file_name = "../Parameters/Parameters.xml";
-  }
+    if (argc > 1) {
+        input_file_name = argv[1];
+    } else {
+        input_file_name = "../Parameters/Parameters.xml";
+    }
 
-  deallog.depth_console(5);
+    deallog.depth_console(5);
 
-	Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
+    Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
-  PrepareStreams();
+    PrepareStreams();
 
-  deallog.push("Main");
+    deallog.push("Main");
 
-  deallog << "Streams prepared. Loading Parameters..." <<std::endl;
+    deallog << "Streams prepared. Loading Parameters..." << std::endl;
 
-	GlobalParams = GetParameters();
+    GlobalParams = GetParameters();
 
-	if(argc ==3) {
-	  GlobalParams.StepWidth = std::atof(argv[2]);
-	}
+    if (argc == 3) {
+        GlobalParams.StepWidth = std::atof(argv[2]);
+    }
 
-	ModeMan.load();
+    ModeMan.load();
 
-	SpaceTransformation * st;
+    SpaceTransformation *st;
 
-	if(GlobalParams.Sc_Homogeneity) {
-		st = new HomogenousTransformationRectangular(GlobalParams.MPI_Rank);
-	} else {
-		st = new InhomogenousTransformationRectangular(GlobalParams.MPI_Rank);
-	}
+    if (GlobalParams.Sc_Homogeneity) {
+        st = new HomogenousTransformationRectangular(GlobalParams.MPI_Rank);
+    } else {
+        st = new InhomogenousTransformationRectangular(GlobalParams.MPI_Rank);
+    }
 
-	st->estimate_and_initialize();
+    st->estimate_and_initialize();
 
-	SquareMeshGenerator * mg;
-	mg = new SquareMeshGenerator();
-	
-	SpaceTransformation * dst;
-	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint ) {
-	  dst = new DualProblemTransformationWrapper(st,  GlobalParams.MPI_Rank);
-	  dst->estimate_and_initialize();
-	} else {
-		// should be different? not sure.
-		dst = new DualProblemTransformationWrapper(st,  GlobalParams.MPI_Rank);
-		dst->estimate_and_initialize();
-	}
+    SquareMeshGenerator *mg;
+    mg = new SquareMeshGenerator();
 
-	NumericProblem * waveguide;
-	std::string prefix = "";
-	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
-	  prefix = "primal";
-	} else {
-	  prefix = ".";
-	}
+    SpaceTransformation *dst;
+    if (GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
+        dst = new DualProblemTransformationWrapper(st, GlobalParams.MPI_Rank);
+        dst->estimate_and_initialize();
+    } else {
+        // should be different? not sure.
+        dst = new DualProblemTransformationWrapper(st, GlobalParams.MPI_Rank);
+        dst->estimate_and_initialize();
+    }
 
-	waveguide = new NumericProblem(MPI_COMM_WORLD, mg, st);
+    NumericProblem *waveguide;
+    std::string prefix = "";
+    if (GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
+        prefix = "primal";
+    } else {
+        prefix = ".";
+    }
 
-	Optimization * opt;
+    waveguide = new NumericProblem(MPI_COMM_WORLD, mg, st);
 
-	if(GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
-		OptimizationAlgorithm<std::complex<double>> * Oa_c ;
-		Oa_c = new Optimization1D();
-		opt = new AdjointOptimization(waveguide, mg, st, dst, Oa_c);
-	} else {
-		OptimizationAlgorithm<double> * Oa_d;
-		Oa_d = new OptimizationSteepestDescent();
-		opt = new FDOptimization(waveguide, mg, st, Oa_d);
-	}
+    Optimization *opt;
 
-  
-	deallog.pop();
+    if (GlobalParams.Sc_Schema == OptimizationSchema::Adjoint) {
+        OptimizationAlgorithm<std::complex<double>> *Oa_c;
+        Oa_c = new Optimization1D();
+        opt = new AdjointOptimization(waveguide, mg, st, dst, Oa_c);
+    } else {
+        OptimizationAlgorithm<double> *Oa_d;
+        Oa_d = new OptimizationSteepestDescent();
+        opt = new FDOptimization(waveguide, mg, st, Oa_d);
+    }
 
-	deallog.push("Run");
+    deallog.pop();
 
-	opt->run();
+    deallog.push("Run");
 
+    opt->run();
 
-	deallog.pop();
-	return 0;
+    deallog.pop();
+    return 0;
 }
 
 #endif
