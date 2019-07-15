@@ -54,13 +54,10 @@
   SUCH DAMAGE.
 */
 
-#ifndef
-QuadratureFormulaCircular_CPP
-#define
-QuadratureFormulaCircular_CPP
+#ifndef QuadratureFormulaCircular_CPP
+#define QuadratureFormulaCircular_CPP
 
-#include
-<stdlib.h>
+#include <stdlib.h>
 
 /*
   Nodes for 2D integration over the sphere derived as a product of two Gaussian
