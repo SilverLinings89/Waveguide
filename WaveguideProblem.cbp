@@ -172,6 +172,12 @@
 		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/Core/AuxiliaryProblem.h">
 			<Option target="Code"/>
 		</Unit>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/Core/DOFManager.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/Core/DOFManager.h">
+			<Option target="Code"/>
+		</Unit>
 		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/Core/MainProblem.cpp">
 			<Option target="Code"/>
 		</Unit>

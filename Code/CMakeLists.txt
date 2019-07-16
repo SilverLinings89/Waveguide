@@ -8,6 +8,7 @@ ADD_LIBRARY(Code
         Core/AuxiliaryProblem.cpp
         Core/MainProblem.cpp
         Core/Simulation.cpp
+        Core/DOFManager.cpp
         Helpers/Geometry.cpp
         Helpers/ExactSolution.cpp
         Helpers/ModeManager.cpp
