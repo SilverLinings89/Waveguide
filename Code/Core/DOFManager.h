@@ -12,18 +12,18 @@
 #include <deal.II/dofs/dof_handler.h>
 
 class DOFManager {
-    std::vector<dealii::IndexSet> own_dofs_per_process;
-    dealii::IndexSet local_dofs;
-    const unsigned int dofs_per_cell;
-    const unsigned int dofs_per_face;
-    const unsigned int dofs_per_edge;
-    unsigned int n_global_dofs;
-    unsigned int n_locally_active_dofs;
-    unsigned int n_locally_owned_dofs;
+    std::vector<dealii::IndexSet> own_dofs_per_process; // via MPI_Build...
+    dealii::IndexSet local_dofs;    // via MPI_Build
+    const unsigned int dofs_per_cell; //constructor
+    const unsigned int dofs_per_face; //constructor
+    const unsigned int dofs_per_edge; //constructor
+    unsigned int n_global_dofs; // via MPI_Build
+    unsigned int n_locally_owned_dofs; // via MPI_Build
     dealii::Triangulation<3,3> * triangulation;
     dealii::DoFHandler<3,3> * dof_handler;
+    const dealii::FiniteElement<3,3> * fe;
 
-    DOFManager(unsigned int i_dofs_per_cell, unsigned int i_dofs_per_face, unsigned int i_dofs_per_edge);
+    DOFManager(unsigned int, unsigned int, unsigned int, dealii::DoFHandler<3,3> *, dealii::Triangulation<3,3> *, const dealii::FiniteElement<3,3> *);
 
     void init ();
     unsigned int compute_n_own_dofs();

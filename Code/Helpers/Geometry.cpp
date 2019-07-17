@@ -39,19 +39,19 @@ void Geometry::set_z_range(std::pair<double, double> in_range) {
 
 std::pair<double, double> Geometry::compute_x_range(Parameters in_params) {
     if (in_params.Blocks_in_x_direction == 1) {
-        return std::pair(-in_params.M_R_XLength / 2.0, in_params.M_R_XLength / 2.0);
+        return std::pair<double,double>(-in_params.M_R_XLength / 2.0, in_params.M_R_XLength / 2.0);
     } else {
         double length =
                 in_params.M_R_XLength / ((double) in_params.Blocks_in_x_direction);
         int block_index = in_params.MPI_Rank % in_params.Blocks_in_x_direction;
         double min = -in_params.M_R_XLength / 2.0 + block_index * length;
-        return std::pair(min, min + length);
+        return std::pair<double,double>(min, min + length);
     }
 }
 
 std::pair<double, double> Geometry::compute_y_range(Parameters in_params) {
     if (in_params.Blocks_in_y_direction == 1) {
-        return std::pair(-in_params.M_R_YLength / 2.0, in_params.M_R_YLength / 2.0);
+        return std::pair<double,double>(-in_params.M_R_YLength / 2.0, in_params.M_R_YLength / 2.0);
     } else {
         double length =
                 in_params.M_R_YLength / ((double) in_params.Blocks_in_y_direction);
@@ -60,13 +60,13 @@ std::pair<double, double> Geometry::compute_y_range(Parameters in_params) {
                                                  in_params.Blocks_in_y_direction)) /
                           block_processor_count;
         double min = -in_params.M_R_YLength / 2.0 + block_index * length;
-        return std::pair(min, min + length);
+        return std::pair<double,double>(min, min + length);
     }
 }
 
 std::pair<double, double> Geometry::compute_z_range(Parameters in_params) {
     if (in_params.Blocks_in_z_direction == 1) {
-        return std::pair(-in_params.M_R_ZLength / 2.0, in_params.M_R_ZLength / 2.0);
+        return std::pair<double,double>(-in_params.M_R_ZLength / 2.0, in_params.M_R_ZLength / 2.0);
     } else {
         double length =
                 in_params.M_R_ZLength / ((double) in_params.Blocks_in_z_direction);
@@ -74,7 +74,7 @@ std::pair<double, double> Geometry::compute_z_range(Parameters in_params) {
                 in_params.Blocks_in_x_direction * in_params.Blocks_in_y_direction;
         int block_index = in_params.MPI_Rank / block_processor_count;
         double min = -in_params.M_R_ZLength / 2.0 + block_index * length;
-        return std::pair(min, min + length);
+        return std::pair<double,double>(min, min + length);
     }
 }
 
