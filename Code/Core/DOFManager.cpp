@@ -35,35 +35,91 @@ struct DofSortData {
     Point<3,double> base_point;
 };
 
-void NumericProblem::SortDofsDownstream() {
-    std::vector<DofSortData> dofs_sort_objects;
-    DoFHandler<3>::active_cell_iterator cell = dof_handler.begin_active(),
-            endc = dof_handler.end();
-    std::vector<unsigned int> lines_touched;
-    std::vector<unsigned int> cells_touched;
-    std::vector<unsigned int> faces_touched;
-    std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
-    std::vector<types::global_dof_index> local_face_dofs(fe.dofs_per_face);
-    std::vector<types::global_dof_index> local_cell_dofs(fe.dofs_per_cell);
-    for (; cell != endc; ++cell) {
-        if (!(std::find(cells_touched.begin(), cells_touched.end(),
-                        cell->index()) !=
-                cells_touched.end())) {
-            cell->get_dof_indices()
+bool compareIndexCenterPairs(DofSortData c1,
+                             DofSortData c2) {
+    //return c1.second < c2.second;
+    if(c1.base_point[2] < c2.base_point[2]) {
+        return true;
+    }
+    if(c1.base_point[2] > c2.base_point[2]) {
+        return false;
+    }
+    if(c1.base_point[1] < c2.base_point[1]) {
+        return true;
+    }
+    if(c1.base_point[1] > c2.base_point[1]) {
+        return false;
+    }
+    if(c1.base_point[0] < c2.base_point[0]) {
+        return true;
+    }
+    if(c1.base_point[0] > c2.base_point[0]) {
+        return false;
+    }
+    if(c1.order < c2.order) {
+        return true;
+    }
+    if(c1.order > c2.order) {
+        return false;
+    }
+    std::cout << "There was an error in dof sorting - two object were undistinguishable." <<std::endl;
+}
 
-        }
+void DOFManager::SortDofs() {
+    std::vector<DofSortData> dofs_sort_objects;
+    DoFHandler<3>::active_cell_iterator cell = dof_handler->begin_active(),
+            endc = dof_handler->end();
+    const unsigned int n_local_dofs = dof_handler->n_dofs();
+    bool * dof_touched = new bool[n_local_dofs];
+    for(unsigned int i = 0; i < n_local_dofs; i++) {
+        dof_touched[i] = false;
+    }
+    short line_order = 0;
+    short face_order = 0;
+    short cell_order = 0;
+    std::vector<types::global_dof_index> local_line_dofs(fe->dofs_per_line);
+    std::vector<types::global_dof_index> local_face_dofs(fe->dofs_per_face);
+    std::vector<types::global_dof_index> local_cell_dofs(fe->dofs_per_cell);
+    for (; cell != endc; ++cell) {
+        cell_order = 0;
+        cell->get_dof_indices(local_cell_dofs);
         for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+            face_order = 0;
+            cell->face(i)->get_dof_indices(local_face_dofs);
             for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
-                if (!(std::find(lines_touched.begin(), lines_touched.end(),
-                                cell->face(i)->line(j)->index()) !=
-                      lines_touched.end())) {
-                    ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
-                    for (unsigned k = 0; k < local_line_dofs.size(); k++) {
-                        dofs_sort_objects.push_back(std::pair<int, Point<3,double>>(
-                                local_line_dofs[k], (cell->face(i))->line(j)->center()));
+                cell->face(i)->line(j)->get_dof_indices(local_line_dofs);
+                line_order = 0;
+                for (unsigned k = 0; k < local_line_dofs.size(); k++) {
+                    if (!dof_touched[local_line_dofs[k]]) {
+                        DofSortData temp;
+                        temp.base_point = (cell->face(i))->line(j)->center();
+                        temp.index = local_line_dofs[k];
+                        temp.order = line_order;
+                        dofs_sort_objects.push_back(temp);
+                        line_order++;
+                        dof_touched[local_line_dofs[k]];
                     }
-                    lines_touched.push_back(cell->face(i)->line(j)->index());
                 }
+            }
+            for(unsigned int k = 0; k < local_face_dofs.size(); k++) {
+                if(!dof_touched[local_face_dofs[k]]) {
+                    DofSortData temp;
+                    temp.base_point = cell->face(i)->center();
+                    temp.index = local_face_dofs[k];
+                    temp.order = face_order;
+                    dof_touched[local_face_dofs[k]] = true;
+                    face_order ++;
+                }
+            }
+        }
+        for(unsigned int k = 0; k < local_cell_dofs.size(); k++) {
+            if(!dof_touched[local_cell_dofs[k]]) {
+                DofSortData temp;
+                temp.base_point = cell->center();
+                temp.index = local_cell_dofs[k];
+                temp.order = cell_order;
+                dof_touched[local_cell_dofs[k]] = true;
+                cell_order ++;
             }
         }
     }
@@ -71,15 +127,12 @@ void NumericProblem::SortDofsDownstream() {
     std::vector<unsigned int> new_numbering;
     new_numbering.resize(dofs_sort_objects.size());
     for (unsigned int i = 0; i < dofs_sort_objects.size(); i++) {
-        new_numbering[dofs_sort_objects[i].first] = i;
+        new_numbering[dofs_sort_objects[i].index] = i;
     }
-    dof_handler.renumber_dofs(new_numbering);
+    dof_handler->renumber_dofs(new_numbering);
 }
 
-bool compareIndexCenterPairs(std::pair<int, double> c1,
-                             std::pair<int, double> c2) {
-    return c1.second < c2.second;
-}
+
 
 unsigned int DOFManager::compute_n_own_dofs() {
     return 0;

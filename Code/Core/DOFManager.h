@@ -29,7 +29,7 @@ class DOFManager {
     unsigned int compute_n_own_dofs();
     void MPI_build_global_index_set_vector();
     void compute_and_communicate_edge_dofs();
-
+    void SortDofs();
 
 
 };
