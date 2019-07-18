@@ -29,9 +29,16 @@ class DOFManager {
     unsigned int compute_n_own_dofs();
     void MPI_build_global_index_set_vector();
     void compute_and_communicate_edge_dofs();
+    void compute_and_communicate_face_dofs();
     void SortDofs();
 
-
+    void compute_and_send_x_dofs();
+    void compute_and_send_y_dofs();
+    void compute_and_send_z_dofs();
+    void receive_x_dofs();
+    void receive_y_dofs();
+    void receive_z_dofs();
+    dealii::IndexSet get_dofs_for_boundary_id(dealii::types::boundary_id in_bid);
 };
 
 
