@@ -21,6 +21,7 @@
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/numerics/data_out_dof_data.h>
 #include <deal.II/numerics/vector_tools.h>
+#include <deal.II/lac/affine_constraints.h>
 #include <sys/time.h>
 #include <algorithm>
 #include <string>
@@ -277,8 +278,8 @@ void NumericProblem::SortDofsDownstream() {
     dof_handler.renumber_dofs(new_numbering);
 }
 
-void NumericProblem::Shift_Constraint_Matrix(ConstraintMatrix *in_cm) {
-    ConstraintMatrix new_global;
+void NumericProblem::Shift_Constraint_Matrix(dealii::AffineConstraints<double> *in_cm) {
+    dealii::AffineConstraints<double> new_global;
     new_global.reinit(locally_relevant_dofs);
     for (unsigned int i = 0; i < n_dofs; i++) {
         if (in_cm->is_constrained(i)) {
@@ -685,7 +686,7 @@ void NumericProblem::reinit_for_rerun() {
 void NumericProblem::reinit_systemmatrix() {
     deallog.push("reinit_systemmatrix");
 
-    ConstraintMatrix cm_temp;
+    dealii::AffineConstraints<double> cm_temp;
     cm_temp.reinit(locally_relevant_dofs);
 
     DoFTools::make_hanging_node_constraints(dof_handler, cm_temp);
@@ -755,7 +756,7 @@ void NumericProblem::reinit_preconditioner() {
 
     deallog.push("Generating BSP");
 
-    ConstraintMatrix cm_temp;
+    dealii::AffineConstraints<double> cm_temp;
     cm_temp.reinit(locally_relevant_dofs);
 
     DoFTools::make_hanging_node_constraints(dof_handler, cm_temp);
@@ -1277,10 +1278,10 @@ void NumericProblem::MakePreconditionerBoundaryConditions() {
     const bool has_non_edge_dofs = (face_own_count > 0);
 
     cm_prec_even.merge(
-            cm, dealii::ConstraintMatrix::MergeConflictBehavior::right_object_wins,
+            cm, dealii::AffineConstraints < double > ::MergeConflictBehavior::right_object_wins,
             true);
     cm_prec_odd.merge(
-            cm, dealii::ConstraintMatrix::MergeConflictBehavior::right_object_wins,
+            cm, dealii::AffineConstraints < double > ::MergeConflictBehavior::right_object_wins,
             true);
 
     for (; cell_loc != endc; ++cell_loc) {
@@ -1365,7 +1366,7 @@ void NumericProblem::MakePreconditionerBoundaryConditions() {
 }
 
 void NumericProblem::Add_Zero_Restraint(
-        ConstraintMatrix *in_cm,
+        dealii::AffineConstraints<double> *in_cm,
         DoFHandler<3>::active_cell_iterator &in_cell, unsigned int in_face,
         unsigned int DofsPerLine, unsigned int DofsPerFace, bool in_non_face_dofs,
         IndexSet locally_owned_dofs) {

@@ -42,7 +42,8 @@ class DOFManager {
     dealii::IndexSet get_dofs_for_boundary_id(dealii::types::boundary_id in_bid);
     dealii::IndexSet get_non_owned_dofs();
     void shift_own_to_final_dof_numbers();
-    void update_interface_dofs_with_IndexSet(IndexSet in_new_indices, types::boundary_id in_bid);
+
+    void update_interface_dofs_with_IndexSet(dealii::IndexSet in_new_indices, dealii::types::boundary_id in_bid);
 
     // TODO: There should be some functions checking for neighboring processes if the communicated IndexSets are the same.
 };

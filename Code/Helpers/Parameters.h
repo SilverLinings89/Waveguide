@@ -269,6 +269,8 @@ struct Parameters {
     Geometry geometry;
 
     int current_run_number;
+
+    unsigned int Coupling_Interface_Index;
 };
 
 #endif

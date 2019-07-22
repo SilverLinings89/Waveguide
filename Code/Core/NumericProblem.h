@@ -49,6 +49,7 @@
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/vector_tools.h>
+#include <deal.II/lac/affine_constraints.h>
 
 #include <deal.II/lac/la_parallel_vector.h>
 #include <deal.II/lac/trilinos_block_sparse_matrix.h>
@@ -224,7 +225,7 @@ public:
 
     Point<3, double> transform_coordinate(const Point<3, double>);
 
-    void Add_Zero_Restraint(ConstraintMatrix *in_cm,
+    void Add_Zero_Restraint(AffineConstraints<double> *in_cm,
                             DoFHandler<3>::active_cell_iterator &in_cell,
                             unsigned int in_face, unsigned int DofsPerLine,
                             unsigned int DofsPerFace, bool in_non_face_dofs,
@@ -337,7 +338,7 @@ private:
             const dealii::TrilinosWrappers::MPI::Vector &);
 
     /**
-     * This function fills the ConstraintMatrix-object of the
+     * This function fills the AffineConstraints<double>-object of the
      * NumericProblem-object with all constraints needed for condensation into the
      * szstem-matrix. It's properties are derived from the Waveguide itself and
      * the Waveguide-Structure-object available to it, therefore there are no
@@ -479,7 +480,7 @@ private:
 
     void SortDofsDownstream();
 
-    void Shift_Constraint_Matrix(ConstraintMatrix *in_cm);
+    void Shift_Constraint_Matrix(AffineConstraints<double> *in_cm);
 
     SpaceTransformation *st;
 
@@ -505,7 +506,7 @@ private:
 
     SolverControl solver_control;
 
-    ConstraintMatrix cm, cm_prec_even, cm_prec_odd, periodic_constraints;
+    AffineConstraints<double> cm, cm_prec_even, cm_prec_odd, periodic_constraints;
     unsigned int interface_dof_count;
     unsigned int n_dofs;
     unsigned int n_global_dofs;
@@ -563,9 +564,9 @@ private:
 
     std::map<types::global_dof_index, double> dirichlet_data,
             preconditioner_dirichlet_data_even, preconditioner_dirichlet_data_odd;
-    ConstraintMatrix boundary_value_constraints_imaginary;
-    ConstraintMatrix boundary_value_constraints_real;
-    ConstraintMatrix hanging_global;
+    AffineConstraints<double> boundary_value_constraints_imaginary;
+    AffineConstraints<double> boundary_value_constraints_real;
+    AffineConstraints<double> hanging_global;
 
     TrilinosWrappers::MPI::BlockVector storage;
     TrilinosWrappers::MPI::BlockVector temp_storage;
