@@ -52,7 +52,12 @@ void DOFManager::receive_x_dofs() {
             IndexSet boundary_dofs = get_dofs_for_boundary_id(0);
             int * bdof_vals = new int[boundary_dofs.n_elements()];
             MPI_Recv(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED, GlobalParams.geometry.get_neighbor_for_interface(Direction::MinusX).second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
-            std::vector<unsigned int> numbering;
+            IndexSet new_numbers;
+            new_numbers.set_size(n_global_dofs);
+            for(unsigned int i = 0; i < boundary_dofs.e_elements(); i++) {
+                new_numbers.add_index(bdof_vals[i]);
+            }
+            update_interface_dofs_with_IndexSet(new_numbers,0);
         }
     }
 }
@@ -63,6 +68,12 @@ void DOFManager::receive_y_dofs() {
             IndexSet boundary_dofs = get_dofs_for_boundary_id(2);
             int *bdof_vals = new int[boundary_dofs.n_elements()];
             MPI_Recv(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED, GlobalParams.geometry.get_neighbor_for_interface(Direction::MinusY).second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+            IndexSet new_numbers;
+            new_numbers.set_size(n_global_dofs);
+            for(unsigned int i = 0; i < boundary_dofs.e_elements(); i++) {
+                new_numbers.add_index(bdof_vals[i]);
+            }
+            update_interface_dofs_with_IndexSet(new_numbers,2);
         }
     }
 }
@@ -73,8 +84,44 @@ void DOFManager::receive_z_dofs() {
             IndexSet boundary_dofs = get_dofs_for_boundary_id(4);
             int * bdof_vals = new int[boundary_dofs.n_elements()];
             MPI_Recv(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED, GlobalParams.geometry.get_neighbor_for_interface(Direction::MinusZ).second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+            IndexSet new_numbers;
+            new_numbers.set_size(n_global_dofs);
+            for(unsigned int i = 0; i < boundary_dofs.e_elements(); i++) {
+                new_numbers.add_index(bdof_vals[i]);
+            }
+            update_interface_dofs_with_IndexSet(new_numbers,0);
         }
     }
+}
+
+void DOFManager::update_interface_dofs_with_IndexSet(IndexSet in_new_indices, types::boundary_id in_bid) {
+    IndexSet local_numbering = get_dofs_for_boundary_id(in_bid);
+    IntexSet all_local_dofs = dof_handler.locally_owned_dofs();
+    vector<unsigned int> new_numbering;
+    for(unsigned int i = 0; i < all_local_dofs.size(); i++) {
+        unsigned int index = all_local_dofs.nth_element(i);
+        if(local_numbering.is_element(index)) {
+            new_numbering.push_back(in_new_indices.nth_index(local_numbering.index_in_set(index)));
+        } else {
+            new_numbering.push_back(index)
+        }
+    }
+    dof_handler.renumber_dofs(new_numbering);
+}
+
+void DOFManager::shift_own_to_final_dof_numbers() {
+    dealii::IndexSet non_owned_dofs = get_non_owned_dofs();
+    std::vector<unsigned int> shifted_numbering;
+    unsigned int counter = 0;
+    for(unsigned int i = 0; i < dof_handler.n_dofs(); i++) {
+        if(! non_owned_dofs.is_element(i)) {
+            shifted_numbering.push_back(local_dofs.nth_index(i));
+            counter ++;
+        } else {
+            shifted_numbering.push_back(i);
+        }
+    }
+    dof_handler.renumber_dofs(shifted_numbering);
 }
 
 IndexSet DOFManager::get_dofs_for_boundary_id(types::boundary_id in_bid) {
@@ -100,6 +147,8 @@ void DOFManager::MPI_build_global_index_set_vector() {
                                                                                        this->n_locally_owned_dofs);
     this->local_dofs = this->own_dofs_per_process[GlobalParams.MPI_Rank];
     this->n_global_dofs = this->own_dofs_per_process[0].size();
+    computed_n_global = true;
+
     // TODO: add the not locally owned dofs to this set.
 }
 
@@ -108,6 +157,7 @@ void DOFManager::init() {
     SortDofs();
     compute_n_own_dofs();
     MPI_build_global_index_set_vector();
+    shift_own_to_final_dof_numbers();
     receive_z_dofs();
     compute_and_send_z_dofs();
     receive_y_dofs();
@@ -219,34 +269,50 @@ void DOFManager::SortDofs() {
     dof_handler->renumber_dofs(new_numbering);
 }
 
-unsigned int DOFManager::compute_n_own_dofs() {
-    n_locally_owned_dofs = dof_handler->n_dofs();
-    bool * is_locally_owned_dof = new bool [n_locally_owned_dofs];
-    for(unsigned int i = 0; i < n_locally_owned_dofs; i++) {
-        is_locally_owned_dof[i] = true;
+IndexSet DOFManager::get_non_owned_dofs() {
+    IndexSet non_owned_dofs;
+    if(computed_n_global) {
+        non_owned_dofs.set_size(n_global_dofs);
+    } else {
+        non_owned_dofs.set_size(GlobalParams.NumberProcesses * dof_handler.n_dofs()); // rough estimate that guarantees that all entries in this index set will be stored.
     }
     std::vector<types::global_dof_index> local_face_dofs(fe->dofs_per_face);
     DoFHandler<3>::active_cell_iterator cell = dof_handler->begin_active(),
             endc = dof_handler->end();
     for (; cell != endc; ++cell) {
-        types::boundary_id c_bid = cell->boundary_id();
-        if(c_bid == 0 || c_bid ==2 || c_bid == 4) {
-            for(unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+        if(cell->at_boundary()) {
+            types::boundary_id c_bid = cell->boundary_id();
+            for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
                 types::boundary_id f_bid = cell->face(i)->boundary_id();
-                if(f_bid == 0 || f_bid == 2 || f_bid == 4) {
+                if (f_bid == 0 && GlobalParams.Index_in_x_direction > 0) {
                     cell->face(i)->get_dof_indices(local_face_dofs);
-                    for(unsigned int j = 0; j < fe->dofs_per_face; j++) {
-                        is_locally_owned_dof[local_face_dofs[j]] = false;
+                    for (unsigned int j = 0; j < fe->dofs_per_face; j++) {
+                        non_owned_dofs.add_index(local_face_dofs[j]);
                     }
                 }
+                if (f_bid == 2 && GlobalParams.Index_in_y_direction > 0) {
+                    cell->face(i)->get_dof_indices(local_face_dofs);
+                    for (unsigned int j = 0; j < fe->dofs_per_face; j++) {
+                        non_owned_dofs.add_index(local_face_dofs[j]);
+                    }
+                }
+                if (f_bid == 4 && GlobalParams.Index_in_z_direction > 0) {
+                    cell->face(i)->get_dof_indices(local_face_dofs);
+                    for (unsigned int j = 0; j < fe->dofs_per_face; j++) {
+                        non_owned_dofs.add_index(local_face_dofs[j]);
+                    }
+                }
+
             }
         }
     }
-    int count = 0;
-    for(unsigned int i = 0; i < n_locally_owned_dofs; i++) {
-        if(!is_locally_owned_dof[i]) count ++;
-    }
-    n_locally_owned_dofs = dof_handler->n_dofs() - count;
+    return non_owned_dofs;
+}
+
+unsigned int DOFManager::compute_n_own_dofs() {
+    n_locally_owned_dofs = dof_handler->n_dofs();
+    dealii::IndexSet non_owned = get_non_owned_dofs();
+    n_locally_owned_dofs = dof_handler->n_dofs() - non_owned.n_elements();
     return 0;
 }
 
@@ -258,4 +324,5 @@ DOFManager::DOFManager(unsigned int i_dofs_per_cell, unsigned int i_dofs_per_fac
                                                               fe(in_fe){
     this->triangulation = in_triangulation;
     this->dof_handler = in_dof_handler;
+    computed_n_global = false;
 }

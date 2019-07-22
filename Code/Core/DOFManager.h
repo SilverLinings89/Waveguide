@@ -22,6 +22,7 @@ class DOFManager {
     dealii::Triangulation<3,3> * triangulation;
     dealii::DoFHandler<3,3> * dof_handler;
     const dealii::FiniteElement<3,3> * fe;
+    bool computed_n_global;
 
     DOFManager(unsigned int, unsigned int, unsigned int, dealii::DoFHandler<3,3> *, dealii::Triangulation<3,3> *, const dealii::FiniteElement<3,3> *);
 
@@ -39,6 +40,11 @@ class DOFManager {
     void receive_y_dofs();
     void receive_z_dofs();
     dealii::IndexSet get_dofs_for_boundary_id(dealii::types::boundary_id in_bid);
+    dealii::IndexSet get_non_owned_dofs();
+    void shift_own_to_final_dof_numbers();
+    void update_interface_dofs_with_IndexSet(IndexSet in_new_indices, types::boundary_id in_bid);
+
+    // TODO: There should be some functions checking for neighboring processes if the communicated IndexSets are the same.
 };
 
 
