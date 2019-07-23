@@ -270,7 +270,7 @@ struct Parameters {
 
     int current_run_number;
 
-    unsigned int Coupling_Interface_Index;
+    unsigned int Coupling_Interface_Z_Block_Index; // The jump interface is at the lower z-surface of the block with this Index_in_z_direction
 };
 
 #endif

@@ -529,7 +529,7 @@ inline bool file_exists(const std::string &name) {
 }
 
 std::vector<types::global_dof_index> Add_Zero_Restraint_test(
-        dealii::ConstraintMatrix *,
+        dealii::AffineConstraints<double> *,
         dealii::DoFHandler<3>::active_cell_iterator in_cell, unsigned int in_face,
         unsigned int DofsPerLine, unsigned int DofsPerFace, bool in_non_face_dofs,
         IndexSet *locally_owned_dofs) {

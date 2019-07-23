@@ -6,7 +6,7 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/distributed/tria.h>
 #include <deal.II/dofs/dof_handler.h>
-#include <deal.II/lac/constraint_matrix.h>
+#include <deal.II/lac/affine_constraints.h>
 #include <fstream>
 #include "../Core/NumericProblem.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
@@ -58,7 +58,7 @@ void PrepareStreams();
 double Distance2D(Point<3, double>, Point<3, double> = Point<3, double>());
 
 std::vector<types::global_dof_index> Add_Zero_Restraint(
-        dealii::ConstraintMatrix *, dealii::DoFHandler<3>::active_cell_iterator &,
+        dealii::AffineConstraints<double> *, dealii::DoFHandler<3>::active_cell_iterator &,
         unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet);
 
 void add_vector_of_indices(dealii::IndexSet *,

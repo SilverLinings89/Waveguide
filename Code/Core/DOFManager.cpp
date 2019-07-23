@@ -10,7 +10,7 @@ using namespace dealii;
 
 void DOFManager::compute_and_send_x_dofs() {
     if(GlobalParams.Blocks_in_x_direction > 1) {
-        if(GlobalParams.Index_in_x_direction < GlobalParams.Blocks_in_x_direction-1 ){
+        if(GlobalParams.Index_in_x_direction < GlobalParams.Blocks_in_x_direction-1){
             IndexSet boundary_dofs = get_dofs_for_boundary_id(1);
             int * bdof_vals = new int[boundary_dofs.n_elements()];
             for(unsigned int j = 0; j < boundary_dofs.n_elements(); j++) {
@@ -38,12 +38,16 @@ void DOFManager::compute_and_send_y_dofs() {
 void DOFManager::compute_and_send_z_dofs() {
     if(GlobalParams.Blocks_in_z_direction > 1) {
         if(GlobalParams.Index_in_z_direction < GlobalParams.Blocks_in_z_direction -1){
-            IndexSet boundary_dofs = get_dofs_for_boundary_id(5);
-            int * bdof_vals = new int[boundary_dofs.n_elements()];
-            for(unsigned int j = 0; j < boundary_dofs.n_elements(); j++) {
-                bdof_vals[j] = boundary_dofs.nth_index_in_set(j);
+            if( GlobalParams.Index_in_z_direction != GlobalParams.Coupling_Interface_Z_Block_Index-1) {
+
+                IndexSet boundary_dofs = get_dofs_for_boundary_id(5);
+                int *bdof_vals = new int[boundary_dofs.n_elements()];
+                for (unsigned int j = 0; j < boundary_dofs.n_elements(); j++) {
+                    bdof_vals[j] = boundary_dofs.nth_index_in_set(j);
+                }
+                MPI_Send(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED,
+                         GlobalParams.geometry.get_neighbor_for_interface(Direction::PlusZ).second, 0, MPI_COMM_WORLD);
             }
-            MPI_Send(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED, GlobalParams.geometry.get_neighbor_for_interface(Direction::PlusZ).second, 0, MPI_COMM_WORLD );
         }
     }
 }
@@ -83,21 +87,28 @@ void DOFManager::receive_y_dofs() {
 void DOFManager::receive_z_dofs() {
     if(GlobalParams.Blocks_in_z_direction > 1) {
         if(GlobalParams.Index_in_z_direction > 0){
-            IndexSet boundary_dofs = get_dofs_for_boundary_id(4);
-            int * bdof_vals = new int[boundary_dofs.n_elements()];
-            MPI_Recv(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED, GlobalParams.geometry.get_neighbor_for_interface(Direction::MinusZ).second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
-            IndexSet new_numbers;
-            new_numbers.set_size(n_global_dofs);
-            for (unsigned int i = 0; i < boundary_dofs.n_elements(); i++) {
-                new_numbers.add_index(bdof_vals[i]);
+            if(GlobalParams.Index_in_z_direction != GlobalParams.Coupling_Interface_Z_Block_Index) {
+                IndexSet boundary_dofs = get_dofs_for_boundary_id(4);
+                int *bdof_vals = new int[boundary_dofs.n_elements()];
+                MPI_Recv(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED,
+                         GlobalParams.geometry.get_neighbor_for_interface(Direction::MinusZ).second, 0, MPI_COMM_WORLD,
+                         MPI_STATUS_IGNORE);
+                IndexSet new_numbers;
+                new_numbers.set_size(n_global_dofs);
+                for (unsigned int i = 0; i < boundary_dofs.n_elements(); i++) {
+                    new_numbers.add_index(bdof_vals[i]);
+                }
+                update_interface_dofs_with_IndexSet(new_numbers, 4);
             }
-            update_interface_dofs_with_IndexSet(new_numbers,0);
         }
     }
 }
 
 void DOFManager::update_interface_dofs_with_IndexSet(IndexSet in_new_indices, types::boundary_id in_bid) {
     IndexSet local_numbering = get_dofs_for_boundary_id(in_bid);
+    if(in_new_indices.n_elements() != local_numbering.n_elements()) {
+        std::cout << "There was a communication problem in update_interface_dofs_with_IndexSet."<<std::endl;
+    }
     IndexSet all_local_dofs = dof_handler->locally_owned_dofs();
     std::vector<unsigned int> new_numbering;
     for(unsigned int i = 0; i < all_local_dofs.size(); i++) {
@@ -309,6 +320,26 @@ IndexSet DOFManager::get_non_owned_dofs() {
             }
         }
     }
+
+    IndexSet InterfaceDofs(n_global_dofs);
+    if(GlobalParams.Index_in_z_direction == GlobalParams.Coupling_Interface_Z_Block_Index) {
+        cell = dof_handler->begin_active();
+        for (; cell != endc; ++cell) {
+            if(cell->at_boundary()) {
+                types::boundary_id c_bid = cell->boundary_id();
+                for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+                    types::boundary_id f_bid = cell->face(i)->boundary_id();
+                    if (f_bid == 4 && GlobalParams.Index_in_z_direction > 0) {
+                        cell->face(i)->get_dof_indices(local_face_dofs);
+                        for (unsigned int j = 0; j < fe->dofs_per_face; j++) {
+                            InterfaceDofs.add_index(local_face_dofs[j]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    non_owned_dofs.subtract_set(InterfaceDofs);
     return non_owned_dofs;
 }
 

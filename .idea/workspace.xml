@@ -1,25 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
-    <generated>
-      <config projectName="WaveguideProblem" targetName="main" />
-      <config projectName="WaveguideProblem" targetName="Code" />
-    </generated>
+    <generated />
   </component>
-  <component name="CMakeSettings" AUTO_RELOAD="true">
-    <configurations>
-      <configuration PROFILE_NAME="Release" CONFIG_NAME="Release" GENERATION_DIR="." />
-    </configurations>
+  <component name="CMakeSettings">
+    <configurations />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ad93b40a-2dca-4621-bc89-15d8a67662be" name="Default Changelist" comment="Bugfix. Builds again.">
+    <list default="true" id="3eb79f9f-621c-46a2-93b5-87eed99f25a6" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/Code/ModalComputations/RectangularMode.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Code/ModalComputations/RectangularMode.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/Core/DOFManager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/DOFManager.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Core/DOFManager.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/DOFManager.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Core/NumericProblem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/NumericProblem.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Core/NumericProblem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/NumericProblem.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Helpers/Parameters.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/Parameters.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Helpers/staticfunctions.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/staticfunctions.h" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/CMakeFiles/" />
-    <ignored path="$PROJECT_DIR$/Code/CMakeFiles/" />
-    <ignored path="$PROJECT_DIR$/Main/CMakeFiles/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,13 +30,50 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
+  <component name="DockManager">
+    <window id="1">
+      <content type="file-editors">
+        <state>
+          <leaf>
+            <file pinned="false" current-in-tab="true">
+              <entry file="file://$PROJECT_DIR$/Code/ModalComputations/RectangularMode.cpp">
+                <provider selected="true" editor-type-id="text-editor">
+                  <state relative-caret-position="467">
+                    <caret line="46" column="76" selection-start-line="46" selection-start-column="76" selection-end-line="46" selection-end-column="76" />
+                  </state>
+                </provider>
+              </entry>
+            </file>
+            <file pinned="false" current-in-tab="false">
+              <entry file="file://$PROJECT_DIR$/Code/ModalComputations/RectangularMode.h">
+                <provider selected="true" editor-type-id="text-editor">
+                  <state relative-caret-position="495">
+                    <caret line="33" column="10" selection-start-line="33" selection-start-column="10" selection-end-line="33" selection-end-column="10" />
+                  </state>
+                </provider>
+              </entry>
+            </file>
+          </leaf>
+        </state>
+      </content>
+    </window>
+  </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Code/Core/Simulation.cpp">
+        <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="900">
-              <caret line="60" column="1" selection-start-line="60" selection-start-column="1" selection-end-line="60" selection-end-column="1" />
+            <state relative-caret-position="-10605">
+              <caret line="223" column="4" lean-forward="true" selection-start-line="223" selection-start-column="4" selection-end-line="224" selection-end-column="65" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-450">
+              <caret line="507" column="81" selection-start-line="507" selection-start-column="61" selection-end-line="507" selection-end-column="81" />
             </state>
           </provider>
         </entry>
@@ -43,17 +81,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Code/Core/DOFManager.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="315">
-              <caret line="91" column="63" selection-start-line="91" selection-start-column="63" selection-end-line="91" selection-end-column="63" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Code/Core/DOFManager.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="379">
-              <caret line="43" column="42" selection-start-line="43" selection-start-column="42" selection-end-line="43" selection-end-column="42" />
+            <state relative-caret-position="150">
+              <caret line="139" selection-start-line="139" selection-end-line="155" selection-end-column="1" />
             </state>
           </provider>
         </entry>
@@ -62,61 +91,30 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>MeshGenerator</find>
-      <find>assemble</find>
-      <find>Point</find>
-      <find>dof_handler.d</find>
-      <find>fe;</find>
+      <find>ConstraintM</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
-    <option name="PREVIOUS_COMMIT_AUTHORS">
-      <list>
-        <option value="Pascal Kraft &lt;pascal.kraft@kit.edu&gt;" />
-      </list>
-    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/Code/Helpers/Parameters.h" />
-        <option value="$PROJECT_DIR$/Code/Helpers/staticfunctions.h" />
-        <option value="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" />
-        <option value="$PROJECT_DIR$/Code/Core/AuxiliaryProblem.cpp" />
-        <option value="$PROJECT_DIR$/Code/Core/AuxiliaryProblem.h" />
-        <option value="$PROJECT_DIR$/Code/MeshGenerators/SquareMeshGenerator.h" />
-        <option value="$PROJECT_DIR$/Code/MeshGenerators/SquareMeshGenerator.cpp" />
-        <option value="$PROJECT_DIR$/Code/Core/MainProblem.h" />
-        <option value="$PROJECT_DIR$/Code/Core/MainProblem.cpp" />
-        <option value="$PROJECT_DIR$/Code/OptimizationStrategies/Optimization.h" />
-        <option value="$PROJECT_DIR$/Code/OptimizationStrategies/AdjointOptimization.cpp" />
-        <option value="$PROJECT_DIR$/Code/OptimizationStrategies/FDOptimization.cpp" />
-        <option value="$PROJECT_DIR$/Code/OptimizationStrategies/FDOptimization.h" />
-        <option value="$PROJECT_DIR$/Code/OptimizationStrategies/AdjointOptimization.h" />
-        <option value="$PROJECT_DIR$/Code/Core/Simulation.cpp" />
-        <option value="$PROJECT_DIR$/Code/HSIE/HSIE_Preconditioner_Base.cpp" />
-        <option value="$PROJECT_DIR$/Code/Helpers/Geometry.h" />
-        <option value="$PROJECT_DIR$/Code/Core/NumericProblem.cpp" />
-        <option value="$PROJECT_DIR$/.gitignore" />
-        <option value="$PROJECT_DIR$/Code/Core/NumericProblem.h" />
-        <option value="$PROJECT_DIR$/Main/main.cpp" />
-        <option value="$PROJECT_DIR$/Code/Helpers/QuadratureFormulaCircle.cpp" />
-        <option value="$PROJECT_DIR$/Code/CMakeLists.txt" />
-        <option value="$PROJECT_DIR$/Code/Helpers/Geometry.cpp" />
-        <option value="$PROJECT_DIR$/Code/Core/DOFManager.h" />
         <option value="$PROJECT_DIR$/Code/Core/DOFManager.cpp" />
+        <option value="$PROJECT_DIR$/Code/Core/NumericProblem.h" />
+        <option value="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" />
+        <option value="$PROJECT_DIR$/Code/Helpers/staticfunctions.h" />
+        <option value="$PROJECT_DIR$/Code/Core/NumericProblem.cpp" />
+        <option value="$PROJECT_DIR$/Code/ModalComputations/RectangularMode.h" />
+        <option value="$PROJECT_DIR$/Code/ModalComputations/RectangularMode.cpp" />
       </list>
     </option>
   </component>
-  <component name="OCResolveContextSettings">
-    <option name="configuration" value="0-Code" />
-  </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="67" />
-    <option name="y" value="25" />
-    <option name="width" value="1853" />
-    <option name="height" value="1055" />
+    <option name="x" value="497" />
+    <option name="width" value="1657" />
+    <option name="height" value="941" />
   </component>
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -130,19 +128,25 @@
         <subPane>
           <expand>
             <path>
-              <item name="WaveguideProblem" type="b2602c69:ProjectViewProjectNode" />
+              <item name="waveguideproblem" type="b2602c69:ProjectViewProjectNode" />
               <item name="waveguideproblem" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
-              <item name="WaveguideProblem" type="b2602c69:ProjectViewProjectNode" />
+              <item name="waveguideproblem" type="b2602c69:ProjectViewProjectNode" />
               <item name="waveguideproblem" type="462c0819:PsiDirectoryNode" />
               <item name="Code" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
-              <item name="WaveguideProblem" type="b2602c69:ProjectViewProjectNode" />
+              <item name="waveguideproblem" type="b2602c69:ProjectViewProjectNode" />
               <item name="waveguideproblem" type="462c0819:PsiDirectoryNode" />
               <item name="Code" type="462c0819:PsiDirectoryNode" />
               <item name="Core" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="waveguideproblem" type="b2602c69:ProjectViewProjectNode" />
+              <item name="waveguideproblem" type="462c0819:PsiDirectoryNode" />
+              <item name="Code" type="462c0819:PsiDirectoryNode" />
+              <item name="ModalComputations" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -155,15 +159,8 @@
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="cf.advertisement.text.has.clang-format" value="true" />
-    <property name="node.js.detected.package.eslint" value="true" />
-    <property name="node.js.detected.package.tslint" value="true" />
-    <property name="node.js.path.for.package.eslint" value="project" />
     <property name="node.js.path.for.package.tslint" value="project" />
-    <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
-    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
-    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="nodejs_package_manager_path" value="npm" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -177,104 +174,34 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="CMake Application.main">
-    <configuration name="Code" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="WaveguideProblem" TARGET_NAME="Code" CONFIG_NAME="Release">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="main" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="WaveguideProblem" TARGET_NAME="main" CONFIG_NAME="Release" RUN_TARGET_PROJECT_NAME="WaveguideProblem" RUN_TARGET_NAME="main">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
-    <list>
-      <item itemvalue="CMake Application.Code" />
-      <item itemvalue="CMake Application.main" />
-    </list>
-  </component>
-  <component name="SvnConfiguration">
-    <configuration />
-  </component>
   <component name="TaskManager">
-    <task active="true" id="Default" summary="Default task">
-      <changelist id="ad93b40a-2dca-4621-bc89-15d8a67662be" name="Default Changelist" comment="" />
-      <created>1561633991300</created>
-      <option name="number" value="Default" />
-      <option name="presentableId" value="Default" />
-      <updated>1561633991300</updated>
-      <workItem from="1561633992428" duration="1339000" />
-      <workItem from="1562675475896" duration="13000" />
-      <workItem from="1562675520696" duration="95000" />
-      <workItem from="1562675626820" duration="1503000" />
-      <workItem from="1562677517349" duration="10274000" />
-      <workItem from="1563192288753" duration="2132000" />
-      <workItem from="1563268785205" duration="3757000" />
-      <workItem from="1563372370286" duration="4424000" />
-      <workItem from="1563797229215" duration="1254000" />
-    </task>
-    <task id="LOCAL-00001" summary="Removed MeshGenerator Base class. Currently not linking. Removed old code.">
-      <created>1562681949813</created>
+    <task id="LOCAL-00001" summary="Bugfixing and migrating to AffineConstraints to fix some deprecation warnings.">
+      <created>1563810182765</created>
       <option name="number" value="00001" />
       <option name="presentableId" value="LOCAL-00001" />
       <option name="project" value="LOCAL" />
-      <updated>1562681949813</updated>
+      <updated>1563810182765</updated>
     </task>
-    <task id="LOCAL-00002" summary="Removed MeshGenerator Base class. Currently not linking. Removed old code.">
-      <created>1562688017472</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1562688017472</updated>
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="3eb79f9f-621c-46a2-93b5-87eed99f25a6" name="Default Changelist" comment="" />
+      <created>1563871389843</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1563871389843</updated>
+      <workItem from="1563871395543" duration="7018000" />
     </task>
-    <task id="LOCAL-00003" summary="Now linking again.">
-      <created>1562688053235</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1562688053235</updated>
-    </task>
-    <task id="LOCAL-00004" summary="Ammended gitignore to hide .idea subfolder from now on.">
-      <created>1562688157842</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1562688157842</updated>
-    </task>
-    <task id="LOCAL-00005" summary="Import reorganized. Code aligned. No programming.">
-      <created>1562688431613</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1562688431613</updated>
-    </task>
-    <task id="LOCAL-00006" summary="Bugfix. Builds again.">
-      <created>1562688594192</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1562688594192</updated>
-    </task>
-    <option name="localTasksCounter" value="7" />
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="40755000" />
+    <option name="totallyTimeSpent" value="7620000" />
   </component>
-  <component name="TodoView">
-    <todo-panel id="selected-file">
-      <is-autoscroll-to-source value="true" />
-    </todo-panel>
-    <todo-panel id="all">
-      <are-packages-shown value="true" />
-      <is-autoscroll-to-source value="true" />
-    </todo-panel>
-  </component>
+  <component name="TodoView" selected-index="3" />
   <component name="ToolWindowManager">
-    <frame x="-4" y="0" width="1374" height="736" extended-state="6" />
+    <frame x="67" y="25" width="1853" height="1055" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.26136363" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.29164362" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -283,13 +210,13 @@
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info anchor="bottom" id="TODO" order="6" weight="0.32944915" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.24946004" />
       <window_info anchor="bottom" id="Database Changes" order="7" />
-      <window_info anchor="bottom" id="Terminal" order="8" weight="0.32944915" />
+      <window_info anchor="bottom" id="Terminal" order="8" visible="true" weight="0.42008638" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
-      <window_info anchor="bottom" id="Version Control" order="10" weight="0.32838982" />
-      <window_info anchor="bottom" id="CMake" order="11" visible="true" weight="0.18874173" />
-      <window_info anchor="bottom" id="Messages" order="12" visible="true" weight="0.32829374" />
+      <window_info anchor="bottom" id="Version Control" order="10" weight="0.27645788" />
+      <window_info anchor="bottom" id="CMake" order="11" weight="0.18790497" />
+      <window_info anchor="bottom" id="Messages" order="12" weight="0.32829374" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.24958494" />
@@ -320,274 +247,84 @@
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
-  <component name="VcsManagerConfiguration">
-    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
-    <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="Removed MeshGenerator Base class. Currently not linking. Removed old code." />
-    <MESSAGE value="Now linking again." />
-    <MESSAGE value="Ammended gitignore to hide .idea subfolder from now on." />
-    <MESSAGE value="Import reorganized. Code aligned. No programming." />
-    <MESSAGE value="Bugfix. Builds again." />
-    <option name="LAST_COMMIT_MESSAGE" value="Bugfix. Builds again." />
-    <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
-  </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/Code/Core/DOFManager.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="675">
+          <caret line="45" column="53" selection-start-line="45" selection-start-column="53" selection-end-line="45" selection-end-column="53" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Code/Helpers/Parameters.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3870">
-          <caret line="258" selection-start-line="258" selection-end-line="258" />
-          <folding>
-            <element signature="e#48#64#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="243">
+          <caret line="249" selection-start-line="249" selection-end-line="249" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Core/Simulation.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="465">
-          <caret line="31" column="36" selection-start-line="31" selection-start-column="36" selection-end-line="31" selection-end-column="36" />
-        </state>
-      </provider>
+    <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Helpers/staticfunctions.h">
+    <entry file="file://$PROJECT_DIR$/Code/Core/Sector.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1065">
-          <caret line="71" column="69" selection-start-line="71" selection-start-column="69" selection-end-line="71" selection-end-column="69" />
+        <state relative-caret-position="45">
+          <caret line="3" selection-start-line="3" selection-end-line="3" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="189">
-          <caret line="417" column="15" selection-start-line="417" selection-start-column="15" selection-end-line="417" selection-end-column="15" />
-          <folding>
-            <element signature="e#57#85#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="151">
+          <caret line="531" column="41" selection-start-line="531" selection-start-column="41" selection-end-line="531" selection-end-column="41" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Code/MeshGenerators/SquareMeshGenerator.h">
+    <entry file="file://$PROJECT_DIR$/Code/Helpers/staticfunctions.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-30">
-          <caret line="28" selection-start-line="28" selection-end-line="28" />
-          <folding>
-            <element signature="e#63#94#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Core/MainProblem.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret line="20" column="42" selection-start-line="20" selection-start-column="42" selection-end-line="20" selection-end-column="42" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/OptimizationStrategies/Optimization.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="570">
-          <caret line="53" column="8" selection-start-line="53" selection-start-column="8" selection-end-line="53" selection-end-column="8" />
-          <folding>
-            <element signature="e#51#87#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/OptimizationStrategies/Optimization.cpp">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/OptimizationStrategies/FDOptimization.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="8" column="34" selection-start-line="8" selection-start-column="34" selection-end-line="8" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/OptimizationStrategies/AdjointOptimization.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2130">
-          <caret line="142" column="53" selection-start-line="142" selection-start-column="53" selection-end-line="142" selection-end-column="53" />
-          <folding>
-            <element signature="e#67#99#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/OptimizationStrategies/FDOptimization.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="389">
-          <caret line="50" column="8" selection-start-line="50" selection-start-column="8" selection-end-line="50" selection-end-column="8" />
-          <folding>
-            <element signature="e#53#88#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/OptimizationStrategies/AdjointOptimization.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="284">
-          <caret line="35" column="8" selection-start-line="35" selection-start-column="8" selection-end-line="35" selection-end-column="8" />
-          <folding>
-            <element signature="e#63#98#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Documentation/docbook/_waveguide_8cpp.xml" />
-    <entry file="file://$PROJECT_DIR$/Code/OptimizationAlgorithm/OptimizationAlgorithm.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="189">
-          <caret line="21" column="6" selection-start-line="21" selection-start-column="6" selection-end-line="21" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/OptimizationAlgorithm/Optimization1D.cpp">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/OptimizationAlgorithm/Optimization1D.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="15" column="14" lean-forward="true" selection-start-line="15" selection-start-column="14" selection-end-line="15" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="uml://JavaScript-modules-diagram//home/kraft/workspace/waveguideproblem/Code">
-      <provider selected="true" editor-type-id="UmlEditorProvider">
-        <state>
-          <ID>JavaScript-modules-diagram</ID>
-          <OriginalElement>$PROJECT_DIR$/Code</OriginalElement>
-          <nodes />
-          <notes />
-          <edges />
-          <settings layout="Hierarchic Group" zoom="1.0" x="433.0" y="284.0" />
-          <SelectedNodes />
-          <Categories>
-            <Category>All</Category>
-          </Categories>
-          <SCOPE>All</SCOPE>
-          <VISIBILITY>Details</VISIBILITY>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Core/MainProblem.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="17" selection-start-line="17" selection-end-line="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/HSIE/HSIE_Preconditioner_Base.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="174">
-          <caret line="199" column="26" selection-start-line="199" selection-start-column="26" selection-end-line="199" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="534">
-          <caret line="73" column="6" selection-start-line="73" selection-start-column="6" selection-end-line="73" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Helpers/QuadratureFormulaCircle.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
-          <caret line="54" column="2" lean-forward="true" selection-start-line="54" selection-start-column="2" selection-end-line="54" selection-end-column="2" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Core/AuxiliaryProblem.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="17" column="50" selection-start-line="17" selection-start-column="50" selection-end-line="17" selection-end-column="50" />
-          <folding>
-            <element signature="e#784#811#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/CMakeLists.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="9" column="23" selection-start-line="9" selection-start-column="23" selection-end-line="9" selection-end-column="23" />
+        <state relative-caret-position="-480">
+          <caret line="7" column="37" selection-start-line="7" selection-start-column="37" selection-end-line="7" selection-end-column="37" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Code/Core/AuxiliaryProblem.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="9" column="61" selection-start-line="9" selection-start-column="61" selection-end-line="9" selection-end-column="61" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Main/main.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret line="34" selection-start-line="34" selection-end-line="34" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="539">
-          <caret line="922" column="38" selection-start-line="922" selection-start-column="38" selection-end-line="922" selection-end-column="38" />
-          <folding>
-            <element signature="e#82#109#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="105">
+          <caret line="7" selection-start-line="7" selection-end-line="7" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="184">
-          <caret line="489" column="12" selection-start-line="489" selection-start-column="4" selection-end-line="489" selection-end-column="12" />
+        <state relative-caret-position="-450">
+          <caret line="507" column="81" selection-start-line="507" selection-start-column="61" selection-end-line="507" selection-end-column="81" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Helpers/Geometry.cpp">
+    <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="80" selection-start-line="80" selection-end-line="80" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/MeshGenerators/SquareMeshGenerator.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1275">
-          <caret line="99" column="4" selection-start-line="99" selection-start-column="4" selection-end-line="99" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Helpers/Geometry.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="780">
-          <caret line="58" column="69" selection-start-line="58" selection-start-column="69" selection-end-line="58" selection-end-column="69" />
-          <folding>
-            <element signature="e#484#502#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/lib/x86_64-linux-gnu/openmpi/include/mpi.h" />
-    <entry file="file://$PROJECT_DIR$/Code/Core/Simulation.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="900">
-          <caret line="60" column="1" selection-start-line="60" selection-start-column="1" selection-end-line="60" selection-end-column="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Core/DOFManager.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="379">
-          <caret line="43" column="42" selection-start-line="43" selection-start-column="42" selection-end-line="43" selection-end-column="42" />
+        <state relative-caret-position="-10605">
+          <caret line="223" column="4" lean-forward="true" selection-start-line="223" selection-start-column="4" selection-end-line="224" selection-end-column="65" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Code/Core/DOFManager.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="91" column="63" selection-start-line="91" selection-start-column="63" selection-end-line="91" selection-end-column="63" />
+        <state relative-caret-position="150">
+          <caret line="139" selection-start-line="139" selection-end-line="155" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/ModalComputations/RectangularMode.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="495">
+          <caret line="33" column="10" selection-start-line="33" selection-start-column="10" selection-end-line="33" selection-end-column="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/ModalComputations/RectangularMode.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="467">
+          <caret line="46" column="76" selection-start-line="46" selection-start-column="76" selection-end-line="46" selection-end-column="76" />
         </state>
       </provider>
     </entry>

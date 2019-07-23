@@ -1057,22 +1057,22 @@ void NumericProblem::MakeBoundaryConditions() {
 
     dealii::ZeroFunction<3, double> zf(6);
 
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 0,
+    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 0,
                                                          cm);
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1,
+    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 1,
                                                          cm);
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2,
+    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 2,
                                                          cm);
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 3,
+    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 3,
                                                          cm);
 
     if (GlobalParams.MPI_Rank == 0) {
-        VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 4,
+        VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 4,
                                                              cm);
     }
 
     if (GlobalParams.MPI_Rank + 1 == GlobalParams.NumberProcesses) {
-        VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 5,
+        VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 5,
                                                              cm);
     }
 
@@ -1207,14 +1207,14 @@ void NumericProblem::ProjectBoundaryConditions() {
     dealii::ZeroFunction<3, double> zf(6);
 
     if (even) {
-        VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 4,
+        VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 4,
                                                              cm_prec_even);
-        VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 5,
+        VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 5,
                                                              cm_prec_odd);
     } else {
-        VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf,
+        VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf,
                                                              5, cm_prec_even);
-        VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf,
+        VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf,
                                                              4, cm_prec_odd);
     }
 }
@@ -1224,41 +1224,41 @@ void NumericProblem::MakePreconditionerBoundaryConditions() {
     cell_loc = dof_handler.begin_active();
     endc = dof_handler.end();
     dealii::ZeroFunction<3, double> zf(6);
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 0,
+    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 0,
                                                          cm_prec_even);
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1,
+    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 1,
                                                          cm_prec_even);
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2,
+    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 2,
                                                          cm_prec_even);
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 3,
+    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 3,
                                                          cm_prec_even);
 
     if (GlobalParams.MPI_Rank == 0) {
-        VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 4,
+        VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 4,
                                                              cm_prec_even);
     }
 
     if (GlobalParams.MPI_Rank + 1 == GlobalParams.NumberProcesses) {
-        VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 5,
+        VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 5,
                                                              cm_prec_even);
     }
 
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 0,
+    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 0,
                                                          cm_prec_odd);
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 1,
+    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 1,
                                                          cm_prec_odd);
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 2,
+    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 2,
                                                          cm_prec_odd);
-    VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 3,
+    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 3,
                                                          cm_prec_odd);
 
     if (GlobalParams.MPI_Rank == 0) {
-        VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 4,
+        VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 4,
                                                              cm_prec_odd);
     }
 
     if (GlobalParams.MPI_Rank + 1 == GlobalParams.NumberProcesses) {
-        VectorTools::project_boundary_values_curl_conforming(dof_handler, 0, zf, 5,
+        VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 5,
                                                              cm_prec_odd);
     }
 

@@ -34,7 +34,6 @@
 #include <deal.II/grid/manifold_lib.h>
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/tria_accessor.h>
-#include <deal.II/grid/tria_boundary_lib.h>
 #include <deal.II/grid/tria_iterator.h>
 #include <deal.II/lac/block_matrix_array.h>
 #include <deal.II/lac/block_sparse_matrix.h>
