@@ -14,9 +14,9 @@
 class DOFManager {
     std::vector<dealii::IndexSet> own_dofs_per_process; // via MPI_Build...
     dealii::IndexSet local_dofs;    // via MPI_Build
-    const unsigned int dofs_per_cell; //constructor
-    const unsigned int dofs_per_face; //constructor
     const unsigned int dofs_per_edge; //constructor
+    const unsigned int dofs_per_face; //constructor
+    const unsigned int dofs_per_cell; //constructor
     unsigned int n_global_dofs; // via MPI_Build
     unsigned int n_locally_owned_dofs; // via MPI_Build
     dealii::Triangulation<3,3> * triangulation;

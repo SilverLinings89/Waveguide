@@ -17,6 +17,6 @@ FaceSurfaceComparator::~FaceSurfaceComparator() {
 
 bool FaceSurfaceComparator::check_face(
         const dealii::parallel::distributed::Triangulation<3, 3>::face_iterator
-        face_iterator) {
+        ) {
     return false;
 }

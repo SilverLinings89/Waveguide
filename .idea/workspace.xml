@@ -1,26 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
-    <generated />
+    <generated>
+      <config projectName="WaveguideProblem" targetName="main" />
+      <config projectName="WaveguideProblem" targetName="Code" />
+    </generated>
   </component>
   <component name="CMakeSettings">
-    <configurations />
+    <configurations>
+      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" />
+    </configurations>
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3eb79f9f-621c-46a2-93b5-87eed99f25a6" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Code/ModalComputations/RectangularMode.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Code/ModalComputations/RectangularMode.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/Core/DOFManager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/DOFManager.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Core/DOFManager.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/DOFManager.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/Core/NumericProblem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/NumericProblem.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/Core/NumericProblem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/NumericProblem.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Helpers/Parameters.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/Parameters.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/HSIE/FaceSurfaceComparator.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIE/FaceSurfaceComparator.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Helpers/staticfunctions.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/staticfunctions.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WaveguideProblem.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/WaveguideProblem.cbp" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/CMakeFiles/" />
+    <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
+    <ignored path="$PROJECT_DIR$/Code/CMakeFiles/" />
+    <ignored path="$PROJECT_DIR$/Main/CMakeFiles/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,41 +35,17 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="DockManager">
-    <window id="1">
-      <content type="file-editors">
-        <state>
-          <leaf>
-            <file pinned="false" current-in-tab="true">
-              <entry file="file://$PROJECT_DIR$/Code/ModalComputations/RectangularMode.cpp">
-                <provider selected="true" editor-type-id="text-editor">
-                  <state relative-caret-position="467">
-                    <caret line="46" column="76" selection-start-line="46" selection-start-column="76" selection-end-line="46" selection-end-column="76" />
-                  </state>
-                </provider>
-              </entry>
-            </file>
-            <file pinned="false" current-in-tab="false">
-              <entry file="file://$PROJECT_DIR$/Code/ModalComputations/RectangularMode.h">
-                <provider selected="true" editor-type-id="text-editor">
-                  <state relative-caret-position="495">
-                    <caret line="33" column="10" selection-start-line="33" selection-start-column="10" selection-end-line="33" selection-end-column="10" />
-                  </state>
-                </provider>
-              </entry>
-            </file>
-          </leaf>
-        </state>
-      </content>
-    </window>
-  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-10605">
-              <caret line="223" column="4" lean-forward="true" selection-start-line="223" selection-start-column="4" selection-end-line="224" selection-end-column="65" />
+            <state relative-caret-position="190">
+              <caret line="1220" column="36" selection-start-line="1220" selection-start-column="36" selection-end-line="1220" selection-end-column="36" />
+              <folding>
+                <element signature="e#82#109#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -72,17 +53,44 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-450">
-              <caret line="507" column="81" selection-start-line="507" selection-start-column="61" selection-end-line="507" selection-end-column="81" />
+            <state relative-caret-position="180">
+              <caret line="495" column="68" selection-start-line="495" selection-start-column="68" selection-end-line="495" selection-end-column="68" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Code/Core/DOFManager.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="150">
-              <caret line="139" selection-start-line="139" selection-end-line="155" selection-end-column="1" />
+            <state relative-caret-position="370">
+              <caret line="213" column="17" selection-start-line="213" selection-start-column="17" selection-end-line="213" selection-end-column="17" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="181">
+              <caret line="569" column="16" selection-start-line="569" selection-start-column="16" selection-end-line="569" selection-end-column="16" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Code/HSIE/FaceSurfaceComparator.cpp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="285">
+              <caret line="19" column="8" selection-start-line="19" selection-start-column="8" selection-end-line="19" selection-end-column="8" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Code/Core/DOFManager.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="130">
+              <caret line="16" column="9" selection-start-line="16" selection-start-column="9" selection-end-line="16" selection-end-column="9" />
             </state>
           </provider>
         </entry>
@@ -101,13 +109,15 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/Code/Helpers/Parameters.h" />
-        <option value="$PROJECT_DIR$/Code/Core/DOFManager.cpp" />
-        <option value="$PROJECT_DIR$/Code/Core/NumericProblem.h" />
-        <option value="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" />
         <option value="$PROJECT_DIR$/Code/Helpers/staticfunctions.h" />
-        <option value="$PROJECT_DIR$/Code/Core/NumericProblem.cpp" />
         <option value="$PROJECT_DIR$/Code/ModalComputations/RectangularMode.h" />
         <option value="$PROJECT_DIR$/Code/ModalComputations/RectangularMode.cpp" />
+        <option value="$PROJECT_DIR$/Code/Core/NumericProblem.h" />
+        <option value="$PROJECT_DIR$/Code/Core/DOFManager.h" />
+        <option value="$PROJECT_DIR$/Code/Core/DOFManager.cpp" />
+        <option value="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" />
+        <option value="$PROJECT_DIR$/Code/HSIE/FaceSurfaceComparator.cpp" />
+        <option value="$PROJECT_DIR$/Code/Core/NumericProblem.cpp" />
       </list>
     </option>
   </component>
@@ -120,30 +130,58 @@
     <ConfirmationsSetting value="2" id="Add" />
   </component>
   <component name="ProjectView">
-    <navigator proportions="" version="1">
+    <navigator currentView="Scope" currentSubView="Scope 'Project Files'; set:Project Files; class com.intellij.psi.search.scope.ProjectFilesScope" proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope">
+        <subPane subId="Scope 'Project Files'; set:Project Files; class com.intellij.psi.search.scope.ProjectFilesScope">
+          <expand>
+            <path>
+              <item name="WaveguideProblem" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="~/workspace/waveguideproblem" type="442cc68d:ScopeViewTreeModel$RootNode" />
+            </path>
+            <path>
+              <item name="WaveguideProblem" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="~/workspace/waveguideproblem" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="Code" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+            <path>
+              <item name="WaveguideProblem" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="~/workspace/waveguideproblem" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="Code" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+              <item name="Core" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+            <path>
+              <item name="WaveguideProblem" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="~/workspace/waveguideproblem" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="Code" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+              <item name="Helpers" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
       <pane id="ProjectPane">
         <subPane>
           <expand>
             <path>
-              <item name="waveguideproblem" type="b2602c69:ProjectViewProjectNode" />
+              <item name="WaveguideProblem" type="b2602c69:ProjectViewProjectNode" />
               <item name="waveguideproblem" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
-              <item name="waveguideproblem" type="b2602c69:ProjectViewProjectNode" />
+              <item name="WaveguideProblem" type="b2602c69:ProjectViewProjectNode" />
               <item name="waveguideproblem" type="462c0819:PsiDirectoryNode" />
               <item name="Code" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
-              <item name="waveguideproblem" type="b2602c69:ProjectViewProjectNode" />
+              <item name="WaveguideProblem" type="b2602c69:ProjectViewProjectNode" />
               <item name="waveguideproblem" type="462c0819:PsiDirectoryNode" />
               <item name="Code" type="462c0819:PsiDirectoryNode" />
               <item name="Core" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
-              <item name="waveguideproblem" type="b2602c69:ProjectViewProjectNode" />
+              <item name="WaveguideProblem" type="b2602c69:ProjectViewProjectNode" />
               <item name="waveguideproblem" type="462c0819:PsiDirectoryNode" />
               <item name="Code" type="462c0819:PsiDirectoryNode" />
               <item name="ModalComputations" type="462c0819:PsiDirectoryNode" />
@@ -152,15 +190,19 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="cf.advertisement.text.has.clang-format" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
     <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="settings.editor.selected.configurable" value="CMakeSettings" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -173,6 +215,22 @@
         </RuleState>
       </list>
     </option>
+  </component>
+  <component name="RunManager" selected="CMake Application.main">
+    <configuration name="Code" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="WaveguideProblem" TARGET_NAME="Code" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="main" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="WaveguideProblem" TARGET_NAME="main" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="WaveguideProblem" RUN_TARGET_NAME="main">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="CMake Application.Code" />
+      <item itemvalue="CMake Application.main" />
+    </list>
   </component>
   <component name="TaskManager">
     <task id="LOCAL-00001" summary="Bugfixing and migrating to AffineConstraints to fix some deprecation warnings.">
@@ -188,20 +246,21 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1563871389843</updated>
-      <workItem from="1563871395543" duration="7018000" />
+      <workItem from="1563871395543" duration="8340000" />
+      <workItem from="1563958364037" duration="2067000" />
     </task>
     <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="7620000" />
+    <option name="totallyTimeSpent" value="11009000" />
   </component>
   <component name="TodoView" selected-index="3" />
   <component name="ToolWindowManager">
     <frame x="67" y="25" width="1853" height="1055" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.29164362" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.29496402" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -212,7 +271,29 @@
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.24946004" />
       <window_info anchor="bottom" id="Database Changes" order="7" />
-      <window_info anchor="bottom" id="Terminal" order="8" visible="true" weight="0.42008638" />
+      <window_info anchor="bottom" id="Terminal" order="8" weight="0.1738661" />
+      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
+      <window_info anchor="bottom" id="Version Control" order="10" weight="0.27645788" />
+      <window_info anchor="bottom" id="CMake" order="11" weight="0.18790497" />
+      <window_info active="true" anchor="bottom" id="Messages" order="12" visible="true" weight="0.32829374" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.24958494" />
+      <window_info anchor="right" id="Database" order="3" />
+    </layout>
+    <layout-to-restore>
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.29496402" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32937366" />
+      <window_info anchor="bottom" id="Run" order="2" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.24946004" />
+      <window_info anchor="bottom" id="Database Changes" order="7" />
+      <window_info anchor="bottom" id="Terminal" order="8" visible="true" weight="0.1738661" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="10" weight="0.27645788" />
       <window_info anchor="bottom" id="CMake" order="11" weight="0.18790497" />
@@ -221,40 +302,12 @@
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.24958494" />
       <window_info anchor="right" id="Database" order="3" />
-    </layout>
-    <layout-to-restore>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.26840067" />
-      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Database Changes" order="7" />
-      <window_info anchor="bottom" id="Terminal" order="8" />
-      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
-      <window_info anchor="bottom" id="Version Control" order="10" visible="true" weight="0.32937366" />
-      <window_info anchor="bottom" id="CMake" order="11" weight="0.32937366" />
-      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
-      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
-      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-      <window_info anchor="right" id="Database" order="3" />
     </layout-to-restore>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/Code/Core/DOFManager.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="675">
-          <caret line="45" column="53" selection-start-line="45" selection-start-column="53" selection-end-line="45" selection-end-column="53" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Code/Helpers/Parameters.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="243">
@@ -262,20 +315,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/Code/Core/Sector.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="45">
           <caret line="3" selection-start-line="3" selection-end-line="3" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="151">
-          <caret line="531" column="41" selection-start-line="531" selection-start-column="41" selection-end-line="531" selection-end-column="41" />
         </state>
       </provider>
     </entry>
@@ -293,24 +336,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.h">
+    <entry file="file://$PROJECT_DIR$/Code/ModalComputations/RectangularMode.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-450">
-          <caret line="507" column="81" selection-start-line="507" selection-start-column="61" selection-end-line="507" selection-end-column="81" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-10605">
-          <caret line="223" column="4" lean-forward="true" selection-start-line="223" selection-start-column="4" selection-end-line="224" selection-end-column="65" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Code/Core/DOFManager.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="150">
-          <caret line="139" selection-start-line="139" selection-end-line="155" selection-end-column="1" />
+        <state relative-caret-position="529">
+          <caret line="55" column="64" selection-start-line="55" selection-start-column="64" selection-end-line="55" selection-end-column="64" />
         </state>
       </provider>
     </entry>
@@ -321,10 +350,66 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Code/ModalComputations/RectangularMode.cpp">
+    <entry file="file://$PROJECT_DIR$/Code/Core/MainProblem.h">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/Core/PreconditionerSweeping.h">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/Core/SolutionWeight.cpp">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cmake_install.cmake">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/cmake_install.cmake">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="467">
-          <caret line="46" column="76" selection-start-line="46" selection-start-column="76" selection-end-line="46" selection-end-column="76" />
+        <state relative-caret-position="180">
+          <caret line="495" column="68" selection-start-line="495" selection-start-column="68" selection-end-line="495" selection-end-column="68" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/Core/DOFManager.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="130">
+          <caret line="16" column="9" selection-start-line="16" selection-start-column="9" selection-end-line="16" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/Core/DOFManager.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="370">
+          <caret line="213" column="17" selection-start-line="213" selection-start-column="17" selection-end-line="213" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="181">
+          <caret line="569" column="16" selection-start-line="569" selection-start-column="16" selection-end-line="569" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/HSIE/FaceSurfaceComparator.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="285">
+          <caret line="19" column="8" selection-start-line="19" selection-start-column="8" selection-end-line="19" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code/Core/NumericProblem.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="190">
+          <caret line="1220" column="36" selection-start-line="1220" selection-start-column="36" selection-end-line="1220" selection-end-column="36" />
+          <folding>
+            <element signature="e#82#109#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

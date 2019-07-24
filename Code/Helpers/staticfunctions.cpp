@@ -568,13 +568,7 @@ void add_vector_of_indices(dealii::IndexSet *in_index_set,
 double hmax_for_cell_center(Point<3, double> in_center) {
     double h_max_in = 0.05;
     double h_max_out = 0.1;
-    // TODO:
-    // Should check if a coordinate is in the waveguide or not.
-    if (true) {
-        return h_max_in;
-    } else {
-        return h_max_out;
-    }
+    return (std::abs(in_center[0]) < GlobalParams.M_C_Dim1In / 2.0 &&  std::abs(in_center[0]) < GlobalParams.M_C_Dim2In / 2.0) ? h_max_in : h_max_out;
 }
 
 double InterpolationPolynomial(double in_z, double in_val_zero,

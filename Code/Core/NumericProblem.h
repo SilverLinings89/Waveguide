@@ -493,6 +493,8 @@ private:
 
     TrilinosWrappers::MPI::BlockVector system_rhs;
 
+    TrilinosWrappers::SparseMatrix l1_matrix, l2_nmatrix, l3_matrix;
+
     TrilinosWrappers::BlockSparseMatrix system_matrix;
 
     TrilinosWrappers::BlockSparseMatrix prec_matrix_odd, prec_matrix_even;

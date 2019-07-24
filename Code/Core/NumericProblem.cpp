@@ -10,7 +10,6 @@
 #include <deal.II/distributed/tria.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_renumbering.h>
-#include <deal.II/grid/tria_boundary_lib.h>
 #include <deal.II/lac/block_matrix_array.h>
 #include <deal.II/lac/block_sparsity_pattern.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
@@ -1055,7 +1054,7 @@ void NumericProblem::MakeBoundaryConditions() {
         }
     }
 
-    dealii::ZeroFunction<3, double> zf(6);
+    dealii::Functions::ZeroFunction<3, double> zf(6);
 
     VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 0,
                                                          cm);
@@ -1080,10 +1079,6 @@ void NumericProblem::MakeBoundaryConditions() {
     const unsigned int face_own_count = std::max(
             static_cast<unsigned int>(0),
             fe.dofs_per_face - GeometryInfo<3>::lines_per_face * fe.dofs_per_line);
-    const unsigned int cell_own_count = std::max(
-            static_cast<unsigned int>(0),
-            fe.dofs_per_cell - GeometryInfo<3>::faces_per_cell * fe.dofs_per_face +
-            GeometryInfo<3>::lines_per_cell * fe.dofs_per_line);
     std::vector<types::global_dof_index> local_face_dofs(fe.dofs_per_face);
     deallog << "Dofs per line: " << fe.dofs_per_line << std::endl;
     deallog << "Dofs per face: " << fe.dofs_per_face << std::endl;
@@ -1204,7 +1199,7 @@ void NumericProblem::MakeBoundaryConditions() {
 }
 
 void NumericProblem::ProjectBoundaryConditions() {
-    dealii::ZeroFunction<3, double> zf(6);
+    dealii::Functions::ZeroFunction<3, double> zf(6);
 
     if (even) {
         VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 4,
@@ -1223,7 +1218,7 @@ void NumericProblem::MakePreconditionerBoundaryConditions() {
     dealii::DoFHandler<3>::active_cell_iterator cell_loc, endc;
     cell_loc = dof_handler.begin_active();
     endc = dof_handler.end();
-    dealii::ZeroFunction<3, double> zf(6);
+    dealii::Functions::ZeroFunction<3, double> zf(6);
     VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 0,
                                                          cm_prec_even);
     VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, zf, 1,

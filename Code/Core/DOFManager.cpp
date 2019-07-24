@@ -161,8 +161,6 @@ void DOFManager::MPI_build_global_index_set_vector() {
     this->local_dofs = this->own_dofs_per_process[GlobalParams.MPI_Rank];
     this->n_global_dofs = this->own_dofs_per_process[0].size();
     computed_n_global = true;
-
-    // TODO: add the not locally owned dofs to this set.
 }
 
 void DOFManager::init() {
@@ -213,6 +211,7 @@ bool compareIndexCenterPairs(DofSortData c1,
         return false;
     }
     std::cout << "There was an error in dof sorting - two object were undistinguishable." <<std::endl;
+    return false;
 }
 
 void DOFManager::SortDofs() {
@@ -247,7 +246,7 @@ void DOFManager::SortDofs() {
                         temp.order = line_order;
                         dofs_sort_objects.push_back(temp);
                         line_order++;
-                        dof_touched[local_line_dofs[k]];
+                        dof_touched[local_line_dofs[k]] = true;
                     }
                 }
             }
@@ -295,7 +294,6 @@ IndexSet DOFManager::get_non_owned_dofs() {
             endc = dof_handler->end();
     for (; cell != endc; ++cell) {
         if(cell->at_boundary()) {
-            types::boundary_id c_bid = cell->boundary_id();
             for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
                 types::boundary_id f_bid = cell->face(i)->boundary_id();
                 if (f_bid == 0 && GlobalParams.Index_in_x_direction > 0) {
@@ -316,7 +314,6 @@ IndexSet DOFManager::get_non_owned_dofs() {
                         non_owned_dofs.add_index(local_face_dofs[j]);
                     }
                 }
-
             }
         }
     }
@@ -326,7 +323,6 @@ IndexSet DOFManager::get_non_owned_dofs() {
         cell = dof_handler->begin_active();
         for (; cell != endc; ++cell) {
             if(cell->at_boundary()) {
-                types::boundary_id c_bid = cell->boundary_id();
                 for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
                     types::boundary_id f_bid = cell->face(i)->boundary_id();
                     if (f_bid == 4 && GlobalParams.Index_in_z_direction > 0) {
@@ -352,10 +348,11 @@ unsigned int DOFManager::compute_n_own_dofs() {
 
 DOFManager::DOFManager(unsigned int i_dofs_per_cell, unsigned int i_dofs_per_face, unsigned int i_dofs_per_edge,
                        dealii::DoFHandler<3, 3> *in_dof_handler, dealii::Triangulation<3, 3> *in_triangulation,
-                       const dealii::FiniteElement<3, 3> *in_fe) : dofs_per_cell(i_dofs_per_cell),
-                                                              dofs_per_edge(i_dofs_per_edge),
-                                                              dofs_per_face(i_dofs_per_face),
-                                                              fe(in_fe){
+                       const dealii::FiniteElement<3, 3> *in_fe) :
+                            dofs_per_edge(i_dofs_per_edge),
+                            dofs_per_face(i_dofs_per_face),
+                            dofs_per_cell(i_dofs_per_cell),
+                            fe(in_fe){
     this->triangulation = in_triangulation;
     this->dof_handler = in_dof_handler;
     computed_n_global = false;
