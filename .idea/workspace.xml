@@ -18,13 +18,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3eb79f9f-621c-46a2-93b5-87eed99f25a6" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/googletest/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/googletest/ExampleTest.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Test Results - All_in_ExampleTest_cpp.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Core/DOFManager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/DOFManager.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Core/DOFManager.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/DOFManager.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WaveguideProblem.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/WaveguideProblem.cbp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Test Results - All_in_ExampleTest_cpp.html" beforeDir="false" afterPath="$PROJECT_DIR$/Test Results - All_in_ExampleTest_cpp.html" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/CMakeFiles/" />
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
@@ -44,6 +40,7 @@
     <option name="formatViaClangd" value="false" />
   </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
+  <component name="ExportTestResults" exportFormat="Xml" outputFolder="$PROJECT_DIR$" userTempatePath="" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="true">
@@ -210,7 +207,7 @@
     </option>
   </component>
   <component name="RunManager" selected="Google Test.All in ExampleTest.cpp">
-    <configuration name="All in ExampleTest.cpp" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" temporary="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="WaveguideProblem" TARGET_NAME="Google_Tests_run" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="WaveguideProblem" RUN_TARGET_NAME="Google_Tests_run" TEST_PATTERN="all-tests(file://$PROJECT_DIR$/googletest/ExampleTest.cpp)" TEST_MODE="PATTERN">
+    <configuration name="All in ExampleTest.cpp" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" temporary="true" PROGRAM_PARAMS="--gtest_output=xml" PASS_PARENT_ENVS_2="true" PROJECT_NAME="WaveguideProblem" TARGET_NAME="Google_Tests_run" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="WaveguideProblem" RUN_TARGET_NAME="Google_Tests_run" TEST_PATTERN="all-tests(file://$PROJECT_DIR$/googletest/ExampleTest.cpp)" TEST_MODE="PATTERN">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
         <option name="BeforeTestRunTask" enabled="true" />
@@ -283,7 +280,7 @@
       <updated>1563871389843</updated>
       <workItem from="1563871395543" duration="8340000" />
       <workItem from="1563958364037" duration="2815000" />
-      <workItem from="1564046677481" duration="4165000" />
+      <workItem from="1564046677481" duration="5556000" />
     </task>
     <option name="localTasksCounter" value="2" />
     <servers />
@@ -303,11 +300,12 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="15922000" />
+    <option name="totallyTimeSpent" value="17313000" />
   </component>
   <component name="TodoView" selected-index="3" />
   <component name="ToolWindowManager">
     <frame x="67" y="25" width="1853" height="1055" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.29828444" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
