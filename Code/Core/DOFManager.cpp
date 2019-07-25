@@ -357,3 +357,7 @@ DOFManager::DOFManager(unsigned int i_dofs_per_cell, unsigned int i_dofs_per_fac
     this->dof_handler = in_dof_handler;
     computed_n_global = false;
 }
+
+int DOFManager::testValue() {
+    return 4;
+}

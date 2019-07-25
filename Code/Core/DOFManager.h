@@ -45,6 +45,7 @@ class DOFManager {
 
     void update_interface_dofs_with_IndexSet(dealii::IndexSet in_new_indices, dealii::types::boundary_id in_bid);
 
+public: static int testValue();
     // TODO: There should be some functions checking for neighboring processes if the communicated IndexSets are the same.
 };
 

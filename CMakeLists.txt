@@ -1,6 +1,4 @@
-##
-#  CMake script for the step-3 tutorial program:
-##
+include_directories(googletest/lib/googletest/include googletest/lib/googletest)
 
 # Set the name of the project and target:
 SET(TARGET "WaveguideProblem")
@@ -23,7 +21,7 @@ SET(TARGET "WaveguideProblem")
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
 
-FIND_PACKAGE(deal.II 8.2 QUIET
+FIND_PACKAGE(deal.II 9.0 QUIET
         HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR}
         )
 IF(NOT ${deal.II_FOUND})
@@ -40,3 +38,4 @@ PROJECT(${TARGET})
 ADD_SUBDIRECTORY(Code)
 ADD_SUBDIRECTORY(Main)
 
+ADD_SUBDIRECTORY(googletest)
