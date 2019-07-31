@@ -196,9 +196,9 @@ HSIEPreconditionerBase<hsie_order>::~HSIEPreconditionerBase() {
 template<int hsie_order>
 HSIEPreconditionerBase<hsie_order>::HSIEPreconditionerBase(
         const dealii::Triangulation<3, 3> *in_tria,
-        double in_z) {
-    FaceSurfaceComparatorZ fscz = new FaceSurfaceComparatorZ(in_z, 0.00001);
-    association = extract_surface_mesh_at_z(in_tria, &surf_tria, fscz);
+        dealii::DoFHandler<3> * in_global_dof_handler) {
+    global_dof_handler = in_global_dof_handler;
+
     surface_edges = surf_tria.n_active_lines();
     surface_faces = surf_tria.n_active_faces();
     surface_vertices = surf_tria.n_vertices();
@@ -209,6 +209,18 @@ HSIEPreconditionerBase<hsie_order>::HSIEPreconditionerBase(
             dealii::GeometryInfo<2>::vertices_per_face * 2 * (hsie_order + 1);
     HSIE_degree = hsie_order;
     hsie_dof_handler = dealii::DoFHandler<3>(surf_tria);
+}
+
+<int hsie_order>
+void HSIEPreconditionerBase<hsie_order>::make_Matrix_for_surface_and_level(unsigned int in_bid, unsigned int in_level) {
+
+    return;
+}
+
+<int hsie_order>
+void HSIEPreconditionerBase<hsie_order>::prepare_Matrix_for_surface_and_level(unsigned int in_bid, unsigned int in_level) {
+
+    return;
 }
 
 template<int hsie_order>

@@ -32,6 +32,7 @@ class HSIEPreconditionerBase : dealii::TrilinosWrappers::PreconditionBase {
     int surface_faces;
     int HSIE_degree;
     dealii::DoFHandler<2, 3> hsie_dof_handler;
+    dealii::DoFHandler<3> global_dof_handler;
 
 public:
     /**
@@ -44,7 +45,7 @@ public:
      * \param in_tria A handle to the triangulation which contains the surface.
      * \param in_z the z-coordinate at which to attach the infinite Elements.
      */
-    HSIEPreconditionerBase(const dealii::Triangulation<3> *in_tria, double in_z);
+    HSIEPreconditionerBase(const dealii::Triangulation<3> *in_tria, dealii::DoFHandler<3> * in_global_dof_handler);
 
     ~HSIEPreconditionerBase();
 
