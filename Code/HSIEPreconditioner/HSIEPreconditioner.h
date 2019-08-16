@@ -1,0 +1,14 @@
+//
+// Created by kraft on 16.08.19.
+//
+
+#ifndef WAVEGUIDEPROBLEM_HSIEPRECONDITIONER_H
+#define WAVEGUIDEPROBLEM_HSIEPRECONDITIONER_H
+
+
+class HSIEPreconditioner {
+
+};
+
+
+#endif //WAVEGUIDEPROBLEM_HSIEPRECONDITIONER_H

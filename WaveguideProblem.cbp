@@ -93,7 +93,8 @@
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/MeshGenerators,"/>
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/OptimizationAlgorithm,"/>
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/OptimizationStrategies,"/>
-					<Add directory="/home/kraft/workspace/waveguideproblem/Code/SpaceTransformations"/>
+					<Add directory="/home/kraft/workspace/waveguideproblem/Code/SpaceTransformations,"/>
+					<Add directory="/home/kraft/workspace/waveguideproblem/Code/HSIEPreconditioner"/>
 					<Add directory="/home/kraft/dealii/include"/>
 					<Add directory="/home/kraft/dealii/include/deal.II/bundled"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi"/>
@@ -128,7 +129,8 @@
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/MeshGenerators,"/>
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/OptimizationAlgorithm,"/>
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/OptimizationStrategies,"/>
-					<Add directory="/home/kraft/workspace/waveguideproblem/Code/SpaceTransformations"/>
+					<Add directory="/home/kraft/workspace/waveguideproblem/Code/SpaceTransformations,"/>
+					<Add directory="/home/kraft/workspace/waveguideproblem/Code/HSIEPreconditioner"/>
 					<Add directory="/home/kraft/dealii/include"/>
 					<Add directory="/home/kraft/dealii/include/deal.II/bundled"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi"/>
@@ -490,6 +492,18 @@
 			<Option target="Code"/>
 		</Unit>
 		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/HSIE/HSIE_Preconditioner_Base.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/HSIEPreconditioner/HSIEPreconditioner.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/HSIEPreconditioner/HSIEPreconditioner.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/HSIEPreconditioner/HSIESurface.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/HSIEPreconditioner/HSIESurface.h">
 			<Option target="Code"/>
 		</Unit>
 		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/Helpers/ExactSolution.cpp">

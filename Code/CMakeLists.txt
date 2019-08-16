@@ -1,4 +1,4 @@
-INCLUDE_DIRECTORIES(Core, Helpers, MeshGenerators, OptimizationAlgorithm, OptimizationStrategies, SpaceTransformations)
+INCLUDE_DIRECTORIES(Core, Helpers, MeshGenerators, OptimizationAlgorithm, OptimizationStrategies, SpaceTransformations, HSIEPreconditioner)
 
 ADD_LIBRARY(Code
         Core/PreconditionerSweeping.cpp
@@ -34,6 +34,8 @@ ADD_LIBRARY(Code
         HSIE/FaceSurfaceComparatorZ.cpp
         HSIE/HSIE_Preconditioner_Base.cpp
         HSIE/HSIEDofType.cpp
+        HSIEPreconditioner/HSIEPreconditioner.cpp
+        HSIEPreconditioner/HSIESurface.cpp
         )
 
 DEAL_II_SETUP_TARGET(Code)
