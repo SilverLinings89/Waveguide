@@ -18,13 +18,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3eb79f9f-621c-46a2-93b5-87eed99f25a6" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIEPreconditioner.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIEPreconditioner.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Code/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/WaveguideProblem.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/WaveguideProblem.cbp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/googletest/Google_tests.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/Google_tests.cbp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/googletest/lib/googlemock/gmock.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/lib/googlemock/gmock.cbp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/googletest/lib/googletest-distribution.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/lib/googletest-distribution.cbp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/googletest/lib/googletest/generated/gmock.pc" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/lib/googletest/generated/gmock.pc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/googletest/lib/googletest/generated/gmock_main.pc" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/lib/googletest/generated/gmock_main.pc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/googletest/lib/googletest/generated/gtest.pc" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/lib/googletest/generated/gtest.pc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/googletest/lib/googletest/generated/gtest_main.pc" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/lib/googletest/generated/gtest_main.pc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/googletest/lib/googletest/gtest.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/lib/googletest/gtest.cbp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -61,7 +66,7 @@
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="cf.advertisement.text.has.clang-format" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../cppanalysistool" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
     <property name="node.js.path.for.package.tslint" value="project" />
@@ -98,11 +103,6 @@
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Google_Tests_run" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="WaveguideProblem" TARGET_NAME="Google_Tests_run" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="WaveguideProblem" RUN_TARGET_NAME="Google_Tests_run">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="gmock" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="WaveguideProblem" TARGET_NAME="gmock" CONFIG_NAME="Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -130,7 +130,6 @@
     </configuration>
     <list>
       <item itemvalue="CMake Application.Code" />
-      <item itemvalue="CMake Application.Google_Tests_run" />
       <item itemvalue="CMake Application.gmock" />
       <item itemvalue="CMake Application.gmock_main" />
       <item itemvalue="CMake Application.gtest" />
@@ -143,6 +142,9 @@
         <item itemvalue="Google Test.All in ExampleTest.cpp" />
       </list>
     </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
   </component>
   <component name="TaskManager">
     <task id="LOCAL-00001" summary="Bugfixing and migrating to AffineConstraints to fix some deprecation warnings.">
@@ -167,6 +169,7 @@
       <workItem from="1565010327418" duration="14000" />
       <workItem from="1565341654444" duration="599000" />
       <workItem from="1565938865490" duration="6908000" />
+      <workItem from="1566301571442" duration="4773000" />
     </task>
     <option name="localTasksCounter" value="2" />
     <servers />
