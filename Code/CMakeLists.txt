@@ -30,10 +30,6 @@ ADD_LIBRARY(Code
         SpaceTransformations/HomogenousTransformationRectangular.cpp
         SpaceTransformations/InhomogenousTransformationRectangular.cpp
         SpaceTransformations/SpaceTransformation.cpp
-        HSIE/FaceSurfaceComparator.cpp
-        HSIE/FaceSurfaceComparatorZ.cpp
-        HSIE/HSIE_Preconditioner_Base.cpp
-        HSIE/HSIEDofType.cpp
         HSIEPreconditioner/HSIEPreconditioner.cpp
         HSIEPreconditioner/HSIESurface.cpp
         )

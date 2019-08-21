@@ -19,6 +19,15 @@
   <component name="ChangeListManager">
     <list default="true" id="3eb79f9f-621c-46a2-93b5-87eed99f25a6" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Code/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/HSIE/FaceSurfaceComparator.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/HSIE/FaceSurfaceComparator.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/HSIE/FaceSurfaceComparatorZ.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/HSIE/FaceSurfaceComparatorZ.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/HSIE/HSIEDofType.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/HSIE/HSIEDofType.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/HSIE/HSIE_Preconditioner_Base.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/HSIE/HSIE_Preconditioner_Base.h" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/WaveguideProblem.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/WaveguideProblem.cbp" afterDir="false" />
@@ -49,11 +58,6 @@
         <option value="CMakeLists.txt" />
       </list>
     </option>
-  </component>
-  <component name="FindInProjectRecents">
-    <findStrings>
-      <find>ConstraintM</find>
-    </findStrings>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -191,7 +195,6 @@
       <configuration name="All in ExampleTest.cpp" configurationId="CMakeGoogleTestRunConfigurationType" />
     </history-entry>
   </component>
-  <component name="TodoView" selected-index="3" />
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
