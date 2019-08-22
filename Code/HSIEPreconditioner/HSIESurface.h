@@ -14,6 +14,14 @@
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_system.h>
 
+union DofBaseStructureID {
+    std::string face_id;
+    unsigned int non_face_id;
+
+    DofBaseStructureID() {};
+    ~DofBaseStructureID() {};
+};
+
 struct DofCount {
     unsigned int owned = 0;
     unsigned int non_owned = 0;
@@ -23,13 +31,36 @@ struct DofCount {
     unsigned int total = 0;
 };
 
+// IFF = Infinite Face Function (a and b)
+enum DofType {
+    EDGE, SURFACE, RAY, IFFa, IFFb, SEGMENTa, SEGMENTb
+};
+
+struct DofData {
+    DofType type;
+    int hsie_order{};
+    int inner_order{};
+    bool is_real{};
+    unsigned int global_index{};
+    DofBaseStructureID base_structure_id;
+
+    DofData() {
+        base_structure_id.face_id = "";
+    }
+
+    DofData(std::string in_id) {
+        base_structure_id.face_id = in_id;
+    }
+
+    DofData(unsigned int in_id) {
+        base_structure_id.non_face_id = in_id;
+    }
+};
+
 template<unsigned int ORDER>
 class HSIESurface {
-    unsigned int n_total_hsie_dofs;
     dealii::Triangulation<3,3> * main_triangulation;
     dealii::Triangulation<2,3> surface_triangulation;
-    unsigned int n_dofs_shared_with_interior;
-    unsigned int n_pure_hsie_dofs;
     const unsigned int b_id;
     const unsigned int Inner_Element_Order;
     unsigned int level;
@@ -38,6 +69,9 @@ class HSIESurface {
     dealii::DoFHandler<2,2> dof_h_q;
     dealii::FESystem<2> fe_nedelec;
     dealii::FESystem<2> fe_q;
+    std::vector<DofData> face_dof_data, edge_dof_data, vertex_dof_data;
+    unsigned int dof_counter;
+    dealii::Point<3> reference_point;
 
 public:
     HSIESurface(dealii::Triangulation<3,3> * in_main_triangulation, unsigned int in_boundary_id, unsigned int in_level, unsigned int in_inner_order);
@@ -45,7 +79,6 @@ public:
     void prepare_surface_triangulation();
     void compute_dof_numbers();
     void fill_matrix(dealii::SparseMatrix<double>* , dealii::IndexSet);
-    unsigned int get_n_own_hsie_dofs();
     DofCount compute_n_edge_dofs();
     DofCount compute_n_vertex_dofs();
     DofCount compute_n_face_dofs();
@@ -60,7 +93,10 @@ public:
     bool is_edge_owned(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned  int edge);
     bool is_face_owned(dealii::DoFHandler<2>::active_cell_iterator cell);
     bool is_vertex_owned(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned  int edge, unsigned int vertex);
-
+    void register_new_vertex_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned  int edge, unsigned int vertex);
+    void register_new_edge_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned  int edge);
+    void register_new_surface_dofs(dealii::DoFHandler<2>::active_cell_iterator cell);
+    unsigned int register_dof();
 };
 
 

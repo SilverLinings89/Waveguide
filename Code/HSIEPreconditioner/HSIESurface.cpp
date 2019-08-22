@@ -26,7 +26,7 @@ HSIESurface<ORDER>::HSIESurface(dealii::Triangulation<3, 3> *in_main_triangulati
                                 fe_nedelec(dealii::FE_Nedelec<2>(Inner_Element_Order), 2),
                                 fe_q(dealii::FE_Q<2>(GlobalParams.So_ElementOrder), 2)
                                 {
-
+    dof_counter = 0;
 }
 
 template<unsigned int ORDER>
@@ -60,7 +60,7 @@ DofCount HSIESurface<ORDER>::compute_n_edge_dofs() {
             if(!(touched_edges.end() == touched_edges.find(cell->line_index(edge)))) {
                 // handle it
                 update_dof_counts_for_edge(cell, edge, &ret);
-
+                register_new_edge_dofs(cell, edge);
                 // remember that it has been handled
                 touched_edges.insert(cell->line_index(edge));
             }
@@ -83,15 +83,16 @@ DofCount HSIESurface<ORDER>::compute_n_vertex_dofs() {
             if(!(touched_vertices.end() == touched_vertices.find(cell->line(edge)->vertex_index(0)))) {
                 // handle it
                 update_dof_counts_for_vertex(cell, edge, 0, &ret);
-
+                register_new_vertex_dofs(cell, edge, 0);
                 // remember that it has been handled
                 touched_vertices.insert(cell->line_index(edge));
             }
+
             // if it wasn't handled before
             if(!(touched_vertices.end() == touched_vertices.find(cell->line(edge)->vertex_index(1)))) {
                 // handle it
                 update_dof_counts_for_vertex(cell, edge, 1, &ret);
-
+                register_new_vertex_dofs(cell, edge, 1);
                 // remember that it has been handled
                 touched_vertices.insert(cell->line_index(edge));
             }
@@ -112,7 +113,7 @@ DofCount HSIESurface<ORDER>::compute_n_face_dofs() {
         if(!(touched_faces.end() == touched_faces.find(cell->id().to_string()))) {
             // handle it
             update_dof_counts_for_face(cell, &ret);
-
+            register_new_surface_dofs(cell);
             // remember that it has been handled
             touched_faces.insert(cell->id().to_string());
         }
@@ -243,4 +244,164 @@ bool HSIESurface<ORDER>::is_vertex_owned(dealii::DoFHandler<2>::active_cell_iter
     return false;
 }
 
+template<unsigned int ORDER>
+void HSIESurface<ORDER>::register_new_vertex_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
+                                                  unsigned int vertex) {
+    for(unsigned int dof_order = -1; dof_order <= ORDER; dof_order++ ) {
+        DofData dd_real(cell->line(edge)->vertex_index(vertex));
+        dd_real.global_index = register_dof();
+        dd_real.hsie_order = dof_order;
+        dd_real.inner_order = -1;
+        dd_real.is_real = true;
+        dd_real.type = DofType::RAY;
+        vertex_dof_data.push_back(dd_real);
+
+        DofData dd_imag(cell->line(edge)->vertex_index(vertex));
+        dd_imag.global_index = register_dof();
+        dd_imag.hsie_order = dof_order;
+        dd_imag.inner_order = -1;
+        dd_imag.is_real = false;
+        dd_imag.type = DofType::RAY;
+        vertex_dof_data.push_back(dd_imag);
+    }
+}
+
+template<unsigned int ORDER>
+void HSIESurface<ORDER>::register_new_edge_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge) {
+    // EDGE Dofs
+    for(unsigned int inner_order = 1; inner_order <= fe_nedelec.dofs_per_line / 2; inner_order++ ) {
+        DofData dd_real(cell->line_index(edge));
+        dd_real.global_index = register_dof();
+        dd_real.hsie_order = -2;
+        dd_real.inner_order = inner_order;
+        dd_real.is_real = true;
+        dd_real.type = DofType::EDGE;
+        edge_dof_data.push_back(dd_real);
+
+        DofData dd_imag(cell->line_index(edge));
+        dd_imag.global_index = register_dof();
+        dd_imag.hsie_order = -2;
+        dd_imag.inner_order = inner_order;
+        dd_imag.is_real = false;
+        dd_imag.type = DofType::EDGE;
+        edge_dof_data.push_back(dd_imag);
+    }
+
+    // INFINITE FACE Dofs Type a
+    for(unsigned int inner_order = 1; inner_order <= fe_nedelec.dofs_per_line / 2; inner_order++ ) {
+        for(unsigned int hsie_order = 0; hsie_order <= ORDER; hsie_order ++) {
+            DofData dd_real(cell->line_index(edge));
+            dd_real.global_index = register_dof();
+            dd_real.hsie_order = hsie_order;
+            dd_real.inner_order = inner_order;
+            dd_real.is_real = true;
+            dd_real.type = DofType::IFFa;
+            edge_dof_data.push_back(dd_real);
+
+            DofData dd_imag(cell->line_index(edge));
+            dd_imag.global_index = register_dof();
+            dd_imag.hsie_order = hsie_order;
+            dd_imag.inner_order = inner_order;
+            dd_imag.is_real = false;
+            dd_imag.type = DofType::IFFa;
+            edge_dof_data.push_back(dd_imag);
+        }
+    }
+
+    // INFINITE FACE Dofs Type b
+    for(unsigned int inner_order = 1; inner_order <= (fe_nedelec.dofs_per_line / 2) - 1; inner_order++ ) {
+        for(unsigned int hsie_order = -1; hsie_order <= ORDER; hsie_order ++) {
+            DofData dd_real(cell->line_index(edge));
+            dd_real.global_index = register_dof();
+            dd_real.hsie_order = hsie_order;
+            dd_real.inner_order = inner_order;
+            dd_real.is_real = true;
+            dd_real.type = DofType::IFFb;
+            edge_dof_data.push_back(dd_real);
+
+            DofData dd_imag(cell->line_index(edge));
+            dd_imag.global_index = register_dof();
+            dd_imag.hsie_order = hsie_order;
+            dd_imag.inner_order = inner_order;
+            dd_imag.is_real = false;
+            dd_imag.type = DofType::IFFb;
+            edge_dof_data.push_back(dd_imag);
+        }
+    }
+}
+
+template<unsigned int ORDER>
+void HSIESurface<ORDER>::register_new_surface_dofs(dealii::DoFHandler<2>::active_cell_iterator cell) {
+    // SURFACE functions
+    for(unsigned int inner_order = 1; inner_order <= (fe_nedelec.dofs_per_line / 2) * (fe_nedelec.dofs_per_line / 2 - 2) ; inner_order++ ) {
+        DofData dd_real(cell->id().to_string());
+        dd_real.global_index = register_dof();
+        dd_real.hsie_order = -2;
+        dd_real.inner_order = inner_order;
+        dd_real.is_real = true;
+        dd_real.type = DofType::SURFACE;
+        face_dof_data.push_back(dd_real);
+
+        DofData dd_imag(cell->id().to_string());
+        dd_imag.global_index = register_dof();
+        dd_imag.hsie_order = -2;
+        dd_imag.inner_order = inner_order;
+        dd_imag.is_real = false;
+        dd_imag.type = DofType::SURFACE;
+        face_dof_data.push_back(dd_imag);
+    }
+
+    // SEGMENT functions a
+    for(unsigned int inner_order = 1; inner_order <= (fe_nedelec.dofs_per_line / 2) * (fe_nedelec.dofs_per_line / 2 - 2) ; inner_order++ ) {
+        for(unsigned int hsie_order = 0; hsie_order <= ORDER; hsie_order ++) {
+            DofData dd_real(cell->id().to_string());
+            dd_real.global_index = register_dof();
+            dd_real.hsie_order = hsie_order;
+            dd_real.inner_order = inner_order;
+            dd_real.is_real = true;
+            dd_real.type = DofType::SEGMENTa;
+            face_dof_data.push_back(dd_real);
+
+            DofData dd_imag(cell->id().to_string());
+            dd_imag.global_index = register_dof();
+            dd_imag.hsie_order = hsie_order;
+            dd_imag.inner_order = inner_order;
+            dd_imag.is_real = false;
+            dd_imag.type = DofType::SEGMENTa;
+            face_dof_data.push_back(dd_imag);
+        }
+    }
+
+    // SEGMENT functions b
+    const unsigned int INNER_ELEMENT_ORDER = fe_nedelec.dofs_per_line / 2;
+    for(unsigned int inner_order = 1; inner_order <= (INNER_ELEMENT_ORDER-1)*(INNER_ELEMENT_ORDER-2)/2 ; inner_order++ ) {
+        for(unsigned int hsie_order = -1; hsie_order <= ORDER; hsie_order ++) {
+            DofData dd_real(cell->id().to_string());
+            dd_real.global_index = register_dof();
+            dd_real.hsie_order = hsie_order;
+            dd_real.inner_order = inner_order;
+            dd_real.is_real = true;
+            dd_real.type = DofType::SEGMENTb;
+            face_dof_data.push_back(dd_real);
+
+            DofData dd_imag(cell->id().to_string());
+            dd_imag.global_index = register_dof();
+            dd_imag.hsie_order = hsie_order;
+            dd_imag.inner_order = inner_order;
+            dd_imag.is_real = false;
+            dd_imag.type = DofType::SEGMENTb;
+            face_dof_data.push_back(dd_imag);
+        }
+    }
+
+}
+
+template<unsigned int ORDER>
+unsigned int HSIESurface<ORDER>::register_dof() {
+    this->dof_counter++;
+    return this->dof_counter - 1;
+}
+
+
 // TODO This file should be easily testable ..... maybe I should do that :D
+
