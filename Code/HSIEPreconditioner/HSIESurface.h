@@ -97,6 +97,8 @@ public:
     void register_new_edge_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned  int edge);
     void register_new_surface_dofs(dealii::DoFHandler<2>::active_cell_iterator cell);
     unsigned int register_dof();
+    void register_single_dof(std::string in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &);
+    void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &);
 };
 
 

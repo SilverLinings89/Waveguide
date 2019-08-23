@@ -42,11 +42,6 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> *, dealii::Ind
 }
 
 template<unsigned int ORDER>
-unsigned int HSIESurface<ORDER>::get_n_own_hsie_dofs() {
-    return n_vertex_dofs.owned_hsie + n_edge_dofs.owned_hsie + n_face_dofs.owned_hsie;
-}
-
-template<unsigned int ORDER>
 DofCount HSIESurface<ORDER>::compute_n_edge_dofs() {
     std::set<unsigned int> touched_edges;
     DoFHandler<2>::active_cell_iterator cell, endc;
@@ -176,8 +171,8 @@ void HSIESurface<ORDER>::initialize() {
 
 template<unsigned int ORDER>
 void HSIESurface<ORDER>::initialize_dof_handlers_and_fe() {
-    dof_h_nedelec = new DoFHandler(surface_triangulation);
-    dof_h_q = new DoFHandler(surface_triangulation);
+    dof_h_nedelec = new dealii::DoFHandler<2,3>(surface_triangulation);
+    dof_h_q = new dealii::DoFHandler<2,3>(surface_triangulation);
     dof_h_q.distribute_dofs(fe_q);
     dof_h_nedelec.distribute_dofs(fe_nedelec);
 }
@@ -247,22 +242,9 @@ bool HSIESurface<ORDER>::is_vertex_owned(dealii::DoFHandler<2>::active_cell_iter
 template<unsigned int ORDER>
 void HSIESurface<ORDER>::register_new_vertex_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
                                                   unsigned int vertex) {
-    for(unsigned int dof_order = -1; dof_order <= ORDER; dof_order++ ) {
-        DofData dd_real(cell->line(edge)->vertex_index(vertex));
-        dd_real.global_index = register_dof();
-        dd_real.hsie_order = dof_order;
-        dd_real.inner_order = -1;
-        dd_real.is_real = true;
-        dd_real.type = DofType::RAY;
-        vertex_dof_data.push_back(dd_real);
-
-        DofData dd_imag(cell->line(edge)->vertex_index(vertex));
-        dd_imag.global_index = register_dof();
-        dd_imag.hsie_order = dof_order;
-        dd_imag.inner_order = -1;
-        dd_imag.is_real = false;
-        dd_imag.type = DofType::RAY;
-        vertex_dof_data.push_back(dd_imag);
+    for(unsigned int hsie_order = -1; hsie_order <= ORDER; hsie_order++ ) {
+        register_single_dof(cell->line(edge)->vertex_index(vertex), hsie_order, -1, true, DofType::RAY, &vertex_dof_data);
+        register_single_dof(cell->line(edge)->vertex_index(vertex), hsie_order, -1, false, DofType::RAY, &vertex_dof_data);
     }
 }
 
@@ -270,62 +252,23 @@ template<unsigned int ORDER>
 void HSIESurface<ORDER>::register_new_edge_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge) {
     // EDGE Dofs
     for(unsigned int inner_order = 1; inner_order <= fe_nedelec.dofs_per_line / 2; inner_order++ ) {
-        DofData dd_real(cell->line_index(edge));
-        dd_real.global_index = register_dof();
-        dd_real.hsie_order = -2;
-        dd_real.inner_order = inner_order;
-        dd_real.is_real = true;
-        dd_real.type = DofType::EDGE;
-        edge_dof_data.push_back(dd_real);
-
-        DofData dd_imag(cell->line_index(edge));
-        dd_imag.global_index = register_dof();
-        dd_imag.hsie_order = -2;
-        dd_imag.inner_order = inner_order;
-        dd_imag.is_real = false;
-        dd_imag.type = DofType::EDGE;
-        edge_dof_data.push_back(dd_imag);
+        register_single_dof(cell->line_index(edge), -2, inner_order, true, DofType::EDGE, &edge_dof_data);
+        register_single_dof(cell->line_index(edge), -2, inner_order, false, DofType::EDGE, &edge_dof_data);
     }
 
     // INFINITE FACE Dofs Type a
     for(unsigned int inner_order = 1; inner_order <= fe_nedelec.dofs_per_line / 2; inner_order++ ) {
         for(unsigned int hsie_order = 0; hsie_order <= ORDER; hsie_order ++) {
-            DofData dd_real(cell->line_index(edge));
-            dd_real.global_index = register_dof();
-            dd_real.hsie_order = hsie_order;
-            dd_real.inner_order = inner_order;
-            dd_real.is_real = true;
-            dd_real.type = DofType::IFFa;
-            edge_dof_data.push_back(dd_real);
-
-            DofData dd_imag(cell->line_index(edge));
-            dd_imag.global_index = register_dof();
-            dd_imag.hsie_order = hsie_order;
-            dd_imag.inner_order = inner_order;
-            dd_imag.is_real = false;
-            dd_imag.type = DofType::IFFa;
-            edge_dof_data.push_back(dd_imag);
+            register_single_dof(cell->line_index(edge), hsie_order, inner_order, true, DofType::IFFa, &edge_dof_data);
+            register_single_dof(cell->line_index(edge), hsie_order, inner_order, false, DofType::IFFa, &edge_dof_data);
         }
     }
 
     // INFINITE FACE Dofs Type b
     for(unsigned int inner_order = 1; inner_order <= (fe_nedelec.dofs_per_line / 2) - 1; inner_order++ ) {
         for(unsigned int hsie_order = -1; hsie_order <= ORDER; hsie_order ++) {
-            DofData dd_real(cell->line_index(edge));
-            dd_real.global_index = register_dof();
-            dd_real.hsie_order = hsie_order;
-            dd_real.inner_order = inner_order;
-            dd_real.is_real = true;
-            dd_real.type = DofType::IFFb;
-            edge_dof_data.push_back(dd_real);
-
-            DofData dd_imag(cell->line_index(edge));
-            dd_imag.global_index = register_dof();
-            dd_imag.hsie_order = hsie_order;
-            dd_imag.inner_order = inner_order;
-            dd_imag.is_real = false;
-            dd_imag.type = DofType::IFFb;
-            edge_dof_data.push_back(dd_imag);
+            register_single_dof(cell->line_index(edge), hsie_order, inner_order, true, DofType::IFFb, &edge_dof_data);
+            register_single_dof(cell->line_index(edge), hsie_order, inner_order, false, DofType::IFFb, &edge_dof_data);
         }
     }
 }
@@ -334,41 +277,15 @@ template<unsigned int ORDER>
 void HSIESurface<ORDER>::register_new_surface_dofs(dealii::DoFHandler<2>::active_cell_iterator cell) {
     // SURFACE functions
     for(unsigned int inner_order = 1; inner_order <= (fe_nedelec.dofs_per_line / 2) * (fe_nedelec.dofs_per_line / 2 - 2) ; inner_order++ ) {
-        DofData dd_real(cell->id().to_string());
-        dd_real.global_index = register_dof();
-        dd_real.hsie_order = -2;
-        dd_real.inner_order = inner_order;
-        dd_real.is_real = true;
-        dd_real.type = DofType::SURFACE;
-        face_dof_data.push_back(dd_real);
-
-        DofData dd_imag(cell->id().to_string());
-        dd_imag.global_index = register_dof();
-        dd_imag.hsie_order = -2;
-        dd_imag.inner_order = inner_order;
-        dd_imag.is_real = false;
-        dd_imag.type = DofType::SURFACE;
-        face_dof_data.push_back(dd_imag);
+        register_single_dof(cell->id().to_string(), -2, inner_order, true, DofType::SURFACE, &face_dof_data);
+        register_single_dof(cell->id().to_string(), -2, inner_order, false, DofType::SURFACE, &face_dof_data);
     }
 
     // SEGMENT functions a
     for(unsigned int inner_order = 1; inner_order <= (fe_nedelec.dofs_per_line / 2) * (fe_nedelec.dofs_per_line / 2 - 2) ; inner_order++ ) {
         for(unsigned int hsie_order = 0; hsie_order <= ORDER; hsie_order ++) {
-            DofData dd_real(cell->id().to_string());
-            dd_real.global_index = register_dof();
-            dd_real.hsie_order = hsie_order;
-            dd_real.inner_order = inner_order;
-            dd_real.is_real = true;
-            dd_real.type = DofType::SEGMENTa;
-            face_dof_data.push_back(dd_real);
-
-            DofData dd_imag(cell->id().to_string());
-            dd_imag.global_index = register_dof();
-            dd_imag.hsie_order = hsie_order;
-            dd_imag.inner_order = inner_order;
-            dd_imag.is_real = false;
-            dd_imag.type = DofType::SEGMENTa;
-            face_dof_data.push_back(dd_imag);
+            register_single_dof(cell->id().to_string(), hsie_order, inner_order, true, DofType::SEGMENTa, &face_dof_data);
+            register_single_dof(cell->id().to_string(), hsie_order, inner_order, false, DofType::SEGMENTa, &face_dof_data);
         }
     }
 
@@ -376,24 +293,33 @@ void HSIESurface<ORDER>::register_new_surface_dofs(dealii::DoFHandler<2>::active
     const unsigned int INNER_ELEMENT_ORDER = fe_nedelec.dofs_per_line / 2;
     for(unsigned int inner_order = 1; inner_order <= (INNER_ELEMENT_ORDER-1)*(INNER_ELEMENT_ORDER-2)/2 ; inner_order++ ) {
         for(unsigned int hsie_order = -1; hsie_order <= ORDER; hsie_order ++) {
-            DofData dd_real(cell->id().to_string());
-            dd_real.global_index = register_dof();
-            dd_real.hsie_order = hsie_order;
-            dd_real.inner_order = inner_order;
-            dd_real.is_real = true;
-            dd_real.type = DofType::SEGMENTb;
-            face_dof_data.push_back(dd_real);
-
-            DofData dd_imag(cell->id().to_string());
-            dd_imag.global_index = register_dof();
-            dd_imag.hsie_order = hsie_order;
-            dd_imag.inner_order = inner_order;
-            dd_imag.is_real = false;
-            dd_imag.type = DofType::SEGMENTb;
-            face_dof_data.push_back(dd_imag);
+            register_single_dof(cell->id().to_string(), hsie_order, inner_order, true, DofType::SEGMENTb, &face_dof_data);
+            register_single_dof(cell->id().to_string(), hsie_order, inner_order, false, DofType::SEGMENTb, &face_dof_data);
         }
     }
 
+}
+
+template<unsigned int ORDER>
+void HSIESurface<ORDER>::register_single_dof(std::string in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> & in_vector) {
+    DofData dd(in_id);
+    dd.global_index = register_dof();
+    dd.hsie_order = in_hsie_order;
+    dd.inner_order = in_inner_order;
+    dd.is_real = in_is_real;
+    dd.type = in_dof_type;
+    in_vector.push_back(dd);
+}
+
+template<unsigned int ORDER>
+void HSIESurface<ORDER>::register_single_dof(unsigned in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> & in_vector) {
+    DofData dd(in_id);
+    dd.global_index = register_dof();
+    dd.hsie_order = in_hsie_order;
+    dd.inner_order = in_inner_order;
+    dd.is_real = in_is_real;
+    dd.type = in_dof_type;
+    in_vector.push_back(dd);
 }
 
 template<unsigned int ORDER>
