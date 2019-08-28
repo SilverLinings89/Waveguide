@@ -263,7 +263,7 @@ public:
      * this coordinate belongs to and how far along in the sector it is located.
      * \param double in_z global system \f$z\f$ coordinate for the transformation.
      */
-    std::pair<int, double> Z_to_Sector_and_local_z(double in_z) const;
+    virtual std::pair<int, double> Z_to_Sector_and_local_z(double in_z) const;
 
     /**
      * Returns the length of one sector

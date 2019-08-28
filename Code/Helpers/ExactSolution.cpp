@@ -266,7 +266,7 @@ std::vector<std::string> ExactSolution::split(std::string str) const {
 
 double scientific_string_to_double(std::string inp) {
     std::istringstream os(inp);
-    double d;
+    double d =0.0;
     os >> d;
     return d;
 }
@@ -289,7 +289,7 @@ ExactSolution::ExactSolution(bool in_rectangular, bool in_dual)
         while (std::getline(input, line)) {
             std::vector<std::string> ls = split(line);
             std::istringstream iss(ls[2]);
-            double x;
+            double x = 0.0;
             iss >> x;
             if (x < l_val) {
                 mesh_points.push_back(x);

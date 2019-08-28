@@ -48,13 +48,6 @@ public:
      */
     Point<3> phys_to_math(Point<3> coord) const;
 
-    /**
-     * In order to test implementation, this function was added to check, if the
-     * transformation-tensor at a given coordinate is the identity or not. \param
-     * coord This is the coordinate to test.
-     */
-    bool is_identity(Point<3> coord) const;
-
     Tensor<2, 3, std::complex<double>> get_Tensor(Point<3> &coordinate) const;
 
     Tensor<2, 3, std::complex<double>> get_Preconditioner_Tensor(

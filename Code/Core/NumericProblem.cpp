@@ -37,6 +37,7 @@
 
 int steps = 0;
 Parameters GlobalParams;
+GeometryManager Geometry;
 ModeManager ModeMan;
 dealii::ConvergenceTable Convergence_Table;
 dealii::TableHandler Optimization_Steps;
@@ -127,7 +128,7 @@ std::complex<double> NumericProblem::evaluate_Energy_for_Position(double x, doub
     ret.real(val);
     ret.imag(0);
     double eps = 1.0;
-    if (GlobalParams.geometry.math_coordinate_in_waveguide(position)) {
+    if (Geometry.math_coordinate_in_waveguide(position)) {
         eps = GlobalParams.M_W_epsilonin;
     } else {
         eps = GlobalParams.M_W_epsilonout;
@@ -278,8 +279,7 @@ void NumericProblem::SortDofsDownstream() {
 }
 
 void NumericProblem::Shift_Constraint_Matrix(dealii::AffineConstraints<double> *in_cm) {
-    dealii::AffineConstraints<double> new_global;
-    new_global.reinit(locally_relevant_dofs);
+    dealii::AffineConstraints<double> new_global(locally_relevant_dofs);
     for (unsigned int i = 0; i < n_dofs; i++) {
         if (in_cm->is_constrained(i)) {
             const std::vector<std::pair<unsigned int, double>> *curr_line =
@@ -919,7 +919,7 @@ void NumericProblem::assemble_system() {
             mu_prec1 = invert(mu_prec1) / mu_zero;
             mu_prec2 = invert(mu_prec2) / mu_zero;
 
-            if (GlobalParams.geometry.math_coordinate_in_waveguide(quadrature_points[q_index])) {
+            if (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])) {
                 epsilon = transformation * eps_in;
                 epsilon_pre1 *= eps_in;
                 epsilon_pre2 *= eps_in;
@@ -1273,10 +1273,10 @@ void NumericProblem::MakePreconditionerBoundaryConditions() {
     const bool has_non_edge_dofs = (face_own_count > 0);
 
     cm_prec_even.merge(
-            cm, dealii::AffineConstraints < double > ::MergeConflictBehavior::right_object_wins,
+            cm, dealii::AffineConstraints<double>::MergeConflictBehavior::right_object_wins,
             true);
     cm_prec_odd.merge(
-            cm, dealii::AffineConstraints < double > ::MergeConflictBehavior::right_object_wins,
+            cm, dealii::AffineConstraints<double>::MergeConflictBehavior::right_object_wins,
             true);
 
     for (; cell_loc != endc; ++cell_loc) {
@@ -1531,9 +1531,9 @@ void NumericProblem::solve() {
         timer.leave_subsection();
 
         while (steps < 40) {
-            struct timeval tp;
-            gettimeofday(&tp, NULL);
-            int64_t ms = tp.tv_sec * 1000 + tp.tv_usec / 1000 - solver_start_milis;
+            struct timeval tp2;
+            gettimeofday(&tp2, NULL);
+            int64_t ms = tp2.tv_sec * 1000 + tp2.tv_usec / 1000 - solver_start_milis;
 
             Convergence_Table.add_value(
                     path_prefix + std::to_string(run_number) + "Iteration", steps + 1);

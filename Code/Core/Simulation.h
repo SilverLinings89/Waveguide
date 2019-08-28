@@ -11,12 +11,12 @@
 #ifndef CODE_CORE_SIMULATION_H_
 #define CODE_CORE_SIMULATION_H_
 
-#include "../Helpers/Geometry.h"
+#include "../Helpers/GeometryManager.h"
 #include "../Helpers/Parameters.h"
 
 class Simulation {
 private:
-    Geometry geometry;
+    GeometryManager geometry;
     Parameters parameters;
 
 public:

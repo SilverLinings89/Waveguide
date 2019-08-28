@@ -16,7 +16,7 @@ void DOFManager::compute_and_send_x_dofs() {
             for(unsigned int j = 0; j < boundary_dofs.n_elements(); j++) {
                 bdof_vals[j] = boundary_dofs.nth_index_in_set(j);
             }
-            MPI_Send(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED, GlobalParams.geometry.get_neighbor_for_interface(Direction::PlusX).second, 0, MPI_COMM_WORLD );
+            MPI_Send(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED, Geometry.get_neighbor_for_interface(Direction::PlusX).second, 0, MPI_COMM_WORLD );
         }
     }
 }
@@ -30,7 +30,7 @@ void DOFManager::compute_and_send_y_dofs() {
                     bdof_vals[j] = boundary_dofs.nth_index_in_set(j);
                 }
                 MPI_Send(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED,
-                         GlobalParams.geometry.get_neighbor_for_interface(Direction::PlusY).second, 0, MPI_COMM_WORLD);
+                         Geometry.get_neighbor_for_interface(Direction::PlusY).second, 0, MPI_COMM_WORLD);
         }
     }
 }
@@ -46,7 +46,7 @@ void DOFManager::compute_and_send_z_dofs() {
                     bdof_vals[j] = boundary_dofs.nth_index_in_set(j);
                 }
                 MPI_Send(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED,
-                         GlobalParams.geometry.get_neighbor_for_interface(Direction::PlusZ).second, 0, MPI_COMM_WORLD);
+                         Geometry.get_neighbor_for_interface(Direction::PlusZ).second, 0, MPI_COMM_WORLD);
             }
         }
     }
@@ -57,7 +57,7 @@ void DOFManager::receive_x_dofs() {
         if(GlobalParams.Index_in_x_direction > 0) {
             IndexSet boundary_dofs = get_dofs_for_boundary_id(0);
             int * bdof_vals = new int[boundary_dofs.n_elements()];
-            MPI_Recv(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED, GlobalParams.geometry.get_neighbor_for_interface(Direction::MinusX).second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+            MPI_Recv(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED, Geometry.get_neighbor_for_interface(Direction::MinusX).second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
             IndexSet new_numbers;
             new_numbers.set_size(n_global_dofs);
             for (unsigned int i = 0; i < boundary_dofs.n_elements(); i++) {
@@ -73,7 +73,7 @@ void DOFManager::receive_y_dofs() {
         if (GlobalParams.Index_in_y_direction > 0) {
             IndexSet boundary_dofs = get_dofs_for_boundary_id(2);
             int *bdof_vals = new int[boundary_dofs.n_elements()];
-            MPI_Recv(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED, GlobalParams.geometry.get_neighbor_for_interface(Direction::MinusY).second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+            MPI_Recv(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED, Geometry.get_neighbor_for_interface(Direction::MinusY).second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
             IndexSet new_numbers;
             new_numbers.set_size(n_global_dofs);
             for (unsigned int i = 0; i < boundary_dofs.n_elements(); i++) {
@@ -91,7 +91,7 @@ void DOFManager::receive_z_dofs() {
                 IndexSet boundary_dofs = get_dofs_for_boundary_id(4);
                 int *bdof_vals = new int[boundary_dofs.n_elements()];
                 MPI_Recv(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED,
-                         GlobalParams.geometry.get_neighbor_for_interface(Direction::MinusZ).second, 0, MPI_COMM_WORLD,
+                         Geometry.get_neighbor_for_interface(Direction::MinusZ).second, 0, MPI_COMM_WORLD,
                          MPI_STATUS_IGNORE);
                 IndexSet new_numbers;
                 new_numbers.set_size(n_global_dofs);

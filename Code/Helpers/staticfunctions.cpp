@@ -13,7 +13,7 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/distributed/tria.h>
 #include <deal.II/dofs/dof_handler.h>
-#include "./Geometry.h"
+#include "GeometryManager.h"
 #include "ParameterReader.h"
 #include "Parameters.h"
 #include "ShapeDescription.h"
@@ -333,11 +333,7 @@ Parameters GetParameters() {
 
     ret.Head = (ret.MPI_Rank == 0);
 
-    if ((int) ret.MPI_Rank > ret.NumberProcesses - ret.M_BC_Zplus - 1) {
-        ret.PMLLayer = true;
-    } else {
-        ret.PMLLayer = false;
-    }
+    ret.PMLLayer = (int) ret.MPI_Rank > ret.NumberProcesses - ret.M_BC_Zplus - 1;
 
     ret.SystemLength = ret.M_R_ZLength + ret.M_BC_Zplus + ret.M_BC_Zminus;
 
@@ -415,9 +411,9 @@ Parameters GetParameters() {
     ret.Index_in_y_direction =
             (ret.MPI_Rank % (ret.Blocks_in_x_direction * ret.Blocks_in_y_direction)) /
             ret.Blocks_in_z_direction;
-    Geometry temp;
+    GeometryManager temp;
     temp.initialize(ret);
-    ret.geometry = temp;
+    Geometry = temp;
     deallog.pop();
 
     return ret;
@@ -459,10 +455,8 @@ void mesh_info(const Triangulation<dim> &tria, const std::string &filename) {
             }
         }
         std::cout << " boundary indicators: ";
-        for (std::map<unsigned int, unsigned int>::iterator it =
-                boundary_count.begin();
-             it != boundary_count.end(); ++it) {
-            std::cout << it->first << "(" << it->second << " times) ";
+        for (auto & it : boundary_count) {
+            std::cout << it.first << "(" << it.second << " times) ";
         }
         std::cout << std::endl;
     }
@@ -491,10 +485,8 @@ void mesh_info(const Triangulation<dim> &tria) {
             }
         }
         std::cout << " boundary indicators: ";
-        for (std::map<unsigned int, unsigned int>::iterator it =
-                boundary_count.begin();
-             it != boundary_count.end(); ++it) {
-            std::cout << it->first << "(" << it->second << " times) ";
+        for (auto & it : boundary_count) {
+            std::cout << it.first << "(" << it.second << " times) ";
         }
         std::cout << std::endl;
     }
@@ -503,22 +495,21 @@ void mesh_info(const Triangulation<dim> &tria) {
 Point<3, double> Triangulation_Shit_To_Local_Geometry(
         const Point<3, double> &p) {
     Point<3, double> q = p;
-    Geometry geom = GlobalParams.geometry;
 
     if (q[0] < 0) {
-        q[0] = geom.x_range.first;
+        q[0] = Geometry.x_range.first;
     } else {
-        q[0] = geom.x_range.second;
+        q[0] = Geometry.x_range.second;
     }
     if (q[1] < 0) {
-        q[1] = geom.y_range.first;
+        q[1] = Geometry.y_range.first;
     } else {
-        q[1] = geom.y_range.second;
+        q[1] = Geometry.y_range.second;
     }
     if (q[2] < 0) {
-        q[3] = geom.z_range.first;
+        q[3] = Geometry.z_range.first;
     } else {
-        q[3] = geom.z_range.second;
+        q[3] = Geometry.z_range.second;
     }
     return q;
 }
@@ -526,36 +517,6 @@ Point<3, double> Triangulation_Shit_To_Local_Geometry(
 inline bool file_exists(const std::string &name) {
     struct stat buffer;
     return (stat(name.c_str(), &buffer) == 0);
-}
-
-std::vector<types::global_dof_index> Add_Zero_Restraint_test(
-        dealii::AffineConstraints<double> *,
-        dealii::DoFHandler<3>::active_cell_iterator in_cell, unsigned int in_face,
-        unsigned int DofsPerLine, unsigned int DofsPerFace, bool in_non_face_dofs,
-        IndexSet *locally_owned_dofs) {
-    std::vector<types::global_dof_index> local_line_dofs(DofsPerLine);
-    std::vector<types::global_dof_index> local_face_dofs(DofsPerFace);
-    std::vector<types::global_dof_index> ret;
-    for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
-        ((in_cell->face(in_face))->line(j))->get_dof_indices(local_line_dofs);
-        for (unsigned int k = 0; k < DofsPerLine; k++) {
-            if (locally_owned_dofs->is_element(local_line_dofs[k])) {
-                // in_cm->add_line(local_line_dofs[k]);
-                ret.push_back(local_line_dofs[k]);
-            }
-        }
-    }
-    if (in_non_face_dofs) {
-        in_cell->face(in_face)->get_dof_indices(local_face_dofs);
-        for (unsigned int j = GeometryInfo<3>::lines_per_face * DofsPerLine;
-             j < DofsPerFace; j++) {
-            if (locally_owned_dofs->is_element(local_face_dofs[j])) {
-                // in_cm->add_line(local_face_dofs[j]);
-                ret.push_back(local_face_dofs[j]);
-            }
-        }
-    }
-    return ret;
 }
 
 void add_vector_of_indices(dealii::IndexSet *in_index_set,

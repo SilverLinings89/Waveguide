@@ -36,7 +36,7 @@ SquareMeshGenerator::SquareMeshGenerator() {}
 SquareMeshGenerator::~SquareMeshGenerator() {}
 
 // This function returns a direction - as specified in the Direction enum in the
-// Geometry header - for a given cell and face. it only takes a vector as an
+// GeometryManager header - for a given cell and face. it only takes a vector as an
 // argument which is the vector pointing from cell center to face center. It
 // then derives which bound-id to give that face (i.e. 0 if it is the boundary
 // in the minus X direction etc.)

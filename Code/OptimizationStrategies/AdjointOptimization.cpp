@@ -139,8 +139,8 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
     double lowest_own = GlobalParams.Minimum_Z - 10.0;
     int lowest_idx = 0;
     for (unsigned int i = 0; i < cnt_steps; i++) {
-        if (z_temp > GlobalParams.geometry.z_range.first &&
-            z_temp < GlobalParams.geometry.z_range.second) {
+        if (z_temp > Geometry.z_range.first &&
+            z_temp < Geometry.z_range.second) {
             mine[i] = true;
             if (own_cnt == 0) {
                 lowest_own = z_temp;
@@ -153,9 +153,7 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
         z_temp += step_width;
     }
     int *displs;
-    if (GlobalParams.MPI_Rank == 0) {
-        displs = new int[GlobalParams.NumberProcesses];
-    }
+    displs = new int[GlobalParams.NumberProcesses];
     std::cout << "I am " << GlobalParams.MPI_Rank << ". I have lowest own "
               << lowest_own << " and own_cnt " << own_cnt << std::endl;
     MPI_Gather(&lowest_idx, 1, MPI_INTEGER, displs, 1, MPI_INTEGER, 0,
@@ -205,6 +203,11 @@ double AdjointOptimization::compute_big_step(std::vector<double> step) {
         }
         cnt_recv[GlobalParams.NumberProcesses - 1] =
                 cnt_steps - displs[GlobalParams.NumberProcesses - 1];
+    } else {
+        all_reals = new double[1];
+        all_imags = new double[1];
+        all_absolutes = new double[1];
+        cnt_recv = new int[1];
     }
     deallog << "Output proc " << GlobalParams.MPI_Rank << "." << std::endl;
     for (unsigned int i = 0; i < own_cnt; i++) {

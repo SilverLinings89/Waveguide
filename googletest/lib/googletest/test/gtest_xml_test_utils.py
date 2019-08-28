@@ -30,7 +30,7 @@
 """Unit test utilities for gtest_xml_output"""
 
 import re
-from xml.dom import Node
+from xml.dom import minidom, Node
 import gtest_test_utils
 
 GTEST_DEFAULT_OUTPUT_FILE = 'test_detail.xml'
@@ -94,7 +94,7 @@ class GTestXMLTestCase(gtest_test_utils.TestCase):
     self.assertEquals(
         len(expected_children), len(actual_children),
         'number of child elements differ in element ' + actual_node.tagName)
-    for child_id, child in expected_children.items():
+    for child_id, child in expected_children.iteritems():
       self.assert_(child_id in actual_children,
                    '<%s> is not in <%s> (in element %s)' %
                    (child_id, actual_children, actual_node.tagName))

@@ -57,6 +57,7 @@
 #include <deal.II/lac/trilinos_sparsity_pattern.h>
 
 #include "../Helpers/ExactSolution.h"
+#include "../Helpers/GeometryManager.h"
 #include "../Helpers/ModeManager.h"
 #include "../Helpers/ParameterReader.h"
 #include "../Helpers/Parameters.h"
@@ -71,6 +72,7 @@
 using namespace dealii;
 
 extern Parameters GlobalParams;
+extern GeometryManager Geometry;
 extern ModeManager ModeMan;
 extern dealii::ConvergenceTable Convergence_Table;
 extern dealii::TableHandler Optimization_Steps;

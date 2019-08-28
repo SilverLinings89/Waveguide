@@ -20,9 +20,7 @@ instructions for how to sign and return it. Once we receive it, we'll be able to
 accept your pull requests.
 
 ## Are you a Googler?
-If you are a Googler, plese make an attempt to submit an internal change rather
-than a GitHub Pull Request. If you are not able to submit an internal change
-a PR is acceptable as an alternative.
+If you are a Googler, you can either create an internal change or work on GitHub directly.
 
 
 ## Contributing A Patch
@@ -80,8 +78,7 @@ itself is a valuable contribution.
 
 To keep the source consistent, readable, diffable and easy to merge,
 we use a fairly rigid coding style, as defined by the [google-styleguide](https://github.com/google/styleguide) project.  All patches will be expected
-to conform to the style outlined [here](https://google.github.io/styleguide/cppguide.html). 
-Use [.clang-format](https://github.com/google/googletest/blob/master/.clang-format) to check your formatting
+to conform to the style outlined [here](https://google.github.io/styleguide/cppguide.html).
 
 ## Requirements for Contributors ###
 

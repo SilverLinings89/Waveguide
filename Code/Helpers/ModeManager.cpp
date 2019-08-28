@@ -339,7 +339,6 @@ double ModeManager::J_n(double x, int n) {
         } else {
             double tox = 2.0 / ax;
             int m = 2 * ((n + (int) std::sqrt((float) IACC * n)) / 2);
-            double bessj = 0;
             int jsum = 0;
             double sum = 0.0;
             double bjp = 0.0;

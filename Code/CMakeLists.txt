@@ -9,7 +9,7 @@ ADD_LIBRARY(Code
         Core/MainProblem.cpp
         Core/Simulation.cpp
         Core/DOFManager.cpp
-        Helpers/Geometry.cpp
+        Helpers/GeometryManager.cpp
         Helpers/ExactSolution.cpp
         Helpers/ModeManager.cpp
         Helpers/ParameterReader.cpp

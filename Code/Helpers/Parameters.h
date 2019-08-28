@@ -5,7 +5,6 @@
 #include <mpi.h>
 #include <string>
 #include "ShapeDescription.h"
-#include "Geometry.h"
 
 /**
  * \class Parameters
@@ -265,8 +264,6 @@ struct Parameters {
     unsigned int Index_in_y_direction;
 
     unsigned int Index_in_z_direction;
-
-    Geometry geometry;
 
     int current_run_number;
 
