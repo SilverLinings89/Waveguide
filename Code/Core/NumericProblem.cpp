@@ -2043,9 +2043,9 @@ Tensor<1, 3, std::complex<double>> NumericProblem::solution_evaluation(
 
     VectorTools::point_value(dof_handler, primal_with_relevant, position, result);
 
-    ret[0] = std::complex<double>(result(0), result(3));
-    ret[1] = std::complex<double>(result(1), result(4));
-    ret[2] = std::complex<double>(result(2), result(5));
+    ret[0] = std::complex<double>(result[0], result[3]);
+    ret[1] = std::complex<double>(result[1], result[4]);
+    ret[2] = std::complex<double>(result[2], result[5]);
     return ret;
 }
 
@@ -2055,7 +2055,7 @@ void NumericProblem::solution_evaluation(Point<3, double> position,
     Vector<double> result(6);
     VectorTools::point_value(dof_handler, primal_with_relevant, position, result);
     for (int i = 0; i < 6; i++) {
-        sol[i] = result(i);
+        sol[i] = result[i];
     }
 }
 
@@ -2065,9 +2065,9 @@ Tensor<1, 3, std::complex<double>> NumericProblem::adjoint_solution_evaluation(
     Vector<double> result(6);
     position[2] = -position[2];
     VectorTools::point_value(dof_handler, dual_with_relevant, position, result);
-    ret[0] = std::complex<double>(result(0), result(3));
-    ret[1] = std::complex<double>(-result(1), -result(4));
-    ret[2] = std::complex<double>(-result(2), -result(5));
+    ret[0] = std::complex<double>(result[0], result[3]);
+    ret[1] = std::complex<double>(-result[1], -result[4]);
+    ret[2] = std::complex<double>(-result[2], -result[5]);
     return ret;
 }
 
@@ -2078,7 +2078,7 @@ void NumericProblem::adjoint_solution_evaluation(Point<3, double> position,
     position[2] = -position[2];
     VectorTools::point_value(dof_handler, dual_with_relevant, position, result);
     for (int i = 0; i < 6; i++) {
-        sol[i] = -result(i);
+        sol[i] = -result[i];
     }
     sol[0] *= -1;
     sol[1] *= -1;

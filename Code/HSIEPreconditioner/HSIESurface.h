@@ -65,10 +65,10 @@ class HSIESurface {
     const unsigned int Inner_Element_Order;
     unsigned int level;
     DofCount n_vertex_dofs, n_face_dofs, n_edge_dofs;
-    dealii::DoFHandler<2,2> dof_h_nedelec;
-    dealii::DoFHandler<2,2> dof_h_q;
-    dealii::FESystem<2> fe_nedelec;
-    dealii::FESystem<2> fe_q;
+    dealii::DoFHandler<2,3> dof_h_nedelec;
+    dealii::DoFHandler<2,3> dof_h_q;
+    dealii::FESystem<2,3> fe_nedelec;
+    dealii::FESystem<2,3> fe_q;
     std::vector<DofData> face_dof_data, edge_dof_data, vertex_dof_data;
     unsigned int dof_counter;
     dealii::Point<3> reference_point;

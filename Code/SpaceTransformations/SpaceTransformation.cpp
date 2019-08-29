@@ -184,7 +184,7 @@ std::complex<double> SpaceTransformation::gauss_product_2D_sphere(
 std::complex<double> SpaceTransformation::evaluate_for_z_with_sum(
         double in_z, Evaluation_Domain in_e_dom, Evaluation_Metric in_e_met,
         NumericProblem *in_w) {
-    std::complex<double> ret = 0;
+    std::complex<double> ret(0,0);
     if (in_e_dom == Evaluation_Domain::RECTANGLE_INNER) {
         try {
             ret = integrate_Waveguide_Core_2D(in_z, 20, in_w, in_e_met);

@@ -111,7 +111,7 @@ DualProblemTransformationWrapper::Apply_PML_To_Tensor(
 
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
-            ret2[i][j] = transformation[i][j] * std::complex<double>(1.0, 0.0);
+            ret2[i][j] = ((double)transformation[i][j]) * std::complex<double>(1.0, 0.0);
         }
     }
 
@@ -130,7 +130,7 @@ DualProblemTransformationWrapper::Apply_PML_To_Tensor_For_Preconditioner(
 
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
-            ret2[i][j] = transformation[i][j] * std::complex<double>(1.0, 0.0);
+            ret2[i][j] = ((double)transformation[i][j]) * std::complex<double>(1.0, 0.0);
         }
     }
 

@@ -15,7 +15,7 @@
 double ExactSolution::value(const Point<3> &in_p,
                             const unsigned int component) const {
     Point<3, double> p = in_p;
-    if (is_dual) p[2] = -in_p[2];
+    if (is_dual) p[2] = -in_p.operator[](2);
     bool zero = false;
     if (p[0] > GlobalParams.M_R_XLength / 2.0 - GlobalParams.M_BC_XPlus)
         zero = true;
@@ -34,16 +34,16 @@ double ExactSolution::value(const Point<3> &in_p,
         std::complex<double> ret_val(0.0, 0.0);
         const double delta = abs(mesh_points[0] - mesh_points[1]);
         const int mesh_number = mesh_points.size();
-        if (!(abs(p(1)) >= mesh_points[0] || abs(p(0)) >= mesh_points[0])) {
+        if (!(abs(p[1]) >= mesh_points[0] || abs(p[0]) >= mesh_points[0])) {
             int ix = 0;
             int iy = 0;
-            while (mesh_points[ix] > p(0) && ix < mesh_number) ix++;
-            while (mesh_points[iy] > p(1) && iy < mesh_number) iy++;
+            while (mesh_points[ix] > p[0] && ix < mesh_number) ix++;
+            while (mesh_points[iy] > p[1] && iy < mesh_number) iy++;
             if (ix == 0 || iy == 0 || ix == mesh_number || iy == mesh_number) {
                 return 0.0;
             } else {
-                double dx = (p(0) - mesh_points[ix]) / delta;
-                double dy = (p(1) - mesh_points[iy]) / delta;
+                double dx = (p[0] - mesh_points[ix]) / delta;
+                double dy = (p[1] - mesh_points[iy]) / delta;
                 double m1m1 = dx * dy;
                 double m1p1 = dx * (1.0 - dy);
                 double p1p1 = (1.0 - dx) * (1.0 - dy);
@@ -87,14 +87,14 @@ double ExactSolution::value(const Point<3> &in_p,
                 }
             }
             double n;
-            if (abs(p(0)) <= GlobalParams.M_C_Dim1In &&
-                abs(p(1)) <= GlobalParams.M_C_Dim2In) {
+            if (abs(p[0]) <= GlobalParams.M_C_Dim1In &&
+                abs(p[1]) <= GlobalParams.M_C_Dim2In) {
                 n = std::sqrt(GlobalParams.M_W_epsilonin);
             } else {
                 n = std::sqrt(GlobalParams.M_W_epsilonout);
             }
             double k = n * 2 * GlobalParams.C_Pi / GlobalParams.M_W_Lambda;
-            std::complex<double> phase(0.0, (p(2) - GlobalParams.Minimum_Z) * k);
+            std::complex<double> phase(0.0, (p[2] - GlobalParams.Minimum_Z) * k);
             ret_val *= std::exp(phase);
             if (component > 2) {
                 return ret_val.imag();
@@ -112,7 +112,7 @@ double ExactSolution::value(const Point<3> &in_p,
 void ExactSolution::vector_value(const Point<3> &in_p,
                                  Vector<double> &values) const {
     Point<3, double> p = in_p;
-    if (is_dual) p[2] = -in_p[2];
+    if (is_dual) p[2] = -in_p.operator[](2);
     bool zero = false;
     if (p[0] > GlobalParams.M_R_XLength / 2.0 - GlobalParams.M_BC_XPlus)
         zero = true;
@@ -132,19 +132,19 @@ void ExactSolution::vector_value(const Point<3> &in_p,
     if (is_rectangular) {
         const double delta = abs(mesh_points[0] - mesh_points[1]);
         const int mesh_number = mesh_points.size();
-        if (!(abs(p(1)) >= mesh_points[0] || abs(p(0)) >= mesh_points[0])) {
+        if (!(abs(p[1]) >= mesh_points[0] || abs(p[0]) >= mesh_points[0])) {
             int ix = 0;
             int iy = 0;
-            while (mesh_points[ix] > p(0) && ix < mesh_number) ix++;
-            while (mesh_points[iy] > p(1) && iy < mesh_number) iy++;
+            while (mesh_points[ix] > p[0] && ix < mesh_number) ix++;
+            while (mesh_points[iy] > p[1] && iy < mesh_number) iy++;
             if (ix == 0 || iy == 0 || ix == mesh_number || iy == mesh_number) {
                 for (unsigned int i = 0; i < values.size(); i++) {
                     values[i] = 0.0;
                 }
                 return;
             } else {
-                double dx = (p(0) - mesh_points[ix]) / delta;
-                double dy = (p(1) - mesh_points[iy]) / delta;
+                double dx = (p[0] - mesh_points[ix]) / delta;
+                double dy = (p[1] - mesh_points[iy]) / delta;
                 double m1m1 = dx * dy;
                 double m1p1 = dx * (1.0 - dy);
                 double p1p1 = (1.0 - dx) * (1.0 - dy);
@@ -174,15 +174,15 @@ void ExactSolution::vector_value(const Point<3> &in_p,
                             m1m1 * vals[ix - 1][iy - 1].Ez.imag() +
                             m1p1 * vals[ix - 1][iy].Ez.imag();
                 double n;
-                if (abs(p(0)) <= GlobalParams.M_C_Dim1In &&
-                    abs(p(1)) <= GlobalParams.M_C_Dim2In) {
+                if (abs(p[0]) <= GlobalParams.M_C_Dim1In &&
+                    abs(p[1]) <= GlobalParams.M_C_Dim2In) {
                     n = std::sqrt(GlobalParams.M_W_epsilonin);
                 } else {
                     n = std::sqrt(GlobalParams.M_W_epsilonout);
                 }
                 double k = n * 2 * GlobalParams.C_Pi / GlobalParams.M_W_Lambda;
                 std::complex<double> phase(
-                        0.0, -(p(2) + GlobalParams.M_R_ZLength / 2.0) * k);
+                        0.0, -(p[2] + GlobalParams.M_R_ZLength / 2.0) * k);
                 phase = std::exp(phase);
                 for (unsigned int komp = 0; komp < 3; komp++) {
                     std::complex<double> entr(values[0 + komp], values[3 + komp]);

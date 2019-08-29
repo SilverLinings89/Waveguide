@@ -82,14 +82,14 @@ std::pair<bool, unsigned int> GeometryManager::get_neighbor_for_interface(
         Direction in_direction) {
     std::pair<bool, unsigned int> ret(true, 0);
     switch (in_direction) {
-        case 0:
+        case Direction::MinusX:
             if (GlobalParams.Index_in_x_direction == 0) {
                 ret.first = false;
             } else {
                 ret.second = GlobalParams.MPI_Rank - 1;
             }
             break;
-        case 1:
+        case Direction::PlusX:
             if (GlobalParams.Index_in_x_direction ==
                 GlobalParams.Blocks_in_x_direction - 1) {
                 ret.first = false;
@@ -97,14 +97,14 @@ std::pair<bool, unsigned int> GeometryManager::get_neighbor_for_interface(
                 ret.second = GlobalParams.MPI_Rank + 1;
             }
             break;
-        case 2:
+        case Direction::MinusY:
             if (GlobalParams.Index_in_y_direction == 0) {
                 ret.first = false;
             } else {
                 ret.second = GlobalParams.MPI_Rank - GlobalParams.Blocks_in_y_direction;
             }
             break;
-        case 3:
+        case Direction::PlusY:
             if (GlobalParams.Index_in_y_direction ==
                 GlobalParams.Blocks_in_y_direction - 1) {
                 ret.first = false;
@@ -112,7 +112,7 @@ std::pair<bool, unsigned int> GeometryManager::get_neighbor_for_interface(
                 ret.second = GlobalParams.MPI_Rank + GlobalParams.Blocks_in_y_direction;
             }
             break;
-        case 4:
+        case Direction::MinusZ:
             if (GlobalParams.Index_in_z_direction == 0) {
                 ret.first = false;
             } else {
@@ -121,7 +121,7 @@ std::pair<bool, unsigned int> GeometryManager::get_neighbor_for_interface(
                                                  GlobalParams.Blocks_in_y_direction);
             }
             break;
-        case 5:
+        case Direction::PlusZ:
             if (GlobalParams.Index_in_z_direction ==
                 GlobalParams.Blocks_in_z_direction - 1) {
                 ret.first = false;

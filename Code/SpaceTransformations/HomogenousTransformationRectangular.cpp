@@ -83,15 +83,15 @@ Point<3, double> HomogenousTransformationRectangular::phys_to_math(
 }
 
 bool HomogenousTransformationRectangular::PML_in_X(Point<3, double> &p) const {
-    return p(0) < XMinus || p(0) > XPlus;
+    return p[0] < XMinus || p[0] > XPlus;
 }
 
 bool HomogenousTransformationRectangular::PML_in_Y(Point<3, double> &p) const {
-    return p(1) < YMinus || p(1) > YPlus;
+    return p[1] < YMinus || p[1] > YPlus;
 }
 
 bool HomogenousTransformationRectangular::PML_in_Z(Point<3, double> &p) const {
-    return p(2) > ZPlus || p(2) < ZMinus;
+    return p[2] > ZPlus || p[2] < ZMinus;
 }
 
 double HomogenousTransformationRectangular::Preconditioner_PML_Z_Distance(
@@ -102,7 +102,7 @@ double HomogenousTransformationRectangular::Preconditioner_PML_Z_Distance(
 
 double HomogenousTransformationRectangular::PML_X_Distance(
         Point<3, double> &p) const {
-    if (p(0) > 0) {
+    if (p[0] > 0) {
         return p(0) - XPlus;
     } else {
         return -p(0) + XMinus;
@@ -111,19 +111,19 @@ double HomogenousTransformationRectangular::PML_X_Distance(
 
 double HomogenousTransformationRectangular::PML_Y_Distance(
         Point<3, double> &p) const {
-    if (p(1) > 0) {
-        return p(1) - YPlus;
+    if (p[1] > 0) {
+        return p[1] - YPlus;
     } else {
-        return -p(1) + YMinus;
+        return -p[1] + YMinus;
     }
 }
 
 double HomogenousTransformationRectangular::PML_Z_Distance(
         Point<3, double> &p) const {
-    if (p(2) < 0) {
-        return -(p(2) + (GlobalParams.M_R_ZLength / 2.0));
+    if (p[2] < 0) {
+        return -(p[2] + (GlobalParams.M_R_ZLength / 2.0));
     } else {
-        return p(2) - (GlobalParams.M_R_ZLength / 2.0);
+        return p[2] - (GlobalParams.M_R_ZLength / 2.0);
     }
 }
 

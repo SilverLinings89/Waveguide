@@ -54,47 +54,47 @@ Point<3> InhomogenousTransformationRectangular::phys_to_math(
 }
 
 bool InhomogenousTransformationRectangular::PML_in_X(Point<3> &p) const {
-    return p(0) < XMinus || p(0) > XPlus;
+    return p[0] < XMinus || p[0] > XPlus;
 }
 
 bool InhomogenousTransformationRectangular::PML_in_Y(Point<3> &p) const {
-    return p(1) < YMinus || p(1) > YPlus;
+    return p[1] < YMinus || p[1] > YPlus;
 }
 
 bool InhomogenousTransformationRectangular::PML_in_Z(Point<3> &p) const {
-    return p(2) < ZMinus || p(2) > ZPlus;
+    return p[2] < ZMinus || p[2] > ZPlus;
 }
 
 double InhomogenousTransformationRectangular::Preconditioner_PML_Z_Distance(
         Point<3> &p, unsigned int rank) const {
-    return p(2) - GlobalParams.Minimum_Z -
+    return p[2] - GlobalParams.Minimum_Z -
            ((double) rank) * GlobalParams.LayerThickness;
 }
 
 double InhomogenousTransformationRectangular::PML_X_Distance(
         Point<3> &p) const {
-    if (p(0) > 0) {
-        return p(0) - XPlus;
+    if (p[0] > 0) {
+        return p[0] - XPlus;
     } else {
-        return -p(0) + XMinus;
+        return -p[0] + XMinus;
     }
 }
 
 double InhomogenousTransformationRectangular::PML_Y_Distance(
         Point<3> &p) const {
-    if (p(1) > 0) {
-        return p(1) - YMinus;
+    if (p[1] > 0) {
+        return p[1] - YMinus;
     } else {
-        return -p(1) + YPlus;
+        return -p[1] + YPlus;
     }
 }
 
 double InhomogenousTransformationRectangular::PML_Z_Distance(
         Point<3> &p) const {
-    if (p(2) < 0) {
-        return -(p(2) + (GlobalParams.M_R_ZLength / 2.0));
+    if (p[2] < 0) {
+        return -(p[2] + (GlobalParams.M_R_ZLength / 2.0));
     } else {
-        return p(2) - (GlobalParams.M_R_ZLength / 2.0);
+        return p[2] - (GlobalParams.M_R_ZLength / 2.0);
     }
 }
 
