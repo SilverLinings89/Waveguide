@@ -36,6 +36,8 @@
       <change beforePath="$PROJECT_DIR$/Code/SpaceTransformations/SpaceTransformation.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/SpaceTransformations/SpaceTransformation.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/googletest/Google_Tests_run" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/Google_Tests_run" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inspections/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/inspections/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Helpers/Parameters.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/Parameters.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -225,6 +227,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />

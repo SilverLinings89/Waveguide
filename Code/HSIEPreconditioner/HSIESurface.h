@@ -72,6 +72,7 @@ class HSIESurface {
     std::vector<DofData> face_dof_data, edge_dof_data, vertex_dof_data;
     unsigned int dof_counter;
     dealii::Point<3> reference_point;
+    std::map<dealii::Triangulation<2,3>::cell_iterator, dealii::Triangulation<3,3>::face_iterator > association
 
 public:
     HSIESurface(dealii::Triangulation<3,3> * in_main_triangulation, unsigned int in_boundary_id, unsigned int in_level, unsigned int in_inner_order);

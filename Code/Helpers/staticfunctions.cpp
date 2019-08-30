@@ -415,7 +415,7 @@ Parameters GetParameters() {
     temp.initialize(ret);
     Geometry = temp;
     deallog.pop();
-
+    ret.HSIE_SWEEPING_LEVEL = 1;
     return ret;
 }
 

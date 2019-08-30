@@ -13,7 +13,7 @@ template<unsigned int ORDER>
 void HSIESurface<ORDER>::prepare_surface_triangulation() {
     std::set<unsigned int> b_ids;
     b_ids.insert(this->b_id);
-    dealii::GridGenerator::extract_boundary_mesh(*main_triangulation, surface_triangulation, b_ids);
+    association = dealii::GridGenerator::extract_boundary_mesh(*main_triangulation, surface_triangulation, b_ids);
 }
 
 template<unsigned int ORDER>
@@ -222,21 +222,44 @@ void HSIESurface<ORDER>::update_dof_counts_for_vertex(const dealii::DoFHandler<2
 
 template<unsigned int ORDER>
 bool HSIESurface<ORDER>::is_edge_owned(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge) {
-    // TODO Implement this. Not really easy.
-    return false;
+    if(level == GlobalParams.HSIE_SWEEPING_LEVEL) {
+        return true;
+    } else {
+        Triangulation<3>::face_iterator face3d = association.find(cell)->second;
+        Point<3> location = face3d->line(edge)->center();
+        if(location[0] == GlobalParams.geometry.x_range.first){
+            return false;
+        }
+        if(location[1] == GlobalParams.geometry.y_range.first){
+            return false;
+        }
+
+    }
+    return true;
 }
 
 template<unsigned int ORDER>
 bool HSIESurface<ORDER>::is_face_owned(dealii::DoFHandler<2>::active_cell_iterator cell) {
-    // TODO Implement this. Not really easy.
-    return false;
+    return true;
 }
 
 template<unsigned int ORDER>
 bool HSIESurface<ORDER>::is_vertex_owned(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
                                          unsigned int vertex) {
-    // TODO Implement this. Not really easy.
-    return false;
+    if(level == GlobalParams.HSIE_SWEEPING_LEVEL) {
+        return true;
+    } else {
+        Triangulation<3>::face_iterator face3d = association.find(cell)->second;
+        Point<3> location = face3d->line(edge)->vertex(vertex);
+        if(location[0] == GlobalParams.geometry.x_range.first){
+            return false;
+        }
+        if(location[1] == GlobalParams.geometry.y_range.first){
+            return false;
+        }
+
+    }
+    return true;
 }
 
 template<unsigned int ORDER>
@@ -327,7 +350,3 @@ unsigned int HSIESurface<ORDER>::register_dof() {
     this->dof_counter++;
     return this->dof_counter - 1;
 }
-
-
-// TODO This file should be easily testable ..... maybe I should do that :D
-

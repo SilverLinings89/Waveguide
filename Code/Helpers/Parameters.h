@@ -268,6 +268,8 @@ struct Parameters {
     int current_run_number;
 
     unsigned int Coupling_Interface_Z_Block_Index; // The jump interface is at the lower z-surface of the block with this Index_in_z_direction
+
+    unsigned int HSIE_SWEEPING_LEVEL = 1; // 1 means normal sweeping, 2 means hierarchical sweeping with depth 1, 3 means hierarchical sweeping with depth 2.
 };
 
 #endif
