@@ -161,7 +161,7 @@ std::complex<double> SpaceTransformation::gauss_product_2D_sphere(
             for (j = 0; j < n; j++) {
                 x = r[j] * q[i];
                 y = r[j] * t[i];
-                s += A[j] * in_w->evaluate_for_Position(R * x - Xc, R * y - Yc, z);
+                s += in_w->evaluate_for_Position(R * x - Xc, R * y - Yc, z) * A[j];
             }
         }
     }
@@ -170,8 +170,7 @@ std::complex<double> SpaceTransformation::gauss_product_2D_sphere(
             for (j = 0; j < n; j++) {
                 x = r[j] * q[i];
                 y = r[j] * t[i];
-                s += A[j] *
-                     in_w->evaluate_Energy_for_Position(R * x - Xc, R * y - Yc, z);
+                s += in_w->evaluate_Energy_for_Position(R * x - Xc, R * y - Yc, z) * A[j];
             }
         }
     }

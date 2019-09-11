@@ -72,7 +72,7 @@ class HSIESurface {
     std::vector<DofData> face_dof_data, edge_dof_data, vertex_dof_data;
     unsigned int dof_counter;
     dealii::Point<3> reference_point;
-    std::map<dealii::Triangulation<2,3>::cell_iterator, dealii::Triangulation<3,3>::face_iterator > association
+    std::map<dealii::Triangulation<2,3>::cell_iterator, dealii::Triangulation<3,3>::face_iterator > association;
 
 public:
     HSIESurface(dealii::Triangulation<3,3> * in_main_triangulation, unsigned int in_boundary_id, unsigned int in_level, unsigned int in_inner_order);
@@ -98,7 +98,7 @@ public:
     void register_new_edge_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned  int edge);
     void register_new_surface_dofs(dealii::DoFHandler<2>::active_cell_iterator cell);
     unsigned int register_dof();
-    void register_single_dof(std::string in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &);
+    void register_single_dof(std::string & in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &);
     void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &);
 };
 

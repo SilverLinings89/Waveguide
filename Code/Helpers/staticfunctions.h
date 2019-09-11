@@ -7,6 +7,7 @@
 #include <deal.II/distributed/tria.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/lac/affine_constraints.h>
+#include <deal.II/base/index_set.h>
 #include <fstream>
 #include "../Core/NumericProblem.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
@@ -58,13 +59,13 @@ void PrepareStreams();
 double Distance2D(Point<3, double>, Point<3, double> = Point<3, double>());
 
 std::vector<types::global_dof_index> Add_Zero_Restraint(
-        dealii::AffineConstraints<double> *, dealii::DoFHandler<3>::active_cell_iterator &,
-        unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet);
+        AffineConstraints<double> *, DoFHandler<3>::active_cell_iterator &,
+        unsigned int, unsigned int, unsigned int, bool, IndexSet);
 
-void add_vector_of_indices(dealii::IndexSet *,
+void add_vector_of_indices(IndexSet *,
                            std::vector<types::global_dof_index>);
 
-double hmax_for_cell_center(dealii::Point<3, double>);
+double hmax_for_cell_center(Point<3, double>);
 
 double InterpolationPolynomial(double, double, double, double, double);
 

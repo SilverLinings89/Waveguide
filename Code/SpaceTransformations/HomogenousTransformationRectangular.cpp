@@ -6,9 +6,7 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/lac/vector.h>
 #include "../Core/Sector.h"
-#include "../Helpers/QuadratureFormulaCircle.cpp"
-#include "../Helpers/staticfunctions.h"
-#include "SpaceTransformation.h"
+#include <complex>
 
 using namespace dealii;
 
@@ -96,16 +94,16 @@ bool HomogenousTransformationRectangular::PML_in_Z(Point<3, double> &p) const {
 
 double HomogenousTransformationRectangular::Preconditioner_PML_Z_Distance(
         Point<3, double> &p, unsigned int rank) const {
-    return p(2) - GlobalParams.Minimum_Z -
+    return p[2] - GlobalParams.Minimum_Z -
            ((double) rank) * GlobalParams.LayerThickness;
 }
 
 double HomogenousTransformationRectangular::PML_X_Distance(
         Point<3, double> &p) const {
     if (p[0] > 0) {
-        return p(0) - XPlus;
+        return p[0]- XPlus;
     } else {
-        return -p(0) + XMinus;
+        return -p[0] + XMinus;
     }
 }
 

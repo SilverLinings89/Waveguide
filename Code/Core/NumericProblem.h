@@ -5,10 +5,10 @@
 #include <cmath>
 #include <mpi.h>
 #include <sys/stat.h>
-#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <ctime>
 
 #include <deal.II/base/function.h>
 #include <deal.II/base/index_set.h>
@@ -557,8 +557,6 @@ private:
 
     IndexSet fixed_dofs;
 
-    long int solver_start_milis = 0;
-
     bool primal = true;
 
     ConditionalOStream pout;
@@ -584,6 +582,7 @@ private:
     std::vector<ConstraintPair> periodicity_constraints;
     std::vector<unsigned int> l2g;
     IndexSet ZeroBoundaryDofs;
+    std::time_t timer_start;
 };
 
 #endif

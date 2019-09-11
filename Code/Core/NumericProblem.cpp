@@ -7,30 +7,22 @@
 #include <deal.II/base/std_cxx11/bind.h>
 #include <deal.II/base/timer.h>
 #include <deal.II/distributed/shared_tria.h>
-#include <deal.II/distributed/tria.h>
 #include <deal.II/dofs/dof_handler.h>
-#include <deal.II/dofs/dof_renumbering.h>
 #include <deal.II/lac/block_matrix_array.h>
 #include <deal.II/lac/block_sparsity_pattern.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/solver.h>
-#include <deal.II/lac/solver_bicgstab.h>
-#include <deal.II/lac/sparsity_tools.h>
 #include <deal.II/lac/trilinos_block_sparse_matrix.h>
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/numerics/data_out_dof_data.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/lac/affine_constraints.h>
-#include <sys/time.h>
+#include <ctime>
 #include <algorithm>
 #include <string>
 #include <utility>
 #include <vector>
-#include "../Helpers/ExactSolution.h"
 #include "../Helpers/staticfunctions.h"
-#include "../SpaceTransformations/HomogenousTransformationRectangular.h"
-#include "../SpaceTransformations/InhomogenousTransformationRectangular.h"
-#include "../SpaceTransformations/SpaceTransformation.h"
 #include "PreconditionerSweeping.h"
 #include "SolutionWeight.h"
 #include "../MeshGenerators/SquareMeshGenerator.h"
@@ -1515,9 +1507,9 @@ void NumericProblem::solve() {
 
         deallog << "Preconditioner Ready. Solving..." << std::endl;
 
-        struct timeval tp;
-        gettimeofday(&tp, NULL);
-        solver_start_milis = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+        timer_start = std::time(nullptr);
+
+
         timer.enter_subsection("GMRES run");
         try {
             if (primal) {
@@ -1531,9 +1523,8 @@ void NumericProblem::solve() {
         timer.leave_subsection();
 
         while (steps < 40) {
-            struct timeval tp2;
-            gettimeofday(&tp2, NULL);
-            int64_t ms = tp2.tv_sec * 1000 + tp2.tv_usec / 1000 - solver_start_milis;
+            std::time_t timer_end = std::time(nullptr);
+            double runtime_in_seconds = std::difftime(timer_end, timer_start);
 
             Convergence_Table.add_value(
                     path_prefix + std::to_string(run_number) + "Iteration", steps + 1);
@@ -1541,7 +1532,7 @@ void NumericProblem::solve() {
                     path_prefix + std::to_string(run_number) + "Residual", 0.0);
             Convergence_Table.add_value(
                     path_prefix + std::to_string(run_number) + "Time",
-                    std::to_string(ms));
+                    std::to_string(runtime_in_seconds));
             steps++;
         }
 
@@ -1658,70 +1649,69 @@ void NumericProblem::store() {
 }
 
 void NumericProblem::output_results(bool) {
-    if (true) {
-        DataOut<3> data_out;
+    DataOut<3> data_out;
 
-        data_out.attach_dof_handler(dof_handler);
-        if (primal) {
-            data_out.add_data_vector(
-                    primal_with_relevant, "Solution",
-                    dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
-                            3>::DataVectorType::type_dof_data);
-        } else {
-            data_out.add_data_vector(
-                    dual_with_relevant, "Solution",
-                    dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
-                            3>::DataVectorType::type_dof_data);
-        }
-
-        data_out.build_patches();
-
-        std::ofstream outputvtu(solutionpath + "/" + path_prefix + "/solution-run" +
-                                std::to_string(run_number) + "-P" +
-                                std::to_string(rank) + ".vtu");
-        data_out.write_vtu(outputvtu);
-
-        if (rank == 0) {
-            std::ofstream outputpvtu(solutionpath + "/" + path_prefix +
-                                     "/solution-run" + std::to_string(run_number) +
-                                     ".pvtu");
-            std::vector<std::string> filenames;
-            for (unsigned int i = 0; i < GlobalParams.NumberProcesses; i++) {
-                filenames.push_back("solution-run" + std::to_string(run_number) + "-P" +
-                                    std::to_string(i) + ".vtu");
-            }
-            data_out.write_pvtu_record(outputpvtu, filenames);
-        }
-
-        if (false) {
-            std::ofstream pattern(solutionpath + "/" + path_prefix + "/pattern.gnu");
-
-            std::ofstream patternscript(solutionpath + "/" + path_prefix +
-                                        "/displaypattern.gnu");
-            patternscript << "set style line 1000 lw 1 lc \"black\"" << std::endl;
-            for (int i = 0; i < GlobalParams.M_W_Sectors; i++) {
-                patternscript << "set arrow " << 1000 + 2 * i << " from 0,-"
-                              << Dofs_Below_Subdomain[i] << " to " << n_global_dofs
-                              << ",-" << Dofs_Below_Subdomain[i]
-                              << " nohead ls 1000 front" << std::endl;
-                patternscript << "set arrow " << 1001 + 2 * i << " from "
-                              << Dofs_Below_Subdomain[i] << ",0 to "
-                              << Dofs_Below_Subdomain[i] << ", -" << n_global_dofs
-                              << " nohead ls 1000 front" << std::endl;
-            }
-            patternscript << "set arrow " << 1000 + 2 * GlobalParams.M_W_Sectors
-                          << " from 0,-" << n_global_dofs << " to " << n_global_dofs
-                          << ",-" << n_global_dofs << " nohead ls 1000 front"
-                          << std::endl;
-            patternscript << "set arrow " << 1001 + 2 * GlobalParams.M_W_Sectors
-                          << " from " << n_global_dofs << ",0 to " << n_global_dofs
-                          << ", -" << n_global_dofs << " nohead ls 1000 front"
-                          << std::endl;
-
-            patternscript << "plot \"pattern.gnu\" with dots" << std::endl;
-            patternscript.flush();
-        }
+    data_out.attach_dof_handler(dof_handler);
+    if (primal) {
+        data_out.add_data_vector(
+                primal_with_relevant, "Solution",
+                dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
+                        3>::DataVectorType::type_dof_data);
+    } else {
+        data_out.add_data_vector(
+                dual_with_relevant, "Solution",
+                dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
+                        3>::DataVectorType::type_dof_data);
     }
+
+    data_out.build_patches();
+
+    std::ofstream outputvtu(solutionpath + "/" + path_prefix + "/solution-run" +
+                            std::to_string(run_number) + "-P" +
+                            std::to_string(rank) + ".vtu");
+    data_out.write_vtu(outputvtu);
+
+    if (rank == 0) {
+        std::ofstream outputpvtu(solutionpath + "/" + path_prefix +
+                                 "/solution-run" + std::to_string(run_number) +
+                                 ".pvtu");
+        std::vector<std::string> filenames;
+        for (unsigned int i = 0; i < GlobalParams.NumberProcesses; i++) {
+            filenames.push_back("solution-run" + std::to_string(run_number) + "-P" +
+                                std::to_string(i) + ".vtu");
+        }
+        data_out.write_pvtu_record(outputpvtu, filenames);
+    }
+
+    if (false) {
+        std::ofstream pattern(solutionpath + "/" + path_prefix + "/pattern.gnu");
+
+        std::ofstream patternscript(solutionpath + "/" + path_prefix +
+                                    "/displaypattern.gnu");
+        patternscript << "set style line 1000 lw 1 lc \"black\"" << std::endl;
+        for (int i = 0; i < GlobalParams.M_W_Sectors; i++) {
+            patternscript << "set arrow " << 1000 + 2 * i << " from 0,-"
+                          << Dofs_Below_Subdomain[i] << " to " << n_global_dofs
+                          << ",-" << Dofs_Below_Subdomain[i]
+                          << " nohead ls 1000 front" << std::endl;
+            patternscript << "set arrow " << 1001 + 2 * i << " from "
+                          << Dofs_Below_Subdomain[i] << ",0 to "
+                          << Dofs_Below_Subdomain[i] << ", -" << n_global_dofs
+                          << " nohead ls 1000 front" << std::endl;
+        }
+        patternscript << "set arrow " << 1000 + 2 * GlobalParams.M_W_Sectors
+                      << " from 0,-" << n_global_dofs << " to " << n_global_dofs
+                      << ",-" << n_global_dofs << " nohead ls 1000 front"
+                      << std::endl;
+        patternscript << "set arrow " << 1001 + 2 * GlobalParams.M_W_Sectors
+                      << " from " << n_global_dofs << ",0 to " << n_global_dofs
+                      << ", -" << n_global_dofs << " nohead ls 1000 front"
+                      << std::endl;
+
+        patternscript << "plot \"pattern.gnu\" with dots" << std::endl;
+        patternscript.flush();
+    }
+
     MPI_Barrier(mpi_comm);
     if (GlobalParams.O_O_V_S_SolutionFirst) {
 
@@ -1729,26 +1719,26 @@ void NumericProblem::output_results(bool) {
 
         MPI_Barrier(mpi_comm);
 
-        DataOut<3> data_out;
+        DataOut<3> data_out_solution_first;
 
-        data_out.attach_dof_handler(dof_handler);
+        data_out_solution_first.attach_dof_handler(dof_handler);
         if (primal) {
-            data_out.add_data_vector(
+            data_out_solution_first.add_data_vector(
                     primal_with_relevant, "Solution",
                     dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
                             3>::DataVectorType::type_dof_data);
         } else {
-            data_out.add_data_vector(
+            data_out_solution_first.add_data_vector(
                     dual_with_relevant, "Solution",
                     dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3,
                             3>::DataVectorType::type_dof_data);
         }
-        data_out.build_patches();
+        data_out_solution_first.build_patches();
 
         std::ofstream outputvtu(
                 solutionpath + "/" + path_prefix + "/solution-transformed-run" +
                 std::to_string(run_number) + "-P" + std::to_string(rank) + ".vtu");
-        data_out.write_vtu(outputvtu);
+        data_out_solution_first.write_vtu(outputvtu);
         MPI_Barrier(mpi_comm);
     }
 }
@@ -2089,16 +2079,15 @@ SolverControl::State NumericProblem::residual_tracker(
         dealii::TrilinosWrappers::MPI::BlockVector) {
     if ((GlobalParams.O_C_D_ConvergenceFirst && run_number == 0) ||
         GlobalParams.O_C_D_ConvergenceAll) {
-        struct timeval tp;
-        gettimeofday(&tp, NULL);
-        int64_t ms = tp.tv_sec * 1000 + tp.tv_usec / 1000 - solver_start_milis;
+        std::time_t timer_now = std::time(nullptr);
+        double runtime_in_seconds = std::difftime(timer_now, timer_start);
 
         Convergence_Table.add_value(
                 path_prefix + std::to_string(run_number) + "Iteration", Iteration);
         Convergence_Table.add_value(
                 path_prefix + std::to_string(run_number) + "Residual", residual);
         Convergence_Table.add_value(
-                path_prefix + std::to_string(run_number) + "Time", std::to_string(ms));
+                path_prefix + std::to_string(run_number) + "Time", std::to_string(runtime_in_seconds));
     }
     steps = Iteration;
     return SolverControl::success;;

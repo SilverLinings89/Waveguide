@@ -15,7 +15,7 @@
 double ExactSolution::value(const Point<3> &in_p,
                             const unsigned int component) const {
     Point<3, double> p = in_p;
-    if (is_dual) p[2] = -in_p.operator[](2);
+    if (is_dual) p[2] = -in_p[2];
     bool zero = false;
     if (p[0] > GlobalParams.M_R_XLength / 2.0 - GlobalParams.M_BC_XPlus)
         zero = true;
@@ -112,7 +112,7 @@ double ExactSolution::value(const Point<3> &in_p,
 void ExactSolution::vector_value(const Point<3> &in_p,
                                  Vector<double> &values) const {
     Point<3, double> p = in_p;
-    if (is_dual) p[2] = -in_p.operator[](2);
+    if (is_dual) p[2] = -in_p[2];
     bool zero = false;
     if (p[0] > GlobalParams.M_R_XLength / 2.0 - GlobalParams.M_BC_XPlus)
         zero = true;

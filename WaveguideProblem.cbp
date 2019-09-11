@@ -600,6 +600,12 @@
 		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/HSIEPreconditioner/HSIESurface.h">
 			<Option target="Code"/>
 		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/HSIEPreconditioner/LaguerreFunction.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/HSIEPreconditioner/LaguerreFunction.h">
+			<Option target="Code"/>
+		</Unit>
 		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers/ExactSolution.cpp">
 			<Option target="Code"/>
 		</Unit>

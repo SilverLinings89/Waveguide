@@ -25,11 +25,7 @@ bool Optimization1D::perform_small_step_next(int small_steps_before) {
         return false;
     }
 
-    if (small_steps_before < STEPS_PER_DOFS) {
-        return true;
-    } else {
-        return false;
-    }
+    return small_steps_before < STEPS_PER_DOFS;
 }
 
 double Optimization1D::get_small_step_step_width(int small_steps_before) {

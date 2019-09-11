@@ -6,13 +6,13 @@
   </component>
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
     <generated>
-      <config projectName="WaveguideProblem" targetName="Google_Tests_run" />
-      <config projectName="WaveguideProblem" targetName="Code" />
-      <config projectName="WaveguideProblem" targetName="gtest" />
-      <config projectName="WaveguideProblem" targetName="gmock" />
-      <config projectName="WaveguideProblem" targetName="main" />
-      <config projectName="WaveguideProblem" targetName="gmock_main" />
       <config projectName="WaveguideProblem" targetName="gtest_main" />
+      <config projectName="WaveguideProblem" targetName="gmock_main" />
+      <config projectName="WaveguideProblem" targetName="gmock" />
+      <config projectName="WaveguideProblem" targetName="Google_Tests_run" />
+      <config projectName="WaveguideProblem" targetName="main" />
+      <config projectName="WaveguideProblem" targetName="gtest" />
+      <config projectName="WaveguideProblem" targetName="Code" />
     </generated>
   </component>
   <component name="CMakeSettings">
@@ -22,22 +22,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3eb79f9f-621c-46a2-93b5-87eed99f25a6" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/inspections/initial/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/inspections/initial/script.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/inspections/initial/styles.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/LaguerreFunction.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/LaguerreFunction.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Code/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/Core/NumericProblem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/NumericProblem.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Core/NumericProblem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Core/NumericProblem.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/Helpers/ExactSolution.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/ExactSolution.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Helpers/GeometryManager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/GeometryManager.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/SpaceTransformations/DualProblemTransformationWrapper.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/SpaceTransformations/DualProblemTransformationWrapper.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Helpers/staticfunctions.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/staticfunctions.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/OptimizationAlgorithm/Optimization1D.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/OptimizationAlgorithm/Optimization1D.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/SpaceTransformations/HomogenousTransformationRectangular.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/SpaceTransformations/HomogenousTransformationRectangular.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/SpaceTransformations/InhomogenousTransformationRectangular.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/SpaceTransformations/InhomogenousTransformationRectangular.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/SpaceTransformations/SpaceTransformation.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/SpaceTransformations/SpaceTransformation.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WaveguideProblem.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/WaveguideProblem.cbp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/googletest/ExampleTest.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/ExampleTest.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/googletest/Google_Tests_run" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/Google_Tests_run" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inspections/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/inspections/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Helpers/Parameters.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/Parameters.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -76,7 +76,7 @@
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="cf.advertisement.text.has.clang-format" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/inspections" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
     <property name="node.js.path.for.package.tslint" value="project" />
@@ -102,7 +102,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="CMake Application.Code">
+  <component name="RunManager" selected="CMake Application.gtest">
     <configuration name="All in ExampleTest.cpp" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" temporary="true" PROGRAM_PARAMS="--gtest_output=xml" PASS_PARENT_ENVS_2="true" PROJECT_NAME="WaveguideProblem" TARGET_NAME="Google_Tests_run" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="WaveguideProblem" RUN_TARGET_NAME="Google_Tests_run" TEST_PATTERN="all-tests(file://$PROJECT_DIR$/googletest/ExampleTest.cpp)" TEST_MODE="PATTERN">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -124,7 +124,7 @@
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="gtest" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="WaveguideProblem" TARGET_NAME="gtest" CONFIG_NAME="Debug">
+    <configuration name="gtest" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="WaveguideProblem" TARGET_NAME="gtest" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="WaveguideProblem" RUN_TARGET_NAME="Google_Tests_run">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -194,6 +194,9 @@
       <workItem from="1566998942383" duration="1091000" />
       <workItem from="1567000155970" duration="867000" />
       <workItem from="1567012950930" duration="3262000" />
+      <workItem from="1567162149687" duration="6172000" />
+      <workItem from="1567898120419" duration="539000" />
+      <workItem from="1568197230676" duration="2994000" />
     </task>
     <option name="localTasksCounter" value="2" />
     <servers />
@@ -227,9 +230,6 @@
         </entry>
       </map>
     </option>
-  </component>
-  <component name="VcsManagerConfiguration">
-    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />

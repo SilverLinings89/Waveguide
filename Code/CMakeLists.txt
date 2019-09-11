@@ -32,7 +32,7 @@ ADD_LIBRARY(Code
         SpaceTransformations/SpaceTransformation.cpp
         HSIEPreconditioner/HSIEPreconditioner.cpp
         HSIEPreconditioner/HSIESurface.cpp
-        )
+        HSIEPreconditioner/LaguerreFunction.cpp HSIEPreconditioner/LaguerreFunction.h)
 
 DEAL_II_SETUP_TARGET(Code)
 	
