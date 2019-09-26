@@ -38,10 +38,10 @@ enum DofType {
 
 struct DofData {
     DofType type;
-    int hsie_order{};
-    int inner_order{};
-    bool is_real{};
-    unsigned int global_index{};
+    int hsie_order;
+    int inner_order;
+    bool is_real;
+    unsigned int global_index;
     DofBaseStructureID base_structure_id;
 
     DofData() {

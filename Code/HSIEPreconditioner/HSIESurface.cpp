@@ -40,7 +40,23 @@ void HSIESurface<ORDER>::compute_dof_numbers() {
 
 template<unsigned int ORDER>
 void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> *, dealii::IndexSet) {
+    auto it = surface_triangulation.begin_active();
+    auto end = surface_triangulation.end_active();
+    // for each cell
+    for(; it != end; ++it) {
 
+
+    // for each dof i
+
+    // get dof i type data (type and degree, base point etc.)
+
+    // for each dof j
+
+    // get dof j type data (type and degree, base point etc.)
+
+    // compute their coupling and write it to matrix
+
+    }
 }
 
 template<unsigned int ORDER>
@@ -235,7 +251,6 @@ bool HSIESurface<ORDER>::is_edge_owned(dealii::DoFHandler<2>::active_cell_iterat
         if(location[1] == Geometry.y_range.first){
             return false;
         }
-
     }
     return true;
 }
