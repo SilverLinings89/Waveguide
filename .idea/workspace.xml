@@ -6,13 +6,13 @@
   </component>
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
     <generated>
-      <config projectName="WaveguideProblem" targetName="gtest_main" />
-      <config projectName="WaveguideProblem" targetName="gmock_main" />
-      <config projectName="WaveguideProblem" targetName="gmock" />
       <config projectName="WaveguideProblem" targetName="Google_Tests_run" />
-      <config projectName="WaveguideProblem" targetName="main" />
-      <config projectName="WaveguideProblem" targetName="gtest" />
       <config projectName="WaveguideProblem" targetName="Code" />
+      <config projectName="WaveguideProblem" targetName="gtest" />
+      <config projectName="WaveguideProblem" targetName="gmock" />
+      <config projectName="WaveguideProblem" targetName="main" />
+      <config projectName="WaveguideProblem" targetName="gmock_main" />
+      <config projectName="WaveguideProblem" targetName="gtest_main" />
     </generated>
   </component>
   <component name="CMakeSettings">
@@ -22,17 +22,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3eb79f9f-621c-46a2-93b5-87eed99f25a6" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/lib/libgmock_maind.a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/libgmockd.a" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WaveguideProblem.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/WaveguideProblem.cbp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/googletest/Google_Tests_run" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/Google_Tests_run" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/googletest/Google_tests.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/Google_tests.cbp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/googletest/lib/googlemock/gmock.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/lib/googlemock/gmock.cbp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/googletest/lib/googletest-distribution.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/lib/googletest-distribution.cbp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/libgtest_maind.a" beforeDir="false" afterPath="$PROJECT_DIR$/lib/libgtest_maind.a" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -194,7 +186,14 @@
       <workItem from="1568197230676" duration="2994000" />
       <workItem from="1568903080838" duration="631000" />
       <workItem from="1569425599646" duration="3270000" />
-      <workItem from="1569512032779" duration="599000" />
+      <workItem from="1569512032779" duration="632000" />
+      <workItem from="1570026312362" duration="32000" />
+      <workItem from="1570188631997" duration="1079000" />
+      <workItem from="1570456482395" duration="7000" />
+      <workItem from="1571924782958" duration="599000" />
+      <workItem from="1572364270863" duration="599000" />
+      <workItem from="1572947943323" duration="12000" />
+      <workItem from="1572947975991" duration="9792000" />
     </task>
     <option name="localTasksCounter" value="2" />
     <servers />

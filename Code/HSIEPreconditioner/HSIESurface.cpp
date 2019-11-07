@@ -39,24 +39,76 @@ void HSIESurface<ORDER>::compute_dof_numbers() {
 }
 
 template<unsigned int ORDER>
-void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> *, dealii::IndexSet) {
+std::vector<DofData> HSIESurface<ORDER>::get_dof_data_for_cell(dealii::Triangulation<2,3>::cell_iterator * cell) {
+    std::vector<DofData> ret = new std::vector<DofData>();
+
+    // get cell dofs:
+    std::string cell_id = (*cell)->id().to_string();
+    unsigned int * edge_ids = new unsigned int[4];
+    unsigned int * vertex_ids = new unsigned int[4];
+    // get edge dofs:
+    for(unsigned int i = 0; i < 4; i++) {
+        edge_ids[i] = (*cell)->line_index(i);
+    }
+
+    // get vertex dofs:
+    for(unsigned int i = 0; i < 4; i++) {
+        vertex_ids[i]= (*cell)->vertex_index(i);
+    }
+
+    // add cell dofs
+    for(unsigned int i = 0; i < this->face_dof_data.size(); i++) {
+        if(this->face_dof_data[i].base_structure_id.face_id == cell_id) {
+            ret.push_back(this->face_dof_data[i]);
+        }
+    }
+
+    // add edge-based dofs
+    for(unsigned int i = 0; i < this->edge_dof_data.size(); i++) {
+        unsigned int idx = this->edge_dof_data[i].base_structure_id.non_face_id;
+        if(idx == edge_ids[0] || idx == edge_ids[1] || idx == edge_ids[2] || idx == edge_ids[3]) {
+            ret.push_back(this->edge_dof_data[i]);
+        }
+    }
+
+    // add vertex-based dofs
+    for(unsigned int i = 0; i < this->vertex_dof_data.size(); i++) {
+        unsigned int idx = this->vertex_dof_data[i].base_structure_id.non_face_id;
+        if(idx == vertex_ids[0] || idx == vertex_ids[1] || idx == vertex_ids[2] || idx == vertex_ids[3]) {
+            ret.push_back(this->vertex_dof_data[i]);
+        }
+    }
+
+    return ret;
+}
+
+template<unsigned int ORDER>
+void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> * matrix, dealii::IndexSet global_indices) {
     auto it = surface_triangulation.begin_active();
     auto end = surface_triangulation.end_active();
     // for each cell
     for(; it != end; ++it) {
-
-
-    // for each dof i
-
-    // get dof i type data (type and degree, base point etc.)
-
-    // for each dof j
-
-    // get dof j type data (type and degree, base point etc.)
-
-    // compute their coupling and write it to matrix
-
+        std::vector<DofData> cell_dofs = this->get_dofs_for_cell(it);
+        // for each dof i
+        for(unsigned int i = 0; i < cell_dofs.size(); i++) {
+            // get dof i type data (type and degree, base point etc.)
+            DofData& u = cell_dofs[i] ;
+            // for each dof j
+            for (unsigned int j = 0; j < cell_dofs.size(); j++) {
+                // get dof j type data (type and degree, base point etc.)
+                DofData& v = cell_dofs[j];
+                // compute their coupling and write it to matrix
+                matrix[global_indices.nth_index_in_set(i), global_indices.nth_index_in_set(j)] = this->compute_coupling(u,v,it);
+            }
+        }
     }
+}
+
+template <unsigned int ORDER>
+double HSIESurface<ORDER>::compute_coupling(DofData & u, DofData & v, dealii::Triangulation<2,3>::cell_iterator * cell) {
+    double ret = 0;
+    
+    return ret;
 }
 
 template<unsigned int ORDER>

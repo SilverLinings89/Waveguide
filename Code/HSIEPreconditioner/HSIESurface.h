@@ -77,6 +77,8 @@ class HSIESurface {
 public:
     HSIESurface(dealii::Triangulation<3,3> * in_main_triangulation, unsigned int in_boundary_id, unsigned int in_level, unsigned int in_inner_order);
 
+    std::vector<DofData> get_dof_data_for_cell(dealii::Triangulation<2,3>::cell_iterator *);
+    double compute_coupling(DofData &, DofData &, dealii::Triangulation<2,3>::cell_iterator *);
     void prepare_surface_triangulation();
     void compute_dof_numbers();
     void fill_matrix(dealii::SparseMatrix<double>* , dealii::IndexSet);
