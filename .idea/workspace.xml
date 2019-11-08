@@ -6,13 +6,13 @@
   </component>
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
     <generated>
-      <config projectName="WaveguideProblem" targetName="Google_Tests_run" />
-      <config projectName="WaveguideProblem" targetName="Code" />
-      <config projectName="WaveguideProblem" targetName="gtest" />
-      <config projectName="WaveguideProblem" targetName="gmock" />
-      <config projectName="WaveguideProblem" targetName="main" />
-      <config projectName="WaveguideProblem" targetName="gmock_main" />
       <config projectName="WaveguideProblem" targetName="gtest_main" />
+      <config projectName="WaveguideProblem" targetName="gmock_main" />
+      <config projectName="WaveguideProblem" targetName="gmock" />
+      <config projectName="WaveguideProblem" targetName="Google_Tests_run" />
+      <config projectName="WaveguideProblem" targetName="main" />
+      <config projectName="WaveguideProblem" targetName="gtest" />
+      <config projectName="WaveguideProblem" targetName="Code" />
     </generated>
   </component>
   <component name="CMakeSettings">
@@ -22,9 +22,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3eb79f9f-621c-46a2-93b5-87eed99f25a6" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIEPolynomial.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIEPolynomial.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Code/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/staticfunctions.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Helpers/staticfunctions.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Helpers/staticfunctions.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WaveguideProblem.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/WaveguideProblem.cbp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/googletest/ExampleTest.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/ExampleTest.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/libgtestd.a" beforeDir="false" afterPath="$PROJECT_DIR$/lib/libgtestd.a" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -53,6 +60,10 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
+  <component name="OCResolveContextSettings">
+    <option name="configuration" value="0-Code" />
   </component>
   <component name="ProjectId" id="1OYOHI9Q9IHcUFoso4IM9QpUBxU" />
   <component name="ProjectLevelVcsManager">
@@ -193,7 +204,7 @@
       <workItem from="1571924782958" duration="599000" />
       <workItem from="1572364270863" duration="599000" />
       <workItem from="1572947943323" duration="12000" />
-      <workItem from="1572947975991" duration="9792000" />
+      <workItem from="1572947975991" duration="16124000" />
     </task>
     <option name="localTasksCounter" value="2" />
     <servers />

@@ -35,7 +35,7 @@ extern SpaceTransformation *the_st;
  */
 Tensor<1, 3, double> crossproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 
-std::complex<double> matrixD(int in_row, int in_column, double in_k0);
+std::complex<double> matrixD(int in_row, int in_column, std::complex<double> in_k0);
 
 void set_the_st(SpaceTransformation *);
 

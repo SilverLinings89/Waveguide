@@ -6,6 +6,11 @@
 #include "../Code/HSIEPreconditioner/LaguerreFunction.h"
 
 #include "gtest/gtest.h"
+#include "../Code/HSIEPreconditioner/HSIESurface.h"
+
+TEST(HSIEPolynomialTests, InitializationTest) {
+    DofData d = DofData();
+}
 
 TEST(DOFManagerTests, StaticFunctionTest) {
     ASSERT_EQ(DOFManager::testValue(),4);

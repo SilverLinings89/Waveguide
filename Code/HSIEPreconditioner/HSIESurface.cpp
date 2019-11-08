@@ -5,6 +5,7 @@
 #include <deal.II/grid/grid_generator.h>
 #include "HSIESurface.h"
 #include "../Core/NumericProblem.h"
+#include "HSIEPolynomial.h"
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria_accessor.h>
 
@@ -106,9 +107,11 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> * matrix, deal
 
 template <unsigned int ORDER>
 double HSIESurface<ORDER>::compute_coupling(DofData & u, DofData & v, dealii::Triangulation<2,3>::cell_iterator * cell) {
-    double ret = 0;
-    
-    return ret;
+    std::complex<double> ret(0,0);
+    HSIEPolynomial up(u);
+    HSIEPolynomial vp(v);
+
+    return ret.real();
 }
 
 template<unsigned int ORDER>

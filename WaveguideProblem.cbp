@@ -470,6 +470,12 @@
 		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/Core/SolutionWeight.h">
 			<Option target="Code"/>
 		</Unit>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/HSIEPreconditioner/HSIEPolynomial.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/HSIEPreconditioner/HSIEPolynomial.h">
+			<Option target="Code"/>
+		</Unit>
 		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/HSIEPreconditioner/HSIEPreconditioner.cpp">
 			<Option target="Code"/>
 		</Unit>
