@@ -14,15 +14,19 @@ class HSIEPolynomial {
     std::complex<double> k0;
     std::complex<double> evaluate( std::complex<double> x);
     std::complex<double> evaluate_dx ( std::complex<double> x);
-
     void update_derivative();
-    HSIEPolynomial applyD();
-    HSIEPolynomial applyI();
+    static void computeDandI(unsigned int, std::complex<double>);
 
 public:
-    explicit HSIEPolynomial(DofData& in_dof);
+    explicit HSIEPolynomial(DofData& in_dof, std::complex<double> k0);
+    explicit HSIEPolynomial(std::vector<std::complex<double>> in_a, std::complex<double> k0);
 
-    explicit HSIEPolynomial(std::vector<std::complex<double>> in_a);
+    static bool matricesLoaded;
+    static dealii::FullMatrix<std::complex<double>> D;
+    static dealii::FullMatrix<std::complex<double>> I;
+
+    HSIEPolynomial applyD();
+    HSIEPolynomial applyI();
 };
 
 

@@ -30,7 +30,7 @@ std::string total_filename = "total.log";
 int StepsR = 10;
 int StepsPhi = 10;
 int alert_counter = 0;
-std::string input_file_name = "";
+std::string input_file_name;
 SpaceTransformation *the_st = 0;
 
 void set_the_st(SpaceTransformation *in_st) { the_st = in_st; }
@@ -49,15 +49,30 @@ std::complex<double> matrixD(int in_row, int in_column, std::complex<double> in_
         return ret;
     }
     std::complex<double> part = 1.0 / (std::complex<double>(0, 2) * in_k0);
-    if (in_row == in_column) {
-        ret = std::complex<double>(-1.0 * ((in_row + 1) * 2 - 1), 0) * part;
-        ret += std::complex<double>(1, 0);
-        return ret;
+    if(in_row == 0) {
+        if(in_column == 0) {
+            return (-1.0 * part) + 1.0;
+        } else {
+            return part;
+        }
     } else {
-        ret +=
-                std::complex<double>(1, 0) + std::complex<double>(in_row + 1, 0) * part;
-        return ret;
+        if(in_column == in_row - 1) {
+            ret = (double)in_row * part * 1.0;
+        }
+        if(in_column == in_row) {
+            ret = (double)in_row * part * (-2.0);
+        }
+        if(in_column == in_row + 1) {
+            ret = (double)in_row * part * 1.0;
+        }
     }
+    if(in_column == in_row) {
+        ret += std::complex<double>(1, 0) - part;
+    }
+    if(in_column == in_row+1) {
+        ret += part;
+    }
+    return ret;
 }
 
 void PrepareStreams() {

@@ -210,7 +210,7 @@ bool compareIndexCenterPairs(DofSortData c1,
     if(c1.order > c2.order) {
         return false;
     }
-    std::cout << "There was an error in dof sorting - two object were undistinguishable." <<std::endl;
+    std::cout << "There was an error in dof sorting - two object were indistinguishable." <<std::endl;
     return false;
 }
 

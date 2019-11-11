@@ -21,7 +21,7 @@ void HSIESurface<ORDER>::prepare_surface_triangulation() {
 
 template<unsigned int ORDER>
 HSIESurface<ORDER>::HSIESurface(dealii::Triangulation<3, 3> *in_main_triangulation, unsigned int in_boundary_id,
-                                unsigned int in_level, unsigned int in_inner_order):
+                                unsigned int in_level, unsigned int in_inner_order, std::complex<double> in_k0):
                                 main_triangulation(in_main_triangulation),
                                 b_id(in_boundary_id),
                                 level(in_level),
@@ -30,6 +30,7 @@ HSIESurface<ORDER>::HSIESurface(dealii::Triangulation<3, 3> *in_main_triangulati
                                 fe_q(dealii::FE_Q<2>(GlobalParams.So_ElementOrder), 2)
                                 {
     dof_counter = 0;
+    k0 = in_k0;
 }
 
 template<unsigned int ORDER>
@@ -41,7 +42,7 @@ void HSIESurface<ORDER>::compute_dof_numbers() {
 
 template<unsigned int ORDER>
 std::vector<DofData> HSIESurface<ORDER>::get_dof_data_for_cell(dealii::Triangulation<2,3>::cell_iterator * cell) {
-    std::vector<DofData> ret = new std::vector<DofData>();
+    std::vector<DofData> ret;
 
     // get cell dofs:
     std::string cell_id = (*cell)->id().to_string();
@@ -86,7 +87,7 @@ std::vector<DofData> HSIESurface<ORDER>::get_dof_data_for_cell(dealii::Triangula
 template<unsigned int ORDER>
 void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> * matrix, dealii::IndexSet global_indices) {
     auto it = surface_triangulation.begin_active();
-    auto end = surface_triangulation.end_active();
+    auto end = surface_triangulation.end();
     // for each cell
     for(; it != end; ++it) {
         std::vector<DofData> cell_dofs = this->get_dofs_for_cell(it);
@@ -108,8 +109,8 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> * matrix, deal
 template <unsigned int ORDER>
 double HSIESurface<ORDER>::compute_coupling(DofData & u, DofData & v, dealii::Triangulation<2,3>::cell_iterator * cell) {
     std::complex<double> ret(0,0);
-    HSIEPolynomial up(u);
-    HSIEPolynomial vp(v);
+    HSIEPolynomial up(u, k0);
+    HSIEPolynomial vp(v, k0);
 
     return ret.real();
 }

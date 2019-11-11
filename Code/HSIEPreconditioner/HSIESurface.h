@@ -73,9 +73,10 @@ class HSIESurface {
     unsigned int dof_counter;
     dealii::Point<3> reference_point;
     std::map<dealii::Triangulation<2,3>::cell_iterator, dealii::Triangulation<3,3>::face_iterator > association;
+    std::complex<double> k0;
 
 public:
-    HSIESurface(dealii::Triangulation<3,3> * in_main_triangulation, unsigned int in_boundary_id, unsigned int in_level, unsigned int in_inner_order);
+    HSIESurface(dealii::Triangulation<3,3> * in_main_triangulation, unsigned int in_boundary_id, unsigned int in_level, unsigned int in_inner_order, std::complex<double> k0);
 
     std::vector<DofData> get_dof_data_for_cell(dealii::Triangulation<2,3>::cell_iterator *);
     double compute_coupling(DofData &, DofData &, dealii::Triangulation<2,3>::cell_iterator *);

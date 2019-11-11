@@ -98,7 +98,7 @@ struct ConstraintPair {
  * Upon initialization it requires structural information about the waveguide
  * that will be simulated. The object then continues to initialize the
  * FEM-framework. After allocating space for all objects, the
- * assemblation-process of the system-matrix begins. Following this step, the
+ * assembly-process of the system-matrix begins. Following this step, the
  * user-selected preconditioner and solver are used to solve the system and
  * generate outputs. This class is the core piece of the implementation.
  *
@@ -134,8 +134,8 @@ public:
     void run();
 
     /**
-     * To compute the output quality of the signal and it's transmition along
-     * the waveguid-axis, this function performs a comparison of the fundamental
+     * To compute the output quality of the signal and it's transmission along
+     * the waveguide-axis, this function performs a comparison of the fundamental
      * mode of a waveguide and the actual situation. For this purpose we
      * integrate the product of the two functions over a cross-section of the
      * waveguide in transformed coordinates. To perform this action we need to
@@ -148,9 +148,9 @@ public:
     std::complex<double> evaluate_for_Position(double x, double y, double z);
 
     /**
-     * This function is an alternat Version of evaluate_for_Position() which
+     * This function is an alternate version of evaluate_for_Position() which
      * doesn't project the E-Field onto the Modes of the waveguide but rather
-     * computes the Poynting-Vector Type Energy stored in the wavegudie,
+     * computes the Poynting-Vector Type Energy stored in the waveguide,
      * Specifically this computes \epsilon(x) * E(x) * \bar{E(x)} where x is the
      * vector passed as individual parameters. \param x gives the x-coordinate.
      * \param y gives the y-coordinate. \param z gives the z-coordinate.
@@ -159,8 +159,8 @@ public:
                                                       double z);
 
     /**
-     * To compute the output quality of the signal and it's transmition along the
-     * waveguid-axis, this function performs a comparison of the fundamental mode
+     * To compute the output quality of the signal and it's transmission along the
+     * waveguide-axis, this function performs a comparison of the fundamental mode
      * of a waveguide and the actual situation. For this purpose we integrate the
      * product of the two functions over a cross-section of the waveguide in
      * transformed coordinates. To perform this action we need to use numeric
@@ -175,10 +175,10 @@ public:
     /**
      * This function has the purpose of filling the qualities array in every
      * process with the appropriate Values from the other ones. Now it will become
-     * necessary to build an optimization-scheme ontop, which can handle this
+     * necessary to build an optimization-scheme on top, which can handle this
      * information on process one and then distribute a new shape to the others.
      * The function will use the Waveguide-Property execute_rebuild to signal a
-     * need for recomputation.
+     * need for re-computation.
      */
     void evaluate();
 
@@ -215,12 +215,12 @@ public:
             double stepwidth);
 
     /**
-     * This chages the SpaceTransformation object used to compute the material-tensors epsilon and mu. The primal version uses the physical representation of the system, whereas the dual version switches to the coordinates to always send the signal backwards through the waveguide configuration.
+     * This changes the SpaceTransformation object used to compute the material-tensors epsilon and mu. The primal version uses the physical representation of the system, whereas the dual version switches to the coordinates to always send the signal backwards through the waveguide configuration.
      */
     void switch_to_primal(SpaceTransformation *primal_st);
 
 /**
-   * This chages the SpaceTransformation object used to compute the material-tensors epsilon and mu. The primal version uses the physical representation of the system, whereas the dual version switches to the coordinates to always send the signal backwards through the waveguide configuration.
+   * This changes the SpaceTransformation object used to compute the material-tensors epsilon and mu. The primal version uses the physical representation of the system, whereas the dual version switches to the coordinates to always send the signal backwards through the waveguide configuration.
    */
     void switch_to_dual(SpaceTransformation *dual_st);
 
@@ -279,7 +279,7 @@ private:
      * This problem can be solved automatically by deal and uses the same
      * mechanism (constraints) as mathematical boundary values do.
      *
-     * 	Constraint Matrixes (as constructed in this function) can be used
+     * 	Constraint matrices (as constructed in this function) can be used
      * primarily in two ways. Documentation concerning this problem can be found
      * at [Constraints On Degrees Of
      * Freedom](https://www.dealii.org/developer/doxygen/deal.II/group__constraints.html).
@@ -314,7 +314,7 @@ private:
     void output_results(bool details);
 
     /**
-     * This function is used bz the GMRE-solvers in deal. This solver uses the
+     * This function is used bz the GMRES-solvers in deal. This solver uses the
      * iteration-results to estimate the eigenvalues and this function is used via
      * handle to use them. In this function, the eigenvalues are simply pushed
      * into a file.
@@ -322,7 +322,7 @@ private:
     void print_eigenvalues(const std::vector<std::complex<double>> &);
 
     /**
-     * Similar to the functio print_eigenvalues(const
+     * Similar to the function print_eigenvalues(const
      * std::vector<std::complex<double>> &) , this function uses step-results of
      * the GMRES-solver to make properties of the system-matrix available. In this
      * case it is the condition number, estimated on the basis of said
@@ -341,7 +341,7 @@ private:
     /**
      * This function fills the AffineConstraints<double>-object of the
      * NumericProblem-object with all constraints needed for condensation into the
-     * szstem-matrix. It's properties are derived from the Waveguide itself and
+     * system-matrix. It's properties are derived from the Waveguide itself and
      * the Waveguide-Structure-object available to it, therefore there are no
      * parameters but those members need to be prepared accordingly..
      */
@@ -393,7 +393,7 @@ private:
             Tensor<1, 3, std::complex<double>> input);
 
     /**
-     * Reinit all datastorage objects.
+     * Reinitialize all data storage objects.
      */
     void reinit_all();
 
@@ -438,7 +438,7 @@ private:
      * push it to some data stream.
      */
     SolverControl::State residual_tracker(
-            unsigned int Iteration, double resiudal,
+            unsigned int Iteration, double residual,
             dealii::TrilinosWrappers::MPI::BlockVector vec);
 
     /**

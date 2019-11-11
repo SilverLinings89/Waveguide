@@ -5,6 +5,22 @@
 #include "HSIEPolynomial.h"
 #include "../Helpers/staticfunctions.h"
 
+bool HSIEPolynomial::matricesLoaded = false;
+dealii::FullMatrix<std::complex<double>> HSIEPolynomial::D;
+dealii::FullMatrix<std::complex<double>> HSIEPolynomial::I;
+
+void HSIEPolynomial::computeDandI(unsigned int dimension, std::complex<double> k0) {
+    HSIEPolynomial::D.reinit(dimension, dimension);
+    for(unsigned int i = 0; i < dimension; i++) {
+        for (unsigned int j = 0; j < dimension; j++) {
+            HSIEPolynomial::D.set(i,j,matrixD(i, j, k0));
+        }
+    }
+    HSIEPolynomial::I.copy_from(HSIEPolynomial::D);
+    HSIEPolynomial::I.invert(HSIEPolynomial::D);
+    HSIEPolynomial::matricesLoaded = true;
+}
+
 std::complex<double> HSIEPolynomial::evaluate(std::complex<double> x_in) {
     std::complex<double> ret(a[0]);
     std::complex<double> x = x_in;
@@ -25,7 +41,7 @@ std::complex<double> HSIEPolynomial::evaluate_dx(std::complex<double> x_in) {
     return ret;
 }
 
-HSIEPolynomial::HSIEPolynomial(DofData& in_dof) {
+HSIEPolynomial::HSIEPolynomial(DofData& in_dof, std::complex<double> in_k0) {
     this->a = std::vector<std::complex<double>>();
     this->da = std::vector<std::complex<double>>();
     for(int i = 0; i < in_dof.hsie_order - 1; i++) {
@@ -37,36 +53,43 @@ HSIEPolynomial::HSIEPolynomial(DofData& in_dof) {
         this->a.emplace_back(0.0,1.0);
     }
     this->update_derivative();
+    this->k0 = in_k0;
 }
 
-HSIEPolynomial::HSIEPolynomial(std::vector<std::complex<double>> in_a) {
+HSIEPolynomial::HSIEPolynomial(std::vector<std::complex<double>> in_a, std::complex<double> in_k0) {
     this->a = in_a;
     this->update_derivative();
+    this->k0 = in_k0;
 }
 
 HSIEPolynomial HSIEPolynomial::applyD() {
+    if(! this->matricesLoaded) {
+        this->computeDandI(this->a.size(), this->k0);
+    }
     std::vector<std::complex<double>> n_a;
     for(long int i = 0; i < this->a.size(); i++) {
         std::complex<double> component(0,0);
         for(long int j = 0; j < this->a.size(); j++) {
-            component += this->a[j] * matrixD(i,j,this->k0);
+            component += this->a[j] * this->D(i,j);
         }
         n_a.push_back(component);
     }
-    return HSIEPolynomial(n_a);
+    return HSIEPolynomial(n_a, k0);
 }
 
 HSIEPolynomial HSIEPolynomial::applyI() {
-    // TODO: Hier fehlt noch die Implementiereung mit I statt D.
+    if(! this->matricesLoaded) {
+        this->computeDandI(this->a.size(), this->k0);
+    }
     std::vector<std::complex<double>> n_a;
     for(long int i = 0; i < this->a.size(); i++) {
         std::complex<double> component(0,0);
         for(long int j = 0; j < this->a.size(); j++) {
-            component += this->a[j] * matrixD(i,j,this->k0);
+            component += this->a[j] * this->I(i,j);
         }
         n_a.push_back(component);
     }
-    return HSIEPolynomial(n_a);
+    return HSIEPolynomial(n_a, k0);
 }
 
 void HSIEPolynomial::update_derivative() {
