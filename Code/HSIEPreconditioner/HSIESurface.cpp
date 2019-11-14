@@ -9,6 +9,8 @@
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria_accessor.h>
 
+#include "../Helpers/QuadratureFormulaCircle.cpp"
+#include "DofData.h"
 #include <utility>
 
 
@@ -251,6 +253,8 @@ void HSIESurface<ORDER>::initialize_dof_handlers_and_fe() {
     dof_h_nedelec.distribute_dofs(fe_nedelec);
 }
 
+
+
 template<unsigned int ORDER>
 void HSIESurface<ORDER>::update_dof_counts_for_edge(const dealii::DoFHandler<2>::active_cell_iterator cell, unsigned  int edge, DofCount & in_dof_count) {
     bool edge_is_owned = is_edge_owned(cell, edge);
@@ -425,4 +429,45 @@ template<unsigned int ORDER>
 unsigned int HSIESurface<ORDER>::register_dof() {
     this->dof_counter++;
     return this->dof_counter - 1;
+}
+
+template<unsigned int ORDER>
+std::complex<double> HSIESurface<ORDER>::evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, unsigned int gauss_order) {
+    double *r = NULL;
+    double *t = NULL;
+    double *q = NULL;
+    double *A = NULL;
+    double B;
+    double x, y;
+    std::complex<double> s(0.0, 0.0);
+
+    int i, j;
+
+    /* Load appropriate predefined table */
+    for (i = 0; i < GSPHERESIZE; i++) {
+        if (gauss_order == gsphere[i].n) {
+            r = gsphere[i].r;
+            t = gsphere[i].t;
+            q = gsphere[i].q;
+            A = gsphere[i].A;
+            B = gsphere[i].B;
+            break;
+        }
+    }
+
+    if (NULL == r) return -1.0;
+
+    for (i = 0; i < gauss_order; i++) {
+        for (j = 0; j < gauss_order; j++) {
+            x = r[j] * q[i];
+            y = r[j] * t[i];
+            s += (  u[0].evaluate(std::complex<double>(x,y)) * v[0].evaluate(std::complex<double>(x,-y)) +
+                    u[1].evaluate(std::complex<double>(x,y)) * v[1].evaluate(std::complex<double>(x,-y)) +
+                    u[2].evaluate(std::complex<double>(x,y)) * v[2].evaluate(std::complex<double>(x,-y)) ) * A[j];
+        }
+    }
+
+    s *= B;
+
+    return s;
 }

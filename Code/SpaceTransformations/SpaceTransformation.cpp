@@ -5,11 +5,9 @@
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/tensor.h>
-#include <deal.II/lac/vector.h>
 #include <complex>
 #include "../Core/Sector.h"
 #include "../Helpers/QuadratureFormulaCircle.cpp"
-#include "../Helpers/staticfunctions.h"
 
 std::pair<int, double> SpaceTransformation::Z_to_Sector_and_local_z(
         double in_z) const {

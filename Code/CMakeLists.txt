@@ -30,10 +30,11 @@ ADD_LIBRARY(Code
         SpaceTransformations/HomogenousTransformationRectangular.cpp
         SpaceTransformations/InhomogenousTransformationRectangular.cpp
         SpaceTransformations/SpaceTransformation.cpp
+        HSIEPreconditioner/HSIEPolynomial.cpp
         HSIEPreconditioner/HSIEPreconditioner.cpp
         HSIEPreconditioner/HSIESurface.cpp
         HSIEPreconditioner/LaguerreFunction.cpp
-        HSIEPreconditioner/HSIEPolynomial.cpp)
+        )
 
 DEAL_II_SETUP_TARGET(Code)
 	

@@ -4,6 +4,7 @@
 
 #include "HSIEPolynomial.h"
 #include "../Helpers/staticfunctions.h"
+#include "DofData.h"
 
 bool HSIEPolynomial::matricesLoaded = false;
 dealii::FullMatrix<std::complex<double>> HSIEPolynomial::D;
@@ -41,7 +42,18 @@ std::complex<double> HSIEPolynomial::evaluate_dx(std::complex<double> x_in) {
     return ret;
 }
 
-HSIEPolynomial::HSIEPolynomial(DofData& in_dof, std::complex<double> in_k0) {
+HSIEPolynomial::HSIEPolynomial(unsigned int order, std::complex<double> in_k0) {
+    this->a = std::vector<std::complex<double>>();
+    this->da = std::vector<std::complex<double>>();
+    for(int i = 0; i < order; i++) {
+        this->a.emplace_back(0.0,0.0);
+    }
+    this->a.emplace_back(1.0,0.0);
+    this->update_derivative();
+    this->k0 = in_k0;
+}
+
+HSIEPolynomial::HSIEPolynomial(DofData &in_dof, std::complex<double> in_k0) {
     this->a = std::vector<std::complex<double>>();
     this->da = std::vector<std::complex<double>>();
     for(int i = 0; i < in_dof.hsie_order - 1; i++) {
@@ -97,4 +109,77 @@ void HSIEPolynomial::update_derivative() {
     for(long int i = 1; i < this->a.size(); i++) {
         this->da.emplace_back(i*this->a[i].real(),i*this->a[i].imag());
     }
+}
+
+void HSIEPolynomial::applyTplus(std::complex<double> u_0) {
+    std::complex<double> temp_pre, temp_post;
+    temp_post = this->a[0];
+    this->a[0] = u_0 + this->a[0];
+    for(unsigned int i = 1; i < this->a.size(); i++) {
+        temp_pre = this->a[i];
+        this->a[i] += temp_post;
+        temp_post = temp_pre;
+    }
+    this->a.push_back(temp_post);
+    this->multiplyBy(0.5);
+}
+
+void HSIEPolynomial::applyTminus(std::complex<double> u_0) {
+    std::complex<double> temp_pre, temp_post;
+    temp_post = this->a[0];
+    this->a[0] = u_0 - this->a[0];
+    for(unsigned int i = 1; i < this->a.size(); i++) {
+        temp_pre = this->a[i];
+        this->a[i] = temp_post - this->a[i];
+        temp_post = temp_pre;
+    }
+    this->a.push_back(temp_post);
+    this->multiplyBy(0.5);
+}
+
+void HSIEPolynomial::multiplyBy(double factor) {
+    multiplyBy(std::complex<double>(factor, 0));
+}
+
+void HSIEPolynomial::multiplyBy(std::complex<double> factor) {
+    for (auto & i : this->a) {
+        i *= factor;
+    }
+    this->update_derivative();
+}
+
+HSIEPolynomial HSIEPolynomial::PsiMinusOne(std::complex<double> k0) {
+    std::complex<double> one(1,0);
+    std::complex<double> i(0,1);
+    std::vector<std::complex<double>> a;
+    a.emplace_back(0,0);
+    HSIEPolynomial ret (a,k0);
+    ret.applyTminus(one);
+    ret.multiplyBy(one/(i*k0));
+    return ret;
+}
+
+HSIEPolynomial HSIEPolynomial::PsiJ(unsigned int j, std::complex<double> k0) {
+    std::complex<double> one(1,0);
+    std::complex<double> i(0,1);
+    HSIEPolynomial ret (j, k0);
+    ret.applyTminus(std::complex<double>(0,0));
+    ret.multiplyBy(one/(i*k0));
+    return ret;
+}
+
+HSIEPolynomial HSIEPolynomial::PhiMinusOne(std::complex<double> k0) {
+    std::complex<double> one(1,0);
+    std::vector<std::complex<double>> a;
+    a.emplace_back(0,0);
+    HSIEPolynomial ret (a,k0);
+    ret.applyTplus(one);
+    return ret;
+}
+
+HSIEPolynomial HSIEPolynomial::PhiJ(unsigned int j, std::complex<double> k0) {
+    std::complex<double> zero(0,0);
+    HSIEPolynomial ret (j, k0);
+    ret.applyTplus(zero);
+    return ret;
 }

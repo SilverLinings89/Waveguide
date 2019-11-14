@@ -13,14 +13,9 @@
 #include <deal.II/fe/fe_nedelec.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_system.h>
+#include "HSIEPolynomial.h"
+#include "DofData.h"
 
-union DofBaseStructureID {
-    std::string face_id;
-    unsigned int non_face_id;
-
-    DofBaseStructureID() {};
-    ~DofBaseStructureID() {};
-};
 
 struct DofCount {
     unsigned int owned = 0;
@@ -31,31 +26,6 @@ struct DofCount {
     unsigned int total = 0;
 };
 
-// IFF = Infinite Face Function (a and b)
-enum DofType {
-    EDGE, SURFACE, RAY, IFFa, IFFb, SEGMENTa, SEGMENTb
-};
-
-struct DofData {
-    DofType type;
-    int hsie_order;
-    int inner_order;
-    bool is_real;
-    unsigned int global_index;
-    DofBaseStructureID base_structure_id;
-
-    DofData() {
-        base_structure_id.face_id = "";
-    }
-
-    DofData(std::string in_id) {
-        base_structure_id.face_id = in_id;
-    }
-
-    DofData(unsigned int in_id) {
-        base_structure_id.non_face_id = in_id;
-    }
-};
 
 template<unsigned int ORDER>
 class HSIESurface {
@@ -103,9 +73,8 @@ public:
     unsigned int register_dof();
     void register_single_dof(std::string & in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &);
     void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &);
+
+    std::complex<double> evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, unsigned int gauss_order);
 };
-
-
-
 
 #endif //WAVEGUIDEPROBLEM_HSIESURFACE_H
