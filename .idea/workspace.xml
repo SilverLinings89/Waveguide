@@ -6,13 +6,13 @@
   </component>
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
     <generated>
-      <config projectName="WaveguideProblem" targetName="gtest_main" />
-      <config projectName="WaveguideProblem" targetName="gmock_main" />
-      <config projectName="WaveguideProblem" targetName="gmock" />
       <config projectName="WaveguideProblem" targetName="Google_Tests_run" />
-      <config projectName="WaveguideProblem" targetName="main" />
-      <config projectName="WaveguideProblem" targetName="gtest" />
       <config projectName="WaveguideProblem" targetName="Code" />
+      <config projectName="WaveguideProblem" targetName="gtest" />
+      <config projectName="WaveguideProblem" targetName="gmock" />
+      <config projectName="WaveguideProblem" targetName="main" />
+      <config projectName="WaveguideProblem" targetName="gmock_main" />
+      <config projectName="WaveguideProblem" targetName="gtest_main" />
     </generated>
   </component>
   <component name="CMakeSettings">
@@ -22,21 +22,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3eb79f9f-621c-46a2-93b5-87eed99f25a6" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/DofData.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/DofData.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Code/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/DofData.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/DofData.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIEPolynomial.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIEPolynomial.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIEPolynomial.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIEPolynomial.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/SpaceTransformations/SpaceTransformation.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/SpaceTransformations/SpaceTransformation.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WaveguideProblem.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/WaveguideProblem.cbp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/googletest/ExampleTest.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/ExampleTest.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/googletest/Google_Tests_run" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/Google_Tests_run" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/googletest/Google_tests.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/Google_tests.cbp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/googletest/lib/googlemock/gmock.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/lib/googlemock/gmock.cbp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/googletest/lib/googletest-distribution.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/lib/googletest-distribution.cbp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -102,7 +92,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="CMake Application.gtest">
+  <component name="RunManager" selected="CMake Application.Code">
     <configuration name="All in ExampleTest.cpp" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" temporary="true" PROGRAM_PARAMS="--gtest_output=xml" PASS_PARENT_ENVS_2="true" PROJECT_NAME="WaveguideProblem" TARGET_NAME="Google_Tests_run" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="WaveguideProblem" RUN_TARGET_NAME="Google_Tests_run" TEST_PATTERN="all-tests(file://$PROJECT_DIR$/googletest/ExampleTest.cpp)" TEST_MODE="PATTERN">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -208,6 +198,8 @@
       <workItem from="1572947943323" duration="12000" />
       <workItem from="1572947975991" duration="16161000" />
       <workItem from="1573472479589" duration="8387000" />
+      <workItem from="1573836579944" duration="1194000" />
+      <workItem from="1574109462179" duration="3442000" />
     </task>
     <option name="localTasksCounter" value="2" />
     <servers />

@@ -6,6 +6,7 @@
 #include "../Helpers/staticfunctions.h"
 #include "DofData.h"
 
+
 bool HSIEPolynomial::matricesLoaded = false;
 dealii::FullMatrix<std::complex<double>> HSIEPolynomial::D;
 dealii::FullMatrix<std::complex<double>> HSIEPolynomial::I;

@@ -13,6 +13,7 @@
 #include "DofData.h"
 #include <utility>
 
+// The solution to the association problem lies in cell->face(0)->dof_index(int, int). I can use it per cell to associate.
 
 template<unsigned int ORDER>
 void HSIESurface<ORDER>::prepare_surface_triangulation() {
@@ -28,8 +29,8 @@ HSIESurface<ORDER>::HSIESurface(dealii::Triangulation<3, 3> *in_main_triangulati
                                 b_id(in_boundary_id),
                                 level(in_level),
                                 Inner_Element_Order(in_inner_order),
-                                fe_nedelec(dealii::FE_Nedelec<2>(Inner_Element_Order), 2),
-                                fe_q(dealii::FE_Q<2>(GlobalParams.So_ElementOrder), 2)
+                                fe_nedelec(Inner_Element_Order),
+                                fe_q(GlobalParams.So_ElementOrder)
                                 {
     dof_counter = 0;
     k0 = in_k0;
@@ -40,6 +41,11 @@ void HSIESurface<ORDER>::compute_dof_numbers() {
     this->n_edge_dofs = compute_n_edge_dofs();
     this->n_face_dofs = compute_n_face_dofs();
     this->n_vertex_dofs = compute_n_vertex_dofs();
+}
+
+template  <unsigned int ORDER>
+void HSIESurface<ORDER>::compute_dof_base_indices() {
+
 }
 
 template<unsigned int ORDER>
@@ -195,7 +201,7 @@ DofCount HSIESurface<ORDER>::compute_n_face_dofs() {
 template<unsigned int ORDER>
 unsigned int HSIESurface<ORDER>::compute_dofs_per_edge(bool only_hsie_dofs) {
     unsigned int ret = 0;
-    const unsigned int INNER_REAL_DOFS_PER_LINE = fe_nedelec.dofs_per_line / 2;
+    const unsigned int INNER_REAL_DOFS_PER_LINE = fe_nedelec.dofs_per_line;
 
     // Number of inner dofs 1.
     if(! only_hsie_dofs) {
@@ -213,8 +219,8 @@ unsigned int HSIESurface<ORDER>::compute_dofs_per_edge(bool only_hsie_dofs) {
 template<unsigned int ORDER>
 unsigned int HSIESurface<ORDER>::compute_dofs_per_face(bool only_hsie_dofs) {
     unsigned int ret = 0;
-    const unsigned int INNER_REAL_NEDELEC_DOFS_PER_FACE = fe_nedelec.dofs_per_face / 2;
-    const unsigned int INNER_REAL_Q_DOFS_PER_FACE = fe_q.dofs_per_face / 2;
+    const unsigned int INNER_REAL_NEDELEC_DOFS_PER_FACE = fe_nedelec.dofs_per_face;
+    const unsigned int INNER_REAL_Q_DOFS_PER_FACE = fe_q.dofs_per_face;
     if(! only_hsie_dofs) {
         ret += INNER_REAL_NEDELEC_DOFS_PER_FACE;
     }
@@ -286,8 +292,6 @@ void HSIESurface<ORDER>::update_dof_counts_for_face(const dealii::DoFHandler<2>:
 template<unsigned int ORDER>
 void HSIESurface<ORDER>::update_dof_counts_for_vertex(const dealii::DoFHandler<2>::active_cell_iterator cell, unsigned  int edge, unsigned int vertex, DofCount & in_dof_count) {
     bool edge_is_owned = is_vertex_owned(cell, edge, vertex);
-
-    // These are only hsie dofs.
     const unsigned int dofs_per_vertex_all = compute_dofs_per_vertex();
 
     in_dof_count.total +=  dofs_per_vertex_all;
@@ -343,9 +347,11 @@ template<unsigned int ORDER>
 void HSIESurface<ORDER>::register_new_vertex_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
                                                   unsigned int vertex) {
     const int max_hsie_order = ORDER;
+    std::vector<unsigned int> local_dofs;
+    cell->line(edge)->child(vertex)->get_dof_indices(local_dofs);
     for(int hsie_order = -1; hsie_order <= max_hsie_order; hsie_order++ ) {
-        register_single_dof(cell->line(edge)->vertex_index(vertex), hsie_order, -1, true, DofType::RAY, &vertex_dof_data);
-        register_single_dof(cell->line(edge)->vertex_index(vertex), hsie_order, -1, false, DofType::RAY, &vertex_dof_data);
+        register_single_dof(cell->line(edge)->vertex_index(vertex), hsie_order, -1, true, DofType::RAY, &vertex_dof_data, local_dofs[0]);
+        register_single_dof(cell->line(edge)->vertex_index(vertex), hsie_order, -1, false, DofType::RAY, &vertex_dof_data, local_dofs[0]);
     }
 }
 
@@ -353,24 +359,26 @@ template<unsigned int ORDER>
 void HSIESurface<ORDER>::register_new_edge_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge) {
     const int max_hsie_order = ORDER;
     // EDGE Dofs
-    for(int inner_order = 1; inner_order <= fe_nedelec.dofs_per_line / 2; inner_order++ ) {
-        register_single_dof(cell->line_index(edge), -2, inner_order, true, DofType::EDGE, &edge_dof_data);
-        register_single_dof(cell->line_index(edge), -2, inner_order, false, DofType::EDGE, &edge_dof_data);
+    std::vector<unsigned int> local_dofs;
+    cell->line(edge)->get_dof_indices(local_dofs);
+    for(int inner_order = 1; inner_order <= fe_nedelec.dofs_per_line; inner_order++ ) {
+        register_single_dof(cell->line_index(edge), -2, inner_order, true, DofType::EDGE, &edge_dof_data, local_dofs[inner_order]);
+        register_single_dof(cell->line_index(edge), -2, inner_order, false, DofType::EDGE, &edge_dof_data, local_dofs[inner_order]);
     }
 
     // INFINITE FACE Dofs Type a
-    for(int inner_order = 1; inner_order <= fe_nedelec.dofs_per_line / 2; inner_order++ ) {
+    for(int inner_order = 1; inner_order <= fe_nedelec.dofs_per_line; inner_order++ ) {
         for(int hsie_order = 0; hsie_order <= max_hsie_order; hsie_order ++) {
-            register_single_dof(cell->line_index(edge), hsie_order, inner_order, true, DofType::IFFa, &edge_dof_data);
-            register_single_dof(cell->line_index(edge), hsie_order, inner_order, false, DofType::IFFa, &edge_dof_data);
+            register_single_dof(cell->line_index(edge), hsie_order, inner_order, true, DofType::IFFa, &edge_dof_data, local_dofs[inner_order]);
+            register_single_dof(cell->line_index(edge), hsie_order, inner_order, false, DofType::IFFa, &edge_dof_data, local_dofs[inner_order]);
         }
     }
 
     // INFINITE FACE Dofs Type b
-    for(int inner_order = 1; inner_order <= ((int)fe_nedelec.dofs_per_line / 2) - 1; inner_order++ ) {
+    for(int inner_order = 1; inner_order <= fe_nedelec.dofs_per_line - 1; inner_order++ ) {
         for(int hsie_order = -1; hsie_order <= max_hsie_order; hsie_order ++) {
-            register_single_dof(cell->line_index(edge), hsie_order, inner_order, true, DofType::IFFb, &edge_dof_data);
-            register_single_dof(cell->line_index(edge), hsie_order, inner_order, false, DofType::IFFb, &edge_dof_data);
+            register_single_dof(cell->line_index(edge), hsie_order, inner_order, true, DofType::IFFb, &edge_dof_data, local_dofs[inner_order]);
+            register_single_dof(cell->line_index(edge), hsie_order, inner_order, false, DofType::IFFb, &edge_dof_data, local_dofs[inner_order]);
         }
     }
 }
@@ -378,50 +386,66 @@ void HSIESurface<ORDER>::register_new_edge_dofs(dealii::DoFHandler<2>::active_ce
 template<unsigned int ORDER>
 void HSIESurface<ORDER>::register_new_surface_dofs(dealii::DoFHandler<2>::active_cell_iterator cell) {
     const int max_hsie_order = ORDER;
+    std::vector<unsigned int> surface_dofs;
+    cell->get_dof_indices(surface_dofs);
+    IndexSet surf_dofs, edge_dofs;
+    for(unsigned int i = 0; i < surface_dofs.size(); i++) {
+        surf_dofs.add_index(surface_dofs[i]);
+    }
+    for(unsigned int i = 0; i < dealii::GeometryInfo<2>::lines_per_face; i++) {
+        std::vector<unsigned int> line_dofs;
+        cell->line(i)->get_dof_indices(line_dofs);
+        for(unsigned int j = 0; j < line_dofs.size(); j++) {
+            edge_dofs.add_index(line_dofs[j]);
+        }
+    }
+    surf_dofs.subtract_set(edge_dofs);
+
     // SURFACE functions
-    for(int inner_order = 1; inner_order <= ((int)fe_nedelec.dofs_per_line / 2) * ((int)fe_nedelec.dofs_per_line / 2 - 2) ; inner_order++ ) {
-        register_single_dof(cell->id().to_string(), -2, inner_order, true, DofType::SURFACE, &face_dof_data);
-        register_single_dof(cell->id().to_string(), -2, inner_order, false, DofType::SURFACE, &face_dof_data);
+    for(unsigned int inner_order = 0; inner_order < surf_dofs.n_elements(); inner_order++ ) {
+        register_single_dof(cell->id().to_string(), -2, inner_order, true, DofType::SURFACE, &face_dof_data, surf_dofs.nth_index_in_set(inner_order));
+        register_single_dof(cell->id().to_string(), -2, inner_order, false, DofType::SURFACE, &face_dof_data, surf_dofs.nth_index_in_set(inner_order));
     }
 
     // SEGMENT functions a
-    for(int inner_order = 1; inner_order <= ((int)fe_nedelec.dofs_per_line / 2) * ((int)fe_nedelec.dofs_per_line / 2 - 2) ; inner_order++ ) {
+    for(unsigned int inner_order = 0; inner_order < surf_dofs.n_elements() ; inner_order++ ) {
         for(int hsie_order = 0; hsie_order <= max_hsie_order; hsie_order ++) {
-            register_single_dof(cell->id().to_string(), hsie_order, inner_order, true, DofType::SEGMENTa, &face_dof_data);
-            register_single_dof(cell->id().to_string(), hsie_order, inner_order, false, DofType::SEGMENTa, &face_dof_data);
+            register_single_dof(cell->id().to_string(), hsie_order, inner_order, true, DofType::SEGMENTa, &face_dof_data, surf_dofs.nth_index_in_set(inner_order));
+            register_single_dof(cell->id().to_string(), hsie_order, inner_order, false, DofType::SEGMENTa, &face_dof_data, surf_dofs.nth_index_in_set(inner_order));
         }
     }
 
     // SEGMENT functions b
-    const int INNER_ELEMENT_ORDER = fe_nedelec.dofs_per_line / 2;
-    for(int inner_order = 1; inner_order <= (INNER_ELEMENT_ORDER-1)*(INNER_ELEMENT_ORDER-2)/2 ; inner_order++ ) {
+    for(unsigned int inner_order = 0; inner_order < surf_dofs.n_elements()/2 ; inner_order++ ) {
         for(int hsie_order = -1; hsie_order <= max_hsie_order; hsie_order ++) {
-            register_single_dof(cell->id().to_string(), hsie_order, inner_order, true, DofType::SEGMENTb, &face_dof_data);
-            register_single_dof(cell->id().to_string(), hsie_order, inner_order, false, DofType::SEGMENTb, &face_dof_data);
+            register_single_dof(cell->id().to_string(), hsie_order, inner_order, true, DofType::SEGMENTb, &face_dof_data, surf_dofs.nth_index_in_set(inner_order*2));
+            register_single_dof(cell->id().to_string(), hsie_order, inner_order, false, DofType::SEGMENTb, &face_dof_data, surf_dofs.nth_index_in_set(inner_order*2));
         }
     }
 
 }
 
 template<unsigned int ORDER>
-void HSIESurface<ORDER>::register_single_dof(std::string & in_id, const int in_hsie_order, const int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> & in_vector) {
+void HSIESurface<ORDER>::register_single_dof(std::string & in_id, const int in_hsie_order, const int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> & in_vector, unsigned int in_base_dof_index) {
     DofData dd(in_id);
     dd.global_index = register_dof();
     dd.hsie_order = in_hsie_order;
     dd.inner_order = in_inner_order;
     dd.is_real = in_is_real;
     dd.type = in_dof_type;
+    dd.set_base_dof(in_base_dof_index);
     in_vector.push_back(dd);
 }
 
 template<unsigned int ORDER>
-void HSIESurface<ORDER>::register_single_dof(unsigned int in_id, const int in_hsie_order, const int in_inner_order, const bool in_is_real, DofType in_dof_type, std::vector<DofData> & in_vector) {
+void HSIESurface<ORDER>::register_single_dof(unsigned int in_id, const int in_hsie_order, const int in_inner_order, const bool in_is_real, DofType in_dof_type, std::vector<DofData> & in_vector, unsigned int in_base_dof_index) {
     DofData dd(in_id);
     dd.global_index = register_dof();
     dd.hsie_order = in_hsie_order;
     dd.inner_order = in_inner_order;
     dd.is_real = in_is_real;
     dd.type = in_dof_type;
+    dd.set_base_dof(in_base_dof_index);
     in_vector.push_back(dd);
 }
 

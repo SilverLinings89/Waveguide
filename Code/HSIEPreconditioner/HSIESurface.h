@@ -34,14 +34,12 @@ class HSIESurface {
     const unsigned int b_id;
     const unsigned int Inner_Element_Order;
     unsigned int level;
-    DofCount n_vertex_dofs, n_face_dofs, n_edge_dofs;
     dealii::DoFHandler<2,3> dof_h_nedelec;
     dealii::DoFHandler<2,3> dof_h_q;
-    dealii::FESystem<2,3> fe_nedelec;
-    dealii::FESystem<2,3> fe_q;
+    dealii::FE_Nedelec<2> fe_nedelec;
+    dealii::FE_Q<2> fe_q;
     std::vector<DofData> face_dof_data, edge_dof_data, vertex_dof_data;
     unsigned int dof_counter;
-    dealii::Point<3> reference_point;
     std::map<dealii::Triangulation<2,3>::cell_iterator, dealii::Triangulation<3,3>::face_iterator > association;
     std::complex<double> k0;
 
@@ -71,10 +69,10 @@ public:
     void register_new_edge_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned  int edge);
     void register_new_surface_dofs(dealii::DoFHandler<2>::active_cell_iterator cell);
     unsigned int register_dof();
-    void register_single_dof(std::string & in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &);
-    void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &);
-
+    void register_single_dof(std::string & in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &, unsigned int);
+    void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &, unsigned int);
     std::complex<double> evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, unsigned int gauss_order);
+    void compute_dof_base_indices();
 };
 
 #endif //WAVEGUIDEPROBLEM_HSIESURFACE_H
