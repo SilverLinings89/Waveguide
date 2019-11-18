@@ -22,18 +22,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3eb79f9f-621c-46a2-93b5-87eed99f25a6" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/DofData.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/DofData.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Code/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIEPolynomial.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIEPolynomial.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIEPolynomial.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIEPolynomial.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Code/HSIEPreconditioner/HSIESurface.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Code/SpaceTransformations/SpaceTransformation.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Code/SpaceTransformations/SpaceTransformation.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/WaveguideProblem.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/WaveguideProblem.cbp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/googletest/ExampleTest.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/ExampleTest.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/googletest/Google_Tests_run" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/Google_Tests_run" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/googletest/Google_tests.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/Google_tests.cbp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/googletest/lib/googlemock/gmock.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/lib/googlemock/gmock.cbp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/googletest/lib/googletest-distribution.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/googletest/lib/googletest-distribution.cbp" afterDir="false" />
