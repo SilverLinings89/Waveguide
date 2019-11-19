@@ -43,11 +43,6 @@ void HSIESurface<ORDER>::compute_dof_numbers() {
     this->n_vertex_dofs = compute_n_vertex_dofs();
 }
 
-template  <unsigned int ORDER>
-void HSIESurface<ORDER>::compute_dof_base_indices() {
-
-}
-
 template<unsigned int ORDER>
 std::vector<DofData> HSIESurface<ORDER>::get_dof_data_for_cell(dealii::Triangulation<2,3>::cell_iterator * cell) {
     std::vector<DofData> ret;
@@ -94,33 +89,90 @@ std::vector<DofData> HSIESurface<ORDER>::get_dof_data_for_cell(dealii::Triangula
 
 template<unsigned int ORDER>
 void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> * matrix, dealii::IndexSet global_indices) {
-    auto it = surface_triangulation.begin_active();
-    auto end = surface_triangulation.end();
+    auto it = dof_h_nedelec.begin_active();
+    auto end = dof_h_nedelec.end();
     // for each cell
+    QGauss<2> quadrature_formula(2);
+    FEValues<2,3> fe_q_values(fe_q, quadrature_formula,
+                            update_values | update_gradients | update_JxW_values |
+                            update_quadrature_points);
+    FEValues<2,3> fe_n_values(fe_nedelec, quadrature_formula,
+                            update_values | update_gradients | update_JxW_values |
+                            update_quadrature_points);
+    std::vector<Point<3>> quadrature_points;
+    const unsigned int n_q_points = quadrature_formula.size();
+    const unsigned int dofs_per_cell = GeometryInfo<2>::vertices_per_cell * compute_dofs_per_vertex() + GeometryInfo<2>::lines_per_cell * compute_dofs_per_edge(false) + compute_dofs_per_face(false);
+    FullMatrix<double> cell_matrix_real(dofs_per_cell, dofs_per_cell);
+
+    auto it2 = dof_h_q.begin_active();
     for(; it != end; ++it) {
         std::vector<DofData> cell_dofs = this->get_dofs_for_cell(it);
-        // for each dof i
+        std::vector<HSIEPolynomial> polynomials;
+        std::vector<unsigned int> q_dofs;
+        std::vector<unsigned int> n_dofs;
+        it2->get_dof_indices(q_dofs);
+        it->get_dof_indices(n_dofs);
         for(unsigned int i = 0; i < cell_dofs.size(); i++) {
-            // get dof i type data (type and degree, base point etc.)
-            DofData& u = cell_dofs[i] ;
-            // for each dof j
-            for (unsigned int j = 0; j < cell_dofs.size(); j++) {
-                // get dof j type data (type and degree, base point etc.)
-                DofData& v = cell_dofs[j];
-                // compute their coupling and write it to matrix
-                matrix[global_indices.nth_index_in_set(i), global_indices.nth_index_in_set(j)] = this->compute_coupling(u,v,it);
+            polynomials.push_back(HSIEPolynomial(cell_dofs[i], k0));
+        }
+        std::vector<unsigned int> local_related_fe_index;
+        for(unsigned int i = 0; i < cell_dofs.size(); i++) {
+            if(cell_dofs[i].type == DofType::RAY) {
+                for(unsigned int j= 0; j < q_dofs.size(); j++) {
+                    if(q_dofs[j] == cell_dofs[i].base_dof_index) {
+                        local_related_fe_index.push_back(j);
+                        break;
+                    }
+                }
+            } else {
+                for(unsigned int j= 0; j < n_dofs.size(); j++) {
+                    if(n_dofs[j] == cell_dofs[i].base_dof_index) {
+                        local_related_fe_index.push_back(j);
+                        break;
+                    }
+                }
             }
         }
+
+        fe_n_values.reinit(it);
+        fe_q_values.reinit(it2);
+        quadrature_points = fe_q_values.get_quadrature_points();
+        std::vector<double> jxw_values = fe_n_values.get_JxW_values();
+        for(unsigned int q_point = 0; q_point < quadrature_points.size(); q_point++) {
+            double JxW = jxw_values[q_point];
+            // for each dof i
+            for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+
+
+                // get dof i type data (type and degree, base point etc.)
+                DofData &u = cell_dofs[i];
+                std::vector<HSIEPolynomial> u_contrib_curl, u_contrib;
+                if(cell_dofs[i].type == DofType::RAY) {
+                    u_contrib_curl = build_curl_term(u, &fe_q_values, quadrature_points[q_point], polynomials[i]);
+                    u_contrib = build_non_curl_term(u, &fe_q_values, quadrature_points[q_point], polynomials[i]);
+                } else {
+                    u_contrib_curl = build_curl_term(u, &fe_n_values, quadrature_points[q_point], polynomials[i]);
+                    u_contrib = build_non_curl_term(u, &fe_n_values, quadrature_points[q_point], polynomials[i]);
+                }
+                // for each dof j
+                for (unsigned int j = 0; j < cell_dofs.size(); j++) {
+                    // get dof j type data (type and degree, base point etc.)
+                    DofData &v = cell_dofs[j];
+                    std::vector<HSIEPolynomial> v_contrib_curl, v_contrib;
+                    if(cell_dofs[i].type == DofType::RAY) {
+                        v_contrib_curl = build_curl_term(v, &fe_q_values, quadrature_points[q_point], polynomials[j]);
+                        v_contrib = build_non_curl_term(v, &fe_q_values, quadrature_points[q_point], polynomials[j]);
+                    } else {
+                        v_contrib_curl = build_curl_term(v, &fe_n_values, quadrature_points[q_point], polynomials[j]);
+                        v_contrib = build_non_curl_term(v, &fe_n_values, quadrature_points[q_point], polynomials[j]);
+                    }
+                    // compute their coupling and write it to matrix
+                    cell_matrix_real[i, j] = (evaluate_a(u_contrib_curl, v_contrib_curl, 5) + evaluate_a(u_contrib, v_contrib, 5)) * JxW;
+                }
+            }
+        }
+        it2++;
     }
-}
-
-template <unsigned int ORDER>
-double HSIESurface<ORDER>::compute_coupling(DofData & u, DofData & v, dealii::Triangulation<2,3>::cell_iterator * cell) {
-    std::complex<double> ret(0,0);
-    HSIEPolynomial up(u, k0);
-    HSIEPolynomial vp(v, k0);
-
-    return ret.real();
 }
 
 template<unsigned int ORDER>
@@ -150,28 +202,19 @@ template<unsigned int ORDER>
 DofCount HSIESurface<ORDER>::compute_n_vertex_dofs() {
     std::set<unsigned int> touched_vertices;
     DoFHandler<2>::active_cell_iterator cell, endc;
-    endc = dof_h_nedelec.end();
+    endc = dof_h_q.end();
     DofCount ret;
     // for each cell
-    for(cell = dof_h_nedelec.begin(); cell != endc; cell++) {
+    for(cell = dof_h_q.begin(); cell != endc; cell++) {
         // for each edge
-        for(unsigned int edge = 0; edge < GeometryInfo<2>::lines_per_cell; edge++) {
-            // First Vertex
-            if(!(touched_vertices.end() == touched_vertices.find(cell->line(edge)->vertex_index(0)))) {
+        for(unsigned int vertex = 0; vertex < GeometryInfo<2>::vertices_per_cell; vertex++) {
+            unsigned int idx = cell->vertex_dof_index(vertex, 0);
+            if(!(touched_vertices.end() == touched_vertices.find(idx))) {
                 // handle it
-                update_dof_counts_for_vertex(cell, edge, 0, &ret);
-                register_new_vertex_dofs(cell, edge, 0);
+                update_dof_counts_for_vertex(cell, idx, vertex, &ret);
+                register_new_vertex_dofs(cell, idx, vertex);
                 // remember that it has been handled
-                touched_vertices.insert(cell->line_index(edge));
-            }
-
-            // if it wasn't handled before
-            if(!(touched_vertices.end() == touched_vertices.find(cell->line(edge)->vertex_index(1)))) {
-                // handle it
-                update_dof_counts_for_vertex(cell, edge, 1, &ret);
-                register_new_vertex_dofs(cell, edge, 1);
-                // remember that it has been handled
-                touched_vertices.insert(cell->line_index(edge));
+                touched_vertices.insert(idx);
             }
         }
     }
@@ -331,7 +374,7 @@ bool HSIESurface<ORDER>::is_vertex_owned(dealii::DoFHandler<2>::active_cell_iter
         return true;
     } else {
         Triangulation<3>::face_iterator face3d = association.find(cell)->second;
-        Point<3> location = face3d->line(edge)->vertex(vertex);
+        Point<3> location = face3d->vertex(vertex);
         if(location[0] == Geometry.x_range.first){
             return false;
         }
@@ -344,14 +387,12 @@ bool HSIESurface<ORDER>::is_vertex_owned(dealii::DoFHandler<2>::active_cell_iter
 }
 
 template<unsigned int ORDER>
-void HSIESurface<ORDER>::register_new_vertex_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
+void HSIESurface<ORDER>::register_new_vertex_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int dof_index,
                                                   unsigned int vertex) {
     const int max_hsie_order = ORDER;
-    std::vector<unsigned int> local_dofs;
-    cell->line(edge)->child(vertex)->get_dof_indices(local_dofs);
     for(int hsie_order = -1; hsie_order <= max_hsie_order; hsie_order++ ) {
-        register_single_dof(cell->line(edge)->vertex_index(vertex), hsie_order, -1, true, DofType::RAY, &vertex_dof_data, local_dofs[0]);
-        register_single_dof(cell->line(edge)->vertex_index(vertex), hsie_order, -1, false, DofType::RAY, &vertex_dof_data, local_dofs[0]);
+        register_single_dof(cell->vertex_index(vertex), hsie_order, -1, true, DofType::RAY, &vertex_dof_data, dof_index);
+        register_single_dof(cell->vertex_index(vertex), hsie_order, -1, false, DofType::RAY, &vertex_dof_data, dof_index);
     }
 }
 
@@ -494,4 +535,80 @@ std::complex<double> HSIESurface<ORDER>::evaluate_a(std::vector<HSIEPolynomial> 
     s *= B;
 
     return s;
+}
+
+template<unsigned int ORDER>
+std::vector<HSIEPolynomial>
+HSIESurface<ORDER>::build_curl_term(DofData d, dealii::FEValues<2, 3> * fe, dealii::Point<3, double> x, HSIEPolynomial p) {
+    std::vector<HSIEPolynomial> ret;
+    switch ( d.type ) {
+        case DofType::RAY:
+
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+            break;
+        case DofType::EDGE:
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+
+
+            break;
+        case DofType::SURFACE:
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+
+
+            break;
+        case DofType::IFFa:
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+
+
+            break;
+        case DofType::IFFb:
+
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+            break;
+        case DofType::SEGMENTa:
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+
+
+            break;
+        case DofType::SEGMENTb:
+
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+            break;
+    }
+
+    return ret;
+}
+
+template<unsigned int ORDER>
+std::vector<HSIEPolynomial>
+HSIESurface<ORDER>::build_non_curl_term(DofData d, dealii::FEValues<2, 3> * fe, dealii::Point<3, double> x, HSIEPolynomial p) {
+    std::vector<HSIEPolynomial> ret;
+    switch ( d.type ) {
+        case DofType::RAY:
+
+            break;
+        case DofType::EDGE:
+
+            break;
+        case DofType::SURFACE:
+
+            break;
+        case DofType::IFFa:
+
+            break;
+        case DofType::IFFb:
+
+            break;
+        case DofType::SEGMENTa:
+
+            break;
+        case DofType::SEGMENTb:
+
+            break;
+    }
+
+    return ret;
 }

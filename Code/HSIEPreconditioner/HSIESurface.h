@@ -45,9 +45,10 @@ class HSIESurface {
 
 public:
     HSIESurface(dealii::Triangulation<3,3> * in_main_triangulation, unsigned int in_boundary_id, unsigned int in_level, unsigned int in_inner_order, std::complex<double> k0);
+    std::vector<HSIEPolynomial> build_curl_term(DofData, dealii::FEValues<2,3> *, dealii::Point<3, double>, HSIEPolynomial );
+    std::vector<HSIEPolynomial> build_non_curl_term(DofData, dealii::FEValues<2,3> *, dealii::Point<3, double>, HSIEPolynomial);
 
     std::vector<DofData> get_dof_data_for_cell(dealii::Triangulation<2,3>::cell_iterator *);
-    double compute_coupling(DofData &, DofData &, dealii::Triangulation<2,3>::cell_iterator *);
     void prepare_surface_triangulation();
     void compute_dof_numbers();
     void fill_matrix(dealii::SparseMatrix<double>* , dealii::IndexSet);
@@ -72,7 +73,6 @@ public:
     void register_single_dof(std::string & in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &, unsigned int);
     void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &, unsigned int);
     std::complex<double> evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, unsigned int gauss_order);
-    void compute_dof_base_indices();
 };
 
 #endif //WAVEGUIDEPROBLEM_HSIESURFACE_H

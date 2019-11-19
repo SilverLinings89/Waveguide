@@ -184,3 +184,12 @@ HSIEPolynomial HSIEPolynomial::PhiJ(unsigned int j, std::complex<double> k0) {
     ret.applyTplus(zero);
     return ret;
 }
+
+HSIEPolynomial HSIEPolynomial::ZeroPolynomial() {
+    std::vector<std::complex<double>> inp;
+    inp.emplace_back(0,0);
+    inp.emplace_back(0,0);
+    inp.emplace_back(0,0);
+    inp.emplace_back(0,0);
+    return HSIEPolynomial(inp, std::complex<double>(0,0));
+}

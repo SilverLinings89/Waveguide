@@ -19,6 +19,7 @@ public:
     static void computeDandI(unsigned int, std::complex<double>);
     static HSIEPolynomial PsiMinusOne(std::complex<double> k0);
     static HSIEPolynomial PsiJ(unsigned int j, std::complex<double> k0);
+    static HSIEPolynomial ZeroPolynomial();
 
     static HSIEPolynomial PhiMinusOne(std::complex<double> k0);
     static HSIEPolynomial PhiJ(unsigned int j, std::complex<double> k0);
