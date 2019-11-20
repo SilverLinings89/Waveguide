@@ -138,6 +138,7 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> * matrix, deal
         fe_q_values.reinit(it2);
         quadrature_points = fe_q_values.get_quadrature_points();
         std::vector<double> jxw_values = fe_n_values.get_JxW_values();
+        const FEValuesExtractors::Vector real(0);
         for(unsigned int q_point = 0; q_point < quadrature_points.size(); q_point++) {
             double JxW = jxw_values[q_point];
             // for each dof i
@@ -148,11 +149,12 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> * matrix, deal
                 DofData &u = cell_dofs[i];
                 std::vector<HSIEPolynomial> u_contrib_curl, u_contrib;
                 if(cell_dofs[i].type == DofType::RAY) {
-                    u_contrib_curl = build_curl_term(u, &fe_q_values, quadrature_points[q_point], polynomials[i]);
-                    u_contrib = build_non_curl_term(u, &fe_q_values, quadrature_points[q_point], polynomials[i]);
+                    u_contrib_curl = build_curl_term(u, fe_q_values[real], q_point, polynomials[i], local_related_fe_index[i]);
+                    u_contrib_curl = build_curl_term(u, fe_q_values, quadrature_points[q_point], polynomials[i], local_related_fe_index[i]);
+                    u_contrib = build_non_curl_term(u, &fe_q_values, quadrature_points[q_point], polynomials[i], local_related_fe_index[i]);
                 } else {
-                    u_contrib_curl = build_curl_term(u, &fe_n_values, quadrature_points[q_point], polynomials[i]);
-                    u_contrib = build_non_curl_term(u, &fe_n_values, quadrature_points[q_point], polynomials[i]);
+                    u_contrib_curl = build_curl_term(u, &fe_n_values, quadrature_points[q_point], polynomials[i], local_related_fe_index[i]);
+                    u_contrib = build_non_curl_term(u, &fe_n_values, quadrature_points[q_point], polynomials[i], local_related_fe_index[i]);
                 }
                 // for each dof j
                 for (unsigned int j = 0; j < cell_dofs.size(); j++) {
@@ -539,8 +541,9 @@ std::complex<double> HSIESurface<ORDER>::evaluate_a(std::vector<HSIEPolynomial> 
 
 template<unsigned int ORDER>
 std::vector<HSIEPolynomial>
-HSIESurface<ORDER>::build_curl_term(DofData d, dealii::FEValues<2, 3> * fe, dealii::Point<3, double> x, HSIEPolynomial p) {
+HSIESurface<ORDER>::build_curl_term(DofData d, dealii::FEValuesViews::Vector<2, 3> fe, unsigned int q_index, HSIEPolynomial p, unsigned int related_function) {
     std::vector<HSIEPolynomial> ret;
+    const FEValuesExtractors::Vector real(0);
     switch ( d.type ) {
         case DofType::RAY:
 
@@ -584,29 +587,47 @@ HSIESurface<ORDER>::build_curl_term(DofData d, dealii::FEValues<2, 3> * fe, deal
 
 template<unsigned int ORDER>
 std::vector<HSIEPolynomial>
-HSIESurface<ORDER>::build_non_curl_term(DofData d, dealii::FEValues<2, 3> * fe, dealii::Point<3, double> x, HSIEPolynomial p) {
+HSIESurface<ORDER>::build_non_curl_term(DofData d, dealii::FEValuesViews::Vector<2, 3> fe, unsigned int q_index, HSIEPolynomial p, unsigned int related_function) {
     std::vector<HSIEPolynomial> ret;
+    HSIEPolynomial temp = HSIEPolynomial::ZeroPolynomial();
     switch ( d.type ) {
         case DofType::RAY:
-
+            temp = HSIEPolynomial::PhiJ(d.hsie_order, k0);
+            temp.multiplyBy(fe.value(related_function,q_index)[0]);
+            temp = temp.applyD();
+            ret.push_back(temp);
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
             break;
         case DofType::EDGE:
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+
 
             break;
         case DofType::SURFACE:
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+
 
             break;
         case DofType::IFFa:
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+
 
             break;
         case DofType::IFFb:
 
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
             break;
         case DofType::SEGMENTa:
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+
 
             break;
         case DofType::SEGMENTb:
 
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
+            ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
             break;
     }
 

@@ -13,6 +13,7 @@
 #include <deal.II/fe/fe_nedelec.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_system.h>
+#include <deal.II/fe/fe_values.h>
 #include "HSIEPolynomial.h"
 #include "DofData.h"
 
@@ -45,8 +46,8 @@ class HSIESurface {
 
 public:
     HSIESurface(dealii::Triangulation<3,3> * in_main_triangulation, unsigned int in_boundary_id, unsigned int in_level, unsigned int in_inner_order, std::complex<double> k0);
-    std::vector<HSIEPolynomial> build_curl_term(DofData, dealii::FEValues<2,3> *, dealii::Point<3, double>, HSIEPolynomial );
-    std::vector<HSIEPolynomial> build_non_curl_term(DofData, dealii::FEValues<2,3> *, dealii::Point<3, double>, HSIEPolynomial);
+    std::vector<HSIEPolynomial> build_curl_term(DofData, dealii::FEValuesViews::Vector<2,3>, unsigned int q_index, HSIEPolynomial, unsigned int);
+    std::vector<HSIEPolynomial> build_non_curl_term(DofData, dealii::FEValuesViews::Vector<2,3>, unsigned int q_index, HSIEPolynomial , unsigned int);
 
     std::vector<DofData> get_dof_data_for_cell(dealii::Triangulation<2,3>::cell_iterator *);
     void prepare_surface_triangulation();
