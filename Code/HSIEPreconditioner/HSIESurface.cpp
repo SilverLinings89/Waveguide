@@ -593,7 +593,7 @@ HSIESurface<ORDER>::build_non_curl_term(DofData d, dealii::FEValuesViews::Vector
     switch ( d.type ) {
         case DofType::RAY:
             temp = HSIEPolynomial::PhiJ(d.hsie_order, k0);
-            temp.multiplyBy(fe.value(related_function,q_index)[0]);
+            temp.multiplyBy(fe.value(related_function,q_index)[0]));
             temp = temp.applyD();
             ret.push_back(temp);
             ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
@@ -601,18 +601,24 @@ HSIESurface<ORDER>::build_non_curl_term(DofData d, dealii::FEValuesViews::Vector
             break;
         case DofType::EDGE:
             ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
-
-
+            temp = HSIEPolynomial::PsiMinusOne(k0).multiplyBy(fe.value(related_function, q_index)[0]);
+            ret.push_back(temp);
+            temp = HSIEPolynomial::PsiMinusOne(k0).multiplyBy(fe.value(related_function, q_index)[1]);
+            ret.push_back(temp);
             break;
         case DofType::SURFACE:
             ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
-
-
+            temp = HSIEPolynomial::PsiMinusOne(k0).multiplyBy(fe.value(related_function, q_index)[0]);
+            ret.push_back(temp);
+            temp = HSIEPolynomial::PsiMinusOne(k0).multiplyBy(fe.value(related_function, q_index)[1]);
+            ret.push_back(temp);
             break;
         case DofType::IFFa:
             ret.push_back(HSIEPolynomial::ZeroPolynomial()); // 0;
-
-
+            temp = HSIEPolynomial::PsiJ(d.hsie_order, k0).multiplyBy(fe.value(related_function, q_index)[0]);
+            ret.push_back(temp);
+            temp = HSIEPolynomial::PsiJ(d.hsie_order, k0).multiplyBy(fe.value(related_function, q_index)[0]);
+            ret.push_back(temp);
             break;
         case DofType::IFFb:
 
