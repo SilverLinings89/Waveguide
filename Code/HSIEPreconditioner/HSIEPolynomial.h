@@ -18,11 +18,11 @@ public:
     void update_derivative();
     static void computeDandI(unsigned int, std::complex<double>);
     static HSIEPolynomial PsiMinusOne(std::complex<double> k0);
-    static HSIEPolynomial PsiJ(unsigned int j, std::complex<double> k0);
+    static HSIEPolynomial PsiJ(int j, std::complex<double> k0);
     static HSIEPolynomial ZeroPolynomial();
 
     static HSIEPolynomial PhiMinusOne(std::complex<double> k0);
-    static HSIEPolynomial PhiJ(unsigned int j, std::complex<double> k0);
+    static HSIEPolynomial PhiJ(int j, std::complex<double> k0);
 
     HSIEPolynomial(unsigned int order, std::complex<double> k0);
     HSIEPolynomial(DofData &in_dof, std::complex<double> k0);
@@ -39,6 +39,8 @@ public:
     void multiplyBy(double factor);
     void applyTplus(std::complex<double> u_0);
     void applyTminus(std::complex<double> u_0);
+    void applyDerivative();
+    void add(HSIEPolynomial b);
 };
 
 

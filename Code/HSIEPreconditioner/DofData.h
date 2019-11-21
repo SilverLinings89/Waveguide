@@ -21,6 +21,7 @@ struct DofData {
     DofType type;
     int hsie_order;
     int inner_order;
+    bool nodal_basis;
     bool is_real;
     unsigned int global_index;
     bool got_base_dof_index;
@@ -45,6 +46,10 @@ struct DofData {
     DofData(unsigned int in_id) {
         this->got_base_dof_index = false;
         base_structure_id.non_face_id = in_id;
+    }
+
+    void update_nodal_basis_flag() {
+        this->nodal_basis = (this->type == DofType::RAY || this->type == DofType::IFFb || this->type == DofType::SEGMENTb);
     }
 };
 

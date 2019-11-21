@@ -35,8 +35,8 @@ class HSIESurface {
     const unsigned int b_id;
     const unsigned int Inner_Element_Order;
     unsigned int level;
-    dealii::DoFHandler<2,3> dof_h_nedelec;
-    dealii::DoFHandler<2,3> dof_h_q;
+    dealii::DoFHandler<2> dof_h_nedelec;
+    dealii::DoFHandler<2> dof_h_q;
     dealii::FE_Nedelec<2> fe_nedelec;
     dealii::FE_Q<2> fe_q;
     std::vector<DofData> face_dof_data, edge_dof_data, vertex_dof_data;
@@ -46,8 +46,10 @@ class HSIESurface {
 
 public:
     HSIESurface(dealii::Triangulation<3,3> * in_main_triangulation, unsigned int in_boundary_id, unsigned int in_level, unsigned int in_inner_order, std::complex<double> k0);
-    std::vector<HSIEPolynomial> build_curl_term(DofData, dealii::FEValuesViews::Vector<2,3>, unsigned int q_index, HSIEPolynomial, unsigned int);
-    std::vector<HSIEPolynomial> build_non_curl_term(DofData, dealii::FEValuesViews::Vector<2,3>, unsigned int q_index, HSIEPolynomial , unsigned int);
+    std::vector<HSIEPolynomial> build_curl_term(DofData, const dealii::FEValuesViews::Vector<2,3>&, unsigned int q_index, HSIEPolynomial, unsigned int);
+    std::vector<HSIEPolynomial> build_non_curl_term(DofData, const dealii::FEValuesViews::Vector<2,3>&, unsigned int q_index, HSIEPolynomial , unsigned int);
+    std::vector<HSIEPolynomial> build_curl_term(DofData, const dealii::FEValuesViews::Scalar<1,3>&, unsigned int q_index, HSIEPolynomial, unsigned int);
+    std::vector<HSIEPolynomial> build_non_curl_term(DofData, const dealii::FEValuesViews::Scalar<1,3>&, unsigned int q_index, HSIEPolynomial , unsigned int);
 
     std::vector<DofData> get_dof_data_for_cell(dealii::Triangulation<2,3>::cell_iterator *);
     void prepare_surface_triangulation();
@@ -74,6 +76,7 @@ public:
     void register_single_dof(std::string & in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &, unsigned int);
     void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &, unsigned int);
     std::complex<double> evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, unsigned int gauss_order);
+    void transform_coordinates_in_place(std::vector<HSIEPolynomial> *);
 };
 
 #endif //WAVEGUIDEPROBLEM_HSIESURFACE_H

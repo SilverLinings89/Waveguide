@@ -160,7 +160,10 @@ HSIEPolynomial HSIEPolynomial::PsiMinusOne(std::complex<double> k0) {
     return ret;
 }
 
-HSIEPolynomial HSIEPolynomial::PsiJ(unsigned int j, std::complex<double> k0) {
+HSIEPolynomial HSIEPolynomial::PsiJ(int j, std::complex<double> k0) {
+    if(j==-1) {
+        return HSIEPolynomial::PsiMinusOne(k0);
+    }
     std::complex<double> one(1,0);
     std::complex<double> i(0,1);
     HSIEPolynomial ret (j, k0);
@@ -178,7 +181,10 @@ HSIEPolynomial HSIEPolynomial::PhiMinusOne(std::complex<double> k0) {
     return ret;
 }
 
-HSIEPolynomial HSIEPolynomial::PhiJ(unsigned int j, std::complex<double> k0) {
+HSIEPolynomial HSIEPolynomial::PhiJ(int j, std::complex<double> k0) {
+    if(j == -1) {
+        return HSIEPolynomial::PhiMinusOne(k0);
+    }
     std::complex<double> zero(0,0);
     HSIEPolynomial ret (j, k0);
     ret.applyTplus(zero);
@@ -192,4 +198,22 @@ HSIEPolynomial HSIEPolynomial::ZeroPolynomial() {
     inp.emplace_back(0,0);
     inp.emplace_back(0,0);
     return HSIEPolynomial(inp, std::complex<double>(0,0));
+}
+
+void HSIEPolynomial::add(HSIEPolynomial b) {
+    if(b.a.size() > a.size()) {
+        while(a.size() < b.a.size()) {
+            a.emplace_back(0, 0);
+        }
+    }
+    for(unsigned int i = 0; i < b.a.size(); i++) {
+        a[i] += b.a[i];
+    }
+    update_derivative();
+}
+
+void HSIEPolynomial::applyDerivative() {
+    update_derivative();
+    a = da;
+    update_derivative();
 }
