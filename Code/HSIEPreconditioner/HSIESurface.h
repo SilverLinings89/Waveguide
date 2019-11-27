@@ -70,8 +70,8 @@ public:
     bool is_face_owned(dealii::DoFHandler<2>::active_cell_iterator cell);
     bool is_vertex_owned(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned  int edge, unsigned int vertex);
     void register_new_vertex_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned  int edge, unsigned int vertex);
-    void register_new_edge_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned  int edge);
-    void register_new_surface_dofs(dealii::DoFHandler<2>::active_cell_iterator cell);
+    void register_new_edge_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, dealii::DoFHandler<2>::active_cell_iterator cell_2, unsigned  int edge);
+    void register_new_surface_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, dealii::DoFHandler<2>::active_cell_iterator cell2);
     unsigned int register_dof();
     void register_single_dof(std::string & in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &, unsigned int);
     void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &, unsigned int);
