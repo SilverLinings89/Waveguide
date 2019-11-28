@@ -300,8 +300,8 @@ void HSIESurface<ORDER>::initialize() {
 
 template<unsigned int ORDER>
 void HSIESurface<ORDER>::initialize_dof_handlers_and_fe() {
-    dof_h_nedelec = {surface_triangulation};
-    dof_h_q = {surface_triangulation};
+    dof_h_nedelec = dealii::DoFHandler<2>{surface_triangulation};
+    dof_h_q = dealii::DoFHandler<2>{surface_triangulation};
     dof_h_q.distribute_dofs(fe_q);
     dof_h_nedelec.distribute_dofs(fe_nedelec);
 }

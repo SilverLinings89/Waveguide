@@ -39,6 +39,7 @@ class HSIESurface {
     dealii::DoFHandler<2> dof_h_q;
     dealii::FE_Nedelec<2> fe_nedelec;
     dealii::FE_Q<2> fe_q;
+    unsigned int n_edge_dofs, n_face_dofs, n_vertex_dofs;
     std::vector<DofData> face_dof_data, edge_dof_data, vertex_dof_data;
     unsigned int dof_counter;
     std::map<dealii::Triangulation<2,3>::cell_iterator, dealii::Triangulation<3,3>::face_iterator > association;
