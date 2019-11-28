@@ -9,6 +9,16 @@
 #include "../Code/HSIEPreconditioner/HSIESurface.h"
 #include "../Code/HSIEPreconditioner/HSIEPolynomial.h"
 
+#include <deal.II/grid/grid_generator.h>
+
+TEST(HSIESurfaceTests, AssemblationTest) {
+    dealii::Triangulation<3> tria;
+    dealii::Gridgenerator::subdivided_hyper_cube(tria, 9, -1.0, 1.0);
+    std::complex<double> k0(0.0, -1.0);
+    HSIESurface surf = {&tria, 0, 0, 1, k0};
+    surf.initialize();
+}
+
 TEST(HSIEPolynomialTests, TestOperatorTplus) {
     std::vector<std::complex<double>> in_a;
     in_a.emplace_back(0.0, 0.0);
