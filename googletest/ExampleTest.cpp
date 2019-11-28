@@ -8,7 +8,7 @@
 #include "gtest/gtest.h"
 #include "../Code/HSIEPreconditioner/HSIESurface.h"
 #include "../Code/HSIEPreconditioner/HSIEPolynomial.h"
-
+#include "../Code/HSIEPreconditioner/HSIESurface.cpp"
 #include <deal.II/grid/grid_generator.h>
 
 TEST(HSIESurfaceTests, AssemblationTest) {
