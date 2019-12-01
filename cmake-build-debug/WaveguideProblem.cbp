@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="WaveguideProblem"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;CMake Files\..\;CMake Files\..\..\;CMake Files\..\..\libs\;CMake Files\..\..\libs\lib\;CMake Files\..\..\libs\lib\cmake\;CMake Files\..\..\libs\lib\cmake\deal.II\;CMake Files\..\..\libs\share\;CMake Files\..\..\libs\share\deal.II\;CMake Files\..\..\libs\share\deal.II\macros\;CMake Files\Code\;CMake Files\Main\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Code">
+				<Option output="/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Code/libCode.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Code"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DBOOST_NO_AUTO_PTR"/>
+					<Add option="-DDEBUG"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/Core,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/MeshGenerators,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationAlgorithm,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationStrategies,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/SpaceTransformations"/>
+					<Add directory="/home/pascal/libs/include"/>
+					<Add directory="/home/pascal/libs/include/deal.II/bundled"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent/include"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include"/>
+					<Add directory="/usr/include/suitesparse"/>
+					<Add directory="/home/pascal/libs/petsc-3.12.0/include"/>
+					<Add directory="/home/pascal/libs/petsc-3.12.0/x86_64/include"/>
+					<Add directory="/home/pascal/libs/FAST/include"/>
+					<Add directory="/usr/include/c++/7"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/7"/>
+					<Add directory="/usr/include/c++/7/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Code/Makefile&quot;  VERBOSE=1 Code"/>
+					<CompileFile command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Code/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Code/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Code/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Code/fast">
+				<Option output="/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Code/libCode.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Code"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DBOOST_NO_AUTO_PTR"/>
+					<Add option="-DDEBUG"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/Core,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/MeshGenerators,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationAlgorithm,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationStrategies,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/SpaceTransformations"/>
+					<Add directory="/home/pascal/libs/include"/>
+					<Add directory="/home/pascal/libs/include/deal.II/bundled"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent/include"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include"/>
+					<Add directory="/usr/include/suitesparse"/>
+					<Add directory="/home/pascal/libs/petsc-3.12.0/include"/>
+					<Add directory="/home/pascal/libs/petsc-3.12.0/x86_64/include"/>
+					<Add directory="/home/pascal/libs/FAST/include"/>
+					<Add directory="/usr/include/c++/7"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/7"/>
+					<Add directory="/usr/include/c++/7/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Code/Makefile&quot;  VERBOSE=1 Code/fast"/>
+					<CompileFile command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Code/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Code/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Code/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="main">
+				<Option output="/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Main/main" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Main"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DBOOST_NO_AUTO_PTR"/>
+					<Add option="-DDEBUG"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/Core,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/MeshGenerators,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationAlgorithm,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationStrategies,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/SpaceTransformations"/>
+					<Add directory="/home/pascal/libs/include"/>
+					<Add directory="/home/pascal/libs/include/deal.II/bundled"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent/include"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include"/>
+					<Add directory="/usr/include/suitesparse"/>
+					<Add directory="/home/pascal/libs/petsc-3.12.0/include"/>
+					<Add directory="/home/pascal/libs/petsc-3.12.0/x86_64/include"/>
+					<Add directory="/home/pascal/libs/FAST/include"/>
+					<Add directory="/usr/include/c++/7"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/7"/>
+					<Add directory="/usr/include/c++/7/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Main/Makefile&quot;  VERBOSE=1 main"/>
+					<CompileFile command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Main/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Main/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Main/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="main/fast">
+				<Option output="/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Main/main" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Main"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DBOOST_NO_AUTO_PTR"/>
+					<Add option="-DDEBUG"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/Core,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/MeshGenerators,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationAlgorithm,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationStrategies,"/>
+					<Add directory="/home/pascal/CLionProjects/waveguideproblem/Code/SpaceTransformations"/>
+					<Add directory="/home/pascal/libs/include"/>
+					<Add directory="/home/pascal/libs/include/deal.II/bundled"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent/include"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include"/>
+					<Add directory="/usr/include/suitesparse"/>
+					<Add directory="/home/pascal/libs/petsc-3.12.0/include"/>
+					<Add directory="/home/pascal/libs/petsc-3.12.0/x86_64/include"/>
+					<Add directory="/home/pascal/libs/FAST/include"/>
+					<Add directory="/usr/include/c++/7"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/7"/>
+					<Add directory="/usr/include/c++/7/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Main/Makefile&quot;  VERBOSE=1 main/fast"/>
+					<CompileFile command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Main/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Main/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/home/pascal/CLionProjects/waveguideproblem/cmake-build-debug/Main/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Core/PreconditionerSweeping.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Core/PreconditionerSweeping.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Core/Sector.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Core/Sector.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Core/SolutionWeight.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Core/SolutionWeight.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Core/Waveguide.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Core/Waveguide.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/HSIE/FaceSurfaceComparator.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/HSIE/FaceSurfaceComparator.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/HSIE/FaceSurfaceComparatorZ.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/HSIE/FaceSurfaceComparatorZ.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/HSIE/HSIEDofType.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/HSIE/HSIEDofType.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/HSIE/HSIE_Preconditioner_Base.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/HSIE/HSIE_Preconditioner_Base.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers/ExactSolution.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers/ExactSolution.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers/ModeManager.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers/ModeManager.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers/ParameterReader.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers/ParameterReader.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers/Parameters.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers/Parameters.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers/PointVal.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers/PointVal.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers/QuadratureFormulaCircle.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers/ShapeDescription.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers/ShapeDescription.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers/staticfunctions.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/Helpers/staticfunctions.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/MeshGenerators/MeshGenerator.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/MeshGenerators/MeshGenerator.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/MeshGenerators/SquareMeshGenerator.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/MeshGenerators/SquareMeshGenerator.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationAlgorithm/Optimization1D.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationAlgorithm/Optimization1D.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationAlgorithm/OptimizationAlgorithm.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationAlgorithm/OptimizationAlgorithm.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationAlgorithm/OptimizationCG.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationAlgorithm/OptimizationCG.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationAlgorithm/OptimizationSteepestDescent.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationAlgorithm/OptimizationSteepestDescent.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationStrategies/AdjointOptimization.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationStrategies/AdjointOptimization.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationStrategies/FDOptimization.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationStrategies/FDOptimization.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationStrategies/Optimization.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/OptimizationStrategies/Optimization.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/SpaceTransformations/DualProblemTransformationWrapper.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/SpaceTransformations/DualProblemTransformationWrapper.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/SpaceTransformations/HomogenousTransformationRectangular.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/SpaceTransformations/HomogenousTransformationRectangular.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/SpaceTransformations/InhomogenousTransformationRectangular.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/SpaceTransformations/InhomogenousTransformationRectangular.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/SpaceTransformations/SpaceTransformation.cpp">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/SpaceTransformations/SpaceTransformation.h">
+			<Option target="Code"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Main/main.cpp">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/../../libs/lib/cmake/deal.II/deal.IIConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\lib\cmake\deal.II\"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/../../libs/lib/cmake/deal.II/deal.IIConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\lib\cmake\deal.II\"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/../../libs/lib/cmake/deal.II/deal.IITargets-debugrelease.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\lib\cmake\deal.II\"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/../../libs/lib/cmake/deal.II/deal.IITargets.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\lib\cmake\deal.II\"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/../../libs/share/deal.II/macros/macro_deal_ii_add_test.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\share\deal.II\macros\"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/../../libs/share/deal.II/macros/macro_deal_ii_initialize_cached_variables.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\share\deal.II\macros\"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/../../libs/share/deal.II/macros/macro_deal_ii_invoke_autopilot.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\share\deal.II\macros\"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/../../libs/share/deal.II/macros/macro_deal_ii_pickup_tests.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\share\deal.II\macros\"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/../../libs/share/deal.II/macros/macro_deal_ii_query_git_information.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\share\deal.II\macros\"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/../../libs/share/deal.II/macros/macro_deal_ii_setup_target.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\share\deal.II\macros\"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Code/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\Code\"/>
+		</Unit>
+		<Unit filename="/home/pascal/CLionProjects/waveguideproblem/Main/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\Main\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
