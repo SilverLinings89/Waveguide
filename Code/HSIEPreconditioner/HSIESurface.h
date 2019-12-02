@@ -16,6 +16,8 @@
 #include <deal.II/fe/fe_values.h>
 #include "HSIEPolynomial.h"
 #include "DofData.h"
+#include <deal.II/fe/fe_nedelec_sz.h>
+
 
 
 struct DofCount {
@@ -31,12 +33,12 @@ struct DofCount {
 template<unsigned int ORDER>
 class HSIESurface {
     dealii::Triangulation<3,3> * main_triangulation;
-    dealii::Triangulation<2,3> surface_triangulation;
+    dealii::Triangulation<2> * surface_triangulation;
     const unsigned int b_id;
     const unsigned int Inner_Element_Order;
     unsigned int level;
-    dealii::DoFHandler<2,3> dof_h_nedelec;
-    dealii::DoFHandler<2,3> dof_h_q;
+    dealii::DoFHandler<2> dof_h_nedelec;
+    dealii::DoFHandler<2> dof_h_q;
     dealii::FE_Nedelec<2> fe_nedelec;
     dealii::FE_Q<2> fe_q;
     DofCount n_edge_dofs, n_face_dofs, n_vertex_dofs;
@@ -46,7 +48,7 @@ class HSIESurface {
     std::complex<double> k0;
 
 public:
-    HSIESurface(dealii::Triangulation<3,3> * in_main_triangulation, unsigned int in_boundary_id, unsigned int in_level, unsigned int in_inner_order, std::complex<double> k0);
+    HSIESurface(dealii::Triangulation<3,3> * in_main_triangulation, dealii::Triangulation<2,2> * in_surf_tria, unsigned int in_boundary_id, unsigned int in_level, unsigned int in_inner_order, std::complex<double> k0, std::map<dealii::Triangulation<2,3>::cell_iterator, dealii::Triangulation<3,3>::face_iterator > in_assoc );
     std::vector<HSIEPolynomial> build_curl_term(DofData, const dealii::FEValuesViews::Vector<2,3>&, unsigned int q_index, HSIEPolynomial, unsigned int);
     std::vector<HSIEPolynomial> build_non_curl_term(DofData, const dealii::FEValuesViews::Vector<2,3>&, unsigned int q_index, HSIEPolynomial , unsigned int);
     std::vector<HSIEPolynomial> build_curl_term(DofData, const dealii::FEValuesViews::Scalar<1,3>&, unsigned int q_index, HSIEPolynomial, unsigned int);
@@ -74,7 +76,7 @@ public:
     void register_new_edge_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, dealii::DoFHandler<2>::active_cell_iterator cell_2, unsigned  int edge);
     void register_new_surface_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, dealii::DoFHandler<2>::active_cell_iterator cell2);
     unsigned int register_dof();
-    void register_single_dof(std::string & in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &, unsigned int);
+    void register_single_dof(std::string in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &, unsigned int);
     void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &, unsigned int);
     std::complex<double> evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, unsigned int gauss_order);
     void transform_coordinates_in_place(std::vector<HSIEPolynomial> *);

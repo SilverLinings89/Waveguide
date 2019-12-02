@@ -22,7 +22,7 @@ SET(DEAL_II_DIR "/home/pascal/libs")
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
 
 FIND_PACKAGE(deal.II 9.0 QUIET
-        HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR}
+        HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ ../../libs $ENV{DEAL_II_DIR}
         )
 IF(NOT ${deal.II_FOUND})
     MESSAGE(FATAL_ERROR "\n"

@@ -13,9 +13,16 @@
 
 TEST(HSIESurfaceTests, AssemblationTest) {
     dealii::Triangulation<3> tria;
+    dealii::Triangulation<2,3> temp_triangulation;
+    dealii::Triangulation<2> surf_tria;
     dealii::GridGenerator::subdivided_hyper_cube(tria, 9, -1.0, 1.0);
     std::complex<double> k0(0.0, -1.0);
-    HSIESurface<5> surf = HSIESurface<5> {&tria, 0, 0, 1, k0};
+    std::set<unsigned int> b_ids;
+    b_ids.insert(0);
+
+    std::map<dealii::Triangulation<2,3>::cell_iterator, dealii::Triangulation<3,3>::face_iterator > association = dealii::GridGenerator::extract_boundary_mesh( tria, temp_triangulation, b_ids);
+    dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
+    HSIESurface<5> surf = HSIESurface<5> {&tria, &surf_tria, 0, 0, 1, k0, association};
     surf.initialize();
 }
 
