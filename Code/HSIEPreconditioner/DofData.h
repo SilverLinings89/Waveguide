@@ -9,14 +9,6 @@ enum DofType {
     EDGE, SURFACE, RAY, IFFa, IFFb, SEGMENTa, SEGMENTb
 };
 
-union DofBaseStructureID {
-    std::string face_id;
-    unsigned int non_face_id;
-
-    DofBaseStructureID() {};
-    ~DofBaseStructureID() {};
-};
-
 struct DofData {
     DofType type;
     int hsie_order;
@@ -26,10 +18,12 @@ struct DofData {
     unsigned int global_index;
     bool got_base_dof_index;
     unsigned int base_dof_index; // The basis functions require either an edge or hat function for computation of some components. This value names the exact number of that dof.
-    DofBaseStructureID base_structure_id;
+    std::string base_structure_id_face;
+    unsigned int base_structure_id_non_face;
 
     DofData() {
-        base_structure_id.face_id = "";
+        base_structure_id_face = "";
+        base_structure_id_non_face = 0;
         this->got_base_dof_index = false;
     }
 
@@ -40,12 +34,12 @@ struct DofData {
 
     DofData(std::string in_id) {
         this->got_base_dof_index = false;
-        base_structure_id.face_id = in_id;
+        base_structure_id_face = in_id;
     }
 
     DofData(unsigned int in_id) {
         this->got_base_dof_index = false;
-        base_structure_id.non_face_id = in_id;
+        base_structure_id_non_face = in_id;
     }
 
     void update_nodal_basis_flag() {

@@ -355,7 +355,7 @@
 			</Target>
 			<Target title="gtest_main">
 				<Option output="/home/kraft/workspace/waveguideproblem/lib/libgtest_maind.a" prefix_auto="0" extension_auto="0"/>
-				<Option working_dir="/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest"/>
+				<Option working_dir="/home/kraft/workspace/waveguideproblem/googletest/lib/googletest"/>
 				<Option object_output="./"/>
 				<Option type="2"/>
 				<Option compiler="gcc"/>
@@ -364,15 +364,15 @@
 					<Add directory="/home/kraft/workspace/waveguideproblem/googletest/lib/googletest"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest/Makefile&quot;  VERBOSE=1 gtest_main"/>
-					<CompileFile command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/Makefile&quot;  VERBOSE=1 gtest_main"/>
+					<CompileFile command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="gtest_main/fast">
 				<Option output="/home/kraft/workspace/waveguideproblem/lib/libgtest_maind.a" prefix_auto="0" extension_auto="0"/>
-				<Option working_dir="/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest"/>
+				<Option working_dir="/home/kraft/workspace/waveguideproblem/googletest/lib/googletest"/>
 				<Option object_output="./"/>
 				<Option type="2"/>
 				<Option compiler="gcc"/>
@@ -381,15 +381,15 @@
 					<Add directory="/home/kraft/workspace/waveguideproblem/googletest/lib/googletest"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest/Makefile&quot;  VERBOSE=1 gtest_main/fast"/>
-					<CompileFile command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/Makefile&quot;  VERBOSE=1 gtest_main/fast"/>
+					<CompileFile command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="gtest">
 				<Option output="/home/kraft/workspace/waveguideproblem/lib/libgtestd.a" prefix_auto="0" extension_auto="0"/>
-				<Option working_dir="/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest"/>
+				<Option working_dir="/home/kraft/workspace/waveguideproblem/googletest/lib/googletest"/>
 				<Option object_output="./"/>
 				<Option type="2"/>
 				<Option compiler="gcc"/>
@@ -398,15 +398,15 @@
 					<Add directory="/home/kraft/workspace/waveguideproblem/googletest/lib/googletest"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest/Makefile&quot;  VERBOSE=1 gtest"/>
-					<CompileFile command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/Makefile&quot;  VERBOSE=1 gtest"/>
+					<CompileFile command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="gtest/fast">
 				<Option output="/home/kraft/workspace/waveguideproblem/lib/libgtestd.a" prefix_auto="0" extension_auto="0"/>
-				<Option working_dir="/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest"/>
+				<Option working_dir="/home/kraft/workspace/waveguideproblem/googletest/lib/googletest"/>
 				<Option object_output="./"/>
 				<Option type="2"/>
 				<Option compiler="gcc"/>
@@ -415,10 +415,10 @@
 					<Add directory="/home/kraft/workspace/waveguideproblem/googletest/lib/googletest"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest/Makefile&quot;  VERBOSE=1 gtest/fast"/>
-					<CompileFile command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googlemock/gtest/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/Makefile&quot;  VERBOSE=1 gtest/fast"/>
+					<CompileFile command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 		</Build>
