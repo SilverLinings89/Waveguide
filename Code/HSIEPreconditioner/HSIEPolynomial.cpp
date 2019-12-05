@@ -46,7 +46,7 @@ std::complex<double> HSIEPolynomial::evaluate_dx(std::complex<double> x_in) {
 HSIEPolynomial::HSIEPolynomial(unsigned int order, std::complex<double> in_k0) {
     this->a = std::vector<std::complex<double>>();
     this->da = std::vector<std::complex<double>>();
-    for(int i = 0; i < order; i++) {
+    for(unsigned int i = 0; i < order; i++) {
         this->a.emplace_back(0.0,0.0);
     }
     this->a.emplace_back(1.0,0.0);
@@ -80,9 +80,9 @@ HSIEPolynomial HSIEPolynomial::applyD() {
         this->computeDandI(this->a.size(), this->k0);
     }
     std::vector<std::complex<double>> n_a;
-    for(long int i = 0; i < this->a.size(); i++) {
+    for(unsigned int i = 0; i < this->a.size(); i++) {
         std::complex<double> component(0,0);
-        for(long int j = 0; j < this->a.size(); j++) {
+        for(unsigned int j = 0; j < this->a.size(); j++) {
             component += this->a[j] * this->D(i,j);
         }
         n_a.push_back(component);
@@ -95,9 +95,9 @@ HSIEPolynomial HSIEPolynomial::applyI() {
         this->computeDandI(this->a.size(), this->k0);
     }
     std::vector<std::complex<double>> n_a;
-    for(long int i = 0; i < this->a.size(); i++) {
+    for(unsigned  int i = 0; i < this->a.size(); i++) {
         std::complex<double> component(0,0);
-        for(long int j = 0; j < this->a.size(); j++) {
+        for(unsigned int j = 0; j < this->a.size(); j++) {
             component += this->a[j] * this->I(i,j);
         }
         n_a.push_back(component);
@@ -107,7 +107,7 @@ HSIEPolynomial HSIEPolynomial::applyI() {
 
 void HSIEPolynomial::update_derivative() {
     this->da = std::vector<std::complex<double>>();
-    for(long int i = 1; i < this->a.size(); i++) {
+    for(unsigned int i = 1; i < this->a.size(); i++) {
         this->da.emplace_back(i*this->a[i].real(),i*this->a[i].imag());
     }
 }

@@ -22,7 +22,7 @@ HSIESurface<ORDER>::HSIESurface( dealii::Triangulation<2,2> & in_surface_triangu
         dof_h_q(in_surface_triangulation),
         Inner_Element_Order(in_inner_order),
         fe_nedelec(Inner_Element_Order),
-        fe_q(Inner_Element_Order),
+        fe_q(Inner_Element_Order+1),
         level(in_level)
 {
     association = in_assoc;
@@ -299,6 +299,8 @@ template<unsigned int ORDER>
 void HSIESurface<ORDER>::initialize_dof_handlers_and_fe() {
     dof_h_q.distribute_dofs(fe_q);
     dof_h_nedelec.distribute_dofs(fe_nedelec);
+    std::cout << "Base Dof Counts Nedelec: " << fe_nedelec.dofs_per_cell << " per cell, " << fe_nedelec.dofs_per_line << " per line and " << fe_nedelec.dofs_per_vertex << "." << std::endl;
+    std::cout << "Base Dof Counts Q: " << fe_q.dofs_per_cell << " per cell, " << fe_q.dofs_per_line << " per line and " << fe_q.dofs_per_vertex << "." << std::endl;
 }
 
 
@@ -346,7 +348,9 @@ void HSIESurface<ORDER>::update_dof_counts_for_vertex(const dealii::DoFHandler<2
 
 template<unsigned int ORDER>
 bool HSIESurface<ORDER>::is_edge_owned(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge) {
-    if(level == GlobalParams.HSIE_SWEEPING_LEVEL) {
+
+    /**
+     if(level == GlobalParams.HSIE_SWEEPING_LEVEL) {
         return true;
     } else {
         Triangulation<3>::face_iterator face3d = association.find(cell)->second;
@@ -358,6 +362,7 @@ bool HSIESurface<ORDER>::is_edge_owned(dealii::DoFHandler<2>::active_cell_iterat
             return false;
         }
     }
+     **/
     return true;
 }
 
