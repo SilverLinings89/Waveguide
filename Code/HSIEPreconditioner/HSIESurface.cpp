@@ -270,12 +270,16 @@ unsigned int HSIESurface<ORDER>::compute_dofs_per_face(bool only_hsie_dofs) {
     }
 
     // Number of elements of type 5a.
-    ret += INNER_REAL_NEDELEC_DOFS_PER_FACE * (ORDER + 1);
+    if(Inner_Element_Order > 1) {
+        ret += Inner_Element_Order * (Inner_Element_Order-2) * (ORDER+2);
+    }
 
     // Number of elements of type 5b.
-    ret += INNER_REAL_Q_DOFS_PER_FACE* (ORDER + 2);
+    if(Inner_Element_Order > 1) {
+        ret += (Inner_Element_Order-1) * (Inner_Element_Order-2) * (ORDER+2) / 2;
+    }
 
-    return ret;
+    return ret*2;
 }
 
 template<unsigned int ORDER>
