@@ -45,9 +45,9 @@ class HSIESurface {
     unsigned int dof_counter;
     dealii::DoFHandler<2> dof_h_nedelec;
     dealii::DoFHandler<2> dof_h_q;
-    std::vector<DofData> face_dof_data, edge_dof_data, vertex_dof_data;
+
     const unsigned int Inner_Element_Order;
-    dealii::FE_Nedelec<2> fe_nedelec;
+    dealii::FE_NedelecSZ<2> fe_nedelec;
     dealii::FE_Q<2> fe_q;
     std::complex<double> k0;
     unsigned int level;
@@ -55,13 +55,14 @@ class HSIESurface {
     dealii::Triangulation<2> surface_triangulation;
 
 public:
+    std::vector<DofData> face_dof_data, edge_dof_data, vertex_dof_data;
     HSIESurface( dealii::Triangulation<2,2> & in_surf_tria, unsigned int in_boundary_id, unsigned int in_level, unsigned int in_inner_order, std::complex<double> k0, std::map<dealii::Triangulation<2,3>::cell_iterator, dealii::Triangulation<3,3>::face_iterator > in_assoc );
-    std::vector<HSIEPolynomial> build_curl_term(DofData, const dealii::FEValuesViews::Vector<2,3>&, unsigned int q_index, HSIEPolynomial, unsigned int);
-    std::vector<HSIEPolynomial> build_non_curl_term(DofData, const dealii::FEValuesViews::Vector<2,3>&, unsigned int q_index, HSIEPolynomial , unsigned int);
-    std::vector<HSIEPolynomial> build_curl_term(DofData, const dealii::FEValuesViews::Scalar<1,3>&, unsigned int q_index, HSIEPolynomial, unsigned int);
-    std::vector<HSIEPolynomial> build_non_curl_term(DofData, const dealii::FEValuesViews::Scalar<1,3>&, unsigned int q_index, HSIEPolynomial , unsigned int);
+    std::vector<HSIEPolynomial> build_curl_term(DofData, const dealii::FEValuesViews::Vector<2,2>&, unsigned int q_index, HSIEPolynomial, unsigned int);
+    std::vector<HSIEPolynomial> build_non_curl_term(DofData, const dealii::FEValuesViews::Vector<2,2>&, unsigned int q_index, HSIEPolynomial , unsigned int);
+    std::vector<HSIEPolynomial> build_curl_term(DofData, const dealii::FEValuesViews::Scalar<2,2>&, unsigned int q_index, HSIEPolynomial, unsigned int);
+    std::vector<HSIEPolynomial> build_non_curl_term(DofData, const dealii::FEValuesViews::Scalar<2,2>&, unsigned int q_index, HSIEPolynomial , unsigned int);
 
-    std::vector<DofData> get_dof_data_for_cell(dealii::Triangulation<2,3>::cell_iterator *);
+    std::vector<DofData> get_dof_data_for_cell(dealii::Triangulation<2,2>::cell_iterator);
     void compute_dof_numbers();
     void fill_matrix(dealii::SparseMatrix<double>* , dealii::IndexSet);
     DofCount compute_n_edge_dofs();

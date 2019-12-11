@@ -31,9 +31,16 @@ static unsigned int dofs_per_vertex(unsigned int hsie_Order) {
 }
 
 static unsigned int dofs_per_face(unsigned int hsie_Order, unsigned int inner_order) {
-    if(inner_order < 2) return 0;
-    if(hsie_Order == 5) return 28;
-    if(hsie_Order == 10) return 48;
+    if(inner_order == 0) {
+        return 0;
+    }
+    if(inner_order == 1) {
+        return (hsie_Order + 2) * 3 * 4;
+    }
+    if(inner_order == 2) {
+        return (hsie_Order + 2) * 3 * 12;
+    }
+    return 0;
 }
 
 class TestData {
@@ -84,7 +91,6 @@ protected:
         const unsigned int dest_surf_cells = Cells_Per_Direction*Cells_Per_Direction;
         ASSERT_EQ(temp_triangulation.n_active_cells(), dest_surf_cells);
         dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
-        std::cout << tria.n_active_cells() << " - " << temp_triangulation.n_active_cells() << " - " << surf_tria.n_active_cells() << std::endl;
         ASSERT_EQ(surf_tria.n_active_cells(), dest_surf_cells);
     }
 };
@@ -99,9 +105,10 @@ TEST_P(TestOrderFixture, AssemblationTestOrder5) {
     ASSERT_EQ(surf.compute_dofs_per_edge(false), dofs_per_edge(5, InnerOrder) * 2 );
     ASSERT_EQ(surf.compute_dofs_per_face(false), dofs_per_face(5, InnerOrder) * 2 );
 
-    DofCount cnt = surf.compute_n_vertex_dofs();
+    ASSERT_EQ((Cells_Per_Direction+1) * (Cells_Per_Direction+1)  *surf.compute_dofs_per_vertex(), surf.vertex_dof_data.size());
+    ASSERT_EQ(2 * Cells_Per_Direction * (Cells_Per_Direction+1) * surf.compute_dofs_per_edge(false), surf.edge_dof_data.size());
+    ASSERT_EQ(Cells_Per_Direction * Cells_Per_Direction * surf.compute_dofs_per_face(false), surf.face_dof_data.size());
 
-    print_dof_count(cnt);
 }
 
 TEST_P(TestOrderFixture, AssemblationTestOrder10) {
@@ -113,9 +120,16 @@ TEST_P(TestOrderFixture, AssemblationTestOrder10) {
     ASSERT_EQ(surf.compute_dofs_per_edge(false), dofs_per_edge(10, InnerOrder) * 2 );
     ASSERT_EQ(surf.compute_dofs_per_face(false), dofs_per_face(10, InnerOrder) * 2 );
 
-    DofCount cnt = surf.compute_n_vertex_dofs();
-
-    print_dof_count(cnt);
+    ASSERT_EQ((Cells_Per_Direction+1) * (Cells_Per_Direction+1)  *surf.compute_dofs_per_vertex(), surf.vertex_dof_data.size());
+    ASSERT_EQ(2 * Cells_Per_Direction * (Cells_Per_Direction+1) * surf.compute_dofs_per_edge(false), surf.edge_dof_data.size());
+    ASSERT_EQ(Cells_Per_Direction * Cells_Per_Direction * surf.compute_dofs_per_face(false), surf.face_dof_data.size());
+    unsigned int total_dof_count = surf.face_dof_data.size() + surf.edge_dof_data.size() + surf.vertex_dof_data.size();
+    IndexSet hsie_dof_indices(total_dof_count);
+    const unsigned int max_couplings =  dofs_per_vertex(5) * 2 *9 + dofs_per_edge(10, InnerOrder) * 2 * 12 + dofs_per_face(10, InnerOrder) * 2 * 4;
+    dealii::SparsityPattern sp(total_dof_count, max_couplings);
+    dealii::SparseMatrix<double> sys_matrix(sp);
+    surf.fill_matrix(&sys_matrix, hsie_dof_indices);
+    ASSERT_NE(sys_matrix.linfty_norm(), 0);
 }
 
 INSTANTIATE_TEST_SUITE_P(HSIESurfaceTests, TestOrderFixture, ::testing::Combine( ::testing::Values(0,1,2), ::testing::Values(5,9)));
