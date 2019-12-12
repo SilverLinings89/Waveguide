@@ -2,13 +2,11 @@
 // Created by kraft on 16.08.19.
 //
 
-#include <deal.II/grid/grid_generator.h>
 #include "HSIESurface.h"
 #include "../Core/NumericProblem.h"
 #include "HSIEPolynomial.h"
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria_accessor.h>
-#include "../Helpers/QuadratureFormulaCircle.cpp"
 #include "DofData.h"
 
 const unsigned int MAX_DOF_NUMBER = INT_MAX;
@@ -85,6 +83,7 @@ std::vector<DofData> HSIESurface<ORDER>::get_dof_data_for_cell(dealii::Triangula
 
 template<unsigned int ORDER>
 void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> * matrix, dealii::IndexSet global_indices) {
+    HSIEPolynomial::computeDandI(ORDER + 2, k0);
     auto it = dof_h_nedelec.begin_active();
     auto end = dof_h_nedelec.end();
     // for each cell
@@ -103,8 +102,8 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> * matrix, deal
     for(; it != end; ++it) {
         std::vector<DofData> cell_dofs = this->get_dof_data_for_cell(it);
         std::vector<HSIEPolynomial> polynomials;
-        std::vector<unsigned int> q_dofs;
-        std::vector<unsigned int> n_dofs;
+        std::vector<unsigned int> q_dofs(fe_q.dofs_per_cell);
+        std::vector<unsigned int> n_dofs(fe_nedelec.dofs_per_cell);;
         it2->get_dof_indices(q_dofs);
         it->get_dof_indices(n_dofs);
         for(unsigned int i = 0; i < cell_dofs.size(); i++) {
@@ -163,7 +162,7 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> * matrix, deal
                         v_contrib = build_non_curl_term(v, fe_n_values[real], q_point, polynomials[j], local_related_fe_index[j]);
                     }
                     // compute their coupling and write it to matrix
-                    cell_matrix_real.set(i, j,((evaluate_a(u_contrib_curl, v_contrib_curl, 5) + evaluate_a(u_contrib, v_contrib, 5)) * JxW).real());
+                    cell_matrix_real.set(i, j,((evaluate_a(u_contrib_curl, v_contrib_curl, 100) + evaluate_a(u_contrib, v_contrib, 100)) * JxW).real());
                 }
             }
             std::vector<unsigned int> local_indices;
@@ -458,7 +457,8 @@ void HSIESurface<ORDER>::register_new_surface_dofs(dealii::DoFHandler<2>::active
     for(unsigned int i = 0; i < surface_dofs.size(); i++) {
         surf_dofs.add_index(surface_dofs[i]);
     }
-    for(unsigned int i = 0; i < dealii::GeometryInfo<2>::lines_per_face; i++) {
+    // std::cout << surf_dofs.n_elements() << " -> ";
+    for(unsigned int i = 0; i < dealii::GeometryInfo<2>::lines_per_cell; i++) {
         std::vector<unsigned int> line_dofs(fe_nedelec.dofs_per_line);
         cell_nedelec->line(i)->get_dof_indices(line_dofs);
         for(unsigned int j = 0; j < line_dofs.size(); j++) {
@@ -466,6 +466,7 @@ void HSIESurface<ORDER>::register_new_surface_dofs(dealii::DoFHandler<2>::active
         }
     }
     surf_dofs.subtract_set(edge_dofs);
+    // std::cout << surf_dofs.n_elements() << std::endl;
     std::string id = cell_q->id().to_string();
     // SURFACE functions
     for(unsigned int inner_order = 0; inner_order < surf_dofs.n_elements(); inner_order++ ) {
@@ -522,44 +523,20 @@ unsigned int HSIESurface<ORDER>::register_dof() {
 }
 
 template<unsigned int ORDER>
-std::complex<double> HSIESurface<ORDER>::evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, unsigned int gauss_order) {
-    double *r = NULL;
-    double *t = NULL;
-    double *q = NULL;
-    double *A = NULL;
-    double B;
-    double x, y;
-    std::complex<double> s(0.0, 0.0);
-
-    int i, j;
-
-    /* Load appropriate predefined table */
-    for (i = 0; i < GSPHERESIZE; i++) {
-        if (gauss_order == gsphere[i].n) {
-            r = gsphere[i].r;
-            t = gsphere[i].t;
-            q = gsphere[i].q;
-            A = gsphere[i].A;
-            B = gsphere[i].B;
-            break;
-        }
+std::complex<double> HSIESurface<ORDER>::evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, unsigned int steps) {
+    std::complex<double> ret(0,0);
+    const double PI = 3.14159265358;
+    double stepwidth = 2.0 * PI / (steps-1);
+    double x,y;
+    const double weight = 1.0 / steps;
+    for(unsigned int i = 0; i < steps; i++) {
+        x = sin(i * stepwidth);
+        y = cos(i*stepwidth);
+        ret += (  u[0].evaluate(std::complex<double>(x,y)) * v[0].evaluate(std::complex<double>(x,-y)) +
+                  u[1].evaluate(std::complex<double>(x,y)) * v[1].evaluate(std::complex<double>(x,-y)) +
+                  u[2].evaluate(std::complex<double>(x,y)) * v[2].evaluate(std::complex<double>(x,-y)) );
     }
-
-    if (NULL == r) return -1.0;
-
-    for (i = 0; i < gauss_order; i++) {
-        for (j = 0; j < gauss_order; j++) {
-            x = r[j] * q[i];
-            y = r[j] * t[i];
-            s += (  u[0].evaluate(std::complex<double>(x,y)) * v[0].evaluate(std::complex<double>(x,-y)) +
-                    u[1].evaluate(std::complex<double>(x,y)) * v[1].evaluate(std::complex<double>(x,-y)) +
-                    u[2].evaluate(std::complex<double>(x,y)) * v[2].evaluate(std::complex<double>(x,-y)) ) * A[j];
-        }
-    }
-
-    s *= B;
-
-    return s;
+    return ret*weight;
 }
 
 template<unsigned int ORDER>
@@ -567,15 +544,13 @@ std::vector<HSIEPolynomial>
 HSIESurface<ORDER>::build_curl_term(DofData d, const dealii::FEValuesViews::Vector<2, 2>& fe, unsigned int q_index, HSIEPolynomial p, unsigned int related_function) {
     std::vector<HSIEPolynomial> ret;
     HSIEPolynomial temp = HSIEPolynomial::PsiJ(d.hsie_order,k0);
-    temp.multiplyBy(fe.curl(related_function, q_index)[0]);
+    temp.multiplyBy(fe.gradient(related_function, q_index)[0][1]);
     temp.applyI();
     HSIEPolynomial temp2 = HSIEPolynomial::PsiJ(d.hsie_order,k0);
-    temp2.multiplyBy(-1.0 * fe.curl(related_function, q_index)[1]);
+    temp2.multiplyBy(-1.0 * (fe.gradient(related_function, q_index))[1][0]);
     temp2.applyI();
     temp.add(temp2);
     ret.push_back(temp);
-
-    // Components 2 and 3 for these types of dofs are easier to compute because U1 is always zero so only one term in the curl is non-zero.
 
     temp = HSIEPolynomial::PsiJ(d.hsie_order,k0);
     temp.multiplyBy(-1.0 * fe.value(related_function, q_index)[1]);

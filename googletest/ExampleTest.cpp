@@ -11,6 +11,14 @@
 #include "../Code/HSIEPreconditioner/HSIESurface.cpp"
 #include <deal.II/grid/grid_generator.h>
 
+static HSIEPolynomial random_poly(unsigned int Order, std::complex<double> k0) {
+    std::vector<std::complex<double>> a;
+    for(unsigned int i = 0; i < Order; i++) {
+        a.emplace_back(rand()%10, rand()%10);
+    }
+    return HSIEPolynomial(a, k0);
+}
+
 static unsigned int dofs_per_edge(unsigned int hsie_Order, unsigned int inner_order) {
     switch(hsie_Order) {
         case 5:
@@ -84,7 +92,6 @@ protected:
         dealii::GridGenerator::subdivided_hyper_rectangle(tria, repetitions, left, right, true);
         const unsigned int dest_cells = Cells_Per_Direction*Cells_Per_Direction*Cells_Per_Direction;
         ASSERT_EQ(tria.n_active_cells(), dest_cells);
-
         std::set<unsigned int> b_ids;
         b_ids.insert(5);
         association = dealii::GridGenerator::extract_boundary_mesh( tria, temp_triangulation, b_ids);
@@ -96,40 +103,35 @@ protected:
 };
 
 TEST_P(TestOrderFixture, AssemblationTestOrder5) {
-
     HSIESurface< 5 > surf(surf_tria, 0, 0, InnerOrder, k0, association);
-
     surf.initialize();
-
     ASSERT_EQ(surf.compute_dofs_per_vertex(), dofs_per_vertex(5) * 2 );
     ASSERT_EQ(surf.compute_dofs_per_edge(false), dofs_per_edge(5, InnerOrder) * 2 );
     ASSERT_EQ(surf.compute_dofs_per_face(false), dofs_per_face(5, InnerOrder) * 2 );
-
     ASSERT_EQ((Cells_Per_Direction+1) * (Cells_Per_Direction+1)  *surf.compute_dofs_per_vertex(), surf.vertex_dof_data.size());
     ASSERT_EQ(2 * Cells_Per_Direction * (Cells_Per_Direction+1) * surf.compute_dofs_per_edge(false), surf.edge_dof_data.size());
-    ASSERT_EQ(Cells_Per_Direction * Cells_Per_Direction * surf.compute_dofs_per_face(false), surf.face_dof_data.size());
-
+    ASSERT_EQ(Cells_Per_Direction * Cells_Per_Direction * surf.compute_dofs_per_face(false) / 2, surf.face_dof_data.size());
 }
 
 TEST_P(TestOrderFixture, AssemblationTestOrder10) {
-
     HSIESurface< 10 > surf(surf_tria, 0, 0, InnerOrder, k0, association);
-
     surf.initialize();
     ASSERT_EQ(surf.compute_dofs_per_vertex(), dofs_per_vertex(10) * 2 );
     ASSERT_EQ(surf.compute_dofs_per_edge(false), dofs_per_edge(10, InnerOrder) * 2 );
     ASSERT_EQ(surf.compute_dofs_per_face(false), dofs_per_face(10, InnerOrder) * 2 );
-
     ASSERT_EQ((Cells_Per_Direction+1) * (Cells_Per_Direction+1)  *surf.compute_dofs_per_vertex(), surf.vertex_dof_data.size());
     ASSERT_EQ(2 * Cells_Per_Direction * (Cells_Per_Direction+1) * surf.compute_dofs_per_edge(false), surf.edge_dof_data.size());
-    ASSERT_EQ(Cells_Per_Direction * Cells_Per_Direction * surf.compute_dofs_per_face(false), surf.face_dof_data.size());
+    ASSERT_EQ(Cells_Per_Direction * Cells_Per_Direction * surf.compute_dofs_per_face(false) / 2, surf.face_dof_data.size());
     unsigned int total_dof_count = surf.face_dof_data.size() + surf.edge_dof_data.size() + surf.vertex_dof_data.size();
     IndexSet hsie_dof_indices(total_dof_count);
     const unsigned int max_couplings =  dofs_per_vertex(5) * 2 *9 + dofs_per_edge(10, InnerOrder) * 2 * 12 + dofs_per_face(10, InnerOrder) * 2 * 4;
     dealii::SparsityPattern sp(total_dof_count, max_couplings);
+    sp.compress();
     dealii::SparseMatrix<double> sys_matrix(sp);
     surf.fill_matrix(&sys_matrix, hsie_dof_indices);
     ASSERT_NE(sys_matrix.linfty_norm(), 0);
+
+
 }
 
 INSTANTIATE_TEST_SUITE_P(HSIESurfaceTests, TestOrderFixture, ::testing::Combine( ::testing::Values(0,1,2), ::testing::Values(5,9)));
@@ -165,6 +167,61 @@ TEST(HSIEPolynomialTests, ProductOfDandIShouldBeIdentity) {
     dealii::FullMatrix<std::complex<double>> product(HSIEPolynomial::D.size(0), HSIEPolynomial::D.size(1));
     HSIEPolynomial::D.mmult(product, HSIEPolynomial::I, false);
     ASSERT_EQ(product.frobenius_norm(), std::sqrt(HSIEPolynomial::I.size(0)));
+}
+
+TEST(HSIE_ORTHOGONALITY_TESTS, EvaluationOfA) {
+    std::complex<double> k0(0,-1);
+    std::vector<std::complex<double>> zeroes;
+    for(unsigned k = 0; k < 10; k++) {
+        zeroes.emplace_back(0,0);
+    }
+    for(unsigned int i = 0; i < 10; i++) {
+        for (unsigned int j = 0; j<10; j++) {
+                std::vector<HSIEPolynomial> u;
+                u.emplace_back(i, k0);
+                u.emplace_back(zeroes, k0);
+                u.emplace_back(zeroes, k0);
+                std::vector<HSIEPolynomial> v;
+                v.emplace_back(j, k0);
+                v.emplace_back(zeroes, k0);
+                v.emplace_back(zeroes, k0);
+                std::complex<double> res = HSIESurface<10>::evaluate_a(u, v, 1000);
+            if(j != i) {
+                ASSERT_NEAR(0, res.real(), 0.001);
+                ASSERT_NEAR(0, res.imag(), 0.001);
+            } else {
+                bool eitherOr = std::abs(res.real()) > 0.0001 || std::abs(res.imag()) > 0.0001;
+                ASSERT_TRUE(eitherOr);
+            }
+        }
+    }
+}
+
+TEST(HSIE_ORTHOGONALITY_TESTS, RandomPolynomialProductTest) {
+    std::complex<double> k0(0,-1);
+    std::vector<std::complex<double>> zeroes;
+    for(unsigned k = 0; k < 10; k++) {
+        zeroes.emplace_back(0,0);
+    }
+
+    std::vector<HSIEPolynomial> u;
+    u.push_back(random_poly(10,k0));
+    u.push_back(random_poly(10,k0));
+    u.push_back(random_poly(10,k0));
+    std::vector<HSIEPolynomial> v;
+    v.push_back(random_poly(10,k0));
+    v.push_back(random_poly(10,k0));
+    v.push_back(random_poly(10,k0));
+    std::complex<double> res = HSIESurface<10>::evaluate_a(u, v, 1000);
+    std::complex<double> expected_result(0,0);
+    for(unsigned j = 0; j < 3; j++) {
+        for (unsigned int i = 0; i < 10; i++) {
+            expected_result += u[j].a[i] * v[j].a[i];
+        }
+    }
+
+    ASSERT_NEAR(expected_result.real(), res.real(), expected_result.real()/100.0);
+    ASSERT_NEAR(expected_result.imag(), res.imag(), expected_result.imag()/100.0);
 }
 
 TEST(DOFManagerTests, StaticFunctionTest) {

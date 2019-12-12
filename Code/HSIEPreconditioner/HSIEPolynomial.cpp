@@ -76,8 +76,8 @@ HSIEPolynomial::HSIEPolynomial(std::vector<std::complex<double>> in_a, std::comp
 }
 
 HSIEPolynomial HSIEPolynomial::applyD() {
-    if(! this->matricesLoaded) {
-        this->computeDandI(this->a.size(), this->k0);
+    if(! this->matricesLoaded || this->a.size() > D.size()[0]) {
+        this->computeDandI(this->a.size()+2, this->k0);
     }
     std::vector<std::complex<double>> n_a;
     for(unsigned int i = 0; i < this->a.size(); i++) {
@@ -91,8 +91,8 @@ HSIEPolynomial HSIEPolynomial::applyD() {
 }
 
 HSIEPolynomial HSIEPolynomial::applyI() {
-    if(! this->matricesLoaded) {
-        this->computeDandI(this->a.size(), this->k0);
+    if(! this->matricesLoaded || this->a.size() > D.size()[0]) {
+        this->computeDandI(this->a.size()+2, this->k0);
     }
     std::vector<std::complex<double>> n_a;
     for(unsigned  int i = 0; i < this->a.size(); i++) {

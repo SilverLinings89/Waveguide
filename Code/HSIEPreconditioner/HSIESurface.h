@@ -85,7 +85,7 @@ public:
     unsigned int register_dof();
     void register_single_dof(std::string in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &, unsigned int);
     void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &, unsigned int);
-    std::complex<double> evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, unsigned int gauss_order);
+    static std::complex<double> evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, unsigned int gauss_order);
     void transform_coordinates_in_place(std::vector<HSIEPolynomial> *);
 };
 
