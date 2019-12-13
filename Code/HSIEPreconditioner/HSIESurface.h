@@ -87,6 +87,8 @@ public:
     void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, bool in_is_real, DofType in_dof_type, std::vector<DofData> &, unsigned int);
     static std::complex<double> evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, unsigned int gauss_order);
     void transform_coordinates_in_place(std::vector<HSIEPolynomial> *);
+    bool check_dof_assignment_integrity();
+    bool check_number_of_dofs_for_cell_integrity();
 };
 
 #endif //WAVEGUIDEPROBLEM_HSIESURFACE_H

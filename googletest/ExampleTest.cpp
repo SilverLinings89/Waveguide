@@ -111,6 +111,8 @@ TEST_P(TestOrderFixture, AssemblationTestOrder5) {
     ASSERT_EQ((Cells_Per_Direction+1) * (Cells_Per_Direction+1)  *surf.compute_dofs_per_vertex(), surf.vertex_dof_data.size());
     ASSERT_EQ(2 * Cells_Per_Direction * (Cells_Per_Direction+1) * surf.compute_dofs_per_edge(false), surf.edge_dof_data.size());
     ASSERT_EQ(Cells_Per_Direction * Cells_Per_Direction * surf.compute_dofs_per_face(false) / 2, surf.face_dof_data.size());
+    ASSERT_TRUE(surf.check_number_of_dofs_for_cell_integrity());
+    ASSERT_TRUE(surf.check_dof_assignment_integrity());
 }
 
 TEST_P(TestOrderFixture, AssemblationTestOrder10) {
@@ -122,6 +124,8 @@ TEST_P(TestOrderFixture, AssemblationTestOrder10) {
     ASSERT_EQ((Cells_Per_Direction+1) * (Cells_Per_Direction+1)  *surf.compute_dofs_per_vertex(), surf.vertex_dof_data.size());
     ASSERT_EQ(2 * Cells_Per_Direction * (Cells_Per_Direction+1) * surf.compute_dofs_per_edge(false), surf.edge_dof_data.size());
     ASSERT_EQ(Cells_Per_Direction * Cells_Per_Direction * surf.compute_dofs_per_face(false) / 2, surf.face_dof_data.size());
+    ASSERT_TRUE(surf.check_number_of_dofs_for_cell_integrity());
+    ASSERT_TRUE(surf.check_dof_assignment_integrity());
     unsigned int total_dof_count = surf.face_dof_data.size() + surf.edge_dof_data.size() + surf.vertex_dof_data.size();
     IndexSet hsie_dof_indices(total_dof_count);
     const unsigned int max_couplings =  dofs_per_vertex(5) * 2 *9 + dofs_per_edge(10, InnerOrder) * 2 * 12 + dofs_per_face(10, InnerOrder) * 2 * 4;
@@ -130,8 +134,6 @@ TEST_P(TestOrderFixture, AssemblationTestOrder10) {
     dealii::SparseMatrix<double> sys_matrix(sp);
     surf.fill_matrix(&sys_matrix, hsie_dof_indices);
     ASSERT_NE(sys_matrix.linfty_norm(), 0);
-
-
 }
 
 INSTANTIATE_TEST_SUITE_P(HSIESurfaceTests, TestOrderFixture, ::testing::Combine( ::testing::Values(0,1,2), ::testing::Values(5,9)));

@@ -74,3 +74,5 @@ Code/.vscode/ipch
 
 .idea/
 .idea/workspace.xml
+cmake-build-debug/Code/libCode.a
+cmake-build-debug/googletest/Google_Tests_run

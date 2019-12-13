@@ -40,7 +40,6 @@ template<unsigned int ORDER>
 std::vector<DofData> HSIESurface<ORDER>::get_dof_data_for_cell(dealii::Triangulation<2,2>::cell_iterator cell) {
     std::vector<DofData> ret;
 
-
     // get cell dofs:
     std::string cell_id =  cell->id().to_string();
     unsigned int * edge_ids = new unsigned int[4];
@@ -142,6 +141,7 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> * matrix, deal
                 // get dof i type data (type and degree, base point etc.)
                 DofData &u = cell_dofs[i];
                 std::vector<HSIEPolynomial> u_contrib_curl, u_contrib;
+                std::cout << "I: " << local_related_fe_index[i] << std::endl;
                 if(cell_dofs[i].type == DofType::RAY) {
                     u_contrib_curl = build_curl_term(u, fe_q_values[real], q_point, polynomials[i], local_related_fe_index[i]);
                     u_contrib = build_non_curl_term(u, fe_q_values[real], q_point, polynomials[i], local_related_fe_index[i]);
@@ -393,6 +393,7 @@ bool HSIESurface<ORDER>::is_vertex_owned(dealii::DoFHandler<2>::active_cell_iter
      **/
 }
 
+
 template<unsigned int ORDER>
 void HSIESurface<ORDER>::register_new_vertex_dofs(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int dof_index,
                                                   unsigned int vertex) {
@@ -407,7 +408,7 @@ template<unsigned int ORDER>
 void HSIESurface<ORDER>::register_new_edge_dofs(dealii::DoFHandler<2>::active_cell_iterator cell_nedelec,dealii::DoFHandler<2>::active_cell_iterator cell_q, unsigned int edge) {
     const int max_hsie_order = ORDER;
     // EDGE Dofs
-    std::vector<unsigned int> local_dofs(fe_nedelec.dofs_per_line + 2* fe_nedelec.dofs_per_vertex);
+    std::vector<unsigned int> local_dofs(fe_nedelec.dofs_per_line);
     cell_nedelec->line(edge)->get_dof_indices(local_dofs);
     for(int inner_order = 1; inner_order <= (int)fe_nedelec.dofs_per_line; inner_order++ ) {
         register_single_dof(cell_nedelec->line_index(edge), -1, inner_order, true, DofType::EDGE, edge_dof_data, local_dofs[inner_order]);
@@ -635,5 +636,81 @@ void HSIESurface<ORDER>::transform_coordinates_in_place(std::vector<HSIEPolynomi
             (*vector)[2] = temp;
             break;
     }
+}
+
+template<unsigned int ORDER>
+bool HSIESurface<ORDER>::check_dof_assignment_integrity() {
+    HSIEPolynomial::computeDandI(ORDER + 2, k0);
+    auto it = dof_h_nedelec.begin_active();
+    auto end = dof_h_nedelec.end();
+    // for each cell
+
+    const unsigned int dofs_per_cell = GeometryInfo<2>::vertices_per_cell * compute_dofs_per_vertex() + GeometryInfo<2>::lines_per_cell * compute_dofs_per_edge(false) + compute_dofs_per_face(false);
+
+    auto it2 = dof_h_q.begin_active();
+    unsigned int counter = 1;
+    for(; it != end; ++it) {
+        if(it->id() != it2->id()) std::cout << "Identity failure!" <<std::endl;
+        std::vector<DofData> cell_dofs = this->get_dof_data_for_cell(it);
+        std::vector<unsigned int> q_dofs(fe_q.dofs_per_cell);
+        std::vector<unsigned int> n_dofs(fe_nedelec.dofs_per_cell);;
+        it2->get_dof_indices(q_dofs);
+        it->get_dof_indices(n_dofs);
+        std::vector<unsigned int> local_related_fe_index;
+        bool found = false;
+        for(unsigned int i = 0; i < cell_dofs.size(); i++) {
+            found = false;
+            if(cell_dofs[i].type == DofType::RAY || cell_dofs[i].type == DofType::IFFb) {
+                for(unsigned int j= 0; j < q_dofs.size(); j++) {
+                    if(q_dofs[j] == cell_dofs[i].base_dof_index) {
+                        local_related_fe_index.push_back(j);
+                        found = true;
+                    }
+                }
+            } else {
+                for(unsigned int j= 0; j < n_dofs.size(); j++) {
+                    if(n_dofs[j] == cell_dofs[i].base_dof_index) {
+                        local_related_fe_index.push_back(j);
+                        found = true;
+                    }
+                }
+            }
+            if(!found) {
+                std::cout << cell_dofs[i].base_dof_index << " not found. Type: << " << cell_dofs[i].type << " Available: ";
+                for(unsigned int j= 0; j < q_dofs.size(); j++) {
+                    std::cout << q_dofs[j] << ", ";
+                }
+                std::cout << " AND ";
+                for(unsigned int j= 0; j < n_dofs.size(); j++) {
+                    std::cout << n_dofs[j] << ", ";
+                }
+                std::cout << std::endl;
+            }
+        }
+
+        if(!(local_related_fe_index.size() == cell_dofs.size())) {
+            std::cout << "Mismatch in cell " << counter << ": Found indices: " << local_related_fe_index.size() << " of a total " << cell_dofs.size() <<std::endl;
+            return false;
+        }
+        counter ++;
+        it2++;
+    }
+
+    return true;
+}
+
+template<unsigned int ORDER>
+bool HSIESurface<ORDER>::check_number_of_dofs_for_cell_integrity() {
+    auto it = dof_h_nedelec.begin_active();
+    auto end = dof_h_nedelec.end();
+    const unsigned int dofs_per_cell = GeometryInfo<2>::vertices_per_cell * compute_dofs_per_vertex() + GeometryInfo<2>::lines_per_cell * compute_dofs_per_edge(false) + compute_dofs_per_face(false);
+
+    for(; it != end; ++it) {
+        std::vector<DofData> cell_dofs = this->get_dof_data_for_cell(it);
+        if(cell_dofs.size() != dofs_per_cell) {
+            return false;
+        }
+    }
+    return true;
 }
 
