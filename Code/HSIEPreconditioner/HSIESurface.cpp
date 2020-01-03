@@ -201,17 +201,12 @@ DofCount HSIESurface<ORDER>::compute_n_edge_dofs() {
     DoFHandler<2>::active_cell_iterator cell, cell2, endc;
     endc = dof_h_nedelec.end();
     DofCount ret;
-    // for each cell
     cell2 = dof_h_q.begin_active();
     for(cell = dof_h_nedelec.begin_active(); cell != endc; cell++) {
-        // for each edge
         for(unsigned int edge = 0; edge < GeometryInfo<2>::lines_per_cell; edge++) {
-            // if it wasn't handled before
             if(!cell->line(edge)->user_flag_set()){
-                // handle it
                 update_dof_counts_for_edge(cell, edge, ret);
                 register_new_edge_dofs(cell, cell2, edge);
-                // remember that it has been handled
                 cell->line(edge)->set_user_flag();
             }
         }
@@ -226,7 +221,6 @@ DofCount HSIESurface<ORDER>::compute_n_vertex_dofs() {
     DoFHandler<2>::active_cell_iterator cell, endc;
     endc = dof_h_q.end();
     DofCount ret;
-    // for each cell
     for(cell = dof_h_q.begin_active(); cell != endc; cell++) {
         // for each edge
         for(unsigned int vertex = 0; vertex < GeometryInfo<2>::vertices_per_cell; vertex++) {

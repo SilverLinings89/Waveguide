@@ -29,15 +29,6 @@ struct DofCount {
     unsigned int total = 0;
 };
 
-static void  print_dof_count(DofCount in_dofs) {
-    std::cout << "Owned: " << in_dofs.owned << std::endl;
-    std::cout << "Non-Owned: " << in_dofs.non_owned << std::endl;
-    std::cout << "HSIE: " << in_dofs.hsie << std::endl;
-    std::cout << "NON-HSIE: " << in_dofs.non_hsie << std::endl;
-    std::cout << "Owned-HSIE: " << in_dofs.owned_hsie << std::endl;
-    std::cout << "Total: " << in_dofs.total << std::endl;
-}
-
 template<unsigned int ORDER>
 class HSIESurface {
     std::map<dealii::Triangulation<2,3>::cell_iterator, dealii::Triangulation<3,3>::face_iterator > association;
