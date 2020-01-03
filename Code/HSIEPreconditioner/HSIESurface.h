@@ -62,7 +62,7 @@ public:
     std::vector<HSIEPolynomial> build_curl_term(DofData, const dealii::FEValuesViews::Scalar<2,2>&, unsigned int q_index, HSIEPolynomial, unsigned int);
     std::vector<HSIEPolynomial> build_non_curl_term(DofData, const dealii::FEValuesViews::Scalar<2,2>&, unsigned int q_index, HSIEPolynomial , unsigned int);
 
-    std::vector<DofData> get_dof_data_for_cell(dealii::Triangulation<2,2>::cell_iterator);
+    std::vector<DofData> get_dof_data_for_cell(dealii::DoFHandler<2>::active_cell_iterator, dealii::DoFHandler<2>::active_cell_iterator);
     void compute_dof_numbers();
     void fill_matrix(dealii::SparseMatrix<double>* , dealii::IndexSet);
     DofCount compute_n_edge_dofs();

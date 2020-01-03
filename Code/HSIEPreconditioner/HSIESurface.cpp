@@ -37,21 +37,26 @@ void HSIESurface<ORDER>::compute_dof_numbers() {
 }
 
 template<unsigned int ORDER>
-std::vector<DofData> HSIESurface<ORDER>::get_dof_data_for_cell(dealii::Triangulation<2,2>::cell_iterator cell) {
+std::vector<DofData> HSIESurface<ORDER>::get_dof_data_for_cell(dealii::DoFHandler<2>::active_cell_iterator cell_nedelec, dealii::DoFHandler<2>::active_cell_iterator cell_q) {
     std::vector<DofData> ret;
 
     // get cell dofs:
-    std::string cell_id =  cell->id().to_string();
-    unsigned int * edge_ids = new unsigned int[4];
+    std::string cell_id =  cell_nedelec->id().to_string();
+    unsigned int * nedelec_edge_ids = new unsigned int[4];
+    unsigned int * q_edge_ids = new unsigned int[4];
     unsigned int * vertex_ids = new unsigned int[4];
     // get edge dofs:
     for(unsigned int i = 0; i < 4; i++) {
-        edge_ids[i] = cell->face_index(i);
+        nedelec_edge_ids[i] = cell_nedelec->face_index(i);
+    }
+
+    for(unsigned int i = 0; i < 4; i++) {
+        q_edge_ids[i] = cell_q->face_index(i);
     }
 
     // get vertex dofs:
     for(unsigned int i = 0; i < 4; i++) {
-        vertex_ids[i]= cell->vertex_index(i);
+        vertex_ids[i]= cell_q->vertex_index(i);
     }
 
     // add cell dofs
@@ -63,9 +68,16 @@ std::vector<DofData> HSIESurface<ORDER>::get_dof_data_for_cell(dealii::Triangula
 
     // add edge-based dofs
     for(unsigned int i = 0; i < this->edge_dof_data.size(); i++) {
-        unsigned int idx = this->edge_dof_data[i].base_structure_id_non_face;
-        if(idx == edge_ids[0] || idx == edge_ids[1] || idx == edge_ids[2] || idx == edge_ids[3]) {
-            ret.push_back(this->edge_dof_data[i]);
+        if(this->edge_dof_data[i].type == DofType::EDGE || this->edge_dof_data[i].type == DofType::IFFa) {
+            unsigned int idx = this->edge_dof_data[i].base_structure_id_non_face;
+            if (idx == nedelec_edge_ids[0] || idx == nedelec_edge_ids[1] || idx == nedelec_edge_ids[2] || idx == nedelec_edge_ids[3]) {
+                ret.push_back(this->edge_dof_data[i]);
+            }
+        } else {
+            unsigned int idx = this->edge_dof_data[i].base_structure_id_non_face;
+            if (idx == q_edge_ids[0] || idx == q_edge_ids[1] || idx == q_edge_ids[2] || idx == q_edge_ids[3]) {
+                ret.push_back(this->edge_dof_data[i]);
+            }
         }
     }
 
@@ -99,7 +111,7 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> * matrix, deal
 
     auto it2 = dof_h_q.begin_active();
     for(; it != end; ++it) {
-        std::vector<DofData> cell_dofs = this->get_dof_data_for_cell(it);
+        std::vector<DofData> cell_dofs = this->get_dof_data_for_cell(it, it2);
         std::vector<HSIEPolynomial> polynomials;
         std::vector<unsigned int> q_dofs(fe_q.dofs_per_cell);
         std::vector<unsigned int> n_dofs(fe_nedelec.dofs_per_cell);;
@@ -296,8 +308,8 @@ template<unsigned int ORDER>
 void HSIESurface<ORDER>::initialize_dof_handlers_and_fe() {
     dof_h_q.distribute_dofs(fe_q);
     dof_h_nedelec.distribute_dofs(fe_nedelec);
-    std::cout << "Base Dof Counts Nedelec: " << fe_nedelec.dofs_per_cell << " per cell, " << fe_nedelec.dofs_per_line << " per line and " << fe_nedelec.dofs_per_vertex << "." << std::endl;
-    std::cout << "Base Dof Counts Q: " << fe_q.dofs_per_cell << " per cell, " << fe_q.dofs_per_line << " per line and " << fe_q.dofs_per_vertex << "." << std::endl;
+    // std::cout << "Base Dof Counts Nedelec: " << fe_nedelec.dofs_per_cell << " per cell, " << fe_nedelec.dofs_per_line << " per line and " << fe_nedelec.dofs_per_vertex << "." << std::endl;
+    // std::cout << "Base Dof Counts Q: " << fe_q.dofs_per_cell << " per cell, " << fe_q.dofs_per_line << " per line and " << fe_q.dofs_per_vertex << "." << std::endl;
 }
 
 
@@ -409,16 +421,16 @@ void HSIESurface<ORDER>::register_new_edge_dofs(dealii::DoFHandler<2>::active_ce
     // EDGE Dofs
     std::vector<unsigned int> local_dofs(fe_nedelec.dofs_per_line);
     cell_nedelec->line(edge)->get_dof_indices(local_dofs);
-    for(int inner_order = 1; inner_order <= (int)fe_nedelec.dofs_per_line; inner_order++ ) {
-        register_single_dof(cell_nedelec->face_index(edge), -1, inner_order, true, DofType::EDGE, edge_dof_data, local_dofs[inner_order]);
-        register_single_dof(cell_nedelec->face_index(edge), -1, inner_order, false, DofType::EDGE, edge_dof_data, local_dofs[inner_order]);
+    for(int inner_order = 0; inner_order < (int)fe_nedelec.dofs_per_line; inner_order++ ) {
+        register_single_dof(cell_nedelec->face_index(edge), -1, inner_order+1, true, DofType::EDGE, edge_dof_data, local_dofs[inner_order]);
+        register_single_dof(cell_nedelec->face_index(edge), -1, inner_order+1, false, DofType::EDGE, edge_dof_data, local_dofs[inner_order]);
     }
 
     // INFINITE FACE Dofs Type a
-    for(int inner_order = 1; inner_order <= (int)fe_nedelec.dofs_per_line; inner_order++ ) {
+    for(int inner_order = 0; inner_order < (int)fe_nedelec.dofs_per_line; inner_order++ ) {
         for(int hsie_order = 0; hsie_order <= max_hsie_order; hsie_order ++) {
-            register_single_dof(cell_nedelec->face_index(edge), hsie_order, inner_order, true, DofType::IFFa, edge_dof_data, local_dofs[inner_order]);
-            register_single_dof(cell_nedelec->face_index(edge), hsie_order, inner_order, false, DofType::IFFa, edge_dof_data, local_dofs[inner_order]);
+            register_single_dof(cell_nedelec->face_index(edge), hsie_order, inner_order+1, true, DofType::IFFa, edge_dof_data, local_dofs[inner_order]);
+            register_single_dof(cell_nedelec->face_index(edge), hsie_order, inner_order+1, false, DofType::IFFa, edge_dof_data, local_dofs[inner_order]);
         }
     }
 
@@ -650,7 +662,7 @@ bool HSIESurface<ORDER>::check_dof_assignment_integrity() {
     unsigned int counter = 1;
     for(; it != end; ++it) {
         if(it->id() != it2->id()) std::cout << "Identity failure!" <<std::endl;
-        std::vector<DofData> cell_dofs = this->get_dof_data_for_cell(it);
+        std::vector<DofData> cell_dofs = this->get_dof_data_for_cell(it, it2);
         std::vector<unsigned int> q_dofs(fe_q.dofs_per_cell);
         std::vector<unsigned int> n_dofs(fe_nedelec.dofs_per_cell);
         it2->get_dof_indices(q_dofs);
@@ -701,16 +713,25 @@ bool HSIESurface<ORDER>::check_dof_assignment_integrity() {
 template<unsigned int ORDER>
 bool HSIESurface<ORDER>::check_number_of_dofs_for_cell_integrity() {
     auto it = dof_h_nedelec.begin_active();
+    auto it2 = dof_h_q.begin_active();
     auto end = dof_h_nedelec.end();
-    const unsigned int dofs_per_cell = GeometryInfo<2>::vertices_per_cell * compute_dofs_per_vertex() + GeometryInfo<2>::lines_per_cell * compute_dofs_per_edge(false) + compute_dofs_per_face(false);
+    const unsigned int dofs_per_cell = 4 * compute_dofs_per_vertex() + 4 * compute_dofs_per_edge(false) + compute_dofs_per_face(false);
     unsigned int counter = 0;
     for(; it != end; ++it) {
-        std::vector<DofData> cell_dofs = this->get_dof_data_for_cell(it);
+        std::vector<DofData> cell_dofs = this->get_dof_data_for_cell(it, it2);
         if(cell_dofs.size() != dofs_per_cell) {
             std::cout << cell_dofs.size() << " is not " << dofs_per_cell << " in cell " << counter << std::endl;
+            for(unsigned int i = 0; i < 7; i++) {
+                unsigned int count = 0;
+                for (int j = 0; j < cell_dofs.size(); ++j) {
+                    if(cell_dofs[j].type == i) count++;
+                }
+                std::cout << "For type " << i << " I found " << count << " dofs"<< std::endl;
+            }
             return false;
         }
         counter ++;
+        it2++;
     }
     return true;
 }
