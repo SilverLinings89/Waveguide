@@ -57,11 +57,13 @@ class HSIESurface {
 public:
     std::vector<DofData> face_dof_data, edge_dof_data, vertex_dof_data;
     HSIESurface( dealii::Triangulation<2,2> & in_surf_tria, unsigned int in_boundary_id, unsigned int in_level, unsigned int in_inner_order, std::complex<double> k0, std::map<dealii::Triangulation<2,3>::cell_iterator, dealii::Triangulation<3,3>::face_iterator > in_assoc );
-    std::vector<HSIEPolynomial> build_curl_term(DofData, const dealii::FEValuesViews::Vector<2,2>&, unsigned int q_index, HSIEPolynomial, unsigned int);
-    std::vector<HSIEPolynomial> build_non_curl_term(DofData, const dealii::FEValuesViews::Vector<2,2>&, unsigned int q_index, HSIEPolynomial , unsigned int);
-    std::vector<HSIEPolynomial> build_curl_term(DofData, const dealii::FEValuesViews::Scalar<2,2>&, unsigned int q_index, HSIEPolynomial, unsigned int);
-    std::vector<HSIEPolynomial> build_non_curl_term(DofData, const dealii::FEValuesViews::Scalar<2,2>&, unsigned int q_index, HSIEPolynomial , unsigned int);
 
+    std::vector<HSIEPolynomial> build_curl_term_q(unsigned int, const dealii::Tensor<1,2>);
+    std::vector<HSIEPolynomial> build_curl_term_nedelec(unsigned int, const dealii::Tensor<1,2>,const dealii::Tensor<1,2>,const double, const double);
+    std::vector<HSIEPolynomial> build_non_curl_term_q(unsigned int, const double);
+    std::vector<HSIEPolynomial> build_non_curl_term_nedelec(unsigned int, const double, const double);
+
+    void fill_sparsity_pattern(dealii::DynamicSparsityPattern * pattern);
     std::vector<DofData> get_dof_data_for_cell(dealii::DoFHandler<2>::active_cell_iterator, dealii::DoFHandler<2>::active_cell_iterator);
     void compute_dof_numbers();
     void fill_matrix(dealii::SparseMatrix<double>* , dealii::IndexSet);

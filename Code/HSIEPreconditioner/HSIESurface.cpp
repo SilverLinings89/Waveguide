@@ -97,7 +97,7 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> * matrix, deal
     HSIEPolynomial::computeDandI(ORDER + 2, k0);
     auto it = dof_h_nedelec.begin_active();
     auto end = dof_h_nedelec.end();
-    // for each cell
+
     QGauss<2> quadrature_formula(2);
     FEValues<2,2> fe_q_values(fe_q, quadrature_formula,
                             update_values | update_gradients | update_JxW_values |
@@ -108,9 +108,10 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> * matrix, deal
     std::vector<Point<2>> quadrature_points;
     const unsigned int dofs_per_cell = GeometryInfo<2>::vertices_per_cell * compute_dofs_per_vertex() + GeometryInfo<2>::lines_per_cell * compute_dofs_per_edge(false) + compute_dofs_per_face(false);
     FullMatrix<double> cell_matrix_real(dofs_per_cell, dofs_per_cell);
-
+    unsigned int cell_counter = 0;
     auto it2 = dof_h_q.begin_active();
     for(; it != end; ++it) {
+        cell_matrix_real = 0;
         std::vector<DofData> cell_dofs = this->get_dof_data_for_cell(it, it2);
         std::vector<HSIEPolynomial> polynomials;
         std::vector<unsigned int> q_dofs(fe_q.dofs_per_cell);
@@ -143,37 +144,43 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> * matrix, deal
         fe_q_values.reinit(it2);
         quadrature_points = fe_q_values.get_quadrature_points();
         std::vector<double> jxw_values = fe_n_values.get_JxW_values();
-        const FEValuesExtractors::Vector real(0);
+
         for(unsigned int q_point = 0; q_point < quadrature_points.size(); q_point++) {
             double JxW = jxw_values[q_point];
-            // for each dof i
             for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-
-
-                // get dof i type data (type and degree, base point etc.)
                 DofData &u = cell_dofs[i];
                 std::vector<HSIEPolynomial> u_contrib_curl, u_contrib;
-                std::cout << "I: " << local_related_fe_index[i] << std::endl;
-                if(cell_dofs[i].type == DofType::RAY) {
-                    u_contrib_curl = build_curl_term(u, fe_q_values[real], q_point, polynomials[i], local_related_fe_index[i]);
-                    u_contrib = build_non_curl_term(u, fe_q_values[real], q_point, polynomials[i], local_related_fe_index[i]);
+                if(cell_dofs[i].type == DofType::RAY || cell_dofs[i].type == DofType::IFFb) {
+                    u_contrib_curl = build_curl_term_q(u.hsie_order, fe_q_values.shape_grad(local_related_fe_index[i], q_point));
+                    u_contrib = build_non_curl_term_q(u.hsie_order, fe_q_values.shape_value(local_related_fe_index[i], q_point));
                 } else {
-                    u_contrib_curl = build_curl_term(u, fe_n_values[real], q_point, polynomials[i], local_related_fe_index[i]);
-                    u_contrib = build_non_curl_term(u, fe_n_values[real], q_point, polynomials[i], local_related_fe_index[i]);
+                    u_contrib_curl = build_curl_term_nedelec(u.hsie_order,
+                            fe_n_values.shape_grad_component(local_related_fe_index[i],q_point,0),
+                            fe_n_values.shape_grad_component(local_related_fe_index[i],q_point,1),
+                            fe_n_values.shape_value_component(local_related_fe_index[i],q_point,0),
+                            fe_n_values.shape_value_component(local_related_fe_index[i],q_point,1));
+                    u_contrib = build_non_curl_term_nedelec(u.hsie_order,
+                            fe_n_values.shape_value_component(local_related_fe_index[i],q_point,0),
+                            fe_n_values.shape_value_component(local_related_fe_index[i],q_point,1));
                 }
-                // for each dof j
+
                 for (unsigned int j = 0; j < cell_dofs.size(); j++) {
-                    // get dof j type data (type and degree, base point etc.)
                     DofData &v = cell_dofs[j];
                     std::vector<HSIEPolynomial> v_contrib_curl, v_contrib;
-                    if(cell_dofs[i].type == DofType::RAY) {
-                        v_contrib_curl = build_curl_term(v, fe_q_values[real], q_point, polynomials[j], local_related_fe_index[j]);
-                        v_contrib = build_non_curl_term(v, fe_q_values[real], q_point, polynomials[j], local_related_fe_index[j]);
+
+                    if(cell_dofs[j].type == DofType::RAY || cell_dofs[j].type == DofType::IFFb) {
+                        v_contrib_curl = build_curl_term_q(v.hsie_order, fe_q_values.shape_grad(local_related_fe_index[j], q_point));
+                        v_contrib = build_non_curl_term_q(v.hsie_order, fe_q_values.shape_value(local_related_fe_index[j], q_point));
                     } else {
-                        v_contrib_curl = build_curl_term(v, fe_n_values[real], q_point, polynomials[j], local_related_fe_index[j]);
-                        v_contrib = build_non_curl_term(v, fe_n_values[real], q_point, polynomials[j], local_related_fe_index[j]);
+                        v_contrib_curl = build_curl_term_nedelec(v.hsie_order,
+                                                                 fe_n_values.shape_grad_component(local_related_fe_index[j],q_point,0),
+                                                                 fe_n_values.shape_grad_component(local_related_fe_index[j],q_point,1),
+                                                                 fe_n_values.shape_value_component(local_related_fe_index[j],q_point,0),
+                                                                 fe_n_values.shape_value_component(local_related_fe_index[j],q_point,1));
+                        v_contrib = build_non_curl_term_nedelec(v.hsie_order,
+                                                                fe_n_values.shape_value_component(local_related_fe_index[j],q_point,0),
+                                                                fe_n_values.shape_value_component(local_related_fe_index[j],q_point,1));
                     }
-                    // compute their coupling and write it to matrix
                     cell_matrix_real.set(i, j,((evaluate_a(u_contrib_curl, v_contrib_curl, 100) + evaluate_a(u_contrib, v_contrib, 100)) * JxW).real());
                 }
             }
@@ -184,6 +191,7 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> * matrix, deal
             matrix->set(local_indices, cell_matrix_real);
         }
         it2++;
+        cell_counter ++;
     }
 
 }
@@ -536,6 +544,15 @@ unsigned int HSIESurface<ORDER>::register_dof() {
 
 template<unsigned int ORDER>
 std::complex<double> HSIESurface<ORDER>::evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, unsigned int steps) {
+    std::complex<double> expected_result(0,0);
+    for(unsigned j = 0; j < 3; j++) {
+        for (unsigned int i = 0; i < 10; i++) {
+            expected_result += u[j].a[i] * v[j].a[i];
+        }
+    }
+    return expected_result;
+
+    /**
     std::complex<double> ret(0,0);
     const double PI = 3.14159265358;
     double stepwidth = 2.0 * PI / (steps-1);
@@ -549,28 +566,31 @@ std::complex<double> HSIESurface<ORDER>::evaluate_a(std::vector<HSIEPolynomial> 
                   u[2].evaluate(std::complex<double>(x,y)) * v[2].evaluate(std::complex<double>(x,-y)) );
     }
     return ret*weight;
+     **/
 }
+
+// NEW GENERATORS:
 
 template<unsigned int ORDER>
 std::vector<HSIEPolynomial>
-HSIESurface<ORDER>::build_curl_term(DofData d, const dealii::FEValuesViews::Vector<2, 2>& fe, unsigned int q_index, HSIEPolynomial p, unsigned int related_function) {
+HSIESurface<ORDER>::build_curl_term_nedelec(unsigned int dof_hsie_order, const Tensor<1, 2> fe_shape_gradient_component_0, const Tensor<1, 2> fe_shape_gradient_component_1, const double fe_shape_value_component_0, const double fe_shape_value_component_1) {
     std::vector<HSIEPolynomial> ret;
-    HSIEPolynomial temp = HSIEPolynomial::PsiJ(d.hsie_order,k0);
-    temp.multiplyBy(fe.gradient(related_function, q_index)[0][1]);
+    HSIEPolynomial temp = HSIEPolynomial::PsiJ(dof_hsie_order,k0);
+    temp.multiplyBy(fe_shape_gradient_component_0[1]);
     temp.applyI();
-    HSIEPolynomial temp2 = HSIEPolynomial::PsiJ(d.hsie_order,k0);
-    temp2.multiplyBy(-1.0 * (fe.gradient(related_function, q_index))[1][0]);
+    HSIEPolynomial temp2 = HSIEPolynomial::PsiJ(dof_hsie_order,k0);
+    temp2.multiplyBy(-1.0 * fe_shape_gradient_component_1[0]);
     temp2.applyI();
     temp.add(temp2);
     ret.push_back(temp);
 
-    temp = HSIEPolynomial::PsiJ(d.hsie_order,k0);
-    temp.multiplyBy(-1.0 * fe.value(related_function, q_index)[1]);
+    temp = HSIEPolynomial::PsiJ(dof_hsie_order,k0);
+    temp.multiplyBy(-1.0 * fe_shape_value_component_1);
     temp.applyDerivative();
     ret.push_back(temp);
 
-    temp = HSIEPolynomial::PsiJ(d.hsie_order,k0);
-    temp.multiplyBy(fe.value(related_function, q_index)[0]);
+    temp = HSIEPolynomial::PsiJ(dof_hsie_order,k0);
+    temp.multiplyBy(fe_shape_value_component_0);
     temp.applyDerivative();
     ret.push_back(temp);
 
@@ -580,14 +600,14 @@ HSIESurface<ORDER>::build_curl_term(DofData d, const dealii::FEValuesViews::Vect
 
 template<unsigned int ORDER>
 std::vector<HSIEPolynomial>
-HSIESurface<ORDER>::build_non_curl_term(DofData d, const dealii::FEValuesViews::Vector<2, 2>& fe, unsigned int q_index, HSIEPolynomial p, unsigned int related_function) {
+HSIESurface<ORDER>::build_non_curl_term_nedelec(const unsigned int dof_hsie_order, const double fe_shape_value_component_0, const double fe_shape_value_component_1) {
     std::vector<HSIEPolynomial> ret;
     ret.push_back(HSIEPolynomial::ZeroPolynomial());
-    HSIEPolynomial temp = HSIEPolynomial::PsiJ(d.hsie_order,k0);
-    temp.multiplyBy(fe.value(related_function, q_index)[0]);
+    HSIEPolynomial temp = HSIEPolynomial::PsiJ(dof_hsie_order,k0);
+    temp.multiplyBy(fe_shape_value_component_0);
     ret.push_back(temp);
-    temp = HSIEPolynomial::PsiJ(d.hsie_order,k0);
-    temp.multiplyBy(fe.value(related_function, q_index)[1]);
+    temp = HSIEPolynomial::PsiJ(dof_hsie_order,k0);
+    temp.multiplyBy(fe_shape_value_component_1);
     ret.push_back(temp);
     this->transform_coordinates_in_place(&ret);
     return ret;
@@ -597,33 +617,32 @@ HSIESurface<ORDER>::build_non_curl_term(DofData d, const dealii::FEValuesViews::
 
 template<unsigned int ORDER>
 std::vector<HSIEPolynomial>
-HSIESurface<ORDER>::build_curl_term(DofData d, const dealii::FEValuesViews::Scalar<2, 2>& fe, unsigned int q_index, HSIEPolynomial p, unsigned int related_function) {
+HSIESurface<ORDER>::build_curl_term_q(const unsigned int dof_hsie_order, const Tensor<1,2> fe_gradient) {
     std::vector<HSIEPolynomial> ret;
     ret.push_back(HSIEPolynomial::ZeroPolynomial());
-    HSIEPolynomial temp = HSIEPolynomial::PhiJ(d.hsie_order, k0);
-    temp.multiplyBy(fe.gradient(related_function, q_index)[1]);
+    HSIEPolynomial temp = HSIEPolynomial::PhiJ(dof_hsie_order, k0);
+    temp.multiplyBy(fe_gradient[1]);
     ret.push_back(temp);
-    temp = HSIEPolynomial::PhiJ(d.hsie_order, k0);
-    temp.multiplyBy(-1.0 * fe.gradient(related_function, q_index)[0]);
+    temp = HSIEPolynomial::PhiJ(dof_hsie_order, k0);
+    temp.multiplyBy(-1.0 * fe_gradient[0]);
     ret.push_back(temp);
-    this->transform_coordinates_in_place(ret);
+    this->transform_coordinates_in_place(&ret);
     return ret;
 }
 
 template<unsigned int ORDER>
 std::vector<HSIEPolynomial>
-HSIESurface<ORDER>::build_non_curl_term(DofData d, const dealii::FEValuesViews::Scalar<2, 2>& fe, unsigned int q_index, HSIEPolynomial p, unsigned int related_function) {
+HSIESurface<ORDER>::build_non_curl_term_q(const unsigned int dof_hsie_order, const double fe_shape_value) {
     std::vector<HSIEPolynomial> ret;
-    HSIEPolynomial temp = HSIEPolynomial::PhiJ(d.hsie_order, k0);
-    temp.multiplyBy(fe.value(related_function,q_index));
+    HSIEPolynomial temp = HSIEPolynomial::PhiJ(dof_hsie_order, k0);
+    temp.multiplyBy(fe_shape_value);
     temp = temp.applyD();
     ret.push_back(temp);
     ret.push_back(HSIEPolynomial::ZeroPolynomial());
     ret.push_back(HSIEPolynomial::ZeroPolynomial());
-    this->transform_coordinates_in_place(ret);
+    this->transform_coordinates_in_place(&ret);
     return ret;
 }
-
 
 template<unsigned int ORDER>
 void HSIESurface<ORDER>::transform_coordinates_in_place(std::vector<HSIEPolynomial> * vector) {
@@ -734,5 +753,21 @@ bool HSIESurface<ORDER>::check_number_of_dofs_for_cell_integrity() {
         it2++;
     }
     return true;
+}
+
+template <unsigned int ORDER>
+void HSIESurface<ORDER>::fill_sparsity_pattern(dealii::DynamicSparsityPattern * pattern) {
+    auto it = dof_h_nedelec.begin_active();
+    auto it2 = dof_h_q.begin_active();
+    auto end = dof_h_nedelec.end();
+    for(; it != end; ++it) {
+        std::vector<DofData> cell_dofs = this->get_dof_data_for_cell(it, it2);
+        for(unsigned int i=0; i < cell_dofs.size(); i++) {
+            for(unsigned int j=0; j < cell_dofs.size(); j++) {
+                pattern->add(cell_dofs[i].global_index, cell_dofs[j].global_index);
+            }
+        }
+        it2++;
+    }
 }
 
