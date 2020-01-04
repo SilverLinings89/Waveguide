@@ -139,7 +139,10 @@ void HSIEPolynomial::applyTminus(std::complex<double> u_0) {
 }
 
 void HSIEPolynomial::multiplyBy(double factor) {
-    multiplyBy(std::complex<double>(factor, 0));
+    for (auto & i : this->a) {
+        i *= factor;
+    }
+    this->update_derivative();
 }
 
 void HSIEPolynomial::multiplyBy(std::complex<double> factor) {
