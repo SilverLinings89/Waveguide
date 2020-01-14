@@ -52,6 +52,21 @@ Parameters GetParameters();
 Point<3, double> Triangulation_Shit_To_Local_Geometry(
         const Point<3, double> &p);
 
+Point<3, double> Transform_4_to_5(
+        const Point<3, double> &p);
+
+Point<3, double> Transform_3_to_5(
+        const Point<3, double> &p);
+
+Point<3, double> Transform_2_to_5(
+        const Point<3, double> &p);
+
+Point<3, double> Transform_1_to_5(
+        const Point<3, double> &p);
+
+Point<3, double> Transform_0_to_5(
+        const Point<3, double> &p);
+
 inline bool file_exists(const std::string &name);
 
 void PrepareStreams();

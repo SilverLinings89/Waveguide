@@ -93,7 +93,8 @@ protected:
         const unsigned int dest_cells = Cells_Per_Direction*Cells_Per_Direction*Cells_Per_Direction;
         ASSERT_EQ(tria.n_active_cells(), dest_cells);
         std::set<unsigned int> b_ids;
-        b_ids.insert(5);
+        b_ids.insert(4);
+        dealii::GridTools::transform(Transform_4_to_5, tria);
         association = dealii::GridGenerator::extract_boundary_mesh( tria, temp_triangulation, b_ids);
         const unsigned int dest_surf_cells = Cells_Per_Direction*Cells_Per_Direction;
         ASSERT_EQ(temp_triangulation.n_active_cells(), dest_surf_cells);
@@ -101,6 +102,65 @@ protected:
         ASSERT_EQ(surf_tria.n_active_cells(), dest_surf_cells);
     }
 };
+
+
+class TestDirectionFixture : public ::testing::TestWithParam<std::tuple<unsigned  int, unsigned int, unsigned int>> {
+public:
+    unsigned int Cells_Per_Direction;
+    unsigned int InnerOrder;
+    unsigned int boundary_id;
+    dealii::Triangulation<3> tria ;
+    dealii::Triangulation<2,3> temp_triangulation;
+    dealii::Triangulation<2> surf_tria;
+    std::complex<double> k0;
+    std::set<unsigned int> b_ids;
+    std::map<dealii::Triangulation<2,3>::cell_iterator, dealii::Triangulation<3,3>::face_iterator > association;
+protected:
+    void SetUp() override {
+        std::tuple<unsigned  int, unsigned int, unsigned int> Params = GetParam();
+        Cells_Per_Direction = std::get<1>(Params);
+        InnerOrder = std::get<0>(Params);
+        boundary_id = std::get<2>(Params);
+        k0= {0.0, -1.0};
+        std::vector<unsigned int> repetitions;
+        repetitions.push_back(Cells_Per_Direction);
+        repetitions.push_back(Cells_Per_Direction);
+        repetitions.push_back(Cells_Per_Direction);
+        dealii::Point<3,double> left(-1, -1, -1);
+        dealii::Point<3,double> right(1, 1, 1);
+        dealii::GridGenerator::subdivided_hyper_rectangle(tria, repetitions, left, right, true);
+        const unsigned int dest_cells = Cells_Per_Direction*Cells_Per_Direction*Cells_Per_Direction;
+        ASSERT_EQ(tria.n_active_cells(), dest_cells);
+        b_ids.insert(boundary_id);
+        switch(boundary_id) {
+            case 0:
+                dealii::GridTools::transform(Transform_0_to_5, tria);
+                break;
+            case 1:
+                dealii::GridTools::transform(Transform_1_to_5, tria);
+                break;
+            case 2:
+                dealii::GridTools::transform(Transform_2_to_5, tria);
+                break;
+            case 3:
+                dealii::GridTools::transform(Transform_3_to_5, tria);
+                break;
+            case 4:
+                dealii::GridTools::transform(Transform_4_to_5, tria);
+                break;
+        }
+
+
+    }
+};
+
+TEST_P(TestDirectionFixture, TestCellRequirements) {
+    association = dealii::GridGenerator::extract_boundary_mesh( tria, temp_triangulation, b_ids);
+    const unsigned int dest_surf_cells = Cells_Per_Direction*Cells_Per_Direction;
+    ASSERT_EQ(temp_triangulation.n_active_cells(), dest_surf_cells);
+    dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
+    ASSERT_EQ(surf_tria.n_active_cells(), dest_surf_cells);
+}
 
 TEST_P(TestOrderFixture, AssemblationTestOrder5) {
     HSIESurface< 5 > surf(surf_tria, 0, 0, InnerOrder, k0, association);
@@ -161,6 +221,8 @@ TEST_P(TestOrderFixture, AssemblationTestOrder10) {
 
 // INSTANTIATE_TEST_SUITE_P(HSIESurfaceTests, TestOrderFixture, ::testing::Combine( ::testing::Values(0,1,2), ::testing::Values(5,9)));
 INSTANTIATE_TEST_SUITE_P(HSIESurfaceTests, TestOrderFixture, ::testing::Combine( ::testing::Values(0), ::testing::Values(5,9)));
+
+INSTANTIATE_TEST_SUITE_P(MespPreparationTests, TestDirectionFixture,  ::testing::Combine( ::testing::Values(0), ::testing::Values(5,9), ::testing::Values(0,1,2,3,4,5)));
 
 TEST(HSIEPolynomialTests, TestOperatorTplus) {
     std::vector<std::complex<double>> in_a;

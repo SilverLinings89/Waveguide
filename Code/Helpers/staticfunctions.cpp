@@ -529,6 +529,50 @@ Point<3, double> Triangulation_Shit_To_Local_Geometry(
     return q;
 }
 
+Point<3, double> Transform_4_to_5(
+        const Point<3, double> &p) {
+    Point<3, double> q = p;
+    q[0] = -p[0];
+    return q;
+}
+
+Point<3, double> Transform_3_to_5(
+        const Point<3, double> &p) {
+    Point<3, double> q = p;
+    q[0] = p[0];
+    q[1] = -p[2];
+    q[2] = p[1];
+    return q;
+}
+
+Point<3, double> Transform_2_to_5(
+        const Point<3, double> &p) {
+    Point<3, double> q = p;
+    q[0] = p[0];
+    q[1] = p[2];
+    q[2] = p[1];
+    return q;
+}
+
+Point<3, double> Transform_1_to_5(
+        const Point<3, double> &p) {
+    Point<3, double> q = p;
+    q[0] = -p[2];
+    q[1] = p[1];
+    q[2] = p[0];
+    return q;
+}
+
+Point<3, double> Transform_0_to_5(
+        const Point<3, double> &p) {
+    Point<3, double> q = p;
+    q[0] = p[2];
+    q[1] = p[1];
+    q[2] = p[0];
+    return q;
+}
+
+
 inline bool file_exists(const std::string &name) {
     struct stat buffer;
     return (stat(name.c_str(), &buffer) == 0);
