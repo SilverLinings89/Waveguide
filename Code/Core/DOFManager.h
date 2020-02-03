@@ -12,6 +12,7 @@
 #include <deal.II/dofs/dof_handler.h>
 
 class DOFManager {
+public:
     std::vector<dealii::IndexSet> own_dofs_per_process; // via MPI_Build...
     dealii::IndexSet local_dofs;    // via MPI_Build
     const unsigned int dofs_per_edge; //constructor
@@ -45,7 +46,7 @@ class DOFManager {
 
     void update_interface_dofs_with_IndexSet(dealii::IndexSet in_new_indices, dealii::types::boundary_id in_bid);
 
-public: static int testValue();
+    static int testValue();
     // TODO: There should be some functions checking for neighboring processes if the communicated IndexSets are the same.
 };
 

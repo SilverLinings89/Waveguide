@@ -149,8 +149,6 @@ protected:
                 dealii::GridTools::transform(Transform_4_to_5, tria);
                 break;
         }
-
-
     }
 };
 

@@ -9,15 +9,13 @@
 using namespace dealii;
 
 void DOFManager::compute_and_send_x_dofs() {
-    if(GlobalParams.Blocks_in_x_direction > 1) {
-        if(GlobalParams.Index_in_x_direction < GlobalParams.Blocks_in_x_direction-1){
-            IndexSet boundary_dofs = get_dofs_for_boundary_id(1);
-            int * bdof_vals = new int[boundary_dofs.n_elements()];
-            for(unsigned int j = 0; j < boundary_dofs.n_elements(); j++) {
-                bdof_vals[j] = boundary_dofs.nth_index_in_set(j);
-            }
-            MPI_Send(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED, Geometry.get_neighbor_for_interface(Direction::PlusX).second, 0, MPI_COMM_WORLD );
+    if(GlobalParams.Blocks_in_x_direction > 1 && (GlobalParams.Index_in_x_direction < GlobalParams.Blocks_in_x_direction-1)) {
+        IndexSet boundary_dofs = get_dofs_for_boundary_id(1);
+        int * bdof_vals = new int[boundary_dofs.n_elements()];
+        for(unsigned int j = 0; j < boundary_dofs.n_elements(); j++) {
+            bdof_vals[j] = boundary_dofs.nth_index_in_set(j);
         }
+        MPI_Send(bdof_vals, boundary_dofs.n_elements(), MPI_UNSIGNED, Geometry.get_neighbor_for_interface(Direction::PlusX).second, 0, MPI_COMM_WORLD );
     }
 }
 
@@ -286,8 +284,7 @@ IndexSet DOFManager::get_non_owned_dofs() {
     if(computed_n_global) {
         non_owned_dofs.set_size(n_global_dofs);
     } else {
-        non_owned_dofs.set_size(GlobalParams.NumberProcesses *
-                                dof_handler->n_dofs()); // rough estimate that guarantees that all entries in this index set will be stored.
+        non_owned_dofs.set_size(dof_handler->n_dofs());
     }
     std::vector<types::global_dof_index> local_face_dofs(fe->dofs_per_face);
     DoFHandler<3>::active_cell_iterator cell = dof_handler->begin_active(),
@@ -343,7 +340,7 @@ unsigned int DOFManager::compute_n_own_dofs() {
     n_locally_owned_dofs = dof_handler->n_dofs();
     dealii::IndexSet non_owned = get_non_owned_dofs();
     n_locally_owned_dofs = dof_handler->n_dofs() - non_owned.n_elements();
-    return 0;
+    return n_locally_owned_dofs;
 }
 
 DOFManager::DOFManager(unsigned int i_dofs_per_cell, unsigned int i_dofs_per_face, unsigned int i_dofs_per_edge,
