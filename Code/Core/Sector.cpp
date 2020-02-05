@@ -180,7 +180,7 @@ double Sector<Dofs_Per_Sector>::get_r(double z) const {
     if (z < 0.0) z = 0.0;
     if (z > 1.0) z = 1.0;
     if (Dofs_Per_Sector < 3) {
-        deallog << "Error in Sector: Acces to radius dof without existence."
+        deallog << "Error in Sector: Access to radius dof without existence."
                 << std::endl;
         return 0;
     }
@@ -233,35 +233,35 @@ Tensor<2, 3, double> Sector<3>::TransformationTensorInternal(double in_x,
                                                              double in_y,
                                                              double z) const {
     if (z < 0 || z > 1)
-        std::cout << "Falty implementation of internal Tensor calculation: z: " << z
+        std::cout << "Faulty implementation of internal Tensor calculation: z: " << z
                   << std::endl;
-    double RadiusInMultiplyer =
+    double RadiusInFactor =
             (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / (2 * dofs_l[0]);
-    double RadiusOutMultiplyer =
+    double RadiusOutFactor =
             (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / (2 * dofs_r[0]);
 
-    double temp = 1 / (RadiusInMultiplyer - 3 * RadiusInMultiplyer * z * z +
-                       2 * RadiusInMultiplyer * z * z * z +
-                       3 * RadiusOutMultiplyer * z * z -
-                       2 * RadiusOutMultiplyer * z * z * z);
+    double temp = 1 / (RadiusInFactor - 3 * RadiusInFactor * z * z +
+                       2 * RadiusInFactor * z * z * z +
+                       3 * RadiusOutFactor * z * z -
+                       2 * RadiusOutFactor * z * z * z);
     double zz = z * z;
     double zzz = zz * z;
     double zzzz = zz * zz;
     double zzzzz = zzz * zz;
-    double help1 = (RadiusInMultiplyer - 3 * RadiusInMultiplyer * zz +
-                    2 * RadiusInMultiplyer * zzz + 3 * RadiusOutMultiplyer * zz -
-                    2 * RadiusOutMultiplyer * zzz);
+    double help1 = (RadiusInFactor - 3 * RadiusInFactor * zz +
+                    2 * RadiusInFactor * zzz + 3 * RadiusOutFactor * zz -
+                    2 * RadiusOutFactor * zzz);
     double help2 =
             (help1 * (dofs_l[2] - 6 * dofs_l[1] * z + 6 * dofs_r[1] * z -
                       4 * dofs_l[2] * z - 2 * dofs_r[2] * z + 6 * dofs_l[1] * zz -
                       6 * dofs_r[1] * zz + 3 * dofs_l[2] * zz + 3 * dofs_r[2] * zz) +
-             6 * z * (RadiusInMultiplyer - RadiusOutMultiplyer) * (z - 1) *
+             6 * z * (RadiusInFactor - RadiusOutFactor) * (z - 1) *
              (dofs_l[1] +
               zzz * (2 * dofs_l[1] - 2 * dofs_r[1] + dofs_l[2] + dofs_r[2]) +
               dofs_l[2] * z -
               zz * (3 * dofs_l[1] - 3 * dofs_r[1] + 2 * dofs_l[2] + dofs_r[2]))) /
             help1 -
-            (6 * in_y * z * (RadiusInMultiplyer - RadiusOutMultiplyer) * (z - 1)) /
+            (6 * in_y * z * (RadiusInFactor - RadiusOutFactor) * (z - 1)) /
             help1;
 
     Tensor<2, 3, double> u;
@@ -272,77 +272,77 @@ Tensor<2, 3, double> Sector<3>::TransformationTensorInternal(double in_x,
     u[1][1] = temp;
     u[1][2] = 0.0;
     u[2][0] =
-            -(6 * in_x * z * (RadiusInMultiplyer - RadiusOutMultiplyer) * (z - 1)) /
+            -(6 * in_x * z * (RadiusInFactor - RadiusOutFactor) * (z - 1)) /
             help1;
     u[2][1] =
-            (RadiusInMultiplyer * dofs_l[2] +
-             12 * dofs_l[1] * RadiusInMultiplyer * zz +
-             36 * dofs_l[1] * RadiusInMultiplyer * zzz -
-             6 * dofs_l[1] * RadiusOutMultiplyer * zz -
-             6 * dofs_r[1] * RadiusInMultiplyer * zz -
-             60 * dofs_l[1] * RadiusInMultiplyer * zzzz -
-             36 * dofs_l[1] * RadiusOutMultiplyer * zzz -
-             36 * dofs_r[1] * RadiusInMultiplyer * zzz +
-             24 * dofs_l[1] * RadiusInMultiplyer * zzzzz +
-             60 * dofs_l[1] * RadiusOutMultiplyer * zzzz +
-             60 * dofs_r[1] * RadiusInMultiplyer * zzzz +
-             36 * dofs_r[1] * RadiusOutMultiplyer * zzz -
-             24 * dofs_l[1] * RadiusOutMultiplyer * zzzzz -
-             24 * dofs_r[1] * RadiusInMultiplyer * zzzzz -
-             60 * dofs_r[1] * RadiusOutMultiplyer * zzzz +
-             24 * dofs_r[1] * RadiusOutMultiplyer * zzzzz -
-             6 * RadiusInMultiplyer * dofs_l[2] * zz +
-             32 * RadiusInMultiplyer * dofs_l[2] * zzz +
-             3 * RadiusInMultiplyer * dofs_r[2] * zz +
-             9 * RadiusOutMultiplyer * dofs_l[2] * zz -
-             35 * RadiusInMultiplyer * dofs_l[2] * zzzz +
-             12 * RadiusInMultiplyer * dofs_r[2] * zzz -
-             32 * RadiusOutMultiplyer * dofs_l[2] * zzz +
-             12 * RadiusInMultiplyer * dofs_l[2] * zzzzz -
-             25 * RadiusInMultiplyer * dofs_r[2] * zzzz +
-             35 * RadiusOutMultiplyer * dofs_l[2] * zzzz -
-             12 * RadiusOutMultiplyer * dofs_r[2] * zzz +
-             12 * RadiusInMultiplyer * dofs_r[2] * zzzzz -
-             12 * RadiusOutMultiplyer * dofs_l[2] * zzzzz +
-             25 * RadiusOutMultiplyer * dofs_r[2] * zzzz -
-             12 * RadiusOutMultiplyer * dofs_r[2] * zzzzz -
-             6 * RadiusInMultiplyer * in_y * zz +
-             6 * RadiusOutMultiplyer * in_y * zz -
-             12 * dofs_l[1] * RadiusInMultiplyer * z +
-             6 * dofs_l[1] * RadiusOutMultiplyer * z +
-             6 * dofs_r[1] * RadiusInMultiplyer * z -
-             4 * RadiusInMultiplyer * dofs_l[2] * z -
-             2 * RadiusInMultiplyer * dofs_r[2] * z +
-             6 * RadiusInMultiplyer * in_y * z - 6 * RadiusOutMultiplyer * in_y * z) /
+            (RadiusInFactor * dofs_l[2] +
+             12 * dofs_l[1] * RadiusInFactor * zz +
+             36 * dofs_l[1] * RadiusInFactor * zzz -
+             6 * dofs_l[1] * RadiusOutFactor * zz -
+             6 * dofs_r[1] * RadiusInFactor * zz -
+             60 * dofs_l[1] * RadiusInFactor * zzzz -
+             36 * dofs_l[1] * RadiusOutFactor * zzz -
+             36 * dofs_r[1] * RadiusInFactor * zzz +
+             24 * dofs_l[1] * RadiusInFactor * zzzzz +
+             60 * dofs_l[1] * RadiusOutFactor * zzzz +
+             60 * dofs_r[1] * RadiusInFactor * zzzz +
+             36 * dofs_r[1] * RadiusOutFactor * zzz -
+             24 * dofs_l[1] * RadiusOutFactor * zzzzz -
+             24 * dofs_r[1] * RadiusInFactor * zzzzz -
+             60 * dofs_r[1] * RadiusOutFactor * zzzz +
+             24 * dofs_r[1] * RadiusOutFactor * zzzzz -
+             6 * RadiusInFactor * dofs_l[2] * zz +
+             32 * RadiusInFactor * dofs_l[2] * zzz +
+             3 * RadiusInFactor * dofs_r[2] * zz +
+             9 * RadiusOutFactor * dofs_l[2] * zz -
+             35 * RadiusInFactor * dofs_l[2] * zzzz +
+             12 * RadiusInFactor * dofs_r[2] * zzz -
+             32 * RadiusOutFactor * dofs_l[2] * zzz +
+             12 * RadiusInFactor * dofs_l[2] * zzzzz -
+             25 * RadiusInFactor * dofs_r[2] * zzzz +
+             35 * RadiusOutFactor * dofs_l[2] * zzzz -
+             12 * RadiusOutFactor * dofs_r[2] * zzz +
+             12 * RadiusInFactor * dofs_r[2] * zzzzz -
+             12 * RadiusOutFactor * dofs_l[2] * zzzzz +
+             25 * RadiusOutFactor * dofs_r[2] * zzzz -
+             12 * RadiusOutFactor * dofs_r[2] * zzzzz -
+             6 * RadiusInFactor * in_y * zz +
+             6 * RadiusOutFactor * in_y * zz -
+             12 * dofs_l[1] * RadiusInFactor * z +
+             6 * dofs_l[1] * RadiusOutFactor * z +
+             6 * dofs_r[1] * RadiusInFactor * z -
+             4 * RadiusInFactor * dofs_l[2] * z -
+             2 * RadiusInFactor * dofs_r[2] * z +
+             6 * RadiusInFactor * in_y * z - 6 * RadiusOutFactor * in_y * z) /
             help1;
     u[2][2] = 1.0;
     double Q[3];
 
-    Q[0] = 1 / (RadiusInMultiplyer +
-                zzz * (2 * RadiusInMultiplyer - 2 * RadiusOutMultiplyer) -
-                zz * (3 * RadiusInMultiplyer - 3 * RadiusOutMultiplyer));
-    Q[1] = 1 / (RadiusInMultiplyer +
-                zzz * (2 * RadiusInMultiplyer - 2 * RadiusOutMultiplyer) -
-                zz * (3 * RadiusInMultiplyer - 3 * RadiusOutMultiplyer));
+    Q[0] = 1 / (RadiusInFactor +
+                zzz * (2 * RadiusInFactor - 2 * RadiusOutFactor) -
+                zz * (3 * RadiusInFactor - 3 * RadiusOutFactor));
+    Q[1] = 1 / (RadiusInFactor +
+                zzz * (2 * RadiusInFactor - 2 * RadiusOutFactor) -
+                zz * (3 * RadiusInFactor - 3 * RadiusOutFactor));
     if (Q[1] < 0) Q[1] *= -1.0;
     if (Q[0] < 0) Q[0] *= -1.0;
     Q[2] =
             sqrt(help2 * help2 +
-                 (36 * in_x * in_x * zz * (RadiusInMultiplyer - RadiusOutMultiplyer) *
-                  (RadiusInMultiplyer - RadiusOutMultiplyer) * (z - 1) * (z - 1)) /
-                 (help1 * help1) +
+                         (36 * in_x * in_x * zz * (RadiusInFactor - RadiusOutFactor) *
+                          (RadiusInFactor - RadiusOutFactor) * (z - 1) * (z - 1)) /
+                         (help1 * help1) +
                  1);
 
-    Tensor<2, 3, double> ginv;
+    Tensor<2, 3, double> gInverse;
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
-            for (int k = 0; k < 3; k++) ginv[i][j] += u[i][k] * u[j][k];
+            for (int k = 0; k < 3; k++) gInverse[i][j] += u[i][k] * u[j][k];
         }
     }
 
     Tensor<2, 3, double> g;
 
-    g = invert(ginv);
+    g = invert(gInverse);
 
     double sp = dotproduct(u[0], crossproduct(u[1], u[2]));
     if (sp < 0) sp *= -1.0;
@@ -359,7 +359,7 @@ template<>
 Tensor<2, 3, double> Sector<2>::TransformationTensorInternal(double, double,
                                                              double z) const {
     if (z < 0 || z > 1)
-        std::cout << "Falty implementation of internal Tensor calculation: z: " << z
+        std::cout << "Faulty implementation of internal Tensor calculation: z: " << z
                   << std::endl;
 
     double zz = z * z;
@@ -386,16 +386,16 @@ Tensor<2, 3, double> Sector<2>::TransformationTensorInternal(double, double,
              std::pow(2 * dofs_l[0] - 2 * dofs_r[0] + dofs_l[1] + dofs_r[1], 2)) +
             1);
 
-    Tensor<2, 3, double> ginv;
+    Tensor<2, 3, double> gInverse;
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
-            for (int k = 0; k < 3; k++) ginv[i][j] += u[i][k] * u[j][k];
+            for (int k = 0; k < 3; k++) gInverse[i][j] += u[i][k] * u[j][k];
         }
     }
 
     Tensor<2, 3, double> g;
 
-    g = invert(ginv);
+    g = invert(gInverse);
 
     double sp = dotproduct(u[0], crossproduct(u[1], u[2]));
     if (sp < 0) sp *= -1.0;
@@ -438,13 +438,13 @@ unsigned int Sector<Dofs_Per_Sector>::getNActiveCells() const {
 }
 
 template<unsigned int Dofs_Per_Sector>
-void Sector<Dofs_Per_Sector>::setLowestDof(unsigned int in_lowestdof) {
-    LowestDof = in_lowestdof;
+void Sector<Dofs_Per_Sector>::setLowestDof(unsigned int inLowestDOF) {
+    LowestDof = inLowestDOF;
 }
 
 template<unsigned int Dofs_Per_Sector>
-void Sector<Dofs_Per_Sector>::setNDofs(unsigned int in_ndofs) {
-    NDofs = in_ndofs;
+void Sector<Dofs_Per_Sector>::setNDofs(unsigned int inNumberOfDOFs) {
+    NDofs = inNumberOfDOFs;
 }
 
 template<unsigned int Dofs_Per_Sector>
@@ -454,8 +454,8 @@ void Sector<Dofs_Per_Sector>::setNInternalBoundaryDofs(
 }
 
 template<unsigned int Dofs_Per_Sector>
-void Sector<Dofs_Per_Sector>::setNActiveCells(unsigned int in_nactivecells) {
-    NActiveCells = in_nactivecells;
+void Sector<Dofs_Per_Sector>::setNActiveCells(unsigned int inNumberOfActiveCells) {
+    NActiveCells = inNumberOfActiveCells;
 }
 
 template
