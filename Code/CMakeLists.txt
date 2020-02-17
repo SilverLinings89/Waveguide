@@ -34,7 +34,12 @@ ADD_LIBRARY(Code
         HSIEPreconditioner/HSIEPreconditioner.cpp
         HSIEPreconditioner/HSIESurface.cpp
         HSIEPreconditioner/LaguerreFunction.cpp
-        Hierarchy/HierarchicalProblem.cpp Hierarchy/HierarchicalProblem.h Hierarchy/NonLocalProblem.cpp Hierarchy/NonLocalProblem.h Hierarchy/LocalProblem.cpp Hierarchy/LocalProblem.h)
+        Hierarchy/HierarchicalProblem.cpp 
+        Hierarchy/HierarchicalProblem.h 
+        Hierarchy/NonLocalProblem.cpp 
+        Hierarchy/NonLocalProblem.h 
+        Hierarchy/LocalProblem.cpp 
+        Hierarchy/LocalProblem.h)
 
 DEAL_II_SETUP_TARGET(Code)
 	
