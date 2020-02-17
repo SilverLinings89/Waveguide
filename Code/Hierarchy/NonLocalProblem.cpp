@@ -50,3 +50,7 @@ void NonLocalProblem::initialize() {
 void NonLocalProblem::generateSparsityPattern() {
 
 }
+
+void NonLocalProblem::initialize_index_sets() {
+    
+}

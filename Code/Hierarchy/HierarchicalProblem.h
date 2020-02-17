@@ -7,6 +7,7 @@
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 #include "../Core/DOFManager.h"
 #include "../Helpers/Parameters.h"
+#include <deal.II/lac/la_parallel_vector.h>
 
 using namespace dealii;
 
@@ -19,6 +20,7 @@ public:
     DOFManager * dof_manager;
     Parameters * parameters;
     IndexSet own_indices;
+    IndexSet locally_owned_dofs, locally_relevant_dofs;
     unsigned int level_total_dofs;
     dealii::TrilinosWrappers::SparseMatrix matrix;
 
@@ -38,6 +40,12 @@ public:
     virtual void generateSparsityPattern() = 0;
     virtual unsigned int compute_own_dofs() = 0;
 
+    virtual void solve();
+    virtual void solve_inner();
+    virtual void assemble();
+    virtual void make_sparsity_pattern();
+    virtual void initialize_index_sets();
+    virtual void apply_sweep(LinearAlgebra::distributed::Vector<double>)
 };
 
 

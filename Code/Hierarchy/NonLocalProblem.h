@@ -25,6 +25,7 @@ public:
 
     void generateSparsityPattern() override;
 
+    void initialize_index_sets() override;
 };
 
 
