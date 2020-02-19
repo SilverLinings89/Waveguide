@@ -15,32 +15,32 @@
 #include "../Helpers/Parameters.h"
 
 class Simulation {
-private:
-    GeometryManager geometry;
-    Parameters parameters;
+ private:
+  GeometryManager geometry;
+  Parameters parameters;
 
-public:
-    Simulation();
+ public:
+  Simulation();
 
-    virtual ~Simulation();
+  virtual ~Simulation();
 
-    void Run();
+  void Run();
 
-    void LoadParameters();
+  void LoadParameters();
 
-    void LoadParametersFromFile();
+  void LoadParametersFromFile();
 
-    void OverwriteParametersFromConsole();
+  void OverwriteParametersFromConsole();
 
-    void PrepareGeometry();
+  void PrepareGeometry();
 
-    void PrepareTransformedGeometry();
+  void PrepareTransformedGeometry();
 
-    void InitializeMainProblem();
+  void InitializeMainProblem();
 
-    void InitializeAuxiliaryProblem();
+  void InitializeAuxiliaryProblem();
 
-    void CreateOutputDirectory();
+  void CreateOutputDirectory();
 };
 
 #endif /* CODE_CORE_SIMULATION_H_ */

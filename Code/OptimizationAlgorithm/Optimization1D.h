@@ -15,20 +15,20 @@
  * changing between differenct schemes. \author Pascal Kraft \date 9.1.2017
  */
 class Optimization1D : public OptimizationAlgorithm<std::complex<double>> {
-public:
-    Optimization1D();
+ public:
+  Optimization1D();
 
-    ~Optimization1D();
+  ~Optimization1D();
 
-    bool perform_small_step_next(int small_steps_before);
+  bool perform_small_step_next(int small_steps_before);
 
-    double get_small_step_step_width(int small_steps_before);
+  double get_small_step_step_width(int small_steps_before);
 
-    bool perform_big_step_next(int small_steps_before);
+  bool perform_big_step_next(int small_steps_before);
 
-    std::vector<double> get_big_step_configuration();
+  std::vector<double> get_big_step_configuration();
 
-    // double * steps_widths;
+  // double * steps_widths;
 };
 
 #endif

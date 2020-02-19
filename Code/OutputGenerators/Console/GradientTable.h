@@ -1,5 +1,6 @@
 #ifndef GRADIENTTABLE_H_
 #define GRADIENTTABLE_H_
+#include <deal.II/lac/vector.h>
 
 /**
  * \class GradientTable

@@ -4,16 +4,16 @@
 #include <complex>
 
 class PointVal {
-public:
-    std::complex<double> Ex, Ey, Ez;
+ public:
+  std::complex<double> Ex, Ey, Ez;
 
-    PointVal();
+  PointVal();
 
-    PointVal(double, double, double, double, double, double);
+  PointVal(double, double, double, double, double, double);
 
-    void set(double, double, double, double, double, double);
+  void set(double, double, double, double, double, double);
 
-    void rescale(double);
+  void rescale(double);
 };
 
 #endif

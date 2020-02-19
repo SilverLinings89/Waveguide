@@ -54,3 +54,7 @@ void NonLocalProblem::generateSparsityPattern() {
 void NonLocalProblem::initialize_index_sets() {
     
 }
+
+IndexSet NonLocalProblem::get_owned_dofs_for_level(unsigned int level) {
+    return this->child->get_owned_dofs_for_level(level);
+}

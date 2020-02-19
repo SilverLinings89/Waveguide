@@ -2,12 +2,12 @@
 #ifndef STATICFUNCTIONS_H_
 #define STATICFUNCTIONS_H_
 
+#include <deal.II/base/index_set.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/distributed/tria.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/lac/affine_constraints.h>
-#include <deal.II/base/index_set.h>
 #include <fstream>
 #include "../Core/NumericProblem.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
@@ -35,37 +35,33 @@ extern SpaceTransformation *the_st;
  */
 Tensor<1, 3, double> crossproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 
-std::complex<double> matrixD(int in_row, int in_column, std::complex<double> in_k0);
+std::complex<double> matrixD(int in_row, int in_column,
+                             std::complex<double> in_k0);
 
 void set_the_st(SpaceTransformation *);
 
 double dotproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 
-template<int dim>
+template <int dim>
 void mesh_info(const Triangulation<dim>, const std::string);
 
-template<int dim>
+template <int dim>
 void mesh_info(const Triangulation<dim>);
 
 Parameters GetParameters();
 
 Point<3, double> Triangulation_Shit_To_Local_Geometry(
-        const Point<3, double> &p);
+    const Point<3, double> &p);
 
-Point<3, double> Transform_4_to_5(
-        const Point<3, double> &p);
+Point<3, double> Transform_4_to_5(const Point<3, double> &p);
 
-Point<3, double> Transform_3_to_5(
-        const Point<3, double> &p);
+Point<3, double> Transform_3_to_5(const Point<3, double> &p);
 
-Point<3, double> Transform_2_to_5(
-        const Point<3, double> &p);
+Point<3, double> Transform_2_to_5(const Point<3, double> &p);
 
-Point<3, double> Transform_1_to_5(
-        const Point<3, double> &p);
+Point<3, double> Transform_1_to_5(const Point<3, double> &p);
 
-Point<3, double> Transform_0_to_5(
-        const Point<3, double> &p);
+Point<3, double> Transform_0_to_5(const Point<3, double> &p);
 
 inline bool file_exists(const std::string &name);
 
@@ -74,11 +70,10 @@ void PrepareStreams();
 double Distance2D(Point<3, double>, Point<3, double> = Point<3, double>());
 
 std::vector<types::global_dof_index> Add_Zero_Restraint(
-        AffineConstraints<double> *, DoFHandler<3>::active_cell_iterator &,
-        unsigned int, unsigned int, unsigned int, bool, IndexSet);
+    AffineConstraints<double> *, DoFHandler<3>::active_cell_iterator &,
+    unsigned int, unsigned int, unsigned int, bool, IndexSet);
 
-void add_vector_of_indices(IndexSet *,
-                           std::vector<types::global_dof_index>);
+void add_vector_of_indices(IndexSet *, std::vector<types::global_dof_index>);
 
 double hmax_for_cell_center(Point<3, double>);
 

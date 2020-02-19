@@ -12,15 +12,15 @@
 #include <vector>
 
 class ShapeDescription {
-public:
-    ShapeDescription();
+ public:
+  ShapeDescription();
 
-    ~ShapeDescription();
+  ~ShapeDescription();
 
-    void SetByString(std::string);
+  void SetByString(std::string);
 
-    int Sectors;
-    std::vector<double> m, v, z;
+  int Sectors;
+  std::vector<double> m, v, z;
 };
 
 #endif /* CODE_HELPERS_SHAPEDESCRIPTION_H_ */

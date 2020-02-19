@@ -22,6 +22,8 @@ public:
     void initialize() override;
 
     void generateSparsityPattern() override;
+    
+    IndexSet get_owned_dofs_for_level(unsigned int level) override;
 };
 
 

@@ -6,27 +6,29 @@
 #define WAVEGUIDEPROBLEM_NONLOCALPROBLEM_H
 
 #include <mpi.h>
-#include "HierarchicalProblem.h"
 #include "../Helpers/Parameters.h"
+#include "HierarchicalProblem.h"
 
-class NonLocalProblem : public HierarchicalProblem{
-    unsigned int compute_own_dofs();
-    MPI_Comm level_communicator;
-    Parameters * params;
-    void initialize_MPI_communicator_for_level();
+class NonLocalProblem : public HierarchicalProblem {
+  unsigned int compute_own_dofs();
+  MPI_Comm level_communicator;
+  Parameters *params;
+  void initialize_MPI_communicator_for_level();
 
-public:
-    NonLocalProblem(unsigned int, unsigned int, DOFManager *, MPI_Comm, Parameters *);
-    void compute_level_dofs_total() override;
+ public:
+  NonLocalProblem(unsigned int, unsigned int, DOFManager *, MPI_Comm,
+                  Parameters *);
+  void compute_level_dofs_total() override;
 
-    void solve() override;
+  void solve() override;
 
-    void initialize() override;
+  void initialize() override;
 
-    void generateSparsityPattern() override;
+  void generateSparsityPattern() override;
 
-    void initialize_index_sets() override;
+  void initialize_index_sets() override;
+
+  IndexSet get_owned_dofs_for_level(unsigned int level) override;
 };
 
-
-#endif //WAVEGUIDEPROBLEM_NONLOCALPROBLEM_H
+#endif  // WAVEGUIDEPROBLEM_NONLOCALPROBLEM_H
