@@ -7,7 +7,7 @@
 
 LocalProblem::LocalProblem(unsigned int local_level, unsigned int global_level,
                            DOFManager* dof_manager, Parameters* params)
-    : HierarchicalProblem(local_level, global_level, dof_manager, params) {}
+    : HierarchicalProblem(0, global_level, dof_manager, params) {}
 
 unsigned int LocalProblem::compute_own_dofs() {
   return dof_manager->compute_n_own_dofs();

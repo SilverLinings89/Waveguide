@@ -369,7 +369,8 @@ DOFManager::DOFManager(unsigned int i_dofs_per_cell,
                        unsigned int i_dofs_per_edge,
                        dealii::DoFHandler<3, 3> *in_dof_handler,
                        dealii::Triangulation<3, 3> *in_triangulation,
-                       const dealii::FiniteElement<3, 3> *in_fe)
+                       const dealii::FiniteElement<3, 3> *in_fe,
+                       unsigned int i_global_level)
     : dofs_per_edge(i_dofs_per_edge),
       dofs_per_face(i_dofs_per_face),
       dofs_per_cell(i_dofs_per_cell),
@@ -377,6 +378,50 @@ DOFManager::DOFManager(unsigned int i_dofs_per_cell,
   this->triangulation = in_triangulation;
   this->dof_handler = in_dof_handler;
   computed_n_global = false;
+  this->level_dofs = new LevelDofOwnershipData(i_global_level + 1);
+  this->global_level = i_global_level;
+  this->hsie_surfaces = new HSIESurface(6);
+  for(unsigned int i = 0; i < 6; i++) {
+    std::set<unsigned int> b_ids;
+    b_ids.insert(i);
+    dealii::Triangulation<2,3> temp_triangulation;
+    dealii::Triangulation<2> surf_tria;
+    std::map<dealii::Triangulation<2,3>::cell_iterator, dealii::Triangulation<3,3>::face_iterator > association;
+    association = dealii::GridGenerator::extract_boundary_mesh( tria, temp_triangulation, b_ids);
+    dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
+    this->hsie_surfaces[i] = new HSIESurface(surf_tria, i, 0, InnerOrder, std::complex<double>(1,0), association);
+  }
 }
+
+void DOFManager::compute_level_dofs() {
+  // local level;
+  this->level_dofs[0] = this->compute_local_level_dofs();
+  
+  // higher levels;
+  for (unsigned int i = 1; i <= global_level; i++ ) {
+    this->level_dofs[i] = this->compute_higher_level_dofs(i);
+  }
+}
+
+LevelDofOwnershipData DOFManager::compute_local_level_dofs() {
+  if(global_level == 3) {
+    // sweeping in x direction
+
+  }
+  if(global_level == 2) {
+    // sweeping in y direction
+  }
+  if(global_level == 1) {
+    // sweeping in z direction
+
+  }
+}
+
+LevelDofOwnershipData DOFManager::compute_higher_level_dofs(unsigned int level) {
+  if(global_level == 3) {
+
+  }
+}
+
 
 int DOFManager::testValue() { return 4; }
