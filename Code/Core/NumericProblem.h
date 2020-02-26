@@ -2,7 +2,7 @@
 #ifndef CODE_CORE_NUMERICPROBLEM_H_
 #define CODE_CORE_NUMERICPROBLEM_H_
 
-#include <mpi.h>
+#include <deal.II/base/mpi.h>
 #include <sys/stat.h>
 #include <cmath>
 #include <ctime>

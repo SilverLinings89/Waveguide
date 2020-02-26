@@ -26,7 +26,8 @@ There are 2 level types: global and local.
 
 #### Global
 
-The global level describes how many hierarchical levels there are in total. 
+The global level describes how many hierarchical levels there are in total.
+
 - 1: there is only sweeping in the z direction.
 - 2: there is sweeping in the z direction and the blocks are solved by sweeping in the y direction
 - 3: there is sweeping in the z direction and the blocks are solved by sweeping in the y direction. The blocks required in the y-sweep are solved by sweeping the x-direction.
@@ -37,6 +38,41 @@ It makes a difference for which of the sweeps a matrix is assebled and what the 
 If local is 0 and global is 1, there is only sweeping in the z-direction. That means the local block is assembled by cutting off the x- and y- directions.
 If local is 0 and global is 2, the lowest order sweeping is in the y-direction, so the direct solver is assembled for a domain with boundary conditions in x- and z-direction but sweeping in y (similar for local 0 and global 3, only for x).
 If local is 1 or higher, the block is not assembled for a direct solver but a matrix for GMRES is built. This means that not all surfaces are either boundaries with HSIE or sweeping block interfaces (Dirichlet boundaries), they can now be internal.
+
+## Rotations for surface extraction
+
+For boundary id:
+| b_{id} | x | y |
+| --- | --- | ---|
+| 0 | z | y |
+| 1 | z | y |
+| 2 | x | z |
+| 3 | x | -z |
+| 4 | -x | y |
+| 5 | x | y |
+
+## Side ownership
+
+### Local Problems
+
+All faces are owned except the upper one for the lowes sweeping direction.
+For global_rank 3: We sweep x in lowest order so the interface to the -x-direction is not owned.
+For global_rank 2: We sweep y in lowest order so the interface to the -y-direction is not owned.
+For global_rank 1: We sweep only in the z direction so the interface to the -z-direction is not owned.
+The process with rank 0 in the lowest sweeping rank owns that interface (since there is no neighbor).
+
+### Hierarchical problems
+
+0 = -x -> only owned if rank in x = 0;
+1 = +x -> always owned
+2 = -y -> only owned if rank in y = 0 or for global_rank - rank > 1 (i.e. x-sweeps);
+3 =  y -> always owned
+4 = -z -> only if rank in z = 0 or for global_rank - rank > 0 (i.e. in y- or x-sweeps);
+5 =  z -> always owned
+
+## Edge ownership
+
+Edges art interceptions between two sides. The weaker rule holds. So if side a is owned by side b is not, the edge between a and b is not owned.
 
 ## Thanks
 

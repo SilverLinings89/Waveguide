@@ -9,11 +9,39 @@
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/grid/tria.h>
 #include <vector>
+#include <deal.II/base/index_set.h>
+#include "../HSIEPreconditioner/HSIESurface.h"
 
 struct LevelDofOwnershipData {
-  unsigned int global_dofs, owned_dofs;
-  IndexSet locally_owned_dofs, input_dofs, output_dofs, locally_relevant_dofs;
-}
+  unsigned int global_dofs;
+  unsigned int owned_dofs;
+  dealii::IndexSet locally_owned_dofs;
+  dealii::IndexSet input_dofs;
+  dealii::IndexSet output_dofs;
+  dealii::IndexSet locally_relevant_dofs;
+
+  LevelDofOwnershipData() {
+    global_dofs = 0;
+    owned_dofs = 0;
+    locally_owned_dofs.clear();
+    input_dofs.clear();
+    output_dofs.clear();
+    locally_relevant_dofs.clear();
+  }
+
+  LevelDofOwnershipData(unsigned int in_global) {
+    global_dofs = in_global;
+    owned_dofs = 0;
+    locally_owned_dofs.clear();
+    locally_owned_dofs.set_size(in_global);
+    input_dofs.clear();
+    input_dofs.set_size(in_global);
+    output_dofs.clear();
+    output_dofs.set_size(in_global);
+    locally_relevant_dofs.clear();
+    locally_relevant_dofs.set_size(in_global);
+  }
+};
 
 class DOFManager {
  public:
@@ -30,11 +58,11 @@ class DOFManager {
   const dealii::FiniteElement<3, 3> *fe;
   bool computed_n_global;
   LevelDofOwnershipData * level_dofs;
-  HSIESurface * hsie_surfaces;
+  HSIESurface<5> ** hsie_surfaces;
 
   DOFManager(unsigned int, unsigned int, unsigned int,
              dealii::DoFHandler<3, 3> *, dealii::Triangulation<3, 3> *,
-             const dealii::FiniteElement<3, 3> *);
+             const dealii::FiniteElement<3, 3> *, unsigned int);
 
   void compute_level_dofs();
   LevelDofOwnershipData compute_local_level_dofs();
@@ -42,9 +70,9 @@ class DOFManager {
 
   void init();
   unsigned int compute_n_own_dofs();
-  IndexSet own_dofs_for_level(unsigned int local_level, unsigned int global_level);
-  IndexSet input_dofs_for_level(unsigned int local_level, unsigned int global_level);
-  IndexSet output_dofs_for_level(unsigned int local_level, unsigned int global_level);
+  dealii::IndexSet own_dofs_for_level(unsigned int local_level, unsigned int global_level);
+  dealii::IndexSet input_dofs_for_level(unsigned int local_level, unsigned int global_level);
+  dealii::IndexSet output_dofs_for_level(unsigned int local_level, unsigned int global_level);
   void MPI_build_global_index_set_vector();
   void compute_and_communicate_edge_dofs();
   void compute_and_communicate_face_dofs();

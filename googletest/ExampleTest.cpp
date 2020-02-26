@@ -91,15 +91,12 @@ protected:
         dealii::Point<3,double> right(1, 1, 1);
         dealii::GridGenerator::subdivided_hyper_rectangle(tria, repetitions, left, right, true);
         const unsigned int dest_cells = Cells_Per_Direction*Cells_Per_Direction*Cells_Per_Direction;
-        ASSERT_EQ(tria.n_active_cells(), dest_cells);
         std::set<unsigned int> b_ids;
         b_ids.insert(4);
         dealii::GridTools::transform(Transform_4_to_5, tria);
         association = dealii::GridGenerator::extract_boundary_mesh( tria, temp_triangulation, b_ids);
         const unsigned int dest_surf_cells = Cells_Per_Direction*Cells_Per_Direction;
-        ASSERT_EQ(temp_triangulation.n_active_cells(), dest_surf_cells);
         dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
-        ASSERT_EQ(surf_tria.n_active_cells(), dest_surf_cells);
     }
 };
 
@@ -159,6 +156,18 @@ TEST_P(TestDirectionFixture, TestCellRequirements) {
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
     ASSERT_EQ(surf_tria.n_active_cells(), dest_surf_cells);
 }
+
+TEST_P(TestDirectionFixture, DofNumberingTest1) {
+    association = dealii::GridGenerator::extract_boundary_mesh( tria, temp_triangulation, b_ids);
+    dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
+    HSIESurface< 5 > surf(surf_tria, boundary_id, 0, InnerOrder, k0, association);
+    surf.initialize();
+    std::vector< types::boundary_id > boundary_ids_of_flattened_mesh = surf_tria.get_boundary_ids();
+    ASSERT_EQ(boundary_ids_of_flattened_mesh.size(), 4);
+    auto it = std::find(boundary_ids_of_flattened_mesh.begin(), boundary_ids_of_flattened_mesh.end(), boundary_id);
+    ASSERT_NE(boundary_ids_of_flattened_mesh.end(), it);
+}
+
 
 TEST_P(TestOrderFixture, AssemblationTestOrder5) {
     HSIESurface< 5 > surf(surf_tria, 0, 0, InnerOrder, k0, association);
