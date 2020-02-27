@@ -11,6 +11,11 @@
 
 const unsigned int MAX_DOF_NUMBER = INT_MAX;
 
+// The i-th entry in this vector means the values are for the surface with b_id i.
+// In that entry, there are 4 values, which correspond to the adjacent faces.
+// First for (new) -x direction, then +x then -y then +y.
+const std::vector<std::vector<unsigned int>> edge_to_boundary_id = {{4,5,2,3}, {5,4,2,3}, {0,1,4,5}, {0,1,5,4}, {1,0,2,3}, {0,1,2,3}};
+
 template <unsigned int ORDER>
 HSIESurface<ORDER>::HSIESurface(
     dealii::Triangulation<2, 2> &in_surface_triangulation,
@@ -28,8 +33,57 @@ HSIESurface<ORDER>::HSIESurface(
       level(in_level) {
   association = in_assoc;
   surface_triangulation.copy_triangulation(in_surface_triangulation);
+  this->set_mesh_boundary_ids();
   dof_counter = 0;
   k0 = in_k0;
+}
+
+template <unsigned int ORDER>
+std::vector<unsigned int> HSIESurface<ORDER>::get_boundary_ids() {
+    return this->surface_triangulation.get_boundary_ids();
+}
+
+template <unsigned int ORDER>
+void HSIESurface<ORDER>::set_mesh_boundary_ids() {
+    auto it = this->surface_triangulation.begin_active();
+    std::vector<double> x,y;
+    while(it != this->surface_triangulation.end()){
+        if(it->at_boundary()) {
+            for (unsigned int face = 0; face < GeometryInfo<2>::faces_per_cell; ++face) {
+                if (it->face(face)->at_boundary()) {
+                    Point<2> c = it->face(face)->center();
+                    x.push_back(c[0]);
+                    y.push_back(c[1]);
+                }
+            }
+        }
+        ++it;
+    }
+    double x_max = *max_element(x.begin(), x.end());
+    double y_max = *max_element(y.begin(), y.end());
+    double x_min = *min_element(x.begin(), x.end());
+    double y_min = *min_element(y.begin(), y.end());
+    it = this->surface_triangulation.begin_active();
+    while(it != this->surface_triangulation.end()){
+        if(it->at_boundary()){
+            for (unsigned int face = 0; face < GeometryInfo<2>::faces_per_cell; ++face) {
+                Point<2> center = it->face(face)->center();
+                if (std::abs(center[0] - x_min) < 0.0001) {
+                    it->face(face)->set_all_boundary_ids(edge_to_boundary_id[this->b_id][0]);
+                }
+                if (std::abs(center[0] - x_max) < 0.0001) {
+                    it->face(face)->set_all_boundary_ids(edge_to_boundary_id[this->b_id][1]);
+                }
+                if (std::abs(center[1] - y_min) < 0.0001) {
+                    it->face(face)->set_all_boundary_ids(edge_to_boundary_id[this->b_id][2]);
+                }
+                if (std::abs(center[1] - y_max) < 0.0001) {
+                    it->face(face)->set_all_boundary_ids(edge_to_boundary_id[this->b_id][3]);
+                }
+            }
+        }
+        ++it;
+    }
 }
 
 template <unsigned int ORDER>

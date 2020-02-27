@@ -73,7 +73,10 @@ Code/.vscode/c_cpp_properties.json
 Code/.vscode/ipch
 
 .idea/
-.idea/workspace.xml
 cmake-build-debug/Code/libCode.a
 cmake-build-debug/googletest/Google_Tests_run
 googletest/Google_Tests_run
+
+build
+.vscode
+*.pc

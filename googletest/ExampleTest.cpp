@@ -162,10 +162,10 @@ TEST_P(TestDirectionFixture, DofNumberingTest1) {
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
     HSIESurface< 5 > surf(surf_tria, boundary_id, 0, InnerOrder, k0, association);
     surf.initialize();
-    std::vector< types::boundary_id > boundary_ids_of_flattened_mesh = surf_tria.get_boundary_ids();
+    std::vector< types::boundary_id > boundary_ids_of_flattened_mesh = surf.get_boundary_ids();
     ASSERT_EQ(boundary_ids_of_flattened_mesh.size(), 4);
     auto it = std::find(boundary_ids_of_flattened_mesh.begin(), boundary_ids_of_flattened_mesh.end(), boundary_id);
-    ASSERT_NE(boundary_ids_of_flattened_mesh.end(), it);
+    ASSERT_EQ(boundary_ids_of_flattened_mesh.end(), it);
 }
 
 

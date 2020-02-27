@@ -5,7 +5,7 @@
 		<Option title="WaveguideProblem"/>
 		<Option makefile_is_custom="1"/>
 		<Option compiler="gcc"/>
-		<Option virtualFolders="CMake Files\;CMake Files\googletest\;CMake Files\googletest\lib\;CMake Files\googletest\lib\googlemock\;CMake Files\googletest\lib\googlemock\cmake\;CMake Files\googletest\lib\googletest\;CMake Files\googletest\lib\googletest\cmake\;CMake Files\..\;CMake Files\..\..\;CMake Files\..\..\dealii\;CMake Files\..\..\dealii\lib\;CMake Files\..\..\dealii\lib\cmake\;CMake Files\..\..\dealii\lib\cmake\deal.II\;CMake Files\..\..\dealii\share\;CMake Files\..\..\dealii\share\deal.II\;CMake Files\..\..\dealii\share\deal.II\macros\;CMake Files\Code\;CMake Files\Main\;"/>
+		<Option virtualFolders="CMake Files\;CMake Files\googletest\;CMake Files\googletest\lib\;CMake Files\googletest\lib\googlemock\;CMake Files\googletest\lib\googlemock\cmake\;CMake Files\googletest\lib\googletest\;CMake Files\googletest\lib\googletest\cmake\;CMake Files\..\;CMake Files\..\..\;CMake Files\..\..\libs\;CMake Files\..\..\libs\lib\;CMake Files\..\..\libs\lib\cmake\;CMake Files\..\..\libs\lib\cmake\deal.II\;CMake Files\..\..\libs\share\;CMake Files\..\..\libs\share\deal.II\;CMake Files\..\..\libs\share\deal.II\macros\;CMake Files\Code\;CMake Files\Main\;"/>
 		<Build>
 			<Target title="all">
 				<Option working_dir="/home/kraft/workspace/waveguideproblem"/>
@@ -95,16 +95,16 @@
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/OptimizationStrategies,"/>
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/SpaceTransformations,"/>
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/HSIEPreconditioner"/>
-					<Add directory="/home/kraft/dealii/include"/>
-					<Add directory="/home/kraft/dealii/include/deal.II/bundled"/>
+					<Add directory="/home/kraft/libs/include"/>
+					<Add directory="/home/kraft/libs/include/deal.II/bundled"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent/include"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include"/>
-					<Add directory="/home/kraft/trilinos/include"/>
 					<Add directory="/usr/include/suitesparse"/>
-					<Add directory="/usr/lib/x86_64-linux-gnu/hdf5/openmpi/include"/>
-					<Add directory="/home/kraft/p4est/FAST/include"/>
+					<Add directory="/home/kraft/libs/petsc-3.12.0/include"/>
+					<Add directory="/home/kraft/libs/petsc-3.12.0/x86_64/include"/>
+					<Add directory="/home/kraft/libs/FAST/include"/>
 				</Compiler>
 				<MakeCommands>
 					<Build command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/Code/Makefile&quot;  VERBOSE=1 Code"/>
@@ -131,16 +131,16 @@
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/OptimizationStrategies,"/>
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/SpaceTransformations,"/>
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/HSIEPreconditioner"/>
-					<Add directory="/home/kraft/dealii/include"/>
-					<Add directory="/home/kraft/dealii/include/deal.II/bundled"/>
+					<Add directory="/home/kraft/libs/include"/>
+					<Add directory="/home/kraft/libs/include/deal.II/bundled"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent/include"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include"/>
-					<Add directory="/home/kraft/trilinos/include"/>
 					<Add directory="/usr/include/suitesparse"/>
-					<Add directory="/usr/lib/x86_64-linux-gnu/hdf5/openmpi/include"/>
-					<Add directory="/home/kraft/p4est/FAST/include"/>
+					<Add directory="/home/kraft/libs/petsc-3.12.0/include"/>
+					<Add directory="/home/kraft/libs/petsc-3.12.0/x86_64/include"/>
+					<Add directory="/home/kraft/libs/FAST/include"/>
 				</Compiler>
 				<MakeCommands>
 					<Build command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/Code/Makefile&quot;  VERBOSE=1 Code/fast"/>
@@ -166,16 +166,16 @@
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/OptimizationAlgorithm,"/>
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/OptimizationStrategies,"/>
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/SpaceTransformations"/>
-					<Add directory="/home/kraft/dealii/include"/>
-					<Add directory="/home/kraft/dealii/include/deal.II/bundled"/>
+					<Add directory="/home/kraft/libs/include"/>
+					<Add directory="/home/kraft/libs/include/deal.II/bundled"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent/include"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include"/>
-					<Add directory="/home/kraft/trilinos/include"/>
 					<Add directory="/usr/include/suitesparse"/>
-					<Add directory="/usr/lib/x86_64-linux-gnu/hdf5/openmpi/include"/>
-					<Add directory="/home/kraft/p4est/FAST/include"/>
+					<Add directory="/home/kraft/libs/petsc-3.12.0/include"/>
+					<Add directory="/home/kraft/libs/petsc-3.12.0/x86_64/include"/>
+					<Add directory="/home/kraft/libs/FAST/include"/>
 				</Compiler>
 				<MakeCommands>
 					<Build command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/Main/Makefile&quot;  VERBOSE=1 main"/>
@@ -201,16 +201,16 @@
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/OptimizationAlgorithm,"/>
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/OptimizationStrategies,"/>
 					<Add directory="/home/kraft/workspace/waveguideproblem/Code/SpaceTransformations"/>
-					<Add directory="/home/kraft/dealii/include"/>
-					<Add directory="/home/kraft/dealii/include/deal.II/bundled"/>
+					<Add directory="/home/kraft/libs/include"/>
+					<Add directory="/home/kraft/libs/include/deal.II/bundled"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent/include"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include"/>
-					<Add directory="/home/kraft/trilinos/include"/>
 					<Add directory="/usr/include/suitesparse"/>
-					<Add directory="/usr/lib/x86_64-linux-gnu/hdf5/openmpi/include"/>
-					<Add directory="/home/kraft/p4est/FAST/include"/>
+					<Add directory="/home/kraft/libs/petsc-3.12.0/include"/>
+					<Add directory="/home/kraft/libs/petsc-3.12.0/x86_64/include"/>
+					<Add directory="/home/kraft/libs/FAST/include"/>
 				</Compiler>
 				<MakeCommands>
 					<Build command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/Main/Makefile&quot;  VERBOSE=1 main/fast"/>
@@ -230,16 +230,16 @@
 					<Add option="-DDEBUG"/>
 					<Add directory="/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/include"/>
 					<Add directory="/home/kraft/workspace/waveguideproblem/googletest/lib/googletest"/>
-					<Add directory="/home/kraft/dealii/include"/>
-					<Add directory="/home/kraft/dealii/include/deal.II/bundled"/>
+					<Add directory="/home/kraft/libs/include"/>
+					<Add directory="/home/kraft/libs/include/deal.II/bundled"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent/include"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include"/>
-					<Add directory="/home/kraft/trilinos/include"/>
 					<Add directory="/usr/include/suitesparse"/>
-					<Add directory="/usr/lib/x86_64-linux-gnu/hdf5/openmpi/include"/>
-					<Add directory="/home/kraft/p4est/FAST/include"/>
+					<Add directory="/home/kraft/libs/petsc-3.12.0/include"/>
+					<Add directory="/home/kraft/libs/petsc-3.12.0/x86_64/include"/>
+					<Add directory="/home/kraft/libs/FAST/include"/>
 				</Compiler>
 				<MakeCommands>
 					<Build command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/Makefile&quot;  VERBOSE=1 Google_Tests_run"/>
@@ -259,16 +259,16 @@
 					<Add option="-DDEBUG"/>
 					<Add directory="/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/include"/>
 					<Add directory="/home/kraft/workspace/waveguideproblem/googletest/lib/googletest"/>
-					<Add directory="/home/kraft/dealii/include"/>
-					<Add directory="/home/kraft/dealii/include/deal.II/bundled"/>
+					<Add directory="/home/kraft/libs/include"/>
+					<Add directory="/home/kraft/libs/include/deal.II/bundled"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi/opal/mca/event/libevent2022/libevent/include"/>
 					<Add directory="/usr/lib/x86_64-linux-gnu/openmpi/include"/>
-					<Add directory="/home/kraft/trilinos/include"/>
 					<Add directory="/usr/include/suitesparse"/>
-					<Add directory="/usr/lib/x86_64-linux-gnu/hdf5/openmpi/include"/>
-					<Add directory="/home/kraft/p4est/FAST/include"/>
+					<Add directory="/home/kraft/libs/petsc-3.12.0/include"/>
+					<Add directory="/home/kraft/libs/petsc-3.12.0/x86_64/include"/>
+					<Add directory="/home/kraft/libs/FAST/include"/>
 				</Compiler>
 				<MakeCommands>
 					<Build command="/usr/bin/make -f &quot;/home/kraft/workspace/waveguideproblem/googletest/Makefile&quot;  VERBOSE=1 Google_Tests_run/fast"/>
@@ -686,35 +686,35 @@
 		<Unit filename="/home/kraft/workspace/waveguideproblem/googletest/lib/googletest/cmake/internal_utils.cmake">
 			<Option virtualFolder="CMake Files\googletest\lib\googletest\cmake\"/>
 		</Unit>
-		<Unit filename="/home/kraft/workspace/waveguideproblem/../../dealii/lib/cmake/deal.II/deal.IIConfig.cmake">
-			<Option virtualFolder="CMake Files\..\..\dealii\lib\cmake\deal.II\"/>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/../../libs/lib/cmake/deal.II/deal.IIConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\lib\cmake\deal.II\"/>
 		</Unit>
-		<Unit filename="/home/kraft/workspace/waveguideproblem/../../dealii/lib/cmake/deal.II/deal.IIConfigVersion.cmake">
-			<Option virtualFolder="CMake Files\..\..\dealii\lib\cmake\deal.II\"/>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/../../libs/lib/cmake/deal.II/deal.IIConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\lib\cmake\deal.II\"/>
 		</Unit>
-		<Unit filename="/home/kraft/workspace/waveguideproblem/../../dealii/lib/cmake/deal.II/deal.IITargets-debugrelease.cmake">
-			<Option virtualFolder="CMake Files\..\..\dealii\lib\cmake\deal.II\"/>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/../../libs/lib/cmake/deal.II/deal.IITargets-debugrelease.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\lib\cmake\deal.II\"/>
 		</Unit>
-		<Unit filename="/home/kraft/workspace/waveguideproblem/../../dealii/lib/cmake/deal.II/deal.IITargets.cmake">
-			<Option virtualFolder="CMake Files\..\..\dealii\lib\cmake\deal.II\"/>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/../../libs/lib/cmake/deal.II/deal.IITargets.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\lib\cmake\deal.II\"/>
 		</Unit>
-		<Unit filename="/home/kraft/workspace/waveguideproblem/../../dealii/share/deal.II/macros/macro_deal_ii_add_test.cmake">
-			<Option virtualFolder="CMake Files\..\..\dealii\share\deal.II\macros\"/>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/../../libs/share/deal.II/macros/macro_deal_ii_add_test.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\share\deal.II\macros\"/>
 		</Unit>
-		<Unit filename="/home/kraft/workspace/waveguideproblem/../../dealii/share/deal.II/macros/macro_deal_ii_initialize_cached_variables.cmake">
-			<Option virtualFolder="CMake Files\..\..\dealii\share\deal.II\macros\"/>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/../../libs/share/deal.II/macros/macro_deal_ii_initialize_cached_variables.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\share\deal.II\macros\"/>
 		</Unit>
-		<Unit filename="/home/kraft/workspace/waveguideproblem/../../dealii/share/deal.II/macros/macro_deal_ii_invoke_autopilot.cmake">
-			<Option virtualFolder="CMake Files\..\..\dealii\share\deal.II\macros\"/>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/../../libs/share/deal.II/macros/macro_deal_ii_invoke_autopilot.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\share\deal.II\macros\"/>
 		</Unit>
-		<Unit filename="/home/kraft/workspace/waveguideproblem/../../dealii/share/deal.II/macros/macro_deal_ii_pickup_tests.cmake">
-			<Option virtualFolder="CMake Files\..\..\dealii\share\deal.II\macros\"/>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/../../libs/share/deal.II/macros/macro_deal_ii_pickup_tests.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\share\deal.II\macros\"/>
 		</Unit>
-		<Unit filename="/home/kraft/workspace/waveguideproblem/../../dealii/share/deal.II/macros/macro_deal_ii_query_git_information.cmake">
-			<Option virtualFolder="CMake Files\..\..\dealii\share\deal.II\macros\"/>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/../../libs/share/deal.II/macros/macro_deal_ii_query_git_information.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\share\deal.II\macros\"/>
 		</Unit>
-		<Unit filename="/home/kraft/workspace/waveguideproblem/../../dealii/share/deal.II/macros/macro_deal_ii_setup_target.cmake">
-			<Option virtualFolder="CMake Files\..\..\dealii\share\deal.II\macros\"/>
+		<Unit filename="/home/kraft/workspace/waveguideproblem/../../libs/share/deal.II/macros/macro_deal_ii_setup_target.cmake">
+			<Option virtualFolder="CMake Files\..\..\libs\share\deal.II\macros\"/>
 		</Unit>
 		<Unit filename="/home/kraft/workspace/waveguideproblem/Code/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\Code\"/>

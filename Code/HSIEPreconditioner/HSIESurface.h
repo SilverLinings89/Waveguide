@@ -113,6 +113,8 @@ class HSIESurface {
   void transform_coordinates_in_place(std::vector<HSIEPolynomial> *);
   bool check_dof_assignment_integrity();
   bool check_number_of_dofs_for_cell_integrity();
+  void set_mesh_boundary_ids();
+  std::vector<unsigned int> get_boundary_ids();
 };
 
 #endif  // WAVEGUIDEPROBLEM_HSIESURFACE_H
