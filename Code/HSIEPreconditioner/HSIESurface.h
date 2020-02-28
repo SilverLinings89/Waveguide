@@ -16,6 +16,7 @@
 #include <deal.II/grid/tria.h>
 #include "DofData.h"
 #include "HSIEPolynomial.h"
+#include "Parameters.h"
 
 struct DofCount {
   unsigned int owned = 0;
@@ -40,19 +41,24 @@ class HSIESurface {
   dealii::FE_NedelecSZ<2> fe_nedelec;
   dealii::FE_Q<2> fe_q;
   std::complex<double> k0;
-  unsigned int level;
-  DofCount n_edge_dofs, n_face_dofs, n_vertex_dofs;
+  const unsigned int global_level;
+  DofCount n_edge_dofs;
+  DofCount n_face_dofs;
+  DofCount n_vertex_dofs;
   dealii::Triangulation<2> surface_triangulation;
+  bool ** edge_ownership_by_level_and_id;
 
  public:
-  std::vector<DofData> face_dof_data, edge_dof_data, vertex_dof_data;
-  HSIESurface(dealii::Triangulation<2, 2> &in_surf_tria,
+  std::vector<DofData> face_dof_data;
+  std::vector<DofData> edge_dof_data;
+  std::vector<DofData> vertex_dof_data;
+  HSIESurface(const dealii::Triangulation<2, 2> &in_surf_tria,
               unsigned int in_boundary_id, unsigned int in_level,
               unsigned int in_inner_order, std::complex<double> k0,
               std::map<dealii::Triangulation<2, 3>::cell_iterator,
                        dealii::Triangulation<3, 3>::face_iterator>
                   in_assoc);
-
+  void compute_edge_ownership_object(Parameters params);
   std::vector<HSIEPolynomial> build_curl_term_q(unsigned int,
                                                 const dealii::Tensor<1, 2>);
   std::vector<HSIEPolynomial> build_curl_term_nedelec(
@@ -79,17 +85,17 @@ class HSIESurface {
   void initialize_dof_handlers_and_fe();
   void update_dof_counts_for_edge(
       dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
-      DofCount &);
+      DofCount &, unsigned int level);
   void update_dof_counts_for_face(
-      dealii::DoFHandler<2>::active_cell_iterator cell, DofCount &);
+      dealii::DoFHandler<2>::active_cell_iterator cell, DofCount &, unsigned int level);
   void update_dof_counts_for_vertex(
       dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
-      unsigned int vertex, DofCount &);
+      unsigned int vertex, DofCount &, unsigned int level);
   bool is_edge_owned(dealii::DoFHandler<2>::active_cell_iterator cell,
-                     unsigned int edge);
-  bool is_face_owned(dealii::DoFHandler<2>::active_cell_iterator cell);
+                     unsigned int edge, unsigned int level);
+  bool is_face_owned(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int level);
   bool is_vertex_owned(dealii::DoFHandler<2>::active_cell_iterator cell,
-                       unsigned int edge, unsigned int vertex);
+                       unsigned int edge, unsigned int vertex, unsigned int level);
   void register_new_vertex_dofs(
       dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
       unsigned int vertex);
@@ -116,5 +122,6 @@ class HSIESurface {
   void set_mesh_boundary_ids();
   std::vector<unsigned int> get_boundary_ids();
 };
+
 
 #endif  // WAVEGUIDEPROBLEM_HSIESURFACE_H

@@ -11,14 +11,14 @@
 
 const unsigned int MAX_DOF_NUMBER = INT_MAX;
 
-// The i-th entry in this vector means the values are for the surface with b_id i.
+// The ith entry in this vector means the values are for the surface with b_id i.
 // In that entry, there are 4 values, which correspond to the adjacent faces.
 // First for (new) -x direction, then +x then -y then +y.
 const std::vector<std::vector<unsigned int>> edge_to_boundary_id = {{4,5,2,3}, {5,4,2,3}, {0,1,4,5}, {0,1,5,4}, {1,0,2,3}, {0,1,2,3}};
 
 template <unsigned int ORDER>
 HSIESurface<ORDER>::HSIESurface(
-    dealii::Triangulation<2, 2> &in_surface_triangulation,
+    const dealii::Triangulation<2, 2> &in_surface_triangulation,
     unsigned int in_boundary_id, unsigned int in_level,
     unsigned int in_inner_order, std::complex<double> in_k0,
     std::map<dealii::Triangulation<2, 3>::cell_iterator,
@@ -30,7 +30,7 @@ HSIESurface<ORDER>::HSIESurface(
       Inner_Element_Order(in_inner_order),
       fe_nedelec(Inner_Element_Order),
       fe_q(Inner_Element_Order + 1),
-      level(in_level) {
+      global_level(in_level) {
   association = in_assoc;
   surface_triangulation.copy_triangulation(in_surface_triangulation);
   this->set_mesh_boundary_ids();
@@ -40,13 +40,14 @@ HSIESurface<ORDER>::HSIESurface(
 
 template <unsigned int ORDER>
 std::vector<unsigned int> HSIESurface<ORDER>::get_boundary_ids() {
-    return this->surface_triangulation.get_boundary_ids();
+    return (this->surface_triangulation.get_boundary_ids());
 }
 
 template <unsigned int ORDER>
 void HSIESurface<ORDER>::set_mesh_boundary_ids() {
     auto it = this->surface_triangulation.begin_active();
-    std::vector<double> x,y;
+    std::vector<double> x;
+    std::vector<double> y;
     while(it != this->surface_triangulation.end()){
         if(it->at_boundary()) {
             for (unsigned int face = 0; face < GeometryInfo<2>::faces_per_cell; ++face) {
@@ -92,6 +93,45 @@ void HSIESurface<ORDER>::compute_dof_numbers() {
   this->n_face_dofs = compute_n_face_dofs();
   this->n_vertex_dofs = compute_n_vertex_dofs();
 }
+
+template<unsigned int ORDER>
+void HSIESurface<ORDER>::compute_edge_ownership_object(Parameters params) {
+  this->edge_ownership_by_level_and_id = new bool*[4];
+  for(unsigned int level; level < 5; ++level) {
+    this->edge_ownership_by_level_and_id[level] = new bool[6];
+    this->edge_ownership_by_level_and_id[level][1] = true;
+    this->edge_ownership_by_level_and_id[level][3] = true;
+    this->edge_ownership_by_level_and_id[level][5] = true;
+  }
+  // level 0;
+  this->edge_ownership_by_level_and_id[0][0] = true ;
+  this->edge_ownership_by_level_and_id[0][2] = true ;
+  this->edge_ownership_by_level_and_id[0][4] = true ;
+
+  // level 1;
+  this->edge_ownership_by_level_and_id[1][0] = params.Index_in_x_direction == 0 || this->global_level == 3;
+  this->edge_ownership_by_level_and_id[1][2] = params.Index_in_y_direction == 0 || this->global_level == 2;
+  this->edge_ownership_by_level_and_id[1][4] = params.Index_in_z_direction == 0 || this->global_level == 1;
+
+  // level 2;
+  if(this->global_level == 2) {
+    this->edge_ownership_by_level_and_id[2][0] = true;
+    this->edge_ownership_by_level_and_id[2][2] = params.Index_in_y_direction == 0 || false;
+    this->edge_ownership_by_level_and_id[2][4] = params.Index_in_z_direction == 0 || false;
+  }
+  if(this->global_level == 3) {
+    this->edge_ownership_by_level_and_id[2][0] = params.Index_in_x_direction == 0 || false;
+    this->edge_ownership_by_level_and_id[2][2] = params.Index_in_y_direction == 0 || false;
+    this->edge_ownership_by_level_and_id[2][4] = true;
+  }
+
+  // level 3;
+  this->edge_ownership_by_level_and_id[3][0] = params.Index_in_x_direction == 0;
+  this->edge_ownership_by_level_and_id[3][2] = params.Index_in_y_direction == 0;
+  this->edge_ownership_by_level_and_id[3][4] = params.Index_in_z_direction == 0;
+
+}
+
 
 template <unsigned int ORDER>
 std::vector<DofData> HSIESurface<ORDER>::get_dof_data_for_cell(
@@ -219,7 +259,8 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> *matrix,
       double JxW = jxw_values[q_point];
       for (unsigned int i = 0; i < cell_dofs.size(); i++) {
         DofData &u = cell_dofs[i];
-        std::vector<HSIEPolynomial> u_contrib_curl, u_contrib;
+        std::vector<HSIEPolynomial> u_contrib_curl;
+        std::vector<HSIEPolynomial> u_contrib;
         if (cell_dofs[i].type == DofType::RAY ||
             cell_dofs[i].type == DofType::IFFb) {
           u_contrib_curl = build_curl_term_q(
@@ -249,7 +290,8 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> *matrix,
 
         for (unsigned int j = 0; j < cell_dofs.size(); j++) {
           DofData &v = cell_dofs[j];
-          std::vector<HSIEPolynomial> v_contrib_curl, v_contrib;
+          std::vector<HSIEPolynomial> v_contrib_curl;
+          std::vector<HSIEPolynomial> v_contrib;
 
           if (cell_dofs[j].type == DofType::RAY ||
               cell_dofs[j].type == DofType::IFFb) {
@@ -298,7 +340,9 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> *matrix,
 
 template <unsigned int ORDER>
 DofCount HSIESurface<ORDER>::compute_n_edge_dofs() {
-  DoFHandler<2>::active_cell_iterator cell, cell2, endc;
+  DoFHandler<2>::active_cell_iterator cell;
+  DoFHandler<2>::active_cell_iterator cell2;
+  DoFHandler<2>::active_cell_iterator endc;
   endc = dof_h_nedelec.end();
   DofCount ret;
   cell2 = dof_h_q.begin_active();
@@ -319,7 +363,8 @@ DofCount HSIESurface<ORDER>::compute_n_edge_dofs() {
 template <unsigned int ORDER>
 DofCount HSIESurface<ORDER>::compute_n_vertex_dofs() {
   std::set<unsigned int> touched_vertices;
-  DoFHandler<2>::active_cell_iterator cell, endc;
+  DoFHandler<2>::active_cell_iterator cell;
+  DoFHandler<2>::active_cell_iterator endc;
   endc = dof_h_q.end();
   DofCount ret;
   for (cell = dof_h_q.begin_active(); cell != endc; cell++) {
@@ -342,7 +387,9 @@ DofCount HSIESurface<ORDER>::compute_n_vertex_dofs() {
 template <unsigned int ORDER>
 DofCount HSIESurface<ORDER>::compute_n_face_dofs() {
   std::set<std::string> touched_faces;
-  DoFHandler<2>::active_cell_iterator cell, cell2, endc;
+  DoFHandler<2>::active_cell_iterator cell;
+  DoFHandler<2>::active_cell_iterator cell2;
+  DoFHandler<2>::active_cell_iterator endc;
   endc = dof_h_nedelec.end();
   DofCount ret;
   cell2 = dof_h_q.begin_active();
@@ -410,8 +457,8 @@ void HSIESurface<ORDER>::initialize_dof_handlers_and_fe() {
 template <unsigned int ORDER>
 void HSIESurface<ORDER>::update_dof_counts_for_edge(
     const dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
-    DofCount &in_dof_count) {
-  bool edge_is_owned = is_edge_owned(cell, edge);
+    DofCount &in_dof_count, unsigned int in_level) {
+  bool edge_is_owned = is_edge_owned(cell, edge, in_level);
   const unsigned int dofs_per_edge_all = compute_dofs_per_edge(false);
   const unsigned int dofs_per_edge_hsie = compute_dofs_per_edge(true);
   in_dof_count.total += dofs_per_edge_all;
@@ -426,8 +473,8 @@ void HSIESurface<ORDER>::update_dof_counts_for_edge(
 template <unsigned int ORDER>
 void HSIESurface<ORDER>::update_dof_counts_for_face(
     const dealii::DoFHandler<2>::active_cell_iterator cell,
-    DofCount &in_dof_count) {
-  bool edge_is_owned = is_face_owned(cell);
+    DofCount &in_dof_count, unsigned int in_level) {
+  bool edge_is_owned = is_face_owned(cell, in_level);
   const unsigned int dofs_per_face_all = compute_dofs_per_face(false);
   const unsigned int dofs_per_face_hsie = compute_dofs_per_face(true);
   in_dof_count.total += dofs_per_face_all;
@@ -442,8 +489,8 @@ void HSIESurface<ORDER>::update_dof_counts_for_face(
 template <unsigned int ORDER>
 void HSIESurface<ORDER>::update_dof_counts_for_vertex(
     const dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
-    unsigned int vertex, DofCount &in_dof_count) {
-  bool edge_is_owned = is_vertex_owned(cell, edge, vertex);
+    unsigned int vertex, DofCount &in_dof_count, unsigned int in_level) {
+  bool edge_is_owned = is_vertex_owned(cell, edge, vertex, in_level);
   const unsigned int dofs_per_vertex_all = compute_dofs_per_vertex();
 
   in_dof_count.total += dofs_per_vertex_all;
@@ -456,20 +503,26 @@ void HSIESurface<ORDER>::update_dof_counts_for_vertex(
 
 template <unsigned int ORDER>
 bool HSIESurface<ORDER>::is_edge_owned(
-    dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge) {
+    dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge, unsigned int level) {
+  if(cell->face(edge)->at_boundary()) {
+    unsigned int edge_boundary_id = cell->face(edge)->boundary_id();
+
+  } else {
+
+  }
   return true;
 }
 
 template <unsigned int ORDER>
 bool HSIESurface<ORDER>::is_face_owned(
-    dealii::DoFHandler<2>::active_cell_iterator) {
+    dealii::DoFHandler<2>::active_cell_iterator, unsigned int level) {
   return true;
 }
 
 template <unsigned int ORDER>
 bool HSIESurface<ORDER>::is_vertex_owned(
     dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int,
-    unsigned int vertex) {
+    unsigned int vertex, unsigned int level) {
   return true;
 }
 
@@ -494,7 +547,7 @@ void HSIESurface<ORDER>::register_new_edge_dofs(
   // EDGE Dofs
   std::vector<unsigned int> local_dofs(fe_nedelec.dofs_per_line);
   cell_nedelec->line(edge)->get_dof_indices(local_dofs);
-  for (int inner_order = 0; inner_order < (int)fe_nedelec.dofs_per_line;
+  for (int inner_order = 0; inner_order < static_cast<int>(fe_nedelec.dofs_per_line);
        inner_order++) {
     register_single_dof(cell_nedelec->face_index(edge), -1, inner_order + 1,
                         true, DofType::EDGE, edge_dof_data,
@@ -505,7 +558,7 @@ void HSIESurface<ORDER>::register_new_edge_dofs(
   }
 
   // INFINITE FACE Dofs Type a
-  for (int inner_order = 0; inner_order < (int)fe_nedelec.dofs_per_line;
+  for (int inner_order = 0; inner_order < static_cast<int>(fe_nedelec.dofs_per_line);
        inner_order++) {
     for (int hsie_order = 0; hsie_order <= max_hsie_order; hsie_order++) {
       register_single_dof(cell_nedelec->face_index(edge), hsie_order,
@@ -521,7 +574,8 @@ void HSIESurface<ORDER>::register_new_edge_dofs(
   local_dofs.clear();
   local_dofs.resize(fe_q.dofs_per_line + 2 * fe_q.dofs_per_vertex);
   cell_q->line(edge)->get_dof_indices(local_dofs);
-  IndexSet line_dofs(MAX_DOF_NUMBER), non_line_dofs(MAX_DOF_NUMBER);
+  IndexSet line_dofs(MAX_DOF_NUMBER);
+  IndexSet non_line_dofs(MAX_DOF_NUMBER);
   for (unsigned int i = 0; i < local_dofs.size(); i++) {
     line_dofs.add_index(local_dofs[i]);
   }
@@ -530,7 +584,7 @@ void HSIESurface<ORDER>::register_new_edge_dofs(
     non_line_dofs.add_index(cell_q->line(edge)->vertex_dof_index(1, i));
   }
   line_dofs.subtract_set(non_line_dofs);
-  for (int inner_order = 0; inner_order < (int)line_dofs.n_elements();
+  for (int inner_order = 0; inner_order < static_cast<int>(line_dofs.n_elements());
        inner_order++) {
     for (int hsie_order = -1; hsie_order <= max_hsie_order; hsie_order++) {
       register_single_dof(cell_q->face_index(edge), hsie_order, inner_order,

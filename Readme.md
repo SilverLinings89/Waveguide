@@ -72,7 +72,20 @@ The process with rank 0 in the lowest sweeping rank owns that interface (since t
 
 ## Edge ownership
 
-Edges art interceptions between two sides. The weaker rule holds. So if side a is owned by side b is not, the edge between a and b is not owned.
+Edges are interceptions between two sides. The weaker rule holds. So if side a is owned by side b is not, the edge between a and b is not owned.
+
+## Precomputation
+
+In order to not have to check for every edge, I will precompute ownership based on indices and level. I can compute if I own an edge based on
+- global level
+- current level
+- the boundary id the surface is associated with
+- the boundary of the edge
+Since global level and the boundary id of the surface are fixed for one object, this is a matrix with (global-level+1)x(6) entries. If I store that data into an array edge_ownership_by_level_and_id[][] I can then simply compute
+``` 
+is_owned_on_level =  edge_ownership_by_level_and_id[level][surface_b_id] && edge_ownership_by_level_and_id[level][edge_b_id];
+```
+
 
 ## Thanks
 
