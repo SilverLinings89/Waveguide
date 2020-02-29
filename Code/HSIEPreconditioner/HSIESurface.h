@@ -16,7 +16,7 @@
 #include <deal.II/grid/tria.h>
 #include "DofData.h"
 #include "HSIEPolynomial.h"
-#include "Parameters.h"
+#include "../Helpers/Parameters.h"
 
 struct DofCount {
   unsigned int owned = 0;
@@ -42,11 +42,9 @@ class HSIESurface {
   dealii::FE_Q<2> fe_q;
   std::complex<double> k0;
   const unsigned int global_level;
-  DofCount n_edge_dofs;
-  DofCount n_face_dofs;
-  DofCount n_vertex_dofs;
   dealii::Triangulation<2> surface_triangulation;
   bool ** edge_ownership_by_level_and_id;
+  std::vector<unsigned int> corner_cell_ids;
 
  public:
   std::vector<DofData> face_dof_data;
@@ -58,6 +56,7 @@ class HSIESurface {
               std::map<dealii::Triangulation<2, 3>::cell_iterator,
                        dealii::Triangulation<3, 3>::face_iterator>
                   in_assoc);
+  void identify_corner_cells();
   void compute_edge_ownership_object(Parameters params);
   std::vector<HSIEPolynomial> build_curl_term_q(unsigned int,
                                                 const dealii::Tensor<1, 2>);
@@ -73,11 +72,10 @@ class HSIESurface {
   std::vector<DofData> get_dof_data_for_cell(
       dealii::DoFHandler<2>::active_cell_iterator,
       dealii::DoFHandler<2>::active_cell_iterator);
-  void compute_dof_numbers();
   void fill_matrix(dealii::SparseMatrix<double> *, dealii::IndexSet);
-  DofCount compute_n_edge_dofs();
-  DofCount compute_n_vertex_dofs();
-  DofCount compute_n_face_dofs();
+  DofCount compute_n_edge_dofs(unsigned int level);
+  DofCount compute_n_vertex_dofs(unsigned int level);
+  DofCount compute_n_face_dofs(unsigned int level);
   unsigned int compute_dofs_per_edge(bool only_hsie_dofs);
   unsigned int compute_dofs_per_face(bool only_hsie_dofs);
   unsigned int compute_dofs_per_vertex();

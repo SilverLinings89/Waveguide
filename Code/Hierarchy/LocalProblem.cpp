@@ -5,7 +5,7 @@
 #include "LocalProblem.h"
 #include "../Helpers/Parameters.h"
 
-LocalProblem::LocalProblem(unsigned int local_level, unsigned int global_level,
+LocalProblem::LocalProblem(unsigned int , unsigned int global_level,
                            DOFManager* dof_manager, Parameters* params)
     : HierarchicalProblem(0, global_level, dof_manager, params) {}
 

@@ -14,7 +14,9 @@ const unsigned int MAX_DOF_NUMBER = INT_MAX;
 // The ith entry in this vector means the values are for the surface with b_id i.
 // In that entry, there are 4 values, which correspond to the adjacent faces.
 // First for (new) -x direction, then +x then -y then +y.
-const std::vector<std::vector<unsigned int>> edge_to_boundary_id = {{4,5,2,3}, {5,4,2,3}, {0,1,4,5}, {0,1,5,4}, {1,0,2,3}, {0,1,2,3}};
+const std::vector<std::vector<unsigned int>> edge_to_boundary_id = {
+    {4,5,2,3}, {5,4,2,3}, {0,1,4,5}, {0,1,5,4}, {1,0,2,3}, {0,1,2,3}
+};
 
 template <unsigned int ORDER>
 HSIESurface<ORDER>::HSIESurface(
@@ -87,13 +89,6 @@ void HSIESurface<ORDER>::set_mesh_boundary_ids() {
     }
 }
 
-template <unsigned int ORDER>
-void HSIESurface<ORDER>::compute_dof_numbers() {
-  this->n_edge_dofs = compute_n_edge_dofs();
-  this->n_face_dofs = compute_n_face_dofs();
-  this->n_vertex_dofs = compute_n_vertex_dofs();
-}
-
 template<unsigned int ORDER>
 void HSIESurface<ORDER>::compute_edge_ownership_object(Parameters params) {
   this->edge_ownership_by_level_and_id = new bool*[4];
@@ -132,6 +127,20 @@ void HSIESurface<ORDER>::compute_edge_ownership_object(Parameters params) {
 
 }
 
+template <unsigned int ORDER>
+void HSIESurface<ORDER>::identify_corner_cells() {
+  auto it = surface_triangulation.begin_active();
+  auto end = surface_triangulation.end();
+  for(; it != end; ++it) {
+    unsigned int outside_edges = 0;
+    for(unsigned int i = 0; i< dealii::GeometryInfo<2>::faces_per_cell; ++i) {
+      if(it->face(i)->at_boundary()) outside_edges++;
+    }
+    if(outside_edges == 2) {
+      this->corner_cell_ids.push_back(it->index());
+    }
+  }
+}
 
 template <unsigned int ORDER>
 std::vector<DofData> HSIESurface<ORDER>::get_dof_data_for_cell(
@@ -339,7 +348,7 @@ void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> *matrix,
 }
 
 template <unsigned int ORDER>
-DofCount HSIESurface<ORDER>::compute_n_edge_dofs() {
+DofCount HSIESurface<ORDER>::compute_n_edge_dofs(unsigned int level) {
   DoFHandler<2>::active_cell_iterator cell;
   DoFHandler<2>::active_cell_iterator cell2;
   DoFHandler<2>::active_cell_iterator endc;
@@ -350,7 +359,7 @@ DofCount HSIESurface<ORDER>::compute_n_edge_dofs() {
     for (unsigned int edge = 0; edge < GeometryInfo<2>::lines_per_cell;
          edge++) {
       if (!cell->line(edge)->user_flag_set()) {
-        update_dof_counts_for_edge(cell, edge, ret);
+        update_dof_counts_for_edge(cell, edge, ret, level);
         register_new_edge_dofs(cell, cell2, edge);
         cell->line(edge)->set_user_flag();
       }
@@ -361,7 +370,7 @@ DofCount HSIESurface<ORDER>::compute_n_edge_dofs() {
 }
 
 template <unsigned int ORDER>
-DofCount HSIESurface<ORDER>::compute_n_vertex_dofs() {
+DofCount HSIESurface<ORDER>::compute_n_vertex_dofs(unsigned int level) {
   std::set<unsigned int> touched_vertices;
   DoFHandler<2>::active_cell_iterator cell;
   DoFHandler<2>::active_cell_iterator endc;
@@ -374,7 +383,7 @@ DofCount HSIESurface<ORDER>::compute_n_vertex_dofs() {
       unsigned int idx = cell->vertex_dof_index(vertex, 0);
       if (touched_vertices.end() == touched_vertices.find(idx)) {
         // handle it
-        update_dof_counts_for_vertex(cell, idx, vertex, ret);
+        update_dof_counts_for_vertex(cell, idx, vertex, ret, level);
         register_new_vertex_dofs(cell, idx, vertex);
         // remember that it has been handled
         touched_vertices.insert(idx);
@@ -385,7 +394,7 @@ DofCount HSIESurface<ORDER>::compute_n_vertex_dofs() {
 }
 
 template <unsigned int ORDER>
-DofCount HSIESurface<ORDER>::compute_n_face_dofs() {
+DofCount HSIESurface<ORDER>::compute_n_face_dofs(unsigned int level) {
   std::set<std::string> touched_faces;
   DoFHandler<2>::active_cell_iterator cell;
   DoFHandler<2>::active_cell_iterator cell2;
@@ -395,7 +404,7 @@ DofCount HSIESurface<ORDER>::compute_n_face_dofs() {
   cell2 = dof_h_q.begin_active();
   for (cell = dof_h_nedelec.begin_active(); cell != endc; cell++) {
     if (touched_faces.end() == touched_faces.find(cell->id().to_string())) {
-      update_dof_counts_for_face(cell, ret);
+      update_dof_counts_for_face(cell, ret, level);
       register_new_surface_dofs(cell, cell2);
       touched_faces.insert(cell->id().to_string());
     }
@@ -445,7 +454,6 @@ unsigned int HSIESurface<ORDER>::compute_dofs_per_vertex() {
 template <unsigned int ORDER>
 void HSIESurface<ORDER>::initialize() {
   initialize_dof_handlers_and_fe();
-  compute_dof_numbers();
 }
 
 template <unsigned int ORDER>
@@ -506,24 +514,44 @@ bool HSIESurface<ORDER>::is_edge_owned(
     dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge, unsigned int level) {
   if(cell->face(edge)->at_boundary()) {
     unsigned int edge_boundary_id = cell->face(edge)->boundary_id();
-
+    return this->edge_ownership_by_level_and_id[level][edge_boundary_id] && this->edge_ownership_by_level_and_id[level][this->b_id];
   } else {
-
+    return this->edge_ownership_by_level_and_id[level][this->b_id];
   }
-  return true;
 }
 
 template <unsigned int ORDER>
 bool HSIESurface<ORDER>::is_face_owned(
     dealii::DoFHandler<2>::active_cell_iterator, unsigned int level) {
-  return true;
+  return this->edge_ownership_by_level_and_id[level][this->b_id];
 }
 
 template <unsigned int ORDER>
 bool HSIESurface<ORDER>::is_vertex_owned(
-    dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int,
+    dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
     unsigned int vertex, unsigned int level) {
-  return true;
+  if(! cell->at_boundary()) {
+    return this->edge_ownership_by_level_and_id[level][this->b_id];
+  }
+  const bool is_corner_cell = std::find(corner_cell_ids.begin(), corner_cell_ids.end(), cell->index())!= corner_cell_ids.end();
+  if(is_corner_cell) {
+    bool vertex_is_owned = this->edge_ownership_by_level_and_id[level][this->b_id];
+    for(unsigned int i = 0; i < dealii::GeometryInfo<2>::faces_per_cell; i++) {
+      if(cell->face(i)->at_boundary()){
+        const bool vertex_belongs_to_edge = cell->face(i)->vertex_index(0) == vertex || cell->face(i)->vertex_index(1) == vertex;
+        if(vertex_belongs_to_edge) {
+          vertex_is_owned = vertex_is_owned && this->edge_ownership_by_level_and_id[level][cell->face(i)->boundary_id()];
+        }
+      }
+    }
+    return vertex_is_owned;
+  } else {
+    if(cell->face(edge)->at_boundary()) {
+      return this->edge_ownership_by_level_and_id[level][cell->face(edge)->boundary_id()] && this->edge_ownership_by_level_and_id[level][this->b_id];
+    } else {
+      return this->edge_ownership_by_level_and_id[level][this->b_id];
+    }
+  }
 }
 
 template <unsigned int ORDER>
