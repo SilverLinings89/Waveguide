@@ -204,6 +204,27 @@ std::vector<DofData> HSIESurface<ORDER>::get_dof_data_for_cell(
   return ret;
 }
 
+template<unsigned int ORDER>
+void HSIESurface<ORDER>::make_hanging_node_constraints(
+    dealii::DynamicSparsityPattern *pattern, dealii::IndexSet global_indices) {
+  dealii::AffineConstraints nedelec_base_constraints =
+      new dealii::AffineConstraints();
+  dealii::AffineConstraints q_base_constraints =
+      new dealii::AffineConstraints();
+  dealii::DoFTools::make_hanging_node_constraints(this->dof_h_nedelec,
+      nedelec_base_constraints);
+  dealii::DoFTools::make_hanging_node_constraints(this->dof_h_nedelec,
+      q_base_constraints);
+
+  for (unsigned int i = 0; i < dof_h_nedelec.n_dofs(); i++) {
+    if (nedelec_base_constraints.is_constrained(i)) {
+      auto constraints = nedelec_base_constraints.get_constraint_entries(i);
+
+    }
+  }
+
+}
+
 template <unsigned int ORDER>
 void HSIESurface<ORDER>::fill_matrix(dealii::SparseMatrix<double> *matrix,
                                      dealii::IndexSet global_indices) {
