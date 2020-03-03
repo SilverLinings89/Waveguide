@@ -219,7 +219,9 @@ void HSIESurface<ORDER>::make_hanging_node_constraints(
   for (unsigned int i = 0; i < dof_h_nedelec.n_dofs(); i++) {
     if (nedelec_base_constraints.is_constrained(i)) {
       auto constraints = nedelec_base_constraints.get_constraint_entries(i);
-
+      std::vector<DofData> related_hsie_dofs =
+          this->get_dof_data_for_base_dof_nedelec(i);
+      // TODO.
     }
   }
 

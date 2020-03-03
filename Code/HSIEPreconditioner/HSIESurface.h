@@ -121,6 +121,9 @@ class HSIESurface {
   bool check_number_of_dofs_for_cell_integrity();
   void set_mesh_boundary_ids();
   std::vector<unsigned int> get_boundary_ids();
+  std::vector<DofData> get_dof_data_for_base_dof_nedelec(
+      unsigned int base_dof_index);
+  std::vector<DofData> get_dof_data_for_base_dof_q(unsigned int base_dof_index);
 };
 
 
