@@ -221,10 +221,77 @@ void HSIESurface<ORDER>::make_hanging_node_constraints(
       auto constraints = nedelec_base_constraints.get_constraint_entries(i);
       std::vector<DofData> related_hsie_dofs =
           this->get_dof_data_for_base_dof_nedelec(i);
-      // TODO.
+      std::vector<std::vector<DofData>> constraint_related_hsie_dofs;
+      for (unsigned int c = 0; c < constraints->size(); c++) {
+        constraint_related_hsie_dofs[c] = constraints[c]
+      }
     }
   }
 
+  for (unsigned int i = 0; i < dof_h_q.n_dofs(); i++) {
+    if (q_base_constraints.is_constrained(i)) {
+      auto constraints = q_base_constraints.get_constraint_entries(i);
+      std::vector<DofData> related_hsie_dofs =
+          this->get_dof_data_for_base_dof_q(i);
+      // TODO.
+    }
+  }
+}
+
+template<unsigned int ORDER>
+std::vector<DofData> HSIESurface<ORDER>::get_dof_data_for_base_dof_nedelec(
+    unsigned int index) {
+  std::vector<DofData> ret;
+  for (unsigned int index = 0; index < this->edge_dof_data.size(); index++) {
+    if ((this->edge_dof_data[index].base_dof_index == index)
+        && (this->edge_dof_data[index].type != DofType::RAY
+            && this->edge_dof_data[index].type != DofType::IFFb)) {
+      ret.push_back(this->edge_dof_data[index]);
+    }
+  }
+  for (unsigned int index = 0; index < this->vertex_dof_data.size(); index++) {
+    if ((this->vertex_dof_data[index].base_dof_index == index)
+        && (this->vertex_dof_data[index].type != DofType::RAY
+            && this->vertex_dof_data[index].type != DofType::IFFb)) {
+      ret.push_back(this->vertex_dof_data[index]);
+    }
+  }
+  for (unsigned int index = 0; index < this->face_dof_data.size(); index++) {
+    if ((this->face_dof_data[index].base_dof_index == index)
+        && (this->face_dof_data[index].type != DofType::RAY
+            && this->face_dof_data[index].type != DofType::IFFb)) {
+      ret.push_back(this->face_dof_data[index]);
+    }
+  }
+  return ret;
+}
+
+template<unsigned int ORDER>
+std::vector<DofData> HSIESurface<ORDER>::get_dof_data_for_base_dof_q(
+    unsigned int index) {
+  std::vector<DofData> ret;
+  for (unsigned int index = 0; index < this->edge_dof_data.size(); index++) {
+    if ((this->edge_dof_data[index].base_dof_index == index)
+        && (this->edge_dof_data[index].type == DofType::RAY
+            || this->edge_dof_data[index].type == DofType::IFFb)) {
+      ret.push_back(this->edge_dof_data[index]);
+    }
+  }
+  for (unsigned int index = 0; index < this->vertex_dof_data.size(); index++) {
+    if ((this->vertex_dof_data[index].base_dof_index == index)
+        && (this->vertex_dof_data[index].type == DofType::RAY
+            || this->vertex_dof_data[index].type == DofType::IFFb)) {
+      ret.push_back(this->vertex_dof_data[index]);
+    }
+  }
+  for (unsigned int index = 0; index < this->face_dof_data.size(); index++) {
+    if ((this->face_dof_data[index].base_dof_index == index)
+        && (this->face_dof_data[index].type == DofType::RAY
+            || this->face_dof_data[index].type == DofType::IFFb)) {
+      ret.push_back(this->face_dof_data[index]);
+    }
+  }
+  return ret;
 }
 
 template <unsigned int ORDER>
