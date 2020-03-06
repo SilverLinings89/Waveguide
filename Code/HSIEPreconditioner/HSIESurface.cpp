@@ -206,7 +206,8 @@ std::vector<DofData> HSIESurface<ORDER>::get_dof_data_for_cell(
 
 template<unsigned int ORDER>
 void HSIESurface<ORDER>::make_hanging_node_constraints(
-    dealii::DynamicSparsityPattern *pattern, dealii::IndexSet global_indices) {
+    dealii::AffineConstraints *in_constraints,
+    dealii::IndexSet global_indices) {
   dealii::AffineConstraints nedelec_base_constraints =
       new dealii::AffineConstraints();
   dealii::AffineConstraints q_base_constraints =
@@ -223,7 +224,15 @@ void HSIESurface<ORDER>::make_hanging_node_constraints(
           this->get_dof_data_for_base_dof_nedelec(i);
       std::vector<std::vector<DofData>> constraint_related_hsie_dofs;
       for (unsigned int c = 0; c < constraints->size(); c++) {
-        constraint_related_hsie_dofs[c] = constraints[c]
+        constraint_related_hsie_dofs[c] =
+            this->get_dof_data_for_base_dof_nedelec(constraints[c].first);
+      }
+      for (unsigned int n_dof = 0; n_dof < related_hsie_dofs.size(); n_dof++) {
+        in_constraints->add_line(related_hsie_dofs[n_dof].global_index);
+        for (unsigned int j = 0; j < constraints.size(); j++) {
+          in_constraints->add_entry(related_hsie_dofs[n_dof].global_index,
+              constraints[j].second);
+        }
       }
     }
   }
@@ -233,7 +242,18 @@ void HSIESurface<ORDER>::make_hanging_node_constraints(
       auto constraints = q_base_constraints.get_constraint_entries(i);
       std::vector<DofData> related_hsie_dofs =
           this->get_dof_data_for_base_dof_q(i);
-      // TODO.
+      std::vector<std::vector<DofData>> constraint_related_hsie_dofs;
+      for (unsigned int c = 0; c < constraints->size(); c++) {
+        constraint_related_hsie_dofs[c] = this->get_dof_data_for_base_dof_q(
+            constraints[c].first);
+      }
+      for (unsigned int n_dof = 0; n_dof < related_hsie_dofs.size(); n_dof++) {
+        in_constraints->add_line(related_hsie_dofs[n_dof].global_index);
+        for (unsigned int j = 0; j < constraints.size(); j++) {
+          in_constraints->add_entry(related_hsie_dofs[n_dof].global_index,
+              constraints[j].second);
+        }
+      }
     }
   }
 }

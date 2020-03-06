@@ -73,7 +73,7 @@ class HSIESurface {
       dealii::DoFHandler<2>::active_cell_iterator,
       dealii::DoFHandler<2>::active_cell_iterator);
   void fill_matrix(dealii::SparseMatrix<double> *, dealii::IndexSet);
-  void make_hanging_node_constraints(dealii::DynamicSparsityPattern*,
+  void make_hanging_node_constraints(dealii::AffineConstraints*,
       dealii::IndexSet);
   DofCount compute_n_edge_dofs(unsigned int level);
   DofCount compute_n_vertex_dofs(unsigned int level);
