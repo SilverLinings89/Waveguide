@@ -8,6 +8,8 @@
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 #include "../Core/DOFManager.h"
 #include "../Helpers/Parameters.h"
+#include "DofIndexData.h"
+#include "LocalProblem.h"
 
 using namespace dealii;
 
@@ -15,17 +17,14 @@ class HierarchicalProblem {
  public:
   bool has_child;
   HierarchicalProblem* child;
-  const unsigned int global_level, local_level;
-  unsigned int number_of_own_indices;
+  const unsigned int global_level;
+  const unsigned int local_level;
   DOFManager* dof_manager;
-  Parameters* parameters;
-  IndexSet own_indices;
-  IndexSet locally_owned_dofs, locally_relevant_dofs;
-  unsigned int level_total_dofs;
+  DofIndexData indices;
   dealii::TrilinosWrappers::SparseMatrix matrix;
 
   HierarchicalProblem(unsigned int in_own_level, unsigned int in_global_level,
-                      DOFManager* in_dof_manager, Parameters* in_params);
+      DOFManager *in_dof_manager);
 
   virtual void send_vector_to_upper();
   virtual void receive_vector_from_upper();
@@ -35,7 +34,6 @@ class HierarchicalProblem {
   virtual unsigned int compute_lower_interface_dof_count();
   virtual unsigned int compute_upper_interface_dof_count();
 
-  virtual void compute_level_dofs_total() = 0;
   virtual void solve() = 0;
   virtual void initialize() = 0;
   virtual void generateSparsityPattern() = 0;
@@ -47,6 +45,7 @@ class HierarchicalProblem {
   virtual void initialize_index_sets();
   virtual void apply_sweep(LinearAlgebra::distributed::Vector<double>);
   virtual IndexSet get_owned_dofs_for_level(unsigned int level);
+  virtual LocalProblem* get_local_problem();
 };
 
 #endif  // WAVEGUIDEPROBLEM_HIERARCHICALPROBLEM_H

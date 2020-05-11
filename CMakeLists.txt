@@ -2,7 +2,7 @@ include_directories(googletest/lib/googletest/include googletest/lib/googletest)
 
 # Set the name of the project and target:
 SET(TARGET "WaveguideProblem")
-SET(DEAL_II_DIR "/home/pascal/libs")
+SET(DEAL_II_DIR "/home/kraft/libs")
 # Declare all source files the target consists of. Here, this is only
 # the one step-X.cc file, but as you expand your project you may wish
 # to add other source files as well. If your project becomes much larger,

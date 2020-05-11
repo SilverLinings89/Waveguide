@@ -5,9 +5,11 @@
 #ifndef WAVEGUIDEPROBLEM_HSIEPRECONDITIONER_H
 #define WAVEGUIDEPROBLEM_HSIEPRECONDITIONER_H
 
+#include "HSIESurface.h"
 
 class HSIEPreconditioner {
 
+  HSIEPreconditioner();
 };
 
 

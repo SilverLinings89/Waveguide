@@ -10,7 +10,8 @@
 
 class HSIEPolynomial {
  public:
-  std::vector<std::complex<double>> a, da;
+  std::vector<std::complex<double>> a;
+  std::vector<std::complex<double>> da;
   std::complex<double> k0;
   std::complex<double> evaluate(std::complex<double> x);
   std::complex<double> evaluate_dx(std::complex<double> x);
@@ -23,8 +24,8 @@ class HSIEPolynomial {
   static HSIEPolynomial PhiMinusOne(std::complex<double> k0);
   static HSIEPolynomial PhiJ(int j, std::complex<double> k0);
 
-  HSIEPolynomial(unsigned int order, std::complex<double> k0);
-  HSIEPolynomial(DofData &in_dof, std::complex<double> k0);
+  HSIEPolynomial(unsigned int, std::complex<double>);
+  // HSIEPolynomial(DofData, std::complex<double>);
   HSIEPolynomial(std::vector<std::complex<double>> in_a,
                  std::complex<double> k0);
 

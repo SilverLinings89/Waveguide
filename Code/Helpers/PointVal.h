@@ -5,7 +5,9 @@
 
 class PointVal {
  public:
-  std::complex<double> Ex, Ey, Ez;
+  std::complex<double> Ex;
+  std::complex<double> Ey;
+  std::complex<double> Ez;
 
   PointVal();
 

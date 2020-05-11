@@ -5,6 +5,7 @@
 #ifndef WAVEGUIDEPROBLEM_HSIESURFACE_H
 #define WAVEGUIDEPROBLEM_HSIESURFACE_H
 
+#include <deal.II/lac/affine_constraints.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_renumbering.h>
 #include <deal.II/dofs/dof_tools.h>
@@ -17,17 +18,9 @@
 #include "DofData.h"
 #include "HSIEPolynomial.h"
 #include "../Helpers/Parameters.h"
+#include "../Helpers/Structs.h"
 
-struct DofCount {
-  unsigned int owned = 0;
-  unsigned int non_owned = 0;
-  unsigned int hsie = 0;
-  unsigned int non_hsie = 0;
-  unsigned int owned_hsie = 0;
-  unsigned int total = 0;
-};
 
-template <unsigned int ORDER>
 class HSIESurface {
   std::map<dealii::Triangulation<2, 3>::cell_iterator,
            dealii::Triangulation<3, 3>::face_iterator>
@@ -45,12 +38,14 @@ class HSIESurface {
   dealii::Triangulation<2> surface_triangulation;
   bool ** edge_ownership_by_level_and_id;
   std::vector<unsigned int> corner_cell_ids;
+  const unsigned int order;
 
  public:
   std::vector<DofData> face_dof_data;
   std::vector<DofData> edge_dof_data;
   std::vector<DofData> vertex_dof_data;
-  HSIESurface(const dealii::Triangulation<2, 2> &in_surf_tria,
+  HSIESurface(unsigned int in_order,
+      const dealii::Triangulation<2, 2> &in_surf_tria,
               unsigned int in_boundary_id, unsigned int in_level,
               unsigned int in_inner_order, std::complex<double> k0,
               std::map<dealii::Triangulation<2, 3>::cell_iterator,
@@ -73,7 +68,7 @@ class HSIESurface {
       dealii::DoFHandler<2>::active_cell_iterator,
       dealii::DoFHandler<2>::active_cell_iterator);
   void fill_matrix(dealii::SparseMatrix<double> *, dealii::IndexSet);
-  void make_hanging_node_constraints(dealii::AffineConstraints*,
+  void make_hanging_node_constraints(dealii::AffineConstraints<double>*,
       dealii::IndexSet);
   DofCount compute_n_edge_dofs(unsigned int level);
   DofCount compute_n_vertex_dofs(unsigned int level);
@@ -124,6 +119,7 @@ class HSIESurface {
   std::vector<DofData> get_dof_data_for_base_dof_nedelec(
       unsigned int base_dof_index);
   std::vector<DofData> get_dof_data_for_base_dof_q(unsigned int base_dof_index);
+  unsigned int get_dof_count_by_boundary_id(unsigned int in_boundary_id);
 };
 
 

@@ -11,19 +11,21 @@
 
 class LocalProblem : public HierarchicalProblem {
 public:
-    LocalProblem(unsigned int, unsigned int, DOFManager * dm, Parameters * parameters);
+  HSIESurface *hsie_surfaces;
 
-    unsigned int compute_own_dofs();
+  LocalProblem(unsigned int, unsigned int, DOFManager *dm);
 
-    void compute_level_dofs_total() override;
+  void compute_level_dofs_total() override;
 
-    void solve() override;
+  void solve() override;
 
-    void initialize() override;
+  void initialize() override;
 
-    void generateSparsityPattern() override;
-    
-    IndexSet get_owned_dofs_for_level(unsigned int level) override;
+  void generateSparsityPattern() override;
+
+  dealii::IndexSet get_owned_dofs_for_level(unsigned int level) override;
+
+  LocalProblem* get_local_problem() override;
 };
 
 

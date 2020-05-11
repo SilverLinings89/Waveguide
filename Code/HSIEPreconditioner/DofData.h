@@ -5,9 +5,20 @@
 #ifndef WAVEGUIDEPROBLEM_DOFDATA_H
 #define WAVEGUIDEPROBLEM_DOFDATA_H
 
-enum DofType { EDGE, SURFACE, RAY, IFFa, IFFb, SEGMENTa, SEGMENTb };
+#include <deal.II/dofs/dof_handler.h>
+#include <deal.II/dofs/dof_renumbering.h>
+#include <deal.II/dofs/dof_tools.h>
+#include <deal.II/fe/fe_nedelec.h>
+#include <deal.II/fe/fe_q.h>
+#include <deal.II/fe/fe_system.h>
+#include <deal.II/grid/tria.h>
 
-struct DofData {
+#include <utility>
+
+#include "../Helpers/Enums.h"
+#include "HSIEPolynomial.h"
+
+class DofData {
   DofType type;
   int hsie_order;
   int inner_order;
@@ -50,15 +61,6 @@ struct DofData {
   }
 };
 
-#include <deal.II/dofs/dof_handler.h>
-#include <deal.II/dofs/dof_renumbering.h>
-#include <deal.II/dofs/dof_tools.h>
-#include <deal.II/fe/fe_nedelec.h>
-#include <deal.II/fe/fe_q.h>
-#include <deal.II/fe/fe_system.h>
-#include <deal.II/grid/tria.h>
 
-#include <utility>
-#include "HSIEPolynomial.h"
 
 #endif  // WAVEGUIDEPROBLEM_DOFDATA_H

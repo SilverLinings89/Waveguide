@@ -5,7 +5,8 @@
 #ifndef WAVEGUIDEPROBLEM_RECTANGULARMODE_H
 #define WAVEGUIDEPROBLEM_RECTANGULARMODE_H
 
-#include <deal.II/base/tria.h>
+#include <deal.II/grid/tria.h>
+#include <deal.II/fe/fe_system.h>
 
 using namespace dealii;
 
@@ -16,7 +17,7 @@ class RectangularMode {
   double x_width_domain, y_width_domain;
   const int FEM_order;
 
-  FE_System<3> fe;
+  FESystem<3> fe;
   FEValuesExtractors::Vector real, imag;
   AffineConstraints<std::complex<double>> constraints, periodic_constraints;
   Triangulation<3> triangulation;

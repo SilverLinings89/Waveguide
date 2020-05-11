@@ -54,7 +54,8 @@ HSIEPolynomial::HSIEPolynomial(unsigned int order, std::complex<double> in_k0) {
   this->k0 = in_k0;
 }
 
-HSIEPolynomial::HSIEPolynomial(DofData &in_dof, std::complex<double> in_k0) {
+/**
+HSIEPolynomial::HSIEPolynomial(DofData in_dof, std::complex<double> in_k0) {
   this->a = std::vector<std::complex<double>>();
   this->da = std::vector<std::complex<double>>();
   for (int i = 0; i < in_dof.hsie_order - 1; i++) {
@@ -68,6 +69,7 @@ HSIEPolynomial::HSIEPolynomial(DofData &in_dof, std::complex<double> in_k0) {
   this->update_derivative();
   this->k0 = in_k0;
 }
+ **/
 
 HSIEPolynomial::HSIEPolynomial(std::vector<std::complex<double>> in_a,
                                std::complex<double> in_k0) {

@@ -6,11 +6,8 @@
 #include "../Helpers/Parameters.h"
 
 LocalProblem::LocalProblem(unsigned int , unsigned int global_level,
-                           DOFManager* dof_manager, Parameters* params)
-    : HierarchicalProblem(0, global_level, dof_manager, params) {}
-
-unsigned int LocalProblem::compute_own_dofs() {
-  return dof_manager->compute_n_own_dofs();
+    DOFManager *dof_manager) :
+    HierarchicalProblem(0, global_level, dof_manager) {
 }
 
 void LocalProblem::compute_level_dofs_total() {}
@@ -30,4 +27,8 @@ IndexSet LocalProblem::get_owned_dofs_for_level(unsigned int level) {
     n_owned_dofs += 1; // TODO: implement this.
   }
   return IndexSet(n_owned_dofs);
+}
+
+LocalProblem* LocalProblem::get_local_problem() {
+  return this;
 }

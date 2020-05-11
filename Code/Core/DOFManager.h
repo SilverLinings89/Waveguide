@@ -12,37 +12,6 @@
 #include <deal.II/base/index_set.h>
 #include "../HSIEPreconditioner/HSIESurface.h"
 
-struct LevelDofOwnershipData {
-  unsigned int global_dofs;
-  unsigned int owned_dofs;
-  dealii::IndexSet locally_owned_dofs;
-  dealii::IndexSet input_dofs;
-  dealii::IndexSet output_dofs;
-  dealii::IndexSet locally_relevant_dofs;
-
-  LevelDofOwnershipData() {
-    global_dofs = 0;
-    owned_dofs = 0;
-    locally_owned_dofs.clear();
-    input_dofs.clear();
-    output_dofs.clear();
-    locally_relevant_dofs.clear();
-  }
-
-  LevelDofOwnershipData(unsigned int in_global) {
-    global_dofs = in_global;
-    owned_dofs = 0;
-    locally_owned_dofs.clear();
-    locally_owned_dofs.set_size(in_global);
-    input_dofs.clear();
-    input_dofs.set_size(in_global);
-    output_dofs.clear();
-    output_dofs.set_size(in_global);
-    locally_relevant_dofs.clear();
-    locally_relevant_dofs.set_size(in_global);
-  }
-};
-
 class DOFManager {
  public:
   unsigned int global_level;
@@ -58,7 +27,7 @@ class DOFManager {
   const dealii::FiniteElement<3, 3> *fe;
   bool computed_n_global;
   LevelDofOwnershipData * level_dofs;
-  HSIESurface<5> ** hsie_surfaces;
+  HSIESurface **hsie_surfaces;
 
   DOFManager(unsigned int, unsigned int, unsigned int,
              dealii::DoFHandler<3, 3> *, dealii::Triangulation<3, 3> *,

@@ -6,12 +6,9 @@
 #include <deal.II/lac/vector.h>
 #include <math.h>
 #include <vector>
+#include "../Helpers/Enums.h"
 
 using namespace dealii;
-
-enum Evaluation_Domain { CIRCLE_CLOSE, CIRCLE_MAX, RECTANGLE_INNER };
-
-enum Evaluation_Metric { FUNDAMENTAL_MODE_EXCITATION, POYNTING_TYPE_ENERGY };
 
 class NumericProblem;
 

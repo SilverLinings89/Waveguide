@@ -65,7 +65,8 @@
 #include "../MeshGenerators/SquareMeshGenerator.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
 #include "./PreconditionerSweeping.h"
-
+#include "../Helpers/Enums.h"
+#include "../Helpers/Structs.h"
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/table_handler.h>
 
@@ -83,10 +84,6 @@ const int STEPS_PER_DOFS = 11;
 
 extern double *steps_widths;
 
-struct ConstraintPair {
-  unsigned int left, right;
-  bool sign;
-};
 
 /**
  * \class NumericProblem

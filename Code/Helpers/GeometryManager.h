@@ -15,15 +15,7 @@
 #include <deal.II/base/point.h>
 #include <utility>
 #include "Parameters.h"
-
-enum Direction {
-  MinusX = 0,
-  PlusX = 1,
-  MinusY = 2,
-  PlusY = 3,
-  MinusZ = 4,
-  PlusZ = 5
-};
+#include "Enums.h"
 
 class GeometryManager {
  public:

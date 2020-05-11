@@ -380,7 +380,7 @@ DOFManager::DOFManager(unsigned int i_dofs_per_cell,
   computed_n_global = false;
   this->level_dofs = new LevelDofOwnershipData(i_global_level + 1);
   this->global_level = i_global_level;
-  this->hsie_surfaces = new HSIESurface<5> * [6];
+  this->hsie_surfaces = new HSIESurface*[6];
   for(unsigned int i = 0; i < 6; i++) {
     std::set<unsigned int> b_ids;
     b_ids.insert(i);
@@ -390,14 +390,15 @@ DOFManager::DOFManager(unsigned int i_dofs_per_cell,
     association = dealii::GridGenerator::extract_boundary_mesh( *in_triangulation, temp_triangulation, b_ids);
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
     // TODO: Set inner order correctly here.
-    this->hsie_surfaces[i] = new HSIESurface<5>(surf_tria, i, 0, 0, std::complex<double>(1,0), association);
+    this->hsie_surfaces[i] = new HSIESurface(5, surf_tria, i, 0, 0,
+        std::complex<double>(1, 0), association);
   }
 }
 
 void DOFManager::compute_level_dofs() {
   // local level;
   this->level_dofs[0] = this->compute_local_level_dofs();
-  
+
   // higher levels;
   for (unsigned int i = 1; i <= global_level; i++ ) {
     this->level_dofs[i] = this->compute_higher_level_dofs(i);
