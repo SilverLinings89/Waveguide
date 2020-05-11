@@ -34,6 +34,23 @@
 #include "../Code/OptimizationAlgorithm/Optimization1D.h"
 #include "../Code/Helpers/ShapeDescription.h"
 
+std::string solutionpath = "";
+std::ofstream log_stream;
+std::string constraints_filename = "constraints.log";
+std::string assemble_filename = "assemble.log";
+std::string precondition_filename = "precondition.log";
+std::string solver_filename = "solver.log";
+std::string total_filename = "total.log";
+int StepsR = 10;
+int StepsPhi = 10;
+int alert_counter = 0;
+std::string input_file_name;
+SpaceTransformation *the_st;
+Parameters GlobalParams;
+GeometryManager Geometry;
+MPICommunicator GlobalMPI;
+ModeManager GlobalModeManager;
+
 int main(int argc, char *argv[]) {
 
     if (argc > 1) {

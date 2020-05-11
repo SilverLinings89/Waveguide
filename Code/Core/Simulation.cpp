@@ -5,25 +5,27 @@
  *      Author: kraft
  */
 
+#include <mpi.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <string>
 #include "Simulation.h"
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/mpi.h>
 #include "../Helpers/staticfunctions.h"
+#include "./GlobalObjects.h"
 
-Simulation::Simulation() = default;
+Simulation::Simulation() {
+  initialize_global_variables();
+}
 
 Simulation::~Simulation() = default;
 
 void Simulation::Run() {
   CreateOutputDirectory();
-  LoadParameters();
-  PrepareGeometry();
   PrepareTransformedGeometry();
-  InitializeMainProblem();
-  InitializeAuxiliaryProblem();
 }
 
-void Simulation::LoadParameters() {}
 
 void Simulation::CreateOutputDirectory() {
   char *pPath;
@@ -80,10 +82,5 @@ void Simulation::CreateOutputDirectory() {
   deallog.attach(log_stream);
 }
 
-void Simulation::PrepareGeometry() { geometry.initialize(parameters); }
-
 void Simulation::PrepareTransformedGeometry() {}
 
-void Simulation::InitializeMainProblem() {}
-
-void Simulation::InitializeAuxiliaryProblem() {}

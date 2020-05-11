@@ -15,9 +15,6 @@
 #include "../Helpers/Parameters.h"
 
 class Simulation {
- private:
-  GeometryManager geometry;
-  Parameters parameters;
 
  public:
   Simulation();
@@ -26,19 +23,9 @@ class Simulation {
 
   void Run();
 
-  void LoadParameters();
-
-  void LoadParametersFromFile();
-
   void OverwriteParametersFromConsole();
 
-  void PrepareGeometry();
-
   void PrepareTransformedGeometry();
-
-  void InitializeMainProblem();
-
-  void InitializeAuxiliaryProblem();
 
   void CreateOutputDirectory();
 };

@@ -2,7 +2,7 @@
 #define CODE_CORE_SOLUTIONWEIGHT_CPP_
 
 #include "SolutionWeight.h"
-
+#include "./GlobalObjects.h"
 #include "NumericProblem.h"
 
 template <int dim>

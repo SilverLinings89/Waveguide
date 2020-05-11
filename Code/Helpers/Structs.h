@@ -51,7 +51,8 @@ struct LevelDofOwnershipData {
 };
 
 struct ConstraintPair {
-  unsigned int left, right;
+  unsigned int left;
+  unsigned int right;
   bool sign;
 };
 

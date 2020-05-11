@@ -8,9 +8,9 @@
 #ifndef CODE_HIERARCHY_MPICOMMUNICATOR_H_
 #define CODE_HIERARCHY_MPICOMMUNICATOR_H_
 
-#include <mpi.h>;
-#include <vector>;
-
+#include <mpi.h>
+#include <vector>
+#include "../Helpers/Enums.h"
 
 
 class MPICommunicator {
@@ -21,7 +21,6 @@ public:
   std::pair<bool, unsigned int> get_neighbor_for_interface(
       Direction in_direction);
   void initialize();
-
 };
 
 #endif /* CODE_HIERARCHY_MPICOMMUNICATOR_H_ */

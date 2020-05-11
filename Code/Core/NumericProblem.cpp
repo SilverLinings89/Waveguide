@@ -26,10 +26,9 @@
 #include "../MeshGenerators/SquareMeshGenerator.h"
 #include "PreconditionerSweeping.h"
 #include "SolutionWeight.h"
-
+#include "./GlobalObjects.h"
 int steps = 0;
-Parameters GlobalParams;
-GeometryManager Geometry;
+
 ModeManager ModeMan;
 dealii::ConvergenceTable Convergence_Table;
 dealii::TableHandler Optimization_Steps;

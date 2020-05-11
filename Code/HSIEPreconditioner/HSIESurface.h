@@ -22,6 +22,7 @@
 
 
 class HSIESurface {
+  const unsigned int order;
   std::map<dealii::Triangulation<2, 3>::cell_iterator,
            dealii::Triangulation<3, 3>::face_iterator>
       association;
@@ -38,7 +39,7 @@ class HSIESurface {
   dealii::Triangulation<2> surface_triangulation;
   bool ** edge_ownership_by_level_and_id;
   std::vector<unsigned int> corner_cell_ids;
-  const unsigned int order;
+
 
  public:
   std::vector<DofData> face_dof_data;

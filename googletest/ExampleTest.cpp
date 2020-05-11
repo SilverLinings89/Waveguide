@@ -11,6 +11,23 @@
 #include "../Code/HSIEPreconditioner/HSIESurface.cpp"
 #include <deal.II/grid/grid_generator.h>
 
+Parameters GlobalParams;
+GeometryManager Geometry;
+MPICommunicator GlobalMPI;
+ModeManager GlobalModeManager;
+std::string solutionpath = "";
+std::ofstream log_stream;
+std::string constraints_filename = "constraints.log";
+std::string assemble_filename = "assemble.log";
+std::string precondition_filename = "precondition.log";
+std::string solver_filename = "solver.log";
+std::string total_filename = "total.log";
+int StepsR = 10;
+int StepsPhi = 10;
+int alert_counter = 0;
+std::string input_file_name;
+SpaceTransformation *the_st;
+
 static HSIEPolynomial random_poly(unsigned int Order, std::complex<double> k0) {
     std::vector<std::complex<double>> a;
     for(unsigned int i = 0; i < Order; i++) {
@@ -25,10 +42,12 @@ static unsigned int dofs_per_edge(unsigned int hsie_Order, unsigned int inner_or
             if(inner_order == 0) return 7;
             if(inner_order == 1) return 21;
             if(inner_order == 2) return 35;
+    break;
         case 10:
             if(inner_order == 0) return 12;
             if(inner_order == 1) return 36;
             if(inner_order == 2) return 60;
+    break;
         default:
             return 0;
     }
@@ -90,7 +109,6 @@ protected:
         dealii::Point<3,double> left(-1, -1, -1);
         dealii::Point<3,double> right(1, 1, 1);
         dealii::GridGenerator::subdivided_hyper_rectangle(tria, repetitions, left, right, true);
-        const unsigned int dest_cells = Cells_Per_Direction*Cells_Per_Direction*Cells_Per_Direction;
         std::set<unsigned int> b_ids;
         b_ids.insert(4);
         dealii::GridTools::transform(Transform_4_to_5, tria);
@@ -160,7 +178,7 @@ TEST_P(TestDirectionFixture, TestCellRequirements) {
 TEST_P(TestDirectionFixture, DofNumberingTest1) {
     association = dealii::GridGenerator::extract_boundary_mesh( tria, temp_triangulation, b_ids);
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
-    HSIESurface< 5 > surf(surf_tria, boundary_id, 0, InnerOrder, k0, association);
+  HSIESurface surf(5, surf_tria, boundary_id, 0, InnerOrder, k0, association);
     surf.initialize();
     std::vector< types::boundary_id > boundary_ids_of_flattened_mesh = surf.get_boundary_ids();
     ASSERT_EQ(boundary_ids_of_flattened_mesh.size(), 4);
@@ -170,7 +188,7 @@ TEST_P(TestDirectionFixture, DofNumberingTest1) {
 
 
 TEST_P(TestOrderFixture, AssemblationTestOrder5) {
-    HSIESurface< 5 > surf(surf_tria, 0, 0, InnerOrder, k0, association);
+  HSIESurface surf(5, surf_tria, 0, 0, InnerOrder, k0, association);
     surf.initialize();
     ASSERT_EQ(surf.compute_dofs_per_vertex(), dofs_per_vertex(5) * 2 );
     ASSERT_EQ(surf.compute_dofs_per_edge(false), dofs_per_edge(5, InnerOrder) * 2 );
@@ -183,7 +201,6 @@ TEST_P(TestOrderFixture, AssemblationTestOrder5) {
     unsigned int total_dof_count = surf.face_dof_data.size() + surf.edge_dof_data.size() + surf.vertex_dof_data.size();
     IndexSet hsie_dof_indices(total_dof_count);
     hsie_dof_indices.add_range(0,total_dof_count);
-    const unsigned int max_couplings =  dofs_per_vertex(5) * 2 *9 + dofs_per_edge(10, InnerOrder) * 2 * 12 + dofs_per_face(10, InnerOrder) * 2 * 4;
     dealii::DynamicSparsityPattern dsp(total_dof_count, total_dof_count);
     surf.fill_sparsity_pattern(&dsp);
     dealii::SparsityPattern sp;
@@ -198,7 +215,7 @@ TEST_P(TestOrderFixture, AssemblationTestOrder5) {
 }
 
 TEST_P(TestOrderFixture, AssemblationTestOrder10) {
-    HSIESurface< 10 > surf(surf_tria, 0, 0, InnerOrder, k0, association);
+  HSIESurface surf(10, surf_tria, 0, 0, InnerOrder, k0, association);
     surf.initialize();
     ASSERT_EQ(surf.compute_dofs_per_vertex(), dofs_per_vertex(10) * 2 );
     ASSERT_EQ(surf.compute_dofs_per_edge(false), dofs_per_edge(10, InnerOrder) * 2 );
@@ -212,7 +229,6 @@ TEST_P(TestOrderFixture, AssemblationTestOrder10) {
     unsigned int total_dof_count = surf.face_dof_data.size() + surf.edge_dof_data.size() + surf.vertex_dof_data.size();
     IndexSet hsie_dof_indices(total_dof_count);
     hsie_dof_indices.add_range(0,total_dof_count);
-    const unsigned int max_couplings =  dofs_per_vertex(5) * 2 *9 + dofs_per_edge(10, InnerOrder) * 2 * 12 + dofs_per_face(10, InnerOrder) * 2 * 4;
     dealii::DynamicSparsityPattern dsp(total_dof_count, total_dof_count);
     surf.fill_sparsity_pattern(&dsp);
     dealii::SparsityPattern sp;
@@ -279,7 +295,7 @@ TEST(HSIE_ORTHOGONALITY_TESTS, EvaluationOfA) {
                 v.emplace_back(j, k0);
                 v.emplace_back(zeroes, k0);
                 v.emplace_back(zeroes, k0);
-                std::complex<double> res = HSIESurface<10>::evaluate_a(u, v);
+      std::complex<double> res = HSIESurface::evaluate_a(u, v);
             if(j != i) {
                 ASSERT_NEAR(0, res.real(), 0.001);
                 ASSERT_NEAR(0, res.imag(), 0.001);
@@ -306,7 +322,7 @@ TEST(HSIE_ORTHOGONALITY_TESTS, RandomPolynomialProductTest) {
     v.push_back(random_poly(10,k0));
     v.push_back(random_poly(10,k0));
     v.push_back(random_poly(10,k0));
-    std::complex<double> res = HSIESurface<10>::evaluate_a(u, v);
+  std::complex<double> res = HSIESurface::evaluate_a(u, v);
     std::complex<double> expected_result(0,0);
     for(unsigned j = 0; j < 3; j++) {
         for (unsigned int i = 0; i < 10; i++) {

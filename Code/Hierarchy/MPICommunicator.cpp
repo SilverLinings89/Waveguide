@@ -24,6 +24,10 @@ inline unsigned int get_index_for_direction_index(int in_direction) {
 
 MPICommunicator::MPICommunicator() {
   // start with MPI Comm world and work the way down.
+
+}
+
+void MPICommunicator::initialize() {
   int local_level = 1;
   MPI_Comm local = MPI_COMM_WORLD;
   communicators_by_level.push_back(MPI_COMM_WORLD);

@@ -5,19 +5,19 @@
  *      Author: kraft
  */
 
+#include "../Core/GlobalObjects.h"
 #include "GeometryManager.h"
 #include "../Core/NumericProblem.h"
 
 GeometryManager::GeometryManager() {}
 
 GeometryManager::~GeometryManager() {
-  // TODO Auto-generated destructor stub
 }
 
-void GeometryManager::initialize(Parameters& in_params) {
-  set_x_range(compute_x_range(in_params));
-  set_y_range(compute_y_range(in_params));
-  set_z_range(compute_z_range(in_params));
+void GeometryManager::initialize() {
+  set_x_range(compute_x_range());
+  set_y_range(compute_y_range());
+  set_z_range(compute_z_range());
 }
 
 void GeometryManager::set_x_range(std::pair<double, double> in_range) {
@@ -26,60 +26,61 @@ void GeometryManager::set_x_range(std::pair<double, double> in_range) {
 }
 
 void GeometryManager::set_y_range(std::pair<double, double> in_range) {
-  // TODO: Testing
   this->y_range = in_range;
   return;
 }
 
 void GeometryManager::set_z_range(std::pair<double, double> in_range) {
-  // TODO: Testing
   this->z_range = in_range;
   return;
 }
 
-std::pair<double, double> GeometryManager::compute_x_range(
-    Parameters& in_params) {
-  if (in_params.Blocks_in_x_direction == 1) {
-    return std::pair<double, double>(-in_params.M_R_XLength / 2.0,
-                                     in_params.M_R_XLength / 2.0);
+std::pair<double, double> GeometryManager::compute_x_range() {
+  if (GlobalParams.Blocks_in_x_direction == 1) {
+    return std::pair<double, double>(-GlobalParams.M_R_XLength / 2.0,
+        GlobalParams.M_R_XLength / 2.0);
   } else {
     double length =
-        in_params.M_R_XLength / ((double)in_params.Blocks_in_x_direction);
-    int block_index = in_params.MPI_Rank % in_params.Blocks_in_x_direction;
-    double min = -in_params.M_R_XLength / 2.0 + block_index * length;
+        GlobalParams.M_R_XLength
+        / ((double) GlobalParams.Blocks_in_x_direction);
+    int block_index = GlobalParams.MPI_Rank
+        % GlobalParams.Blocks_in_x_direction;
+    double min = -GlobalParams.M_R_XLength / 2.0 + block_index * length;
     return std::pair<double, double>(min, min + length);
   }
 }
 
-std::pair<double, double> GeometryManager::compute_y_range(
-    Parameters& in_params) {
-  if (in_params.Blocks_in_y_direction == 1) {
-    return std::pair<double, double>(-in_params.M_R_YLength / 2.0,
-                                     in_params.M_R_YLength / 2.0);
+std::pair<double, double> GeometryManager::compute_y_range() {
+  if (GlobalParams.Blocks_in_y_direction == 1) {
+    return std::pair<double, double>(-GlobalParams.M_R_YLength / 2.0,
+        GlobalParams.M_R_YLength / 2.0);
   } else {
     double length =
-        in_params.M_R_YLength / ((double)in_params.Blocks_in_y_direction);
-    int block_processor_count = in_params.Blocks_in_x_direction;
-    int block_index = (in_params.MPI_Rank % (in_params.Blocks_in_x_direction *
-                                             in_params.Blocks_in_y_direction)) /
+        GlobalParams.M_R_YLength
+        / ((double) GlobalParams.Blocks_in_y_direction);
+    int block_processor_count = GlobalParams.Blocks_in_x_direction;
+    int block_index = (GlobalParams.MPI_Rank
+        % (GlobalParams.Blocks_in_x_direction
+            * GlobalParams.Blocks_in_y_direction)) /
                       block_processor_count;
-    double min = -in_params.M_R_YLength / 2.0 + block_index * length;
+    double min = -GlobalParams.M_R_YLength / 2.0 + block_index * length;
     return std::pair<double, double>(min, min + length);
   }
 }
 
-std::pair<double, double> GeometryManager::compute_z_range(
-    Parameters& in_params) {
-  if (in_params.Blocks_in_z_direction == 1) {
-    return std::pair<double, double>(-in_params.M_R_ZLength / 2.0,
-                                     in_params.M_R_ZLength / 2.0);
+std::pair<double, double> GeometryManager::compute_z_range() {
+  if (GlobalParams.Blocks_in_z_direction == 1) {
+    return std::pair<double, double>(-GlobalParams.M_R_ZLength / 2.0,
+        GlobalParams.M_R_ZLength / 2.0);
   } else {
     double length =
-        in_params.M_R_ZLength / ((double)in_params.Blocks_in_z_direction);
+        GlobalParams.M_R_ZLength
+        / ((double) GlobalParams.Blocks_in_z_direction);
     int block_processor_count =
-        in_params.Blocks_in_x_direction * in_params.Blocks_in_y_direction;
-    int block_index = in_params.MPI_Rank / block_processor_count;
-    double min = -in_params.M_R_ZLength / 2.0 + block_index * length;
+        GlobalParams.Blocks_in_x_direction
+        * GlobalParams.Blocks_in_y_direction;
+    int block_index = GlobalParams.MPI_Rank / block_processor_count;
+    double min = -GlobalParams.M_R_ZLength / 2.0 + block_index * length;
     return std::pair<double, double>(min, min + length);
   }
 }

@@ -5,10 +5,9 @@ ADD_LIBRARY(Code
         Core/Sector.cpp
         Core/SolutionWeight.cpp
         Core/NumericProblem.cpp
-        Core/AuxiliaryProblem.cpp
-        Core/MainProblem.cpp
         Core/Simulation.cpp
         Core/DOFManager.cpp
+        Core/GlobalObjects.cpp
         Helpers/GeometryManager.cpp
         Helpers/ExactSolution.cpp
         Helpers/ModeManager.cpp
@@ -39,7 +38,9 @@ ADD_LIBRARY(Code
         Hierarchy/NonLocalProblem.cpp 
         Hierarchy/NonLocalProblem.h 
         Hierarchy/LocalProblem.cpp 
-        Hierarchy/LocalProblem.h)
+        Hierarchy/LocalProblem.h
+        Hierarchy/MPICommunicator.cpp
+        Hierarchy/MPICommunicator.h)
 
 DEAL_II_SETUP_TARGET(Code)
 	

@@ -33,9 +33,8 @@ void RectangularMode::run() {
 }
 
 void RectangularMode::make_mesh() {
-  Point<3> p1 =
-      new Point<3>(-x_width_domain / 2.0, -y_width_domain / 2.0, -0.1);
-  Point<3> p2 = new Point<3>(x_width_domain / 2.0, y_width_domain / 2.0, 0.1);
+  Point<3> p1(-x_width_domain / 2.0, -y_width_domain / 2.0, -0.1);
+  Point<3> p2(x_width_domain / 2.0, y_width_domain / 2.0, 0.1);
   std::vector<unsigned int> repetitions;
   repetitions.push_back(100);
   repetitions.push_back(100);

@@ -5,6 +5,7 @@
 #include "HSIESurface.h"
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria_accessor.h>
+#include <deal.II/lac/affine_constraints.h>
 #include "../Core/NumericProblem.h"
 #include "DofData.h"
 #include "HSIEPolynomial.h"
@@ -25,14 +26,14 @@ HSIESurface::HSIESurface(unsigned int in_order,
     std::map<dealii::Triangulation<2, 3>::cell_iterator,
              dealii::Triangulation<3, 3>::face_iterator>
         in_assoc)
-    : b_id(in_boundary_id),
+    :
+    order(in_order), b_id(in_boundary_id),
       dof_h_nedelec(in_surface_triangulation),
       dof_h_q(in_surface_triangulation),
       Inner_Element_Order(in_inner_order),
       fe_nedelec(Inner_Element_Order),
       fe_q(Inner_Element_Order + 1),
       global_level(in_level) {
-  order = in_order;
   association = in_assoc;
   surface_triangulation.copy_triangulation(in_surface_triangulation);
   this->set_mesh_boundary_ids();
@@ -52,7 +53,8 @@ void HSIESurface::set_mesh_boundary_ids() {
         if(it->at_boundary()) {
             for (unsigned int face = 0; face < GeometryInfo<2>::faces_per_cell; ++face) {
                 if (it->face(face)->at_boundary()) {
-                    Point<2> c = it->face(face)->center();
+          dealii::Point<2, double> c;
+          c = it->face(face)->center();
                     x.push_back(c[0]);
                     y.push_back(c[1]);
                 }
@@ -66,25 +68,31 @@ void HSIESurface::set_mesh_boundary_ids() {
     double y_min = *min_element(y.begin(), y.end());
     it = this->surface_triangulation.begin_active();
     while(it != this->surface_triangulation.end()){
-        if(it->at_boundary()){
-            for (unsigned int face = 0; face < GeometryInfo<2>::faces_per_cell; ++face) {
-                Point<2> center = it->face(face)->center();
-                if (std::abs(center[0] - x_min) < 0.0001) {
-                    it->face(face)->set_all_boundary_ids(edge_to_boundary_id[this->b_id][0]);
-                }
-                if (std::abs(center[0] - x_max) < 0.0001) {
-                    it->face(face)->set_all_boundary_ids(edge_to_boundary_id[this->b_id][1]);
-                }
-                if (std::abs(center[1] - y_min) < 0.0001) {
-                    it->face(face)->set_all_boundary_ids(edge_to_boundary_id[this->b_id][2]);
-                }
-                if (std::abs(center[1] - y_max) < 0.0001) {
-                    it->face(face)->set_all_boundary_ids(edge_to_boundary_id[this->b_id][3]);
-                }
-            }
+    if (it->at_boundary()) {
+      for (unsigned int face = 0; face < GeometryInfo<2>::faces_per_cell;
+          ++face) {
+        Point<2, double> center;
+        center = it->face(face)->center();
+        if (std::abs(center[0] - x_min) < 0.0001) {
+          it->face(face)->set_all_boundary_ids(
+              edge_to_boundary_id[this->b_id][0]);
         }
-        ++it;
+        if (std::abs(center[0] - x_max) < 0.0001) {
+          it->face(face)->set_all_boundary_ids(
+              edge_to_boundary_id[this->b_id][1]);
+        }
+        if (std::abs(center[1] - y_min) < 0.0001) {
+          it->face(face)->set_all_boundary_ids(
+              edge_to_boundary_id[this->b_id][2]);
+        }
+        if (std::abs(center[1] - y_max) < 0.0001) {
+          it->face(face)->set_all_boundary_ids(
+              edge_to_boundary_id[this->b_id][3]);
+        }
+        }
     }
+    ++it;
+  }
 }
 
 void HSIESurface::compute_edge_ownership_object(Parameters params) {
@@ -202,50 +210,57 @@ std::vector<DofData> HSIESurface::get_dof_data_for_cell(
 void HSIESurface::make_hanging_node_constraints(
     dealii::AffineConstraints<double> *in_constraints,
     dealii::IndexSet global_indices) {
-  dealii::AffineConstraints nedelec_base_constraints =
-      new dealii::AffineConstraints();
-  dealii::AffineConstraints q_base_constraints =
-      new dealii::AffineConstraints();
+  dealii::AffineConstraints<double> *nedelec_base_constraints =
+      new dealii::AffineConstraints<double>(
+          this->dof_h_nedelec.locally_owned_dofs());
+  dealii::AffineConstraints<double> *q_base_constraints =
+      new dealii::AffineConstraints<double>(
+      this->dof_h_q.locally_owned_dofs());
   dealii::DoFTools::make_hanging_node_constraints(this->dof_h_nedelec,
-      nedelec_base_constraints);
+      *nedelec_base_constraints);
   dealii::DoFTools::make_hanging_node_constraints(this->dof_h_nedelec,
-      q_base_constraints);
+      *q_base_constraints);
 
   for (unsigned int i = 0; i < dof_h_nedelec.n_dofs(); i++) {
-    if (nedelec_base_constraints.is_constrained(i)) {
-      auto constraints = nedelec_base_constraints.get_constraint_entries(i);
+    if (nedelec_base_constraints->is_constrained(i)) {
+      auto constraints =
+          nedelec_base_constraints->get_constraint_entries(i);
       std::vector<DofData> related_hsie_dofs =
           this->get_dof_data_for_base_dof_nedelec(i);
       std::vector<std::vector<DofData>> constraint_related_hsie_dofs;
       for (unsigned int c = 0; c < constraints->size(); c++) {
         constraint_related_hsie_dofs[c] =
-            this->get_dof_data_for_base_dof_nedelec(constraints[c].first);
+            this->get_dof_data_for_base_dof_nedelec(
+                constraints->operator [](c).first);
       }
+
       for (unsigned int n_dof = 0; n_dof < related_hsie_dofs.size(); n_dof++) {
         in_constraints->add_line(related_hsie_dofs[n_dof].global_index);
-        for (unsigned int j = 0; j < constraints.size(); j++) {
+        for (unsigned int j = 0; j < constraints->size(); j++) {
           in_constraints->add_entry(related_hsie_dofs[n_dof].global_index,
-              constraints[j].second);
+              constraints->operator [](j).first,
+              constraints->operator [](j).second);
         }
       }
     }
   }
 
   for (unsigned int i = 0; i < dof_h_q.n_dofs(); i++) {
-    if (q_base_constraints.is_constrained(i)) {
-      auto constraints = q_base_constraints.get_constraint_entries(i);
+    if (q_base_constraints->is_constrained(i)) {
+      auto constraints = q_base_constraints->get_constraint_entries(i);
       std::vector<DofData> related_hsie_dofs =
           this->get_dof_data_for_base_dof_q(i);
       std::vector<std::vector<DofData>> constraint_related_hsie_dofs;
       for (unsigned int c = 0; c < constraints->size(); c++) {
         constraint_related_hsie_dofs[c] = this->get_dof_data_for_base_dof_q(
-            constraints[c].first);
+            constraints->operator[](c).first);
       }
       for (unsigned int n_dof = 0; n_dof < related_hsie_dofs.size(); n_dof++) {
         in_constraints->add_line(related_hsie_dofs[n_dof].global_index);
-        for (unsigned int j = 0; j < constraints.size(); j++) {
+        for (unsigned int j = 0; j < constraints->size(); j++) {
           in_constraints->add_entry(related_hsie_dofs[n_dof].global_index,
-              constraints[j].second);
+              constraints->operator [](j).first,
+              constraints->operator [](j).second);
         }
       }
     }
@@ -253,24 +268,24 @@ void HSIESurface::make_hanging_node_constraints(
 }
 
 std::vector<DofData> HSIESurface::get_dof_data_for_base_dof_nedelec(
-    unsigned int index) {
+    unsigned int in_index) {
   std::vector<DofData> ret;
   for (unsigned int index = 0; index < this->edge_dof_data.size(); index++) {
-    if ((this->edge_dof_data[index].base_dof_index == index)
+    if ((this->edge_dof_data[index].base_dof_index == in_index)
         && (this->edge_dof_data[index].type != DofType::RAY
             && this->edge_dof_data[index].type != DofType::IFFb)) {
       ret.push_back(this->edge_dof_data[index]);
     }
   }
   for (unsigned int index = 0; index < this->vertex_dof_data.size(); index++) {
-    if ((this->vertex_dof_data[index].base_dof_index == index)
+    if ((this->vertex_dof_data[index].base_dof_index == in_index)
         && (this->vertex_dof_data[index].type != DofType::RAY
             && this->vertex_dof_data[index].type != DofType::IFFb)) {
       ret.push_back(this->vertex_dof_data[index]);
     }
   }
   for (unsigned int index = 0; index < this->face_dof_data.size(); index++) {
-    if ((this->face_dof_data[index].base_dof_index == index)
+    if ((this->face_dof_data[index].base_dof_index == in_index)
         && (this->face_dof_data[index].type != DofType::RAY
             && this->face_dof_data[index].type != DofType::IFFb)) {
       ret.push_back(this->face_dof_data[index]);
@@ -280,24 +295,24 @@ std::vector<DofData> HSIESurface::get_dof_data_for_base_dof_nedelec(
 }
 
 std::vector<DofData> HSIESurface::get_dof_data_for_base_dof_q(
-    unsigned int index) {
+    unsigned int in_index) {
   std::vector<DofData> ret;
   for (unsigned int index = 0; index < this->edge_dof_data.size(); index++) {
-    if ((this->edge_dof_data[index].base_dof_index == index)
+    if ((this->edge_dof_data[index].base_dof_index == in_index)
         && (this->edge_dof_data[index].type == DofType::RAY
             || this->edge_dof_data[index].type == DofType::IFFb)) {
       ret.push_back(this->edge_dof_data[index]);
     }
   }
   for (unsigned int index = 0; index < this->vertex_dof_data.size(); index++) {
-    if ((this->vertex_dof_data[index].base_dof_index == index)
+    if ((this->vertex_dof_data[index].base_dof_index == in_index)
         && (this->vertex_dof_data[index].type == DofType::RAY
             || this->vertex_dof_data[index].type == DofType::IFFb)) {
       ret.push_back(this->vertex_dof_data[index]);
     }
   }
   for (unsigned int index = 0; index < this->face_dof_data.size(); index++) {
-    if ((this->face_dof_data[index].base_dof_index == index)
+    if ((this->face_dof_data[index].base_dof_index == in_index)
         && (this->face_dof_data[index].type == DofType::RAY
             || this->face_dof_data[index].type == DofType::IFFb)) {
       ret.push_back(this->face_dof_data[index]);
@@ -714,17 +729,15 @@ void HSIESurface::register_new_edge_dofs(
 void HSIESurface::register_new_surface_dofs(
     dealii::DoFHandler<2>::active_cell_iterator cell_nedelec,
     dealii::DoFHandler<2>::active_cell_iterator cell_q) {
-  unsigned int ret = 0;
   const unsigned int INNER_REAL_NEDELEC_DOFS_PER_FACE =
       fe_nedelec.dofs_per_cell -
       dealii::GeometryInfo<2>::faces_per_cell * fe_nedelec.dofs_per_face;
 
-  ret = INNER_REAL_NEDELEC_DOFS_PER_FACE * (order + 2) * 3;
-
   const int max_hsie_order = order;
   std::vector<unsigned int> surface_dofs(fe_nedelec.dofs_per_cell);
   cell_nedelec->get_dof_indices(surface_dofs);
-  IndexSet surf_dofs(MAX_DOF_NUMBER), edge_dofs(MAX_DOF_NUMBER);
+  IndexSet surf_dofs(MAX_DOF_NUMBER);
+  IndexSet edge_dofs(MAX_DOF_NUMBER);
   for (unsigned int i = 0; i < surface_dofs.size(); i++) {
     surf_dofs.add_index(surface_dofs[i]);
   }
@@ -1038,13 +1051,13 @@ unsigned int HSIESurface::get_dof_count_by_boundary_id(
             const unsigned int second_index = it2->face(edge)->vertex_index(1);
             auto search = find(vertex_indices.begin(), vertex_indices.end(),
                 first_index);
-            if (!search == vertex_indices.end()) {
+            if (search != vertex_indices.end()) {
               ret += this->compute_dofs_per_vertex();
               vertex_indices.push_back(first_index);
             }
             search = find(vertex_indices.begin(), vertex_indices.end(),
                 second_index);
-            if (!search == vertex_indices.end()) {
+            if (search != vertex_indices.end()) {
               ret += this->compute_dofs_per_vertex();
               vertex_indices.push_back(second_index);
             }

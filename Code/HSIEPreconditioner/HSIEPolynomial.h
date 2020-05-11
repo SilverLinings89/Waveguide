@@ -6,7 +6,9 @@
 #define WAVEGUIDEPROBLEM_HSIEPOLYNOMIAL_H
 
 #include <deal.II/base/point.h>
+#include <deal.II/lac/full_matrix.h>
 #include "DofData.h"
+#include <complex>
 
 class HSIEPolynomial {
  public:
@@ -25,7 +27,7 @@ class HSIEPolynomial {
   static HSIEPolynomial PhiJ(int j, std::complex<double> k0);
 
   HSIEPolynomial(unsigned int, std::complex<double>);
-  // HSIEPolynomial(DofData, std::complex<double>);
+  HSIEPolynomial(DofData&, std::complex<double>);
   HSIEPolynomial(std::vector<std::complex<double>> in_a,
                  std::complex<double> k0);
 

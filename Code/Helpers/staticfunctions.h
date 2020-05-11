@@ -9,10 +9,8 @@
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/lac/affine_constraints.h>
 #include <fstream>
-#include "../Core/NumericProblem.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
-
-using namespace dealii;
+#include "./Parameters.h"
 
 extern std::string solutionpath;
 extern std::ofstream log_stream;

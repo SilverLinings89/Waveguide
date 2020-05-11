@@ -69,11 +69,10 @@
 #include "../Helpers/Structs.h"
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/table_handler.h>
+#include "GlobalObjects.h"
 
 using namespace dealii;
 
-extern Parameters GlobalParams;
-extern GeometryManager Geometry;
 extern ModeManager ModeMan;
 extern dealii::ConvergenceTable Convergence_Table;
 extern dealii::TableHandler Optimization_Steps;

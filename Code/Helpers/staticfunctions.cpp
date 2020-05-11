@@ -20,18 +20,8 @@
 
 using namespace dealii;
 
-std::string solutionpath = "";
-std::ofstream log_stream;
-std::string constraints_filename = "constraints.log";
-std::string assemble_filename = "assemble.log";
-std::string precondition_filename = "precondition.log";
-std::string solver_filename = "solver.log";
-std::string total_filename = "total.log";
-int StepsR = 10;
-int StepsPhi = 10;
-int alert_counter = 0;
-std::string input_file_name;
-SpaceTransformation *the_st = 0;
+extern Parameters GlobalParams;
+extern GeometryManager Geometry;
 
 void set_the_st(SpaceTransformation *in_st) { the_st = in_st; }
 
@@ -427,9 +417,6 @@ Parameters GetParameters() {
   ret.Index_in_y_direction =
       (ret.MPI_Rank % (ret.Blocks_in_x_direction * ret.Blocks_in_y_direction)) /
       ret.Blocks_in_z_direction;
-  GeometryManager temp;
-  temp.initialize(ret);
-  Geometry = temp;
   deallog.pop();
   ret.HSIE_SWEEPING_LEVEL = 1;
   return ret;

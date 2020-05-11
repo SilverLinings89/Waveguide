@@ -5,7 +5,8 @@
 #include "DOFManager.h"
 #include "NumericProblem.h"
 #include "mpi.h"
-
+#include "../HSIEPreconditioner/HSIESurface.h"
+#include "./GlobalObjects.h"
 using namespace dealii;
 
 void DOFManager::compute_and_send_x_dofs() {

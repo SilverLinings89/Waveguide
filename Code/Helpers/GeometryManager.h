@@ -14,7 +14,6 @@
 
 #include <deal.II/base/point.h>
 #include <utility>
-#include "Parameters.h"
 #include "Enums.h"
 
 class GeometryManager {
@@ -23,17 +22,17 @@ class GeometryManager {
 
   virtual ~GeometryManager();
 
-  void initialize(Parameters& parameters);
+  void initialize();
 
   std::pair<double, double> x_range;
   std::pair<double, double> y_range;
   std::pair<double, double> z_range;
 
-  std::pair<double, double> compute_x_range(Parameters& parameters);
+  std::pair<double, double> compute_x_range();
 
-  std::pair<double, double> compute_y_range(Parameters& parameters);
+  std::pair<double, double> compute_y_range();
 
-  std::pair<double, double> compute_z_range(Parameters& parameters);
+  std::pair<double, double> compute_z_range();
 
   void set_x_range(std::pair<double, double>);
 

@@ -9,9 +9,7 @@
 #include "../Core/DOFManager.h"
 #include "../Helpers/Parameters.h"
 #include "DofIndexData.h"
-#include "LocalProblem.h"
-
-using namespace dealii;
+class LocalProblem;
 
 class HierarchicalProblem {
  public:
@@ -34,17 +32,17 @@ class HierarchicalProblem {
   virtual unsigned int compute_lower_interface_dof_count();
   virtual unsigned int compute_upper_interface_dof_count();
 
-  virtual void solve() = 0;
-  virtual void initialize() = 0;
-  virtual void generateSparsityPattern() = 0;
-  virtual unsigned int compute_own_dofs() = 0;
+  virtual void solve();
+  virtual void initialize();
+  virtual void generate_sparsity_pattern();
+  virtual unsigned int compute_own_dofs();
 
   virtual void solve_inner();
   virtual void assemble();
   virtual void make_sparsity_pattern();
   virtual void initialize_index_sets();
-  virtual void apply_sweep(LinearAlgebra::distributed::Vector<double>);
-  virtual IndexSet get_owned_dofs_for_level(unsigned int level);
+  virtual void apply_sweep(dealii::LinearAlgebra::distributed::Vector<double>);
+  virtual dealii::IndexSet get_owned_dofs_for_level(unsigned int level);
   virtual LocalProblem* get_local_problem();
 };
 

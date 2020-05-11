@@ -3,22 +3,20 @@
 //
 
 #include "LocalProblem.h"
-#include "../Helpers/Parameters.h"
 
 LocalProblem::LocalProblem(unsigned int , unsigned int global_level,
     DOFManager *dof_manager) :
     HierarchicalProblem(0, global_level, dof_manager) {
 }
 
-void LocalProblem::compute_level_dofs_total() {}
-
 void LocalProblem::solve() {}
 
 void LocalProblem::initialize() {}
 
-void LocalProblem::generateSparsityPattern() {}
+void LocalProblem::generate_sparsity_pattern() {
+}
 
-IndexSet LocalProblem::get_owned_dofs_for_level(unsigned int level) {
+dealii::IndexSet LocalProblem::get_owned_dofs_for_level(unsigned int level) {
   unsigned int n_owned_dofs = compute_own_dofs();
   if (level >= 2) {
     n_owned_dofs += 1;  // TODO: implement this.
@@ -26,7 +24,7 @@ IndexSet LocalProblem::get_owned_dofs_for_level(unsigned int level) {
   if (level >= 1) {
     n_owned_dofs += 1; // TODO: implement this.
   }
-  return IndexSet(n_owned_dofs);
+  return dealii::IndexSet(n_owned_dofs);
 }
 
 LocalProblem* LocalProblem::get_local_problem() {

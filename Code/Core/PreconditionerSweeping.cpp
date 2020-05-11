@@ -14,7 +14,7 @@
 #include <deal.II/lac/trilinos_vector.h>
 
 #include "PreconditionerSweeping.h"
-
+#include "./GlobalObjects.h"
 using namespace dealii;
 
 dealii::SolverControl s(10, 1.e-10, false, false);

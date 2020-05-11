@@ -5,20 +5,9 @@
 #ifndef WAVEGUIDEPROBLEM_DOFDATA_H
 #define WAVEGUIDEPROBLEM_DOFDATA_H
 
-#include <deal.II/dofs/dof_handler.h>
-#include <deal.II/dofs/dof_renumbering.h>
-#include <deal.II/dofs/dof_tools.h>
-#include <deal.II/fe/fe_nedelec.h>
-#include <deal.II/fe/fe_q.h>
-#include <deal.II/fe/fe_system.h>
-#include <deal.II/grid/tria.h>
-
-#include <utility>
-
 #include "../Helpers/Enums.h"
-#include "HSIEPolynomial.h"
 
-class DofData {
+struct DofData {
   DofType type;
   int hsie_order;
   int inner_order;
@@ -27,9 +16,7 @@ class DofData {
   unsigned int global_index;
   bool got_base_dof_index;
   unsigned int
-      base_dof_index;  // The basis functions require either an edge or hat
-                       // function for computation of some components. This
-                       // value names the exact number of that dof.
+      base_dof_index;
   std::string base_structure_id_face;
   unsigned int base_structure_id_non_face;
 
@@ -55,12 +42,9 @@ class DofData {
   }
 
   void update_nodal_basis_flag() {
-    this->nodal_basis =
-        (this->type == DofType::RAY || this->type == DofType::IFFb ||
-         this->type == DofType::SEGMENTb);
+    this->nodal_basis = (this->type == DofType::RAY
+        || this->type == DofType::IFFb || this->type == DofType::SEGMENTb);
   }
 };
-
-
 
 #endif  // WAVEGUIDEPROBLEM_DOFDATA_H

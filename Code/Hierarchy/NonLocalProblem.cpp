@@ -36,10 +36,6 @@ void NonLocalProblem::initialize_MPI_communicator_for_level() {
 
 }
 
-void NonLocalProblem::compute_level_dofs_total() {
-
-}
-
 void NonLocalProblem::solve() {
 
 }
