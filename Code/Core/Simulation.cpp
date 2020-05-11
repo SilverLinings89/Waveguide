@@ -21,13 +21,19 @@ Simulation::Simulation() {
 
 Simulation::~Simulation() = default;
 
-void Simulation::Run() {
-  CreateOutputDirectory();
-  PrepareTransformedGeometry();
+void Simulation::prepare() {
+  create_output_directory();
+  prepare_transformed_geometry();
+  mainProblem = new NonLocalProblem(GlobalParams.HSIE_SWEEPING_LEVEL,
+      GlobalParams.HSIE_SWEEPING_LEVEL);
+  mainProblem->initialize();
 }
 
+void Simulation::run() {
+  mainProblem->solve();
+}
 
-void Simulation::CreateOutputDirectory() {
+void Simulation::create_output_directory() {
   char *pPath;
   pPath = getenv("WORK");
   bool seperate_solutions = (pPath != nullptr);
@@ -82,5 +88,6 @@ void Simulation::CreateOutputDirectory() {
   deallog.attach(log_stream);
 }
 
-void Simulation::PrepareTransformedGeometry() {}
+void Simulation::prepare_transformed_geometry() {
+}
 

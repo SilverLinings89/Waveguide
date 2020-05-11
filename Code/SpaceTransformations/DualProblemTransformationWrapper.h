@@ -329,15 +329,6 @@ class DualProblemTransformationWrapper : public SpaceTransformation {
    * Console output of the current Waveguide Structure.
    */
   void Print() const;
-
-  std::complex<double> evaluate_for_z_with_sum(double, double,
-                                               NumericProblem *);
-
-  std::complex<double> gauss_product_2D_sphere(double z, int n, double R,
-                                               double Xc, double Yc,
-                                               NumericProblem *in_w,
-                                               Evaluation_Metric in_m);
-
   SpaceTransformation *st;
 };
 

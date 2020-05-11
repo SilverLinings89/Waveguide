@@ -11,14 +11,18 @@
 
 class NonLocalProblem: public HierarchicalProblem {
   unsigned int compute_own_dofs();
-  MPI_Comm level_communicator;
 
   void initialize_MPI_communicator_for_level();
 
  public:
-  NonLocalProblem(unsigned int, unsigned int, DOFManager*, MPI_Comm);
+  NonLocalProblem(unsigned int, unsigned int);
+  ~NonLocalProblem() override;
 
-  LocalProblem* get_local_problem() override;
+  unsigned int compute_lower_interface_dof_count() override;
+
+  unsigned int compute_upper_interface_dof_count() override;
+
+  void assemble() override;
 
   void solve() override;
 
@@ -28,8 +32,11 @@ class NonLocalProblem: public HierarchicalProblem {
 
   void initialize_index_sets() override;
 
+  void apply_sweep(dealii::LinearAlgebra::distributed::Vector<double>) override;
+
   dealii::IndexSet get_owned_dofs_for_level(unsigned int level) override;
 
+  LocalProblem* get_local_problem() override;
 };
 
 #endif  // WAVEGUIDEPROBLEM_NONLOCALPROBLEM_H

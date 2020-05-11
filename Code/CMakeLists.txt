@@ -18,13 +18,6 @@ ADD_LIBRARY(Code
         Helpers/staticfunctions.cpp
         Helpers/ShapeDescription.cpp
         MeshGenerators/SquareMeshGenerator.cpp
-        OptimizationAlgorithm/Optimization1D.cpp
-        OptimizationAlgorithm/OptimizationAlgorithm.cpp
-        OptimizationAlgorithm/OptimizationCG.cpp
-        OptimizationAlgorithm/OptimizationSteepestDescent.cpp
-        OptimizationStrategies/AdjointOptimization.cpp
-        OptimizationStrategies/FDOptimization.cpp
-        OptimizationStrategies/Optimization.cpp
         SpaceTransformations/DualProblemTransformationWrapper.cpp
         SpaceTransformations/HomogenousTransformationRectangular.cpp
         SpaceTransformations/InhomogenousTransformationRectangular.cpp
@@ -40,7 +33,12 @@ ADD_LIBRARY(Code
         Hierarchy/LocalProblem.cpp 
         Hierarchy/LocalProblem.h
         Hierarchy/MPICommunicator.cpp
-        Hierarchy/MPICommunicator.h)
+        Hierarchy/MPICommunicator.h
+        Hierarchy/DofIndexData.h
+        Hierarchy/DofIndexData.cpp
+        Hierarchy/LevelDofIndexData.h
+        Hierarchy/LevelDofIndexData.cpp
+        )
 
 DEAL_II_SETUP_TARGET(Code)
 	

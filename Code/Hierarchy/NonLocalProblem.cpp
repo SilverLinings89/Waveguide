@@ -8,31 +8,24 @@
 #include "../Core/NumericProblem.h"
 
 NonLocalProblem::NonLocalProblem(unsigned int local_level,
-    unsigned int global_level, DOFManager *dof_manager, MPI_Comm communicator) :
-    HierarchicalProblem(local_level, global_level, dof_manager) {
-    const unsigned int diff = global_level - local_level;
-    level_communicator = MPI_COMM_WORLD;
-    if(diff == 3) {
-    MPI_Comm_split(communicator, GlobalParams.Index_in_x_direction,
-        GlobalParams.MPI_Rank, &level_communicator);
-    }
-    if(diff == 2) {
-    MPI_Comm_split(communicator, GlobalParams.Index_in_y_direction,
-        GlobalParams.MPI_Rank, &level_communicator);
-    }
-    if(diff == 1) {
-    MPI_Comm_split(communicator, GlobalParams.Index_in_z_direction,
-        GlobalParams.MPI_Rank, &level_communicator);
-    }
+    unsigned int global_level) :
+    HierarchicalProblem(local_level, global_level) {
     if(local_level > 1) {
-    child = new NonLocalProblem(local_level - 1, global_level, dof_manager,
-        communicator);
+    child = new NonLocalProblem(local_level - 1, global_level);
     } else {
-    child = new LocalProblem(local_level - 1, global_level, dof_manager);
+    child = new LocalProblem(local_level - 1, global_level);
     }
 }
 
+NonLocalProblem::~NonLocalProblem() {
+
+}
+
 void NonLocalProblem::initialize_MPI_communicator_for_level() {
+
+}
+
+void NonLocalProblem::assemble() {
 
 }
 
@@ -59,3 +52,24 @@ IndexSet NonLocalProblem::get_owned_dofs_for_level(unsigned int level) {
 LocalProblem* NonLocalProblem::get_local_problem() {
   return child->get_local_problem();
 }
+
+unsigned int NonLocalProblem::compute_own_dofs() {
+  // TODO implement compuatation of the number of local degrees of freedom. It is always at least the number of dofs from the inner dof handler + HSIE dofs for all sides where HSIE are applied.
+  return 0;
+}
+
+unsigned int NonLocalProblem::compute_lower_interface_dof_count() {
+  // TODO implement this. Use the HSIE-suface in that direction and take the number of non-hsie dofs.
+  return 0;
+}
+
+unsigned int NonLocalProblem::compute_upper_interface_dof_count() {
+  // TODO implement this. Use the HSIE-suface in that direction and take the number of non-hsie dofs.
+  return 0;
+}
+
+void NonLocalProblem::apply_sweep(
+    dealii::LinearAlgebra::distributed::Vector<double>) {
+
+}
+

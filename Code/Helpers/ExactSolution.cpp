@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "../Core/NumericProblem.h"
+#include "../Core/GlobalObjects.h"
 #include "PointVal.h"
 
 double ExactSolution::value(const Point<3> &in_p,
@@ -105,7 +106,7 @@ double ExactSolution::value(const Point<3> &in_p,
       return 0.0;
     }
   } else {
-    return ModeMan.get_input_component(component, p, 0);
+    return GlobalModeManager.get_input_component(component, p, 0);
   }
 }
 
@@ -190,8 +191,6 @@ void ExactSolution::vector_value(const Point<3> &in_p,
           values[0 + komp] = entr.real();
           values[3 + komp] = entr.imag();
         }
-        // values[0] *= -1.0;
-        // values[3] *= -1.0;
         return;
       }
     } else {
@@ -202,7 +201,7 @@ void ExactSolution::vector_value(const Point<3> &in_p,
     }
   } else {
     for (unsigned int c = 0; c < 6; ++c)
-      values[c] = ModeMan.get_input_component(c, p, 0);
+      values[c] = GlobalModeManager.get_input_component(c, p, 0);
   }
 }
 
@@ -211,7 +210,10 @@ Tensor<1, 3, std::complex<double>> ExactSolution::curl(
   const double h = 0.0001;
   Tensor<1, 3, std::complex<double>> ret;
   if (is_rectangular) {
-    Vector<double> dxF, dyF, dzF, val;
+    Vector<double> dxF;
+    Vector<double> dyF;
+    Vector<double> dzF;
+    Vector<double> val;
     dxF.reinit(6, false);
     dyF.reinit(6, false);
     dzF.reinit(6, false);
@@ -311,13 +313,12 @@ ExactSolution::ExactSolution(bool in_rectangular, bool in_dual)
       for (unsigned int j = 0; j < cnt; ++j) {
         getline(input2, line2);
         std::vector<std::string> ls = split(line2);
-        double d1, d2, d3, d4, d5, d6;
-        d1 = scientific_string_to_double(ls[4]);
-        d2 = scientific_string_to_double(ls[5]);
-        d3 = scientific_string_to_double(ls[3]);
-        d4 = scientific_string_to_double(ls[7]);
-        d5 = scientific_string_to_double(ls[8]);
-        d6 = scientific_string_to_double(ls[6]);
+        double d1 = scientific_string_to_double(ls[4]);
+        double d2 = scientific_string_to_double(ls[5]);
+        double d3 = scientific_string_to_double(ls[3]);
+        double d4 = scientific_string_to_double(ls[7]);
+        double d5 = scientific_string_to_double(ls[8]);
+        double d6 = scientific_string_to_double(ls[6]);
         if (d1 > max) max = d1;
         if (d2 > max) max = d2;
         if (d3 > max) max = d3;

@@ -332,19 +332,6 @@ class SpaceTransformation {
    */
   virtual void Print() const = 0;
 
-  std::complex<double> evaluate_for_z_with_sum(double, Evaluation_Domain,
-                                               Evaluation_Metric,
-                                               NumericProblem *);
-
-  std::complex<double> gauss_product_2D_sphere(double z, int n, double R,
-                                               double Xc, double Yc,
-                                               NumericProblem *in_w,
-                                               Evaluation_Metric in_m);
-
-  std::complex<double> integrate_Waveguide_Core_2D(double z, int n,
-                                                   NumericProblem *in_w,
-                                                   Evaluation_Metric in_m);
-
   const int rank;
 };
 

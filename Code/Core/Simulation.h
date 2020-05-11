@@ -13,21 +13,25 @@
 
 #include "../Helpers/GeometryManager.h"
 #include "../Helpers/Parameters.h"
+#include "../Hierarchy/NonLocalProblem.h"
 
 class Simulation {
+  NonLocalProblem *mainProblem;
 
  public:
   Simulation();
 
   virtual ~Simulation();
 
-  void Run();
+  void prepare();
 
-  void OverwriteParametersFromConsole();
+  void run();
 
-  void PrepareTransformedGeometry();
+  void overwrite_parameters_from_console();
 
-  void CreateOutputDirectory();
+  void prepare_transformed_geometry();
+
+  void create_output_directory();
 };
 
 #endif /* CODE_CORE_SIMULATION_H_ */

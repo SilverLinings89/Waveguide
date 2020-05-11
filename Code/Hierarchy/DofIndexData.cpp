@@ -6,7 +6,8 @@
  */
 
 #include "DofIndexData.h"
-#include "../Core/NumericProblem.h"
+#include "../Core/GlobalObjects.h"
+#include "LevelDofIndexData.h"
 
 DofIndexData::DofIndexData() {
   for (unsigned int i = 0; i < GlobalParams.HSIE_SWEEPING_LEVEL; i++) {
@@ -25,6 +26,7 @@ DofIndexData::DofIndexData() {
 }
 
 DofIndexData::~DofIndexData() {
+  delete[] isSurfaceNeighbor;
 }
 
 void DofIndexData::communicateSurfaceDofs() {

@@ -17,7 +17,7 @@ public:
   std::vector<LevelDofIndexData> indexCountsByLevel;
 
   DofIndexData();
-  virtual ~DofIndexData();
+  ~DofIndexData();
 
   void communicateSurfaceDofs();
   void initialize();

@@ -177,12 +177,6 @@ DualProblemTransformationWrapper::get_Preconditioner_Tensor(Point<3> &position,
   return ret;
 }
 
-std::complex<double> DualProblemTransformationWrapper::gauss_product_2D_sphere(
-    double z, int n, double R, double Xc, double Yc, NumericProblem *in_w,
-    Evaluation_Metric in_m) {
-  return st->gauss_product_2D_sphere(z, n, R, Xc, Yc, in_w, in_m);
-}
-
 void DualProblemTransformationWrapper::estimate_and_initialize() {
   st->estimate_and_initialize();
   return;
