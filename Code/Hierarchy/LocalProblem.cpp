@@ -85,7 +85,14 @@ void LocalProblem::generate_sparsity_pattern() {
 }
 
 unsigned int LocalProblem::compute_own_dofs() {
-  // Todo this is the number of inner dofs + HSIE dofs for every direction.
+  unsigned int ret = 0;
+  ret += base_problem.dof_handler.n_dofs();
+  ret += surface_0->dof_counter;
+  ret += surface_1->dof_counter;
+  ret += surface_2->dof_counter;
+  ret += surface_3->dof_counter;
+  ret += surface_4->dof_counter;
+  ret += surface_5->dof_counter;
   return 0;
 }
 
