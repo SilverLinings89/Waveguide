@@ -22,7 +22,7 @@ public:
   HSIESurface *surface_4;
   HSIESurface *surface_5;
 
-  LocalProblem(unsigned int, unsigned int);
+  LocalProblem();
   ~LocalProblem() override;
 
   unsigned int compute_lower_interface_dof_count() override;

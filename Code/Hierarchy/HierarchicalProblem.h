@@ -16,13 +16,12 @@ class HierarchicalProblem {
   bool is_dof_manager_set;
   bool has_child;
   HierarchicalProblem* child;
-  const unsigned int global_level;
   const unsigned int local_level;
   DOFManager* dof_manager;
   DofIndexData indices;
   dealii::TrilinosWrappers::SparseMatrix matrix;
 
-  HierarchicalProblem(unsigned int in_own_level, unsigned int in_global_level);
+  HierarchicalProblem(unsigned int in_own_level);
   virtual ~HierarchicalProblem() =0;
 
   virtual unsigned int compute_lower_interface_dof_count()=0;
@@ -39,6 +38,9 @@ class HierarchicalProblem {
       dealii::LinearAlgebra::distributed::Vector<double>)=0;
   virtual LocalProblem* get_local_problem()=0;
   void setup_dof_manager(DOFManager *in_dof_manager);
+  void constrain_identical_dof_sets(std::vector<unsigned int> *set_one,
+      std::vector<unsigned int> *set_two,
+      dealii::AffineConstraints<double> *affine_constraints);
 };
 
 #endif  // WAVEGUIDEPROBLEM_HIERARCHICALPROBLEM_H

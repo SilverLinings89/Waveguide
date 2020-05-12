@@ -10,13 +10,20 @@
 #include "./LocalProblem.h"
 
 class NonLocalProblem: public HierarchicalProblem {
-  unsigned int compute_own_dofs();
-
-  void initialize_MPI_communicator_for_level();
+private:
+  SweepingDirection sweeping_direction;
+  bool *is_hsie_surface;
+  dealii::TrilinosWrappers::SparseMatrix system_matrix;
+  dealii::IndexSet local_indices;
+  unsigned int n_own_dofs;
 
  public:
-  NonLocalProblem(unsigned int, unsigned int);
+  NonLocalProblem(unsigned int);
   ~NonLocalProblem() override;
+
+  unsigned int compute_own_dofs();
+
+  void initialize_own_dofs();
 
   unsigned int compute_lower_interface_dof_count() override;
 

@@ -23,11 +23,12 @@ inline unsigned int get_index_for_direction_index(int in_direction) {
 }
 
 MPICommunicator::MPICommunicator() {
-  // start with MPI Comm world and work the way down.
+
 
 }
 
 void MPICommunicator::initialize() {
+  // start with MPI Comm world and work the way down.
   int local_level = 1;
   MPI_Comm local = MPI_COMM_WORLD;
   communicators_by_level.push_back(MPI_COMM_WORLD);
@@ -39,6 +40,7 @@ void MPICommunicator::initialize() {
     local_level++;
     communicators_by_level.push_back(new_com);
   }
+  std::reverse(communicators_by_level.begin(), communicators_by_level.end());
 }
 
 std::pair<bool, unsigned int> MPICommunicator::get_neighbor_for_interface(

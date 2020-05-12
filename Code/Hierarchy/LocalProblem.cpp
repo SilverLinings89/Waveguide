@@ -5,8 +5,8 @@
 #include "LocalProblem.h"
 #include "../HSIEPreconditioner/HSIESurface.h"
 
-LocalProblem::LocalProblem(unsigned int, unsigned int global_level) :
-    HierarchicalProblem(0, global_level), base_problem() {
+LocalProblem::LocalProblem() :
+    HierarchicalProblem(0), base_problem() {
   base_problem.make_grid();
 
 }

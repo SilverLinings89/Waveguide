@@ -8,6 +8,10 @@
 #ifndef CODE_HELPERS_ENUMS
 #define CODE_HELPERS_ENUMS
 
+enum SweepingDirection {
+  X = 0, Y = 1, Z = 2
+};
+
 enum DofType {
   EDGE, SURFACE, RAY, IFFa, IFFb, SEGMENTa, SEGMENTb
 };
