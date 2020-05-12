@@ -34,8 +34,6 @@ class NonLocalProblem: public HierarchicalProblem {
 
   void apply_sweep(dealii::LinearAlgebra::distributed::Vector<double>) override;
 
-  dealii::IndexSet get_owned_dofs_for_level(unsigned int level) override;
-
   LocalProblem* get_local_problem() override;
 };
 

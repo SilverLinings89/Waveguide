@@ -37,7 +37,6 @@ class HierarchicalProblem {
   virtual void initialize_index_sets()=0;
   virtual void apply_sweep(
       dealii::LinearAlgebra::distributed::Vector<double>)=0;
-  virtual dealii::IndexSet get_owned_dofs_for_level(unsigned int level)=0;
   virtual LocalProblem* get_local_problem()=0;
   void setup_dof_manager(DOFManager *in_dof_manager);
 };

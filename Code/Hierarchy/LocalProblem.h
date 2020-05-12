@@ -14,6 +14,7 @@ class LocalProblem: public HierarchicalProblem {
 public:
 
   NumericProblem base_problem;
+  HSIESurface **surfaces;
   HSIESurface *surface_0;
   HSIESurface *surface_1;
   HSIESurface *surface_2;
@@ -41,8 +42,6 @@ public:
   void initialize_index_sets() override;
 
   void apply_sweep(dealii::LinearAlgebra::distributed::Vector<double>);
-
-  dealii::IndexSet get_owned_dofs_for_level(unsigned int level) override;
 
   LocalProblem* get_local_problem() override;
 };
