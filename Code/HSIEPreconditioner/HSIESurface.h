@@ -38,7 +38,7 @@ class HSIESurface {
   dealii::Triangulation<2> surface_triangulation;
   bool ** edge_ownership_by_level_and_id;
   std::vector<unsigned int> corner_cell_ids;
-
+  const double additional_coordinate;
 
  public:
   unsigned int dof_counter;
@@ -51,7 +51,8 @@ class HSIESurface {
               unsigned int in_inner_order, std::complex<double> k0,
               std::map<dealii::Triangulation<2, 3>::cell_iterator,
                        dealii::Triangulation<3, 3>::face_iterator>
-                  in_assoc);
+                  in_assoc,
+      double in_additional_coordinate);
   void identify_corner_cells();
   void compute_edge_ownership_object(Parameters params);
   std::vector<HSIEPolynomial> build_curl_term_q(unsigned int,
@@ -121,6 +122,8 @@ class HSIESurface {
       unsigned int base_dof_index);
   std::vector<DofData> get_dof_data_for_base_dof_q(unsigned int base_dof_index);
   unsigned int get_dof_count_by_boundary_id(unsigned int in_boundary_id);
+  std::vector<DofAssociation> get_dof_association();
+  dealii::Point<3> undo_transform(dealii::Point<2>);
 };
 
 

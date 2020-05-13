@@ -10,6 +10,16 @@
 
 #include <deal.II/base/index_set.h>
 
+struct DofAssociation {
+  bool is_edge;
+  unsigned int edge_index;
+  std::string face_index;
+  unsigned int dof_index_on_hsie_surface;
+  dealii::Point<3> base_point;
+  bool true_orientation;
+};
+
+
 struct DofCount {
   unsigned int owned = 0;
   unsigned int non_owned = 0;

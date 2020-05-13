@@ -25,7 +25,8 @@ HSIESurface::HSIESurface(unsigned int in_order,
     unsigned int in_inner_order, std::complex<double> in_k0,
     std::map<dealii::Triangulation<2, 3>::cell_iterator,
              dealii::Triangulation<3, 3>::face_iterator>
-        in_assoc)
+        in_assoc,
+    double in_additional_coordinate)
     :
     order(in_order), b_id(in_boundary_id),
       dof_h_nedelec(in_surface_triangulation),
@@ -33,7 +34,8 @@ HSIESurface::HSIESurface(unsigned int in_order,
       Inner_Element_Order(in_inner_order),
       fe_nedelec(Inner_Element_Order),
       fe_q(Inner_Element_Order + 1),
-      global_level(in_level) {
+      global_level(in_level), additional_coordinate(
+        in_additional_coordinate) {
   association = in_assoc;
   surface_triangulation.copy_triangulation(in_surface_triangulation);
   this->set_mesh_boundary_ids();
@@ -929,6 +931,88 @@ void HSIESurface::transform_coordinates_in_place(
       (*vector)[2] = temp;
       break;
   }
+}
+
+dealii::Point<3> HSIESurface::undo_transform(dealii::Point<2> inp) {
+  dealii::Point<3, double> ret;
+  ret[0] = inp[0];
+  ret[1] = inp[1];
+  ret[2] = additional_coordinate;
+  switch (b_id) {
+  case 0:
+    ret = Transform_5_to_0(ret);
+    break;
+  case 1:
+    ret = Transform_5_to_1(ret);
+    break;
+  case 2:
+    ret = Transform_5_to_2(ret);
+    break;
+  case 3:
+    ret = Transform_5_to_3(ret);
+    break;
+  case 4:
+    ret = Transform_5_to_4(ret);
+    break;
+  default:
+    break;
+  }
+  return ret;
+}
+
+bool is_oriented_positively(dealii::Point<3, double> in_p) {
+  return (in_p[0] + in_p[1] + in_p[2] > 0);
+}
+
+std::vector<DofAssociation> HSIESurface::get_dof_association() {
+  std::vector<DofAssociation> ret;
+
+  for (auto it = this->edge_dof_data.begin(); it != this->edge_dof_data.end();
+      it++) {
+    if (it->hsie_order == 0 && it->type == DofType::EDGE) {
+      DofAssociation new_item;
+      new_item.dof_index_on_hsie_surface = it->global_index;
+      new_item.edge_index = it->base_structure_id_non_face;
+      new_item.is_edge = true;
+
+      for (auto it_nedelec = dof_h_nedelec.begin(); it != dof_h_nedelec.end();
+          it++) {
+        for (unsigned int i = 0; i < 4; i++) {
+          if (it_nedelec->face_index(i) == new_item.edge_index) {
+            new_item.base_point = undo_transform(
+                it_nedelec->face(i)->center(false, false));
+            Point<2, double> test = it_nedelec->face(i)->vertex(1);
+            test[0] -= it_nedelec->face(i)->vertex(0)[0];
+            test[1] -= it_nedelec->face(i)->vertex(0)[1];
+            dealii::Point<3, double> tp = undo_transform(test);
+            new_item.true_orientation = is_oriented_positively(tp);
+            break;
+          }
+        }
+      }
+      ret.push_back(new_item);
+    }
+  }
+  for (auto it = this->face_dof_data.begin(); it != this->face_dof_data.end();
+      it++) {
+    if (it->hsie_order == 0 && it->type == DofType::SURFACE) {
+      DofAssociation new_item;
+      new_item.dof_index_on_hsie_surface = it->global_index;
+      new_item.face_index = it->base_structure_id_face;
+      new_item.is_edge = false;
+      for (auto it_nedelec = dof_h_nedelec.begin(); it != dof_h_nedelec.end();
+          it++) {
+        if (it_nedelec->id() == new_item.face_index) {
+          new_item.base_point = undo_transform(
+              it_nedelec->center(false, false));
+          new_item.true_orientation = false;
+          break;
+        }
+      }
+      ret.push_back(new_item);
+    }
+  }
+  return ret;
 }
 
 bool HSIESurface::check_dof_assignment_integrity() {
