@@ -14,8 +14,9 @@ private:
   SweepingDirection sweeping_direction;
   bool *is_hsie_surface;
   dealii::TrilinosWrappers::SparseMatrix system_matrix;
+  dealii::Vector<double> system_rhs;
   dealii::IndexSet local_indices;
-  unsigned int n_own_dofs;
+  dealii::SolverGMRES solver;
 
  public:
   NonLocalProblem(unsigned int);
@@ -23,7 +24,7 @@ private:
 
   unsigned int compute_own_dofs();
 
-  void initialize_own_dofs();
+  void initialize_own_dofs() override;
 
   unsigned int compute_lower_interface_dof_count() override;
 
@@ -31,7 +32,7 @@ private:
 
   void assemble() override;
 
-  void solve() override;
+  void solve(dealii::Vector<double> src, dealii::Vector<double> &dst) override;
 
   void initialize() override;
 
@@ -42,6 +43,8 @@ private:
   void apply_sweep(dealii::LinearAlgebra::distributed::Vector<double>) override;
 
   LocalProblem* get_local_problem() override;
+
+  void reinit();
 };
 
 #endif  // WAVEGUIDEPROBLEM_NONLOCALPROBLEM_H

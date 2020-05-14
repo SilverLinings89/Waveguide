@@ -10,7 +10,9 @@
 #include "../Core/DOFManager.h"
 #include "../Core/NumericProblem.h"
 
-class LocalProblem: public HierarchicalProblem {
+class LocalProblem: public HierarchicalProblem,
+    dealii::TrilinosWrappers::PreconditionBase {
+  using dealii::TrilinosWrappers::PreconditionBase::vmult;
 public:
 
   NumericProblem base_problem;
@@ -21,21 +23,29 @@ public:
   HSIESurface *surface_3;
   HSIESurface *surface_4;
   HSIESurface *surface_5;
+  dealii::SparseDirectUMFPACK solver;
 
   LocalProblem();
   ~LocalProblem() override;
+
+  virtual void vmult(dealii::TrilinosWrappers::MPI::Vector &dst,
+      const dealii::TrilinosWrappers::MPI::Vector &src) const;
 
   unsigned int compute_lower_interface_dof_count() override;
 
   unsigned int compute_upper_interface_dof_count() override;
 
-  void solve() override;
+  void solve(dealii::Vector<double> src, dealii::Vector<double> &dst) override;
 
   void initialize() override;
 
   void generate_sparsity_pattern() override;
 
   unsigned int compute_own_dofs() override;
+
+  void initialize_own_dofs() override;
+
+  void run();
 
   void assemble() override;
 

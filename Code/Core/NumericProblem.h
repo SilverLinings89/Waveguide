@@ -71,8 +71,6 @@
 #include <deal.II/base/table_handler.h>
 #include "GlobalObjects.h"
 
-using namespace dealii;
-
 /**
  * \class NumericProblem
  * \brief This class encapsulates all important mechanism for solving a FEM
@@ -274,25 +272,25 @@ class NumericProblem {
 
   SpaceTransformation *st;
 
-  FESystem<3> fe;
+  dealii::FESystem<3> fe;
 
-  Triangulation<3> triangulation;
+  dealii::Triangulation<3> triangulation;
 
-  FEValuesExtractors::Vector real;
-  FEValuesExtractors::Vector imag;
+  dealii::FEValuesExtractors::Vector real;
+  dealii::FEValuesExtractors::Vector imag;
 
-  SolverControl solver_control;
+  dealii::SolverControl solver_control;
 
-  AffineConstraints<double> cm;
-  SparsityPattern final_sparsity_pattern;
+  dealii::AffineConstraints<double> cm;
+  dealii::SparsityPattern final_sparsity_pattern;
   unsigned int n_dofs;
 
-  DoFHandler<3> dof_handler;
+  dealii::DoFHandler<3> dof_handler;
 
-  dealii::SparseMatrix<double> system_matrix;
+  dealii::TrilinosWrappers::SparseMatrix system_matrix;
   dealii::Vector<double> system_rhs;
 
-  IndexSet fixed_dofs;
+  dealii::IndexSet fixed_dofs;
 };
 
 #endif

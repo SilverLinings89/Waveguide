@@ -24,13 +24,12 @@ Simulation::~Simulation() = default;
 void Simulation::prepare() {
   create_output_directory();
   prepare_transformed_geometry();
-  mainProblem = new NonLocalProblem(GlobalParams.HSIE_SWEEPING_LEVEL,
-      GlobalParams.HSIE_SWEEPING_LEVEL);
+  mainProblem = new LocalProblem();
   mainProblem->initialize();
 }
 
 void Simulation::run() {
-  mainProblem->solve();
+  mainProblem->run();
 }
 
 void Simulation::create_output_directory() {

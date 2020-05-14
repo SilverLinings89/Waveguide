@@ -86,11 +86,29 @@ void NonLocalProblem::assemble() {
 
 }
 
-void NonLocalProblem::solve() {
+void NonLocalProblem::solve(dealii::Vector<double> src,
+    dealii::Vector<double> &dst) {
+  dealii::Vector<double> inputb(n_own_dofs);
+  for (unsigned int i = 0; i < n_own_dofs; i++) {
+    inputb[i] = src(i);
+  }
 
+  solver.solve(system_matrix, dst, system_rhs, this->child);
+
+  for (unsigned int i = 0; i < n_own_dofs; i++) {
+    dst[i] = inputb[i];
+  }
+}
+
+void NonLocalProblem::reinit() {
+  system_matrix = new dealii::TrilinosWrappers::SparseMatrix(local_indices,
+      GlobalMPI.communicators_by_level[local_level], 100);
+  system_rhs = new dealii::TrilinosWrappers::MPI::Vector(local_indices,
+      GlobalMPI.communicators_by_level[local_level]);
 }
 
 void NonLocalProblem::initialize() {
+  child->initialize();
   initialize_own_dofs();
   initialize_index_sets();
 }
@@ -102,6 +120,32 @@ void NonLocalProblem::generate_sparsity_pattern() {
 void NonLocalProblem::initialize_index_sets() {
   local_indices = dealii::Utilities::MPI::create_ascending_partitioning(
       GlobalMPI.communicators_by_level[local_level], n_own_dofs);
+  unsigned int ret =
+      this->get_local_problem()->base_problem.dof_handler.n_dofs()
+          + local_indices.nth_index_in_set(0);
+  surface_first_dofs.push_back(ret);
+  for (unsigned int i = 0; i < 6; i++) {
+    if (is_hsie_surface[i]) {
+      ret += this->get_local_problem()->surfaces[i]->dof_counter;
+    }
+    if (i != 5) {
+      surface_first_dofs.push_back(ret);
+    }
+  }
+  n_procs_in_sweep = dealii::Utilities::MPI::n_mpi_processes(
+      GlobalMPI.communicators_by_level[local_level]);
+  rank = dealii::Utilities::MPI::this_mpi_process(
+      GlobalMPI.communicators_by_level[local_level]);
+  unsigned int *all_dof_counts = new unsigned int[n_procs_in_sweep];
+  MPI_Allgather(&this->n_own_dofs, 1, MPI_UINT16_T, all_dof_counts,
+      n_procs_in_sweep, MPI_UINT16_T,
+      GlobalMPI.communicators_by_level[local_level]);
+  if (rank > 0) {
+    dofs_process_below = all_dof_counts[rank - 1];
+  }
+  if (rank + 1 < n_procs_in_sweep) {
+    dofs_process_above = all_dof_counts[rank + 1];
+  }
 }
 
 LocalProblem* NonLocalProblem::get_local_problem() {

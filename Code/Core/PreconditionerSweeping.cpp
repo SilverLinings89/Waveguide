@@ -17,8 +17,8 @@
 #include "./GlobalObjects.h"
 using namespace dealii;
 
-dealii::SolverControl s(10, 1.e-10, false, false);
-dealii::SparseDirectUMFPACK *solver = 0;
+// dealii::SolverControl s(10, 1.e-10, false, false);
+// dealii::SparseDirectUMFPACK *solver = 0;
 
 dealii::SparsityPattern off_diag_block_lower, off_diag_block_upper;
 

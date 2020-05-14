@@ -15,6 +15,16 @@ HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level) :
   dof_manager = nullptr;
   has_child = in_own_level > 0;
   child = nullptr;
+  matrix = nullptr;
+  n_own_dofs = 0;
+  first_own_index = 0;
+  for (unsigned int i = 0; i < 6; i++) {
+    surface_first_dofs.push_back(0);
+  }
+  dofs_process_above = 0;
+  dofs_process_below = 0;
+  rank = 0;
+  n_procs_in_sweep = 0;
 }
 
 void HierarchicalProblem::setup_dof_manager(DOFManager *in_dof_manager) {

@@ -39,12 +39,17 @@ class HSIESurface {
   bool ** edge_ownership_by_level_and_id;
   std::vector<unsigned int> corner_cell_ids;
   const double additional_coordinate;
+  std::vector<std::pair<unsigned int, dealii::Point<3, double>>> surface_dofs;
+  bool surface_dof_sorting_done;
 
  public:
   unsigned int dof_counter;
   std::vector<DofData> face_dof_data;
   std::vector<DofData> edge_dof_data;
   std::vector<DofData> vertex_dof_data;
+  unsigned int n_edge_dofs;
+  unsigned int n_face_dofs;
+  unsigned int n_vertex_dofs;
   HSIESurface(unsigned int in_order,
       const dealii::Triangulation<2, 2> &in_surf_tria,
               unsigned int in_boundary_id, unsigned int in_level,
@@ -70,11 +75,12 @@ class HSIESurface {
       dealii::DoFHandler<2>::active_cell_iterator,
       dealii::DoFHandler<2>::active_cell_iterator);
   void fill_matrix(dealii::SparseMatrix<double> *, dealii::IndexSet);
+  void fill_matrix(dealii::SparseMatrix<double>*, unsigned int);
   void make_hanging_node_constraints(dealii::AffineConstraints<double>*,
       dealii::IndexSet);
-  DofCount compute_n_edge_dofs(unsigned int level);
-  DofCount compute_n_vertex_dofs(unsigned int level);
-  DofCount compute_n_face_dofs(unsigned int level);
+  DofCount compute_n_edge_dofs();
+  DofCount compute_n_vertex_dofs();
+  DofCount compute_n_face_dofs();
   unsigned int compute_dofs_per_edge(bool only_hsie_dofs);
   unsigned int compute_dofs_per_face(bool only_hsie_dofs);
   unsigned int compute_dofs_per_vertex();
@@ -82,17 +88,12 @@ class HSIESurface {
   void initialize_dof_handlers_and_fe();
   void update_dof_counts_for_edge(
       dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
-      DofCount &, unsigned int level);
+      DofCount&);
   void update_dof_counts_for_face(
-      dealii::DoFHandler<2>::active_cell_iterator cell, DofCount &, unsigned int level);
+      dealii::DoFHandler<2>::active_cell_iterator cell, DofCount&);
   void update_dof_counts_for_vertex(
       dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
-      unsigned int vertex, DofCount &, unsigned int level);
-  bool is_edge_owned(dealii::DoFHandler<2>::active_cell_iterator cell,
-                     unsigned int edge, unsigned int level);
-  bool is_face_owned(dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int level);
-  bool is_vertex_owned(dealii::DoFHandler<2>::active_cell_iterator cell,
-                       unsigned int edge, unsigned int vertex, unsigned int level);
+      unsigned int vertex, DofCount&);
   void register_new_vertex_dofs(
       dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
       unsigned int vertex);
@@ -122,8 +123,10 @@ class HSIESurface {
       unsigned int base_dof_index);
   std::vector<DofData> get_dof_data_for_base_dof_q(unsigned int base_dof_index);
   unsigned int get_dof_count_by_boundary_id(unsigned int in_boundary_id);
-  std::vector<DofAssociation> get_dof_association();
+  std::vector<unsigned int> get_dof_association();
   dealii::Point<3> undo_transform(dealii::Point<2>);
+  void add_surface_relevant_dof(unsigned int in_global_index,
+      dealii::Point<3, double> point);
 };
 
 

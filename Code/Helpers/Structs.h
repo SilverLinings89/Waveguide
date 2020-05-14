@@ -21,11 +21,8 @@ struct DofAssociation {
 
 
 struct DofCount {
-  unsigned int owned = 0;
-  unsigned int non_owned = 0;
   unsigned int hsie = 0;
   unsigned int non_hsie = 0;
-  unsigned int owned_hsie = 0;
   unsigned int total = 0;
 };
 
