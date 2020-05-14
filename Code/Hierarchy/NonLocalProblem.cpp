@@ -100,6 +100,10 @@ void NonLocalProblem::solve(dealii::Vector<double> src,
   }
 }
 
+void NonLocalProblem::run() {
+
+}
+
 void NonLocalProblem::reinit() {
   system_matrix = new dealii::TrilinosWrappers::SparseMatrix(local_indices,
       GlobalMPI.communicators_by_level[local_level], 100);

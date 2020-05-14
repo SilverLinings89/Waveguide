@@ -16,7 +16,7 @@ private:
   dealii::TrilinosWrappers::SparseMatrix system_matrix;
   dealii::Vector<double> system_rhs;
   dealii::IndexSet local_indices;
-  dealii::SolverGMRES solver;
+  dealii::SolverGMRES<dealii::TrilinosWrappers::SparseMatrix> solver;
 
  public:
   NonLocalProblem(unsigned int);
@@ -33,6 +33,8 @@ private:
   void assemble() override;
 
   void solve(dealii::Vector<double> src, dealii::Vector<double> &dst) override;
+
+  void run() override;
 
   void initialize() override;
 

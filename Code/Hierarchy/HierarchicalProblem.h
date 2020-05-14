@@ -39,7 +39,7 @@ class HierarchicalProblem {
   virtual void initialize()=0;
   virtual void generate_sparsity_pattern()=0;
   virtual unsigned int compute_own_dofs()=0;
-
+  virtual void run() =0;
   virtual void initialize_own_dofs();
   virtual void assemble()=0;
   virtual void initialize_index_sets()=0;

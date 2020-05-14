@@ -16,7 +16,7 @@
 #include "../Hierarchy/NonLocalProblem.h"
 
 class Simulation {
-  NonLocalProblem *mainProblem;
+  HierarchicalProblem *mainProblem;
 
  public:
   Simulation();

@@ -45,7 +45,7 @@ public:
 
   void initialize_own_dofs() override;
 
-  void run();
+  void run() override;
 
   void assemble() override;
 

@@ -70,7 +70,7 @@ bool compareIndexCenterPairs(std::pair<int, double> c1,
 }
 
 void NumericProblem::SortDofsDownstream() {
-  std::vector<std::pair<int, double>> current;
+  std::vector<std::pair<int, Point<3, double>>> current;
 
   std::vector<unsigned int> lines_touched;
   std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
@@ -84,15 +84,15 @@ void NumericProblem::SortDofsDownstream() {
               lines_touched.end())) {
           ((cell->face(i))->line(j))->get_dof_indices(local_line_dofs);
           for (unsigned k = 0; k < local_line_dofs.size(); k++) {
-            current.push_back(std::pair<int, double>(
-                local_line_dofs[k], (cell->face(i))->line(j)->center()[2]));
+            current.emplace_back(local_line_dofs[k],
+                (cell->face(i))->line(j)->center());
           }
           lines_touched.push_back(cell->face(i)->line(j)->index());
         }
       }
     }
   }
-  std::sort(current.begin(), current.end(), compareIndexCenterPairs);
+  std::sort(current.begin(), current.end(), compareDofBaseData);
   std::vector<unsigned int> new_numbering;
   new_numbering.resize(current.size());
   for (unsigned int i = 0; i < current.size(); i++) {

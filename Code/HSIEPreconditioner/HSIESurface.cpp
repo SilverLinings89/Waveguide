@@ -688,17 +688,6 @@ void HSIESurface::register_new_edge_dofs(
   }
 }
 
-bool compareDofBaseData(std::pair<int, Point<3, double>> c1,
-    std::pair<int, Point<3, double>> c2) {
-  if (c1.second[2] != c2.second[2]) {
-    return c1.second[2] < c2.second[2];
-  }
-  if (c1.second[1] != c2.second[1]) {
-    return c1.second[1] < c2.second[1];
-  }
-
-  return c1.second[0] < c2.second[0];
-}
 
 void HSIESurface::register_new_surface_dofs(
     dealii::DoFHandler<2>::active_cell_iterator cell_nedelec,

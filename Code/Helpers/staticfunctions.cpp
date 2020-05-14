@@ -25,6 +25,19 @@ extern GeometryManager Geometry;
 
 void set_the_st(SpaceTransformation *in_st) { the_st = in_st; }
 
+bool compareDofBaseData(std::pair<int, Point<3, double>> c1,
+    std::pair<int, Point<3, double>> c2) {
+  if (c1.second[2] != c2.second[2]) {
+    return c1.second[2] < c2.second[2];
+  }
+  if (c1.second[1] != c2.second[1]) {
+    return c1.second[1] < c2.second[1];
+  }
+
+  return c1.second[0] < c2.second[0];
+}
+
+
 void alert() {
   MPI_Barrier(MPI_COMM_WORLD);
   if (dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0) {
