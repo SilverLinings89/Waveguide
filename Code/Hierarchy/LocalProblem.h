@@ -23,7 +23,10 @@ public:
   HSIESurface *surface_3;
   HSIESurface *surface_4;
   HSIESurface *surface_5;
+
   dealii::SparseDirectUMFPACK solver;
+  dealii::AffineConstraints<double> constraints;
+  dealii::SparsityPattern sp;
 
   LocalProblem();
   ~LocalProblem() override;
@@ -45,7 +48,11 @@ public:
 
   void initialize_own_dofs() override;
 
+  void make_constraints() override;
+
   void run() override;
+
+  void solve();
 
   void assemble() override;
 

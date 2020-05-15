@@ -8,16 +8,17 @@
 #include <mpi.h>
 #include "HierarchicalProblem.h"
 #include "./LocalProblem.h"
+#include <deal.II/lac/solver_control.h>
 
 class NonLocalProblem: public HierarchicalProblem {
 private:
   SweepingDirection sweeping_direction;
   bool *is_hsie_surface;
-  dealii::TrilinosWrappers::SparseMatrix system_matrix;
-  dealii::Vector<double> system_rhs;
+  dealii::TrilinosWrappers::SparseMatrix *system_matrix;
+  dealii::TrilinosWrappers::MPI::Vector *system_rhs;
   dealii::IndexSet local_indices;
-  dealii::SolverGMRES<dealii::TrilinosWrappers::SparseMatrix> solver;
-
+  dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver;
+  dealii::SolverControl sc;
  public:
   NonLocalProblem(unsigned int);
   ~NonLocalProblem() override;
@@ -37,6 +38,8 @@ private:
   void run() override;
 
   void initialize() override;
+
+  void make_constraints() override;
 
   void generate_sparsity_pattern() override;
 

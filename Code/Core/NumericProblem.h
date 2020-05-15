@@ -291,6 +291,11 @@ class NumericProblem {
   dealii::Vector<double> system_rhs;
 
   dealii::IndexSet fixed_dofs;
+
+  std::vector<unsigned int> get_surface_dof_vector_for_boundary_id(
+      unsigned int b_id);
+
+  std::vector<unsigned int> dofs_for_cell_around_point(dealii::Point<3> &in_p);
 };
 
 #endif

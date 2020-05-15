@@ -58,7 +58,16 @@ Tensor<1, 3, std::complex<double>> NumericProblem::Conjugate_Vector(
 }
 
 void NumericProblem::make_grid() {
-  mg->prepare_triangulation(&triangulation);
+  // mg->prepare_triangulation(&triangulation);
+  const unsigned int Cells_Per_Direction = 21;
+  std::vector<unsigned int> repetitions;
+  repetitions.push_back(Cells_Per_Direction);
+  repetitions.push_back(Cells_Per_Direction);
+  repetitions.push_back(Cells_Per_Direction);
+  dealii::Point<3, double> left(-1, -1, -1);
+  dealii::Point<3, double> right(1, 1, 1);
+  dealii::GridGenerator::subdivided_hyper_rectangle(triangulation, repetitions,
+      left, right, true);
   dof_handler.distribute_dofs(fe);
   SortDofsDownstream();
   n_dofs = dof_handler.n_dofs();
@@ -67,6 +76,20 @@ void NumericProblem::make_grid() {
 bool compareIndexCenterPairs(std::pair<int, double> c1,
                              std::pair<int, double> c2) {
   return c1.second < c2.second;
+}
+
+std::vector<unsigned int> NumericProblem::dofs_for_cell_around_point(
+    dealii::Point<3> &in_p) {
+  std::vector<unsigned int> ret;
+  auto cell = dof_handler.begin_active();
+  auto endc = dof_handler.end();
+  for (; cell != endc; ++cell) {
+    if (cell->point_inside(in_p)) {
+      cell->get_dof_indices(ret);
+      return ret;
+    }
+  }
+  return ret;
 }
 
 void NumericProblem::SortDofsDownstream() {
@@ -131,6 +154,7 @@ void NumericProblem::reinit_systemmatrix() {
   DynamicSparsityPattern dsp (dof_handler.n_dofs());
   DoFTools::make_sparsity_pattern(dof_handler, dsp);
   DoFTools::make_hanging_node_constraints(dof_handler, cm);
+  cm.close();
   cm.condense(dsp);
   final_sparsity_pattern.copy_from(dsp);
   system_matrix.reinit(final_sparsity_pattern);
@@ -139,11 +163,38 @@ void NumericProblem::reinit_systemmatrix() {
 }
 
 void NumericProblem::reinit_rhs() {
-
+  system_rhs.reinit(dof_handler.n_dofs());
 }
 
 void NumericProblem::reinit_solution() {
 
+}
+
+std::vector<unsigned int> NumericProblem::get_surface_dof_vector_for_boundary_id(
+    unsigned int b_id) {
+  std::vector<unsigned int> ret;
+  auto cell = dof_handler.begin_active();
+  auto endc = dof_handler.end();
+
+  for (; cell != endc; ++cell) {
+    if (cell->at_boundary(b_id)) {
+      for (unsigned int face = 0;
+          face < dealii::GeometryInfo<3>::faces_per_cell; face++) {
+        if (cell->face(face)->boundary_id() == b_id) {
+          std::vector<unsigned int> dof_indices;
+          cell->face(face)->get_dof_indices(dof_indices);
+          for (unsigned int i = 0; i < dof_indices.size(); i++) {
+            if (std::find(ret.begin(), ret.end(), dof_indices[i])
+                != ret.end()) {
+              ret.push_back(dof_indices[i]);
+            }
+          }
+        }
+      }
+    }
+  }
+  std::sort(ret.begin(), ret.end());
+  return ret;
 }
 
 void NumericProblem::assemble_system() {
@@ -166,18 +217,11 @@ void NumericProblem::assemble_system() {
   FullMatrix<double> cell_matrix_prec_even(dofs_per_cell, dofs_per_cell);
 
   double e_temp = 1.0;
-  if (!GlobalParams.C_AllOne) {
-    e_temp *= GlobalParams.C_Epsilon;
-  }
   double mu_temp = 1.0;
-  if (!GlobalParams.C_AllOne) {
-    mu_temp *= GlobalParams.C_Mu;
-  }
 
   const double eps_in = GlobalParams.M_W_epsilonin * e_temp;
   const double eps_out = GlobalParams.M_W_epsilonout * e_temp;
   const double mu_zero = mu_temp;
-
   Vector<double> cell_rhs(dofs_per_cell);
   cell_rhs = 0;
   Tensor<2, 3, std::complex<double>> transformation;
@@ -187,14 +231,24 @@ void NumericProblem::assemble_system() {
   std::complex<double> k_a_sqr(GlobalParams.C_omega,
                                GlobalParams.So_PreconditionerDampening);
   k_a_sqr = k_a_sqr * k_a_sqr;
-
+  for (unsigned int i = 0; i < 3; i++) {
+    for (unsigned int j = 0; j < 3; j++) {
+      if (i == j) {
+        transformation[i][j] = std::complex<double>(1, 0);
+      } else {
+        transformation[i][j] = std::complex<double>(0, 0);
+      }
+    }
+  }
   auto cell = dof_handler.begin_active();
   auto endc = dof_handler.end();
 
+  deallog << "Assembly loop." << std::endl;
   for (; cell != endc; ++cell) {
     cell->get_dof_indices(local_dof_indices);
     cell_rhs.reinit(dofs_per_cell, false);
     fe_values.reinit(cell);
+
     quadrature_points = fe_values.get_quadrature_points();
     std::vector<types::global_dof_index> input_dofs(fe.dofs_per_line);
     IndexSet input_dofs_local_set(fe.dofs_per_cell);
@@ -205,7 +259,7 @@ void NumericProblem::assemble_system() {
     cell_matrix_prec_odd = 0;
     cell_matrix_prec_even = 0;
     for (unsigned int q_index = 0; q_index < n_q_points; ++q_index) {
-      transformation = st->get_Tensor(quadrature_points[q_index]);
+
       mu = invert(transformation) / mu_zero;
 
       if (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])) {
@@ -243,10 +297,10 @@ void NumericProblem::assemble_system() {
 
         }
       }
-
       cm.distribute_local_to_global(cell_matrix_real, cell_rhs,
                                     local_dof_indices, system_matrix,
                                     system_rhs, false);
+
     }
   }
 

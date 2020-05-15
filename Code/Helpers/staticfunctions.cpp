@@ -124,13 +124,6 @@ void PrepareStreams() {
           ".log",
       std::ios::binary);
 
-  int create_link = symlink(solutionpath.c_str(), "./latest");
-  if (create_link == 0) {
-    deallog << "Symlink latest created." << std::endl;
-  } else {
-    deallog << "Symlink latest creation failed." << std::endl;
-  }
-
   deallog.attach(log_stream);
 }
 

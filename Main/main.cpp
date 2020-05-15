@@ -55,12 +55,15 @@ int main(int argc, char *argv[]) {
 
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
+  std::cout << "Prepare Streams" << std::endl;
   PrepareStreams();
 
   Simulation simulation;
 
+  std::cout << "Prepare Simulation" << std::endl;
   simulation.prepare();
 
+  std::cout << "Run Simulation" << std::endl;
   simulation.run();
 
   return 0;

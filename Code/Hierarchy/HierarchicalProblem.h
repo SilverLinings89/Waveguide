@@ -21,7 +21,7 @@ class HierarchicalProblem {
   const unsigned int local_level;
   DOFManager* dof_manager;
   DofIndexData indices;
-  dealii::TrilinosWrappers::SparseMatrix *matrix;
+  dealii::SparseMatrix<double> *matrix;
   unsigned int n_own_dofs;
   unsigned int first_own_index;
   unsigned int dofs_process_above;
@@ -40,7 +40,8 @@ class HierarchicalProblem {
   virtual void generate_sparsity_pattern()=0;
   virtual unsigned int compute_own_dofs()=0;
   virtual void run() =0;
-  virtual void initialize_own_dofs();
+  virtual void initialize_own_dofs() =0;
+  virtual void make_constraints() = 0;
   virtual void assemble()=0;
   virtual void initialize_index_sets()=0;
   virtual void apply_sweep(

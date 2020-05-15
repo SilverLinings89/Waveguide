@@ -6,9 +6,15 @@
 #include "../Helpers/GeometryManager.h"
 #include "LocalProblem.h"
 #include "../Core/NumericProblem.h"
+#include <deal.II/lac/solver_gmres.h>
 
 NonLocalProblem::NonLocalProblem(unsigned int local_level) :
-    HierarchicalProblem(local_level) {
+HierarchicalProblem(local_level),
+sc(GlobalParams.So_TotalSteps,
+        GlobalParams.So_Precision, true, true), solver(sc,
+        dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData(
+            GlobalParams.So_RestartSteps))
+{
     if(local_level > 1) {
     child = new NonLocalProblem(local_level - 1);
     } else {
@@ -79,6 +85,11 @@ NonLocalProblem::NonLocalProblem(unsigned int local_level) :
 }
 
 NonLocalProblem::~NonLocalProblem() {
+  delete system_matrix;
+  delete system_rhs;
+}
+
+void NonLocalProblem::make_constraints() {
 
 }
 
@@ -93,7 +104,7 @@ void NonLocalProblem::solve(dealii::Vector<double> src,
     inputb[i] = src(i);
   }
 
-  solver.solve(system_matrix, dst, system_rhs, this->child);
+  // solver.solve(system_matrix, dst, system_rhs, this->child);
 
   for (unsigned int i = 0; i < n_own_dofs; i++) {
     dst[i] = inputb[i];
@@ -122,8 +133,15 @@ void NonLocalProblem::generate_sparsity_pattern() {
 }
 
 void NonLocalProblem::initialize_index_sets() {
-  local_indices = dealii::Utilities::MPI::create_ascending_partitioning(
+  std::vector<dealii::IndexSet> index_sets_per_process;
+  n_procs_in_sweep = dealii::Utilities::MPI::n_mpi_processes(
+      GlobalMPI.communicators_by_level[local_level]);
+  rank = dealii::Utilities::MPI::this_mpi_process(
+      GlobalMPI.communicators_by_level[local_level]);
+  index_sets_per_process =
+      dealii::Utilities::MPI::create_ascending_partitioning(
       GlobalMPI.communicators_by_level[local_level], n_own_dofs);
+  local_indices = index_sets_per_process[rank];
   unsigned int ret =
       this->get_local_problem()->base_problem.dof_handler.n_dofs()
           + local_indices.nth_index_in_set(0);
@@ -136,19 +154,12 @@ void NonLocalProblem::initialize_index_sets() {
       surface_first_dofs.push_back(ret);
     }
   }
-  n_procs_in_sweep = dealii::Utilities::MPI::n_mpi_processes(
-      GlobalMPI.communicators_by_level[local_level]);
-  rank = dealii::Utilities::MPI::this_mpi_process(
-      GlobalMPI.communicators_by_level[local_level]);
-  unsigned int *all_dof_counts = new unsigned int[n_procs_in_sweep];
-  MPI_Allgather(&this->n_own_dofs, 1, MPI_UINT16_T, all_dof_counts,
-      n_procs_in_sweep, MPI_UINT16_T,
-      GlobalMPI.communicators_by_level[local_level]);
+
   if (rank > 0) {
-    dofs_process_below = all_dof_counts[rank - 1];
+    dofs_process_below = index_sets_per_process[rank - 1].n_elements();
   }
   if (rank + 1 < n_procs_in_sweep) {
-    dofs_process_above = all_dof_counts[rank + 1];
+    dofs_process_above = index_sets_per_process[rank + 1].n_elements();
   }
 }
 

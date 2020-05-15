@@ -95,7 +95,7 @@ void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
 
   in_tria->signals.post_refinement.connect(
       std_cxx11::bind(&SquareMeshGenerator::set_boundary_ids,
-                      std_cxx11::cref(*this), std_cxx11::ref(*in_tria)));
+          std_cxx11::cref(*this), std_cxx11::ref(*in_tria)));
 
   refine_triangulation_iteratively(in_tria);
 

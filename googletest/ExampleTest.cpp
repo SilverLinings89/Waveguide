@@ -178,7 +178,11 @@ TEST_P(TestDirectionFixture, TestCellRequirements) {
 TEST_P(TestDirectionFixture, DofNumberingTest1) {
     association = dealii::GridGenerator::extract_boundary_mesh( tria, temp_triangulation, b_ids);
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
-  HSIESurface surf(5, surf_tria, boundary_id, 0, InnerOrder, k0, association);
+  const unsigned int component = 0;
+  auto temp_it = temp_triangulation.begin();
+  double additional_coorindate = temp_it->center()[component];
+  HSIESurface surf(5, surf_tria, boundary_id, InnerOrder, k0, association,
+      additional_coorindate);
     surf.initialize();
     std::vector< types::boundary_id > boundary_ids_of_flattened_mesh = surf.get_boundary_ids();
     ASSERT_EQ(boundary_ids_of_flattened_mesh.size(), 4);
@@ -188,7 +192,11 @@ TEST_P(TestDirectionFixture, DofNumberingTest1) {
 
 
 TEST_P(TestOrderFixture, AssemblationTestOrder5) {
-  HSIESurface surf(5, surf_tria, 0, 0, InnerOrder, k0, association);
+  const unsigned int component = 0;
+  auto temp_it = temp_triangulation.begin();
+  double additional_coorindate = temp_it->center()[component];
+  HSIESurface surf(5, surf_tria, 0, InnerOrder, k0, association,
+      additional_coorindate);
     surf.initialize();
     ASSERT_EQ(surf.compute_dofs_per_vertex(), dofs_per_vertex(5) * 2 );
     ASSERT_EQ(surf.compute_dofs_per_edge(false), dofs_per_edge(5, InnerOrder) * 2 );
@@ -215,7 +223,11 @@ TEST_P(TestOrderFixture, AssemblationTestOrder5) {
 }
 
 TEST_P(TestOrderFixture, AssemblationTestOrder10) {
-  HSIESurface surf(10, surf_tria, 0, 0, InnerOrder, k0, association);
+  const unsigned int component = 0;
+  auto temp_it = temp_triangulation.begin();
+  double additional_coorindate = temp_it->center()[component];
+  HSIESurface surf(10, surf_tria, 0, InnerOrder, k0, association,
+      additional_coorindate);
     surf.initialize();
     ASSERT_EQ(surf.compute_dofs_per_vertex(), dofs_per_vertex(10) * 2 );
     ASSERT_EQ(surf.compute_dofs_per_edge(false), dofs_per_edge(10, InnerOrder) * 2 );

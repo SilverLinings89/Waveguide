@@ -30,14 +30,16 @@ void LocalProblem::solve(dealii::Vector<double> src,
 }
 
 void LocalProblem::initialize() {
-  dealii::Triangulation<2, 3> temp_triangulation;
-  dealii::Triangulation<2> surf_tria;
-  std::complex<double> k0;
-  std::map<dealii::Triangulation<2, 3>::cell_iterator,
-      dealii::Triangulation<3, 3>::face_iterator> association;
+  base_problem.setup_system();
   for (unsigned int side = 0; side < 6; side++) {
+    dealii::Triangulation<2, 3> temp_triangulation;
+    dealii::Triangulation<2> surf_tria;
+    std::complex<double> k0;
+    std::map<dealii::Triangulation<2, 3>::cell_iterator,
+        dealii::Triangulation<3, 3>::face_iterator> association;
     std::cout << "Initializing surface " << side << " in local problem.";
     dealii::Triangulation<3> tria;
+    std::cout << "Copy base tria" << std::endl;
     tria.copy_triangulation(base_problem.triangulation);
     std::set<unsigned int> b_ids;
     b_ids.insert(side);
@@ -62,35 +64,45 @@ void LocalProblem::initialize() {
     }
     association = dealii::GridGenerator::extract_boundary_mesh(tria,
         temp_triangulation, b_ids);
+    const unsigned int component = side / 2;
+    auto temp_it = temp_triangulation.begin();
+    double additional_coorindate = temp_it->center()[component];
+    std::cout << "Flatten base tria" << std::endl;
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
     switch (side) {
     case 0:
-      surface_0 = new HSIESurface(5, std::ref(surf_tria), side, 0,
-          GlobalParams.So_ElementOrder, k0, std::ref(association));
+      surface_0 = new HSIESurface(5, std::ref(surf_tria), side,
+          GlobalParams.So_ElementOrder, k0, std::ref(association),
+          additional_coorindate);
       break;
     case 1:
-      surface_1 = new HSIESurface(5, std::ref(surf_tria), side, 0,
-          GlobalParams.So_ElementOrder, k0, std::ref(association));
+      surface_1 = new HSIESurface(5, std::ref(surf_tria), side,
+          GlobalParams.So_ElementOrder, k0, std::ref(association),
+          additional_coorindate);
       break;
     case 2:
-      surface_2 = new HSIESurface(5, std::ref(surf_tria), side, 0,
-          GlobalParams.So_ElementOrder, k0, std::ref(association));
+      surface_2 = new HSIESurface(5, std::ref(surf_tria), side,
+          GlobalParams.So_ElementOrder, k0, std::ref(association),
+          additional_coorindate);
       break;
     case 3:
-      surface_3 = new HSIESurface(5, std::ref(surf_tria), side, 0,
-          GlobalParams.So_ElementOrder, k0, std::ref(association));
+      surface_3 = new HSIESurface(5, std::ref(surf_tria), side,
+          GlobalParams.So_ElementOrder, k0, std::ref(association),
+          additional_coorindate);
       break;
     case 4:
-      surface_4 = new HSIESurface(5, std::ref(surf_tria), side, 0,
-          GlobalParams.So_ElementOrder, k0, std::ref(association));
+      surface_4 = new HSIESurface(5, std::ref(surf_tria), side,
+          GlobalParams.So_ElementOrder, k0, std::ref(association),
+          additional_coorindate);
       break;
     case 5:
-      surface_5 = new HSIESurface(5, surf_tria, side, 0,
-          GlobalParams.So_ElementOrder, k0, association);
+      surface_5 = new HSIESurface(5, surf_tria, side,
+          GlobalParams.So_ElementOrder, k0, association, additional_coorindate);
       break;
     default:
       break;
     }
+    std::cout << "Done" << std::endl;
   }
   surfaces = new HSIESurface*[6];
   surfaces[0] = surface_0;
@@ -117,13 +129,52 @@ unsigned int LocalProblem::compute_own_dofs() {
   return ret;
 }
 
+void LocalProblem::make_constraints() {
+  dealii::IndexSet is;
+  is.set_size(n_own_dofs);
+  constraints.reinit(is);
+  for (unsigned int surface = 0; surface < 6; surface++) {
+    std::vector<unsigned int> from_surface =
+        surfaces[surface]->get_dof_association();
+    std::vector<unsigned int> from_inner_problem =
+        base_problem.get_surface_dof_vector_for_boundary_id(surface);
+    if (from_surface.size() != from_inner_problem.size()) {
+      std::cout << "Warning: Size mismatch in make_constraints for surface "
+          << surface << ": Inner: " << from_inner_problem.size()
+          << " != Surface:" << from_inner_problem.size() << "." << std::endl;
+    } else {
+      std::cout << "Dof counts OK: " << from_inner_problem.size() << "."
+          << std::endl;
+    }
+    for (unsigned int line = 0; line < from_inner_problem.size(); line++) {
+      constraints.add_line(from_inner_problem[line]);
+      constraints.add_entry(from_inner_problem[line],
+          from_surface[line] + surface_first_dofs[surface], -1);
+    }
+  }
+
+  // Only for point sorce example
+  dealii::Point<3> center(0.0, 0.0, 0.0);
+  std::vector<unsigned int> restrained_dofs =
+      base_problem.dofs_for_cell_around_point(center);
+  for (unsigned int i = 0; i < restrained_dofs.size(); i++) {
+    constraints.add_line(restrained_dofs[i]);
+    constraints.set_inhomogeneity(restrained_dofs[i], 1);
+  }
+
+}
+
 void LocalProblem::assemble() {
   base_problem.assemble_system();
-  matrix = new dealii::TrilinosWrappers::SparseMatrix(n_own_dofs, n_own_dofs,
-      100);
+  dealii::SparsityPattern sp(n_own_dofs, n_own_dofs, 100);
+  matrix->reinit(sp);
   matrix->copy_from(base_problem.system_matrix);
 
-  matrix = &base_problem.system_matrix;
+  for (unsigned int surface = 0; surface < 6; surface++) {
+    surfaces[surface]->fill_matrix(matrix, surface_first_dofs[surface]);
+  }
+  constraints.condense(*matrix);
+  matrix->compress(dealii::VectorOperation::add);
 }
 
 void LocalProblem::initialize_own_dofs() {
@@ -132,7 +183,12 @@ void LocalProblem::initialize_own_dofs() {
 
 void LocalProblem::run() {
   assemble();
-  // solve();
+  solve();
+}
+
+void LocalProblem::solve() {
+  dealii::Vector<double> rhs(n_own_dofs);
+  solver.solve(*matrix, rhs);
 }
 
 void LocalProblem::initialize_index_sets() {

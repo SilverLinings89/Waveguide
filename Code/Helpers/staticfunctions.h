@@ -64,6 +64,16 @@ Point<3, double> Transform_1_to_5(const Point<3, double> &p);
 
 Point<3, double> Transform_0_to_5(const Point<3, double> &p);
 
+Point<3, double> Transform_5_to_4(const Point<3, double> &p);
+
+Point<3, double> Transform_5_to_3(const Point<3, double> &p);
+
+Point<3, double> Transform_5_to_2(const Point<3, double> &p);
+
+Point<3, double> Transform_5_to_1(const Point<3, double> &p);
+
+Point<3, double> Transform_5_to_0(const Point<3, double> &p);
+
 inline bool file_exists(const std::string &name);
 
 void PrepareStreams();

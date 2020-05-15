@@ -9,6 +9,7 @@
 #include "../Core/NumericProblem.h"
 #include "DofData.h"
 #include "HSIEPolynomial.h"
+#include "../Helpers/staticfunctions.h"
 
 const unsigned int MAX_DOF_NUMBER = INT_MAX;
 
@@ -21,8 +22,8 @@ const std::vector<std::vector<unsigned int>> edge_to_boundary_id = {
 
 HSIESurface::HSIESurface(unsigned int in_order,
     const dealii::Triangulation<2, 2> &in_surface_triangulation,
-    unsigned int in_boundary_id, unsigned int in_level,
-    unsigned int in_inner_order, std::complex<double> in_k0,
+    unsigned int in_boundary_id, unsigned int in_inner_order,
+    std::complex<double> in_k0,
     std::map<dealii::Triangulation<2, 3>::cell_iterator,
              dealii::Triangulation<3, 3>::face_iterator>
         in_assoc,
@@ -34,7 +35,7 @@ HSIESurface::HSIESurface(unsigned int in_order,
       Inner_Element_Order(in_inner_order),
       fe_nedelec(Inner_Element_Order),
       fe_q(Inner_Element_Order + 1),
-      global_level(in_level), additional_coordinate(
+      additional_coordinate(
         in_additional_coordinate) {
   association = in_assoc;
   surface_triangulation.copy_triangulation(in_surface_triangulation);
@@ -111,17 +112,20 @@ void HSIESurface::compute_edge_ownership_object(Parameters params) {
   this->edge_ownership_by_level_and_id[0][4] = true ;
 
   // level 1;
-  this->edge_ownership_by_level_and_id[1][0] = params.Index_in_x_direction == 0 || this->global_level == 3;
-  this->edge_ownership_by_level_and_id[1][2] = params.Index_in_y_direction == 0 || this->global_level == 2;
-  this->edge_ownership_by_level_and_id[1][4] = params.Index_in_z_direction == 0 || this->global_level == 1;
+  this->edge_ownership_by_level_and_id[1][0] = params.Index_in_x_direction == 0
+      || GlobalParams.HSIE_SWEEPING_LEVEL == 3;
+  this->edge_ownership_by_level_and_id[1][2] = params.Index_in_y_direction == 0
+      || GlobalParams.HSIE_SWEEPING_LEVEL == 2;
+  this->edge_ownership_by_level_and_id[1][4] = params.Index_in_z_direction == 0
+      || GlobalParams.HSIE_SWEEPING_LEVEL == 1;
 
   // level 2;
-  if(this->global_level == 2) {
+  if (GlobalParams.HSIE_SWEEPING_LEVEL == 2) {
     this->edge_ownership_by_level_and_id[2][0] = true;
     this->edge_ownership_by_level_and_id[2][2] = params.Index_in_y_direction == 0 || false;
     this->edge_ownership_by_level_and_id[2][4] = params.Index_in_z_direction == 0 || false;
   }
-  if(this->global_level == 3) {
+  if (GlobalParams.HSIE_SWEEPING_LEVEL == 3) {
     this->edge_ownership_by_level_and_id[2][0] = params.Index_in_x_direction == 0 || false;
     this->edge_ownership_by_level_and_id[2][2] = params.Index_in_y_direction == 0 || false;
     this->edge_ownership_by_level_and_id[2][4] = true;
@@ -473,7 +477,148 @@ void HSIESurface::fill_matrix(dealii::SparseMatrix<double> *matrix,
   }
 }
 
-DofCount HSIESurface::compute_n_edge_dofs(unsigned int level) {
+void HSIESurface::fill_matrix(dealii::TrilinosWrappers::SparseMatrix *matrix,
+    unsigned int lowest_index) {
+  IndexSet is;
+  is.set_size(lowest_index + dof_counter);
+  is.add_range(lowest_index, lowest_index + dof_counter);
+  fill_matrix(matrix, is);
+}
+
+void HSIESurface::fill_matrix(dealii::TrilinosWrappers::SparseMatrix *matrix,
+    dealii::IndexSet global_indices) {
+  HSIEPolynomial::computeDandI(order + 2, k0);
+  auto it = dof_h_nedelec.begin_active();
+  auto end = dof_h_nedelec.end();
+
+  QGauss<2> quadrature_formula(2);
+  FEValues<2, 2> fe_q_values(fe_q, quadrature_formula,
+      update_values | update_gradients | update_JxW_values
+          | update_quadrature_points);
+  FEValues<2, 2> fe_n_values(fe_nedelec, quadrature_formula,
+      update_values | update_gradients | update_JxW_values
+          | update_quadrature_points);
+  std::vector<Point<2>> quadrature_points;
+  const unsigned int dofs_per_cell = GeometryInfo<2>::vertices_per_cell
+      * compute_dofs_per_vertex()
+      + GeometryInfo<2>::lines_per_cell * compute_dofs_per_edge(false)
+      + compute_dofs_per_face(false);
+  FullMatrix<double> cell_matrix_real(dofs_per_cell, dofs_per_cell);
+  unsigned int cell_counter = 0;
+  auto it2 = dof_h_q.begin_active();
+
+  for (; it != end; ++it) {
+    cell_matrix_real = 0;
+    std::vector<DofData> cell_dofs = this->get_dof_data_for_cell(it, it2);
+    std::vector<HSIEPolynomial> polynomials;
+    std::vector<unsigned int> q_dofs(fe_q.dofs_per_cell);
+    std::vector<unsigned int> n_dofs(fe_nedelec.dofs_per_cell);
+    ;
+    it2->get_dof_indices(q_dofs);
+    it->get_dof_indices(n_dofs);
+    for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+      polynomials.push_back(HSIEPolynomial(cell_dofs[i], k0));
+    }
+    std::vector<unsigned int> local_related_fe_index;
+    for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+      if (cell_dofs[i].type == DofType::RAY) {
+        for (unsigned int j = 0; j < q_dofs.size(); j++) {
+          if (q_dofs[j] == cell_dofs[i].base_dof_index) {
+            local_related_fe_index.push_back(j);
+            break;
+          }
+        }
+      } else {
+        for (unsigned int j = 0; j < n_dofs.size(); j++) {
+          if (n_dofs[j] == cell_dofs[i].base_dof_index) {
+            local_related_fe_index.push_back(j);
+            break;
+          }
+        }
+      }
+    }
+
+    fe_n_values.reinit(it);
+    fe_q_values.reinit(it2);
+    quadrature_points = fe_q_values.get_quadrature_points();
+    std::vector<double> jxw_values = fe_n_values.get_JxW_values();
+
+    for (unsigned int q_point = 0; q_point < quadrature_points.size();
+        q_point++) {
+      double JxW = jxw_values[q_point];
+      for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+        DofData &u = cell_dofs[i];
+        std::vector<HSIEPolynomial> u_contrib_curl;
+        std::vector<HSIEPolynomial> u_contrib;
+        if (cell_dofs[i].type == DofType::RAY
+            || cell_dofs[i].type == DofType::IFFb) {
+          u_contrib_curl = build_curl_term_q(u.hsie_order,
+              fe_q_values.shape_grad(local_related_fe_index[i], q_point));
+          u_contrib = build_non_curl_term_q(u.hsie_order,
+              fe_q_values.shape_value(local_related_fe_index[i], q_point));
+        } else {
+          u_contrib_curl = build_curl_term_nedelec(u.hsie_order,
+              fe_n_values.shape_grad_component(local_related_fe_index[i],
+                  q_point, 0),
+              fe_n_values.shape_grad_component(local_related_fe_index[i],
+                  q_point, 1),
+              fe_n_values.shape_value_component(local_related_fe_index[i],
+                  q_point, 0),
+              fe_n_values.shape_value_component(local_related_fe_index[i],
+                  q_point, 1));
+          u_contrib = build_non_curl_term_nedelec(u.hsie_order,
+              fe_n_values.shape_value_component(local_related_fe_index[i],
+                  q_point, 0),
+              fe_n_values.shape_value_component(local_related_fe_index[i],
+                  q_point, 1));
+        }
+
+        for (unsigned int j = 0; j < cell_dofs.size(); j++) {
+          DofData &v = cell_dofs[j];
+          std::vector<HSIEPolynomial> v_contrib_curl;
+          std::vector<HSIEPolynomial> v_contrib;
+
+          if (cell_dofs[j].type == DofType::RAY
+              || cell_dofs[j].type == DofType::IFFb) {
+            v_contrib_curl = build_curl_term_q(v.hsie_order,
+                fe_q_values.shape_grad(local_related_fe_index[j], q_point));
+            v_contrib = build_non_curl_term_q(v.hsie_order,
+                fe_q_values.shape_value(local_related_fe_index[j], q_point));
+          } else {
+            v_contrib_curl = build_curl_term_nedelec(v.hsie_order,
+                fe_n_values.shape_grad_component(local_related_fe_index[j],
+                    q_point, 0),
+                fe_n_values.shape_grad_component(local_related_fe_index[j],
+                    q_point, 1),
+                fe_n_values.shape_value_component(local_related_fe_index[j],
+                    q_point, 0),
+                fe_n_values.shape_value_component(local_related_fe_index[j],
+                    q_point, 1));
+            v_contrib = build_non_curl_term_nedelec(v.hsie_order,
+                fe_n_values.shape_value_component(local_related_fe_index[j],
+                    q_point, 0),
+                fe_n_values.shape_value_component(local_related_fe_index[j],
+                    q_point, 1));
+          }
+          std::complex<double> part = (evaluate_a(u_contrib_curl,
+              v_contrib_curl) + evaluate_a(u_contrib, v_contrib)) * JxW;
+          cell_matrix_real[i][j] += part.real();
+        }
+      }
+    }
+    std::vector<unsigned int> local_indices;
+    for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+      local_indices.push_back(
+          global_indices.nth_index_in_set(cell_dofs[i].global_index));
+    }
+    matrix->add(local_indices, cell_matrix_real);
+    it2++;
+    cell_counter++;
+  }
+}
+
+
+DofCount HSIESurface::compute_n_edge_dofs() {
   DoFHandler<2>::active_cell_iterator cell;
   DoFHandler<2>::active_cell_iterator cell2;
   DoFHandler<2>::active_cell_iterator endc;
@@ -484,7 +629,7 @@ DofCount HSIESurface::compute_n_edge_dofs(unsigned int level) {
     for (unsigned int edge = 0; edge < GeometryInfo<2>::lines_per_cell;
          edge++) {
       if (!cell->line(edge)->user_flag_set()) {
-        update_dof_counts_for_edge(cell, edge, ret, level);
+        update_dof_counts_for_edge(cell, edge, ret);
         register_new_edge_dofs(cell, cell2, edge);
         cell->line(edge)->set_user_flag();
       }
@@ -494,7 +639,7 @@ DofCount HSIESurface::compute_n_edge_dofs(unsigned int level) {
   return ret;
 }
 
-DofCount HSIESurface::compute_n_vertex_dofs(unsigned int level) {
+DofCount HSIESurface::compute_n_vertex_dofs() {
   std::set<unsigned int> touched_vertices;
   DoFHandler<2>::active_cell_iterator cell;
   DoFHandler<2>::active_cell_iterator endc;
@@ -507,7 +652,7 @@ DofCount HSIESurface::compute_n_vertex_dofs(unsigned int level) {
       unsigned int idx = cell->vertex_dof_index(vertex, 0);
       if (touched_vertices.end() == touched_vertices.find(idx)) {
         // handle it
-        update_dof_counts_for_vertex(cell, idx, vertex, ret, level);
+        update_dof_counts_for_vertex(cell, idx, vertex, ret);
         register_new_vertex_dofs(cell, idx, vertex);
         // remember that it has been handled
         touched_vertices.insert(idx);
@@ -517,7 +662,7 @@ DofCount HSIESurface::compute_n_vertex_dofs(unsigned int level) {
   return ret;
 }
 
-DofCount HSIESurface::compute_n_face_dofs(unsigned int level) {
+DofCount HSIESurface::compute_n_face_dofs() {
   std::set<std::string> touched_faces;
   DoFHandler<2>::active_cell_iterator cell;
   DoFHandler<2>::active_cell_iterator cell2;
@@ -527,7 +672,7 @@ DofCount HSIESurface::compute_n_face_dofs(unsigned int level) {
   cell2 = dof_h_q.begin_active();
   for (cell = dof_h_nedelec.begin_active(); cell != endc; cell++) {
     if (touched_faces.end() == touched_faces.find(cell->id().to_string())) {
-      update_dof_counts_for_face(cell, ret, level);
+      update_dof_counts_for_face(cell, ret);
       register_new_surface_dofs(cell, cell2);
       touched_faces.insert(cell->id().to_string());
     }
@@ -574,7 +719,7 @@ unsigned int HSIESurface::compute_dofs_per_vertex() {
 
 void HSIESurface::initialize() {
   initialize_dof_handlers_and_fe();
-  DofData a = compute_n_edge_dofs();
+  DofCount a = compute_n_edge_dofs();
 
 }
 
