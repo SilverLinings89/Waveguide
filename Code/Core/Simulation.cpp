@@ -22,14 +22,18 @@ Simulation::Simulation() {
 Simulation::~Simulation() = default;
 
 void Simulation::prepare() {
+  std::cout << "Start Simulation::prepare()" << std::endl;
   create_output_directory();
   prepare_transformed_geometry();
   mainProblem = new LocalProblem();
   mainProblem->initialize();
+  std::cout << "End of Simulation::prepare()" << std::endl;
 }
 
 void Simulation::run() {
+  std::cout << "Start Simulation::run()" << std::endl;
   mainProblem->run();
+  std::cout << "End of Simulation::run()" << std::endl;
 }
 
 void Simulation::create_output_directory() {
@@ -76,13 +80,6 @@ void Simulation::create_output_directory() {
           std::to_string(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) +
           ".log",
       std::ios::binary);
-
-  int create_link = symlink(solutionpath.c_str(), "./latest");
-  if (create_link == 0) {
-    deallog << "Symlink latest created." << std::endl;
-  } else {
-    deallog << "Symlink latest creation failed." << std::endl;
-  }
 
   deallog.attach(log_stream);
 }

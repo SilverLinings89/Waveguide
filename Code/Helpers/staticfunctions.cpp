@@ -238,30 +238,6 @@ Parameters GetParameters() {
       ret.M_W_Sectors = prm.get_integer("Sectors");
     }
     prm.leave_subsection();
-
-    prm.enter_subsection("Boundary Conditions");
-    {
-      std::string temp = prm.get("Type");
-      if (temp == "PML") {
-        ret.M_BC_Type = BoundaryConditionType::PML;
-      } else {
-        ret.M_BC_Type = BoundaryConditionType::HSIE;
-      }
-      ret.M_BC_Zminus = prm.get_double("ZMinus");
-      ret.M_BC_Zplus = prm.get_double("ZPlus");
-      ret.M_BC_XMinus = prm.get_double("XMinus");
-      ret.M_BC_XPlus = prm.get_double("XPlus");
-      ret.M_BC_YMinus = prm.get_double("YMinus");
-      ret.M_BC_YPlus = prm.get_double("YPlus");
-      ret.M_BC_KappaXMax = prm.get_double("KappaXMax");
-      ret.M_BC_KappaYMax = prm.get_double("KappaYMax");
-      ret.M_BC_KappaZMax = prm.get_double("KappaZMax");
-      ret.M_BC_SigmaXMax = prm.get_double("SigmaXMax");
-      ret.M_BC_SigmaYMax = prm.get_double("SigmaYMax");
-      ret.M_BC_SigmaZMax = prm.get_double("SigmaZMax");
-      ret.M_BC_DampeningExponent = prm.get_double("DampeningExponentM");
-    }
-    prm.leave_subsection();
   }
   prm.leave_subsection();
 
@@ -288,26 +264,6 @@ Parameters GetParameters() {
 
   prm.enter_subsection("Solver");
   {
-    std::string temp = prm.get("Solver");
-    if (temp == "GMRES") {
-      ret.So_Solver = SolverOptions::GMRES;
-    } else if (temp == "MINRES") {
-      ret.So_Solver = SolverOptions::MINRES;
-    } else if (temp == "UMFPACK") {
-      ret.So_Solver = SolverOptions::UMFPACK;
-    }
-    ret.So_RestartSteps = prm.get_integer("GMRESSteps");
-    temp = prm.get("Preconditioner");
-    if (temp == "Sweeping") {
-      ret.So_Preconditioner = PreconditionerOptions::Sweeping;
-    } else if (temp == "FastSweeping") {
-      ret.So_Preconditioner = PreconditionerOptions::FastSweeping;
-    } else if (temp == "HSIESweeping") {
-      ret.So_Preconditioner = PreconditionerOptions::HSIESweeping;
-    } else if (temp == "HSIEFastSweeping") {
-      ret.So_Preconditioner = PreconditionerOptions::HSIEFastSweeping;
-    }
-    ret.So_PreconditionerDampening = prm.get_double("PreconditionerDampening");
     ret.So_TotalSteps = prm.get_integer("Steps");
     ret.So_Precision = prm.get_double("Precision");
   }
@@ -339,17 +295,8 @@ Parameters GetParameters() {
   }
   prm.leave_subsection();
 
-  ret.MPIC_World = MPI_COMM_WORLD;
   ret.MPI_Rank = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
   ret.NumberProcesses = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
-
-  ret.Head = (ret.MPI_Rank == 0);
-
-  ret.PMLLayer = (int)ret.MPI_Rank > ret.NumberProcesses - ret.M_BC_Zplus - 1;
-
-  ret.SystemLength = ret.M_R_ZLength + ret.M_BC_Zplus + ret.M_BC_Zminus;
-
-  ret.LayerThickness = ret.SystemLength / (double)ret.NumberProcesses;
 
   deallog << "Case Detection: ";
   if (ret.M_PC_Use) {
@@ -373,8 +320,6 @@ Parameters GetParameters() {
       } else {
         ret.M_W_Sectors = ret.sd.Sectors;
         ret.M_R_ZLength = ret.sd.z[ret.sd.Sectors - 1] - ret.sd.z[0];
-        ret.SystemLength = ret.M_R_ZLength + ret.M_BC_Zplus + ret.M_BC_Zminus;
-        ret.LayerThickness = ret.SystemLength / (double)ret.NumberProcesses;
       }
     }
   } else {
@@ -382,11 +327,6 @@ Parameters GetParameters() {
   }
 
   ret.SectorThickness = ret.M_R_ZLength / ret.M_W_Sectors;
-
-  ret.LayersPerSector = ret.SectorThickness / ret.LayerThickness;
-
-  ret.Maximum_Z = (ret.M_R_ZLength / 2.0) + ret.M_BC_Zplus;
-  ret.Minimum_Z = -(ret.M_R_ZLength / 2.0) - ret.M_BC_Zminus;
 
   deallog.push("Checking Waveguide Properties");
 
@@ -454,8 +394,8 @@ void mesh_info(const Triangulation<dim> &tria, const std::string &filename) {
   {
     std::map<unsigned int, unsigned int> boundary_count;
     typename Triangulation<dim>::active_cell_iterator cell =
-                                                          tria.begin_active(),
-                                                      endc = tria.end();
+        tria.begin_active();
+    typename Triangulation<dim>::active_cell_iterator endc = tria.end();
     for (; cell != endc; ++cell) {
       for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell;
            ++face) {
@@ -484,8 +424,8 @@ void mesh_info(const Triangulation<dim> &tria) {
   {
     std::map<unsigned int, unsigned int> boundary_count;
     typename Triangulation<dim>::active_cell_iterator cell =
-                                                          tria.begin_active(),
-                                                      endc = tria.end();
+        tria.begin_active();
+    typename Triangulation<dim>::active_cell_iterator endc = tria.end();
     for (; cell != endc; ++cell) {
       for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell;
            ++face) {
@@ -506,19 +446,19 @@ Point<3, double> Triangulation_Shit_To_Local_Geometry(
   Point<3, double> q = p;
 
   if (q[0] < 0) {
-    q[0] = Geometry.x_range.first;
+    q[0] = Geometry.local_x_range.first;
   } else {
-    q[0] = Geometry.x_range.second;
+    q[0] = Geometry.local_x_range.second;
   }
   if (q[1] < 0) {
-    q[1] = Geometry.y_range.first;
+    q[1] = Geometry.local_y_range.first;
   } else {
-    q[1] = Geometry.y_range.second;
+    q[1] = Geometry.local_y_range.second;
   }
   if (q[2] < 0) {
-    q[3] = Geometry.z_range.first;
+    q[3] = Geometry.local_z_range.first;
   } else {
-    q[3] = Geometry.z_range.second;
+    q[3] = Geometry.local_z_range.second;
   }
   return q;
 }

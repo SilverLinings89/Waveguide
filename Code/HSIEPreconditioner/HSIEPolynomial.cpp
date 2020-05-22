@@ -18,6 +18,7 @@ void HSIEPolynomial::computeDandI(unsigned int dimension,
       HSIEPolynomial::D.set(i, j, matrixD(i, j, k0));
     }
   }
+
   HSIEPolynomial::I.copy_from(HSIEPolynomial::D);
   HSIEPolynomial::I.invert(HSIEPolynomial::D);
   HSIEPolynomial::matricesLoaded = true;

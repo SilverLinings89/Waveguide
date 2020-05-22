@@ -17,19 +17,6 @@ double ExactSolution::value(const Point<3> &in_p,
                             const unsigned int component) const {
   Point<3, double> p = in_p;
   if (is_dual) p[2] = -in_p[2];
-  bool zero = false;
-  if (p[0] > GlobalParams.M_R_XLength / 2.0 - GlobalParams.M_BC_XPlus)
-    zero = true;
-  if (p[0] < -GlobalParams.M_R_XLength / 2.0 + GlobalParams.M_BC_XMinus)
-    zero = true;
-  if (p[1] > GlobalParams.M_R_YLength / 2.0 - GlobalParams.M_BC_YPlus)
-    zero = true;
-  if (p[1] < -GlobalParams.M_R_YLength / 2.0 + GlobalParams.M_BC_YMinus)
-    zero = true;
-  if (p[2] > GlobalParams.M_R_ZLength / 2.0) zero = true;
-  if (zero) {
-    return 0.0;
-  }
 
   if (is_rectangular) {
     std::complex<double> ret_val(0.0, 0.0);
@@ -95,7 +82,8 @@ double ExactSolution::value(const Point<3> &in_p,
         n = std::sqrt(GlobalParams.M_W_epsilonout);
       }
       double k = n * 2 * GlobalParams.C_Pi / GlobalParams.M_W_Lambda;
-      std::complex<double> phase(0.0, (p[2] - GlobalParams.Minimum_Z) * k);
+      std::complex<double> phase(0.0,
+          (p[2] - Geometry.global_z_range.first) * k);
       ret_val *= std::exp(phase);
       if (component > 2) {
         return ret_val.imag();
@@ -114,22 +102,7 @@ void ExactSolution::vector_value(const Point<3> &in_p,
                                  Vector<double> &values) const {
   Point<3, double> p = in_p;
   if (is_dual) p[2] = -in_p[2];
-  bool zero = false;
-  if (p[0] > GlobalParams.M_R_XLength / 2.0 - GlobalParams.M_BC_XPlus)
-    zero = true;
-  if (p[0] < -GlobalParams.M_R_XLength / 2.0 + GlobalParams.M_BC_XMinus)
-    zero = true;
-  if (p[1] > GlobalParams.M_R_YLength / 2.0 - GlobalParams.M_BC_YPlus)
-    zero = true;
-  if (p[1] < -GlobalParams.M_R_YLength / 2.0 + GlobalParams.M_BC_YMinus)
-    zero = true;
-  if (p[2] > GlobalParams.M_R_ZLength / 2.0) zero = true;
-  if (zero) {
-    for (unsigned int i = 0; i < values.size(); i++) {
-      values[i] = 0.0;
-    }
-    return;
-  }
+
   if (is_rectangular) {
     const double delta = abs(mesh_points[0] - mesh_points[1]);
     const int mesh_number = mesh_points.size();

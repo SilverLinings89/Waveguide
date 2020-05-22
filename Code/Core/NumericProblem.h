@@ -296,6 +296,9 @@ class NumericProblem {
       unsigned int b_id);
 
   std::vector<unsigned int> dofs_for_cell_around_point(dealii::Point<3> &in_p);
+
+  void make_sparsity_pattern(dealii::SparsityPattern *in_pattern,
+      unsigned int shift);
 };
 
 #endif

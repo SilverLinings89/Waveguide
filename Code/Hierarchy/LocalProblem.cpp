@@ -34,9 +34,7 @@ void LocalProblem::initialize() {
   for (unsigned int side = 0; side < 6; side++) {
     dealii::Triangulation<2, 3> temp_triangulation;
     dealii::Triangulation<2> surf_tria;
-    std::complex<double> k0;
-    std::map<dealii::Triangulation<2, 3>::cell_iterator,
-        dealii::Triangulation<3, 3>::face_iterator> association;
+    std::complex<double> k0(0, 1);
     std::cout << "Initializing surface " << side << " in local problem.";
     dealii::Triangulation<3> tria;
     std::cout << "Copy base tria" << std::endl;
@@ -62,7 +60,7 @@ void LocalProblem::initialize() {
     default:
       break;
     }
-    association = dealii::GridGenerator::extract_boundary_mesh(tria,
+    dealii::GridGenerator::extract_boundary_mesh(tria,
         temp_triangulation, b_ids);
     const unsigned int component = side / 2;
     auto temp_it = temp_triangulation.begin();
@@ -72,37 +70,32 @@ void LocalProblem::initialize() {
     switch (side) {
     case 0:
       surface_0 = new HSIESurface(5, std::ref(surf_tria), side,
-          GlobalParams.So_ElementOrder, k0, std::ref(association),
-          additional_coorindate);
+          GlobalParams.So_ElementOrder, k0, additional_coorindate);
       break;
     case 1:
       surface_1 = new HSIESurface(5, std::ref(surf_tria), side,
-          GlobalParams.So_ElementOrder, k0, std::ref(association),
-          additional_coorindate);
+          GlobalParams.So_ElementOrder, k0, additional_coorindate);
       break;
     case 2:
       surface_2 = new HSIESurface(5, std::ref(surf_tria), side,
-          GlobalParams.So_ElementOrder, k0, std::ref(association),
-          additional_coorindate);
+          GlobalParams.So_ElementOrder, k0, additional_coorindate);
       break;
     case 3:
       surface_3 = new HSIESurface(5, std::ref(surf_tria), side,
-          GlobalParams.So_ElementOrder, k0, std::ref(association),
-          additional_coorindate);
+          GlobalParams.So_ElementOrder, k0, additional_coorindate);
       break;
     case 4:
       surface_4 = new HSIESurface(5, std::ref(surf_tria), side,
-          GlobalParams.So_ElementOrder, k0, std::ref(association),
-          additional_coorindate);
+          GlobalParams.So_ElementOrder, k0, additional_coorindate);
       break;
     case 5:
       surface_5 = new HSIESurface(5, surf_tria, side,
-          GlobalParams.So_ElementOrder, k0, association, additional_coorindate);
+          GlobalParams.So_ElementOrder, k0, additional_coorindate);
       break;
     default:
       break;
     }
-    std::cout << "Done" << std::endl;
+
   }
   surfaces = new HSIESurface*[6];
   surfaces[0] = surface_0;
@@ -111,14 +104,23 @@ void LocalProblem::initialize() {
   surfaces[3] = surface_3;
   surfaces[4] = surface_4;
   surfaces[5] = surface_5;
+  for (unsigned int i = 0; i < 6; i++) {
+    surfaces[i]->initialize();
+  }
+  std::cout << "Done" << std::endl;
+  std::cout << "Initialize index sets" << std::endl;
+  initialize_own_dofs();
+  std::cout << "Number of local dofs: " << n_own_dofs << std::endl;
+  std::cout << "End of Local Problem Initialize()." << std::endl;
 }
 
 void LocalProblem::generate_sparsity_pattern() {
 }
 
 unsigned int LocalProblem::compute_own_dofs() {
-  unsigned int ret = 0;
-  ret += base_problem.dof_handler.n_dofs();
+  std::cout << "Begin Compute own dofs: " << std::endl;
+  surface_first_dofs.clear();
+  unsigned int ret = base_problem.dof_handler.n_dofs();
   surface_first_dofs.push_back(ret);
   for (unsigned int i = 0; i < 6; i++) {
     ret += surfaces[i]->dof_counter;
@@ -126,6 +128,10 @@ unsigned int LocalProblem::compute_own_dofs() {
       surface_first_dofs.push_back(ret);
     }
   }
+  for (unsigned int i = 0; i < surface_first_dofs.size(); i++) {
+    std::cout << surface_first_dofs[i] << " ";
+  }
+  std::cout << std::endl;
   return ret;
 }
 
@@ -165,16 +171,32 @@ void LocalProblem::make_constraints() {
 }
 
 void LocalProblem::assemble() {
+  std::cout << "Start LocalProblem::assemble()" << std::endl;
   base_problem.assemble_system();
   dealii::SparsityPattern sp(n_own_dofs, n_own_dofs, 100);
-  matrix->reinit(sp);
-  matrix->copy_from(base_problem.system_matrix);
-
+  base_problem.make_sparsity_pattern(&sp, 0);
   for (unsigned int surface = 0; surface < 6; surface++) {
+    surfaces[surface]->fill_sparsity_pattern(&sp, surface_first_dofs[surface]);
+  }
+  sp.compress();
+  matrix = new dealii::SparseMatrix<double>(sp);
+
+  std::cout << "Copy Main Matrix" << std::endl;
+  for (auto it = base_problem.system_matrix.begin();
+      it != base_problem.system_matrix.end(); it++) {
+    matrix->add(it->row(), it->column(), it->value());
+  }
+  std::cout << "Done" << std::endl;
+  for (unsigned int surface = 0; surface < 6; surface++) {
+    std::cout << "Fill Surface Block " << surface << std::endl;
+    std::cout << surface_first_dofs[surface] << std::endl;
     surfaces[surface]->fill_matrix(matrix, surface_first_dofs[surface]);
   }
+  std::cout << "Condense" << std::endl;
   constraints.condense(*matrix);
+  std::cout << "Compress" << std::endl;
   matrix->compress(dealii::VectorOperation::add);
+  std::cout << "End LocalProblem::assemble()" << std::endl;
 }
 
 void LocalProblem::initialize_own_dofs() {
@@ -182,8 +204,10 @@ void LocalProblem::initialize_own_dofs() {
 }
 
 void LocalProblem::run() {
+  std::cout << "Start LocalProblem::run()" << std::endl;
   assemble();
   solve();
+  std::cout << "End LocalProblem::run()" << std::endl;
 }
 
 void LocalProblem::solve() {

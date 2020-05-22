@@ -24,21 +24,18 @@ HSIESurface::HSIESurface(unsigned int in_order,
     const dealii::Triangulation<2, 2> &in_surface_triangulation,
     unsigned int in_boundary_id, unsigned int in_inner_order,
     std::complex<double> in_k0,
-    std::map<dealii::Triangulation<2, 3>::cell_iterator,
-             dealii::Triangulation<3, 3>::face_iterator>
-        in_assoc,
     double in_additional_coordinate)
     :
     order(in_order), b_id(in_boundary_id),
-      dof_h_nedelec(in_surface_triangulation),
       dof_h_q(in_surface_triangulation),
       Inner_Element_Order(in_inner_order),
       fe_nedelec(Inner_Element_Order),
       fe_q(Inner_Element_Order + 1),
       additional_coordinate(
         in_additional_coordinate) {
-  association = in_assoc;
   surface_triangulation.copy_triangulation(in_surface_triangulation);
+  dof_h_nedelec.initialize(surface_triangulation, fe_nedelec);
+  dof_h_q.initialize(surface_triangulation, fe_q);
   this->set_mesh_boundary_ids();
   dof_counter = 0;
   k0 = in_k0;
@@ -165,14 +162,7 @@ std::vector<DofData> HSIESurface::get_dof_data_for_cell(
   // get edge dofs:
   for (unsigned int i = 0; i < 4; i++) {
     nedelec_edge_ids[i] = cell_nedelec->face_index(i);
-  }
-
-  for (unsigned int i = 0; i < 4; i++) {
     q_edge_ids[i] = cell_q->face_index(i);
-  }
-
-  // get vertex dofs:
-  for (unsigned int i = 0; i < 4; i++) {
     vertex_ids[i] = cell_q->vertex_index(i);
   }
 
@@ -338,7 +328,7 @@ void HSIESurface::fill_matrix(dealii::SparseMatrix<double> *matrix,
 void HSIESurface::fill_matrix(dealii::SparseMatrix<double> *matrix,
                                      dealii::IndexSet global_indices) {
   HSIEPolynomial::computeDandI(order + 2, k0);
-  auto it = dof_h_nedelec.begin_active();
+  auto it = dof_h_nedelec.begin();
   auto end = dof_h_nedelec.end();
 
   QGauss<2> quadrature_formula(2);
@@ -355,7 +345,8 @@ void HSIESurface::fill_matrix(dealii::SparseMatrix<double> *matrix,
       compute_dofs_per_face(false);
   FullMatrix<double> cell_matrix_real(dofs_per_cell, dofs_per_cell);
   unsigned int cell_counter = 0;
-  auto it2 = dof_h_q.begin_active();
+  std::cout << "Try 2" << std::endl;
+  auto it2 = dof_h_q.begin();
 
   for (; it != end; ++it) {
     cell_matrix_real = 0;
@@ -474,6 +465,44 @@ void HSIESurface::fill_matrix(dealii::SparseMatrix<double> *matrix,
     matrix->add(local_indices, cell_matrix_real);
     it2++;
     cell_counter++;
+  }
+}
+
+void HSIESurface::fill_sparsity_pattern(dealii::SparsityPattern *bsp,
+    unsigned int lowest_index) {
+  IndexSet is;
+  is.set_size(lowest_index + dof_counter);
+  is.add_range(lowest_index, lowest_index + dof_counter);
+  fill_sparsity_pattern(bsp, is);
+}
+
+void HSIESurface::fill_sparsity_pattern(dealii::SparsityPattern *sp,
+    dealii::IndexSet global_indices) {
+  auto it = dof_h_nedelec.begin();
+  auto end = dof_h_nedelec.end();
+
+  const unsigned int dofs_per_cell = GeometryInfo<2>::vertices_per_cell
+      * compute_dofs_per_vertex()
+      + GeometryInfo<2>::lines_per_cell * compute_dofs_per_edge(false)
+      + compute_dofs_per_face(false);
+  auto it2 = dof_h_q.begin();
+  for (; it != end; ++it) {
+    std::vector<DofData> cell_dofs = this->get_dof_data_for_cell(it, it2);
+    std::vector<unsigned int> q_dofs(fe_q.dofs_per_cell);
+    std::vector<unsigned int> n_dofs(fe_nedelec.dofs_per_cell);
+    it2->get_dof_indices(q_dofs);
+    it->get_dof_indices(n_dofs);
+    std::vector<unsigned int> local_indices;
+    for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+      local_indices.push_back(
+          global_indices.nth_index_in_set(cell_dofs[i].global_index));
+    }
+    for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+      for (unsigned int j = 0; j < cell_dofs.size(); j++) {
+        sp->add(local_indices[i], local_indices[j]);
+      }
+    }
+    it2++;
   }
 }
 
@@ -720,7 +749,8 @@ unsigned int HSIESurface::compute_dofs_per_vertex() {
 void HSIESurface::initialize() {
   initialize_dof_handlers_and_fe();
   DofCount a = compute_n_edge_dofs();
-
+  DofCount b = compute_n_face_dofs();
+  DofCount c = compute_n_vertex_dofs();
 }
 
 void HSIESurface::initialize_dof_handlers_and_fe() {
@@ -788,9 +818,9 @@ void HSIESurface::register_new_edge_dofs(
     Point<3, double> bp = undo_transform(
         cell_nedelec->face(edge)->center(false, false));
     add_surface_relevant_dof(
-        face_dof_data[edge_dof_data.size() - 2].global_index, bp);
+        edge_dof_data[edge_dof_data.size() - 2].global_index, bp);
     add_surface_relevant_dof(
-        face_dof_data[edge_dof_data.size() - 1].global_index, bp);
+        edge_dof_data[edge_dof_data.size() - 1].global_index, bp);
   }
 
   // INFINITE FACE Dofs Type a
@@ -805,7 +835,6 @@ void HSIESurface::register_new_edge_dofs(
                           local_dofs[inner_order]);
     }
   }
-
   // INFINITE FACE Dofs Type b
   local_dofs.clear();
   local_dofs.resize(fe_q.dofs_per_line + 2 * fe_q.dofs_per_vertex);

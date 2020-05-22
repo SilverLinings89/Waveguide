@@ -80,34 +80,6 @@ struct Parameters {
 
   double M_W_Lambda;
 
-  BoundaryConditionType M_BC_Type;
-
-  double M_BC_Zminus;
-
-  double M_BC_Zplus;
-
-  double M_BC_XMinus;
-
-  double M_BC_XPlus;
-
-  double M_BC_YMinus;
-
-  double M_BC_YPlus;
-
-  double M_BC_KappaXMax;
-
-  double M_BC_KappaZMax;
-
-  double M_BC_KappaYMax;
-
-  double M_BC_SigmaXMax;
-
-  double M_BC_SigmaZMax;
-
-  double M_BC_SigmaYMax;
-
-  double M_BC_DampeningExponent;
-
   bool Sc_Homogeneity;
 
   OptimizationSchema Sc_Schema;
@@ -117,12 +89,6 @@ struct Parameters {
   SteppingMethod Sc_SteppingMethod;
 
   // StepWidth Sc_StepWidth;
-
-  SolverOptions So_Solver;
-
-  PreconditionerOptions So_Preconditioner;
-
-  double So_PreconditionerDampening;
 
   int So_ElementOrder;
 
@@ -154,26 +120,12 @@ struct Parameters {
 
   int R_Interior;
 
-  double LayerThickness;
-
   double SectorThickness;
 
   unsigned int MPI_Rank;
 
-  MPI_Comm MPIC_World;
-
-  bool PMLLayer;
-
-  double LayersPerSector;
-
   unsigned int NumberProcesses;
 
-  bool Head = false;
-
-  double SystemLength;
-
-  double Maximum_Z;
-  double Minimum_Z;
   // unsigned int MPI_Size;
 
   double Phys_V;

@@ -21,17 +21,26 @@ void GeometryManager::initialize() {
 }
 
 void GeometryManager::set_x_range(std::pair<double, double> in_range) {
-  this->x_range = in_range;
+  this->local_x_range = in_range;
+  std::pair<double, double> global_range(0.0, 0.0);
+  global_range.first = -GlobalParams.M_R_XLength / 2.0;
+  this->global_x_range = global_range;
   return;
 }
 
 void GeometryManager::set_y_range(std::pair<double, double> in_range) {
-  this->y_range = in_range;
+  this->local_y_range = in_range;
+  std::pair<double, double> global_range(0.0, 0.0);
+  global_range.first = -GlobalParams.M_R_YLength / 2.0;
+  this->global_y_range = global_range;
   return;
 }
 
 void GeometryManager::set_z_range(std::pair<double, double> in_range) {
-  this->z_range = in_range;
+  this->local_z_range = in_range;
+  std::pair<double, double> global_range(0.0, 0.0);
+  global_range.first = -GlobalParams.M_R_ZLength / 2.0;
+  this->global_z_range = global_range;
   return;
 }
 

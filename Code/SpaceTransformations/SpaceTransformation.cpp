@@ -14,16 +14,20 @@ std::pair<int, double> SpaceTransformation::Z_to_Sector_and_local_z(
   std::pair<int, double> ret;
   ret.first = 0;
   ret.second = 0.0;
-  if (in_z <= -GlobalParams.M_R_ZLength / 2.0) {
+  if (in_z <= Geometry.global_z_range.first) {
     ret.first = 0;
     ret.second = 0.0;
-  } else if (abs(in_z) < GlobalParams.M_R_ZLength / 2.0) {
-    ret.first = floor((in_z + GlobalParams.M_R_ZLength / 2.0) /
+  } else if (in_z < Geometry.global_z_range.second
+      && in_z > Geometry.global_z_range.first) {
+    ret.first = floor(
+        (in_z + Geometry.global_z_range.first)
+            /
                       (GlobalParams.SectorThickness));
-    ret.second = (in_z + GlobalParams.M_R_ZLength / 2.0 -
+    ret.second = (in_z + Geometry.global_z_range.first
+        -
                   (ret.first * GlobalParams.SectorThickness)) /
                  (GlobalParams.SectorThickness);
-  } else if (in_z >= GlobalParams.M_R_ZLength / 2.0) {
+  } else if (in_z >= Geometry.global_z_range.second) {
     ret.first = sectors - 1;
     ret.second = 1.0;
   }
@@ -44,20 +48,6 @@ SpaceTransformation::SpaceTransformation(int in_dofs_per_layer, int in_rank)
 
 double SpaceTransformation::Sector_Length() const {
   return GlobalParams.SectorThickness;
-}
-
-int SpaceTransformation::Z_to_Layer(double in_z) const {
-  double temp = (in_z - GlobalParams.Minimum_Z) / GlobalParams.LayerThickness;
-  int flr = floor(temp);
-  if (flr == 0) {
-    return 0;
-  } else {
-    if (temp - flr < 0.000001) {
-      return flr - 1;
-    } else {
-      return flr;
-    }
-  }
 }
 
 bool SpaceTransformation::is_identity(Point<3, double> coord) const {
@@ -94,16 +84,13 @@ bool SpaceTransformation::point_in_dof_support(Point<3> location,
 Tensor<2, 3, std::complex<double>> SpaceTransformation::get_Tensor_for_step(
     Point<3> &coordinate, unsigned int dof, double step_width) {
   double old_value = get_dof(dof);
-  Tensor<2, 3, double> trafo = get_Space_Transformation_Tensor(coordinate);
+  Tensor<2, 3, double> trafo1 = get_Space_Transformation_Tensor(coordinate);
 
-  Tensor<2, 3, std::complex<double>> original =
-      Apply_PML_To_Tensor(coordinate, trafo);
   set_dof(dof, old_value + step_width);
-  trafo = get_Space_Transformation_Tensor(coordinate);
-  Tensor<2, 3, std::complex<double>> ret =
-      Apply_PML_To_Tensor(coordinate, trafo);
+  Tensor<2, 3, double> trafo2 = get_Space_Transformation_Tensor(coordinate);
+
   set_dof(dof, old_value);
-  return ret - original;
+  return trafo2 - trafo1;
 }
 
 

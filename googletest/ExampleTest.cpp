@@ -95,7 +95,6 @@ public:
     dealii::Triangulation<2,3> temp_triangulation;
     dealii::Triangulation<2> surf_tria;
     std::complex<double> k0;
-    std::map<dealii::Triangulation<2,3>::cell_iterator, dealii::Triangulation<3,3>::face_iterator > association;
 protected:
     void SetUp() override {
         std::tuple<unsigned  int, unsigned int> Params = GetParam();
@@ -112,7 +111,8 @@ protected:
         std::set<unsigned int> b_ids;
         b_ids.insert(4);
         dealii::GridTools::transform(Transform_4_to_5, tria);
-        association = dealii::GridGenerator::extract_boundary_mesh( tria, temp_triangulation, b_ids);
+    dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation,
+        b_ids);
         const unsigned int dest_surf_cells = Cells_Per_Direction*Cells_Per_Direction;
         dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
     }
@@ -129,7 +129,6 @@ public:
     dealii::Triangulation<2> surf_tria;
     std::complex<double> k0;
     std::set<unsigned int> b_ids;
-    std::map<dealii::Triangulation<2,3>::cell_iterator, dealii::Triangulation<3,3>::face_iterator > association;
 protected:
     void SetUp() override {
         std::tuple<unsigned  int, unsigned int, unsigned int> Params = GetParam();
@@ -168,7 +167,7 @@ protected:
 };
 
 TEST_P(TestDirectionFixture, TestCellRequirements) {
-    association = dealii::GridGenerator::extract_boundary_mesh( tria, temp_triangulation, b_ids);
+  dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation, b_ids);
     const unsigned int dest_surf_cells = Cells_Per_Direction*Cells_Per_Direction;
     ASSERT_EQ(temp_triangulation.n_active_cells(), dest_surf_cells);
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
@@ -176,12 +175,12 @@ TEST_P(TestDirectionFixture, TestCellRequirements) {
 }
 
 TEST_P(TestDirectionFixture, DofNumberingTest1) {
-    association = dealii::GridGenerator::extract_boundary_mesh( tria, temp_triangulation, b_ids);
+  dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation, b_ids);
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
   const unsigned int component = 0;
   auto temp_it = temp_triangulation.begin();
   double additional_coorindate = temp_it->center()[component];
-  HSIESurface surf(5, surf_tria, boundary_id, InnerOrder, k0, association,
+  HSIESurface surf(5, surf_tria, boundary_id, InnerOrder, k0,
       additional_coorindate);
     surf.initialize();
     std::vector< types::boundary_id > boundary_ids_of_flattened_mesh = surf.get_boundary_ids();
@@ -195,7 +194,7 @@ TEST_P(TestOrderFixture, AssemblationTestOrder5) {
   const unsigned int component = 0;
   auto temp_it = temp_triangulation.begin();
   double additional_coorindate = temp_it->center()[component];
-  HSIESurface surf(5, surf_tria, 0, InnerOrder, k0, association,
+  HSIESurface surf(5, surf_tria, 0, InnerOrder, k0,
       additional_coorindate);
     surf.initialize();
     ASSERT_EQ(surf.compute_dofs_per_vertex(), dofs_per_vertex(5) * 2 );
@@ -226,7 +225,7 @@ TEST_P(TestOrderFixture, AssemblationTestOrder10) {
   const unsigned int component = 0;
   auto temp_it = temp_triangulation.begin();
   double additional_coorindate = temp_it->center()[component];
-  HSIESurface surf(10, surf_tria, 0, InnerOrder, k0, association,
+  HSIESurface surf(10, surf_tria, 0, InnerOrder, k0,
       additional_coorindate);
     surf.initialize();
     ASSERT_EQ(surf.compute_dofs_per_vertex(), dofs_per_vertex(10) * 2 );

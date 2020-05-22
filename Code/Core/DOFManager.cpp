@@ -388,16 +388,12 @@ DOFManager::DOFManager(unsigned int i_dofs_per_cell,
     b_ids.insert(i);
     dealii::Triangulation<2,3> temp_triangulation;
     dealii::Triangulation<2> surf_tria;
-    std::map<dealii::Triangulation<2,3>::cell_iterator, dealii::Triangulation<3,3>::face_iterator > association;
-    association = dealii::GridGenerator::extract_boundary_mesh( *in_triangulation, temp_triangulation, b_ids);
+    dealii::GridGenerator::extract_boundary_mesh(*in_triangulation,
+        temp_triangulation, b_ids);
     const unsigned int component = i / 2;
     auto temp_it = surf_tria.begin();
     double additional_coorindate = temp_it->center()[component];
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
-    this->hsie_surfaces[i] = new HSIESurface(5, surf_tria, i,
-        GlobalParams.So_ElementOrder,
-        std::complex<double>(1, 0), association,
-        additional_coorindate);
   }
 }
 

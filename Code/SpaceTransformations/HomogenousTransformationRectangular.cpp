@@ -13,12 +13,6 @@ using namespace dealii;
 HomogenousTransformationRectangular::HomogenousTransformationRectangular(
     int in_rank)
     : SpaceTransformation(2, in_rank),
-      XMinus(-(GlobalParams.M_R_XLength * 0.5 - GlobalParams.M_BC_XMinus)),
-      XPlus(GlobalParams.M_R_XLength * 0.5 - GlobalParams.M_BC_XPlus),
-      YMinus(-(GlobalParams.M_R_YLength * 0.5 - GlobalParams.M_BC_YMinus)),
-      YPlus(GlobalParams.M_R_YLength * 0.5 - GlobalParams.M_BC_YPlus),
-      ZMinus(-GlobalParams.M_R_ZLength * 0.5),
-      ZPlus(GlobalParams.M_R_ZLength * 0.5),
       epsilon_K(GlobalParams.M_W_epsilonin),
       epsilon_M(GlobalParams.M_W_epsilonout),
       sectors(GlobalParams.M_W_Sectors),
@@ -54,6 +48,31 @@ Point<3, double> HomogenousTransformationRectangular::math_to_phys(
   return ret;
 }
 
+Tensor<2, 3, double> HomogenousTransformationRectangular::get_Space_Transformation_Tensor_Homogenized(
+    Point<3, double> &position) const {
+  std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
+
+  Tensor<2, 3, double> transformation =
+      case_sectors[sector_z.first].TransformationTensorInternal(position[0],
+          position[1], sector_z.second);
+
+  double dist = position[0] * position[0] + position[1] * position[1];
+
+  dist = sqrt(dist);
+  double v1 = Geometry.global_x_range.second;
+  double v2 = Geometry.global_y_range.second;
+  double maxdist = std::min(v1, v2);
+  double mindist = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / 2.0;
+  double sig = sigma(dist, mindist, maxdist);
+  double factor = InterpolationPolynomialZeroDerivative(sig, 1, 0);
+  transformation *= factor;
+  for (int i = 0; i < 3; i++) {
+    transformation[i][i] += 1 - factor;
+  }
+
+  return transformation;
+}
+
 Point<3, double> HomogenousTransformationRectangular::phys_to_math(
     Point<3, double> coord) const {
   Point<3, double> ret;
@@ -80,93 +99,10 @@ Point<3, double> HomogenousTransformationRectangular::phys_to_math(
   return ret;
 }
 
-bool HomogenousTransformationRectangular::PML_in_X(Point<3, double> &p) const {
-  return p[0] < XMinus || p[0] > XPlus;
-}
-
-bool HomogenousTransformationRectangular::PML_in_Y(Point<3, double> &p) const {
-  return p[1] < YMinus || p[1] > YPlus;
-}
-
-bool HomogenousTransformationRectangular::PML_in_Z(Point<3, double> &p) const {
-  return p[2] > ZPlus || p[2] < ZMinus;
-}
-
-double HomogenousTransformationRectangular::Preconditioner_PML_Z_Distance(
-    Point<3, double> &p, unsigned int rank) const {
-  return p[2] - GlobalParams.Minimum_Z -
-         ((double)rank) * GlobalParams.LayerThickness;
-}
-
-double HomogenousTransformationRectangular::PML_X_Distance(
-    Point<3, double> &p) const {
-  if (p[0] > 0) {
-    return p[0] - XPlus;
-  } else {
-    return -p[0] + XMinus;
-  }
-}
-
-double HomogenousTransformationRectangular::PML_Y_Distance(
-    Point<3, double> &p) const {
-  if (p[1] > 0) {
-    return p[1] - YPlus;
-  } else {
-    return -p[1] + YMinus;
-  }
-}
-
-double HomogenousTransformationRectangular::PML_Z_Distance(
-    Point<3, double> &p) const {
-  if (p[2] < 0) {
-    return -(p[2] + (GlobalParams.M_R_ZLength / 2.0));
-  } else {
-    return p[2] - (GlobalParams.M_R_ZLength / 2.0);
-  }
-}
-
 Tensor<2, 3, std::complex<double>>
 HomogenousTransformationRectangular::get_Tensor(
     Point<3, double> &position) const {
-  Tensor<2, 3, double> transform =
-      get_Space_Transformation_Tensor_Homogenized(position);
-  return Apply_PML_To_Tensor(position, transform);
-}
-
-Tensor<2, 3, std::complex<double>>
-HomogenousTransformationRectangular::get_Preconditioner_Tensor(
-    Point<3, double> &position, int block) const {
-  Tensor<2, 3, double> transform =
-      get_Space_Transformation_Tensor_Homogenized(position);
-  return Apply_PML_To_Tensor_For_Preconditioner(position, transform, block);
-}
-
-Tensor<2, 3, double> HomogenousTransformationRectangular::
-    get_Space_Transformation_Tensor_Homogenized(
-        Point<3, double> &position) const {
-  std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
-
-  Tensor<2, 3, double> transformation =
-      case_sectors[sector_z.first].TransformationTensorInternal(
-          position[0], position[1], sector_z.second);
-
-  double dist = position[0] * position[0] + position[1] * position[1];
-
-  dist = sqrt(dist);
-  double v1 = GlobalParams.M_R_XLength / 2.0 -
-              std::min(GlobalParams.M_BC_XMinus, GlobalParams.M_BC_XPlus);
-  double v2 = GlobalParams.M_R_YLength / 2.0 -
-              std::min(GlobalParams.M_BC_YMinus, GlobalParams.M_BC_YPlus);
-  double maxdist = std::min(v1, v2);
-  double mindist = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / 2.0;
-  double sig = sigma(dist, mindist, maxdist);
-  double factor = InterpolationPolynomialZeroDerivative(sig, 1, 0);
-  transformation *= factor;
-  for (int i = 0; i < 3; i++) {
-    transformation[i][i] += 1 - factor;
-  }
-
-  return transformation;
+  return get_Space_Transformation_Tensor_Homogenized(position);
 }
 
 Tensor<2, 3, double>
@@ -179,155 +115,6 @@ HomogenousTransformationRectangular::get_Space_Transformation_Tensor(
           position[0], position[1], sector_z.second);
 
   return transformation;
-}
-
-Tensor<2, 3, std::complex<double>>
-HomogenousTransformationRectangular::Apply_PML_To_Tensor(
-    Point<3, double> &position, Tensor<2, 3, double> transformation) const {
-  Tensor<2, 3, std::complex<double>> MaterialTensor;
-
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
-      MaterialTensor[i][j] =
-          transformation[i][j] * std::complex<double>(1.0, 0.0);
-    }
-  }
-
-  std::complex<double> sx(1.0, 0.0), sy(1.0, 0.0), sz(1.0, 0.0);
-
-  if (PML_in_X(position)) {
-    double r, d;
-    r = PML_X_Distance(position);
-    if (position[0] < 0) {
-      d = GlobalParams.M_BC_XMinus;
-    } else {
-      d = GlobalParams.M_BC_XPlus;
-    }
-    sx.real(1 + pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-                    GlobalParams.M_BC_KappaXMax);
-    sx.imag(pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-            GlobalParams.M_BC_SigmaXMax);
-  }
-
-  if (PML_in_Y(position)) {
-    double r, d;
-    r = PML_Y_Distance(position);
-    if (position[1] < 0) {
-      d = GlobalParams.M_BC_YMinus;
-    } else {
-      d = GlobalParams.M_BC_YPlus;
-    }
-
-    sy.real(1 + pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-                    GlobalParams.M_BC_KappaYMax);
-    sy.imag(pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-            GlobalParams.M_BC_SigmaYMax);
-  }
-
-  if (PML_in_Z(position)) {
-    double r, d;
-    r = PML_Z_Distance(position);
-    if (position[1] < 0) {
-      d = GlobalParams.M_BC_Zminus;
-    } else {
-      d = GlobalParams.M_BC_Zplus;
-    }
-    sz.real(1 + pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-                    GlobalParams.M_BC_KappaZMax);
-    sz.imag(pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-            GlobalParams.M_BC_SigmaZMax);
-  }
-
-  MaterialTensor[0][0] *= sy * sz / sx;
-  MaterialTensor[0][1] *= sz;
-  MaterialTensor[0][2] *= sy;
-
-  MaterialTensor[1][0] *= sz;
-  MaterialTensor[1][1] *= sx * sz / sy;
-  MaterialTensor[1][2] *= sx;
-
-  MaterialTensor[2][0] *= sy;
-  MaterialTensor[2][1] *= sx;
-  MaterialTensor[2][2] *= sx * sy / sz;
-
-  return MaterialTensor;
-}
-
-Tensor<2, 3, std::complex<double>>
-HomogenousTransformationRectangular::Apply_PML_To_Tensor_For_Preconditioner(
-    Point<3, double> &position, Tensor<2, 3, double> transformation,
-    int) const {
-  Tensor<2, 3, std::complex<double>> MaterialTensor;
-
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
-      MaterialTensor[i][j] =
-          transformation[i][j] * std::complex<double>(1.0, 0.0);
-    }
-  }
-
-  std::complex<double> sx(1.0, 0.0), sy(1.0, 0.0), sz(1.0, 0.0), sz_p(0.0, 0.0);
-  if (PML_in_X(position)) {
-    double r, d;
-    r = PML_X_Distance(position);
-    if (position[0] < 0) {
-      d = GlobalParams.M_BC_XMinus;
-    } else {
-      d = GlobalParams.M_BC_XPlus;
-    }
-    sx.real(1 + pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-                    GlobalParams.M_BC_KappaXMax);
-    sx.imag(pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-            GlobalParams.M_BC_SigmaXMax);
-  }
-  if (PML_in_Y(position)) {
-    double r, d;
-    r = PML_Y_Distance(position);
-    if (position[1] < 0) {
-      d = GlobalParams.M_BC_YMinus;
-    } else {
-      d = GlobalParams.M_BC_YPlus;
-    }
-
-    sy.real(1 + pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-                    GlobalParams.M_BC_KappaYMax);
-    sy.imag(pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-            GlobalParams.M_BC_SigmaYMax);
-  }
-
-  if (Preconditioner_PML_Z_Distance(position, rank) > 0) {
-    double r_temp = Preconditioner_PML_Z_Distance(position, rank);
-    double d_temp = GlobalParams.LayerThickness;
-
-    sz.real(1 + pow(r_temp / d_temp, GlobalParams.M_BC_DampeningExponent) *
-                    GlobalParams.M_BC_KappaZMax);
-    sz.imag(pow(r_temp / d_temp, GlobalParams.M_BC_DampeningExponent) *
-            GlobalParams.M_BC_SigmaZMax);
-  }
-
-  if (PML_in_Z(position)) {
-    double r, d;
-    r = PML_Z_Distance(position);
-    d = GlobalParams.M_BC_Zplus;
-    sz.real(1 + pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-                    GlobalParams.M_BC_KappaZMax);
-    sz.imag(pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-            GlobalParams.M_BC_SigmaZMax);
-  }
-
-  MaterialTensor[0][0] *= sy * sz / sx;
-  MaterialTensor[0][1] *= sz;
-  MaterialTensor[0][2] *= sy;
-
-  MaterialTensor[1][0] *= sz;
-  MaterialTensor[1][1] *= sx * sz / sy;
-  MaterialTensor[1][2] *= sx;
-
-  MaterialTensor[2][0] *= sy;
-  MaterialTensor[2][1] *= sx;
-  MaterialTensor[2][2] *= sx * sy / sz;
-
-  return MaterialTensor;
 }
 
 double HomogenousTransformationRectangular::get_dof(int dof) const {

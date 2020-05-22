@@ -23,9 +23,6 @@
 
 class HSIESurface {
   const unsigned int order;
-  std::map<dealii::Triangulation<2, 3>::cell_iterator,
-           dealii::Triangulation<3, 3>::face_iterator>
-      association;
   const unsigned int b_id;
   dealii::DoFHandler<2> dof_h_nedelec;
   dealii::DoFHandler<2> dof_h_q;
@@ -53,9 +50,6 @@ class HSIESurface {
       const dealii::Triangulation<2, 2> &in_surf_tria,
       unsigned int in_boundary_id,
               unsigned int in_inner_order, std::complex<double> k0,
-              std::map<dealii::Triangulation<2, 3>::cell_iterator,
-                       dealii::Triangulation<3, 3>::face_iterator>
-                  in_assoc,
       double in_additional_coordinate);
   void identify_corner_cells();
   void compute_edge_ownership_object(Parameters params);
@@ -77,6 +71,10 @@ class HSIESurface {
   void fill_matrix(dealii::SparseMatrix<double>*, unsigned int);
   void fill_matrix(dealii::TrilinosWrappers::SparseMatrix*, dealii::IndexSet);
   void fill_matrix(dealii::TrilinosWrappers::SparseMatrix*, unsigned int);
+  void fill_sparsity_pattern(dealii::SparsityPattern *in_dsp,
+      unsigned int shift);
+  void fill_sparsity_pattern(dealii::SparsityPattern *in_dsp,
+      dealii::IndexSet shift);
   void make_hanging_node_constraints(dealii::AffineConstraints<double>*,
       dealii::IndexSet);
   DofCount compute_n_edge_dofs();

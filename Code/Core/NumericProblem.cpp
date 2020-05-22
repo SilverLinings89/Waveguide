@@ -59,6 +59,7 @@ Tensor<1, 3, std::complex<double>> NumericProblem::Conjugate_Vector(
 
 void NumericProblem::make_grid() {
   // mg->prepare_triangulation(&triangulation);
+  std::cout << "Make Grid." << std::endl;
   const unsigned int Cells_Per_Direction = 21;
   std::vector<unsigned int> repetitions;
   repetitions.push_back(Cells_Per_Direction);
@@ -71,6 +72,8 @@ void NumericProblem::make_grid() {
   dof_handler.distribute_dofs(fe);
   SortDofsDownstream();
   n_dofs = dof_handler.n_dofs();
+  std::cout << "Mesh Preparation finished. System has " << n_dofs
+      << " degrees of freedom." << std::endl;
 }
 
 bool compareIndexCenterPairs(std::pair<int, double> c1,
@@ -80,7 +83,7 @@ bool compareIndexCenterPairs(std::pair<int, double> c1,
 
 std::vector<unsigned int> NumericProblem::dofs_for_cell_around_point(
     dealii::Point<3> &in_p) {
-  std::vector<unsigned int> ret;
+  std::vector<unsigned int> ret(fe.dofs_per_cell);
   auto cell = dof_handler.begin_active();
   auto endc = dof_handler.end();
   for (; cell != endc; ++cell) {
@@ -90,6 +93,38 @@ std::vector<unsigned int> NumericProblem::dofs_for_cell_around_point(
     }
   }
   return ret;
+}
+
+void NumericProblem::make_sparsity_pattern(
+    dealii::SparsityPattern *in_pattern,
+    unsigned int shift) {
+  reinit_rhs();
+
+  std::vector<Point<3>> quadrature_points;
+  const unsigned int dofs_per_cell = fe.dofs_per_cell;
+
+  deallog << "Starting Assemblation process" << std::endl;
+
+  std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+  auto cell = dof_handler.begin_active();
+  auto endc = dof_handler.end();
+
+  deallog << "Assembly loop." << std::endl;
+  for (; cell != endc; ++cell) {
+    cell->get_dof_indices(local_dof_indices);
+
+    std::vector<types::global_dof_index> input_dofs(fe.dofs_per_line);
+    IndexSet input_dofs_local_set(fe.dofs_per_cell);
+    std::vector<Point<3, double>> input_dof_centers(fe.dofs_per_cell);
+    std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
+
+    for (unsigned int i = 0; i < dofs_per_cell; i++) {
+      for (unsigned int j = 0; j < dofs_per_cell; j++) {
+        in_pattern->add(local_dof_indices[i] + shift,
+            local_dof_indices[j] + shift);
+      }
+    }
+  }
 }
 
 void NumericProblem::SortDofsDownstream() {
@@ -154,6 +189,13 @@ void NumericProblem::reinit_systemmatrix() {
   DynamicSparsityPattern dsp (dof_handler.n_dofs());
   DoFTools::make_sparsity_pattern(dof_handler, dsp);
   DoFTools::make_hanging_node_constraints(dof_handler, cm);
+  dealii::Point<3, double> center(0, 0, 0);
+  std::vector<unsigned int> restrained_dofs = dofs_for_cell_around_point(
+      center);
+  for (unsigned int i = 0; i < restrained_dofs.size(); i++) {
+    cm.add_line(restrained_dofs[i]);
+    cm.set_inhomogeneity(restrained_dofs[i], 1);
+  }
   cm.close();
   cm.condense(dsp);
   final_sparsity_pattern.copy_from(dsp);
@@ -228,9 +270,6 @@ void NumericProblem::assemble_system() {
   Tensor<2, 3, std::complex<double>> epsilon;
   Tensor<2, 3, std::complex<double>> mu;
   std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-  std::complex<double> k_a_sqr(GlobalParams.C_omega,
-                               GlobalParams.So_PreconditionerDampening);
-  k_a_sqr = k_a_sqr * k_a_sqr;
   for (unsigned int i = 0; i < 3; i++) {
     for (unsigned int j = 0; j < 3; j++) {
       if (i == j) {
