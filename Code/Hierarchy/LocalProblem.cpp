@@ -35,9 +35,9 @@ void LocalProblem::initialize() {
     dealii::Triangulation<2, 3> temp_triangulation;
     dealii::Triangulation<2> surf_tria;
     std::complex<double> k0(0, 1);
-    std::cout << "Initializing surface " << side << " in local problem.";
+    std::cout << "Initializing surface " << side << " in local problem."
+        << std::endl;
     dealii::Triangulation<3> tria;
-    std::cout << "Copy base tria" << std::endl;
     tria.copy_triangulation(base_problem.triangulation);
     std::set<unsigned int> b_ids;
     b_ids.insert(side);
@@ -65,7 +65,6 @@ void LocalProblem::initialize() {
     const unsigned int component = side / 2;
     auto temp_it = temp_triangulation.begin();
     double additional_coorindate = temp_it->center()[component];
-    std::cout << "Flatten base tria" << std::endl;
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
     switch (side) {
     case 0:
@@ -168,18 +167,50 @@ void LocalProblem::make_constraints() {
     constraints.set_inhomogeneity(restrained_dofs[i], 1);
   }
 
+  for (unsigned int i = 0; i < 6; i++) {
+    for (unsigned int j = i; j < 6; j++) {
+      bool opposing = ((i % 2) == 0) && (i + 1 == j);
+      if (!opposing) {
+        std::vector<unsigned int> lower_face_dofs =
+            surfaces[i]->get_dof_association_by_boundary_id(j);
+        std::vector<unsigned int> upper_face_dofs =
+            surfaces[j]->get_dof_association_by_boundary_id(i);
+        if (lower_face_dofs.size() != upper_face_dofs.size()) {
+          std::cout << "ERROR: There was a edge dof count error!" << std::endl
+              << "Surface " << i << " offers " << lower_face_dofs.size()
+              << " dofs, " << j << " offers " << upper_face_dofs.size() << "."
+              << std::endl;
+        }
+        for (unsigned int dof = 0; dof < lower_face_dofs.size(); dof++) {
+          unsigned int dof_a = lower_face_dofs[dof] + surface_first_dofs[i];
+          unsigned int dof_b = upper_face_dofs[dof] + surface_first_dofs[j];
+          if (!constraints.is_constrained(dof_a)) {
+            constraints.add_line(dof_a);
+            constraints.add_entry(dof_a, dof_b, -1);
+          } else {
+            if (!constraints.is_constrained(dof_b)) {
+              constraints.add_line(dof_b);
+              constraints.add_entry(dof_b, dof_a, -1);
+            } else {
+              std::cout << "Both dofs already restrained ..." << std::endl;
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 void LocalProblem::assemble() {
   std::cout << "Start LocalProblem::assemble()" << std::endl;
   base_problem.assemble_system();
-  dealii::SparsityPattern sp(n_own_dofs, n_own_dofs, 100);
-  base_problem.make_sparsity_pattern(&sp, 0);
+  sp = new dealii::SparsityPattern(n_own_dofs, n_own_dofs, 400);
+  base_problem.make_sparsity_pattern(sp, 0);
   for (unsigned int surface = 0; surface < 6; surface++) {
-    surfaces[surface]->fill_sparsity_pattern(&sp, surface_first_dofs[surface]);
+    surfaces[surface]->fill_sparsity_pattern(sp, surface_first_dofs[surface]);
   }
-  sp.compress();
-  matrix = new dealii::SparseMatrix<double>(sp);
+  sp->compress();
+  matrix = new dealii::SparseMatrix<double>(*sp);
 
   std::cout << "Copy Main Matrix" << std::endl;
   for (auto it = base_problem.system_matrix.begin();
@@ -189,10 +220,10 @@ void LocalProblem::assemble() {
   std::cout << "Done" << std::endl;
   for (unsigned int surface = 0; surface < 6; surface++) {
     std::cout << "Fill Surface Block " << surface << std::endl;
-    std::cout << surface_first_dofs[surface] << std::endl;
     surfaces[surface]->fill_matrix(matrix, surface_first_dofs[surface]);
   }
   std::cout << "Condense" << std::endl;
+  constraints.close();
   constraints.condense(*matrix);
   std::cout << "Compress" << std::endl;
   matrix->compress(dealii::VectorOperation::add);

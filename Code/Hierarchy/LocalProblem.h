@@ -26,7 +26,7 @@ public:
 
   dealii::SparseDirectUMFPACK solver;
   dealii::AffineConstraints<double> constraints;
-  dealii::SparsityPattern sp;
+  dealii::SparsityPattern *sp;
 
   LocalProblem();
   ~LocalProblem() override;

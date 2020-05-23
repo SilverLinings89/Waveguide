@@ -126,6 +126,8 @@ class HSIESurface {
   dealii::Point<3> undo_transform(dealii::Point<2>);
   void add_surface_relevant_dof(unsigned int in_global_index,
       dealii::Point<3, double> point);
+  std::vector<unsigned int> get_dof_association_by_boundary_id(
+      unsigned int in_boundary_id);
 };
 
 
