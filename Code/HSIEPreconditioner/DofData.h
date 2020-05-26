@@ -12,7 +12,6 @@ struct DofData {
   int hsie_order;
   int inner_order;
   bool nodal_basis;
-  bool is_real;
   unsigned int global_index;
   bool got_base_dof_index;
   unsigned int

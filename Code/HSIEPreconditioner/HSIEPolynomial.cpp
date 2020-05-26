@@ -62,11 +62,9 @@ HSIEPolynomial::HSIEPolynomial(DofData &in_dof, std::complex<double> in_k0) {
   for (int i = 0; i < in_dof.hsie_order - 1; i++) {
     this->a.emplace_back(0.0, 0.0);
   }
-  if (in_dof.is_real) {
-    this->a.emplace_back(1.0, 0.0);
-  } else {
-    this->a.emplace_back(0.0, 1.0);
-  }
+
+  this->a.emplace_back(1.0, 0.0);
+
   this->update_derivative();
   this->k0 = in_k0;
 }
@@ -116,7 +114,8 @@ void HSIEPolynomial::update_derivative() {
 }
 
 void HSIEPolynomial::applyTplus(std::complex<double> u_0) {
-  std::complex<double> temp_pre, temp_post;
+  std::complex<double> temp_pre;
+  std::complex<double> temp_post;
   temp_post = this->a[0];
   this->a[0] = u_0 + this->a[0];
   for (unsigned int i = 1; i < this->a.size(); i++) {
@@ -129,7 +128,8 @@ void HSIEPolynomial::applyTplus(std::complex<double> u_0) {
 }
 
 void HSIEPolynomial::applyTminus(std::complex<double> u_0) {
-  std::complex<double> temp_pre, temp_post;
+  std::complex<double> temp_pre;
+  std::complex<double> temp_post;
   temp_post = this->a[0];
   this->a[0] = u_0 - this->a[0];
   for (unsigned int i = 1; i < this->a.size(); i++) {

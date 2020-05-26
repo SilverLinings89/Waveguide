@@ -23,7 +23,7 @@
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_renumbering.h>
 #include <deal.II/dofs/dof_tools.h>
-#include <deal.II/fe/fe_nedelec.h>
+#include <deal.II/fe/fe_nedelec_sz.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_values.h>
@@ -36,7 +36,6 @@
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
 #include <deal.II/lac/affine_constraints.h>
-#include <deal.II/lac/block_matrix_array.h>
 #include <deal.II/lac/block_sparse_matrix.h>
 #include <deal.II/lac/block_sparsity_pattern.h>
 #include <deal.II/lac/block_vector.h>
@@ -272,23 +271,20 @@ class NumericProblem {
 
   SpaceTransformation *st;
 
-  dealii::FESystem<3> fe;
+  dealii::FE_NedelecSZ<3> fe;
 
   dealii::Triangulation<3> triangulation;
 
-  dealii::FEValuesExtractors::Vector real;
-  dealii::FEValuesExtractors::Vector imag;
-
   dealii::SolverControl solver_control;
 
-  dealii::AffineConstraints<double> cm;
+  dealii::AffineConstraints<std::complex<double>> cm;
   dealii::SparsityPattern final_sparsity_pattern;
   unsigned int n_dofs;
 
   dealii::DoFHandler<3> dof_handler;
 
-  dealii::TrilinosWrappers::SparseMatrix system_matrix;
-  dealii::Vector<double> system_rhs;
+  dealii::SparseMatrix<std::complex<double>> system_matrix;
+  dealii::Vector<std::complex<double>> system_rhs;
 
   dealii::IndexSet fixed_dofs;
 

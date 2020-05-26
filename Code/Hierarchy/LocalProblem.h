@@ -25,7 +25,7 @@ public:
   HSIESurface *surface_5;
 
   dealii::SparseDirectUMFPACK solver;
-  dealii::AffineConstraints<double> constraints;
+  dealii::AffineConstraints<std::complex<double>> constraints;
   dealii::SparsityPattern *sp;
 
   LocalProblem();
@@ -38,7 +38,8 @@ public:
 
   unsigned int compute_upper_interface_dof_count() override;
 
-  void solve(dealii::Vector<double> src, dealii::Vector<double> &dst) override;
+  void solve(dealii::Vector<std::complex<double>> src,
+      dealii::Vector<std::complex<double>> &dst) override;
 
   void initialize() override;
 
@@ -58,9 +59,16 @@ public:
 
   void initialize_index_sets() override;
 
-  void apply_sweep(dealii::LinearAlgebra::distributed::Vector<double>);
+  void apply_sweep(
+      dealii::LinearAlgebra::distributed::Vector<std::complex<double>>);
 
   LocalProblem* get_local_problem() override;
+
+  void validate();
+
+  dealii::Vector<std::complex<double>> get_local_vector_from_global() override;
+
+  void output_results();
 };
 
 

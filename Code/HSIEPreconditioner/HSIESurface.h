@@ -19,14 +19,14 @@
 #include "HSIEPolynomial.h"
 #include "../Helpers/Parameters.h"
 #include "../Helpers/Structs.h"
-
+#include <deal.II/lac/trilinos_sparse_matrix.h>
 
 class HSIESurface {
   const unsigned int order;
   const unsigned int b_id;
   dealii::DoFHandler<2> dof_h_nedelec;
   dealii::DoFHandler<2> dof_h_q;
-
+  bool is_metal = false;
   const unsigned int Inner_Element_Order;
   dealii::FE_NedelecSZ<2> fe_nedelec;
   dealii::FE_Q<2> fe_q;
@@ -50,7 +50,8 @@ class HSIESurface {
       const dealii::Triangulation<2, 2> &in_surf_tria,
       unsigned int in_boundary_id,
               unsigned int in_inner_order, std::complex<double> k0,
-      double in_additional_coordinate);
+      double in_additional_coordinate,
+      bool in_is_metal = false);
   void identify_corner_cells();
   void compute_edge_ownership_object(Parameters params);
   std::vector<HSIEPolynomial> build_curl_term_q(unsigned int,
@@ -67,10 +68,9 @@ class HSIESurface {
   std::vector<DofData> get_dof_data_for_cell(
       dealii::DoFHandler<2>::active_cell_iterator,
       dealii::DoFHandler<2>::active_cell_iterator);
-  void fill_matrix(dealii::SparseMatrix<double> *, dealii::IndexSet);
-  void fill_matrix(dealii::SparseMatrix<double>*, unsigned int);
-  void fill_matrix(dealii::TrilinosWrappers::SparseMatrix*, dealii::IndexSet);
-  void fill_matrix(dealii::TrilinosWrappers::SparseMatrix*, unsigned int);
+  void fill_matrix(dealii::SparseMatrix<std::complex<double>>*,
+      dealii::IndexSet);
+  void fill_matrix(dealii::SparseMatrix<std::complex<double>>*, unsigned int);
   void fill_sparsity_pattern(dealii::SparsityPattern *in_dsp,
       unsigned int shift);
   void fill_sparsity_pattern(dealii::SparsityPattern *in_dsp,

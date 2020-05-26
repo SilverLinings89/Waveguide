@@ -97,9 +97,14 @@ void NonLocalProblem::assemble() {
 
 }
 
-void NonLocalProblem::solve(dealii::Vector<double> src,
-    dealii::Vector<double> &dst) {
-  dealii::Vector<double> inputb(n_own_dofs);
+dealii::Vector<std::complex<double>> NonLocalProblem::get_local_vector_from_global() {
+  dealii::Vector<std::complex<double>> ret(n_own_dofs);
+  return ret;
+}
+
+void NonLocalProblem::solve(dealii::Vector<std::complex<double>> src,
+    dealii::Vector<std::complex<double>> &dst) {
+  dealii::Vector<std::complex<double>> inputb(n_own_dofs);
   for (unsigned int i = 0; i < n_own_dofs; i++) {
     inputb[i] = src(i);
   }
@@ -193,7 +198,7 @@ unsigned int NonLocalProblem::compute_upper_interface_dof_count() {
 }
 
 void NonLocalProblem::apply_sweep(
-    dealii::LinearAlgebra::distributed::Vector<double>) {
+    dealii::LinearAlgebra::distributed::Vector<std::complex<double>>) {
 
 }
 

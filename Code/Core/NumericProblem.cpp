@@ -9,7 +9,6 @@
 #include <deal.II/distributed/shared_tria.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/lac/affine_constraints.h>
-#include <deal.II/lac/block_matrix_array.h>
 #include <deal.II/lac/block_sparsity_pattern.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/solver.h>
@@ -30,10 +29,9 @@
 #include "../SpaceTransformations/HomogenousTransformationRectangular.h"
 
 NumericProblem::NumericProblem()
-    : fe(FE_Nedelec<3>(GlobalParams.So_ElementOrder), 2),
+    :
+    fe(GlobalParams.So_ElementOrder),
       triangulation(Triangulation<3>::MeshSmoothing(Triangulation<3>::none)),
-      real(0),
-      imag(3),
       dof_handler(triangulation) {
   mg = new SquareMeshGenerator();
   st = new HomogenousTransformationRectangular(0);
@@ -60,7 +58,7 @@ Tensor<1, 3, std::complex<double>> NumericProblem::Conjugate_Vector(
 void NumericProblem::make_grid() {
   // mg->prepare_triangulation(&triangulation);
   std::cout << "Make Grid." << std::endl;
-  const unsigned int Cells_Per_Direction = 21;
+  const unsigned int Cells_Per_Direction = 11;
   std::vector<unsigned int> repetitions;
   repetitions.push_back(Cells_Per_Direction);
   repetitions.push_back(Cells_Per_Direction);
@@ -103,13 +101,10 @@ void NumericProblem::make_sparsity_pattern(
   std::vector<Point<3>> quadrature_points;
   const unsigned int dofs_per_cell = fe.dofs_per_cell;
 
-  deallog << "Starting Assemblation process" << std::endl;
-
   std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
   auto cell = dof_handler.begin_active();
   auto endc = dof_handler.end();
 
-  deallog << "Assembly loop." << std::endl;
   for (; cell != endc; ++cell) {
     cell->get_dof_indices(local_dof_indices);
 
@@ -189,13 +184,13 @@ void NumericProblem::reinit_systemmatrix() {
   DynamicSparsityPattern dsp (dof_handler.n_dofs());
   DoFTools::make_sparsity_pattern(dof_handler, dsp);
   DoFTools::make_hanging_node_constraints(dof_handler, cm);
-  dealii::Point<3, double> center(0, 0, 0);
-  std::vector<unsigned int> restrained_dofs = dofs_for_cell_around_point(
-      center);
-  for (unsigned int i = 0; i < restrained_dofs.size(); i++) {
-    cm.add_line(restrained_dofs[i]);
-    cm.set_inhomogeneity(restrained_dofs[i], 1);
-  }
+  //dealii::Point<3, double> center(0, 0, 0);
+  // std::vector<unsigned int> restrained_dofs = dofs_for_cell_around_point(
+  //     center);
+  // for (unsigned int i = 0; i < restrained_dofs.size(); i++) {
+  //  cm.add_line(restrained_dofs[i]);
+  //  cm.set_inhomogeneity(restrained_dofs[i], 1);
+  // }
   cm.close();
   cm.condense(dsp);
   final_sparsity_pattern.copy_from(dsp);
@@ -217,25 +212,17 @@ std::vector<unsigned int> NumericProblem::get_surface_dof_vector_for_boundary_id
   std::vector<unsigned int> ret;
   auto cell = dof_handler.begin_active();
   auto endc = dof_handler.end();
-
-  for (; cell != endc; ++cell) {
-    if (cell->at_boundary(b_id)) {
-      for (unsigned int face = 0;
-          face < dealii::GeometryInfo<3>::faces_per_cell; face++) {
-        if (cell->face(face)->boundary_id() == b_id) {
-          std::vector<unsigned int> dof_indices;
-          cell->face(face)->get_dof_indices(dof_indices);
-          for (unsigned int i = 0; i < dof_indices.size(); i++) {
-            if (std::find(ret.begin(), ret.end(), dof_indices[i])
-                != ret.end()) {
-              ret.push_back(dof_indices[i]);
-            }
-          }
-        }
-      }
+  std::vector<bool> dof_vector;
+  std::set<unsigned int> b_ids;
+  b_ids.insert(b_id);
+  dealii::ComponentMask cm;
+  dealii::DoFTools::extract_boundary_dofs(dof_handler,
+      cm, dof_vector, b_ids);
+  for (unsigned int i = 0; i < dof_vector.size(); i++) {
+    if (dof_vector[i]) {
+      ret.push_back(i);
     }
   }
-  std::sort(ret.begin(), ret.end());
   return ret;
 }
 
@@ -243,8 +230,6 @@ void NumericProblem::assemble_system() {
   reinit_rhs();
 
   QGauss<3> quadrature_formula(2);
-  const FEValuesExtractors::Vector real(0);
-  const FEValuesExtractors::Vector imag(3);
   FEValues<3> fe_values(fe, quadrature_formula,
                         update_values | update_gradients | update_JxW_values |
                             update_quadrature_points);
@@ -254,9 +239,8 @@ void NumericProblem::assemble_system() {
 
   deallog << "Starting Assemblation process" << std::endl;
 
-  FullMatrix<double> cell_matrix_real(dofs_per_cell, dofs_per_cell);
-  FullMatrix<double> cell_matrix_prec_odd(dofs_per_cell, dofs_per_cell);
-  FullMatrix<double> cell_matrix_prec_even(dofs_per_cell, dofs_per_cell);
+  FullMatrix<std::complex<double>> cell_matrix_real(dofs_per_cell,
+      dofs_per_cell);
 
   double e_temp = 1.0;
   double mu_temp = 1.0;
@@ -283,66 +267,63 @@ void NumericProblem::assemble_system() {
   auto endc = dof_handler.end();
 
   deallog << "Assembly loop." << std::endl;
+  const dealii::Point<3> bounded_cell(0.0, 0.0, 0.0);
+  const FEValuesExtractors::Vector fe_field(0);
   for (; cell != endc; ++cell) {
-    cell->get_dof_indices(local_dof_indices);
-    cell_rhs.reinit(dofs_per_cell, false);
-    fe_values.reinit(cell);
 
-    quadrature_points = fe_values.get_quadrature_points();
-    std::vector<types::global_dof_index> input_dofs(fe.dofs_per_line);
-    IndexSet input_dofs_local_set(fe.dofs_per_cell);
-    std::vector<Point<3, double>> input_dof_centers(fe.dofs_per_cell);
-    std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
+      cell->get_dof_indices(local_dof_indices);
+      cell_rhs.reinit(dofs_per_cell, false);
+      fe_values.reinit(cell);
+      quadrature_points = fe_values.get_quadrature_points();
+      std::vector<types::global_dof_index> input_dofs(fe.dofs_per_line);
+      IndexSet input_dofs_local_set(fe.dofs_per_cell);
+      std::vector<Point<3, double>> input_dof_centers(fe.dofs_per_cell);
+      std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
 
-    cell_matrix_real = 0;
-    cell_matrix_prec_odd = 0;
-    cell_matrix_prec_even = 0;
-    for (unsigned int q_index = 0; q_index < n_q_points; ++q_index) {
+      cell_matrix_real = 0;
+      for (unsigned int q_index = 0; q_index < n_q_points; ++q_index) {
 
-      mu = invert(transformation) / mu_zero;
+        mu = invert(transformation) / mu_zero;
 
-      if (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])) {
-        epsilon = transformation * eps_in;
-      } else {
-        epsilon = transformation * eps_out;
-      }
-
-      const double JxW = fe_values.JxW(q_index);
-      for (unsigned int i = 0; i < dofs_per_cell; i++) {
-        Tensor<1, 3, std::complex<double>> I_Curl;
-        Tensor<1, 3, std::complex<double>> I_Val;
-        for (int k = 0; k < 3; k++) {
-          I_Curl[k].imag(fe_values[imag].curl(i, q_index)[k]);
-          I_Curl[k].real(fe_values[real].curl(i, q_index)[k]);
-          I_Val[k].imag(fe_values[imag].value(i, q_index)[k]);
-          I_Val[k].real(fe_values[real].value(i, q_index)[k]);
+        if (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])) {
+          epsilon = transformation * eps_in;
+        } else {
+          epsilon = transformation * eps_out;
         }
 
-        for (unsigned int j = 0; j < dofs_per_cell; j++) {
-          Tensor<1, 3, std::complex<double>> J_Curl;
-          Tensor<1, 3, std::complex<double>> J_Val;
-          for (int k = 0; k < 3; k++) {
-            J_Curl[k].imag(fe_values[imag].curl(j, q_index)[k]);
-            J_Curl[k].real(fe_values[real].curl(j, q_index)[k]);
-            J_Val[k].imag(fe_values[imag].value(j, q_index)[k]);
-            J_Val[k].real(fe_values[real].value(j, q_index)[k]);
+        const double JxW = fe_values.JxW(q_index);
+        for (unsigned int i = 0; i < dofs_per_cell; i++) {
+          Tensor<1, 3, std::complex<double>> I_Curl;
+          Tensor<1, 3, std::complex<double>> I_Val;
+        I_Curl = fe_values[fe_field].curl(i, q_index);
+        I_Val = fe_values[fe_field].value(i, q_index);
+
+          for (unsigned int j = 0; j < dofs_per_cell; j++) {
+            Tensor<1, 3, std::complex<double>> J_Curl;
+            Tensor<1, 3, std::complex<double>> J_Val;
+          J_Curl = fe_values[fe_field].curl(j, q_index);
+          J_Val = fe_values[fe_field].value(j, q_index);
+
+            std::complex<double> x = (mu * I_Curl) * Conjugate_Vector(J_Curl)
+                * JxW
+                - ((epsilon * I_Val) * Conjugate_Vector(J_Val)) * JxW
+                    * GlobalParams.C_omega * GlobalParams.C_omega;
+          cell_matrix_real[i][j] += x;
+
           }
-
-          std::complex<double> x =
-              (mu * I_Curl) * Conjugate_Vector(J_Curl) * JxW -
-              ((epsilon * I_Val) * Conjugate_Vector(J_Val)) * JxW *
-                  GlobalParams.C_omega * GlobalParams.C_omega;
-          cell_matrix_real[i][j] += x.real();
-
+        }
+      for (unsigned int i = 0; i < local_dof_indices.size(); i++) {
+        for (unsigned int j = 0; j < local_dof_indices.size(); j++) {
+          system_matrix.add(local_dof_indices[i], local_dof_indices[j],
+              cell_matrix_real[i][j]);
         }
       }
-      cm.distribute_local_to_global(cell_matrix_real, cell_rhs,
-                                    local_dof_indices, system_matrix,
-                                    system_rhs, false);
-
     }
   }
 
+  deallog << "System Matrix l_infty norm: " << system_matrix.linfty_norm()
+      << std::endl;
+  deallog << "System Matrix l_1 norm: " << system_matrix.l1_norm() << std::endl;
 
   deallog << "Assembling done. L2-Norm of RHS: " << system_rhs.l2_norm()
           << std::endl;

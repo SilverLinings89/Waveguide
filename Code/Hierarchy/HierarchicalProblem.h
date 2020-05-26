@@ -21,7 +21,8 @@ class HierarchicalProblem {
   const unsigned int local_level;
   DOFManager* dof_manager;
   DofIndexData indices;
-  dealii::SparseMatrix<double> *matrix;
+  dealii::SparseMatrix<std::complex<double>> *matrix;
+  dealii::Vector<std::complex<double>> rhs;
   unsigned int n_own_dofs;
   unsigned int first_own_index;
   unsigned int dofs_process_above;
@@ -35,7 +36,8 @@ class HierarchicalProblem {
   virtual unsigned int compute_lower_interface_dof_count()=0;
   virtual unsigned int compute_upper_interface_dof_count()=0;
 
-  virtual void solve(dealii::Vector<double> src, dealii::Vector<double> &dst)=0;
+  virtual void solve(dealii::Vector<std::complex<double>> src,
+      dealii::Vector<std::complex<double>> &dst)=0;
   virtual void initialize()=0;
   virtual void generate_sparsity_pattern()=0;
   virtual unsigned int compute_own_dofs()=0;
@@ -45,12 +47,13 @@ class HierarchicalProblem {
   virtual void assemble()=0;
   virtual void initialize_index_sets()=0;
   virtual void apply_sweep(
-      dealii::LinearAlgebra::distributed::Vector<double>)=0;
+      dealii::LinearAlgebra::distributed::Vector<std::complex<double>>)=0;
   virtual LocalProblem* get_local_problem()=0;
   void setup_dof_manager(DOFManager *in_dof_manager);
   void constrain_identical_dof_sets(std::vector<unsigned int> *set_one,
       std::vector<unsigned int> *set_two,
-      dealii::AffineConstraints<double> *affine_constraints);
+      dealii::AffineConstraints<std::complex<double>> *affine_constraints);
+  virtual dealii::Vector<std::complex<double>> get_local_vector_from_global() = 0;
 };
 
 #endif  // WAVEGUIDEPROBLEM_HIERARCHICALPROBLEM_H

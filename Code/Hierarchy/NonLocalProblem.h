@@ -33,7 +33,8 @@ private:
 
   void assemble() override;
 
-  void solve(dealii::Vector<double> src, dealii::Vector<double> &dst) override;
+  void solve(dealii::Vector<std::complex<double>> src,
+      dealii::Vector<std::complex<double>> &dst) override;
 
   void run() override;
 
@@ -45,11 +46,16 @@ private:
 
   void initialize_index_sets() override;
 
-  void apply_sweep(dealii::LinearAlgebra::distributed::Vector<double>) override;
+  void apply_sweep(
+      dealii::LinearAlgebra::distributed::Vector<std::complex<double>>)
+          override;
 
   LocalProblem* get_local_problem() override;
 
   void reinit();
+
+  dealii::Vector<std::complex<double>> get_local_vector_from_global() override;
+
 };
 
 #endif  // WAVEGUIDEPROBLEM_NONLOCALPROBLEM_H
