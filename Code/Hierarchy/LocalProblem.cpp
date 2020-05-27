@@ -353,7 +353,9 @@ LocalProblem* LocalProblem::get_local_problem() {
 }
 
 dealii::Vector<std::complex<double>> LocalProblem::get_local_vector_from_global() {
-  dealii::Vector<std::complex<double>> ret(base_problem.n_dofs);
+  dealii::Vector<std::complex<double>> ret(base_problem.dof_handler.n_dofs());
+  std::cout << "Dof handler dofs: " << base_problem.dof_handler.n_dofs()
+      << std::endl;
   for (unsigned int i = 0; i < base_problem.n_dofs; i++) {
     ret[i] = rhs[i];
   }
@@ -362,10 +364,10 @@ dealii::Vector<std::complex<double>> LocalProblem::get_local_vector_from_global(
 
 void LocalProblem::output_results() {
   dealii::DataOut<3> data_out;
-
+  dealii::Vector<std::complex<double>> solution =
+      get_local_vector_from_global();
   data_out.attach_dof_handler(base_problem.dof_handler);
-  data_out.add_data_vector(get_local_vector_from_global(), "Solution",
-      dealii::DataOut_DoFData<dealii::DoFHandler<3>, 3, 3>::DataVectorType::type_dof_data);
+  data_out.add_data_vector(solution, "Solution");
   data_out.build_patches();
   std::ofstream outputvtu("solution.vtu");
   data_out.write_vtu(outputvtu);
