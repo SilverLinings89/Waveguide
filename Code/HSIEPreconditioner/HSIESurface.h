@@ -128,6 +128,8 @@ class HSIESurface {
       dealii::Point<3, double> point);
   std::vector<unsigned int> get_dof_association_by_boundary_id(
       unsigned int in_boundary_id);
+  void clear_user_flags();
+
 };
 
 

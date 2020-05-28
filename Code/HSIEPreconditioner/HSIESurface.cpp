@@ -1065,15 +1065,30 @@ void HSIESurface::fill_sparsity_pattern(
   }
 }
 
+void HSIESurface::clear_user_flags() {
+  auto it = dof_h_nedelec.begin();
+  const auto end = dof_h_nedelec.end();
+  while (it != end) {
+    it->clear_user_flag();
+    for (unsigned int i = 0; i < 4; i++) {
+      it->face(i)->clear_user_flag();
+    }
+    it++;
+  }
+}
+
 std::vector<unsigned int> HSIESurface::get_dof_association_by_boundary_id(
     unsigned int in_boundary_id) {
   std::vector<unsigned int> ret;
+
   if (in_boundary_id == this->b_id) {
     return this->get_dof_association();
   } else {
+    clear_user_flags();
     auto it = dof_h_nedelec.begin_active();
     auto it2 = dof_h_q.begin_active();
     auto end = dof_h_nedelec.end();
+    it = dof_h_nedelec.begin_active();
     std::vector<std::pair<unsigned int, dealii::Point<2>>> vertex_indices_with_point;
     std::vector<std::pair<unsigned int, dealii::Point<2>>> face_indices_with_point;
     std::vector<unsigned int> vertex_indices;
@@ -1110,6 +1125,8 @@ std::vector<unsigned int> HSIESurface::get_dof_association_by_boundary_id(
       }
       it2++;
     }
+    std::cout << "Found " << vertex_indices.size() << " vertices and "
+        << face_indices.size() << " faces." << std::endl;
     std::vector<std::pair<unsigned int, dealii::Point<3>>> surface_dofs_unsorted;
     // Collect dof data
     for (unsigned int i = 0; i < face_indices_with_point.size(); i++) {
@@ -1132,6 +1149,8 @@ std::vector<unsigned int> HSIESurface::get_dof_association_by_boundary_id(
     }
     std::sort(surface_dofs_unsorted.begin(), surface_dofs_unsorted.end(),
         compareDofBaseData);
+    std::cout << "Now have " << surface_dofs_unsorted.size() << " dofs."
+        << std::endl;
     std::vector<unsigned int> ret;
     for (unsigned int i = 0; i < surface_dofs_unsorted.size(); i++) {
       ret.push_back(surface_dofs_unsorted[i].first);

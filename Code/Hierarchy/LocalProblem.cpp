@@ -25,13 +25,11 @@ void LocalProblem::solve(dealii::Vector<std::complex<double>> src,
     inputb[i] = src(i);
   }
 
-  // solver.solve(inputb);
+  solver.solve(inputb);
 
   for (unsigned int i = 0; i < n_own_dofs; i++) {
     dst[i] = inputb[i];
   }
-
-  // dealii::SolverID
 }
 
 void LocalProblem::initialize() {
@@ -130,8 +128,6 @@ void LocalProblem::validate() {
   std::cout << "N Cols: " << matrix->n() << std::endl;
   std::cout << "Actually non-zero elements: "
       << matrix->n_actually_nonzero_elements(0.001) << std::endl;
-  std::cout << "Base Problem non-zero elements: "
-      << base_problem.system_matrix.n_nonzero_elements() << std::endl;
   std::cout << "Matrix l1 norm: " << matrix->l1_norm() << std::endl;
   for (unsigned int i = 0; i < matrix->n(); i++) {
     auto it = matrix->begin(i);
@@ -175,6 +171,8 @@ void LocalProblem::make_constraints() {
   is.set_size(n_own_dofs);
   is.add_range(0, n_own_dofs);
   constraints.reinit(is);
+
+  // couple surface dofs with inner ones.
   for (unsigned int surface = 0; surface < 6; surface++) {
     std::vector<unsigned int> from_surface =
         surfaces[surface]->get_dof_association();
@@ -193,18 +191,14 @@ void LocalProblem::make_constraints() {
     }
 
   }
+  std::cout << "Restraints after phase 1:" << constraints.n_constraints()
+      << std::endl;
 
-  // Only for point sorce example
-  dealii::Point<3> center(0.0, 0.0, 0.0);
-  std::vector<unsigned int> restrained_dofs =
-      base_problem.dofs_for_cell_around_point(center);
-  for (unsigned int i = 0; i < restrained_dofs.size(); i++) {
-    constraints.add_line(restrained_dofs[i]);
-    constraints.set_inhomogeneity(restrained_dofs[i],
-        std::complex<double>(1, 0));
-  }
+  // Implementation of a pointsource in the coordinate center
 
-
+  std::cout << "Restraints after phase 2:" << constraints.n_constraints()
+      << std::endl;
+  // Couple the surfaces together
   for (unsigned int i = 0; i < 6; i++) {
     for (unsigned int j = i + 1; j < 6; j++) {
       bool opposing = ((i % 2) == 0) && (i + 1 == j);
@@ -218,6 +212,9 @@ void LocalProblem::make_constraints() {
               << "Surface " << i << " offers " << lower_face_dofs.size()
               << " dofs, " << j << " offers " << upper_face_dofs.size() << "."
               << std::endl;
+        } else {
+          std::cout << "For pair (" << i << "," << j << ") there were "
+              << lower_face_dofs.size() << " dofs found." << std::endl;
         }
         for (unsigned int dof = 0; dof < lower_face_dofs.size(); dof++) {
           unsigned int dof_a = lower_face_dofs[dof] + surface_first_dofs[i];
@@ -233,40 +230,18 @@ void LocalProblem::make_constraints() {
               std::cout << "Both dofs already restrained ..." << std::endl;
             }
           }
-
-          std::vector<unsigned int> current_line_a;
-          std::vector<unsigned int> current_line_b;
-          sp->add(dof_a, dof_b);
-          for (auto temp_it = sp->begin(dof_b); temp_it != sp->end(dof_b);
-              temp_it++) {
-            current_line_a.push_back(temp_it->column());
-          }
-          sp->add(dof_b, dof_a);
-          for (auto temp_it = sp->begin(dof_a); temp_it != sp->end(dof_a);
-              temp_it++) {
-            current_line_b.push_back(temp_it->column());
-          }
-          for (auto it_a = current_line_a.begin(); it_a != current_line_a.end();
-              it_a++) {
-            sp->add_entries(*it_a, current_line_b.begin(),
-                current_line_b.end());
-          }
-          for (auto it_b = current_line_b.begin(); it_b != current_line_b.end();
-              it_b++) {
-            sp->add_entries(*it_b, current_line_a.begin(),
-                current_line_a.end());
-          }
         }
       }
     }
   }
+  std::cout << "Restraints after phase 3:" << constraints.n_constraints()
+      << std::endl;
 
   std::cout << "End Make Constraints." << std::endl;
 }
 
 void LocalProblem::assemble() {
   std::cout << "Start LocalProblem::assemble()" << std::endl;
-  base_problem.assemble_system();
   sp = new dealii::SparsityPattern(n_own_dofs, n_own_dofs, 400);
   rhs.reinit(n_own_dofs);
   base_problem.make_sparsity_pattern(sp, 0);
@@ -279,11 +254,8 @@ void LocalProblem::assemble() {
   sp->compress();
   matrix = new dealii::SparseMatrix<std::complex<double>>(*sp);
 
-  std::cout << "Copy Main Matrix" << std::endl;
-  for (auto it = base_problem.system_matrix.begin();
-      it != base_problem.system_matrix.end(); it++) {
-    matrix->add(it->row(), it->column(), it->value());
-  }
+  std::cout << "Assemble Main Matrix" << std::endl;
+  base_problem.assemble_system(0, matrix, &rhs);
   std::cout << "Done" << std::endl;
   for (unsigned int surface = 0; surface < 6; surface++) {
     std::cout << "Fill Surface Block " << surface << std::endl;
@@ -292,11 +264,11 @@ void LocalProblem::assemble() {
   std::cout << "Condense" << std::endl;
 
   constraints.condense(*matrix);
-  constraints.distribute(rhs);
+  // constraints.distribute(rhs);
   std::cout << "Compress" << std::endl;
   matrix->compress(dealii::VectorOperation::add);
   std::cout << "End LocalProblem::assemble()" << std::endl;
-  // validate();
+  validate();
 }
 
 void LocalProblem::initialize_own_dofs() {
@@ -313,8 +285,15 @@ void LocalProblem::run() {
 }
 
 void LocalProblem::solve() {
-  solver.solve(*matrix, rhs);
-  std::cout << rhs.l2_norm() << std::endl;
+  std::cout << "Solve the system." << std::endl;
+  std::cout << "Norm before: " << rhs.l2_norm() << std::endl;
+  solver.factorize(*matrix);
+
+  solver.solve(rhs);
+
+  constraints.distribute(rhs);
+  std::cout << "Done solving." << std::endl;
+  std::cout << "Norm after: " << rhs.l2_norm() << std::endl;
 }
 
 void LocalProblem::initialize_index_sets() {

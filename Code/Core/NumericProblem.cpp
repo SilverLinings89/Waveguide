@@ -58,7 +58,7 @@ Tensor<1, 3, std::complex<double>> NumericProblem::Conjugate_Vector(
 void NumericProblem::make_grid() {
   // mg->prepare_triangulation(&triangulation);
   std::cout << "Make Grid." << std::endl;
-  const unsigned int Cells_Per_Direction = 11;
+  const unsigned int Cells_Per_Direction = 25;
   std::vector<unsigned int> repetitions;
   repetitions.push_back(Cells_Per_Direction);
   repetitions.push_back(Cells_Per_Direction);
@@ -82,6 +82,7 @@ bool compareIndexCenterPairs(std::pair<int, double> c1,
 std::vector<unsigned int> NumericProblem::dofs_for_cell_around_point(
     dealii::Point<3> &in_p) {
   std::vector<unsigned int> ret(fe.dofs_per_cell);
+  std::cout << "DOFS per Cell: " << fe.dofs_per_cell << std::endl;
   auto cell = dof_handler.begin_active();
   auto endc = dof_handler.end();
   for (; cell != endc; ++cell) {
@@ -122,6 +123,17 @@ void NumericProblem::make_sparsity_pattern(
   }
 }
 
+void NumericProblem::make_constraints() {
+  dealii::Point<3> center(0.0, 0.0, 0.0);
+  std::vector<unsigned int> restrained_dofs = dofs_for_cell_around_point(
+      center);
+  for (unsigned int i = 0; i < restrained_dofs.size(); i++) {
+    cm.add_line(restrained_dofs[i]);
+    cm.set_inhomogeneity(restrained_dofs[i], std::complex<double>(1.0, -1.0));
+  }
+  cm.close();
+}
+
 void NumericProblem::SortDofsDownstream() {
   std::vector<std::pair<int, Point<3, double>>> current;
 
@@ -158,6 +170,7 @@ void NumericProblem::setup_system() {
   deallog.push("setup_system");
 
   reinit_all();
+  make_constraints();
 
   deallog.pop();
 }
@@ -184,23 +197,13 @@ void NumericProblem::reinit_systemmatrix() {
   DynamicSparsityPattern dsp (dof_handler.n_dofs());
   DoFTools::make_sparsity_pattern(dof_handler, dsp);
   DoFTools::make_hanging_node_constraints(dof_handler, cm);
-  //dealii::Point<3, double> center(0, 0, 0);
-  // std::vector<unsigned int> restrained_dofs = dofs_for_cell_around_point(
-  //     center);
-  // for (unsigned int i = 0; i < restrained_dofs.size(); i++) {
-  //  cm.add_line(restrained_dofs[i]);
-  //  cm.set_inhomogeneity(restrained_dofs[i], 1);
-  // }
-  cm.close();
-  cm.condense(dsp);
-  final_sparsity_pattern.copy_from(dsp);
-  system_matrix.reinit(final_sparsity_pattern);
+
   deallog << "Done." << std::endl;
   deallog.pop();
 }
 
 void NumericProblem::reinit_rhs() {
-  system_rhs.reinit(dof_handler.n_dofs());
+  // system_rhs.reinit(dof_handler.n_dofs());
 }
 
 void NumericProblem::reinit_solution() {
@@ -226,7 +229,9 @@ std::vector<unsigned int> NumericProblem::get_surface_dof_vector_for_boundary_id
   return ret;
 }
 
-void NumericProblem::assemble_system() {
+void NumericProblem::assemble_system(unsigned int shift,
+    dealii::SparseMatrix<std::complex<double>> *matrix,
+    dealii::Vector<std::complex<double>> *rhs) {
   reinit_rhs();
 
   QGauss<3> quadrature_formula(2);
@@ -248,7 +253,7 @@ void NumericProblem::assemble_system() {
   const double eps_in = GlobalParams.M_W_epsilonin * e_temp;
   const double eps_out = GlobalParams.M_W_epsilonout * e_temp;
   const double mu_zero = mu_temp;
-  Vector<double> cell_rhs(dofs_per_cell);
+  Vector<std::complex<double>> cell_rhs(dofs_per_cell);
   cell_rhs = 0;
   Tensor<2, 3, std::complex<double>> transformation;
   Tensor<2, 3, std::complex<double>> epsilon;
@@ -270,8 +275,12 @@ void NumericProblem::assemble_system() {
   const dealii::Point<3> bounded_cell(0.0, 0.0, 0.0);
   const FEValuesExtractors::Vector fe_field(0);
   for (; cell != endc; ++cell) {
-
+    if (true) {
+      // if (!cell->point_inside(bounded_cell)) {
       cell->get_dof_indices(local_dof_indices);
+      for (unsigned int i = 0; i < local_dof_indices.size(); i++) {
+        local_dof_indices[i] += shift;
+      }
       cell_rhs.reinit(dofs_per_cell, false);
       fe_values.reinit(cell);
       quadrature_points = fe_values.get_quadrature_points();
@@ -295,41 +304,45 @@ void NumericProblem::assemble_system() {
         for (unsigned int i = 0; i < dofs_per_cell; i++) {
           Tensor<1, 3, std::complex<double>> I_Curl;
           Tensor<1, 3, std::complex<double>> I_Val;
-        I_Curl = fe_values[fe_field].curl(i, q_index);
-        I_Val = fe_values[fe_field].value(i, q_index);
+          I_Curl = fe_values[fe_field].curl(i, q_index);
+          I_Val = fe_values[fe_field].value(i, q_index);
 
           for (unsigned int j = 0; j < dofs_per_cell; j++) {
             Tensor<1, 3, std::complex<double>> J_Curl;
             Tensor<1, 3, std::complex<double>> J_Val;
-          J_Curl = fe_values[fe_field].curl(j, q_index);
-          J_Val = fe_values[fe_field].value(j, q_index);
+            J_Curl = fe_values[fe_field].curl(j, q_index);
+            J_Val = fe_values[fe_field].value(j, q_index);
 
             std::complex<double> x = (mu * I_Curl) * Conjugate_Vector(J_Curl)
                 * JxW
                 - ((epsilon * I_Val) * Conjugate_Vector(J_Val)) * JxW
                     * GlobalParams.C_omega * GlobalParams.C_omega;
-          cell_matrix_real[i][j] += x;
+            cell_matrix_real[i][j] += x;
 
           }
         }
-      for (unsigned int i = 0; i < local_dof_indices.size(); i++) {
-        for (unsigned int j = 0; j < local_dof_indices.size(); j++) {
-          system_matrix.add(local_dof_indices[i], local_dof_indices[j],
-              cell_matrix_real[i][j]);
-        }
+
+        cm.distribute_local_to_global(cell_matrix_real, cell_rhs,
+            local_dof_indices, *matrix, *rhs, false);
+        // for (unsigned int i = 0; i < local_dof_indices.size(); i++) {
+        //  for (unsigned int j = 0; j < local_dof_indices.size(); j++) {
+        //    matrix->add(local_dof_indices[i], local_dof_indices[j],
+        //        cell_matrix_real[i][j]);
+        //  }
+        // }
       }
     }
   }
 
-  deallog << "System Matrix l_infty norm: " << system_matrix.linfty_norm()
+  std::cout << "System Matrix l_infty norm: " << matrix->linfty_norm()
       << std::endl;
-  deallog << "System Matrix l_1 norm: " << system_matrix.l1_norm() << std::endl;
+  std::cout << "System Matrix l_1 norm: " << matrix->l1_norm() << std::endl;
 
-  deallog << "Assembling done. L2-Norm of RHS: " << system_rhs.l2_norm()
-          << std::endl;
+  std::cout << "Assembling done. L2-Norm of RHS: " << rhs->l2_norm()
+      << std::endl;
 
-  system_matrix.compress(VectorOperation::add);
-  system_rhs.compress(VectorOperation::add);
+  // system_matrix.compress(VectorOperation::add);
+  // system_rhs.compress(VectorOperation::add);
 
   deallog << "Distributing solution done." << std::endl;
 }

@@ -204,7 +204,9 @@ class NumericProblem {
    * matrix in order to proceed to upcoming versions. \author Pascal Kraft
    * \date 16.11.2015
    */
-  void assemble_system();
+  void assemble_system(unsigned int shift,
+      dealii::SparseMatrix<std::complex<double>> *matrix,
+      dealii::Vector<std::complex<double>> *rhs);
 
   /**
    * This function executes refined downstream ordering of degrees of freedom.
@@ -269,6 +271,8 @@ class NumericProblem {
 
   void SortDofsDownstream();
 
+  void make_constraints();
+
   SpaceTransformation *st;
 
   dealii::FE_NedelecSZ<3> fe;
@@ -278,13 +282,13 @@ class NumericProblem {
   dealii::SolverControl solver_control;
 
   dealii::AffineConstraints<std::complex<double>> cm;
-  dealii::SparsityPattern final_sparsity_pattern;
+
   unsigned int n_dofs;
 
   dealii::DoFHandler<3> dof_handler;
 
-  dealii::SparseMatrix<std::complex<double>> system_matrix;
-  dealii::Vector<std::complex<double>> system_rhs;
+  // dealii::SparseMatrix<std::complex<double>> system_matrix;
+  // dealii::Vector<std::complex<double>> system_rhs;
 
   dealii::IndexSet fixed_dofs;
 
