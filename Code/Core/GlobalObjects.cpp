@@ -1,13 +1,3 @@
-/*
- * GlobalObjects.cpp
- *
- *  Created on: May 11, 2020
- *      Author: kraft
- */
-
-#ifndef CODE_CORE_GlobalObjects_
-#define CODE_CORE_GlobalObjects_
-
 #include "../Helpers/Parameters.h"
 #include "../Helpers/GeometryManager.h"
 #include "../Hierarchy/MPICommunicator.h"
@@ -28,5 +18,3 @@ void initialize_global_variables() {
   // Build Mode Manager
   GlobalModeManager.load();
 }
-
-#endif

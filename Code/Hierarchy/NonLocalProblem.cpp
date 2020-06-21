@@ -1,7 +1,3 @@
-//
-// Created by pascal on 03.02.20.
-//
-
 #include "NonLocalProblem.h"
 #include "../Helpers/GeometryManager.h"
 #include "LocalProblem.h"

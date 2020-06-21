@@ -1,11 +1,7 @@
-//
-// Created by pascal on 14.11.19.
-//
-
-#ifndef WAVEGUIDEPROBLEM_DOFDATA_H
-#define WAVEGUIDEPROBLEM_DOFDATA_H
+#pragma once
 
 #include "../Helpers/Enums.h"
+#include <string>
 
 struct DofData {
   DofType type;
@@ -40,10 +36,8 @@ struct DofData {
     base_structure_id_non_face = in_id;
   }
 
-  void update_nodal_basis_flag() {
+  auto update_nodal_basis_flag() -> void {
     this->nodal_basis = (this->type == DofType::RAY
         || this->type == DofType::IFFb || this->type == DofType::SEGMENTb);
   }
 };
-
-#endif  // WAVEGUIDEPROBLEM_DOFDATA_H
