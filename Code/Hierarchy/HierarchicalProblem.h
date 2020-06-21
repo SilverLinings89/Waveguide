@@ -4,11 +4,12 @@
 
 #ifndef WAVEGUIDEPROBLEM_HIERARCHICALPROBLEM_H
 #define WAVEGUIDEPROBLEM_HIERARCHICALPROBLEM_H
-#include <deal.II/lac/la_parallel_vector.h>
-#include <deal.II/lac/trilinos_sparse_matrix.h>
+
 #include "../Core/DOFManager.h"
 #include "../Helpers/Parameters.h"
 #include "DofIndexData.h"
+#include <deal.II/lac/vector.h>
+
 class LocalProblem;
 
 class HierarchicalProblem {
@@ -46,8 +47,7 @@ class HierarchicalProblem {
   virtual void make_constraints() = 0;
   virtual void assemble()=0;
   virtual void initialize_index_sets()=0;
-  virtual void apply_sweep(
-      dealii::LinearAlgebra::distributed::Vector<std::complex<double>>)=0;
+  virtual void apply_sweep(dealii::LinearAlgebra::distributed::Vector<std::complex<double>>)=0;
   virtual LocalProblem* get_local_problem()=0;
   void setup_dof_manager(DOFManager *in_dof_manager);
   void constrain_identical_dof_sets(std::vector<unsigned int> *set_one,

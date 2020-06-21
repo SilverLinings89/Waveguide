@@ -19,7 +19,6 @@
 #include "HSIEPolynomial.h"
 #include "../Helpers/Parameters.h"
 #include "../Helpers/Structs.h"
-#include <deal.II/lac/trilinos_sparse_matrix.h>
 
 class HSIESurface {
   const unsigned int order;
@@ -131,6 +130,5 @@ class HSIESurface {
   void clear_user_flags();
 
 };
-
 
 #endif  // WAVEGUIDEPROBLEM_HSIESURFACE_H

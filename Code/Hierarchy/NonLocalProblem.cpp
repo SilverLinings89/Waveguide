@@ -12,7 +12,7 @@ NonLocalProblem::NonLocalProblem(unsigned int local_level) :
 HierarchicalProblem(local_level),
 sc(GlobalParams.So_TotalSteps,
         GlobalParams.So_Precision, true, true), solver(sc,
-        dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector>::AdditionalData(
+        dealii::SolverGMRES<dealii::parallel::distributed::Vector<std::complex<double>>>::AdditionalData(
             GlobalParams.So_RestartSteps))
 {
     if(local_level > 1) {
@@ -121,10 +121,7 @@ void NonLocalProblem::run() {
 }
 
 void NonLocalProblem::reinit() {
-  system_matrix = new dealii::TrilinosWrappers::SparseMatrix(local_indices,
-      GlobalMPI.communicators_by_level[local_level], 100);
-  system_rhs = new dealii::TrilinosWrappers::MPI::Vector(local_indices,
-      GlobalMPI.communicators_by_level[local_level]);
+  // TODO reimplement
 }
 
 void NonLocalProblem::initialize() {

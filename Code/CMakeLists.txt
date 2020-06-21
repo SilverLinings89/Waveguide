@@ -1,13 +1,13 @@
 INCLUDE_DIRECTORIES(Core, Helpers, MeshGenerators, OptimizationAlgorithm, OptimizationStrategies, SpaceTransformations, HSIEPreconditioner)
 
 ADD_LIBRARY(Code
-        Core/PreconditionerSweeping.cpp
         Core/Sector.cpp
         Core/SolutionWeight.cpp
         Core/NumericProblem.cpp
         Core/Simulation.cpp
         Core/DOFManager.cpp
         Core/GlobalObjects.cpp
+        Core/Types.h
         Helpers/GeometryManager.cpp
         Helpers/ExactSolution.cpp
         Helpers/ModeManager.cpp

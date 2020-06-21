@@ -4,6 +4,7 @@
 *.class
 *.dll
 *.exe
+*.a
 *.o
 *.so
 .idea/workspace.xml

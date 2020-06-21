@@ -5,25 +5,31 @@
 #ifndef WAVEGUIDEPROBLEM_NONLOCALPROBLEM_H
 #define WAVEGUIDEPROBLEM_NONLOCALPROBLEM_H
 
+#include "../Core/Types.h"
 #include <mpi.h>
+#include <complex>
 #include "HierarchicalProblem.h"
 #include "./LocalProblem.h"
 #include <deal.II/lac/solver_control.h>
+#include <deal.II/lac/parallel_vector.h>
+#include "../Helpers/Enums.h"
+
+using namespace dealii;
 
 class NonLocalProblem: public HierarchicalProblem {
 private:
   SweepingDirection sweeping_direction;
   bool *is_hsie_surface;
-  dealii::TrilinosWrappers::SparseMatrix *system_matrix;
-  dealii::TrilinosWrappers::MPI::Vector *system_rhs;
+  dealii::SparseMatrix<EFieldComponent> *system_matrix;
+  dealii::parallel::distributed::Vector<EFieldComponent> *system_rhs;
   dealii::IndexSet local_indices;
-  dealii::SolverGMRES<dealii::TrilinosWrappers::MPI::Vector> solver;
+  dealii::SolverGMRES<dealii::parallel::distributed::Vector<EFieldComponent>> solver;
   dealii::SolverControl sc;
  public:
   NonLocalProblem(unsigned int);
   ~NonLocalProblem() override;
 
-  unsigned int compute_own_dofs();
+  unsigned int compute_own_dofs() override;
 
   void initialize_own_dofs() override;
 
@@ -33,8 +39,8 @@ private:
 
   void assemble() override;
 
-  void solve(dealii::Vector<std::complex<double>> src,
-      dealii::Vector<std::complex<double>> &dst) override;
+  void solve(dealii::Vector<EFieldComponent> src,
+      dealii::Vector<EFieldComponent> &dst) override;
 
   void run() override;
 
@@ -47,7 +53,7 @@ private:
   void initialize_index_sets() override;
 
   void apply_sweep(
-      dealii::LinearAlgebra::distributed::Vector<std::complex<double>>)
+      dealii::LinearAlgebra::distributed::Vector<EFieldComponent>)
           override;
 
   LocalProblem* get_local_problem() override;

@@ -9,10 +9,9 @@
 #include "HierarchicalProblem.h"
 #include "../Core/DOFManager.h"
 #include "../Core/NumericProblem.h"
+#include "../HSIEPreconditioner/HSIESurface.h"
 
-class LocalProblem: public HierarchicalProblem,
-    dealii::TrilinosWrappers::PreconditionBase {
-  using dealii::TrilinosWrappers::PreconditionBase::vmult;
+class LocalProblem: public HierarchicalProblem {
 public:
 
   NumericProblem base_problem;
@@ -30,9 +29,6 @@ public:
 
   LocalProblem();
   ~LocalProblem() override;
-
-  virtual void vmult(dealii::TrilinosWrappers::MPI::Vector &dst,
-      const dealii::TrilinosWrappers::MPI::Vector &src) const;
 
   unsigned int compute_lower_interface_dof_count() override;
 

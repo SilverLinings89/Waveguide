@@ -4,9 +4,12 @@
 
 #include "LocalProblem.h"
 #include "../HSIEPreconditioner/HSIESurface.h"
+#include <cmath>
 #include <iostream>
 #include <fstream>
+#include <complex>
 #include <deal.II/lac/solver_idr.h>
+#include <deal.II/lac/vector.h>
 
 LocalProblem::LocalProblem() :
     HierarchicalProblem(0), base_problem() {
@@ -129,12 +132,14 @@ void LocalProblem::validate() {
   std::cout << "Actually non-zero elements: "
       << matrix->n_actually_nonzero_elements(0.001) << std::endl;
   std::cout << "Matrix l1 norm: " << matrix->l1_norm() << std::endl;
+  std::complex<double> matrix_entry;
   for (unsigned int i = 0; i < matrix->n(); i++) {
     auto it = matrix->begin(i);
     auto end = matrix->end(i);
     unsigned int entries = 0;
     while (it != end) {
-      if (it->value() != 0.0) {
+      matrix_entry = (*it).value(); 
+      if (std::abs(matrix_entry) != 0.0 ) {
         entries++;
       }
       it++;
@@ -351,67 +356,4 @@ void LocalProblem::output_results() {
   std::ofstream outputvtu("solution.vtu");
   data_out.write_vtu(outputvtu);
 
-}
-
-void LocalProblem::vmult(TrilinosWrappers::MPI::Vector &dst,
-    const TrilinosWrappers::MPI::Vector &src) const {
-  /**
-   dealii::Vector<double> recv_buffer_above(dofs_process_above);
-   dealii::Vector<double> recv_buffer_below(dofs_process_below);
-   dealii::Vector<double> temp_own(n_own_dofs);
-   dealii::Vector<double> temp_own_2(n_own_dofs);
-   dealii::Vector<double> input(n_own_dofs);
-   const MPI_Comm mpi_comm = GlobalMPI.communicators_by_level[1];
-   for (unsigned int i = 0; i < n_own_dofs; i++) {
-   input[i] = src[indices[i]];
-   }
-   if (rank + 1 == n_procs_in_sweep) {
-   solver.solve(input);
-   MPI_Send(&input[0], n_own_dofs, MPI_DOUBLE, rank - 1, 0, mpi_comm);
-   } else {
-   MPI_Recv(&recv_buffer_below[0], dofs_process_below, MPI_DOUBLE, rank + 1, 0, mpi_comm,
-   MPI_STATUS_IGNORE);
-   UpperProduct(recv_buffer_below, temp_own);
-   input -= temp_own;
-   if (rank != 0) {
-   Hinv(input, temp_own);
-   MPI_Send(&temp_own[0], n_own_dofs, MPI_DOUBLE, rank - 1, 0, mpi_comm);
-   }
-   }
-   if (rank + 1 != GlobalParams.NumberProcesses) {
-   for (unsigned int i = 0; i < n_own_dofs; i++) {
-   temp_own[i] = input[i];
-   }
-   Hinv(temp_own, input);
-   }
-   if (rank == 0) {
-   MPI_Send(&input[0], n_own_dofs, MPI_DOUBLE, rank + 1, 0, mpi_comm);
-   } else {
-   MPI_Recv(&recv_buffer_above[0], dofs_process_above, MPI_DOUBLE, rank - 1, 0, mpi_comm,
-   MPI_STATUS_IGNORE);
-   double recv_norm = 0.0;
-   for (unsigned int i = 0; i < dofs_process_above; i++) {
-   recv_norm += std::abs(recv_buffer_above[i]);
-   }
-   LowerProduct(recv_buffer_above, temp_own);
-   Hinv(temp_own, temp_own_2);
-   input -= temp_own_2;
-   if (rank + 1 < GlobalParams.NumberProcesses) {
-   MPI_Send(&input[0], n_own_dofs, MPI_DOUBLE, rank + 1, 0, mpi_comm);
-   }
-   }
-
-   for (unsigned int i = 0; i < n_own_dofs; i++) {
-   if (!fixed_dofs->is_element(indices[i])) {
-   dst[indices[i]] = input[i];
-   }
-   }
-
-   double delta = 0;
-   for (unsigned int i = 0; i < n_own_dofs; i++) {
-   if (!fixed_dofs->is_element(indices[i])) {
-   delta += std::abs(dst[indices[i]] - src[indices[i]]);
-   }
-   }
-   **/
 }

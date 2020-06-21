@@ -12,8 +12,6 @@
 #include <deal.II/lac/block_sparsity_pattern.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/solver.h>
-#include <deal.II/lac/trilinos_block_sparse_matrix.h>
-#include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/numerics/data_out_dof_data.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <algorithm>
@@ -23,7 +21,6 @@
 #include <vector>
 #include "../Helpers/staticfunctions.h"
 #include "../MeshGenerators/SquareMeshGenerator.h"
-#include "PreconditionerSweeping.h"
 #include "SolutionWeight.h"
 #include "./GlobalObjects.h"
 #include "../SpaceTransformations/HomogenousTransformationRectangular.h"

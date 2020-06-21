@@ -1,4 +1,4 @@
-// Copyright 2018 Pascal Kraft
+
 #ifndef CODE_CORE_NUMERICPROBLEM_H_
 #define CODE_CORE_NUMERICPROBLEM_H_
 
@@ -50,10 +50,6 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <deal.II/lac/la_parallel_vector.h>
-#include <deal.II/lac/trilinos_block_sparse_matrix.h>
-#include <deal.II/lac/trilinos_precondition.h>
-#include <deal.II/lac/trilinos_solver.h>
-#include <deal.II/lac/trilinos_sparsity_pattern.h>
 
 #include "../Helpers/ExactSolution.h"
 #include "../Helpers/GeometryManager.h"
@@ -63,7 +59,6 @@
 #include "../Helpers/staticfunctions.h"
 #include "../MeshGenerators/SquareMeshGenerator.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
-#include "./PreconditionerSweeping.h"
 #include "../Helpers/Enums.h"
 #include "../Helpers/Structs.h"
 #include <deal.II/base/convergence_table.h>
