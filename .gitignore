@@ -81,3 +81,4 @@ googletest/Google_Tests_run
 build
 .vscode
 *.pc
+.clangd
