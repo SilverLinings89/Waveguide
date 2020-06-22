@@ -21,26 +21,31 @@ private:
   SweepingDirection sweeping_direction;
   bool *is_hsie_surface;
   dealii::SparseMatrix<EFieldComponent> *system_matrix;
-  dealii::parallel::distributed::Vector<EFieldComponent> *system_rhs;
+  NumericVectorDistributed *system_rhs;
   dealii::IndexSet local_indices;
-  dealii::SolverGMRES<dealii::parallel::distributed::Vector<EFieldComponent>> solver;
+  dealii::SolverGMRES<NumericVectorDistributed> solver;
   dealii::SolverControl sc;
  public:
   NonLocalProblem(unsigned int);
   ~NonLocalProblem() override;
 
-  unsigned int compute_own_dofs() override;
+  auto compute_own_dofs() -> DofCount override;
 
-  void initialize_own_dofs() override;
+  auto initialize_own_dofs() -> void override;
 
-  unsigned int compute_lower_interface_dof_count() override;
+  auto compute_lower_interface_dof_count() -> DofCount override;
 
-  unsigned int compute_upper_interface_dof_count() override;
+  auto compute_upper_interface_dof_count() -> DofCount override;
 
   void assemble() override;
 
-  void solve(dealii::Vector<EFieldComponent> src,
-      dealii::Vector<EFieldComponent> &dst) override;
+  void solve(NumericVectorDistributed src,
+      NumericVectorDistributed &dst) override;
+
+  auto solve(NumericVectorLocal,
+      NumericVectorLocal &) -> void override {
+        std::cout << "Calling wrong solve on NonLocal Problem." << std::endl;
+      } ;
 
   void run() override;
 
@@ -52,15 +57,13 @@ private:
 
   void initialize_index_sets() override;
 
-  void apply_sweep(
-      dealii::LinearAlgebra::distributed::Vector<EFieldComponent>)
-          override;
+  void apply_sweep(NumericVectorDistributed) override;
 
   LocalProblem* get_local_problem() override;
 
   void reinit();
 
-  dealii::Vector<std::complex<double>> get_local_vector_from_global() override;
+  NumericVectorLocal get_local_vector_from_global() override;
 
 };
 

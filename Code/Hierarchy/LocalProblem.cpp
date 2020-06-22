@@ -2,6 +2,7 @@
 // Created by pascal on 03.02.20.
 //
 
+#include "../Core/Types.h"
 #include "LocalProblem.h"
 #include "../HSIEPreconditioner/HSIESurface.h"
 #include <cmath>
@@ -21,9 +22,9 @@ LocalProblem::~LocalProblem() {
 
 }
 
-void LocalProblem::solve(dealii::Vector<std::complex<double>> src,
-    dealii::Vector<std::complex<double>> &dst) {
-  dealii::Vector<std::complex<double>> inputb(n_own_dofs);
+void LocalProblem::solve(NumericVectorLocal src,
+    NumericVectorLocal &dst) {
+  NumericVectorLocal inputb(n_own_dofs);
   for (unsigned int i = 0; i < n_own_dofs; i++) {
     inputb[i] = src(i);
   }

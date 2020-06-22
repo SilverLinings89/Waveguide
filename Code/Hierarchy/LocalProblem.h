@@ -1,10 +1,4 @@
-//
-// Created by pascal on 03.02.20.
-//
-
-#ifndef WAVEGUIDEPROBLEM_LOCALPROBLEM_H
-#define WAVEGUIDEPROBLEM_LOCALPROBLEM_H
-
+#pragma once
 
 #include "HierarchicalProblem.h"
 #include "../Core/DOFManager.h"
@@ -34,8 +28,13 @@ public:
 
   unsigned int compute_upper_interface_dof_count() override;
 
-  void solve(dealii::Vector<std::complex<double>> src,
-      dealii::Vector<std::complex<double>> &dst) override;
+  auto solve(NumericVectorDistributed src,
+      NumericVectorDistributed &dst) -> void override {
+        std::cout << "Wrong solve function called in LocalProblem." << std::endl;
+      };
+
+  void solve(NumericVectorLocal src,
+      NumericVectorLocal &dst) override;
 
   void initialize() override;
 
@@ -66,6 +65,3 @@ public:
 
   void output_results();
 };
-
-
-#endif //WAVEGUIDEPROBLEM_LOCALPROBLEM_H

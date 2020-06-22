@@ -492,9 +492,9 @@ void HSIESurface::fill_sparsity_pattern(dealii::SparsityPattern *sp,
   }
 }
 
-DofCount HSIESurface::compute_n_edge_dofs() {
+DofCountsStruct HSIESurface::compute_n_edge_dofs() {
   if (is_metal) {
-    DofCount ret;
+    DofCountsStruct ret;
     ret.hsie = 0;
     ret.non_hsie = 0;
     ret.total = 0;
@@ -504,7 +504,7 @@ DofCount HSIESurface::compute_n_edge_dofs() {
   DoFHandler<2>::active_cell_iterator cell2;
   DoFHandler<2>::active_cell_iterator endc;
   endc = dof_h_nedelec.end();
-  DofCount ret;
+  DofCountsStruct ret;
   cell2 = dof_h_q.begin_active();
   for (cell = dof_h_nedelec.begin_active(); cell != endc; cell++) {
     for (unsigned int edge = 0; edge < GeometryInfo<2>::lines_per_cell;
@@ -520,9 +520,9 @@ DofCount HSIESurface::compute_n_edge_dofs() {
   return ret;
 }
 
-DofCount HSIESurface::compute_n_vertex_dofs() {
+DofCountsStruct HSIESurface::compute_n_vertex_dofs() {
   if (is_metal) {
-    DofCount ret;
+    DofCountsStruct ret;
     ret.hsie = 0;
     ret.non_hsie = 0;
     ret.total = 0;
@@ -532,7 +532,7 @@ DofCount HSIESurface::compute_n_vertex_dofs() {
   DoFHandler<2>::active_cell_iterator cell;
   DoFHandler<2>::active_cell_iterator endc;
   endc = dof_h_q.end();
-  DofCount ret;
+  DofCountsStruct ret;
   for (cell = dof_h_q.begin_active(); cell != endc; cell++) {
     // for each edge
     for (unsigned int vertex = 0; vertex < GeometryInfo<2>::vertices_per_cell;
@@ -550,9 +550,9 @@ DofCount HSIESurface::compute_n_vertex_dofs() {
   return ret;
 }
 
-DofCount HSIESurface::compute_n_face_dofs() {
+DofCountsStruct HSIESurface::compute_n_face_dofs() {
   if (is_metal) {
-    DofCount ret;
+    DofCountsStruct ret;
     ret.hsie = 0;
     ret.non_hsie = 0;
     ret.total = 0;
@@ -563,7 +563,7 @@ DofCount HSIESurface::compute_n_face_dofs() {
   DoFHandler<2>::active_cell_iterator cell2;
   DoFHandler<2>::active_cell_iterator endc;
   endc = dof_h_nedelec.end();
-  DofCount ret;
+  DofCountsStruct ret;
   cell2 = dof_h_q.begin_active();
   for (cell = dof_h_nedelec.begin_active(); cell != endc; cell++) {
     if (touched_faces.end() == touched_faces.find(cell->id().to_string())) {
@@ -620,9 +620,9 @@ void HSIESurface::initialize() {
   if (!is_metal) {
     initialize_dof_handlers_and_fe();
   }
-  DofCount a = compute_n_edge_dofs();
-  DofCount b = compute_n_face_dofs();
-  DofCount c = compute_n_vertex_dofs();
+  DofCountsStruct a = compute_n_edge_dofs();
+  DofCountsStruct b = compute_n_face_dofs();
+  DofCountsStruct c = compute_n_vertex_dofs();
 }
 
 void HSIESurface::initialize_dof_handlers_and_fe() {
@@ -632,7 +632,7 @@ void HSIESurface::initialize_dof_handlers_and_fe() {
 
 void HSIESurface::update_dof_counts_for_edge(
     const dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
-    DofCount &in_dof_count) {
+    DofCountsStruct &in_dof_count) {
   const unsigned int dofs_per_edge_all = compute_dofs_per_edge(false);
   const unsigned int dofs_per_edge_hsie = compute_dofs_per_edge(true);
   in_dof_count.total += dofs_per_edge_all;
@@ -642,7 +642,7 @@ void HSIESurface::update_dof_counts_for_edge(
 
 void HSIESurface::update_dof_counts_for_face(
     const dealii::DoFHandler<2>::active_cell_iterator cell,
-    DofCount &in_dof_count) {
+    DofCountsStruct &in_dof_count) {
   const unsigned int dofs_per_face_all = compute_dofs_per_face(false);
   const unsigned int dofs_per_face_hsie = compute_dofs_per_face(true);
   in_dof_count.total += dofs_per_face_all;
@@ -652,7 +652,7 @@ void HSIESurface::update_dof_counts_for_face(
 
 void HSIESurface::update_dof_counts_for_vertex(
     const dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
-    unsigned int vertex, DofCount &in_dof_count) {
+    unsigned int vertex, DofCountsStruct &in_dof_count) {
   const unsigned int dofs_per_vertex_all = compute_dofs_per_vertex();
 
   in_dof_count.total += dofs_per_vertex_all;

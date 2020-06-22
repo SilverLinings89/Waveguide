@@ -5,6 +5,7 @@
 #ifndef WAVEGUIDEPROBLEM_HIERARCHICALPROBLEM_H
 #define WAVEGUIDEPROBLEM_HIERARCHICALPROBLEM_H
 
+#include "../Core/Types.h"
 #include "../Core/DOFManager.h"
 #include "../Helpers/Parameters.h"
 #include "DofIndexData.h"
@@ -15,19 +16,19 @@ class LocalProblem;
 class HierarchicalProblem {
 
  public:
-  std::vector<unsigned int> surface_first_dofs;
+  std::vector<DofNumber> surface_first_dofs;
   bool is_dof_manager_set;
   bool has_child;
   HierarchicalProblem* child;
-  const unsigned int local_level;
+  const SweepingLevel local_level;
   DOFManager* dof_manager;
   DofIndexData indices;
-  dealii::SparseMatrix<std::complex<double>> *matrix;
-  dealii::Vector<std::complex<double>> rhs;
-  unsigned int n_own_dofs;
-  unsigned int first_own_index;
-  unsigned int dofs_process_above;
-  unsigned int dofs_process_below;
+  dealii::SparseMatrix<EFieldComponent> *matrix;
+  dealii::Vector<EFieldComponent> rhs;
+  DofCount n_own_dofs;
+  DofNumber first_own_index;
+  DofCount dofs_process_above;
+  DofCount dofs_process_below;
   unsigned int n_procs_in_sweep;
   unsigned int rank;
 
@@ -37,8 +38,11 @@ class HierarchicalProblem {
   virtual unsigned int compute_lower_interface_dof_count()=0;
   virtual unsigned int compute_upper_interface_dof_count()=0;
 
-  virtual void solve(dealii::Vector<std::complex<double>> src,
-      dealii::Vector<std::complex<double>> &dst)=0;
+  virtual void solve(NumericVectorDistributed src,
+      NumericVectorDistributed &dst)=0;
+  virtual void solve(NumericVectorLocal src,
+      NumericVectorLocal &dst)=0;
+  
   virtual void initialize()=0;
   virtual void generate_sparsity_pattern()=0;
   virtual unsigned int compute_own_dofs()=0;

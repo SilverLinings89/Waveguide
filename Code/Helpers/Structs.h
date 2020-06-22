@@ -8,19 +8,20 @@
 #ifndef CODE_HELPERS_STRUCTS
 #define CODE_HELPERS_STRUCTS
 
+#include "../Core/Types.h"
 #include <deal.II/base/index_set.h>
 
 struct DofAssociation {
   bool is_edge;
-  unsigned int edge_index;
+  DofNumber edge_index;
   std::string face_index;
-  unsigned int dof_index_on_hsie_surface;
-  dealii::Point<3> base_point;
+  DofNumber dof_index_on_hsie_surface;
+  Position base_point;
   bool true_orientation;
 };
 
 
-struct DofCount {
+struct DofCountsStruct {
   unsigned int hsie = 0;
   unsigned int non_hsie = 0;
   unsigned int total = 0;
