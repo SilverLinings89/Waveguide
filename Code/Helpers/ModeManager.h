@@ -1,12 +1,4 @@
-/*
- * ModeManager.h
- *
- *  \date 23.03.2017
- *  \author Pascal Kraft
- */
-
-#ifndef CODE_HELPERS_MODEMANAGER_H_
-#define CODE_HELPERS_MODEMANAGER_H_
+#pragma once
 
 #include <deal.II/base/point.h>
 
@@ -62,5 +54,3 @@ class ModeManager {
 
   double bessi1(double);
 };
-
-#endif /* CODE_HELPERS_MODEMANAGER_H_ */

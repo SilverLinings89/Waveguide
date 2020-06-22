@@ -1,5 +1,4 @@
-#ifndef PointValHeaderFlag
-#define PointValHeaderFlag
+#pragma once
 
 #include <complex>
 
@@ -17,5 +16,3 @@ class PointVal {
 
   void rescale(double);
 };
-
-#endif

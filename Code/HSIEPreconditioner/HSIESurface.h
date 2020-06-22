@@ -14,13 +14,12 @@
 #include "DofData.h"
 #include "HSIEPolynomial.h"
 #include "../Helpers/Parameters.h"
-#include "../Helpers/Structs.h"
 
 class HSIESurface {
   const HSIEElementOrder order;
   const BoundaryId b_id;
-  dealii::DoFHandler<2> dof_h_nedelec;
-  dealii::DoFHandler<2> dof_h_q;
+  DofHandler2D dof_h_nedelec;
+  DofHandler2D dof_h_q;
   bool is_metal = false;
   const unsigned int Inner_Element_Order;
   dealii::FE_NedelecSZ<2> fe_nedelec;
@@ -35,9 +34,9 @@ class HSIESurface {
 
  public:
   DofCount dof_counter;
-  std::vector<DofData> face_dof_data;
-  std::vector<DofData> edge_dof_data;
-  std::vector<DofData> vertex_dof_data;
+  DofDataVector face_dof_data;
+  DofDataVector edge_dof_data;
+  DofDataVector vertex_dof_data;
   DofCount n_edge_dofs;
   DofCount n_face_dofs;
   DofCount n_vertex_dofs;
@@ -60,18 +59,12 @@ class HSIESurface {
                                                           const double);
 
   void fill_sparsity_pattern(dealii::DynamicSparsityPattern *pattern);
-  std::vector<DofData> get_dof_data_for_cell(
-      dealii::DoFHandler<2>::active_cell_iterator,
-      dealii::DoFHandler<2>::active_cell_iterator);
-  void fill_matrix(SparseComplexMatrix *,
-      dealii::IndexSet);
-  void fill_matrix(SparseComplexMatrix *, unsigned int);
-  void fill_sparsity_pattern(dealii::SparsityPattern *in_dsp,
-      unsigned int shift);
-  void fill_sparsity_pattern(dealii::SparsityPattern *in_dsp,
-      dealii::IndexSet shift);
-  void make_hanging_node_constraints(dealii::AffineConstraints<double>*,
-      dealii::IndexSet);
+  auto get_dof_data_for_cell(CellIterator2D, CellIterator2D) -> DofDataVector;
+  void fill_matrix(SparseComplexMatrix *, dealii::IndexSet);
+  void fill_matrix(SparseComplexMatrix *, DofNumber shift);
+  void fill_sparsity_pattern(dealii::SparsityPattern *in_dsp, DofNumber shift);
+  void fill_sparsity_pattern(dealii::SparsityPattern *in_dsp, dealii::IndexSet shift);
+  void make_hanging_node_constraints(dealii::AffineConstraints<ComplexNumber>*, DofNumber shift);
   auto compute_n_edge_dofs() -> DofCountsStruct;
   auto compute_n_vertex_dofs() -> DofCountsStruct;
   auto compute_n_face_dofs() -> DofCountsStruct;
@@ -80,42 +73,25 @@ class HSIESurface {
   auto compute_dofs_per_vertex() -> DofCount;
   void initialize();
   void initialize_dof_handlers_and_fe();
-  void update_dof_counts_for_edge(
-      dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
-      DofCountsStruct&);
-  void update_dof_counts_for_face(
-      dealii::DoFHandler<2>::active_cell_iterator cell, DofCountsStruct&);
-  void update_dof_counts_for_vertex(
-      dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
-      unsigned int vertex, DofCountsStruct&);
-  void register_new_vertex_dofs(
-      dealii::DoFHandler<2>::active_cell_iterator cell, unsigned int edge,
-      unsigned int vertex);
-  void register_new_edge_dofs(
-      dealii::DoFHandler<2>::active_cell_iterator cell,
-      dealii::DoFHandler<2>::active_cell_iterator cell_2, unsigned int edge);
-  void register_new_surface_dofs(
-      dealii::DoFHandler<2>::active_cell_iterator cell,
-      dealii::DoFHandler<2>::active_cell_iterator cell2);
-  unsigned int register_dof();
-  void register_single_dof(std::string in_id, int in_hsie_order,
-                           int in_inner_order, bool in_is_real,
-                           DofType in_dof_type, std::vector<DofData> &,
-                           unsigned int);
-  void register_single_dof(unsigned int in_id, int in_hsie_order,
-                           int in_inner_order, bool in_is_real,
-                           DofType in_dof_type, std::vector<DofData> &,
-                           unsigned int);
-  static ComplexNumber evaluate_a(std::vector<HSIEPolynomial> &u,
-                                         std::vector<HSIEPolynomial> &v);
+  void update_dof_counts_for_edge(CellIterator2D cell, unsigned int edge, DofCountsStruct&);
+  void update_dof_counts_for_face(CellIterator2D cell, DofCountsStruct&);
+  void update_dof_counts_for_vertex(CellIterator2D cell, unsigned int edge, unsigned int vertex, DofCountsStruct&);
+  void register_new_vertex_dofs(CellIterator2D cell, unsigned int edge, unsigned int vertex);
+  void register_new_edge_dofs(CellIterator2D cell, CellIterator2D cell_2, unsigned int edge);
+  void register_new_surface_dofs(CellIterator2D cell, CellIterator2D cell2);
+  auto register_dof() -> DofNumber;
+  void register_single_dof(std::string in_id, int in_hsie_order, int in_inner_order, bool in_is_real,
+                           DofType in_dof_type, DofDataVector &, unsigned int);
+  void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, bool in_is_real,
+                           DofType in_dof_type, DofDataVector &, unsigned int);
+  static ComplexNumber evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v);
   void transform_coordinates_in_place(std::vector<HSIEPolynomial> *);
   bool check_dof_assignment_integrity();
   bool check_number_of_dofs_for_cell_integrity();
   void set_mesh_boundary_ids();
-  std::vector<BoundaryId> get_boundary_ids();
-  std::vector<DofData> get_dof_data_for_base_dof_nedelec(
-      DofNumber base_dof_index);
-  std::vector<DofData> get_dof_data_for_base_dof_q(DofNumber base_dof_index);
+  auto get_boundary_ids() -> std::vector<BoundaryId>;
+  auto get_dof_data_for_base_dof_nedelec(DofNumber base_dof_index) -> DofDataVector;
+  auto get_dof_data_for_base_dof_q(DofNumber base_dof_index) -> DofDataVector;
   auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount;
   std::vector<unsigned int> get_dof_association();
   Position undo_transform(dealii::Point<2>);

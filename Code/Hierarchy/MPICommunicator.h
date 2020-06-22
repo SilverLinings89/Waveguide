@@ -1,17 +1,8 @@
-/*
- * MPICommunicator.h
- *
- *  Created on: Apr 27, 2020
- *      Author: kraft
- */
-
-#ifndef CODE_HIERARCHY_MPICOMMUNICATOR_H_
-#define CODE_HIERARCHY_MPICOMMUNICATOR_H_
+#pragma once
 
 #include <mpi.h>
 #include <vector>
 #include "../Helpers/Enums.h"
-
 
 class MPICommunicator {
 public:
@@ -22,5 +13,3 @@ public:
       Direction in_direction);
   void initialize();
 };
-
-#endif /* CODE_HIERARCHY_MPICOMMUNICATOR_H_ */

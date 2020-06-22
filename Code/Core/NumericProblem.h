@@ -1,6 +1,4 @@
-
-#ifndef CODE_CORE_NUMERICPROBLEM_H_
-#define CODE_CORE_NUMERICPROBLEM_H_
+#pragma once
 
 #include <deal.II/base/mpi.h>
 #include <sys/stat.h>
@@ -51,6 +49,7 @@
 
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include "../Core/Types.h"
 #include "../Helpers/ExactSolution.h"
 #include "../Helpers/GeometryManager.h"
 #include "../Helpers/ModeManager.h"
@@ -60,7 +59,6 @@
 #include "../MeshGenerators/SquareMeshGenerator.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
 #include "../Helpers/Enums.h"
-#include "../Helpers/Structs.h"
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/table_handler.h>
 #include "GlobalObjects.h"
@@ -280,7 +278,7 @@ class NumericProblem {
 
   unsigned int n_dofs;
 
-  dealii::DoFHandler<3> dof_handler;
+  DofHandler3D dof_handler;
 
   // dealii::SparseMatrix<std::complex<double>> system_matrix;
   // dealii::Vector<std::complex<double>> system_rhs;
@@ -295,5 +293,3 @@ class NumericProblem {
   void make_sparsity_pattern(dealii::SparsityPattern *in_pattern,
       unsigned int shift);
 };
-
-#endif

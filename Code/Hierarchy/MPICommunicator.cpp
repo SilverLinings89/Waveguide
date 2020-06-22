@@ -1,10 +1,3 @@
-/*
- * MPICommunicator.cpp
- *
- *  Created on: Apr 27, 2020
- *      Author: kraft
- */
-
 #include <mpi.h>
 #include "MPICommunicator.h"
 #include "../Core/NumericProblem.h"
@@ -23,13 +16,11 @@ inline unsigned int get_index_for_direction_index(int in_direction) {
 }
 
 MPICommunicator::MPICommunicator() {
-
-
 }
 
 void MPICommunicator::initialize() {
   // start with MPI Comm world and work the way down.
-  int local_level = 1;
+  unsigned local_level = 1;
   MPI_Comm local = MPI_COMM_WORLD;
   communicators_by_level.push_back(MPI_COMM_WORLD);
   while (local_level <= GlobalParams.HSIE_SWEEPING_LEVEL) {

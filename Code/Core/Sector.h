@@ -1,8 +1,6 @@
-#ifndef SectorFlagH
-#define SectorFlagH
+#pragma once
 
 #include <deal.II/base/tensor.h>
-
 #include "NumericProblem.h"
 
 using namespace dealii;
@@ -222,5 +220,3 @@ class Sector {
   // not.
   bool *zero_derivative;
 };
-
-#endif

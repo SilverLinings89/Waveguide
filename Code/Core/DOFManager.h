@@ -1,9 +1,4 @@
-//
-// Created by kraft on 16.07.19.
-//
-
-#ifndef WAVEGUIDEPROBLEM_DOFMANAGER_H
-#define WAVEGUIDEPROBLEM_DOFMANAGER_H
+#pragma once
 
 #include <deal.II/base/index_set.h>
 #include <deal.II/dofs/dof_handler.h>
@@ -64,5 +59,3 @@ class DOFManager {
   // TODO: There should be some functions checking for neighboring processes if
   // the communicated IndexSets are the same.
 };
-
-#endif  // WAVEGUIDEPROBLEM_DOFMANAGER_H

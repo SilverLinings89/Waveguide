@@ -1,9 +1,4 @@
-//
-// Created by kraft on 08.11.19.
-//
-
-#ifndef WAVEGUIDEPROBLEM_HSIEPOLYNOMIAL_H
-#define WAVEGUIDEPROBLEM_HSIEPOLYNOMIAL_H
+#pragma once
 
 #include <deal.II/base/point.h>
 #include <deal.II/lac/full_matrix.h>
@@ -45,5 +40,3 @@ class HSIEPolynomial {
   void applyDerivative();
   void add(HSIEPolynomial b);
 };
-
-#endif  // WAVEGUIDEPROBLEM_HSIEPOLYNOMIAL_H

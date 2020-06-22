@@ -1,9 +1,4 @@
-//
-// Created by pascal on 03.02.20.
-//
-
-#ifndef WAVEGUIDEPROBLEM_NONLOCALPROBLEM_H
-#define WAVEGUIDEPROBLEM_NONLOCALPROBLEM_H
+#pragma once
 
 #include "../Core/Types.h"
 #include <mpi.h>
@@ -13,8 +8,6 @@
 #include <deal.II/lac/solver_control.h>
 #include <deal.II/lac/parallel_vector.h>
 #include "../Helpers/Enums.h"
-
-using namespace dealii;
 
 class NonLocalProblem: public HierarchicalProblem {
 private:
@@ -66,5 +59,3 @@ private:
   NumericVectorLocal get_local_vector_from_global() override;
 
 };
-
-#endif  // WAVEGUIDEPROBLEM_NONLOCALPROBLEM_H

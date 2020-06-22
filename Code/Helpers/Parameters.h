@@ -1,6 +1,4 @@
-
-#ifndef ParametersFlag
-#define ParametersFlag
+#pragma once
 
 #include <mpi.h>
 #include <string>
@@ -162,5 +160,3 @@ struct Parameters {
       1;  // 1 means normal sweeping, 2 means hierarchical sweeping with depth
           // 1, 3 means hierarchical sweeping with depth 2.
 };
-
-#endif

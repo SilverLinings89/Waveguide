@@ -1,6 +1,4 @@
-
-#ifndef ExactSolutionFlag_H_
-#define ExactSolutionFlag_H_
+#pragma once
 
 #include <deal.II/base/function.h>
 #include <deal.II/base/point.h>
@@ -82,5 +80,3 @@ class ExactSolution: public dealii::Function<3, double> {
   dealii::Tensor<1, 3, std::complex<double>> val(
       const dealii::Point<3> &in_p) const;
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef ParameterReaderFlag
-#define ParameterReaderFlag
+#pragma once
 
 #include <deal.II/base/parameter_handler.h>
 #include "../Core/NumericProblem.h"
@@ -64,5 +63,3 @@ class ParameterReader : public Subscriptor {
  private:
   ParameterHandler &prm;
 };
-
-#endif

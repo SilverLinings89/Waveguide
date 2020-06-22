@@ -1,7 +1,3 @@
-//
-// Created by pascal on 03.02.20.
-//
-
 #include "../Core/Types.h"
 #include "LocalProblem.h"
 #include "../HSIEPreconditioner/HSIESurface.h"

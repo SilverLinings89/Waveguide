@@ -1,12 +1,4 @@
-/*
- * DofIndexData.h
- *
- *  Created on: Apr 24, 2020
- *      Author: kraft
- */
-
-#ifndef CODE_HIERARCHY_DOFINDEXDATA_H_
-#define CODE_HIERARCHY_DOFINDEXDATA_H_
+#pragma once
 
 #include <deal.II/base/index_set.h>
 #include "LevelDofIndexData.h"
@@ -23,5 +15,3 @@ public:
   void initialize();
   void initialize_level(unsigned int level);
 };
-
-#endif /* CODE_HIERARCHY_DOFINDEXDATA_H_ */

@@ -1,6 +1,4 @@
-
-#ifndef STATICFUNCTIONS_H_
-#define STATICFUNCTIONS_H_
+#pragma once
 
 #include <deal.II/base/index_set.h>
 #include <deal.II/base/point.h>
@@ -96,5 +94,3 @@ double InterpolationPolynomialDerivative(double, double, double, double,
 double InterpolationPolynomialZeroDerivative(double, double, double);
 
 double sigma(double, double, double);
-
-#endif /* STATICFUNCTIONS_H_ */

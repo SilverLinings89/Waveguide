@@ -98,8 +98,8 @@ dealii::Vector<std::complex<double>> NonLocalProblem::get_local_vector_from_glob
   return ret;
 }
 
-void NonLocalProblem::solve(dealii::Vector<std::complex<double>> src,
-    dealii::Vector<std::complex<double>> &dst) {
+void NonLocalProblem::solve(NumericVectorDistributed src,
+    NumericVectorDistributed &dst) {
   dealii::Vector<std::complex<double>> inputb(n_own_dofs);
   for (unsigned int i = 0; i < n_own_dofs; i++) {
     inputb[i] = src(i);

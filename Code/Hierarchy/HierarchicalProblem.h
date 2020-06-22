@@ -1,9 +1,4 @@
-//
-// Created by pascal on 03.02.20.
-//
-
-#ifndef WAVEGUIDEPROBLEM_HIERARCHICALPROBLEM_H
-#define WAVEGUIDEPROBLEM_HIERARCHICALPROBLEM_H
+#pragma once
 
 #include "../Core/Types.h"
 #include "../Core/DOFManager.h"
@@ -59,5 +54,3 @@ class HierarchicalProblem {
       dealii::AffineConstraints<std::complex<double>> *affine_constraints);
   virtual dealii::Vector<std::complex<double>> get_local_vector_from_global() = 0;
 };
-
-#endif  // WAVEGUIDEPROBLEM_HIERARCHICALPROBLEM_H

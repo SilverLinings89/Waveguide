@@ -1,12 +1,4 @@
-/*
- * enums.cpp
- *
- *  Created on: May 11, 2020
- *      Author: kraft
- */
-
-#ifndef CODE_HELPERS_ENUMS
-#define CODE_HELPERS_ENUMS
+#pragma once
 
 enum SweepingDirection {
   X = 0, Y = 1, Z = 2
@@ -91,5 +83,3 @@ enum PreconditionerOptions {
 enum SteppingMethod {
   Steepest, CG, LineSearch
 };
-
-#endif /* CODE_HELPERS_ENUMS */

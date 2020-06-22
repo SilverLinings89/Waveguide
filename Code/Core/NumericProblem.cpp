@@ -19,6 +19,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "../Core/Types.h"
 #include "../Helpers/staticfunctions.h"
 #include "../MeshGenerators/SquareMeshGenerator.h"
 #include "SolutionWeight.h"
