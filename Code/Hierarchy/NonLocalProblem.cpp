@@ -5,11 +5,9 @@
 #include <deal.II/lac/solver_gmres.h>
 
 NonLocalProblem::NonLocalProblem(unsigned int local_level) :
-HierarchicalProblem(local_level),
-sc(GlobalParams.So_TotalSteps,
-        GlobalParams.So_Precision, true, true), solver(sc,
-        dealii::SolverGMRES<dealii::parallel::distributed::Vector<std::complex<double>>>::AdditionalData(
-            GlobalParams.So_RestartSteps))
+  HierarchicalProblem(local_level),
+  sc(GlobalParams.So_TotalSteps, GlobalParams.So_Precision, true, true), 
+  solver(sc, dealii::SolverGMRES<NumericVectorDistributed>::AdditionalData(GlobalParams.So_RestartSteps))
 {
     if(local_level > 1) {
     child = new NonLocalProblem(local_level - 1);

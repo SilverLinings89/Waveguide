@@ -33,15 +33,15 @@ Sector<Dofs_Per_Sector>::Sector(bool in_left, bool in_right, double in_z_0,
     zero_derivative[0] = true;
     zero_derivative[1] = false;
     zero_derivative[2] = true;
-    derivative[0] = 0;
-    derivative[1] = 2;
-    derivative[2] = 0;
+    derivative     [0] = 0;
+    derivative     [1] = 2;
+    derivative     [2] = 0;
   }
   if (Dofs_Per_Sector == 2) {
     zero_derivative[0] = false;
     zero_derivative[1] = true;
-    derivative[0] = 1;
-    derivative[1] = 0;
+    derivative     [0] = 1;
+    derivative     [1] = 0;
   }
 
   for (unsigned int i = 0; i < Dofs_Per_Sector; i++) {

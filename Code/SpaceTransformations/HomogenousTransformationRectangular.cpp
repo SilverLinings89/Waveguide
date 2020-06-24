@@ -7,6 +7,8 @@
 #include <deal.II/lac/vector.h>
 #include <complex>
 #include "../Core/Sector.h"
+#include "../Core/GlobalObjects.h"
+#include "../Helpers/staticfunctions.h"
 
 using namespace dealii;
 

@@ -16,8 +16,8 @@ private:
   dealii::SparseMatrix<EFieldComponent> *system_matrix;
   NumericVectorDistributed *system_rhs;
   dealii::IndexSet local_indices;
-  dealii::SolverGMRES<NumericVectorDistributed> solver;
   dealii::SolverControl sc;
+  dealii::SolverGMRES<NumericVectorDistributed> solver;
  public:
   NonLocalProblem(unsigned int);
   ~NonLocalProblem() override;

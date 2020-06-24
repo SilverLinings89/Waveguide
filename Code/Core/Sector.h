@@ -1,9 +1,6 @@
 #pragma once
 
 #include <deal.II/base/tensor.h>
-#include "NumericProblem.h"
-
-using namespace dealii;
 
 /**
  * \class Sector
@@ -67,7 +64,7 @@ class Sector {
    * point, for which the Tensor should be calculated. \param in_z z-coordinate
    * of the point, for which the Tensor should be calculated.
    */
-  Tensor<2, 3, double> TransformationTensorInternal(double in_x, double in_y,
+  dealii::Tensor<2, 3, double> TransformationTensorInternal(double in_x, double in_y,
                                                     double in_z) const;
 
   /**

@@ -70,53 +70,13 @@ void LocalProblem::initialize() {
     auto temp_it = temp_triangulation.begin();
     double additional_coorindate = temp_it->center()[component];
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
-    switch (side) {
-    case 0:
-      surface_0 = new HSIESurface(5, std::ref(surf_tria), side,
-          GlobalParams.So_ElementOrder, k0, additional_coorindate);
-      break;
-    case 1:
-      surface_1 = new HSIESurface(5, std::ref(surf_tria), side,
-          GlobalParams.So_ElementOrder, k0, additional_coorindate);
-      break;
-    case 2:
-      surface_2 = new HSIESurface(5, std::ref(surf_tria), side,
-          GlobalParams.So_ElementOrder, k0, additional_coorindate);
-      break;
-    case 3:
-      surface_3 = new HSIESurface(5, std::ref(surf_tria), side,
-          GlobalParams.So_ElementOrder, k0, additional_coorindate);
-      break;
-    case 4:
-      surface_4 = new HSIESurface(5, std::ref(surf_tria), side,
-          GlobalParams.So_ElementOrder, k0, additional_coorindate);
-      break;
-    case 5:
-      surface_5 = new HSIESurface(5, surf_tria, side,
-          GlobalParams.So_ElementOrder, k0, additional_coorindate);
-      break;
-    default:
-      break;
-    }
-
+    surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(5, std::ref(surf_tria), side,
+          GlobalParams.So_ElementOrder, k0, additional_coorindate));
   }
 
-  surfaces = new HSIESurface*[6];
-  surfaces[0] = surface_0;
-  surfaces[1] = surface_1;
-  surfaces[2] = surface_2;
-  surfaces[3] = surface_3;
-  surfaces[4] = surface_4;
-  surfaces[5] = surface_5;
-  for (unsigned int i = 0; i < 6; i++) {
-    surfaces[i]->initialize();
-  }
-
-  std::cout << "Done" << std::endl;
   std::cout << "Initialize index sets" << std::endl;
   initialize_own_dofs();
   std::cout << "Number of local dofs: " << n_own_dofs << std::endl;
-  std::cout << "End of Local Problem Initialize()." << std::endl;
 }
 
 void LocalProblem::generate_sparsity_pattern() {

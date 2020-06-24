@@ -4,19 +4,14 @@
 #include "../Core/DOFManager.h"
 #include "../Core/NumericProblem.h"
 #include "../HSIEPreconditioner/HSIESurface.h"
+#include <array>
+#include <memory>
 
 class LocalProblem: public HierarchicalProblem {
 public:
 
   NumericProblem base_problem;
-  HSIESurface **surfaces;
-  HSIESurface *surface_0;
-  HSIESurface *surface_1;
-  HSIESurface *surface_2;
-  HSIESurface *surface_3;
-  HSIESurface *surface_4;
-  HSIESurface *surface_5;
-
+  std::array<std::shared_ptr<HSIESurface>,6> surfaces;
   dealii::SparseDirectUMFPACK solver;
   dealii::AffineConstraints<std::complex<double>> constraints;
   dealii::SparsityPattern *sp;
@@ -28,19 +23,17 @@ public:
 
   unsigned int compute_upper_interface_dof_count() override;
 
-  auto solve(NumericVectorDistributed src,
-      NumericVectorDistributed &dst) -> void override {
-        std::cout << "Wrong solve function called in LocalProblem." << std::endl;
-      };
+  auto solve(NumericVectorDistributed, NumericVectorDistributed &) -> void override {
+    std::cout << "Wrong solve function called in LocalProblem." << std::endl;
+  };
 
-  void solve(NumericVectorLocal src,
-      NumericVectorLocal &dst) override;
+  void solve(NumericVectorLocal src, NumericVectorLocal &dst) override;
 
   void initialize() override;
 
   void generate_sparsity_pattern() override;
 
-  unsigned int compute_own_dofs() override;
+  auto compute_own_dofs() -> DofCount override;
 
   void initialize_own_dofs() override;
 
@@ -54,10 +47,9 @@ public:
 
   void initialize_index_sets() override;
 
-  void apply_sweep(
-      dealii::LinearAlgebra::distributed::Vector<std::complex<double>>);
+  void apply_sweep(dealii::LinearAlgebra::distributed::Vector<std::complex<double>>);
 
-  LocalProblem* get_local_problem() override;
+  auto get_local_problem() -> LocalProblem* override;
 
   void validate();
 

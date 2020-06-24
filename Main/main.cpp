@@ -1,6 +1,3 @@
-#ifndef MainCppFlag
-#define MainCppFlag
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <deal.II/base/parameter_handler.h>
@@ -69,5 +66,3 @@ int main(int argc, char *argv[]) {
   return 0;
 
 }
-
-#endif

@@ -7,10 +7,13 @@
 #include <math.h>
 #include <vector>
 #include "../Helpers/Enums.h"
+#include "../Core/GlobalObjects.h"
 
 using namespace dealii;
 
 class NumericProblem;
+template <unsigned int Dofs_Per_Sector>
+class Sector;
 
 /**
  * \class SpaceTransformation

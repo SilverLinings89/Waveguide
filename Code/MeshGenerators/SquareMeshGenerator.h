@@ -1,5 +1,4 @@
-#ifndef SquareMeshGenerator_h_
-#define SquareMeshGenerator_h_
+#pragma once
 
 #include <deal.II/base/point.h>
 #include <deal.II/grid/tria.h>
@@ -68,5 +67,3 @@ class SquareMeshGenerator {
   bool check_and_mark_one_cell_for_refinement(
       Triangulation<3>::active_cell_iterator);
 };
-
-#endif

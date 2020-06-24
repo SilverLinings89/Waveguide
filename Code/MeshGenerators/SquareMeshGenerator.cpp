@@ -1,10 +1,7 @@
-#ifndef SquareMeshGeneratorCppFlag
-#define SquareMeshGeneratorCppFlag
-
 #include "SquareMeshGenerator.h"
 #include <deal.II/base/multithread_info.h>
-#include <deal.II/base/std_cxx11/array.h>
-#include <deal.II/base/std_cxx11/bind.h>
+#include <array>
+#include <functional>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/thread_management.h>
 #include <deal.II/grid/grid_generator.h>
@@ -94,8 +91,8 @@ void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
   set_boundary_ids(*in_tria);
 
   in_tria->signals.post_refinement.connect(
-      std_cxx11::bind(&SquareMeshGenerator::set_boundary_ids,
-          std_cxx11::cref(*this), std_cxx11::ref(*in_tria)));
+      std::bind(&SquareMeshGenerator::set_boundary_ids,
+          std::cref(*this), std::ref(*in_tria)));
 
   refine_triangulation_iteratively(in_tria);
 
@@ -144,5 +141,3 @@ bool SquareMeshGenerator::check_and_mark_one_cell_for_refinement(
 
   return found_refinable_cell;
 }
-
-#endif

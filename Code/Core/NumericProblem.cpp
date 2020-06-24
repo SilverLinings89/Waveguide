@@ -4,7 +4,7 @@
 
 #include "NumericProblem.h"
 
-#include <deal.II/base/std_cxx11/bind.h>
+#include <functional>
 #include <deal.II/base/timer.h>
 #include <deal.II/distributed/shared_tria.h>
 #include <deal.II/dofs/dof_handler.h>
@@ -28,11 +28,11 @@
 
 NumericProblem::NumericProblem()
     :
+      mesh_generator{},
+      space_transformation{0},
     fe(GlobalParams.So_ElementOrder),
       triangulation(Triangulation<3>::MeshSmoothing(Triangulation<3>::none)),
-      dof_handler(triangulation) {
-  mg = new SquareMeshGenerator();
-  st = new HomogenousTransformationRectangular(0);
+      dof_handler(triangulation){
   n_dofs = 0;
 }
 
@@ -54,7 +54,6 @@ Tensor<1, 3, std::complex<double>> NumericProblem::Conjugate_Vector(
 }
 
 void NumericProblem::make_grid() {
-  // mg->prepare_triangulation(&triangulation);
   std::cout << "Make Grid." << std::endl;
   const unsigned int Cells_Per_Direction = 25;
   std::vector<unsigned int> repetitions;
@@ -211,8 +210,6 @@ void NumericProblem::reinit_solution() {
 std::vector<unsigned int> NumericProblem::get_surface_dof_vector_for_boundary_id(
     unsigned int b_id) {
   std::vector<unsigned int> ret;
-  auto cell = dof_handler.begin_active();
-  auto endc = dof_handler.end();
   std::vector<bool> dof_vector;
   std::set<unsigned int> b_ids;
   b_ids.insert(b_id);
@@ -269,12 +266,10 @@ void NumericProblem::assemble_system(unsigned int shift,
   auto cell = dof_handler.begin_active();
   auto endc = dof_handler.end();
 
-  deallog << "Assembly loop." << std::endl;
   const dealii::Point<3> bounded_cell(0.0, 0.0, 0.0);
   const FEValuesExtractors::Vector fe_field(0);
   for (; cell != endc; ++cell) {
     if (true) {
-      // if (!cell->point_inside(bounded_cell)) {
       cell->get_dof_indices(local_dof_indices);
       for (unsigned int i = 0; i < local_dof_indices.size(); i++) {
         local_dof_indices[i] += shift;
@@ -322,12 +317,6 @@ void NumericProblem::assemble_system(unsigned int shift,
 
         cm.distribute_local_to_global(cell_matrix_real, cell_rhs,
             local_dof_indices, *matrix, *rhs, false);
-        // for (unsigned int i = 0; i < local_dof_indices.size(); i++) {
-        //  for (unsigned int j = 0; j < local_dof_indices.size(); j++) {
-        //    matrix->add(local_dof_indices[i], local_dof_indices[j],
-        //        cell_matrix_real[i][j]);
-        //  }
-        // }
       }
     }
   }

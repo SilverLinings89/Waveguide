@@ -26,7 +26,7 @@ class HSIESurface {
   dealii::FE_Q<2> fe_q;
   std::complex<double> k0;
   dealii::Triangulation<2> surface_triangulation;
-  bool ** edge_ownership_by_level_and_id;
+  std::array<std::array<bool,6>,4> edge_ownership_by_level_and_id;
   std::vector<unsigned int> corner_cell_ids;
   const double additional_coordinate;
   std::vector<DofSortingData> surface_dofs;
@@ -80,10 +80,8 @@ class HSIESurface {
   void register_new_edge_dofs(CellIterator2D cell, CellIterator2D cell_2, unsigned int edge);
   void register_new_surface_dofs(CellIterator2D cell, CellIterator2D cell2);
   auto register_dof() -> DofNumber;
-  void register_single_dof(std::string in_id, int in_hsie_order, int in_inner_order, bool in_is_real,
-                           DofType in_dof_type, DofDataVector &, unsigned int);
-  void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, bool in_is_real,
-                           DofType in_dof_type, DofDataVector &, unsigned int);
+  void register_single_dof(std::string in_id, int in_hsie_order, int in_inner_order, DofType in_dof_type, DofDataVector &, unsigned int);
+  void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, DofType in_dof_type, DofDataVector &, unsigned int);
   static ComplexNumber evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v);
   void transform_coordinates_in_place(std::vector<HSIEPolynomial> *);
   bool check_dof_assignment_integrity();

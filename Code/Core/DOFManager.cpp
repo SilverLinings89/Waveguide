@@ -383,18 +383,6 @@ DOFManager::DOFManager(unsigned int i_dofs_per_cell,
   this->global_level = i_global_level;
   this->hsie_surfaces = new HSIESurface*[6];
   n_global_dofs = 0;
-  for(unsigned int i = 0; i < 6; i++) {
-    std::set<unsigned int> b_ids;
-    b_ids.insert(i);
-    dealii::Triangulation<2,3> temp_triangulation;
-    dealii::Triangulation<2> surf_tria;
-    dealii::GridGenerator::extract_boundary_mesh(*in_triangulation,
-        temp_triangulation, b_ids);
-    const unsigned int component = i / 2;
-    auto temp_it = surf_tria.begin();
-    double additional_coorindate = temp_it->center()[component];
-    dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
-  }
 }
 
 void DOFManager::compute_level_dofs() {
@@ -427,6 +415,10 @@ LevelDofOwnershipData DOFManager::compute_higher_level_dofs(unsigned int level){
   LevelDofOwnershipData ret;
   if(global_level == 3) {
 
+  } else {
+    if(level == 0) {
+      ret.owned_dofs = 0;
+    }
   }
   return ret;
 }

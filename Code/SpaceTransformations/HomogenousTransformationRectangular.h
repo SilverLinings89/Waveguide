@@ -1,5 +1,4 @@
-#ifndef HomogenousTransformationRectangularFlag
-#define HomogenousTransformationRectangularFlag
+#pragma once
 
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
@@ -7,8 +6,10 @@
 #include <math.h>
 #include <vector>
 
-#include "../Core/NumericProblem.h"
 #include "../Core/Sector.h"
+#include "./SpaceTransformation.h"
+
+class NumericProblem;
 
 /**
  * \class HomogenousTransformationRectangular
@@ -221,5 +222,3 @@ class HomogenousTransformationRectangular : public SpaceTransformation {
   std::complex<double> evaluate_for_z_with_sum(double, double,
                                                NumericProblem *);
 };
-
-#endif

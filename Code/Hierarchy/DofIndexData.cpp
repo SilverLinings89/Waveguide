@@ -36,6 +36,6 @@ void DofIndexData::initialize() {
 
 }
 
-void DofIndexData::initialize_level(unsigned int level) {
+void DofIndexData::initialize_level(unsigned int) {
 
 }

@@ -56,8 +56,9 @@
 #include "../Helpers/ParameterReader.h"
 #include "../Helpers/Parameters.h"
 #include "../Helpers/staticfunctions.h"
+#include "./Sector.h"
 #include "../MeshGenerators/SquareMeshGenerator.h"
-#include "../SpaceTransformations/SpaceTransformation.h"
+#include "../SpaceTransformations/HomogenousTransformationRectangular.h"
 #include "../Helpers/Enums.h"
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/table_handler.h>
@@ -135,7 +136,7 @@ class NumericProblem {
    */
   void store();
 
-  SquareMeshGenerator *mg;
+  SquareMeshGenerator mesh_generator;
 
   /**
    * Grid-generation is a crucial part of any FEM-Code. This function holds all
@@ -266,7 +267,7 @@ class NumericProblem {
 
   void make_constraints();
 
-  SpaceTransformation *st;
+  HomogenousTransformationRectangular space_transformation;
 
   dealii::FE_NedelecSZ<3> fe;
 

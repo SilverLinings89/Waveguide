@@ -42,15 +42,16 @@ static unsigned int dofs_per_edge(unsigned int hsie_Order, unsigned int inner_or
             if(inner_order == 0) return 7;
             if(inner_order == 1) return 21;
             if(inner_order == 2) return 35;
-    break;
+            break;
         case 10:
             if(inner_order == 0) return 12;
             if(inner_order == 1) return 36;
             if(inner_order == 2) return 60;
-    break;
+            break;
         default:
             return 0;
     }
+    return 0;
 }
 
 static unsigned int dofs_per_vertex(unsigned int hsie_Order) {
@@ -113,7 +114,6 @@ protected:
         dealii::GridTools::transform(Transform_4_to_5, tria);
     dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation,
         b_ids);
-        const unsigned int dest_surf_cells = Cells_Per_Direction*Cells_Per_Direction;
         dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
     }
 };
