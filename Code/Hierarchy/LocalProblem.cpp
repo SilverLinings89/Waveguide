@@ -95,7 +95,7 @@ void LocalProblem::validate() {
     auto end = matrix->end(i);
     unsigned int entries = 0;
     while (it != end) {
-      matrix_entry = (*it).value(); 
+      matrix_entry = (*it).value();
       if (std::abs(matrix_entry) != 0.0 ) {
         entries++;
       }

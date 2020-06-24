@@ -1,7 +1,3 @@
-//
-// Created by kraft on 16.08.19.
-//
-
 #include "HSIESurface.h"
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria_accessor.h>
