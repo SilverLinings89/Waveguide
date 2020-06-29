@@ -18,9 +18,9 @@ public:
   LocalProblem();
   ~LocalProblem() override;
 
-  unsigned int compute_lower_interface_dof_count() override;
+  DofCount compute_lower_interface_dof_count() override;
 
-  unsigned int compute_upper_interface_dof_count() override;
+  DofCount compute_upper_interface_dof_count() override;
 
   auto solve(NumericVectorDistributed, NumericVectorDistributed &) -> void override {
     std::cout << "Wrong solve function called in LocalProblem." << std::endl;

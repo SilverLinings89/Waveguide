@@ -93,10 +93,13 @@ class HSIESurface {
   auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount;
   std::vector<unsigned int> get_dof_association();
   Position undo_transform(dealii::Point<2>);
-  void add_surface_relevant_dof(unsigned int in_global_index,
-      Position point);
+  void add_surface_relevant_dof(DofNumber in_global_index, Position point);
   std::vector<unsigned int> get_dof_association_by_boundary_id(
       BoundaryId in_boundary_id);
   void clear_user_flags();
+  void set_b_id_uses_hsie(unsigned int, bool);
 
 };
+
+
+

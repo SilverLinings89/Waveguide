@@ -72,6 +72,7 @@ void LocalProblem::initialize() {
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
     surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(5, std::ref(surf_tria), side,
           GlobalParams.So_ElementOrder, k0, additional_coorindate));
+    surfaces[side]->initialize();
   }
 
   std::cout << "Initialize index sets" << std::endl;
@@ -95,7 +96,7 @@ void LocalProblem::validate() {
     auto end = matrix->end(i);
     unsigned int entries = 0;
     while (it != end) {
-      matrix_entry = (*it).value(); 
+      matrix_entry = (*it).value();
       if (std::abs(matrix_entry) != 0.0 ) {
         entries++;
       }
@@ -109,10 +110,10 @@ void LocalProblem::validate() {
 
 }
 
-unsigned int LocalProblem::compute_own_dofs() {
+DofCount LocalProblem::compute_own_dofs() {
   std::cout << "Begin Compute own dofs: " << std::endl;
   surface_first_dofs.clear();
-  unsigned int ret = base_problem.dof_handler.n_dofs();
+  DofCount ret = base_problem.dof_handler.n_dofs();
   surface_first_dofs.push_back(ret);
   for (unsigned int i = 0; i < 6; i++) {
     ret += surfaces[i]->dof_counter;
@@ -120,7 +121,7 @@ unsigned int LocalProblem::compute_own_dofs() {
       surface_first_dofs.push_back(ret);
     }
   }
-  for (unsigned int i = 0; i < surface_first_dofs.size(); i++) {
+  for (DofNumber i = 0; i < surface_first_dofs.size(); i++) {
     std::cout << surface_first_dofs[i] << " ";
   }
   std::cout << std::endl;
@@ -155,14 +156,10 @@ void LocalProblem::make_constraints() {
   }
   std::cout << "Restraints after phase 1:" << constraints.n_constraints()
       << std::endl;
-
-  // Implementation of a pointsource in the coordinate center
-
-  std::cout << "Restraints after phase 2:" << constraints.n_constraints()
-      << std::endl;
-  // Couple the surfaces together
+  dealii::AffineConstraints<ComplexNumber> surface_to_surface_constraints;
   for (unsigned int i = 0; i < 6; i++) {
     for (unsigned int j = i + 1; j < 6; j++) {
+      surface_to_surface_constraints.reinit(is);
       bool opposing = ((i % 2) == 0) && (i + 1 == j);
       if (!opposing) {
         std::vector<unsigned int> lower_face_dofs =
@@ -181,23 +178,15 @@ void LocalProblem::make_constraints() {
         for (unsigned int dof = 0; dof < lower_face_dofs.size(); dof++) {
           unsigned int dof_a = lower_face_dofs[dof] + surface_first_dofs[i];
           unsigned int dof_b = upper_face_dofs[dof] + surface_first_dofs[j];
-          if (!constraints.is_constrained(dof_a)) {
-            constraints.add_line(dof_a);
-            constraints.add_entry(dof_a, dof_b, std::complex<double>(-1, 0));
-          } else {
-            if (!constraints.is_constrained(dof_b)) {
-              constraints.add_line(dof_b);
-              constraints.add_entry(dof_b, dof_a, std::complex<double>(-1, 0));
-            } else {
-              std::cout << "Both dofs already restrained ..." << std::endl;
-            }
-          }
+          surface_to_surface_constraints.add_line(dof_a);
+          surface_to_surface_constraints.add_entry(dof_a, dof_b, std::complex<double>(-1, 0));
         }
       }
+      constraints.merge(surface_to_surface_constraints, 
+        dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
     }
   }
-  std::cout << "Restraints after phase 3:" << constraints.n_constraints()
-      << std::endl;
+  std::cout << "Restraints after phase 2:" << constraints.n_constraints() << std::endl;
 
   std::cout << "End Make Constraints." << std::endl;
 }

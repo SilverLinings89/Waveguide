@@ -265,7 +265,8 @@ class NumericProblem {
 
   void SortDofsDownstream();
 
-  void make_constraints();
+  void make_constraints(dealii::AffineConstraints<std::complex<double>>*,
+      unsigned int shift, unsigned int size);
 
   HomogenousTransformationRectangular space_transformation;
 

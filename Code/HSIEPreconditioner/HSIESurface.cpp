@@ -1,7 +1,3 @@
-//
-// Created by kraft on 16.08.19.
-//
-
 #include "HSIESurface.h"
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria_accessor.h>
@@ -1075,14 +1071,14 @@ std::vector<unsigned int> HSIESurface::get_dof_association_by_boundary_id(Bounda
                   1);
               auto search = find(vertex_indices.begin(), vertex_indices.end(),
                   first_index);
-              if (search != vertex_indices.end()) {
+              if (search == vertex_indices.end()) {
                 vertex_indices.push_back(first_index);
                 vertex_indices_with_point.emplace_back(first_index,
                     it2->face(edge)->vertex(0));
               }
               search = find(vertex_indices.begin(), vertex_indices.end(),
                   second_index);
-              if (search != vertex_indices.end()) {
+              if (search == vertex_indices.end()) {
                 vertex_indices.push_back(second_index);
                 vertex_indices_with_point.emplace_back(second_index,
                     it2->face(edge)->vertex(1));

@@ -25,6 +25,7 @@ ADD_LIBRARY(Code
         HSIEPreconditioner/HSIEPreconditioner.cpp
         HSIEPreconditioner/HSIESurface.cpp
         HSIEPreconditioner/LaguerreFunction.cpp
+        HSIEPreconditioner/JacobianForCell.cpp
         Hierarchy/HierarchicalProblem.cpp 
         Hierarchy/HierarchicalProblem.h 
         Hierarchy/NonLocalProblem.cpp 

@@ -1,4 +1,3 @@
-// Copyright 2018 Pascal Kraft
 #ifndef WaveguideCppFlag
 #define WaveguideCppFlag
 
@@ -120,15 +119,27 @@ void NumericProblem::make_sparsity_pattern(
   }
 }
 
-void NumericProblem::make_constraints() {
-  dealii::Point<3> center(0.0, 0.0, 0.0);
+
+
+void NumericProblem::make_constraints(
+    AffineConstraints<std::complex<double>> *in_constraints, unsigned int shift,
+    unsigned int) {
+  dealii::AffineConstraints<std::complex<double>> temp_cm;
+  dealii::IndexSet is;
+  is.set_size(n_dofs);
+  is.add_range(0, n_dofs);
+  temp_cm.reinit(is);
+
+  Position center(0.0, 0.0, 0.0);
   std::vector<unsigned int> restrained_dofs = dofs_for_cell_around_point(
       center);
   for (unsigned int i = 0; i < restrained_dofs.size(); i++) {
-    cm.add_line(restrained_dofs[i]);
-    cm.set_inhomogeneity(restrained_dofs[i], std::complex<double>(1.0, -1.0));
+    temp_cm.add_line(restrained_dofs[i] + shift);
+    temp_cm.set_inhomogeneity(restrained_dofs[i] + shift,
+        ComplexNumber(1,0));
   }
-  cm.close();
+  in_constraints->merge(temp_cm,
+      dealii::AffineConstraints<std::complex<double>>::MergeConflictBehavior::left_object_wins);
 }
 
 void NumericProblem::SortDofsDownstream() {
@@ -167,7 +178,6 @@ void NumericProblem::setup_system() {
   deallog.push("setup_system");
 
   reinit_all();
-  make_constraints();
 
   deallog.pop();
 }
