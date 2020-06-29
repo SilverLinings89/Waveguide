@@ -312,5 +312,4 @@ void LocalProblem::output_results() {
   data_out.build_patches();
   std::ofstream outputvtu("solution.vtu");
   data_out.write_vtu(outputvtu);
-
 }

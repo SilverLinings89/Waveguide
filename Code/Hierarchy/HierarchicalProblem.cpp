@@ -5,14 +5,10 @@
 #include "HierarchicalProblem.h"
 #include "../Helpers/Parameters.h"
 
-HierarchicalProblem::~HierarchicalProblem() {
-  delete dof_manager;
-}
+HierarchicalProblem::~HierarchicalProblem() { }
 
 HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level) :
     local_level(in_own_level) {
-  is_dof_manager_set = false;
-  dof_manager = nullptr;
   has_child = in_own_level > 0;
   child = nullptr;
   matrix = nullptr;
@@ -25,11 +21,6 @@ HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level) :
   dofs_process_below = 0;
   rank = 0;
   n_procs_in_sweep = 0;
-}
-
-void HierarchicalProblem::setup_dof_manager(DOFManager *in_dof_manager) {
-  dof_manager = in_dof_manager;
-  is_dof_manager_set = true;
 }
 
 void HierarchicalProblem::constrain_identical_dof_sets(

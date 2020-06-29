@@ -1,7 +1,6 @@
 #pragma once
 
 #include "HierarchicalProblem.h"
-#include "../Core/DOFManager.h"
 #include "../Core/NumericProblem.h"
 #include "../HSIEPreconditioner/HSIESurface.h"
 #include <array>

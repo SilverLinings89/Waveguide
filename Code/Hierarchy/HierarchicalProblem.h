@@ -1,13 +1,11 @@
 #pragma once
 
 #include "../Core/Types.h"
-#include "../Core/DOFManager.h"
 #include "../Helpers/Parameters.h"
 #include "DofIndexData.h"
 #include <deal.II/lac/vector.h>
 
 class LocalProblem;
-
 class HierarchicalProblem {
 
  public:
@@ -16,7 +14,6 @@ class HierarchicalProblem {
   bool has_child;
   HierarchicalProblem* child;
   const SweepingLevel local_level;
-  DOFManager* dof_manager;
   DofIndexData indices;
   dealii::SparseMatrix<EFieldComponent> *matrix;
   dealii::Vector<EFieldComponent> rhs;
@@ -30,8 +27,8 @@ class HierarchicalProblem {
   HierarchicalProblem(unsigned int in_own_level);
   virtual ~HierarchicalProblem() =0;
 
-  virtual unsigned int compute_lower_interface_dof_count()=0;
-  virtual unsigned int compute_upper_interface_dof_count()=0;
+  virtual DofCount compute_lower_interface_dof_count()=0;
+  virtual DofCount compute_upper_interface_dof_count()=0;
 
   virtual void solve(NumericVectorDistributed src,
       NumericVectorDistributed &dst)=0;
@@ -40,7 +37,7 @@ class HierarchicalProblem {
   
   virtual void initialize()=0;
   virtual void generate_sparsity_pattern()=0;
-  virtual unsigned int compute_own_dofs()=0;
+  virtual DofCount compute_own_dofs()=0;
   virtual void run() =0;
   virtual void initialize_own_dofs() =0;
   virtual void make_constraints() = 0;
@@ -48,7 +45,6 @@ class HierarchicalProblem {
   virtual void initialize_index_sets()=0;
   virtual void apply_sweep(dealii::LinearAlgebra::distributed::Vector<std::complex<double>>)=0;
   virtual LocalProblem* get_local_problem()=0;
-  void setup_dof_manager(DOFManager *in_dof_manager);
   void constrain_identical_dof_sets(std::vector<unsigned int> *set_one,
       std::vector<unsigned int> *set_two,
       dealii::AffineConstraints<std::complex<double>> *affine_constraints);

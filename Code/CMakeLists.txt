@@ -5,7 +5,6 @@ ADD_LIBRARY(Code
         Core/SolutionWeight.cpp
         Core/NumericProblem.cpp
         Core/Simulation.cpp
-        Core/DOFManager.cpp
         Core/GlobalObjects.cpp
         Core/Types.h
         Helpers/GeometryManager.cpp

@@ -1,10 +1,4 @@
-//
-// Created by kraft on 25.07.19.
-//
-
-#include "../Code/Core/DOFManager.h"
 #include "../Code/HSIEPreconditioner/LaguerreFunction.h"
-
 #include "gtest/gtest.h"
 #include "../Code/HSIEPreconditioner/HSIESurface.h"
 #include "../Code/HSIEPreconditioner/HSIEPolynomial.h"
@@ -343,10 +337,6 @@ TEST(HSIE_ORTHOGONALITY_TESTS, RandomPolynomialProductTest) {
 
     ASSERT_NEAR(expected_result.real(), res.real(), expected_result.real()/100.0);
     ASSERT_NEAR(expected_result.imag(), res.imag(), expected_result.imag()/100.0);
-}
-
-TEST(DOFManagerTests, StaticFunctionTest) {
-    ASSERT_EQ(DOFManager::testValue(),4);
 }
 
 TEST(LAGUERRE_FUNCTION_TESTS, LAGUERRE_EVALUATION_1) {
