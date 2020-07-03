@@ -1,6 +1,7 @@
 #include "../Core/Types.h"
 #include "LocalProblem.h"
 #include "../HSIEPreconditioner/HSIESurface.h"
+#include "../Helpers/staticfunctions.h"
 #include <cmath>
 #include <iostream>
 #include <fstream>

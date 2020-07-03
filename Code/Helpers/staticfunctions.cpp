@@ -27,7 +27,7 @@ extern GeometryManager Geometry;
 
 void set_the_st(SpaceTransformation *in_st) { the_st = in_st; }
 
-Position compute_center_of_triangulation(Mesh *in_mesh) {
+auto compute_center_of_triangulation(const Mesh *in_mesh) -> Position {
   double x_average = 0;
   double y_average = 0;
   double z_average = 0;

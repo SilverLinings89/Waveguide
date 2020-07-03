@@ -281,12 +281,12 @@ TEST_P(TestOrderFixture, AssemblationTestOrder10) {
 }
 
 // INSTANTIATE_TEST_SUITE_P(HSIESurfaceTests, TestOrderFixture, ::testing::Combine( ::testing::Values(0,1,2), ::testing::Values(5,9)));
-INSTANTIATE_TEST_SUITE_P(HSIESurfaceTests, TestOrderFixture,
-    ::testing::Combine(::testing::Values(0), ::testing::Values(5, 9)));
+// INSTANTIATE_TEST_SUITE_P(HSIESurfaceTests, TestOrderFixture,
+//     ::testing::Combine(::testing::Values(0), ::testing::Values(5, 9)));
 
-INSTANTIATE_TEST_SUITE_P(MespPreparationTests, TestDirectionFixture,
-    ::testing::Combine(::testing::Values(0), ::testing::Values(5, 9),
-        ::testing::Values(0, 1, 2, 3, 4, 5)));
+// INSTANTIATE_TEST_SUITE_P(MespPreparationTests, TestDirectionFixture,
+//    ::testing::Combine(::testing::Values(0), ::testing::Values(5, 9),
+//        ::testing::Values(0, 1, 2, 3, 4, 5)));
 
 TEST(HSIEPolynomialTests, TestOperatorTplus) {
   std::vector<std::complex<double>> in_a;
