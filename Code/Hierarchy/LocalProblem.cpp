@@ -185,7 +185,7 @@ void LocalProblem::make_constraints() {
     }
   }
   std::cout << "Restraints after phase 2:" << constraints.n_constraints() << std::endl;
-
+  base_problem.make_constraints(&constraints, 0, n_own_dofs);
   std::cout << "End Make Constraints." << std::endl;
 }
 

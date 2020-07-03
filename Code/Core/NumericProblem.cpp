@@ -123,11 +123,11 @@ void NumericProblem::make_sparsity_pattern(
 
 void NumericProblem::make_constraints(
     AffineConstraints<std::complex<double>> *in_constraints, unsigned int shift,
-    unsigned int) {
+    unsigned int constraints_size) {
   dealii::AffineConstraints<std::complex<double>> temp_cm;
   dealii::IndexSet is;
-  is.set_size(n_dofs);
-  is.add_range(0, n_dofs);
+  is.set_size(constraints_size);
+  is.add_range(0, constraints_size);
   temp_cm.reinit(is);
 
   Position center(0.0, 0.0, 0.0);
