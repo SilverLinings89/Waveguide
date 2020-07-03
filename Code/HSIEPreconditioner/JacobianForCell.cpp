@@ -9,97 +9,103 @@
 #include "JacobianForCell.h"
 #include <deal.II/base/point.h>
 #include <deal.II/dofs/dof_handler.h>
+#include "../Helpers/staticfunctions.h"
 #include <vector>
 
-JacobianForCell::JacobianForCell() {
-  reset();
+JacobianForCell::JacobianForCell(const Position &in_V0, const BoundaryId &in_bid, double in_additional_component) {
+  reinit(in_V0, in_bid, in_additional_component); 
 }
 
-void JacobianForCell::reset() {
-  for (unsigned int i = 0; i < 3; i++) {
-    for (unsigned int j = 0; j < 3; j++) {
-      if (i == j) {
-        J[i][j] = 1;
-      } else {
-        J[i][j] = 0;
-      }
-    }
+void JacobianForCell::reinit(const Position &in_V0, const BoundaryId &in_bid, double in_additional_component) {
+    x                    = {"x"};
+    y                    = {"y"};
+    z                    = {"z"};
+    boundary_id          = in_bid;
+    additional_component = in_additional_component;
+    V0x                  = {"V0x"};
+    V0y                  = {"V0y"};
+    V0z                  = {"V0z"};
+    z0                   = {"z0"};
+    V0                   = split_into_triangulation_and_external_part(in_V0);
+  F[0]                   = x + (z-z0)*(x-V0x);
+  F[1]                   = y + (z-z0)*(y-V0y);
+  F[2]                   = (z-z0)*(z0 - V0z);
+  surface_wide_substitution_map[V0x] = MathExpression(V0.first[0]);
+  surface_wide_substitution_map[V0y] = MathExpression(V0.first[1]);
+  surface_wide_substitution_map[V0z] = MathExpression(V0.second);
+  surface_wide_substitution_map[z0]  = MathExpression(in_additional_component);
+  for(unsigned int i = 0; i <3; i++) {
+    F[i] = F[i].substitute(surface_wide_substitution_map);
   }
-  is_x_tilted = false;
-  is_y_tilted = false;
-  x0 = 0;
-  y0 = 0;
-  Lx = 0;
-  Ly = 0;
-}
-
-void JacobianForCell::reinit_for_cell(CellIterator2D cell,
-    std::vector<bool> in_b_ids_have_hsie) {
-  if (!cell->at_boundary()) {
-    reset();
-    return;
+  for(unsigned int i = 0; i < 3; i++) {
+    J[i][0] = F[i].differentiate(x);
+    J[i][1] = F[i].differentiate(y);
+    J[i][2] = F[i].differentiate(z);
   }
-  this->b_ids_have_hsie = in_b_ids_have_hsie;
-  Lx = compute_L_x_for_cell(cell);
-  Ly = compute_L_y_for_cell(cell);
 }
 
-double JacobianForCell::compute_L_x_for_cell(CellIterator2D cell) {
-  return 2.0 * std::abs(cell->center()[0] - (cell->vertex(0))[0]);
-}
-
-double JacobianForCell::compute_L_y_for_cell(CellIterator2D cell) {
-  return 2.0 * std::abs(cell->center()[1] - (cell->vertex(0))[1]);
-}
-
-bool JacobianForCell::is_cell_x_tilted(
-    CellIterator2D cell) {
-  if(!is_cell_at_x_interface()) {
-    return false;
+dealii::Tensor<2,3,double> JacobianForCell::get_J_hat_for_position(const Position2D &position) const {
+  dealii::Tensor<2,3,double> ret;
+  dealii::Differentiation::SD::types::substitution_map substitution_map;
+  substitution_map[x] = MathExpression(position[0]);
+  substitution_map[y] = MathExpression(position[1]);
+  substitution_map[z] = MathExpression(additional_component);
+  for(unsigned int i = 0; i < 3; i++){
+    for(unsigned int j = 0; j < 3; j++){
+      ret[i][j] = J[i][j].substitute_and_evaluate<double>(substitution_map);
+    }  
   }
-  for(unsigned int edge = 0; edge < 4; edge++) {
-    if(cell->line(edge)->at_boundary() && is_line_in_x_direction(cell->line(edge))) {
-      if(b_ids_have_hsie[cell->line(edge)->boundary_id()]) {
-        return true;
-      }
-    }
+  return ret;
+}
+
+JacobianAndTensorData JacobianForCell::get_C_G_and_J(Position2D in_p) {
+  JacobianAndTensorData ret;
+  ret.J = get_J_hat_for_position(in_p);
+  const double J_norm = ret.J.norm();
+  const Tensor<2,3,double> J_inverse = invert(ret.J);
+  ret.G = J_norm * J_inverse * transpose(J_inverse);
+  ret.C = (1.0 / J_norm) * transpose(ret.J) * ret.J;
+  return ret;
+}
+
+Position JacobianForCell::transform_to_3D_space(Position2D in_position){
+  Position ret= {in_position[0], in_position[1], additional_component};
+  if (boundary_id == 0) {
+    return Transform_5_to_0(ret);
   }
-  return false;
-}
-
-bool JacobianForCell::is_line_in_x_direction(dealii::internal::DoFHandlerImplementation::Iterators<class DoFHandler<2, 2>, false>::line_iterator line) {
-    dealii::Point<2> vertex_1 = line->vertex(0);
-    dealii::Point<2> vertex_2 = line->vertex(1);
-    return (std::abs(vertex_1[0]-vertex_2[0]) > std::abs(vertex_1[1]-vertex_2[1]));
-}
-
-bool JacobianForCell::is_line_in_y_direction(dealii::internal::DoFHandlerImplementation::Iterators<class DoFHandler<2, 2>, false>::line_iterator line) {
-    dealii::Point<2> vertex_1 = line->vertex(0);
-    dealii::Point<2> vertex_2 = line->vertex(1);
-    return (std::abs(vertex_1[0]-vertex_2[0]) < std::abs(vertex_1[1]-vertex_2[1]));
-}
-
-bool JacobianForCell::is_cell_y_tilted(
-    CellIterator2D cell) {
-  if(!is_cell_at_y_interface()) {
-    return false;
+  if (boundary_id == 1) {
+    return Transform_5_to_1(ret);
   }
-  for(unsigned int edge = 0; edge < 4; edge++) {
-    if(cell->line(edge)->at_boundary() && is_line_in_y_direction(cell->line(edge))) {
-      if(b_ids_have_hsie[cell->line(edge)->boundary_id()]) {
-        return true;
-      }
-    }
+  if (boundary_id == 2) {
+    return Transform_5_to_2(ret);
   }
-  return false;
+  if (boundary_id == 3) {
+    return Transform_5_to_3(ret);
+  }
+  if (boundary_id == 4) {
+    return Transform_5_to_4(ret);
+  }
+  if (boundary_id == 5) {
+    return ret;
+  }
 }
 
-bool JacobianForCell::is_cell_at_x_interface(
-    CellIterator2D cell) {
-  
-}
-
-bool JacobianForCell::is_cell_at_y_interface(
-    CellIterator2D cell) {
-
+std::pair<Position2D,double> JacobianForCell::split_into_triangulation_and_external_part(const Position in_point) {
+  Position temp = in_point;
+  if (boundary_id == 0) {
+    temp = Transform_0_to_5(in_point);
+  }
+  if (boundary_id == 1) {
+    temp = Transform_1_to_5(in_point);
+  }
+  if (boundary_id == 2) {
+    temp = Transform_2_to_5(in_point);
+  }
+  if (boundary_id == 3) {
+    temp = Transform_3_to_5(in_point);
+  }
+  if (boundary_id == 4) {
+    temp = Transform_4_to_5(in_point);
+  }
+  return {{temp[0], temp[1]}, temp[2]};
 }

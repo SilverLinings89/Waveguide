@@ -4,6 +4,7 @@
 #include "../Code/HSIEPreconditioner/HSIEPolynomial.h"
 #include "../Code/HSIEPreconditioner/HSIESurface.cpp"
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/base/tensor.h>
 
 Parameters GlobalParams;
 GeometryManager Geometry;
@@ -300,7 +301,11 @@ TEST(HSIE_ORTHOGONALITY_TESTS, EvaluationOfA) {
                 v.emplace_back(j, k0);
                 v.emplace_back(zeroes, k0);
                 v.emplace_back(zeroes, k0);
-      std::complex<double> res = HSIESurface::evaluate_a(u, v);
+                dealii::Tensor<2,3,double> G;
+                G[0][0] = 1;
+                G[1][1] = 1;
+                G[2][2] = 1;
+      std::complex<double> res = HSIESurface::evaluate_a(u, v, G);
             if(j != i) {
                 ASSERT_NEAR(0, res.real(), 0.001);
                 ASSERT_NEAR(0, res.imag(), 0.001);
@@ -327,7 +332,11 @@ TEST(HSIE_ORTHOGONALITY_TESTS, RandomPolynomialProductTest) {
     v.push_back(random_poly(10,k0));
     v.push_back(random_poly(10,k0));
     v.push_back(random_poly(10,k0));
-  std::complex<double> res = HSIESurface::evaluate_a(u, v);
+    dealii::Tensor<2,3,double> G;
+    G[0][0] = 1;
+    G[1][1] = 1;
+    G[2][2] = 1;
+    std::complex<double> res = HSIESurface::evaluate_a(u, v, G);
     std::complex<double> expected_result(0,0);
     for(unsigned j = 0; j < 3; j++) {
         for (unsigned int i = 0; i < 10; i++) {

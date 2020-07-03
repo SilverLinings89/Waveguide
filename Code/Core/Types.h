@@ -4,6 +4,7 @@
 #include <vector>
 #include <complex>
 #include <deal.II/base/point.h>
+#include <deal.II/differentiation/sd/symengine_number_types.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/lac/la_parallel_vector.h>
 #include <deal.II/lac/sparse_matrix.h>
@@ -14,6 +15,7 @@ using EFieldComponent          = std::complex<double>;
 using EFieldValue              = std::array<EFieldComponent, 3>;
 using DofCount                 = unsigned int;
 using Position                 = dealii::Point<3,            double>;
+using Position2D                 = dealii::Point<2,            double>;
 using DofNumber                = unsigned int;
 using DofSortingData           = std::pair<DofNumber,        Position>;
 using NumericVectorLocal       = dealii::Vector<EFieldComponent>;
@@ -29,6 +31,7 @@ using DofHandler3D             = dealii::DoFHandler<3>;
 using CellIterator2D           = DofHandler2D::active_cell_iterator;
 using CellIterator3D           = DofHandler3D::active_cell_iterator;
 using DofDataVector            = std::vector<DofData>;
+using MathExpression = dealii::Differentiation::SD::Expression;
 
 struct DofAssociation {
   bool is_edge;
@@ -39,6 +42,11 @@ struct DofAssociation {
   bool true_orientation;
 };
 
+struct JacobianAndTensorData {
+  dealii::Tensor<2,3,double> C;
+  dealii::Tensor<2,3,double> G;
+  dealii::Tensor<2,3,double> J;
+};
 
 struct DofCountsStruct {
   unsigned int hsie     = 0;

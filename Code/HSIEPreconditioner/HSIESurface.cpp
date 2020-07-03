@@ -6,6 +6,7 @@
 #include "DofData.h"
 #include "HSIEPolynomial.h"
 #include "../Helpers/staticfunctions.h"
+#include "JacobianForCell.h"
 
 const unsigned int MAX_DOF_NUMBER = INT_MAX;
 
@@ -350,7 +351,7 @@ void HSIESurface::fill_matrix(
         dofs_per_cell);
   unsigned int cell_counter = 0;
   auto it2 = dof_h_q.begin();
-
+  JacobianForCell jacobian_for_cell = {V0, b_id, additional_coordinate};
   for (; it != end; ++it) {
     cell_matrix_real = 0;
     DofDataVector cell_dofs = this->get_dof_data_for_cell(it, it2);
@@ -388,8 +389,10 @@ void HSIESurface::fill_matrix(
     std::vector<double> jxw_values = fe_n_values.get_JxW_values();
     std::vector<std::vector<HSIEPolynomial>> contribution_value;
     std::vector<std::vector<HSIEPolynomial>> contribution_curl;
+    JacobianAndTensorData C_G_J;
     for (unsigned int q_point = 0; q_point < quadrature_points.size();
         q_point++) {
+      C_G_J = jacobian_for_cell.get_C_G_and_J(quadrature_points[q_point]);
       for (unsigned int i = 0; i < cell_dofs.size(); i++) {
         DofData &u = cell_dofs[i];
         if (cell_dofs[i].type == DofType::RAY
@@ -424,9 +427,8 @@ void HSIESurface::fill_matrix(
       for (unsigned int i = 0; i < cell_dofs.size(); i++) {
         for (unsigned int j = 0; j < cell_dofs.size(); j++) {
           std::complex<double> part =
-              (evaluate_a(contribution_curl[i],
-              contribution_curl[j])
-              + evaluate_a(contribution_value[i], contribution_value[j])) *
+              (evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C)
+              + evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
               JxW;
             cell_matrix_real[i][j] += part;
         }
@@ -784,11 +786,13 @@ unsigned int HSIESurface::register_dof() {
 }
 
 std::complex<double> HSIESurface::evaluate_a(
-    std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v) {
+    std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, Tensor<2,3,double> G) {
   std::complex<double> result(0, 0);
-  for (unsigned j = 0; j < 3; j++) {
-    for (unsigned int i = 0; i < std::min(u[j].a.size(), v[j].a.size()); i++) {
-      result += u[j].a[i] * v[j].a[i];
+  for(unsigned int i = 0; i < 3; i++) {
+    for (unsigned int j = 0; j < 3; j++) {
+      for (unsigned int k = 0; k < std::min(u[i].a.size(), v[j].a.size()); k++) {
+        result += G[i][j] * u[i].a[k] * v[j].a[k];
+      }
     }
   }
   return result;
@@ -1089,8 +1093,6 @@ std::vector<unsigned int> HSIESurface::get_dof_association_by_boundary_id(Bounda
       }
       it2++;
     }
-    std::cout << "Found " << vertex_indices.size() << " vertices and "
-        << face_indices.size() << " faces." << std::endl;
     std::vector<std::pair<unsigned int, dealii::Point<3>>> surface_dofs_unsorted;
     // Collect dof data
     for (unsigned int i = 0; i < face_indices_with_point.size(); i++) {
@@ -1113,8 +1115,6 @@ std::vector<unsigned int> HSIESurface::get_dof_association_by_boundary_id(Bounda
     }
     std::sort(surface_dofs_unsorted.begin(), surface_dofs_unsorted.end(),
         compareDofBaseData);
-    std::cout << "Now have " << surface_dofs_unsorted.size() << " dofs."
-        << std::endl;
     std::vector<unsigned int> ret;
     for (unsigned int i = 0; i < surface_dofs_unsorted.size(); i++) {
       ret.push_back(surface_dofs_unsorted[i].first);
@@ -1164,4 +1164,8 @@ unsigned int HSIESurface::get_dof_count_by_boundary_id(BoundaryId in_boundary_id
 
 void HSIESurface::add_surface_relevant_dof(DofNumber in_global_index, Position point) {
   surface_dofs.emplace_back(in_global_index, point);
+}
+
+void HSIESurface::set_V0(Position in_V0) {
+  V0 = in_V0;
 }

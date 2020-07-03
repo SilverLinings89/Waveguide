@@ -11,12 +11,9 @@
 LocalProblem::LocalProblem() :
     HierarchicalProblem(0), base_problem() {
   base_problem.make_grid();
-
 }
 
-LocalProblem::~LocalProblem() {
-
-}
+LocalProblem::~LocalProblem() {}
 
 void LocalProblem::solve(NumericVectorLocal src,
     NumericVectorLocal &dst) {
@@ -35,7 +32,6 @@ void LocalProblem::solve(NumericVectorLocal src,
 void LocalProblem::initialize() {
   base_problem.setup_system();
   for (unsigned int side = 0; side < 6; side++) {
-
     dealii::Triangulation<2, 3> temp_triangulation;
     dealii::Triangulation<2> surf_tria;
     std::complex<double> k0(0, 1);
@@ -73,6 +69,8 @@ void LocalProblem::initialize() {
     surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(5, std::ref(surf_tria), side,
           GlobalParams.So_ElementOrder, k0, additional_coorindate));
     surfaces[side]->initialize();
+    Position center = {0,0,0};
+    surfaces[side]->set_V0(center);
   }
 
   std::cout << "Initialize index sets" << std::endl;
@@ -171,9 +169,6 @@ void LocalProblem::make_constraints() {
               << "Surface " << i << " offers " << lower_face_dofs.size()
               << " dofs, " << j << " offers " << upper_face_dofs.size() << "."
               << std::endl;
-        } else {
-          std::cout << "For pair (" << i << "," << j << ") there were "
-              << lower_face_dofs.size() << " dofs found." << std::endl;
         }
         for (unsigned int dof = 0; dof < lower_face_dofs.size(); dof++) {
           unsigned int dof_a = lower_face_dofs[dof] + surface_first_dofs[i];

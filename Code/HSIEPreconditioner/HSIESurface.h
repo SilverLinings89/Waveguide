@@ -24,15 +24,18 @@ class HSIESurface {
   const unsigned int Inner_Element_Order;
   dealii::FE_NedelecSZ<2> fe_nedelec;
   dealii::FE_Q<2> fe_q;
-  std::complex<double> k0;
+  ComplexNumber k0;
   dealii::Triangulation<2> surface_triangulation;
   std::array<std::array<bool,6>,4> edge_ownership_by_level_and_id;
   std::vector<unsigned int> corner_cell_ids;
   const double additional_coordinate;
   std::vector<DofSortingData> surface_dofs;
   bool surface_dof_sorting_done;
+  dealii::Tensor<2,3,double> C;
+  dealii::Tensor<2,3,double> G;
+  Position V0;
 
- public:
+public:
   DofCount dof_counter;
   DofDataVector face_dof_data;
   DofDataVector edge_dof_data;
@@ -57,7 +60,7 @@ class HSIESurface {
   std::vector<HSIEPolynomial> build_non_curl_term_nedelec(unsigned int,
                                                           const double,
                                                           const double);
-
+  void set_V0(Position);
   void fill_sparsity_pattern(dealii::DynamicSparsityPattern *pattern);
   auto get_dof_data_for_cell(CellIterator2D, CellIterator2D) -> DofDataVector;
   void fill_matrix(SparseComplexMatrix *, dealii::IndexSet);
@@ -82,7 +85,7 @@ class HSIESurface {
   auto register_dof() -> DofNumber;
   void register_single_dof(std::string in_id, int in_hsie_order, int in_inner_order, DofType in_dof_type, DofDataVector &, unsigned int);
   void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, DofType in_dof_type, DofDataVector &, unsigned int);
-  static ComplexNumber evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v);
+  static ComplexNumber evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, dealii::Tensor<2,3,double> G);
   void transform_coordinates_in_place(std::vector<HSIEPolynomial> *);
   bool check_dof_assignment_integrity();
   bool check_number_of_dofs_for_cell_integrity();
@@ -91,14 +94,12 @@ class HSIESurface {
   auto get_dof_data_for_base_dof_nedelec(DofNumber base_dof_index) -> DofDataVector;
   auto get_dof_data_for_base_dof_q(DofNumber base_dof_index) -> DofDataVector;
   auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount;
-  std::vector<unsigned int> get_dof_association();
-  Position undo_transform(dealii::Point<2>);
+  auto get_dof_association() -> std::vector<DofNumber>;
+  auto undo_transform(dealii::Point<2>) -> Position;
   void add_surface_relevant_dof(DofNumber in_global_index, Position point);
-  std::vector<unsigned int> get_dof_association_by_boundary_id(
-      BoundaryId in_boundary_id);
+  auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<DofNumber>;
   void clear_user_flags();
   void set_b_id_uses_hsie(unsigned int, bool);
-
 };
 
 
