@@ -7,11 +7,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string>
+#include <limits>
 
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/distributed/tria.h>
+#include <deal.II/base/iterator_range.h>
 #include <deal.II/dofs/dof_handler.h>
 #include "GeometryManager.h"
 #include "ParameterReader.h"
@@ -24,6 +26,22 @@ extern Parameters GlobalParams;
 extern GeometryManager Geometry;
 
 void set_the_st(SpaceTransformation *in_st) { the_st = in_st; }
+
+Position compute_center_of_triangulation(Mesh *in_mesh) {
+  double x_average = 0;
+  double y_average = 0;
+  double z_average = 0;
+  const unsigned int n_vertices = in_mesh->n_vertices();
+  for (auto &cell : in_mesh->active_cell_iterators()) {
+    for (unsigned int i = 0; i < 8; i++) {
+      Position v = cell->vertex(i);
+      x_average += v[0] / n_vertices;
+      y_average += v[1] / n_vertices;
+      z_average += v[2] / n_vertices;
+    }
+  }
+  return {x_average, y_average, z_average};
+}
 
 bool compareDofBaseData(std::pair<int, Point<3, double>> c1,
     std::pair<int, Point<3, double>> c2) {

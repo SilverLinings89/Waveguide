@@ -55,4 +55,6 @@ public:
   dealii::Vector<std::complex<double>> get_local_vector_from_global() override;
 
   void output_results();
+
+  auto get_center() -> Position const override;
 };

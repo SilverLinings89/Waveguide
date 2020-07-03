@@ -58,4 +58,5 @@ private:
 
   NumericVectorLocal get_local_vector_from_global() override;
 
+  auto get_center() -> Position const override;
 };

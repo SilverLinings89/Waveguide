@@ -318,19 +318,20 @@ DofDataVector HSIESurface::get_dof_data_for_base_dof_q(
 
 void HSIESurface::fill_matrix(
     dealii::SparseMatrix<std::complex<double>> *matrix,
-    unsigned int lowest_index) {
+    unsigned int lowest_index, const Position &in_V0) {
   if (!is_metal) {
     IndexSet is;
     is.set_size(lowest_index + dof_counter);
     is.add_range(lowest_index, lowest_index + dof_counter);
-    fill_matrix(matrix, is);
+    fill_matrix(matrix, is, in_V0);
   }
 }
 
 void HSIESurface::fill_matrix(
     dealii::SparseMatrix<std::complex<double>> *matrix,
-                                     dealii::IndexSet global_indices) {
+    dealii::IndexSet global_indices, const Position &in_V0) {
   if (!is_metal) {
+    set_V0(in_V0);
   HSIEPolynomial::computeDandI(order + 2, k0);
   auto it = dof_h_nedelec.begin();
   auto end = dof_h_nedelec.end();
@@ -358,7 +359,6 @@ void HSIESurface::fill_matrix(
     std::vector<HSIEPolynomial> polynomials;
     std::vector<unsigned int> q_dofs(fe_q.dofs_per_cell);
     std::vector<unsigned int> n_dofs(fe_nedelec.dofs_per_cell);
-    ;
     it2->get_dof_indices(q_dofs);
     it->get_dof_indices(n_dofs);
     for (unsigned int i = 0; i < cell_dofs.size(); i++) {

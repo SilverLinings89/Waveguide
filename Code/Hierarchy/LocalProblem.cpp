@@ -29,6 +29,10 @@ void LocalProblem::solve(NumericVectorLocal src,
   }
 }
 
+auto LocalProblem::get_center() -> Position const {
+  return compute_center_of_triangulation(&base_problem.triangulation);
+}
+
 void LocalProblem::initialize() {
   base_problem.setup_system();
   for (unsigned int side = 0; side < 6; side++) {
@@ -69,8 +73,6 @@ void LocalProblem::initialize() {
     surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(5, std::ref(surf_tria), side,
           GlobalParams.So_ElementOrder, k0, additional_coorindate));
     surfaces[side]->initialize();
-    Position center = {0,0,0};
-    surfaces[side]->set_V0(center);
   }
 
   std::cout << "Initialize index sets" << std::endl;
@@ -177,7 +179,7 @@ void LocalProblem::make_constraints() {
           surface_to_surface_constraints.add_entry(dof_a, dof_b, std::complex<double>(-1, 0));
         }
       }
-      constraints.merge(surface_to_surface_constraints, 
+      constraints.merge(surface_to_surface_constraints,
         dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
     }
   }
@@ -205,7 +207,8 @@ void LocalProblem::assemble() {
   std::cout << "Done" << std::endl;
   for (unsigned int surface = 0; surface < 6; surface++) {
     std::cout << "Fill Surface Block " << surface << std::endl;
-    surfaces[surface]->fill_matrix(matrix, surface_first_dofs[surface]);
+    surfaces[surface]->fill_matrix(matrix, surface_first_dofs[surface],
+        get_center());
   }
   std::cout << "Condense" << std::endl;
 

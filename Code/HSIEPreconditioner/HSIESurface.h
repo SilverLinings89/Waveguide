@@ -63,8 +63,8 @@ public:
   void set_V0(Position);
   void fill_sparsity_pattern(dealii::DynamicSparsityPattern *pattern);
   auto get_dof_data_for_cell(CellIterator2D, CellIterator2D) -> DofDataVector;
-  void fill_matrix(SparseComplexMatrix *, dealii::IndexSet);
-  void fill_matrix(SparseComplexMatrix *, DofNumber shift);
+  void fill_matrix(SparseComplexMatrix*, dealii::IndexSet, const Position &V0);
+  void fill_matrix(SparseComplexMatrix*, DofNumber shift, const Position &V0);
   void fill_sparsity_pattern(dealii::SparsityPattern *in_dsp, DofNumber shift);
   void fill_sparsity_pattern(dealii::SparsityPattern *in_dsp, dealii::IndexSet shift);
   void make_hanging_node_constraints(dealii::AffineConstraints<ComplexNumber>*, DofNumber shift);

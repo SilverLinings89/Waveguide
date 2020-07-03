@@ -6,7 +6,7 @@
 
 NonLocalProblem::NonLocalProblem(unsigned int local_level) :
   HierarchicalProblem(local_level),
-  sc(GlobalParams.So_TotalSteps, GlobalParams.So_Precision, true, true), 
+  sc(GlobalParams.So_TotalSteps, GlobalParams.So_Precision, true, true),
   solver(sc, dealii::SolverGMRES<NumericVectorDistributed>::AdditionalData(GlobalParams.So_RestartSteps))
 {
     if(local_level > 1) {
@@ -193,3 +193,13 @@ void NonLocalProblem::apply_sweep(
 
 }
 
+auto NonLocalProblem::get_center() -> Position const {
+  Position local_contribution = (this->get_local_problem())->get_center();
+  double x = dealii::Utilities::MPI::min_max_avg(local_contribution[0],
+      GlobalMPI.communicators_by_level[this->local_level]).avg;
+  double y = dealii::Utilities::MPI::min_max_avg(local_contribution[1],
+      GlobalMPI.communicators_by_level[this->local_level]).avg;
+  double z = dealii::Utilities::MPI::min_max_avg(local_contribution[2],
+      GlobalMPI.communicators_by_level[this->local_level]).avg;
+  return {x,y,z};
+}

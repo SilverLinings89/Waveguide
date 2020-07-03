@@ -15,7 +15,7 @@ using EFieldComponent          = std::complex<double>;
 using EFieldValue              = std::array<EFieldComponent, 3>;
 using DofCount                 = unsigned int;
 using Position                 = dealii::Point<3,            double>;
-using Position2D                 = dealii::Point<2,            double>;
+using Position2D = dealii::Point<2, double>;
 using DofNumber                = unsigned int;
 using DofSortingData           = std::pair<DofNumber,        Position>;
 using NumericVectorLocal       = dealii::Vector<EFieldComponent>;
@@ -32,6 +32,7 @@ using CellIterator2D           = DofHandler2D::active_cell_iterator;
 using CellIterator3D           = DofHandler3D::active_cell_iterator;
 using DofDataVector            = std::vector<DofData>;
 using MathExpression = dealii::Differentiation::SD::Expression;
+using Mesh = dealii::Triangulation<3>;
 
 struct DofAssociation {
   bool is_edge;

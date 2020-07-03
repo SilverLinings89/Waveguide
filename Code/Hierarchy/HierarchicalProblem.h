@@ -34,7 +34,7 @@ class HierarchicalProblem {
       NumericVectorDistributed &dst)=0;
   virtual void solve(NumericVectorLocal src,
       NumericVectorLocal &dst)=0;
-  
+
   virtual void initialize()=0;
   virtual void generate_sparsity_pattern()=0;
   virtual DofCount compute_own_dofs()=0;
@@ -49,4 +49,5 @@ class HierarchicalProblem {
       std::vector<unsigned int> *set_two,
       dealii::AffineConstraints<std::complex<double>> *affine_constraints);
   virtual dealii::Vector<std::complex<double>> get_local_vector_from_global() = 0;
+  virtual auto get_center() -> Position const = 0;
 };

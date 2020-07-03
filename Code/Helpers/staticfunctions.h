@@ -9,6 +9,7 @@
 #include <fstream>
 #include "../SpaceTransformations/SpaceTransformation.h"
 #include "./Parameters.h"
+#include "../Core/Types.h"
 
 extern std::string solutionpath;
 extern std::ofstream log_stream;
@@ -94,3 +95,5 @@ double InterpolationPolynomialDerivative(double, double, double, double,
 double InterpolationPolynomialZeroDerivative(double, double, double);
 
 double sigma(double, double, double);
+
+auto compute_center_of_triangulation(const Mesh*) -> Position;
