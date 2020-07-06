@@ -41,17 +41,15 @@ void PointSourceField::vector_value(const dealii::Point<3> &p,
 
 void PointSourceField::vector_curl(const dealii::Point<3> &p,
     dealii::Vector<std::complex<double> > &vec) {
-  const std::complex<double> factor;
+  std::complex<double> factor;
   if (p.norm() < 0.01) {
-    factor =
-        (std::complex<double>(1, 0) - std::complex<double>(0, 1) * k * 0.01)
-            / 0.01;
+    factor = { 100, -k };
   } else {
     factor = (std::complex<double>(1, 0)
         - std::complex<double>(0, 1) * k * p.norm()) / p.norm();
   }
 
-  const std::complex<double> e_field = value(p, 0);
+  std::complex<double> e_field = value(p, 0);
   vec[0] = 0;
   vec[1] = p[2] * e_field * factor;
   vec[2] = p[1] * e_field * factor;

@@ -107,6 +107,7 @@ void LocalProblem::validate() {
       << matrix->n_actually_nonzero_elements(0.001) << std::endl;
   std::cout << "Matrix l1 norm: " << matrix->l1_norm() << std::endl;
   std::complex<double> matrix_entry;
+  unsigned int empty_row_counter = 0;
   for (unsigned int i = 0; i < matrix->n(); i++) {
     auto it = matrix->begin(i);
     auto end = matrix->end(i);
@@ -119,9 +120,13 @@ void LocalProblem::validate() {
       it++;
     }
     if (entries == 0) {
-      std::cout << "There were no entries in line " << i << std::endl;
+      empty_row_counter++;
     }
 
+  }
+  if (empty_row_counter > 0) {
+    std::cout << " There were " << empty_row_counter << " empty rows."
+        << std::endl;
   }
 
 }
@@ -252,9 +257,8 @@ void LocalProblem::assemble() {
         get_center());
   }
   std::cout << "Condense" << std::endl;
-
   constraints.condense(*matrix, rhs);
-  // constraints.distribute(rhs);
+
   std::cout << "Compress" << std::endl;
   matrix->compress(dealii::VectorOperation::add);
   std::cout << "End LocalProblem::assemble()" << std::endl;

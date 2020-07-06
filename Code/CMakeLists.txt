@@ -11,6 +11,7 @@ ADD_LIBRARY(Code
         Helpers/ExactSolution.cpp
         Helpers/ModeManager.cpp
         Helpers/ParameterReader.cpp
+        Helpers/PointSourceField.cpp
         Helpers/Parameters.cpp
         Helpers/PointVal.cpp
         Helpers/QuadratureFormulaCircle.cpp

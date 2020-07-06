@@ -24,6 +24,7 @@
 #include "SolutionWeight.h"
 #include "./GlobalObjects.h"
 #include "../SpaceTransformations/HomogenousTransformationRectangular.h"
+#include "../Helpers/PointSourceField.h"
 
 NumericProblem::NumericProblem()
     :
@@ -119,27 +120,46 @@ void NumericProblem::make_sparsity_pattern(
   }
 }
 
-
-
 void NumericProblem::make_constraints(
     AffineConstraints<std::complex<double>> *in_constraints, unsigned int shift,
     unsigned int constraints_size) {
+  std::cout << "Called Make constraints with shift = " << shift
+      << " and  constraint_size" << constraints_size << std::endl;
   dealii::AffineConstraints<std::complex<double>> temp_cm;
   dealii::IndexSet is;
   is.set_size(constraints_size);
   is.add_range(0, constraints_size);
   temp_cm.reinit(is);
-
+  PointSourceField psf;
   Position center(0.0, 0.0, 0.0);
-  std::vector<unsigned int> restrained_dofs = dofs_for_cell_around_point(
-      center);
-  for (unsigned int i = 0; i < restrained_dofs.size(); i++) {
-    temp_cm.add_line(restrained_dofs[i] + shift);
-    temp_cm.set_inhomogeneity(restrained_dofs[i] + shift,
-        ComplexNumber(1,0));
+  std::vector<unsigned int> ret(fe.dofs_per_line);
+  auto cell = dof_handler.begin_active();
+  auto endc = dof_handler.end();
+  for (; cell != endc; ++cell) {
+    if (cell->point_inside(center)) {
+      std::cout << "Am in cell. Its center is " << cell->center() << std::endl;
+      for (unsigned int i = 0; i < 12; i++) {
+        cell->line(i)->get_dof_indices(ret);
+        temp_cm.add_line(ret[0] + shift);
+        Position p0 = cell->line(i)->vertex(0);
+        Position p1 = cell->line(i)->vertex(1);
+        dealii::Vector<ComplexNumber> value;
+        value.reinit(3);
+        psf.vector_value(cell->line(i)->center(), value);
+        ComplexNumber dof_value = { 0, 0 };
+        for (unsigned int j = 0; j < 3; j++) {
+          dof_value += value[j] * (p1[j] - p0[j]);
+        }
+        temp_cm.set_inhomogeneity(ret[0] + shift, dof_value);
+        for (unsigned int j = 1; j < fe.dofs_per_line; j++) {
+          temp_cm.add_line(ret[j] + shift);
+          temp_cm.set_inhomogeneity(ret[j] + shift, ComplexNumber(0, 0));
+        }
+      }
+    }
   }
   in_constraints->merge(temp_cm,
-      dealii::AffineConstraints<std::complex<double>>::MergeConflictBehavior::left_object_wins);
+      dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
 }
 
 void NumericProblem::SortDofsDownstream() {
@@ -294,7 +314,6 @@ std::vector<DofIndexAndOrientationAndPosition> NumericProblem::get_surface_dof_v
   return removed_doubles;
 }
 
-
 void NumericProblem::assemble_system(unsigned int shift,
     dealii::SparseMatrix<std::complex<double>> *matrix,
     dealii::Vector<std::complex<double>> *rhs) {
@@ -340,7 +359,7 @@ void NumericProblem::assemble_system(unsigned int shift,
   const dealii::Point<3> bounded_cell(0.0, 0.0, 0.0);
   const FEValuesExtractors::Vector fe_field(0);
   for (; cell != endc; ++cell) {
-    if (true) {
+    if (cell->point_inside(bounded_cell)) {
       cell->get_dof_indices(local_dof_indices);
       for (unsigned int i = 0; i < local_dof_indices.size(); i++) {
         local_dof_indices[i] += shift;
@@ -377,12 +396,10 @@ void NumericProblem::assemble_system(unsigned int shift,
             J_Curl = fe_values[fe_field].curl(j, q_index);
             J_Val = fe_values[fe_field].value(j, q_index);
 
-            std::complex<double> x = (mu * I_Curl) * Conjugate_Vector(J_Curl)
+            cell_matrix_real[i][j] += (mu * I_Curl) * Conjugate_Vector(J_Curl)
                 * JxW
                 - ((epsilon * I_Val) * Conjugate_Vector(J_Val)) * JxW
                     * GlobalParams.C_omega * GlobalParams.C_omega;
-            cell_matrix_real[i][j] += x;
-
           }
         }
 
@@ -398,9 +415,6 @@ void NumericProblem::assemble_system(unsigned int shift,
 
   std::cout << "Assembling done. L2-Norm of RHS: " << rhs->l2_norm()
       << std::endl;
-
-  // system_matrix.compress(VectorOperation::add);
-  // system_rhs.compress(VectorOperation::add);
 
   deallog << "Distributing solution done." << std::endl;
 }

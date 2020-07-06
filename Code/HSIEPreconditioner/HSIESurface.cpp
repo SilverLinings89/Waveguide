@@ -1098,7 +1098,6 @@ std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association_
                   it->line(edge)->vertex(0), it->line(edge)->vertex(1));
               index_and_orientation.position = undo_transform(
                   it->line(edge)->center());
-
               face_indices_with_point.emplace_back(index_and_orientation);
               it->line(edge)->set_user_flag();
               const unsigned int first_index = it->line(edge)->vertex_index(0);
