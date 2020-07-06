@@ -217,22 +217,83 @@ void NumericProblem::reinit_solution() {
 
 }
 
-std::vector<unsigned int> NumericProblem::get_surface_dof_vector_for_boundary_id(
-    unsigned int b_id) {
-  std::vector<unsigned int> ret;
-  std::vector<bool> dof_vector;
-  std::set<unsigned int> b_ids;
-  b_ids.insert(b_id);
-  dealii::ComponentMask cm;
-  dealii::DoFTools::extract_boundary_dofs(dof_handler,
-      cm, dof_vector, b_ids);
-  for (unsigned int i = 0; i < dof_vector.size(); i++) {
-    if (dof_vector[i]) {
-      ret.push_back(i);
+bool NumericProblem::get_orientation(const Position &vertex_1,
+    const Position &vertex_2) {
+  bool ret = false;
+  double abs_max = -1.0;
+  for (unsigned int i = 0; i < 3; i++) {
+    double diff = vertex_1[i] - vertex_2[i];
+    if (std::abs(diff) > abs_max) {
+      ret = diff > 0;
+      abs_max = std::abs(diff);
     }
   }
   return ret;
 }
+
+std::vector<DofIndexAndOrientationAndPosition> NumericProblem::get_surface_dof_vector_for_boundary_id(
+    unsigned int b_id) {
+  std::vector<DofIndexAndOrientationAndPosition> ret;
+  for (auto cell : dof_handler.active_cell_iterators()) {
+    if (cell->at_boundary(b_id)) {
+      bool found_one = false;
+      for (unsigned int face = 0; face < 6; face++) {
+        if (cell->face(face)->boundary_id() == b_id && found_one) {
+          std::cout << "Error in get_surface_dof_vector_for_boundary_id"
+              << std::endl;
+        }
+        if (cell->face(face)->boundary_id() == b_id) {
+          found_one = true;
+          std::vector<DofNumber> face_dofs_indices(fe.dofs_per_face);
+          cell->face(face)->get_dof_indices(face_dofs_indices);
+          std::vector<DofIndexAndOrientationAndPosition> cell_dofs_and_orientations_and_points(
+              fe.dofs_per_face);
+          for (unsigned int i = 0; i < fe.dofs_per_face; i++) {
+            cell_dofs_and_orientations_and_points[i].index =
+                face_dofs_indices[i];
+            cell_dofs_and_orientations_and_points[i].position =
+                cell->face(face)->center();
+            cell_dofs_and_orientations_and_points[i].orientation =
+                get_orientation(cell->face(face)->vertex(0),
+                    cell->face(face)->vertex(1));
+          }
+          for (unsigned int i = 0; i < 4; i++) {
+            std::vector<DofNumber> line_dofs(fe.dofs_per_line);
+            cell->face(face)->line(i)->get_dof_indices(line_dofs);
+            for (unsigned int j = 0; j < fe.dofs_per_line; j++) {
+              for (unsigned int outer_index = 0; outer_index < fe.dofs_per_face;
+                  outer_index++) {
+                if (face_dofs_indices[outer_index] == line_dofs[j]) {
+                  cell_dofs_and_orientations_and_points[outer_index].orientation =
+                      get_orientation(cell->face(face)->line(i)->vertex(0),
+                          cell->face(face)->line(i)->vertex(1));
+                  cell_dofs_and_orientations_and_points[outer_index].position =
+                      cell->face(face)->line(i)->center();
+                }
+              }
+            }
+          }
+          for (unsigned int i = 0;
+              i < cell_dofs_and_orientations_and_points.size(); i++) {
+            ret.push_back(cell_dofs_and_orientations_and_points[i]);
+          }
+        }
+      }
+    }
+  }
+  std::sort(ret.begin(), ret.end(), compareDofBaseDataAndOrientation);
+  std::vector<DofIndexAndOrientationAndPosition> removed_doubles;
+  if (ret.size() == 0)
+    return ret;
+  removed_doubles.push_back(ret[0]);
+  for (unsigned int i = 1; i < ret.size(); i++) {
+    if (ret[i].index != ret[i - 1].index) {
+      removed_doubles.push_back(ret[i]);
+    }
+  }
+  return removed_doubles;
+}
+
 
 void NumericProblem::assemble_system(unsigned int shift,
     dealii::SparseMatrix<std::complex<double>> *matrix,

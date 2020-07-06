@@ -38,6 +38,13 @@ std::complex<double> matrixD(int in_row, int in_column,
 bool compareDofBaseData(std::pair<int, Point<3, double>> c1,
     std::pair<int, Point<3, double>> c2);
 
+bool compareDofBaseDataAndOrientation(
+    DofIndexAndOrientationAndPosition,
+    DofIndexAndOrientationAndPosition);
+
+bool areDofsClose(const DofIndexAndOrientationAndPosition &a,
+    const DofIndexAndOrientationAndPosition &b);
+
 void set_the_st(SpaceTransformation *);
 
 double dotproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);

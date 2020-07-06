@@ -671,7 +671,14 @@ void HSIESurface::register_new_edge_dofs(
     register_single_dof(cell_nedelec->face_index(edge), -1, inner_order + 1, DofType::EDGE, edge_dof_data, local_dofs[inner_order]);
 
     Point<3, double> bp = undo_transform(cell_nedelec->face(edge)->center(false, false));
-    add_surface_relevant_dof(edge_dof_data[edge_dof_data.size() - 1].global_index, bp);
+    DofIndexAndOrientationAndPosition index_and_orientation;
+    index_and_orientation.index =
+        edge_dof_data[edge_dof_data.size() - 1].global_index;
+    index_and_orientation.orientation = get_orientation(
+        cell_nedelec->face(edge)->vertex(0),
+        cell_nedelec->face(edge)->vertex(1));
+    index_and_orientation.position = bp;
+    add_surface_relevant_dof(index_and_orientation);
   }
 
   // INFINITE FACE Dofs Type a
@@ -733,7 +740,13 @@ void HSIESurface::register_new_surface_dofs(
     register_single_dof(cell_nedelec->id().to_string(), -1, inner_order, DofType::SURFACE, face_dof_data, surf_dofs.nth_index_in_set(inner_order));
 
     Point<3, double> bp = undo_transform(cell_nedelec->center(false, false));
-    add_surface_relevant_dof(face_dof_data[face_dof_data.size() - 1].global_index, bp);
+    DofIndexAndOrientationAndPosition index_and_orientation;
+    index_and_orientation.index =
+        face_dof_data[face_dof_data.size() - 1].global_index;
+    index_and_orientation.orientation = get_orientation(cell_nedelec->vertex(0),
+        cell_nedelec->vertex(1));
+    index_and_orientation.position = bp;
+    add_surface_relevant_dof(index_and_orientation);
   }
 
   // SEGMENT functions a
@@ -925,15 +938,12 @@ bool is_oriented_positively(dealii::Point<3, double> in_p) {
   return (in_p[0] + in_p[1] + in_p[2] > 0);
 }
 
-std::vector<unsigned int> HSIESurface::get_dof_association() {
+std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association() {
   if (!surface_dof_sorting_done) {
-    std::sort(surface_dofs.begin(), surface_dofs.end(), compareDofBaseData);
+    std::sort(surface_dofs.begin(), surface_dofs.end(),
+        compareDofBaseDataAndOrientation);
   }
-  std::vector<unsigned int> ret;
-  for (unsigned int i = 0; i < surface_dofs.size(); i++) {
-    ret.push_back(surface_dofs[i].first);
-  }
-  return ret;
+  return surface_dofs;
 }
 
 bool HSIESurface::check_dof_assignment_integrity() {
@@ -1046,78 +1056,113 @@ void HSIESurface::clear_user_flags() {
   }
 }
 
-std::vector<unsigned int> HSIESurface::get_dof_association_by_boundary_id(BoundaryId in_boundary_id) {
-  std::vector<unsigned int> ret;
+bool HSIESurface::get_orientation(const Position2D &vertex_1,
+    const Position2D &vertex_2) {
+  Position a = undo_transform(vertex_1);
+  Position b = undo_transform(vertex_2);
+  bool ret = false;
+  double abs_max = -1.0;
+  for (unsigned int i = 0; i < 3; i++) {
+    double diff = a[i] - b[i];
+    if (std::abs(diff) > abs_max) {
+      ret = diff > 0;
+      abs_max = std::abs(diff);
+    }
+  }
+  return ret;
+}
+
+std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association_by_boundary_id(
+    BoundaryId in_boundary_id) {
+  std::vector<DofIndexAndOrientationAndPosition> ret;
 
   if (in_boundary_id == this->b_id) {
     return this->get_dof_association();
   } else {
     clear_user_flags();
     auto it = dof_h_nedelec.begin_active();
-    auto it2 = dof_h_q.begin_active();
     auto end = dof_h_nedelec.end();
-    it = dof_h_nedelec.begin_active();
-    std::vector<std::pair<unsigned int, dealii::Point<2>>> vertex_indices_with_point;
-    std::vector<std::pair<unsigned int, dealii::Point<2>>> face_indices_with_point;
+    std::vector<DofIndexAndOrientationAndPosition> vertex_indices_with_point;
+    std::vector<DofIndexAndOrientationAndPosition> face_indices_with_point;
     std::vector<unsigned int> vertex_indices;
     std::vector<unsigned int> face_indices;
     for (; it != end; ++it) {
       if (it->at_boundary()) {
         for (unsigned int edge = 0; edge < 4; edge++) {
-          if (it->face(edge)->boundary_id() == in_boundary_id) {
-            if (!it->face(edge)->user_flag_set()) {
+          if (it->line(edge)->boundary_id() == in_boundary_id) {
+            if (!it->line(edge)->user_flag_set()) {
               face_indices.push_back(it->face_index(edge));
-              face_indices_with_point.emplace_back(it->face_index(edge),
-                  it->face(edge)->center());
-              it->face(edge)->set_user_flag();
-              const unsigned int first_index = it2->face(edge)->vertex_index(0);
-              const unsigned int second_index = it2->face(edge)->vertex_index(
+              DofIndexAndOrientationAndPosition index_and_orientation;
+              index_and_orientation.index = it->face_index(edge);
+              index_and_orientation.orientation = get_orientation(
+                  it->line(edge)->vertex(0), it->line(edge)->vertex(1));
+              index_and_orientation.position = undo_transform(
+                  it->line(edge)->center());
+
+              face_indices_with_point.emplace_back(index_and_orientation);
+              it->line(edge)->set_user_flag();
+              const unsigned int first_index = it->line(edge)->vertex_index(0);
+              const unsigned int second_index = it->line(edge)->vertex_index(
                   1);
               auto search = find(vertex_indices.begin(), vertex_indices.end(),
                   first_index);
               if (search == vertex_indices.end()) {
                 vertex_indices.push_back(first_index);
-                vertex_indices_with_point.emplace_back(first_index,
-                    it2->face(edge)->vertex(0));
+                DofIndexAndOrientationAndPosition index_and_orientation;
+                index_and_orientation.index = first_index;
+                index_and_orientation.orientation = true;
+                index_and_orientation.position = undo_transform(
+                    it->line(edge)->vertex(0));
+                vertex_indices_with_point.emplace_back(index_and_orientation);
               }
               search = find(vertex_indices.begin(), vertex_indices.end(),
                   second_index);
               if (search == vertex_indices.end()) {
-                vertex_indices.push_back(second_index);
-                vertex_indices_with_point.emplace_back(second_index,
-                    it2->face(edge)->vertex(1));
+                DofIndexAndOrientationAndPosition index_and_orientation;
+                index_and_orientation.index = second_index;
+                index_and_orientation.orientation = true;
+                index_and_orientation.position = undo_transform(
+                    it->line(edge)->vertex(1));
+                vertex_indices_with_point.emplace_back(index_and_orientation);
               }
             }
           }
         }
       }
-      it2++;
     }
-    std::vector<std::pair<unsigned int, dealii::Point<3>>> surface_dofs_unsorted;
+    std::vector<DofIndexAndOrientationAndPosition> surface_dofs_unsorted;
     // Collect dof data
     for (unsigned int i = 0; i < face_indices_with_point.size(); i++) {
       for (unsigned int j = 0; j < edge_dof_data.size(); j++) {
         if (edge_dof_data[j].base_structure_id_non_face
-            == face_indices_with_point[i].first) {
-          surface_dofs_unsorted.emplace_back(edge_dof_data[j].global_index,
-              undo_transform(face_indices_with_point[i].second));
+            == face_indices_with_point[i].index) {
+          DofIndexAndOrientationAndPosition index_and_orientation;
+          index_and_orientation.index = edge_dof_data[j].global_index;
+          index_and_orientation.orientation =
+              face_indices_with_point[i].orientation;
+          index_and_orientation.position = face_indices_with_point[i].position;
+          surface_dofs_unsorted.emplace_back(index_and_orientation);
         }
       }
     }
     for (unsigned int i = 0; i < vertex_indices_with_point.size(); i++) {
       for (unsigned int j = 0; j < vertex_dof_data.size(); j++) {
         if (vertex_dof_data[j].base_structure_id_non_face
-            == vertex_indices_with_point[i].first) {
-          surface_dofs_unsorted.emplace_back(vertex_dof_data[j].global_index,
-              undo_transform(vertex_indices_with_point[i].second));
+            == vertex_indices_with_point[i].index) {
+          DofIndexAndOrientationAndPosition index_and_orientation;
+          index_and_orientation.index = vertex_dof_data[j].global_index;
+          index_and_orientation.orientation = true;
+          index_and_orientation.position =
+              vertex_indices_with_point[i].position;
+          surface_dofs_unsorted.emplace_back(index_and_orientation);
         }
       }
     }
     std::sort(surface_dofs_unsorted.begin(), surface_dofs_unsorted.end(),
-        compareDofBaseData);
-    std::vector<unsigned int> ret;
+        compareDofBaseDataAndOrientation);
+
     for (unsigned int i = 0; i < surface_dofs_unsorted.size(); i++) {
-      ret.push_back(surface_dofs_unsorted[i].first);
+      ret.push_back(surface_dofs_unsorted[i]);
     }
     return ret;
   }
@@ -1162,8 +1207,9 @@ unsigned int HSIESurface::get_dof_count_by_boundary_id(BoundaryId in_boundary_id
   return ret;
 }
 
-void HSIESurface::add_surface_relevant_dof(DofNumber in_global_index, Position point) {
-  surface_dofs.emplace_back(in_global_index, point);
+void HSIESurface::add_surface_relevant_dof(
+    DofIndexAndOrientationAndPosition dof_data) {
+  surface_dofs.emplace_back(dof_data);
 }
 
 void HSIESurface::set_V0(Position in_V0) {

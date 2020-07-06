@@ -55,6 +55,28 @@ bool compareDofBaseData(std::pair<int, Point<3, double>> c1,
   return c1.second[0] < c2.second[0];
 }
 
+bool areDofsClose(const DofIndexAndOrientationAndPosition &a,
+    const DofIndexAndOrientationAndPosition &b) {
+  double dist = 0;
+  for (unsigned int i = 0; i < 3; i++) {
+    dist += (a.position[i] - b.position[i]) * (a.position[i] - b.position[i]);
+  }
+  return std::sqrt(dist) < 0.001;
+}
+
+bool compareDofBaseDataAndOrientation(
+    DofIndexAndOrientationAndPosition c1,
+    DofIndexAndOrientationAndPosition c2) {
+  if (c1.position[2] != c2.position[2]) {
+    return c1.position[2] < c2.position[2];
+  }
+  if (c1.position[1] != c2.position[1]) {
+    return c1.position[1] < c2.position[1];
+  }
+
+  return c1.position[0] < c2.position[0];
+}
+
 
 void alert() {
   MPI_Barrier(MPI_COMM_WORLD);

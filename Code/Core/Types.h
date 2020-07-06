@@ -34,6 +34,23 @@ using DofDataVector            = std::vector<DofData>;
 using MathExpression = dealii::Differentiation::SD::Expression;
 using Mesh = dealii::Triangulation<3>;
 
+struct DofIndexAndOrientationAndPosition {
+  DofIndexAndOrientationAndPosition() {
+    index = 0;
+    orientation = false;
+    position = { 0, 0, 0 };
+  }
+  DofIndexAndOrientationAndPosition(const DofNumber &in_index,
+      const bool &in_orientation, const Position &in_position) {
+    index = in_index;
+    orientation = in_orientation;
+    position = in_position;
+  }
+  DofNumber index;
+  bool orientation;
+  Position position;
+};
+
 struct DofAssociation {
   bool is_edge;
   DofNumber edge_index;

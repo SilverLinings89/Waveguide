@@ -29,7 +29,7 @@ class HSIESurface {
   std::array<std::array<bool,6>,4> edge_ownership_by_level_and_id;
   std::vector<unsigned int> corner_cell_ids;
   const double additional_coordinate;
-  std::vector<DofSortingData> surface_dofs;
+  std::vector<DofIndexAndOrientationAndPosition> surface_dofs;
   bool surface_dof_sorting_done;
   dealii::Tensor<2,3,double> C;
   dealii::Tensor<2,3,double> G;
@@ -94,12 +94,15 @@ public:
   auto get_dof_data_for_base_dof_nedelec(DofNumber base_dof_index) -> DofDataVector;
   auto get_dof_data_for_base_dof_q(DofNumber base_dof_index) -> DofDataVector;
   auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount;
-  auto get_dof_association() -> std::vector<DofNumber>;
+  auto get_dof_association() -> std::vector<DofIndexAndOrientationAndPosition>;
   auto undo_transform(dealii::Point<2>) -> Position;
-  void add_surface_relevant_dof(DofNumber in_global_index, Position point);
-  auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<DofNumber>;
+  void add_surface_relevant_dof(
+      DofIndexAndOrientationAndPosition in_gindex_and_orientation);
+  auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) ->
+      std::vector<DofIndexAndOrientationAndPosition>;
   void clear_user_flags();
   void set_b_id_uses_hsie(unsigned int, bool);
+  bool get_orientation(const Position2D &vertex_1, const Position2D &vertex_2);
 };
 
 

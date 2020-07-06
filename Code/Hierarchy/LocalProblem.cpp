@@ -38,8 +38,24 @@ void LocalProblem::initialize() {
   base_problem.setup_system();
   for (unsigned int side = 0; side < 6; side++) {
     dealii::Triangulation<2, 3> temp_triangulation;
-    dealii::Triangulation<2> surf_tria;
+    const unsigned int component = side / 2;
+    double additional_coorindate = 0;
     std::complex<double> k0(0, 1);
+    bool found = false;
+    for (auto it : base_problem.triangulation.active_cell_iterators()) {
+      if (it->at_boundary(side)) {
+        for (auto i = 0; i < 6 && !found; i++) {
+          if (it->face(i)->boundary_id() == side) {
+            found = true;
+            additional_coorindate = it->face(i)->center()[component];
+          }
+        }
+      }
+      if (found) {
+        break;
+      }
+    }
+    dealii::Triangulation<2> surf_tria;
     std::cout << "Initializing surface " << side << " in local problem."
         << std::endl;
     dealii::Triangulation<3> tria;
@@ -67,9 +83,8 @@ void LocalProblem::initialize() {
     }
     dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation,
         b_ids);
-    const unsigned int component = side / 2;
-    auto temp_it = temp_triangulation.begin();
-    double additional_coorindate = temp_it->center()[component];
+    std::cout << "Additional coordinate: " << additional_coorindate
+        << std::endl;
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
     surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(5, std::ref(surf_tria), side,
           GlobalParams.So_ElementOrder, k0, additional_coorindate));
@@ -138,9 +153,9 @@ void LocalProblem::make_constraints() {
 
   // couple surface dofs with inner ones.
   for (unsigned int surface = 0; surface < 6; surface++) {
-    std::vector<unsigned int> from_surface =
+    std::vector<DofIndexAndOrientationAndPosition> from_surface =
         surfaces[surface]->get_dof_association();
-    std::vector<unsigned int> from_inner_problem =
+    std::vector<DofIndexAndOrientationAndPosition> from_inner_problem =
         base_problem.get_surface_dof_vector_for_boundary_id(surface);
     if (from_surface.size() != from_inner_problem.size()) {
       std::cout << "Warning: Size mismatch in make_constraints for surface "
@@ -148,10 +163,21 @@ void LocalProblem::make_constraints() {
           << " != Surface:" << from_surface.size() << "." << std::endl;
     }
     for (unsigned int line = 0; line < from_inner_problem.size(); line++) {
-        constraints.add_line(from_inner_problem[line]);
-        constraints.add_entry(from_inner_problem[line],
-          from_surface[line] + surface_first_dofs[surface],
-          std::complex<double>(-1, 0));
+      if (!areDofsClose(from_inner_problem[line], from_surface[line])) {
+        std::cout << "Error in face to inner_coupling. Positions are inner: "
+            << from_inner_problem[line].position << " and surface: "
+            << from_surface[line].position << std::endl;
+      }
+      constraints.add_line(from_inner_problem[line].index);
+      ComplexNumber value = { 0, 0 };
+      if (from_inner_problem[line].orientation
+          == from_surface[line].orientation) {
+        value.real(-1.0);
+      } else {
+        value.real(1.0);
+      }
+      constraints.add_entry(from_inner_problem[line].index,
+          from_surface[line].index + surface_first_dofs[surface], value);
     }
 
   }
@@ -163,9 +189,9 @@ void LocalProblem::make_constraints() {
       surface_to_surface_constraints.reinit(is);
       bool opposing = ((i % 2) == 0) && (i + 1 == j);
       if (!opposing) {
-        std::vector<unsigned int> lower_face_dofs =
+        std::vector<DofIndexAndOrientationAndPosition> lower_face_dofs =
             surfaces[i]->get_dof_association_by_boundary_id(j);
-        std::vector<unsigned int> upper_face_dofs =
+        std::vector<DofIndexAndOrientationAndPosition> upper_face_dofs =
             surfaces[j]->get_dof_association_by_boundary_id(i);
         if (lower_face_dofs.size() != upper_face_dofs.size()) {
           std::cout << "ERROR: There was a edge dof count error!" << std::endl
@@ -174,10 +200,24 @@ void LocalProblem::make_constraints() {
               << std::endl;
         }
         for (unsigned int dof = 0; dof < lower_face_dofs.size(); dof++) {
-          unsigned int dof_a = lower_face_dofs[dof] + surface_first_dofs[i];
-          unsigned int dof_b = upper_face_dofs[dof] + surface_first_dofs[j];
+          if (!areDofsClose(lower_face_dofs[dof], upper_face_dofs[dof])) {
+            std::cout << "Error in face to face_coupling. Positions are lower: "
+                << lower_face_dofs[dof].position << " and upper: "
+                << upper_face_dofs[dof].position << std::endl;
+          }
+          unsigned int dof_a = lower_face_dofs[dof].index
+              + surface_first_dofs[i];
+          unsigned int dof_b = upper_face_dofs[dof].index
+              + surface_first_dofs[j];
+          ComplexNumber value = { 0, 0 };
+          if (lower_face_dofs[dof].orientation
+              == upper_face_dofs[dof].orientation) {
+            value.real(-1.0);
+          } else {
+            value.real(1.0);
+          }
           surface_to_surface_constraints.add_line(dof_a);
-          surface_to_surface_constraints.add_entry(dof_a, dof_b, std::complex<double>(-1, 0));
+          surface_to_surface_constraints.add_entry(dof_a, dof_b, value);
         }
       }
       constraints.merge(surface_to_surface_constraints,
@@ -213,7 +253,7 @@ void LocalProblem::assemble() {
   }
   std::cout << "Condense" << std::endl;
 
-  constraints.condense(*matrix);
+  constraints.condense(*matrix, rhs);
   // constraints.distribute(rhs);
   std::cout << "Compress" << std::endl;
   matrix->compress(dealii::VectorOperation::add);
