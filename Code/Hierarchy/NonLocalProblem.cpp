@@ -3,6 +3,7 @@
 #include "LocalProblem.h"
 #include "../Core/NumericProblem.h"
 #include <deal.II/lac/solver_gmres.h>
+#include <deal.II/lac/sparsity_pattern.h>
 
 NonLocalProblem::NonLocalProblem(unsigned int local_level) :
   HierarchicalProblem(local_level),
@@ -81,6 +82,7 @@ NonLocalProblem::NonLocalProblem(unsigned int local_level) :
 NonLocalProblem::~NonLocalProblem() {
   delete system_matrix;
   delete system_rhs;
+  delete[] is_hsie_surface;
 }
 
 void NonLocalProblem::make_constraints() {
@@ -115,7 +117,20 @@ void NonLocalProblem::run() {
 }
 
 void NonLocalProblem::reinit() {
-  // TODO reimplement
+  DynamicSparsityPattern dsp = { total_number_of_dofs_on_level,
+      total_number_of_dofs_on_level, local_indices };
+  DofNumber first_index = local_indices.nth_index_in_set(0);
+  get_local_problem()->base_problem.make_sparsity_pattern(&dsp, first_index);
+  first_index += get_local_problem()->base_problem.n_dofs;
+  for (unsigned int i = 0; i < 6; i++) {
+    if (is_hsie_surface[i]) {
+      get_local_problem()->surfaces[i]->fill_sparsity_pattern(&dsp,
+          first_index);
+      first_index += get_local_problem()->surfaces[i]->dof_counter;
+    }
+  }
+  sp.copy_from(dsp);
+  system_matrix->reinit(sp);
 }
 
 void NonLocalProblem::initialize() {
@@ -138,16 +153,20 @@ void NonLocalProblem::initialize_index_sets() {
       dealii::Utilities::MPI::create_ascending_partitioning(
       GlobalMPI.communicators_by_level[local_level], n_own_dofs);
   local_indices = index_sets_per_process[rank];
-  unsigned int ret =
+  total_number_of_dofs_on_level = 0;
+  for (unsigned int i = 0; i < n_procs_in_sweep; i++) {
+    total_number_of_dofs_on_level += index_sets_per_process[i].n_elements();
+  }
+  DofCount n_inner_dofs =
       this->get_local_problem()->base_problem.dof_handler.n_dofs()
           + local_indices.nth_index_in_set(0);
-  surface_first_dofs.push_back(ret);
+  surface_first_dofs.push_back(n_inner_dofs);
   for (unsigned int i = 0; i < 6; i++) {
     if (is_hsie_surface[i]) {
-      ret += this->get_local_problem()->surfaces[i]->dof_counter;
+      n_inner_dofs += this->get_local_problem()->surfaces[i]->dof_counter;
     }
     if (i != 5) {
-      surface_first_dofs.push_back(ret);
+      surface_first_dofs.push_back(n_inner_dofs);
     }
   }
 
@@ -178,14 +197,38 @@ unsigned int NonLocalProblem::compute_own_dofs() {
   return ret;
 }
 
-unsigned int NonLocalProblem::compute_lower_interface_dof_count() {
-  // TODO implement this. Use the HSIE-suface in that direction and take the number of non-hsie dofs.
+auto NonLocalProblem::compute_lower_interface_id() -> BoundaryId {
+  if (this->sweeping_direction == SweepingDirection::X) {
+    return 0;
+  }
+  if (this->sweeping_direction == SweepingDirection::Y) {
+    return 2;
+  }
+  if (this->sweeping_direction == SweepingDirection::Z) {
+    return 4;
+  }
   return 0;
 }
 
-unsigned int NonLocalProblem::compute_upper_interface_dof_count() {
-  // TODO implement this. Use the HSIE-suface in that direction and take the number of non-hsie dofs.
+auto NonLocalProblem::compute_upper_interface_id() -> BoundaryId {
+  if (this->sweeping_direction == SweepingDirection::X) {
+    return 1;
+  }
+  if (this->sweeping_direction == SweepingDirection::Y) {
+    return 3;
+  }
+  if (this->sweeping_direction == SweepingDirection::Z) {
+    return 5;
+  }
   return 0;
+}
+
+auto NonLocalProblem::compute_lower_interface_dof_count() -> DofCount {
+  return get_local_problem()->surfaces[compute_lower_interface_id()]->get_dof_association().size();
+}
+
+auto NonLocalProblem::compute_upper_interface_dof_count() -> DofCount {
+  return get_local_problem()->surfaces[compute_upper_interface_id()]->get_dof_association().size();
 }
 
 void NonLocalProblem::apply_sweep(

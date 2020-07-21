@@ -58,7 +58,7 @@ void LocalProblem::initialize() {
     dealii::Triangulation<2> surf_tria;
     std::cout << "Initializing surface " << side << " in local problem."
         << std::endl;
-    dealii::Triangulation<3> tria;
+    Mesh tria;
     tria.copy_triangulation(base_problem.triangulation);
     std::set<unsigned int> b_ids;
     b_ids.insert(side);
@@ -122,13 +122,11 @@ void LocalProblem::validate() {
     if (entries == 0) {
       empty_row_counter++;
     }
-
   }
   if (empty_row_counter > 0) {
     std::cout << " There were " << empty_row_counter << " empty rows."
         << std::endl;
   }
-
 }
 
 DofCount LocalProblem::compute_own_dofs() {
@@ -235,20 +233,8 @@ void LocalProblem::make_constraints() {
 }
 
 void LocalProblem::assemble() {
-  std::cout << "Start LocalProblem::assemble()" << std::endl;
-  sp = new dealii::SparsityPattern(n_own_dofs, n_own_dofs, 400);
-  rhs.reinit(n_own_dofs);
-  base_problem.make_sparsity_pattern(sp, 0);
-  make_constraints();
-  for (unsigned int surface = 0; surface < 6; surface++) {
-    surfaces[surface]->fill_sparsity_pattern(sp, surface_first_dofs[surface]);
-  }
-  constraints.close();
-  constraints.condense(*sp);
-  sp->compress();
-  matrix = new dealii::SparseMatrix<std::complex<double>>(*sp);
 
-  std::cout << "Assemble Main Matrix" << std::endl;
+  std::cout << "Start LocalProblem::assemble()" << std::endl;
   base_problem.assemble_system(0, matrix, &rhs);
   std::cout << "Done" << std::endl;
   for (unsigned int surface = 0; surface < 6; surface++) {
@@ -265,16 +251,31 @@ void LocalProblem::assemble() {
   validate();
 }
 
+void LocalProblem::reinit() {
+  dealii::DynamicSparsityPattern dsp = { n_own_dofs };
+  rhs.reinit(n_own_dofs);
+  base_problem.make_sparsity_pattern(&dsp, 0);
+  make_constraints();
+  for (unsigned int surface = 0; surface < 6; surface++) {
+    surfaces[surface]->fill_sparsity_pattern(&dsp, surface_first_dofs[surface]);
+  }
+  constraints.close();
+  sp.copy_from(dsp);
+  constraints.condense(sp);
+  sp.compress();
+  matrix = new dealii::SparseMatrix<std::complex<double>>(sp);
+}
+
 void LocalProblem::initialize_own_dofs() {
   n_own_dofs = compute_own_dofs();
 }
 
 void LocalProblem::run() {
   std::cout << "Start LocalProblem::run()" << std::endl;
+  reinit();
   assemble();
   solve();
   output_results();
-
   std::cout << "End LocalProblem::run()" << std::endl;
 }
 

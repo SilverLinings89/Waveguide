@@ -13,7 +13,6 @@ public:
   std::array<std::shared_ptr<HSIESurface>,6> surfaces;
   dealii::SparseDirectUMFPACK solver;
   dealii::AffineConstraints<std::complex<double>> constraints;
-  dealii::SparsityPattern *sp;
 
   LocalProblem();
   ~LocalProblem() override;
@@ -57,4 +56,6 @@ public:
   void output_results();
 
   auto get_center() -> Position const override;
+
+  auto reinit() -> void override;
 };

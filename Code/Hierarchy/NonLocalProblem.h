@@ -13,6 +13,7 @@ class NonLocalProblem: public HierarchicalProblem {
 private:
   SweepingDirection sweeping_direction;
   bool *is_hsie_surface;
+  DofCount total_number_of_dofs_on_level;
   dealii::SparseMatrix<EFieldComponent> *system_matrix;
   NumericVectorDistributed *system_rhs;
   dealii::IndexSet local_indices;
@@ -29,6 +30,10 @@ private:
   auto compute_lower_interface_dof_count() -> DofCount override;
 
   auto compute_upper_interface_dof_count() -> DofCount override;
+
+  auto compute_lower_interface_id() -> BoundaryId;
+
+  auto compute_upper_interface_id() -> BoundaryId;
 
   void assemble() override;
 
@@ -54,7 +59,7 @@ private:
 
   LocalProblem* get_local_problem() override;
 
-  void reinit();
+  void reinit() override;
 
   NumericVectorLocal get_local_vector_from_global() override;
 

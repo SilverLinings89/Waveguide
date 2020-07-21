@@ -13,6 +13,7 @@ class HierarchicalProblem {
   bool is_dof_manager_set;
   bool has_child;
   HierarchicalProblem* child;
+  dealii::SparsityPattern sp;
   const SweepingLevel local_level;
   DofIndexData indices;
   dealii::SparseMatrix<EFieldComponent> *matrix;
@@ -50,4 +51,5 @@ class HierarchicalProblem {
       dealii::AffineConstraints<std::complex<double>> *affine_constraints);
   virtual dealii::Vector<std::complex<double>> get_local_vector_from_global() = 0;
   virtual auto get_center() -> Position const = 0;
+  virtual auto reinit() -> void = 0;
 };

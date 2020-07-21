@@ -19,13 +19,19 @@ Simulation::Simulation() {
   initialize_global_variables();
 }
 
-Simulation::~Simulation() = default;
+Simulation::~Simulation() {
+  delete mainProblem;
+}
 
 void Simulation::prepare() {
   std::cout << "Start Simulation::prepare()" << std::endl;
   create_output_directory();
   prepare_transformed_geometry();
-  mainProblem = new LocalProblem();
+  if (GlobalParams.NumberProcesses > 1) {
+    mainProblem = new NonLocalProblem(GlobalParams.HSIE_SWEEPING_LEVEL);
+  } else {
+    mainProblem = new LocalProblem();
+  }
   mainProblem->initialize();
   std::cout << "End of Simulation::prepare()" << std::endl;
 }

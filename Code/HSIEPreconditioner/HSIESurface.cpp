@@ -446,7 +446,7 @@ void HSIESurface::fill_matrix(
   }
 }
 
-void HSIESurface::fill_sparsity_pattern(dealii::SparsityPattern *bsp,
+void HSIESurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *bsp,
     unsigned int lowest_index) {
   if (!is_metal) {
     IndexSet is;
@@ -456,7 +456,7 @@ void HSIESurface::fill_sparsity_pattern(dealii::SparsityPattern *bsp,
   }
 }
 
-void HSIESurface::fill_sparsity_pattern(dealii::SparsityPattern *sp,
+void HSIESurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *sp,
     dealii::IndexSet global_indices) {
   if (!is_metal) {
     auto it = dof_h_nedelec.begin();
@@ -597,7 +597,6 @@ unsigned int HSIESurface::compute_dofs_per_face(bool only_hsie_dofs) {
   }
   return ret;
 }
-
 
 unsigned int HSIESurface::compute_dofs_per_vertex() {
   if (is_metal)

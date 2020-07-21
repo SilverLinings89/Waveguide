@@ -292,7 +292,7 @@ class NumericProblem {
 
   std::vector<unsigned int> dofs_for_cell_around_point(dealii::Point<3> &in_p);
 
-  void make_sparsity_pattern(dealii::SparsityPattern *in_pattern,
+  void make_sparsity_pattern(dealii::DynamicSparsityPattern *in_pattern,
       unsigned int shift);
 
   bool get_orientation(const Position &vertex_1, const Position &vertex_2);

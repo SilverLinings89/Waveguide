@@ -33,6 +33,7 @@ using CellIterator3D           = DofHandler3D::active_cell_iterator;
 using DofDataVector            = std::vector<DofData>;
 using MathExpression = dealii::Differentiation::SD::Expression;
 using Mesh = dealii::Triangulation<3>;
+using MaterialTensor = dealii::Tensor<2,3,ComplexNumber>;
 
 struct DofIndexAndOrientationAndPosition {
   DofIndexAndOrientationAndPosition() {

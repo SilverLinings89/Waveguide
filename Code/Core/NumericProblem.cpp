@@ -60,10 +60,12 @@ void NumericProblem::make_grid() {
   repetitions.push_back(Cells_Per_Direction);
   repetitions.push_back(Cells_Per_Direction);
   repetitions.push_back(Cells_Per_Direction);
-  dealii::Point<3, double> left(-1, -1, -1);
-  dealii::Point<3, double> right(1, 1, 1);
+  Position lower(Geometry.local_x_range.first, Geometry.local_y_range.first,
+      Geometry.local_z_range.first);
+  Position upper(Geometry.local_x_range.second, Geometry.local_y_range.second,
+      Geometry.local_z_range.second);
   dealii::GridGenerator::subdivided_hyper_rectangle(triangulation, repetitions,
-      left, right, true);
+      lower, upper, true);
   dof_handler.distribute_dofs(fe);
   SortDofsDownstream();
   n_dofs = dof_handler.n_dofs();
@@ -92,7 +94,7 @@ std::vector<unsigned int> NumericProblem::dofs_for_cell_around_point(
 }
 
 void NumericProblem::make_sparsity_pattern(
-    dealii::SparsityPattern *in_pattern,
+    dealii::DynamicSparsityPattern *in_pattern,
     unsigned int shift) {
   reinit_rhs();
 
@@ -340,26 +342,26 @@ void NumericProblem::assemble_system(unsigned int shift,
   const double mu_zero = mu_temp;
   Vector<std::complex<double>> cell_rhs(dofs_per_cell);
   cell_rhs = 0;
-  Tensor<2, 3, std::complex<double>> transformation;
-  Tensor<2, 3, std::complex<double>> epsilon;
-  Tensor<2, 3, std::complex<double>> mu;
-  std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+  MaterialTensor transformation;
+  MaterialTensor epsilon;
+  MaterialTensor mu;
+  std::vector<DofNumber> local_dof_indices(dofs_per_cell);
   for (unsigned int i = 0; i < 3; i++) {
     for (unsigned int j = 0; j < 3; j++) {
       if (i == j) {
-        transformation[i][j] = std::complex<double>(1, 0);
+        transformation[i][j] = ComplexNumber(1, 0);
       } else {
-        transformation[i][j] = std::complex<double>(0, 0);
+        transformation[i][j] = ComplexNumber(0, 0);
       }
     }
   }
   auto cell = dof_handler.begin_active();
   auto endc = dof_handler.end();
 
-  const dealii::Point<3> bounded_cell(0.0, 0.0, 0.0);
+  const Position bounded_cell(0.0, 0.0, 0.0);
   const FEValuesExtractors::Vector fe_field(0);
   for (; cell != endc; ++cell) {
-    if (cell->point_inside(bounded_cell)) {
+    if (!cell->point_inside(bounded_cell)) {
       cell->get_dof_indices(local_dof_indices);
       for (unsigned int i = 0; i < local_dof_indices.size(); i++) {
         local_dof_indices[i] += shift;
@@ -369,7 +371,7 @@ void NumericProblem::assemble_system(unsigned int shift,
       quadrature_points = fe_values.get_quadrature_points();
       std::vector<types::global_dof_index> input_dofs(fe.dofs_per_line);
       IndexSet input_dofs_local_set(fe.dofs_per_cell);
-      std::vector<Point<3, double>> input_dof_centers(fe.dofs_per_cell);
+      std::vector<Position> input_dof_centers(fe.dofs_per_cell);
       std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
 
       cell_matrix_real = 0;
@@ -418,6 +420,5 @@ void NumericProblem::assemble_system(unsigned int shift,
 
   deallog << "Distributing solution done." << std::endl;
 }
-
 
 #endif
