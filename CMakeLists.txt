@@ -1,3 +1,4 @@
+SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Set the name of the project and target:
 SET(TARGET "WaveguideProblem")

@@ -22,11 +22,11 @@ std::pair<int, double> SpaceTransformation::Z_to_Sector_and_local_z(
     ret.first = floor(
         (in_z + Geometry.global_z_range.first)
             /
-                      (GlobalParams.SectorThickness));
+                      (GlobalParams.Sector_thickness));
     ret.second = (in_z + Geometry.global_z_range.first
         -
-                  (ret.first * GlobalParams.SectorThickness)) /
-                 (GlobalParams.SectorThickness);
+                  (ret.first * GlobalParams.Sector_thickness)) /
+                 (GlobalParams.Sector_thickness);
   } else if (in_z >= Geometry.global_z_range.second) {
     ret.first = sectors - 1;
     ret.second = 1.0;
@@ -40,14 +40,14 @@ SpaceTransformation::SpaceTransformation(int in_dofs_per_layer, int in_rank)
       boundary_dofs_out(in_dofs_per_layer),
       epsilon_K(GlobalParams.Epsilon_R_in_waveguide),
       epsilon_M(GlobalParams.Epsilon_R_outside_waveguide),
-      sectors(GlobalParams.M_W_Sectors),
-      deltaY(GlobalParams.M_W_Delta),
+      sectors(GlobalParams.Number_of_sectors),
+      deltaY(GlobalParams.Vertical_displacement_of_waveguide),
       rank(in_rank) {
   InitialQuality = 0;
 }
 
 double SpaceTransformation::Sector_Length() const {
-  return GlobalParams.SectorThickness;
+  return GlobalParams.Sector_thickness;
 }
 
 bool SpaceTransformation::is_identity(Point<3, double> coord) const {

@@ -25,8 +25,8 @@ DualProblemTransformationWrapper::DualProblemTransformationWrapper(
     : SpaceTransformation(3, inner_rank),
       epsilon_K(GlobalParams.Epsilon_R_in_waveguide),
       epsilon_M(GlobalParams.Epsilon_R_outside_waveguide),
-      sectors(GlobalParams.M_W_Sectors),
-      deltaY(GlobalParams.M_W_Delta) {
+      sectors(GlobalParams.Number_of_sectors),
+      deltaY(GlobalParams.Vertical_displacement_of_waveguide) {
   st = in_st;
   homogenized = st->homogenized;
 }
@@ -42,7 +42,7 @@ Point<3> DualProblemTransformationWrapper::phys_to_math(Point<3> coord) const {
 dealii::Point<3, double> transform_position(Point<3> in_position) {
   Point<3> ret = in_position;
   ret[2] = -ret[2];
-  // ret[2] += GlobalParams.M_BC_Zplus*GlobalParams.SectorThickness;
+  // ret[2] += GlobalParams.M_BC_Zplus*GlobalParams.Sector_thickness;
   return ret;
 }
 

@@ -1,5 +1,3 @@
-#pragma once
-
 #include "staticfunctions.h"
 #include <deal.II/base/point.h>
 #include <mpi.h>

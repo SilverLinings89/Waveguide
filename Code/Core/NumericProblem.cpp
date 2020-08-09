@@ -404,7 +404,7 @@ void NumericProblem::assemble_system(unsigned int shift,
             cell_matrix_real[i][j] += (mu * I_Curl) * Conjugate_Vector(J_Curl)
                 * JxW
                 - ((epsilon * I_Val) * Conjugate_Vector(J_Val)) * JxW
-                    * GlobalParams.C_omega * GlobalParams.C_omega;
+                    * GlobalParams.Omega * GlobalParams.Omega;
           }
         }
 

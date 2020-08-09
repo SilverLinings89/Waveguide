@@ -7,8 +7,8 @@
 
 NonLocalProblem::NonLocalProblem(unsigned int local_level) :
   HierarchicalProblem(local_level),
-  sc(GlobalParams.So_TotalSteps, GlobalParams.So_Precision, true, true),
-  solver(sc, dealii::SolverGMRES<NumericVectorDistributed>::AdditionalData(GlobalParams.So_RestartSteps))
+  sc(GlobalParams.GMRES_max_steps, GlobalParams.Solver_Precision, true, true),
+  solver(sc, dealii::SolverGMRES<NumericVectorDistributed>::AdditionalData(GlobalParams.GMRES_Steps_before_restart))
 {
     if(local_level > 1) {
     child = new NonLocalProblem(local_level - 1);

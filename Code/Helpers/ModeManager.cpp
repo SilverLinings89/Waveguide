@@ -29,8 +29,8 @@ void ModeManager::load() {
 
   // out_circular = GlobalParams.M_C_Shape == ConnectorType::Circle;
   out_circular = true;
-  v_in = 2 * GlobalParams.Phys_V;
-  v_out = 2 * GlobalParams.Phys_V;
+  v_in = 2 * GlobalParams.Waveguide_value_V;
+  v_out = 2 * GlobalParams.Waveguide_value_V;
   return;
 }
 

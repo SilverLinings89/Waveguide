@@ -1,6 +1,5 @@
 #pragma once
 
-#include <deal.II/base/mpi.h>
 #include <sys/stat.h>
 #include <cmath>
 #include <ctime>

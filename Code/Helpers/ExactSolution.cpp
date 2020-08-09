@@ -81,7 +81,7 @@ double ExactSolution::value(const Point<3> &in_p,
       } else {
         n = std::sqrt(GlobalParams.Epsilon_R_outside_waveguide);
       }
-      double k = n * 2 * GlobalParams.Pi / GlobalParams.M_W_Lambda;
+      double k = n * 2 * GlobalParams.Pi / GlobalParams.Lambda;
       std::complex<double> phase(0.0,
           (p[2] - Geometry.global_z_range.first) * k);
       ret_val *= std::exp(phase);
@@ -154,7 +154,7 @@ void ExactSolution::vector_value(const Point<3> &in_p,
         } else {
           n = std::sqrt(GlobalParams.Epsilon_R_outside_waveguide);
         }
-        double k = n * 2 * GlobalParams.Pi / GlobalParams.M_W_Lambda;
+        double k = n * 2 * GlobalParams.Pi / GlobalParams.Lambda;
         std::complex<double> phase(
             0.0, -(p[2] + GlobalParams.Geometry_Size_Z / 2.0) * k);
         phase = std::exp(phase);
