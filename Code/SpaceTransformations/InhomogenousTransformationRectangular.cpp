@@ -9,21 +9,16 @@
 #include "../Helpers/QuadratureFormulaCircle.cpp"
 #include "../Helpers/staticfunctions.h"
 #include "SpaceTransformation.h"
+
 using namespace dealii;
 
 InhomogenousTransformationRectangular::InhomogenousTransformationRectangular(
     int in_rank)
     : SpaceTransformation(3, in_rank),
-      XMinus(-(GlobalParams.M_R_XLength * 0.5 - GlobalParams.M_BC_XMinus)),
-      XPlus(GlobalParams.M_R_XLength * 0.5 - GlobalParams.M_BC_XPlus),
-      YMinus(-(GlobalParams.M_R_YLength * 0.5 - GlobalParams.M_BC_YMinus)),
-      YPlus(GlobalParams.M_R_YLength * 0.5 - GlobalParams.M_BC_YPlus),
-      ZMinus(-GlobalParams.M_R_ZLength * 0.5),
-      ZPlus(GlobalParams.M_R_ZLength * 0.5),
-      epsilon_K(GlobalParams.M_W_epsilonin),
-      epsilon_M(GlobalParams.M_W_epsilonout),
-      sectors(GlobalParams.M_W_Sectors),
-      deltaY(GlobalParams.M_W_Delta) {
+      epsilon_K(GlobalParams.Epsilon_R_in_waveguide),
+      epsilon_M(GlobalParams.Epsilon_R_outside_waveguide),
+      sectors(GlobalParams.Number_of_sectors),
+      deltaY(GlobalParams.Vertical_displacement_of_waveguide) {
   homogenized = false;
 }
 
@@ -52,210 +47,9 @@ Point<3> InhomogenousTransformationRectangular::phys_to_math(
   return ret;
 }
 
-bool InhomogenousTransformationRectangular::PML_in_X(Point<3> &p) const {
-  return p(0) < XMinus || p(0) > XPlus;
-}
-
-bool InhomogenousTransformationRectangular::PML_in_Y(Point<3> &p) const {
-  return p(1) < YMinus || p(1) > YPlus;
-}
-
-bool InhomogenousTransformationRectangular::PML_in_Z(Point<3> &p) const {
-  return p(2) < ZMinus || p(2) > ZPlus;
-}
-
-double InhomogenousTransformationRectangular::Preconditioner_PML_Z_Distance(
-    Point<3> &p, unsigned int rank) const {
-  return p(2) - GlobalParams.Minimum_Z -
-         ((double)rank) * GlobalParams.LayerThickness;
-}
-
-double InhomogenousTransformationRectangular::PML_X_Distance(
-    Point<3> &p) const {
-  if (p(0) > 0) {
-    return p(0) - XPlus;
-  } else {
-    return -p(0) + XMinus;
-  }
-}
-
-double InhomogenousTransformationRectangular::PML_Y_Distance(
-    Point<3> &p) const {
-  if (p(1) > 0) {
-    return p(1) - YMinus;
-  } else {
-    return -p(1) + YPlus;
-  }
-}
-
-double InhomogenousTransformationRectangular::PML_Z_Distance(
-    Point<3> &p) const {
-  if (p(2) < 0) {
-    return -(p(2) + (GlobalParams.M_R_ZLength / 2.0));
-  } else {
-    return p(2) - (GlobalParams.M_R_ZLength / 2.0);
-  }
-}
-
 Tensor<2, 3, std::complex<double>>
 InhomogenousTransformationRectangular::get_Tensor(Point<3> &position) const {
-  Tensor<2, 3, double> transform = get_Space_Transformation_Tensor(position);
-  return Apply_PML_To_Tensor(position, transform);
-}
-
-Tensor<2, 3, std::complex<double>>
-InhomogenousTransformationRectangular::get_Preconditioner_Tensor(
-    Point<3> &position, int block) const {
-  Tensor<2, 3, double> transform = get_Space_Transformation_Tensor(position);
-  return Apply_PML_To_Tensor_For_Preconditioner(position, transform, block);
-}
-
-Tensor<2, 3, std::complex<double>>
-InhomogenousTransformationRectangular::Apply_PML_To_Tensor(
-    Point<3> &position, Tensor<2, 3, double> transformation) const {
-  Tensor<2, 3, std::complex<double>> MaterialTensor;
-
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
-      MaterialTensor[i][j] =
-          transformation[i][j] * std::complex<double>(1.0, 0.0);
-    }
-  }
-
-  std::complex<double> sx(1.0, 0.0), sy(1.0, 0.0), sz(1.0, 0.0);
-
-  if (PML_in_X(position)) {
-    double r, d;
-    r = PML_X_Distance(position);
-    if (position[0] < 0) {
-      d = GlobalParams.M_BC_XMinus;
-    } else {
-      d = GlobalParams.M_BC_XPlus;
-    }
-    sx.real(1 + pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-                    GlobalParams.M_BC_KappaXMax);
-    sx.imag(pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-            GlobalParams.M_BC_SigmaXMax);
-  }
-
-  if (PML_in_Y(position)) {
-    double r, d;
-    r = PML_Y_Distance(position);
-    if (position[1] < 0) {
-      d = GlobalParams.M_BC_YMinus;
-    } else {
-      d = GlobalParams.M_BC_YPlus;
-    }
-
-    sy.real(1 + pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-                    GlobalParams.M_BC_KappaYMax);
-    sy.imag(pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-            GlobalParams.M_BC_SigmaYMax);
-  }
-
-  if (PML_in_Z(position)) {
-    double r, d;
-    r = PML_Z_Distance(position);
-    if (position[1] < 0) {
-      d = GlobalParams.M_BC_Zminus;
-    } else {
-      d = GlobalParams.M_BC_Zplus;
-    }
-    sz.real(1 + pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-                    GlobalParams.M_BC_KappaZMax);
-    sz.imag(pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-            GlobalParams.M_BC_SigmaZMax);
-  }
-
-  MaterialTensor[0][0] *= sy * sz / sx;
-  MaterialTensor[0][1] *= sz;
-  MaterialTensor[0][2] *= sy;
-
-  MaterialTensor[1][0] *= sz;
-  MaterialTensor[1][1] *= sx * sz / sy;
-  MaterialTensor[1][2] *= sx;
-
-  MaterialTensor[2][0] *= sy;
-  MaterialTensor[2][1] *= sx;
-  MaterialTensor[2][2] *= sx * sy / sz;
-
-  return MaterialTensor;
-}
-
-Tensor<2, 3, std::complex<double>>
-InhomogenousTransformationRectangular::Apply_PML_To_Tensor_For_Preconditioner(
-    Point<3> &position, Tensor<2, 3, double> transformation, int) const {
-  Tensor<2, 3, std::complex<double>> MaterialTensor;
-
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
-      MaterialTensor[i][j] =
-          transformation[i][j] * std::complex<double>(1.0, 0.0);
-    }
-  }
-
-  std::complex<double> sx(1.0, 0.0), sy(1.0, 0.0), sz(1.0, 0.0), sz_p(0.0, 0.0);
-  if (PML_in_X(position)) {
-    double r, d;
-    r = PML_X_Distance(position);
-    if (position[0] < 0) {
-      d = GlobalParams.M_BC_XMinus;
-    } else {
-      d = GlobalParams.M_BC_XPlus;
-    }
-    sx.real(1 + pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-                    GlobalParams.M_BC_KappaXMax);
-    sx.imag(pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-            GlobalParams.M_BC_SigmaXMax);
-  }
-  if (PML_in_Y(position)) {
-    double r, d;
-    r = PML_Y_Distance(position);
-    if (position[1] < 0) {
-      d = GlobalParams.M_BC_YMinus;
-    } else {
-      d = GlobalParams.M_BC_YPlus;
-    }
-
-    sy.real(1 + pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-                    GlobalParams.M_BC_KappaYMax);
-    sy.imag(pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-            GlobalParams.M_BC_SigmaYMax);
-  }
-
-  if (Preconditioner_PML_Z_Distance(position, rank) > 0) {
-    double r_temp = Preconditioner_PML_Z_Distance(position, rank);
-    double d_temp = GlobalParams.LayerThickness;
-
-    sz.real(1 + pow(r_temp / d_temp, GlobalParams.M_BC_DampeningExponent) *
-                    GlobalParams.M_BC_KappaZMax);
-    sz.imag(pow(r_temp / d_temp, GlobalParams.M_BC_DampeningExponent) *
-            GlobalParams.M_BC_SigmaZMax);
-  }
-
-  if (PML_in_Z(position)) {
-    double r, d;
-    r = PML_Z_Distance(position);
-    d = GlobalParams.M_BC_Zplus;
-    sz.real(1 + pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-                    GlobalParams.M_BC_KappaZMax);
-    sz.imag(pow(r / d, GlobalParams.M_BC_DampeningExponent) *
-            GlobalParams.M_BC_SigmaZMax);
-  }
-
-  MaterialTensor[0][0] *= sy * sz / sx;
-  MaterialTensor[0][1] *= sz;
-  MaterialTensor[0][2] *= sy;
-
-  MaterialTensor[1][0] *= sz;
-  MaterialTensor[1][1] *= sx * sz / sy;
-  MaterialTensor[1][2] *= sx;
-
-  MaterialTensor[2][0] *= sy;
-  MaterialTensor[2][1] *= sx;
-  MaterialTensor[2][2] *= sx * sy / sz;
-
-  return MaterialTensor;
+  return get_Space_Transformation_Tensor(position);
 }
 
 double InhomogenousTransformationRectangular::get_dof(int dof) const {
@@ -330,11 +124,11 @@ void InhomogenousTransformationRectangular::set_free_dof(int in_dof,
 }
 
 double InhomogenousTransformationRectangular::Sector_Length() const {
-  return GlobalParams.SectorThickness;
+  return GlobalParams.Sector_thickness;
 }
 
 void InhomogenousTransformationRectangular::estimate_and_initialize() {
-  if (GlobalParams.M_PC_Use) {
+  if (GlobalParams.Use_Predefined_Shape) {
     Sector<2> the_first(true, false, GlobalParams.sd.z[0],
                         GlobalParams.sd.z[1]);
     the_first.set_properties_force(GlobalParams.sd.m[0], GlobalParams.sd.m[1],
@@ -367,24 +161,24 @@ void InhomogenousTransformationRectangular::estimate_and_initialize() {
     }
   } else {
     case_sectors.reserve(sectors);
-    double m_0 = GlobalParams.M_W_Delta / 2.0;
-    double m_1 = -GlobalParams.M_W_Delta / 2.0;
+    double m_0 = GlobalParams.Vertical_displacement_of_waveguide / 2.0;
+    double m_1 = -GlobalParams.Vertical_displacement_of_waveguide / 2.0;
     if (sectors == 1) {
-      Sector<2> temp12(true, true, -GlobalParams.M_R_ZLength / 2.0,
-                       GlobalParams.M_R_ZLength / 2.0);
+      Sector<2> temp12(true, true, -GlobalParams.Geometry_Size_Z / 2.0,
+                       GlobalParams.Geometry_Size_Z / 2.0);
       case_sectors.push_back(temp12);
       case_sectors[0].set_properties_force(
-          GlobalParams.M_W_Delta / 2.0, -GlobalParams.M_W_Delta / 2.0,
-          GlobalParams.M_C_Dim1In, GlobalParams.M_C_Dim1Out, 0, 0);
+          GlobalParams.Vertical_displacement_of_waveguide / 2.0, -GlobalParams.Vertical_displacement_of_waveguide / 2.0,
+          GlobalParams.Width_of_waveguide, GlobalParams.Width_of_waveguide, 0, 0);
     } else {
       double length = Sector_Length();
-      Sector<2> temp(true, false, -GlobalParams.M_R_ZLength / (2.0),
-                     -GlobalParams.M_R_ZLength / 2.0 + length);
+      Sector<2> temp(true, false, -GlobalParams.Geometry_Size_Z / (2.0),
+                     -GlobalParams.Geometry_Size_Z / 2.0 + length);
       case_sectors.push_back(temp);
       for (int i = 1; i < sectors; i++) {
         Sector<2> temp2(false, false,
-                        -GlobalParams.M_R_ZLength / (2.0) + length * (1.0 * i),
-                        -GlobalParams.M_R_ZLength / (2.0) + length * (i + 1.0));
+                        -GlobalParams.Geometry_Size_Z / (2.0) + length * (1.0 * i),
+                        -GlobalParams.Geometry_Size_Z / (2.0) + length * (i + 1.0));
         case_sectors.push_back(temp2);
       }
 
@@ -405,7 +199,7 @@ void InhomogenousTransformationRectangular::estimate_and_initialize() {
   }
 }
 
-double InhomogenousTransformationRectangular::get_r(double ) const {
+double InhomogenousTransformationRectangular::get_r(double) const {
   std::cout << "Asking for Radius of rectangular Waveguide." << std::endl;
   return 0;
 }

@@ -1,47 +1,37 @@
 
 #ifndef ExactSolutionFlag_CPP
 #define ExactSolutionFlag_CPP
+
 #include "ExactSolution.h"
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 #include <complex>
 #include <string>
 #include <vector>
-#include "../Core/Waveguide.h"
+
+#include "../Core/NumericProblem.h"
+#include "../Core/GlobalObjects.h"
 #include "PointVal.h"
 
 double ExactSolution::value(const Point<3> &in_p,
                             const unsigned int component) const {
   Point<3, double> p = in_p;
   if (is_dual) p[2] = -in_p[2];
-  bool zero = false;
-  if (p[0] > GlobalParams.M_R_XLength / 2.0 - GlobalParams.M_BC_XPlus)
-    zero = true;
-  if (p[0] < -GlobalParams.M_R_XLength / 2.0 + GlobalParams.M_BC_XMinus)
-    zero = true;
-  if (p[1] > GlobalParams.M_R_YLength / 2.0 - GlobalParams.M_BC_YPlus)
-    zero = true;
-  if (p[1] < -GlobalParams.M_R_YLength / 2.0 + GlobalParams.M_BC_YMinus)
-    zero = true;
-  if (p[2] > GlobalParams.M_R_ZLength / 2.0) zero = true;
-  if (zero) {
-    return 0.0;
-  }
 
   if (is_rectangular) {
     std::complex<double> ret_val(0.0, 0.0);
     const double delta = abs(mesh_points[0] - mesh_points[1]);
     const int mesh_number = mesh_points.size();
-    if (!(abs(p(1)) >= mesh_points[0] || abs(p(0)) >= mesh_points[0])) {
+    if (!(abs(p[1]) >= mesh_points[0] || abs(p[0]) >= mesh_points[0])) {
       int ix = 0;
       int iy = 0;
-      while (mesh_points[ix] > p(0) && ix < mesh_number) ix++;
-      while (mesh_points[iy] > p(1) && iy < mesh_number) iy++;
+      while (mesh_points[ix] > p[0] && ix < mesh_number) ix++;
+      while (mesh_points[iy] > p[1] && iy < mesh_number) iy++;
       if (ix == 0 || iy == 0 || ix == mesh_number || iy == mesh_number) {
         return 0.0;
       } else {
-        double dx = (p(0) - mesh_points[ix]) / delta;
-        double dy = (p(1) - mesh_points[iy]) / delta;
+        double dx = (p[0] - mesh_points[ix]) / delta;
+        double dy = (p[1] - mesh_points[iy]) / delta;
         double m1m1 = dx * dy;
         double m1p1 = dx * (1.0 - dy);
         double p1p1 = (1.0 - dx) * (1.0 - dy);
@@ -85,14 +75,15 @@ double ExactSolution::value(const Point<3> &in_p,
         }
       }
       double n;
-      if (abs(p(0)) <= GlobalParams.M_C_Dim1In &&
-          abs(p(1)) <= GlobalParams.M_C_Dim2In) {
-        n = std::sqrt(GlobalParams.M_W_epsilonin);
+      if (abs(p[0]) <= GlobalParams.Width_of_waveguide &&
+          abs(p[1]) <= GlobalParams.Height_of_waveguide) {
+        n = std::sqrt(GlobalParams.Epsilon_R_in_waveguide);
       } else {
-        n = std::sqrt(GlobalParams.M_W_epsilonout);
+        n = std::sqrt(GlobalParams.Epsilon_R_outside_waveguide);
       }
-      double k = n * 2 * GlobalParams.C_Pi / GlobalParams.M_W_Lambda;
-      std::complex<double> phase(0.0, (p(2) - GlobalParams.Minimum_Z) * k);
+      double k = n * 2 * GlobalParams.Pi / GlobalParams.Lambda;
+      std::complex<double> phase(0.0,
+          (p[2] - Geometry.global_z_range.first) * k);
       ret_val *= std::exp(phase);
       if (component > 2) {
         return ret_val.imag();
@@ -103,7 +94,7 @@ double ExactSolution::value(const Point<3> &in_p,
       return 0.0;
     }
   } else {
-    return ModeMan.get_input_component(component, p, 0);
+    return GlobalModeManager.get_input_component(component, p, 0);
   }
 }
 
@@ -111,38 +102,23 @@ void ExactSolution::vector_value(const Point<3> &in_p,
                                  Vector<double> &values) const {
   Point<3, double> p = in_p;
   if (is_dual) p[2] = -in_p[2];
-  bool zero = false;
-  if (p[0] > GlobalParams.M_R_XLength / 2.0 - GlobalParams.M_BC_XPlus)
-    zero = true;
-  if (p[0] < -GlobalParams.M_R_XLength / 2.0 + GlobalParams.M_BC_XMinus)
-    zero = true;
-  if (p[1] > GlobalParams.M_R_YLength / 2.0 - GlobalParams.M_BC_YPlus)
-    zero = true;
-  if (p[1] < -GlobalParams.M_R_YLength / 2.0 + GlobalParams.M_BC_YMinus)
-    zero = true;
-  if (p[2] > GlobalParams.M_R_ZLength / 2.0) zero = true;
-  if (zero) {
-    for (unsigned int i = 0; i < values.size(); i++) {
-      values[i] = 0.0;
-    }
-    return;
-  }
+
   if (is_rectangular) {
     const double delta = abs(mesh_points[0] - mesh_points[1]);
     const int mesh_number = mesh_points.size();
-    if (!(abs(p(1)) >= mesh_points[0] || abs(p(0)) >= mesh_points[0])) {
+    if (!(abs(p[1]) >= mesh_points[0] || abs(p[0]) >= mesh_points[0])) {
       int ix = 0;
       int iy = 0;
-      while (mesh_points[ix] > p(0) && ix < mesh_number) ix++;
-      while (mesh_points[iy] > p(1) && iy < mesh_number) iy++;
+      while (mesh_points[ix] > p[0] && ix < mesh_number) ix++;
+      while (mesh_points[iy] > p[1] && iy < mesh_number) iy++;
       if (ix == 0 || iy == 0 || ix == mesh_number || iy == mesh_number) {
         for (unsigned int i = 0; i < values.size(); i++) {
           values[i] = 0.0;
         }
         return;
       } else {
-        double dx = (p(0) - mesh_points[ix]) / delta;
-        double dy = (p(1) - mesh_points[iy]) / delta;
+        double dx = (p[0] - mesh_points[ix]) / delta;
+        double dy = (p[1] - mesh_points[iy]) / delta;
         double m1m1 = dx * dy;
         double m1p1 = dx * (1.0 - dy);
         double p1p1 = (1.0 - dx) * (1.0 - dy);
@@ -172,15 +148,15 @@ void ExactSolution::vector_value(const Point<3> &in_p,
                     m1m1 * vals[ix - 1][iy - 1].Ez.imag() +
                     m1p1 * vals[ix - 1][iy].Ez.imag();
         double n;
-        if (abs(p(0)) <= GlobalParams.M_C_Dim1In &&
-            abs(p(1)) <= GlobalParams.M_C_Dim2In) {
-          n = std::sqrt(GlobalParams.M_W_epsilonin);
+        if (abs(p[0]) <= GlobalParams.Width_of_waveguide &&
+            abs(p[1]) <= GlobalParams.Height_of_waveguide) {
+          n = std::sqrt(GlobalParams.Epsilon_R_in_waveguide);
         } else {
-          n = std::sqrt(GlobalParams.M_W_epsilonout);
+          n = std::sqrt(GlobalParams.Epsilon_R_outside_waveguide);
         }
-        double k = n * 2 * GlobalParams.C_Pi / GlobalParams.M_W_Lambda;
+        double k = n * 2 * GlobalParams.Pi / GlobalParams.Lambda;
         std::complex<double> phase(
-            0.0, -(p(2) + GlobalParams.M_R_ZLength / 2.0) * k);
+            0.0, -(p[2] + GlobalParams.Geometry_Size_Z / 2.0) * k);
         phase = std::exp(phase);
         for (unsigned int komp = 0; komp < 3; komp++) {
           std::complex<double> entr(values[0 + komp], values[3 + komp]);
@@ -188,8 +164,6 @@ void ExactSolution::vector_value(const Point<3> &in_p,
           values[0 + komp] = entr.real();
           values[3 + komp] = entr.imag();
         }
-        // values[0] *= -1.0;
-        // values[3] *= -1.0;
         return;
       }
     } else {
@@ -200,7 +174,7 @@ void ExactSolution::vector_value(const Point<3> &in_p,
     }
   } else {
     for (unsigned int c = 0; c < 6; ++c)
-      values[c] = ModeMan.get_input_component(c, p, 0);
+      values[c] = GlobalModeManager.get_input_component(c, p, 0);
   }
 }
 
@@ -209,7 +183,10 @@ Tensor<1, 3, std::complex<double>> ExactSolution::curl(
   const double h = 0.0001;
   Tensor<1, 3, std::complex<double>> ret;
   if (is_rectangular) {
-    Vector<double> dxF, dyF, dzF, val;
+    Vector<double> dxF;
+    Vector<double> dyF;
+    Vector<double> dzF;
+    Vector<double> val;
     dxF.reinit(6, false);
     dyF.reinit(6, false);
     dzF.reinit(6, false);
@@ -264,7 +241,7 @@ std::vector<std::string> ExactSolution::split(std::string str) const {
 
 double scientific_string_to_double(std::string inp) {
   std::istringstream os(inp);
-  double d;
+  double d = 0.0;
   os >> d;
   return d;
 }
@@ -287,7 +264,7 @@ ExactSolution::ExactSolution(bool in_rectangular, bool in_dual)
     while (std::getline(input, line)) {
       std::vector<std::string> ls = split(line);
       std::istringstream iss(ls[2]);
-      double x;
+      double x = 0.0;
       iss >> x;
       if (x < l_val) {
         mesh_points.push_back(x);
@@ -309,13 +286,12 @@ ExactSolution::ExactSolution(bool in_rectangular, bool in_dual)
       for (unsigned int j = 0; j < cnt; ++j) {
         getline(input2, line2);
         std::vector<std::string> ls = split(line2);
-        double d1, d2, d3, d4, d5, d6;
-        d1 = scientific_string_to_double(ls[4]);
-        d2 = scientific_string_to_double(ls[5]);
-        d3 = scientific_string_to_double(ls[3]);
-        d4 = scientific_string_to_double(ls[7]);
-        d5 = scientific_string_to_double(ls[8]);
-        d6 = scientific_string_to_double(ls[6]);
+        double d1 = scientific_string_to_double(ls[4]);
+        double d2 = scientific_string_to_double(ls[5]);
+        double d3 = scientific_string_to_double(ls[3]);
+        double d4 = scientific_string_to_double(ls[7]);
+        double d5 = scientific_string_to_double(ls[8]);
+        double d6 = scientific_string_to_double(ls[6]);
         if (d1 > max) max = d1;
         if (d2 > max) max = d2;
         if (d3 > max) max = d3;

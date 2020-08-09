@@ -1,13 +1,12 @@
-#ifndef SquareMeshGenerator_h_
-#define SquareMeshGenerator_h_
+#pragma once
 
 #include <deal.II/base/point.h>
 #include <deal.II/grid/tria.h>
 #include <array>
 #include <vector>
 #include "../SpaceTransformations/SpaceTransformation.h"
-#include "./MeshGenerator.h"
 #include "./SquareMeshGenerator.h"
+
 /**
  * \class SquareMeshGenerator
  * \brief This class generates meshes, that are used to discretize a rectangular
@@ -21,47 +20,11 @@
  * currently compute while tubular waveguides on that scale are not yet
  * feasible. \author Pascal Kraft \date 28.11.2016
  */
-class SquareMeshGenerator : public MeshGenerator {
-  SpaceTransformation* ct;
-  unsigned int Layers;
-  Point<3> origin;
-  std_cxx11::array<Tensor<1, 3>, 3> edges;
-  std::vector<unsigned int> subs;
-
-  const double MaxDistX;
-  const double MaxDistY;
-
+class SquareMeshGenerator {
  public:
-  SquareMeshGenerator(SpaceTransformation* st);
+  SquareMeshGenerator();
 
   ~SquareMeshGenerator();
-  /**
-   * This function is intended to execute a global refinement of the mesh. This
-   * means that every cell will be refined in every direction (effectively
-   * multiplying the number of DOFs by 8). This version is the most expensive
-   * refinement possible and should be used with caution. \param times Number of
-   * refinement steps to be performed (gives us a multiplication of the number
-   * of degrees of freedom by \f$8^{times}\f$.
-   */
-  void refine_global(Triangulation<3>* in_tria, unsigned int times);
-
-  /**
-   * This function is intended to execute an internal refinement of the mesh.
-   * This means that every cell inside the waveguide will be refined in every
-   * direction. This method is rather cheap and only refines where the field is
-   * strong, however, the mesh outside the waveguide should not be too coarse to
-   * reduce numerical errors. \param times Number of refinement steps to be
-   * performed.
-   */
-  void refine_internal(Triangulation<3>* in_tria, unsigned int times);
-
-  /**
-   * This function is intended to execute a refinement inside and near the
-   * waveguide boundary. \param times Number of refinement steps to be
-   * performed.
-   */
-  void refine_proximity(Triangulation<3>* in_tria, unsigned int times,
-                        double factor);
 
   /**
    * This function checks if the given coordinate is inside the waveguide or
@@ -90,14 +53,17 @@ class SquareMeshGenerator : public MeshGenerator {
    * be prepared. All further information is derived from the parameter file and
    * not given by parameters.
    */
-  void prepare_triangulation(Triangulation<3>* in_tria);
+  void prepare_triangulation(Triangulation<3> *in_tria);
 
   unsigned int getDominantComponentAndDirection(
       dealii::Point<3, double> in_dir) const;
 
-  void set_boundary_ids(Triangulation<3>& tria) const;
+  void set_boundary_ids(Triangulation<3> &) const;
 
   Triangulation<3>::active_cell_iterator cell, endc;
-};
 
-#endif
+  void refine_triangulation_iteratively(Triangulation<3, 3> *);
+
+  bool check_and_mark_one_cell_for_refinement(
+      Triangulation<3>::active_cell_iterator);
+};

@@ -1,0 +1,27 @@
+subsection Run parameters
+    set Perform optimization = false
+
+end 
+subsection Scheme properties
+    set Kappa angle = 1
+    set HSIE polynomial degree = 5
+    set FEM order = 0
+    set Processes in x = 1
+    set Processes in y = 1
+    set Processes in z = 1
+    set HSIE sweeping level = 1
+    set geometry size x = 1.0
+    set geometry size y = 1.0
+    set geometry size z = 1.0
+end
+subsection Waveguide properties
+    set Width of waveguide = 2
+    set Heigth of waveguide = 2
+    set X shift = 0
+    set Y shift = 0
+    set epsilon in = 1.5
+    set epsilon out = 1.0
+    set mu in = 1.0
+    set mu out = 1.0
+    set mode amplitude = 1.0
+end

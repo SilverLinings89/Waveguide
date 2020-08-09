@@ -1,16 +1,15 @@
+#pragma once
 
-#ifndef STATICFUNCTIONS_H_
-#define STATICFUNCTIONS_H_
-
+#include <deal.II/base/index_set.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/distributed/tria.h>
 #include <deal.II/dofs/dof_handler.h>
-#include <deal.II/lac/constraint_matrix.h>
+#include <deal.II/lac/affine_constraints.h>
 #include <fstream>
-#include "../Core/Waveguide.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
-using namespace dealii;
+#include "./Parameters.h"
+#include "../Core/Types.h"
 
 extern std::string solutionpath;
 extern std::ofstream log_stream;
@@ -24,6 +23,7 @@ extern int StepsPhi;
 extern int alert_counter;
 extern std::string input_file_name;
 extern SpaceTransformation *the_st;
+
 /**
  * For given vectors \f$\boldsymbol{a},\boldsymbol{b} \in \mathbb{R}^3\f$, this
  * function calculates the following crossproduct: \f[\boldsymbol{a} \ times
@@ -32,7 +32,18 @@ extern SpaceTransformation *the_st;
  */
 Tensor<1, 3, double> crossproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 
-std::complex<double> matrixD(int in_row, int in_column, double in_k0);
+std::complex<double> matrixD(int in_row, int in_column,
+                             std::complex<double> in_k0);
+
+bool compareDofBaseData(std::pair<int, Point<3, double>> c1,
+    std::pair<int, Point<3, double>> c2);
+
+bool compareDofBaseDataAndOrientation(
+    DofIndexAndOrientationAndPosition,
+    DofIndexAndOrientationAndPosition);
+
+bool areDofsClose(const DofIndexAndOrientationAndPosition &a,
+    const DofIndexAndOrientationAndPosition &b);
 
 void set_the_st(SpaceTransformation *);
 
@@ -44,21 +55,44 @@ void mesh_info(const Triangulation<dim>, const std::string);
 template <int dim>
 void mesh_info(const Triangulation<dim>);
 
-double my_inter(double, double, double);
-
 Parameters GetParameters();
 
-Point<3, double> Triangulation_Stretch_X(const Point<3, double> &p);
+Point<3, double> Triangulation_Shit_To_Local_Geometry(
+    const Point<3, double> &p);
 
-Point<3, double> Triangulation_Stretch_Y(const Point<3, double> &p);
+Point<3, double> Transform_4_to_5(const Point<3, double> &p);
 
-Point<3, double> Triangulation_Stretch_Z(const Point<3, double> &p);
+Point<3, double> Transform_3_to_5(const Point<3, double> &p);
+
+Point<3, double> Transform_2_to_5(const Point<3, double> &p);
+
+Point<3, double> Transform_1_to_5(const Point<3, double> &p);
+
+Point<3, double> Transform_0_to_5(const Point<3, double> &p);
+
+Point<3, double> Transform_5_to_4(const Point<3, double> &p);
+
+Point<3, double> Transform_5_to_3(const Point<3, double> &p);
+
+Point<3, double> Transform_5_to_2(const Point<3, double> &p);
+
+Point<3, double> Transform_5_to_1(const Point<3, double> &p);
+
+Point<3, double> Transform_5_to_0(const Point<3, double> &p);
 
 inline bool file_exists(const std::string &name);
 
-double TEMode00(dealii::Point<3, double>, int);
+void PrepareStreams();
 
-double sigma(double, double, double);
+double Distance2D(Point<3, double>, Point<3, double> = Point<3, double>());
+
+std::vector<types::global_dof_index> Add_Zero_Restraint(
+    AffineConstraints<double> *, DoFHandler<3>::active_cell_iterator &,
+    unsigned int, unsigned int, unsigned int, bool, IndexSet);
+
+void add_vector_of_indices(IndexSet *, std::vector<types::global_dof_index>);
+
+double hmax_for_cell_center(Point<3, double>);
 
 double InterpolationPolynomial(double, double, double, double, double);
 
@@ -67,28 +101,6 @@ double InterpolationPolynomialDerivative(double, double, double, double,
 
 double InterpolationPolynomialZeroDerivative(double, double, double);
 
-void PrepareStreams();
+double sigma(double, double, double);
 
-double Distance2D(Point<3, double>, Point<3, double> = Point<3, double>());
-
-Point<3, double> Triangulation_Stretch_to_circle(const Point<3, double> &);
-
-Point<3, double> Triangulation_Shift_Z(const Point<3, double> &);
-
-Point<3, double> Triangulation_Stretch_Computational_Radius(
-    const Point<3, double> &);
-Point<3, double> Triangulation_Stretch_Single_Part_Z(const Point<3, double> &);
-
-Point<3, double> Triangulation_Stretch_Computational_Rectangle(
-    const Point<3, double> &);
-
-Point<3, double> Triangulation_Transform_to_physical(const Point<3, double> &);
-
-std::vector<types::global_dof_index> Add_Zero_Restraint(
-    dealii::ConstraintMatrix *, dealii::DoFHandler<3>::active_cell_iterator &,
-    unsigned int, unsigned int, unsigned int, bool, dealii::IndexSet);
-
-void add_vector_of_indices(dealii::IndexSet *,
-                           std::vector<types::global_dof_index>);
-
-#endif /* STATICFUNCTIONS_H_ */
+auto compute_center_of_triangulation(const Mesh*) -> Position;

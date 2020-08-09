@@ -1,10 +1,11 @@
-
-#ifndef ParametersFlag
-#define ParametersFlag
+#pragma once
 
 #include <mpi.h>
 #include <string>
 #include "ShapeDescription.h"
+#include "../Core/Types.h"
+#include "Enums.h"
+
 /**
  * \class Parameters
  * \brief This structure contains all information contained in the input file
@@ -14,233 +15,92 @@
  * available globally. \author: Pascal Kraft \date: 28.11.2016
  */
 
-enum ConnectorType { Circle, Rectangle };
-
-enum BoundaryConditionType { PML, HSIE };
-
-enum SpecialCase {
-  none,
-  reference_bond_nr_0,
-  reference_bond_nr_1,
-  reference_bond_nr_2,
-  reference_bond_nr_40,
-  reference_bond_nr_41,
-  reference_bond_nr_42,
-  reference_bond_nr_43,
-  reference_bond_nr_44,
-  reference_bond_nr_45,
-  reference_bond_nr_46,
-  reference_bond_nr_47,
-  reference_bond_nr_48,
-  reference_bond_nr_49,
-  reference_bond_nr_50,
-  reference_bond_nr_51,
-  reference_bond_nr_52,
-  reference_bond_nr_53,
-  reference_bond_nr_54,
-  reference_bond_nr_55,
-  reference_bond_nr_56,
-  reference_bond_nr_57,
-  reference_bond_nr_58,
-  reference_bond_nr_59,
-  reference_bond_nr_60,
-  reference_bond_nr_61,
-  reference_bond_nr_62,
-  reference_bond_nr_63,
-  reference_bond_nr_64,
-  reference_bond_nr_65,
-  reference_bond_nr_66,
-  reference_bond_nr_67,
-  reference_bond_nr_68,
-  reference_bond_nr_69,
-  reference_bond_nr_70,
-  reference_bond_nr_71,
-  reference_bond_nr_72
-};
-
-enum OptimizationSchema { FD, Adjoint };
-
-enum SolverOptions { GMRES, MINRES, UMFPACK };
-
 const static std::string PrecOptionNames[] = {
     "Sweeping", "FastSweeping", "HSIESweeping", "HSIEFastSweeping"};
 
-enum PreconditionerOptions {
-  Sweeping,
-  FastSweeping,
-  HSIESweeping,
-  HSIEFastSweeping
-};
-
-enum SteppingMethod { Steepest, CG, LineSearch };
-
 struct Parameters {
-  bool O_O_G_HistoryLive;
+    ShapeDescription sd;
 
-  bool O_O_G_HistoryShapes;
+    double Solver_Precision;
 
-  bool O_O_G_History;
+    unsigned int GMRES_Steps_before_restart;
 
-  bool O_O_V_T_TransformationWeightsAll;
+    unsigned int GMRES_max_steps;
 
-  bool O_O_V_T_TransformationWeightsFirst;
+    unsigned int MPI_Rank;
 
-  bool O_O_V_T_TransformationWeightsLast;
+    unsigned int NumberProcesses;
 
-  bool O_O_V_S_SolutionAll;
+    double Amplitude_of_input_signal;
 
-  bool O_O_V_S_SolutionFirst;
+    double Width_of_waveguide; // x-direction
 
-  bool O_O_V_S_SolutionLast;
+    double Height_of_waveguide; // y-direction
 
-  bool O_C_D_ConvergenceAll;
+    double Horizontal_displacement_of_waveguide; // x-direction
 
-  bool O_C_D_ConvergenceFirst;
+    double Vertical_displacement_of_waveguide;
 
-  bool O_C_D_ConvergenceLast;
+    double Epsilon_R_in_waveguide;
 
-  bool O_C_P_ConvergenceAll;
+    double Epsilon_R_outside_waveguide;
 
-  bool O_C_P_ConvergenceFirst;
+    double Mu_R_in_waveguide;
 
-  bool O_C_P_ConvergenceLast;
+    double Mu_R_outside_waveguide;
 
-  bool O_G_Summary;
+    unsigned int HSIE_polynomial_degree;
 
-  bool O_G_Log;
+    bool Perform_Optimization;
 
-  ConnectorType M_C_Shape;
+    double kappa_0_angle; // For HSIE-Elements. kappa_0 is a complex number with absolute value 1. This is the angle against the real axis.
 
-  double M_C_Dim1In;
+    ComplexNumber kappa_0; // For HSIE-Elements
 
-  double M_C_Dim2In;
+    unsigned int Nedelec_element_order;
+    
+    unsigned int Blocks_in_z_direction;
 
-  double M_C_Dim1Out;
+    unsigned int Blocks_in_x_direction;
 
-  double M_C_Dim2Out;
+    unsigned int Blocks_in_y_direction;
 
-  double M_R_XLength;
+    unsigned int Index_in_x_direction;
 
-  double M_R_YLength;
+    unsigned int Index_in_y_direction;
 
-  double M_R_ZLength;
+    unsigned int Index_in_z_direction;
 
-  double M_W_Delta;
+    int current_run_number;
 
-  double M_W_epsilonin;
+    double Geometry_Size_X;
 
-  double M_W_epsilonout;
+    double Geometry_Size_Y;
 
-  int M_W_Sectors;
+    double Geometry_Size_Z;
 
-  double M_W_Lambda;
+    unsigned int Number_of_sectors;
 
-  BoundaryConditionType M_BC_Type;
+    double Sector_thickness;
 
-  double M_BC_Zminus;
+    double Sector_padding;
 
-  double M_BC_Zplus;
+    double Pi = 3.141592653589793238462;
 
-  double M_BC_XMinus;
+    double Omega = 1.0;
 
-  double M_BC_XPlus;
+    double Lambda = 1.0;
 
-  double M_BC_YMinus;
+    double Waveguide_value_V = 1.0;
 
-  double M_BC_YPlus;
+    bool Use_Predefined_Shape = false;
 
-  double M_BC_KappaXMax;
+    unsigned int Number_of_Predefined_Shape = 1;
 
-  double M_BC_KappaZMax;
+    unsigned int HSIE_SWEEPING_LEVEL =
+        1;  // 1 means normal sweeping, 2 means hierarchical sweeping with depth
+            // 1, 3 means hierarchical sweeping with depth 2.
 
-  double M_BC_KappaYMax;
+    auto complete_data() -> void;
 
-  double M_BC_SigmaXMax;
-
-  double M_BC_SigmaZMax;
-
-  double M_BC_SigmaYMax;
-
-  double M_BC_DampeningExponent;
-
-  bool Sc_Homogeneity;
-
-  OptimizationSchema Sc_Schema;
-
-  int Sc_OptimizationSteps;
-
-  SteppingMethod Sc_SteppingMethod;
-
-  // StepWidth Sc_StepWidth;
-
-  SolverOptions So_Solver;
-
-  PreconditionerOptions So_Preconditioner;
-
-  double So_PreconditionerDampening;
-
-  int So_ElementOrder;
-
-  int So_RestartSteps;
-
-  int So_TotalSteps;
-
-  double So_Precision;
-
-  bool C_AllOne;
-
-  double C_Mu;
-
-  double C_Epsilon;
-
-  double C_Pi;
-
-  double C_c;
-
-  double C_f0;
-
-  double C_k0;
-
-  double C_omega;
-
-  int R_Global;
-
-  int R_Local;
-
-  int R_Interior;
-
-  double LayerThickness;
-
-  double SectorThickness;
-
-  unsigned int MPI_Rank;
-
-  MPI_Comm MPIC_World;
-
-  bool PMLLayer;
-
-  double LayersPerSector;
-
-  unsigned int NumberProcesses;
-
-  bool Head = false;
-
-  double SystemLength;
-
-  double Maximum_Z;
-  double Minimum_Z;
-  // unsigned int MPI_Size;
-
-  double Phys_V;
-  double Phys_SpotRadius;
-
-  double StepWidth;
-
-  bool M_PC_Use;
-
-  int M_PC_Case;
-
-  ShapeDescription sd;
 };
-
-#endif

@@ -9,8 +9,6 @@
 #include "../Core/Sector.h"
 #include "SpaceTransformation.h"
 
-using namespace dealii;
-
 /**
  * \class DualProblemTransformationWrapper
  * \brief If we do an adjoint computation, we need a SpaceTransformation, which
@@ -40,109 +38,34 @@ class DualProblemTransformationWrapper : public SpaceTransformation {
    * untransformed coordinate). \param coord the coordinate to be transformed.
    * In this class we simply pass the
    */
-  Point<3> math_to_phys(Point<3> coord) const;
+  dealii::Point<3> math_to_phys(dealii::Point<3> coord) const;
 
   /**
    * This function does the same as math_to_phys only in the opposit direction.
    * \param coord the coordinate to be transformed.
    */
-  Point<3> phys_to_math(Point<3> coord) const;
+  dealii::Point<3> phys_to_math(dealii::Point<3> coord) const;
 
-  /**
-   * In order to test implementation, this function was added to check, if the
-   * transformation-tensor at a given coordinate is the identity or not. \param
-   * coord This is the coordinate to test.
-   */
-  bool is_identity(Point<3> coord) const;
+  dealii::Tensor<2, 3, std::complex<double>> get_Tensor(
+      dealii::Point<3> &coordinate) const;
 
-  Tensor<2, 3, std::complex<double>> get_Tensor(Point<3> &coordinate) const;
+  dealii::Tensor<2, 3, std::complex<double>> get_Preconditioner_Tensor(
+      dealii::Point<3> &coordinate, int block) const;
 
-  Tensor<2, 3, std::complex<double>> get_Preconditioner_Tensor(
-      Point<3> &coordinate, int block) const;
+  dealii::Tensor<2, 3, std::complex<double>> Apply_PML_To_Tensor(
+      dealii::Point<3> &coordinate,
+      dealii::Tensor<2, 3, double> Tensor_input) const;
 
-  Tensor<2, 3, std::complex<double>> Apply_PML_To_Tensor(
-      Point<3> &coordinate, Tensor<2, 3, double> Tensor_input) const;
+  dealii::Tensor<2, 3, std::complex<double>> Apply_PML_To_Tensor_For_Preconditioner(
+      dealii::Point<3> &coordinate, dealii::Tensor<2, 3, double> Tensor_input,
+      int block) const;
 
-  Tensor<2, 3, std::complex<double>> Apply_PML_To_Tensor_For_Preconditioner(
-      Point<3> &coordinate, Tensor<2, 3, double> Tensor_input, int block) const;
+  dealii::Tensor<2, 3, double> get_Space_Transformation_Tensor(
+      dealii::Point<3> &coordinate) const;
 
-  Tensor<2, 3, double> get_Space_Transformation_Tensor(
-      Point<3> &coordinate) const;
+  dealii::Tensor<2, 3, double> get_Space_Transformation_Tensor_Homogenized(
+      dealii::Point<3> &coordinate) const;
 
-  Tensor<2, 3, double> get_Space_Transformation_Tensor_Homogenized(
-      Point<3> &coordinate) const;
-
-  const double XMinus, XPlus, YMinus, YPlus, ZMinus, ZPlus;
-
-  /**
-   * This function is used to determine, if a system-coordinate belongs to a
-   * PML-region for the PML that limits the computational domain along the
-   * x-axis. Since there are 3 blocks of PML-type material, there are 3
-   * functions. \param position Stores the position in which to test for
-   * presence of a PML-Material.
-   */
-  bool PML_in_X(Point<3> &position) const;
-
-  /**
-   * This function is used to determine, if a system-coordinate belongs to a
-   * PML-region for the PML that limits the computational domain along the
-   * y-axis. Since there are 3 blocks of PML-type material, there are 3
-   * functions. \param position Stores the position in which to test for
-   * presence of a PML-Material.
-   */
-  bool PML_in_Y(Point<3> &position) const;
-
-  /**
-   * This function is used to determine, if a system-coordinate belongs to a
-   * PML-region for the PML that limits the computational domain along the
-   * z-axis. Since there are 3 blocks of PML-type material, there are 3
-   * functions. \param position Stores the position in which to test for
-   * presence of a PML-Material.
-   */
-  bool PML_in_Z(Point<3> &position) const;
-
-  /**
-   * This function fulfills the same purpose as those with similar names but it
-   * is supposed to be used together with Preconditioner_PML_in_Z instead of the
-   * versions without "Preconditioner".
-   */
-  double Preconditioner_PML_Z_Distance(Point<3> &p, unsigned int block) const;
-
-  /**
-   * This function calculates for a given point, its distance to a PML-boundary
-   * limiting the computational domain. This function is used merely to make
-   * code more readable. There is a function for every one of the dimensions
-   * since the normal vectors of PML-regions in this implementation are the
-   * coordinate-axis. This value is set to zero outside the PML and positive
-   * inside both PML-domains (only one for the z-direction). \param position
-   * Stores the position from which to calculate the distance to the
-   * PML-surface.
-   */
-  double PML_X_Distance(Point<3> &position) const;
-
-  /**
-   * This function calculates for a given point, its distance to a PML-boundary
-   * limiting the computational domain. This function is used merely to make
-   * code more readable. There is a function for every one of the dimensions
-   * since the normal vectors of PML-regions in this implementation are the
-   * coordinate-axis. This value is set to zero outside the PML and positive
-   * inside both PML-domains (only one for the z-direction). \param position
-   * Stores the position from which to calculate the distance to the
-   * PML-surface.
-   */
-
-  double PML_Y_Distance(Point<3> &position) const;
-  /**
-   * This function calculates for a given point, its distance to a PML-boundary
-   * limiting the computational domain. This function is used merely to make
-   * code more readable. There is a function for every one of the dimensions
-   * since the normal vectors of PML-regions in this implementation are the
-   * coordinate-axis. This value is set to zero outside the PML and positive
-   * inside both PML-domains (only one for the z-direction). \param position
-   * Stores the position from which to calculate the distance to the
-   * PML-surface.
-   */
-  double PML_Z_Distance(Point<3> &position) const;
 
   /**
    * This member contains all the Sectors who, as a sum, form the complete
@@ -293,8 +216,6 @@ class DualProblemTransformationWrapper : public SpaceTransformation {
    */
   double get_v(double in_z) const;
 
-  int Z_to_Layer(double) const;
-
   /**
    * This vector of values saves the initial configuration
    */
@@ -335,14 +256,6 @@ class DualProblemTransformationWrapper : public SpaceTransformation {
    * Console output of the current Waveguide Structure.
    */
   void Print() const;
-
-  std::complex<double> evaluate_for_z_with_sum(double, double, Waveguide *);
-
-  std::complex<double> gauss_product_2D_sphere(double z, int n, double R,
-                                               double Xc, double Yc,
-                                               Waveguide *in_w,
-                                               Evaluation_Metric in_m);
-
   SpaceTransformation *st;
 };
 

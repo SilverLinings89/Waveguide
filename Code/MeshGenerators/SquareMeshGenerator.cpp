@@ -1,10 +1,7 @@
-#ifndef SquareMeshGeneratorCppFlag
-#define SquareMeshGeneratorCppFlag
-
 #include "SquareMeshGenerator.h"
 #include <deal.II/base/multithread_info.h>
-#include <deal.II/base/std_cxx11/array.h>
-#include <deal.II/base/std_cxx11/bind.h>
+#include <array>
+#include <functional>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/thread_management.h>
 #include <deal.II/grid/grid_generator.h>
@@ -31,34 +28,15 @@ void mesh_i(const Triangulation<3, 3> &tria, const std::string &filename) {
   std::cout << " written to " << filename << std::endl << std::endl;
 }
 
-SquareMeshGenerator::SquareMeshGenerator(SpaceTransformation *in_ct)
-    : MaxDistX((GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In) * 1.4 /
-               2.0),
-      MaxDistY((GlobalParams.M_C_Dim2Out + GlobalParams.M_C_Dim2In) * 1.4 /
-               2.0) {
-  ct = in_ct;
-  Layers = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
-  origin = Point<3>(-1, -1, -1);
-  p1 = Point<3>(-1, -1, -1);
-  p2 = Point<3>(1, 1, 1);
-  edges[0][0] = 2;
-  edges[0][1] = 0;
-  edges[0][2] = 0;
-
-  edges[1][0] = 0;
-  edges[1][1] = 2;
-  edges[1][2] = 0;
-
-  edges[2][0] = 0;
-  edges[2][1] = 0;
-  edges[2][2] = 2;
-
-  subs.push_back(1);
-  subs.push_back(1);
-  subs.push_back(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD));
-}
+SquareMeshGenerator::SquareMeshGenerator() {}
 
 SquareMeshGenerator::~SquareMeshGenerator() {}
+
+// This function returns a direction - as specified in the Direction enum in the
+// GeometryManager header - for a given cell and face. it only takes a vector as
+// an argument which is the vector pointing from cell center to face center. It
+// then derives which bound-id to give that face (i.e. 0 if it is the boundary
+// in the minus X direction etc.)
 
 unsigned int SquareMeshGenerator::getDominantComponentAndDirection(
     Point<3> in_dir) const {
@@ -108,147 +86,58 @@ void SquareMeshGenerator::set_boundary_ids(Triangulation<3> &tria) const {
 }
 
 void SquareMeshGenerator::prepare_triangulation(Triangulation<3, 3> *in_tria) {
-  deallog.push("SquareMeshGenerator:prepare_triangulation");
-  deallog << "Starting Mesh preparation" << std::endl;
-
-  const std_cxx11::array<Tensor<1, 3>, 3> edges2(edges);
-
   GridGenerator::hyper_cube(*in_tria, -1.0, 1.0, false);
-
+  GridTools::transform(&Triangulation_Shit_To_Local_Geometry, *in_tria);
   set_boundary_ids(*in_tria);
 
   in_tria->signals.post_refinement.connect(
-      std_cxx11::bind(&SquareMeshGenerator::set_boundary_ids,
-                      std_cxx11::cref(*this), std_cxx11::ref(*in_tria)));
+      std::bind(&SquareMeshGenerator::set_boundary_ids,
+          std::cref(*this), std::ref(*in_tria)));
 
-  in_tria->refine_global(3);
+  refine_triangulation_iteratively(in_tria);
 
-  GridTools::transform(&Triangulation_Stretch_Computational_Rectangle,
-                       *in_tria);
-
-  parallel::distributed::Triangulation<3>::active_cell_iterator
-
-      cell = in_tria->begin_active(),
-      endc = in_tria->end();
-
-  if (GlobalParams.R_Global > 0) {
-    in_tria->refine_global(GlobalParams.R_Global);
-    }
-
-    double MaxDistX =
-        (GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In) * 1.4 / 2.0;
-    double MaxDistY =
-        (GlobalParams.M_C_Dim2Out + GlobalParams.M_C_Dim2In) * 1.4 / 2.0;
-    for (int i = 0; i < GlobalParams.R_Local; i++) {
-      cell = in_tria->begin_active();
-      for (; cell != endc; ++cell) {
-        if (std::abs(cell->center()[0]) < MaxDistX &&
-            std::abs(cell->center()[1]) < MaxDistY) {
-          cell->set_refine_flag();
-        }
-      }
-      in_tria->execute_coarsening_and_refinement();
-      MaxDistX =
-          (GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In) * 1.4 / 2.0;
-      MaxDistY =
-          (GlobalParams.M_C_Dim2Out + GlobalParams.M_C_Dim2In) * 1.4 / 2.0;
-    }
-
-    for (int i = 0; i < GlobalParams.R_Interior; i++) {
-      cell = in_tria->begin_active();
-      for (; cell != endc; ++cell) {
-        if (std::abs(cell->center()[0]) <
-                (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / 2.0 &&
-            std::abs(cell->center()[1]) <
-                (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out) / 2.0) {
-          cell->set_refine_flag();
-        }
-      }
-      in_tria->execute_coarsening_and_refinement();
-    }
-
-    GridTools::transform(&Triangulation_Stretch_Single_Part_Z, *in_tria);
-
-    // GridTools::transform(&Triangulation_Stretch_Z, *in_tria);
-
-    // GridTools::transform(&Triangulation_Shift_Z, *in_tria);
-
-    z_min = 10000000.0;
-    z_max = -10000000.0;
-    cell = in_tria->begin_active();
-    endc = in_tria->end();
-
-    for (; cell != endc; ++cell) {
-      if (cell->is_locally_owned()) {
-        for (int face = 0; face < 6; face++) {
-          z_min = std::min(z_min, cell->face(face)->center()[2]);
-          z_max = std::max(z_max, cell->face(face)->center()[2]);
-        }
-      }
-    }
-
-    cell = in_tria->begin_active();
-    endc = in_tria->end();
-
-    set_boundary_ids(*in_tria);
-
-    deallog << "Done" << std::endl;
-    deallog.pop();
+  set_boundary_ids(*in_tria);
 }
 
-bool SquareMeshGenerator::math_coordinate_in_waveguide(
-    Point<3, double> in_position) const {
-  return std::abs(in_position[0]) <
-             (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / 2.0 &&
-         std::abs(in_position[1]) <
-             (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out) / 2.0;
-}
-
-bool SquareMeshGenerator::phys_coordinate_in_waveguide(
-    Point<3, double> in_position) const {
-  std::cout
-      << "NOT IMPLEMENTED: SquareMeshGenerator::phys_coordinate_in_waveguide"
-      << std::endl;
-  Point<3, double> temp = in_position;
-  temp[1] -= ct->get_m(in_position[2]);
-  double r = ct->get_r(in_position[2]);
-  return (abs(temp[0]) < r && abs(temp[1]) < r);
-  return false;
-}
-
-void SquareMeshGenerator::refine_global(Triangulation<3> *in_tria,
-                                        unsigned int times) {
-  in_tria->refine_global(times);
-}
-
-void SquareMeshGenerator::refine_proximity(Triangulation<3> *in_tria,
-                                           unsigned int times, double factor) {
-  double X = (GlobalParams.M_C_Dim1Out + GlobalParams.M_C_Dim1In) *
-             (1.0 + factor) / 2.0;
-  double Y = (GlobalParams.M_C_Dim2Out + GlobalParams.M_C_Dim2In) *
-             (1.0 + factor) / 2.0;
-  for (unsigned int i = 0; i < times; i++) {
-    cell = in_tria->begin_active();
-    for (; cell != endc; ++cell) {
-      if (std::abs(cell->center()[0]) < X && std::abs(cell->center()[1]) < Y) {
-        cell->set_refine_flag();
-      }
+void SquareMeshGenerator::refine_triangulation_iteratively(
+    Triangulation<3, 3> *in_tria) {
+  bool refinement_required = true;
+  Triangulation<3>::active_cell_iterator cell = in_tria->begin_active(),
+                                         endc = in_tria->end();
+  while (refinement_required && in_tria->n_active_cells() < 100000) {
+    refinement_required = false;
+    for (cell = in_tria->begin_active(); cell != endc; ++cell) {
+      refinement_required = check_and_mark_one_cell_for_refinement(cell);
     }
     in_tria->execute_coarsening_and_refinement();
   }
 }
 
-void SquareMeshGenerator::refine_internal(Triangulation<3> *in_tria,
-                                          unsigned int times) {
-  for (unsigned int i = 0; i < times; i++) {
-    cell = in_tria->begin_active();
-    for (; cell != endc; ++cell) {
-      if (math_coordinate_in_waveguide(cell->center())) {
-        cell->set_refine_flag();
+bool SquareMeshGenerator::check_and_mark_one_cell_for_refinement(
+    Triangulation<3>::active_cell_iterator cell) {
+  bool found_refinable_cell = false;
+  double h_max = hmax_for_cell_center(cell->center());
+  for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; i++) {
+    for (unsigned int j = 0; j < GeometryInfo<3>::lines_per_face; j++) {
+      dealii::Tensor<1, 3> dir =
+          cell->face(i)->line(j)->vertex(0) - cell->face(i)->line(j)->vertex(1);
+      dir[0] = std::abs(dir[0]);
+      dir[1] = std::abs(dir[1]);
+      dir[2] = std::abs(dir[2]);
+      if (cell->face(i)->line(j)->measure() > h_max) {
+        found_refinable_cell = true;
+        if (dir[0] > dir[1] && dir[0] > dir[2]) {
+          cell->set_refine_flag(RefinementCase<3>::cut_x);
+        } else {
+          if (dir[1] > dir[2]) {
+            cell->set_refine_flag(RefinementCase<3>::cut_y);
+          } else {
+            cell->set_refine_flag(RefinementCase<3>::cut_z);
+          }
+        }
       }
     }
-    in_tria->execute_coarsening_and_refinement();
   }
-}
 
-#endif
+  return found_refinable_cell;
+}

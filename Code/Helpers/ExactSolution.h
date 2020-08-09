@@ -1,14 +1,12 @@
+#pragma once
 
-#ifndef ExactSolutionFlag_H_
-#define ExactSolutionFlag_H_
 #include <deal.II/base/function.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 #include <string>
 #include <vector>
 #include "PointVal.h"
-
-using namespace dealii;
+#include "../Core/GlobalObjects.h"
 
 /**
  * \class ExactSolution
@@ -33,9 +31,10 @@ using namespace dealii;
  * \date 23.11.2015
  */
 
-class ExactSolution : public Function<3, double> {
+class ExactSolution: public dealii::Function<3, double> {
  private:
-  bool is_rectangular, is_dual;
+  bool is_rectangular;
+  bool is_dual;
   std::vector<float> mesh_points;
   PointVal **vals;
 
@@ -58,7 +57,7 @@ class ExactSolution : public Function<3, double> {
    * components 0 to 2 are the real parts of the solution-vector and the
    * components 3-5 are the imaginary parts.
    */
-  double value(const Point<3> &p, const unsigned int component) const;
+  double value(const dealii::Point<3> &p, const unsigned int component) const;
 
   /**
    * This function is the one that gets called from external contexts and calls
@@ -70,10 +69,14 @@ class ExactSolution : public Function<3, double> {
    * \begin{pmatrix}\operatorname{value}(x,y,z,3)\\\operatorname{value}(x,y,z,4)\\\operatorname{value}(x,y,z,5)\end{pmatrix}.\f]
    */
 
-  void vector_value(const Point<3> &p, Vector<double> &value) const;
-  std::vector<std::string> split(std::string) const;
-  Tensor<1, 3, std::complex<double>> curl(const Point<3> &in_p) const;
-  Tensor<1, 3, std::complex<double>> val(const Point<3> &in_p) const;
-};
+  void vector_value(const dealii::Point<3> &p,
+      dealii::Vector<double> &value) const;
 
-#endif
+  std::vector<std::string> split(std::string) const;
+
+  dealii::Tensor<1, 3, std::complex<double>> curl(
+      const dealii::Point<3> &in_p) const;
+
+  dealii::Tensor<1, 3, std::complex<double>> val(
+      const dealii::Point<3> &in_p) const;
+};

@@ -1,11 +1,6 @@
-#ifndef SectorFlagH
-#define SectorFlagH
+#pragma once
 
 #include <deal.II/base/tensor.h>
-#include "../Core/Waveguide.h"
-
-#include <deal.II/base/tensor.h>
-using namespace dealii;
 
 /**
  * \class Sector
@@ -69,7 +64,7 @@ class Sector {
    * point, for which the Tensor should be calculated. \param in_z z-coordinate
    * of the point, for which the Tensor should be calculated.
    */
-  Tensor<2, 3, double> TransformationTensorInternal(double in_x, double in_y,
+  dealii::Tensor<2, 3, double> TransformationTensorInternal(double in_x, double in_y,
                                                     double in_z) const;
 
   /**
@@ -80,6 +75,7 @@ class Sector {
    * freedom if right is true
    */
   void set_properties(double, double, double, double);
+
   void set_properties(double, double, double, double, double, double);
 
   /**
@@ -87,19 +83,23 @@ class Sector {
    * able to change the values of the input- and output boundary.
    */
   void set_properties_force(double, double, double, double);
+
   void set_properties_force(double, double, double, double, double, double);
+
   /**
    * The values of Q1, Q2 and Q3 are needed to compute the solution in real
    * coordinates from the one in trnsformed coordinates. This function returnes
    * Q1 for a given position and the current transformation.
    */
   double getQ1(double) const;
+
   /**
    * The values of Q1, Q2 and Q3 are needed to compute the solution in real
    * coordinates from the one in transformed coordinates. This function returnes
    * Q2 for a given position and the current transformation.
    */
   double getQ2(double) const;
+
   /**
    * The values of Q1, Q2 and Q3 are needed to compute the solution in real
    * coordinates from the one in transformed coordinates. This function returnes
@@ -201,21 +201,19 @@ class Sector {
 
   // Stores the values of the left degrees of freedom. These are the values of
   // the dofs on the surface of the sector towards z--> -\infty.
-  double* dofs_l;
+  double *dofs_l;
 
   // Stores the values of the right degrees of freedom. These are the values of
   // the dofs on the surface of the sector towards z--> \infty.
-  double* dofs_r;
+  double *dofs_r;
 
   //  This stores the indices for derivative dpendence. For example: If the
   //  third dof is the dof type 'm' (in former nomenclature) and the second is
   //  of type 'v' so v should be the derivative of 'm' then the derivative[3]=2.
   //  This is used in the function get_dof.
-  unsigned int* derivative;
+  unsigned int *derivative;
 
   // this stores for any dof if it has zero_derivative (at sector interfaces) or
   // not.
-  bool* zero_derivative;
+  bool *zero_derivative;
 };
-
-#endif

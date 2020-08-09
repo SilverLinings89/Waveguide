@@ -8,7 +8,9 @@
 #ifndef PointValSourceFlag
 #define PointValSourceFlag
 
+#include <complex>
 #include "PointVal.h"
+
 
 PointVal::PointVal() : Ex(0.0, 0.0), Ey(0.0, 0.0), Ez(0.0, 0.0) {}
 
@@ -31,4 +33,5 @@ void PointVal::rescale(double inp) {
   Ey = Ey * inp;
   Ez = Ez * inp;
 }
+
 #endif
