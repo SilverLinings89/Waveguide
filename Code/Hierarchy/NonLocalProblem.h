@@ -7,6 +7,7 @@
 #include "./LocalProblem.h"
 #include <deal.II/lac/solver_control.h>
 #include <deal.II/lac/parallel_vector.h>
+#include <deal.II/lac/petsc_sparse_matrix.h>
 #include "../Helpers/Enums.h"
 
 class NonLocalProblem: public HierarchicalProblem {
@@ -14,7 +15,7 @@ private:
   SweepingDirection sweeping_direction;
   bool *is_hsie_surface;
   DofCount total_number_of_dofs_on_level;
-  dealii::SparseMatrix<EFieldComponent> *system_matrix;
+  dealii::PETScWrappers::SparseMatrix *system_matrix;
   NumericVectorDistributed *system_rhs;
   dealii::IndexSet local_indices;
   dealii::SolverControl sc;

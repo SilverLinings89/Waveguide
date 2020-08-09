@@ -34,19 +34,17 @@
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
 #include <deal.II/lac/affine_constraints.h>
-#include <deal.II/lac/block_sparse_matrix.h>
-#include <deal.II/lac/block_sparsity_pattern.h>
-#include <deal.II/lac/block_vector.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/precondition.h>
 #include <deal.II/lac/solver_gmres.h>
-#include <deal.II/lac/solver_minres.h>
 #include <deal.II/lac/sparse_direct.h>
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/vector_tools.h>
 
+#include <deal.II/lac/petsc_vector.h>
+#include <deal.II/lac/petsc_sparse_matrix.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include "../Core/Types.h"
@@ -199,8 +197,8 @@ class NumericProblem {
    * \date 16.11.2015
    */
   void assemble_system(unsigned int shift,
-      dealii::SparseMatrix<std::complex<double>> *matrix,
-      dealii::Vector<std::complex<double>> *rhs);
+      SparseComplexMatrix *matrix,
+      NumericVectorDistributed *rhs);
 
   /**
    * This function executes refined downstream ordering of degrees of freedom.

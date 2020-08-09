@@ -75,11 +75,11 @@ double ExactSolution::value(const Point<3> &in_p,
         }
       }
       double n;
-      if (abs(p[0]) <= GlobalParams.M_C_Dim1In &&
-          abs(p[1]) <= GlobalParams.M_C_Dim2In) {
-        n = std::sqrt(GlobalParams.M_W_epsilonin);
+      if (abs(p[0]) <= GlobalParams.Width_of_waveguide &&
+          abs(p[1]) <= GlobalParams.Height_of_waveguide) {
+        n = std::sqrt(GlobalParams.Epsilon_R_in_waveguide);
       } else {
-        n = std::sqrt(GlobalParams.M_W_epsilonout);
+        n = std::sqrt(GlobalParams.Epsilon_R_outside_waveguide);
       }
       double k = n * 2 * GlobalParams.C_Pi / GlobalParams.M_W_Lambda;
       std::complex<double> phase(0.0,
@@ -148,15 +148,15 @@ void ExactSolution::vector_value(const Point<3> &in_p,
                     m1m1 * vals[ix - 1][iy - 1].Ez.imag() +
                     m1p1 * vals[ix - 1][iy].Ez.imag();
         double n;
-        if (abs(p[0]) <= GlobalParams.M_C_Dim1In &&
-            abs(p[1]) <= GlobalParams.M_C_Dim2In) {
-          n = std::sqrt(GlobalParams.M_W_epsilonin);
+        if (abs(p[0]) <= GlobalParams.Width_of_waveguide &&
+            abs(p[1]) <= GlobalParams.Height_of_waveguide) {
+          n = std::sqrt(GlobalParams.Epsilon_R_in_waveguide);
         } else {
-          n = std::sqrt(GlobalParams.M_W_epsilonout);
+          n = std::sqrt(GlobalParams.Epsilon_R_outside_waveguide);
         }
         double k = n * 2 * GlobalParams.C_Pi / GlobalParams.M_W_Lambda;
         std::complex<double> phase(
-            0.0, -(p[2] + GlobalParams.M_R_ZLength / 2.0) * k);
+            0.0, -(p[2] + GlobalParams.Geometry_Size_Z / 2.0) * k);
         phase = std::exp(phase);
         for (unsigned int komp = 0; komp < 3; komp++) {
           std::complex<double> entr(values[0 + komp], values[3 + komp]);

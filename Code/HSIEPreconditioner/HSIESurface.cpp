@@ -317,7 +317,7 @@ DofDataVector HSIESurface::get_dof_data_for_base_dof_q(
 }
 
 void HSIESurface::fill_matrix(
-    dealii::SparseMatrix<std::complex<double>> *matrix,
+    SparseComplexMatrix *matrix,
     unsigned int lowest_index, const Position &in_V0) {
   if (!is_metal) {
     IndexSet is;
@@ -328,7 +328,7 @@ void HSIESurface::fill_matrix(
 }
 
 void HSIESurface::fill_matrix(
-    dealii::SparseMatrix<std::complex<double>> *matrix,
+    SparseComplexMatrix *matrix,
     dealii::IndexSet global_indices, const Position &in_V0) {
   if (!is_metal) {
     set_V0(in_V0);

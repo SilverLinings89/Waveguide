@@ -15,8 +15,8 @@ using namespace dealii;
 InhomogenousTransformationRectangular::InhomogenousTransformationRectangular(
     int in_rank)
     : SpaceTransformation(3, in_rank),
-      epsilon_K(GlobalParams.M_W_epsilonin),
-      epsilon_M(GlobalParams.M_W_epsilonout),
+      epsilon_K(GlobalParams.Epsilon_R_in_waveguide),
+      epsilon_M(GlobalParams.Epsilon_R_outside_waveguide),
       sectors(GlobalParams.M_W_Sectors),
       deltaY(GlobalParams.M_W_Delta) {
   homogenized = false;
@@ -164,21 +164,21 @@ void InhomogenousTransformationRectangular::estimate_and_initialize() {
     double m_0 = GlobalParams.M_W_Delta / 2.0;
     double m_1 = -GlobalParams.M_W_Delta / 2.0;
     if (sectors == 1) {
-      Sector<2> temp12(true, true, -GlobalParams.M_R_ZLength / 2.0,
-                       GlobalParams.M_R_ZLength / 2.0);
+      Sector<2> temp12(true, true, -GlobalParams.Geometry_Size_Z / 2.0,
+                       GlobalParams.Geometry_Size_Z / 2.0);
       case_sectors.push_back(temp12);
       case_sectors[0].set_properties_force(
           GlobalParams.M_W_Delta / 2.0, -GlobalParams.M_W_Delta / 2.0,
-          GlobalParams.M_C_Dim1In, GlobalParams.M_C_Dim1Out, 0, 0);
+          GlobalParams.Width_of_waveguide, GlobalParams.Width_of_waveguide, 0, 0);
     } else {
       double length = Sector_Length();
-      Sector<2> temp(true, false, -GlobalParams.M_R_ZLength / (2.0),
-                     -GlobalParams.M_R_ZLength / 2.0 + length);
+      Sector<2> temp(true, false, -GlobalParams.Geometry_Size_Z / (2.0),
+                     -GlobalParams.Geometry_Size_Z / 2.0 + length);
       case_sectors.push_back(temp);
       for (int i = 1; i < sectors; i++) {
         Sector<2> temp2(false, false,
-                        -GlobalParams.M_R_ZLength / (2.0) + length * (1.0 * i),
-                        -GlobalParams.M_R_ZLength / (2.0) + length * (i + 1.0));
+                        -GlobalParams.Geometry_Size_Z / (2.0) + length * (1.0 * i),
+                        -GlobalParams.Geometry_Size_Z / (2.0) + length * (i + 1.0));
         case_sectors.push_back(temp2);
       }
 

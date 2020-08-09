@@ -9,8 +9,8 @@ template <int dim>
 double SolutionWeight<dim>::value(const Point<dim> &p,
                                   const unsigned int) const {
   double value = Distance2D(p);
-  if (value < (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / 2.0) {
-    if (p[2] < GlobalParams.M_R_ZLength / 2.0) {
+  if (value < (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide) / 2.0) {
+    if (p[2] < GlobalParams.Geometry_Size_Z / 2.0) {
       return 1.0;
     } else {
       return 0.0;

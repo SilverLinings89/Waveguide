@@ -38,8 +38,8 @@ SpaceTransformation::SpaceTransformation(int in_dofs_per_layer, int in_rank)
     : dofs_per_layer(in_dofs_per_layer),
       boundary_dofs_in(in_dofs_per_layer),
       boundary_dofs_out(in_dofs_per_layer),
-      epsilon_K(GlobalParams.M_W_epsilonin),
-      epsilon_M(GlobalParams.M_W_epsilonout),
+      epsilon_K(GlobalParams.Epsilon_R_in_waveguide),
+      epsilon_M(GlobalParams.Epsilon_R_outside_waveguide),
       sectors(GlobalParams.M_W_Sectors),
       deltaY(GlobalParams.M_W_Delta),
       rank(in_rank) {
@@ -66,7 +66,7 @@ std::pair<double, double> SpaceTransformation::dof_support(
   ret.second = 0.0;
   int boundary = index / dofs_per_layer;
   ret.first =
-      -GlobalParams.M_R_ZLength / 2.0 + (boundary - 1) * Sector_Length();
+      -GlobalParams.Geometry_Size_Z / 2.0 + (boundary - 1) * Sector_Length();
   ret.second = ret.first + 2 * Sector_Length();
   return ret;
 }
@@ -74,7 +74,7 @@ std::pair<double, double> SpaceTransformation::dof_support(
 bool SpaceTransformation::point_in_dof_support(Point<3> location,
                                                unsigned int dof_index) const {
   std::pair<double, double> temp = dof_support(dof_index);
-  if (std::abs(location[2]) > GlobalParams.M_R_ZLength / 2.0) {
+  if (std::abs(location[2]) > GlobalParams.Geometry_Size_Z / 2.0) {
     return false;
   } else {
     return (temp.first <= location[2] && temp.second >= location[2]);

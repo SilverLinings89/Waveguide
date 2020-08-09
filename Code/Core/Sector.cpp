@@ -236,9 +236,9 @@ Tensor<2, 3, double> Sector<3>::TransformationTensorInternal(double in_x,
     std::cout << "Faulty implementation of internal Tensor calculation: z: "
               << z << std::endl;
   double RadiusInFactor =
-      (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / (2 * dofs_l[0]);
+      (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide) / (2 * dofs_l[0]);
   double RadiusOutFactor =
-      (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / (2 * dofs_r[0]);
+      (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide) / (2 * dofs_r[0]);
 
   double temp =
       1 / (RadiusInFactor - 3 * RadiusInFactor * z * z +

@@ -4,6 +4,8 @@
 #include "../Helpers/Parameters.h"
 #include "DofIndexData.h"
 #include <deal.II/lac/vector.h>
+#include <deal.II/lac/petsc_sparse_matrix.h>
+#include <deal.II/lac/petsc_vector.h> 
 
 class LocalProblem;
 class HierarchicalProblem {
@@ -16,8 +18,9 @@ class HierarchicalProblem {
   dealii::SparsityPattern sp;
   const SweepingLevel local_level;
   DofIndexData indices;
-  dealii::SparseMatrix<EFieldComponent> *matrix;
-  dealii::Vector<EFieldComponent> rhs;
+  SparseComplexMatrix *matrix;
+  NumericVectorDistributed rhs;
+  NumericVectorDistributed solution;
   DofCount n_own_dofs;
   DofNumber first_own_index;
   DofCount dofs_process_above;
@@ -44,7 +47,7 @@ class HierarchicalProblem {
   virtual void make_constraints() = 0;
   virtual void assemble()=0;
   virtual void initialize_index_sets()=0;
-  virtual void apply_sweep(dealii::LinearAlgebra::distributed::Vector<std::complex<double>>)=0;
+  virtual void apply_sweep(NumericVectorDistributed)=0;
   virtual LocalProblem* get_local_problem()=0;
   void constrain_identical_dof_sets(std::vector<unsigned int> *set_one,
       std::vector<unsigned int> *set_two,

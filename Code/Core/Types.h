@@ -8,24 +8,26 @@
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/lac/la_parallel_vector.h>
 #include <deal.II/lac/sparse_matrix.h>
+#include <deal.II/lac/petsc_sparse_matrix.h>
+#include <deal.II/lac/petsc_vector.h> 
 #include <deal.II/base/index_set.h>
 #include "../HSIEPreconditioner/DofData.h"
 
 using EFieldComponent          = std::complex<double>;
 using EFieldValue              = std::array<EFieldComponent, 3>;
 using DofCount                 = unsigned int;
-using Position                 = dealii::Point<3,            double>;
-using Position2D = dealii::Point<2, double>;
+using Position                 = dealii::Point<3, double>;
+using Position2D               = dealii::Point<2, double>;
 using DofNumber                = unsigned int;
-using DofSortingData           = std::pair<DofNumber,        Position>;
+using DofSortingData           = std::pair<DofNumber, Position>;
 using NumericVectorLocal       = dealii::Vector<EFieldComponent>;
-using NumericVectorDistributed = dealii::LinearAlgebra::distributed::Vector<EFieldComponent>;
+using NumericVectorDistributed = dealii::PETScWrappers::MPI::Vector;
+using SparseComplexMatrix      = dealii::PETScWrappers::MPI::SparseMatrix;
 using SweepingLevel            = unsigned int;
 using HSIEElementOrder         = unsigned int;
 using NedelecElementOrder      = unsigned int;
 using BoundaryId               = unsigned int;
 using ComplexNumber            = std::complex<double>;
-using SparseComplexMatrix      = dealii::SparseMatrix<EFieldComponent>;
 using DofHandler2D             = dealii::DoFHandler<2>;
 using DofHandler3D             = dealii::DoFHandler<3>;
 using CellIterator2D           = DofHandler2D::active_cell_iterator;

@@ -231,8 +231,7 @@ auto NonLocalProblem::compute_upper_interface_dof_count() -> DofCount {
   return get_local_problem()->surfaces[compute_upper_interface_id()]->get_dof_association().size();
 }
 
-void NonLocalProblem::apply_sweep(
-    dealii::LinearAlgebra::distributed::Vector<std::complex<double>>) {
+void NonLocalProblem::apply_sweep(NumericVectorDistributed) {
 
 }
 

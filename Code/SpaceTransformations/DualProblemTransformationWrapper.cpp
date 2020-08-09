@@ -23,8 +23,8 @@ using namespace dealii;
 DualProblemTransformationWrapper::DualProblemTransformationWrapper(
     SpaceTransformation *in_st, int inner_rank)
     : SpaceTransformation(3, inner_rank),
-      epsilon_K(GlobalParams.M_W_epsilonin),
-      epsilon_M(GlobalParams.M_W_epsilonout),
+      epsilon_K(GlobalParams.Epsilon_R_in_waveguide),
+      epsilon_M(GlobalParams.Epsilon_R_outside_waveguide),
       sectors(GlobalParams.M_W_Sectors),
       deltaY(GlobalParams.M_W_Delta) {
   st = in_st;

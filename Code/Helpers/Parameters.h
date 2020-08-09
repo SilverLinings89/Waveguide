@@ -3,6 +3,7 @@
 #include <mpi.h>
 #include <string>
 #include "ShapeDescription.h"
+#include "../Core/Types.h"
 #include "Enums.h"
 
 /**
@@ -18,145 +19,64 @@ const static std::string PrecOptionNames[] = {
     "Sweeping", "FastSweeping", "HSIESweeping", "HSIEFastSweeping"};
 
 struct Parameters {
-  bool O_O_G_HistoryLive;
+    ShapeDescription sd;
 
-  bool O_O_G_HistoryShapes;
+    unsigned int MPI_Rank;
 
-  bool O_O_G_History;
+    unsigned int NumberProcesses;
 
-  bool O_O_V_T_TransformationWeightsAll;
+    double Amplitude_of_input_signal;
 
-  bool O_O_V_T_TransformationWeightsFirst;
+    double Width_of_waveguide; // x-direction
 
-  bool O_O_V_T_TransformationWeightsLast;
+    double Height_of_waveguide; // y-direction
 
-  bool O_O_V_S_SolutionAll;
+    double Horizontal_displacement_of_waveguide; // x-direction
 
-  bool O_O_V_S_SolutionFirst;
+    double Vertical_displacement_of_waveguide;
 
-  bool O_O_V_S_SolutionLast;
+    double Epsilon_R_in_waveguide;
 
-  bool O_C_D_ConvergenceAll;
+    double Epsilon_R_outside_waveguide;
 
-  bool O_C_D_ConvergenceFirst;
+    double Mu_R_in_waveguide;
 
-  bool O_C_D_ConvergenceLast;
+    double Mu_R_outside_waveguide;
 
-  bool O_C_P_ConvergenceAll;
+    unsigned int HSIE_polynomial_degree;
 
-  bool O_C_P_ConvergenceFirst;
+    bool Perform_Optimization;
 
-  bool O_C_P_ConvergenceLast;
+    double kappa_0_angle; // For HSIE-Elements. kappa_0 is a complex number with absolute value 1. This is the angle against the real axis.
 
-  bool O_G_Summary;
+    ComplexNumber kappa_0; // For HSIE-Elements
 
-  bool O_G_Log;
+    unsigned int Nedelec_element_order;
+    
+    unsigned int Blocks_in_z_direction;
 
-  ConnectorType M_C_Shape;
+    unsigned int Blocks_in_x_direction;
 
-  double M_C_Dim1In;
+    unsigned int Blocks_in_y_direction;
 
-  double M_C_Dim2In;
+    unsigned int Index_in_x_direction;
 
-  double M_C_Dim1Out;
+    unsigned int Index_in_y_direction;
 
-  double M_C_Dim2Out;
+    unsigned int Index_in_z_direction;
 
-  double M_R_XLength;
+    int current_run_number;
 
-  double M_R_YLength;
+    double Geometry_Size_X;
 
-  double M_R_ZLength;
+    double Geometry_Size_Y;
 
-  double M_W_Delta;
+    double Geometry_Size_Z;
+    
+    unsigned int HSIE_SWEEPING_LEVEL =
+        1;  // 1 means normal sweeping, 2 means hierarchical sweeping with depth
+            // 1, 3 means hierarchical sweeping with depth 2.
 
-  double M_W_epsilonin;
+    auto complete_data() -> void;
 
-  double M_W_epsilonout;
-
-  int M_W_Sectors;
-
-  double M_W_Lambda;
-
-  bool Sc_Homogeneity;
-
-  OptimizationSchema Sc_Schema;
-
-  int Sc_OptimizationSteps;
-
-  SteppingMethod Sc_SteppingMethod;
-
-  // StepWidth Sc_StepWidth;
-
-  int So_ElementOrder;
-
-  int So_RestartSteps;
-
-  int So_TotalSteps;
-
-  double So_Precision;
-
-  bool C_AllOne;
-
-  double C_Mu;
-
-  double C_Epsilon;
-
-  double C_Pi;
-
-  double C_c;
-
-  double C_f0;
-
-  double C_k0;
-
-  double C_omega;
-
-  int R_Global;
-
-  int R_Local;
-
-  int R_Interior;
-
-  double SectorThickness;
-
-  unsigned int MPI_Rank;
-
-  unsigned int NumberProcesses;
-
-  // unsigned int MPI_Size;
-
-  double Phys_V;
-  double Phys_SpotRadius;
-
-  double StepWidth;
-
-  bool M_PC_Use;
-
-  int M_PC_Case;
-
-  ShapeDescription sd;
-
-  unsigned int Blocks_in_z_direction;
-
-  unsigned int Blocks_in_x_direction;
-
-  unsigned int Blocks_in_y_direction;
-
-  unsigned int Index_in_x_direction;
-
-  unsigned int Index_in_y_direction;
-
-  unsigned int Index_in_z_direction;
-
-  int current_run_number;
-
-  unsigned int
-      Coupling_Interface_Z_Block_Index;  // The jump interface is at the lower
-                                         // z-surface of the block with this
-                                         // Index_in_z_direction
-
-  unsigned int HSIE_SWEEPING_LEVEL =
-      1;  // 1 means normal sweeping, 2 means hierarchical sweeping with depth
-          // 1, 3 means hierarchical sweeping with depth 2.
 };

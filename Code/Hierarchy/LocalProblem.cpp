@@ -10,7 +10,7 @@
 #include <deal.II/lac/vector.h>
 
 LocalProblem::LocalProblem() :
-    HierarchicalProblem(0), base_problem() {
+    HierarchicalProblem(0), base_problem(), sc(), solver(sc, MPI_COMM_SELF) {
   base_problem.make_grid();
 }
 
@@ -18,16 +18,22 @@ LocalProblem::~LocalProblem() {}
 
 void LocalProblem::solve(NumericVectorLocal src,
     NumericVectorLocal &dst) {
-  NumericVectorLocal inputb(n_own_dofs);
+  NumericVectorDistributed input(MPI_COMM_SELF, n_own_dofs, n_own_dofs);
+  NumericVectorDistributed output(MPI_COMM_SELF, n_own_dofs, n_own_dofs);
   for (unsigned int i = 0; i < n_own_dofs; i++) {
-    inputb[i] = src(i);
+    input[i] = src(i);
   }
 
-  solver.solve(inputb);
+  solver.solve(*matrix , output, input);
 
   for (unsigned int i = 0; i < n_own_dofs; i++) {
-    dst[i] = inputb[i];
+    dst[i] = output[i];
   }
+}
+
+void LocalProblem::solve(NumericVectorDistributed src,
+    NumericVectorDistributed &dst) {
+  solver.solve(*matrix , dst, src);
 }
 
 auto LocalProblem::get_center() -> Position const {
@@ -87,7 +93,7 @@ void LocalProblem::initialize() {
         << std::endl;
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
     surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(5, std::ref(surf_tria), side,
-          GlobalParams.So_ElementOrder, k0, additional_coorindate));
+          GlobalParams.Nedelec_element_order, k0, additional_coorindate));
     surfaces[side]->initialize();
   }
 
@@ -103,8 +109,6 @@ void LocalProblem::validate() {
   std::cout << "Validate System: " << std::endl;
   std::cout << "N Rows: " << matrix->m() << std::endl;
   std::cout << "N Cols: " << matrix->n() << std::endl;
-  std::cout << "Actually non-zero elements: "
-      << matrix->n_actually_nonzero_elements(0.001) << std::endl;
   std::cout << "Matrix l1 norm: " << matrix->l1_norm() << std::endl;
   std::complex<double> matrix_entry;
   unsigned int empty_row_counter = 0;
@@ -239,11 +243,10 @@ void LocalProblem::assemble() {
   std::cout << "Done" << std::endl;
   for (unsigned int surface = 0; surface < 6; surface++) {
     std::cout << "Fill Surface Block " << surface << std::endl;
-    surfaces[surface]->fill_matrix(matrix, surface_first_dofs[surface],
-        get_center());
+    surfaces[surface]->fill_matrix(matrix, surface_first_dofs[surface],get_center());
   }
   std::cout << "Condense" << std::endl;
-  constraints.condense(*matrix, rhs);
+  // constraints.condense(matrix, rhs);
 
   std::cout << "Compress" << std::endl;
   matrix->compress(dealii::VectorOperation::add);
@@ -253,7 +256,8 @@ void LocalProblem::assemble() {
 
 void LocalProblem::reinit() {
   dealii::DynamicSparsityPattern dsp = { n_own_dofs };
-  rhs.reinit(n_own_dofs);
+  rhs.reinit(MPI_COMM_SELF, n_own_dofs, n_own_dofs, false);
+  solution.reinit(MPI_COMM_SELF, n_own_dofs, n_own_dofs, false);
   base_problem.make_sparsity_pattern(&dsp, 0);
   make_constraints();
   for (unsigned int surface = 0; surface < 6; surface++) {
@@ -263,7 +267,9 @@ void LocalProblem::reinit() {
   sp.copy_from(dsp);
   constraints.condense(sp);
   sp.compress();
-  matrix = new dealii::SparseMatrix<std::complex<double>>(sp);
+  std::vector<unsigned int> local_rows;
+  local_rows.push_back(n_own_dofs);
+  matrix->reinit(MPI_COMM_SELF, sp, local_rows, local_rows, 0);
 }
 
 void LocalProblem::initialize_own_dofs() {
@@ -282,11 +288,11 @@ void LocalProblem::run() {
 void LocalProblem::solve() {
   std::cout << "Solve the system." << std::endl;
   std::cout << "Norm before: " << rhs.l2_norm() << std::endl;
-  solver.factorize(*matrix);
+  //solver.factorize(*matrix);
 
-  solver.solve(rhs);
+  solver.solve(*matrix, solution, rhs);
 
-  constraints.distribute(rhs);
+  // constraints.distribute(rhs);
   std::cout << "Done solving." << std::endl;
   std::cout << "Norm after: " << rhs.l2_norm() << std::endl;
 }
@@ -307,8 +313,7 @@ void LocalProblem::initialize_index_sets() {
   }
 }
 
-void LocalProblem::apply_sweep(
-    dealii::LinearAlgebra::distributed::Vector<std::complex<double>>) {
+void LocalProblem::apply_sweep(NumericVectorDistributed) {
 
 }
 

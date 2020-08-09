@@ -3,6 +3,7 @@
 #include "HierarchicalProblem.h"
 #include "../Core/NumericProblem.h"
 #include "../HSIEPreconditioner/HSIESurface.h"
+#include "deal.II/lac/petsc_solver.h"
 #include <array>
 #include <memory>
 
@@ -11,7 +12,8 @@ public:
 
   NumericProblem base_problem;
   std::array<std::shared_ptr<HSIESurface>,6> surfaces;
-  dealii::SparseDirectUMFPACK solver;
+  SolverControl sc;
+  dealii::PETScWrappers::SparseDirectMUMPS solver;
   dealii::AffineConstraints<std::complex<double>> constraints;
 
   LocalProblem();
@@ -21,11 +23,9 @@ public:
 
   DofCount compute_upper_interface_dof_count() override;
 
-  auto solve(NumericVectorDistributed, NumericVectorDistributed &) -> void override {
-    std::cout << "Wrong solve function called in LocalProblem." << std::endl;
-  };
-
   void solve(NumericVectorLocal src, NumericVectorLocal &dst) override;
+  
+  void solve(NumericVectorDistributed src, NumericVectorDistributed &dst) override;
 
   void initialize() override;
 
@@ -45,7 +45,7 @@ public:
 
   void initialize_index_sets() override;
 
-  void apply_sweep(dealii::LinearAlgebra::distributed::Vector<std::complex<double>>);
+  void apply_sweep(NumericVectorDistributed);
 
   auto get_local_problem() -> LocalProblem* override;
 

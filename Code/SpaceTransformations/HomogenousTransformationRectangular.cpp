@@ -15,8 +15,8 @@ using namespace dealii;
 HomogenousTransformationRectangular::HomogenousTransformationRectangular(
     int in_rank)
     : SpaceTransformation(2, in_rank),
-      epsilon_K(GlobalParams.M_W_epsilonin),
-      epsilon_M(GlobalParams.M_W_epsilonout),
+      epsilon_K(GlobalParams.Epsilon_R_in_waveguide),
+      epsilon_M(GlobalParams.Epsilon_R_outside_waveguide),
       sectors(GlobalParams.M_W_Sectors),
       deltaY(GlobalParams.M_W_Delta) {
   homogenized = true;
@@ -27,24 +27,24 @@ HomogenousTransformationRectangular::~HomogenousTransformationRectangular() {}
 Point<3, double> HomogenousTransformationRectangular::math_to_phys(
     Point<3, double> coord) const {
   Point<3, double> ret;
-  if (coord[2] < GlobalParams.M_R_ZLength / (-2.0)) {
-    ret[0] = (2 * GlobalParams.M_C_Dim1In) * coord[0] /
-             (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
-    ret[1] = (2 * GlobalParams.M_C_Dim2In) * coord[1] /
-             (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out);
+  if (coord[2] < GlobalParams.Geometry_Size_Z / (-2.0)) {
+    ret[0] = (2 * GlobalParams.Width_of_waveguide) * coord[0] /
+             (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide);
+    ret[1] = (2 * GlobalParams.Height_of_waveguide) * coord[1] /
+             (GlobalParams.Height_of_waveguide + GlobalParams.Height_of_waveguide);
     ret[2] = coord[2];
-  } else if (coord[2] >= GlobalParams.M_R_ZLength / (-2.0) &&
-             coord[2] < GlobalParams.M_R_ZLength / (2.0)) {
+  } else if (coord[2] >= GlobalParams.Geometry_Size_Z / (-2.0) &&
+             coord[2] < GlobalParams.Geometry_Size_Z / (2.0)) {
     std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
     double m = case_sectors[sec.first].get_m(sec.second);
     ret[0] = coord[0];
     ret[1] = coord[1] + m;
     ret[2] = coord[2];
   } else {
-    ret[0] = (2 * GlobalParams.M_C_Dim1Out) * coord[0] /
-             (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out);
-    ret[1] = (2 * GlobalParams.M_C_Dim2Out) * coord[1] /
-             (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out);
+    ret[0] = (2 * GlobalParams.Width_of_waveguide) * coord[0] /
+             (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide);
+    ret[1] = (2 * GlobalParams.Height_of_waveguide) * coord[1] /
+             (GlobalParams.Height_of_waveguide + GlobalParams.Height_of_waveguide);
     ret[2] = coord[2];
   }
   return ret;
@@ -64,7 +64,7 @@ Tensor<2, 3, double> HomogenousTransformationRectangular::get_Space_Transformati
   double v1 = Geometry.global_x_range.second;
   double v2 = Geometry.global_y_range.second;
   double maxdist = std::min(v1, v2);
-  double mindist = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / 2.0;
+  double mindist = (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide) / 2.0;
   double sig = sigma(dist, mindist, maxdist);
   double factor = InterpolationPolynomialZeroDerivative(sig, 1, 0);
   transformation *= factor;
@@ -78,24 +78,24 @@ Tensor<2, 3, double> HomogenousTransformationRectangular::get_Space_Transformati
 Point<3, double> HomogenousTransformationRectangular::phys_to_math(
     Point<3, double> coord) const {
   Point<3, double> ret;
-  if (coord[2] < GlobalParams.M_R_ZLength / (-2.0)) {
-    ret[0] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[0] /
-             (2 * GlobalParams.M_C_Dim1In);
-    ret[1] = (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out) * coord[1] /
-             (2 * GlobalParams.M_C_Dim2In);
+  if (coord[2] < GlobalParams.Geometry_Size_Z / (-2.0)) {
+    ret[0] = (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide) * coord[0] /
+             (2 * GlobalParams.Width_of_waveguide);
+    ret[1] = (GlobalParams.Height_of_waveguide + GlobalParams.Height_of_waveguide) * coord[1] /
+             (2 * GlobalParams.Height_of_waveguide);
     ret[2] = coord[2];
-  } else if (coord[2] >= GlobalParams.M_R_ZLength / (-2.0) &&
-             coord[2] < GlobalParams.M_R_ZLength / (2.0)) {
+  } else if (coord[2] >= GlobalParams.Geometry_Size_Z / (-2.0) &&
+             coord[2] < GlobalParams.Geometry_Size_Z / (2.0)) {
     std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
     double m = case_sectors[sec.first].get_m(sec.second);
     ret[0] = coord[0];
     ret[1] = coord[1] - m;
     ret[2] = coord[2];
   } else {
-    ret[0] = (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) * coord[0] /
-             (2 * GlobalParams.M_C_Dim1In);
-    ret[1] = (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out) * coord[1] /
-             (2 * GlobalParams.M_C_Dim2In);
+    ret[0] = (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide) * coord[0] /
+             (2 * GlobalParams.Width_of_waveguide);
+    ret[1] = (GlobalParams.Height_of_waveguide + GlobalParams.Height_of_waveguide) * coord[1] /
+             (2 * GlobalParams.Height_of_waveguide);
     ret[2] = coord[2];
   }
   return ret;
@@ -231,21 +231,21 @@ void HomogenousTransformationRectangular::estimate_and_initialize() {
     double m_0 = GlobalParams.M_W_Delta / 2.0;
     double m_1 = -GlobalParams.M_W_Delta / 2.0;
     if (sectors == 1) {
-      Sector<2> temp12(true, true, -GlobalParams.M_R_ZLength / 2.0,
-                       GlobalParams.M_R_ZLength / 2.0);
+      Sector<2> temp12(true, true, -GlobalParams.Geometry_Size_Z / 2.0,
+                       GlobalParams.Geometry_Size_Z / 2.0);
       case_sectors.push_back(temp12);
       case_sectors[0].set_properties_force(
           GlobalParams.M_W_Delta / 2.0, -GlobalParams.M_W_Delta / 2.0,
-          GlobalParams.M_C_Dim1In, GlobalParams.M_C_Dim1Out, 0, 0);
+          GlobalParams.Width_of_waveguide, GlobalParams.Width_of_waveguide, 0, 0);
     } else {
       double length = Sector_Length();
-      Sector<2> temp(true, false, -GlobalParams.M_R_ZLength / (2.0),
-                     -GlobalParams.M_R_ZLength / 2.0 + length);
+      Sector<2> temp(true, false, -GlobalParams.Geometry_Size_Z / (2.0),
+                     -GlobalParams.Geometry_Size_Z / 2.0 + length);
       case_sectors.push_back(temp);
       for (int i = 1; i < sectors; i++) {
         Sector<2> temp2(false, false,
-                        -GlobalParams.M_R_ZLength / (2.0) + length * (1.0 * i),
-                        -GlobalParams.M_R_ZLength / (2.0) + length * (i + 1.0));
+                        -GlobalParams.Geometry_Size_Z / (2.0) + length * (1.0 * i),
+                        -GlobalParams.Geometry_Size_Z / (2.0) + length * (i + 1.0));
         case_sectors.push_back(temp2);
       }
 

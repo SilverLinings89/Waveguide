@@ -30,7 +30,7 @@ NumericProblem::NumericProblem()
     :
       mesh_generator{},
       space_transformation{0},
-    fe(GlobalParams.So_ElementOrder),
+    fe(GlobalParams.Nedelec_element_order),
       triangulation(Triangulation<3>::MeshSmoothing(Triangulation<3>::none)),
       dof_handler(triangulation){
   n_dofs = 0;
@@ -60,6 +60,9 @@ void NumericProblem::make_grid() {
   repetitions.push_back(Cells_Per_Direction);
   repetitions.push_back(Cells_Per_Direction);
   repetitions.push_back(Cells_Per_Direction);
+  std::cout << "x: ( "<< Geometry.local_x_range.first << " - " << Geometry.local_x_range.second << " )" << std::endl; 
+  std::cout << "y: ( "<< Geometry.local_y_range.first << " - " << Geometry.local_y_range.second << " )" << std::endl;
+  std::cout << "z: ( "<< Geometry.local_z_range.first << " - " << Geometry.local_z_range.second << " )" << std::endl;
   Position lower(Geometry.local_x_range.first, Geometry.local_y_range.first,
       Geometry.local_z_range.first);
   Position upper(Geometry.local_x_range.second, Geometry.local_y_range.second,
@@ -317,8 +320,8 @@ std::vector<DofIndexAndOrientationAndPosition> NumericProblem::get_surface_dof_v
 }
 
 void NumericProblem::assemble_system(unsigned int shift,
-    dealii::SparseMatrix<std::complex<double>> *matrix,
-    dealii::Vector<std::complex<double>> *rhs) {
+    SparseComplexMatrix *matrix,
+    NumericVectorDistributed *rhs) {
   reinit_rhs();
 
   QGauss<3> quadrature_formula(2);
@@ -337,8 +340,8 @@ void NumericProblem::assemble_system(unsigned int shift,
   double e_temp = 1.0;
   double mu_temp = 1.0;
 
-  const double eps_in = GlobalParams.M_W_epsilonin * e_temp;
-  const double eps_out = GlobalParams.M_W_epsilonout * e_temp;
+  const double eps_in = GlobalParams.Epsilon_R_in_waveguide * e_temp;
+  const double eps_out = GlobalParams.Epsilon_R_outside_waveguide * e_temp;
   const double mu_zero = mu_temp;
   Vector<std::complex<double>> cell_rhs(dofs_per_cell);
   cell_rhs = 0;

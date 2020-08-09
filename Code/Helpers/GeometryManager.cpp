@@ -23,7 +23,7 @@ void GeometryManager::initialize() {
 void GeometryManager::set_x_range(std::pair<double, double> in_range) {
   this->local_x_range = in_range;
   std::pair<double, double> global_range(0.0, 0.0);
-  global_range.first = -GlobalParams.M_R_XLength / 2.0;
+  global_range.first = -GlobalParams.Geometry_Size_X / 2.0;
   this->global_x_range = global_range;
   return;
 }
@@ -31,7 +31,7 @@ void GeometryManager::set_x_range(std::pair<double, double> in_range) {
 void GeometryManager::set_y_range(std::pair<double, double> in_range) {
   this->local_y_range = in_range;
   std::pair<double, double> global_range(0.0, 0.0);
-  global_range.first = -GlobalParams.M_R_YLength / 2.0;
+  global_range.first = -GlobalParams.Geometry_Size_Y / 2.0;
   this->global_y_range = global_range;
   return;
 }
@@ -39,57 +39,57 @@ void GeometryManager::set_y_range(std::pair<double, double> in_range) {
 void GeometryManager::set_z_range(std::pair<double, double> in_range) {
   this->local_z_range = in_range;
   std::pair<double, double> global_range(0.0, 0.0);
-  global_range.first = -GlobalParams.M_R_ZLength / 2.0;
+  global_range.first = -GlobalParams.Geometry_Size_Z / 2.0;
   this->global_z_range = global_range;
   return;
 }
 
 std::pair<double, double> GeometryManager::compute_x_range() {
   if (GlobalParams.Blocks_in_x_direction == 1) {
-    return std::pair<double, double>(-GlobalParams.M_R_XLength / 2.0,
-        GlobalParams.M_R_XLength / 2.0);
+    return std::pair<double, double>(-GlobalParams.Geometry_Size_X / 2.0,
+        GlobalParams.Geometry_Size_X / 2.0);
   } else {
     double length =
-        GlobalParams.M_R_XLength
+        GlobalParams.Geometry_Size_X
         / ((double) GlobalParams.Blocks_in_x_direction);
     int block_index = GlobalParams.MPI_Rank
         % GlobalParams.Blocks_in_x_direction;
-    double min = -GlobalParams.M_R_XLength / 2.0 + block_index * length;
+    double min = -GlobalParams.Geometry_Size_X / 2.0 + block_index * length;
     return std::pair<double, double>(min, min + length);
   }
 }
 
 std::pair<double, double> GeometryManager::compute_y_range() {
   if (GlobalParams.Blocks_in_y_direction == 1) {
-    return std::pair<double, double>(-GlobalParams.M_R_YLength / 2.0,
-        GlobalParams.M_R_YLength / 2.0);
+    return std::pair<double, double>(-GlobalParams.Geometry_Size_Y / 2.0,
+        GlobalParams.Geometry_Size_Y / 2.0);
   } else {
     double length =
-        GlobalParams.M_R_YLength
+        GlobalParams.Geometry_Size_Y
         / ((double) GlobalParams.Blocks_in_y_direction);
     int block_processor_count = GlobalParams.Blocks_in_x_direction;
     int block_index = (GlobalParams.MPI_Rank
         % (GlobalParams.Blocks_in_x_direction
             * GlobalParams.Blocks_in_y_direction)) /
                       block_processor_count;
-    double min = -GlobalParams.M_R_YLength / 2.0 + block_index * length;
+    double min = -GlobalParams.Geometry_Size_Y / 2.0 + block_index * length;
     return std::pair<double, double>(min, min + length);
   }
 }
 
 std::pair<double, double> GeometryManager::compute_z_range() {
   if (GlobalParams.Blocks_in_z_direction == 1) {
-    return std::pair<double, double>(-GlobalParams.M_R_ZLength / 2.0,
-        GlobalParams.M_R_ZLength / 2.0);
+    return std::pair<double, double>(-GlobalParams.Geometry_Size_Z / 2.0,
+        GlobalParams.Geometry_Size_Z / 2.0);
   } else {
     double length =
-        GlobalParams.M_R_ZLength
+        GlobalParams.Geometry_Size_Z
         / ((double) GlobalParams.Blocks_in_z_direction);
     int block_processor_count =
         GlobalParams.Blocks_in_x_direction
         * GlobalParams.Blocks_in_y_direction;
     int block_index = GlobalParams.MPI_Rank / block_processor_count;
-    double min = -GlobalParams.M_R_ZLength / 2.0 + block_index * length;
+    double min = -GlobalParams.Geometry_Size_Z / 2.0 + block_index * length;
     return std::pair<double, double>(min, min + length);
   }
 }
@@ -154,7 +154,7 @@ std::pair<bool, unsigned int> GeometryManager::get_neighbor_for_interface(
 bool GeometryManager::math_coordinate_in_waveguide(
     dealii::Point<3, double> in_position) const {
   return std::abs(in_position[0]) <
-             (GlobalParams.M_C_Dim1In + GlobalParams.M_C_Dim1Out) / 2.0 &&
+             (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide) / 2.0 &&
          std::abs(in_position[1]) <
-             (GlobalParams.M_C_Dim2In + GlobalParams.M_C_Dim2Out) / 2.0;
+             (GlobalParams.Height_of_waveguide + GlobalParams.Height_of_waveguide) / 2.0;
 }

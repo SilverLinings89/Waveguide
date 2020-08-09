@@ -232,7 +232,7 @@ TEST_P(TestOrderFixture, AssemblationTestOrder5) {
   sp.compress();
   dealii::SparseMatrix<std::complex<double>> sys_matrix(sp);
   Position center = { 0, 0, 0 };
-  surf.fill_matrix(&sys_matrix, hsie_dof_indices, center);
+  // surf.fill_matrix(&sys_matrix, hsie_dof_indices, center);
   std::cout << "L1 Norm: " << sys_matrix.l1_norm() << std::endl;
   std::cout << "L infty Norm: " << sys_matrix.linfty_norm() << std::endl;
   ASSERT_NE(sys_matrix.linfty_norm(), 0);
@@ -273,7 +273,7 @@ TEST_P(TestOrderFixture, AssemblationTestOrder10) {
   sp.compress();
   dealii::SparseMatrix<std::complex<double>> sys_matrix(sp);
   Position c = { 0, 0, 0 };
-  surf.fill_matrix(&sys_matrix, hsie_dof_indices, c);
+  // surf.fill_matrix(&sys_matrix, hsie_dof_indices, c);
   std::cout << "L1 Norm: " << sys_matrix.l1_norm() << std::endl;
   std::cout << "L infty Norm: " << sys_matrix.linfty_norm() << std::endl;
   ASSERT_NE(sys_matrix.linfty_norm(), 0);
