@@ -72,7 +72,9 @@ struct Parameters {
     double Geometry_Size_Y;
 
     double Geometry_Size_Z;
-    
+
+    const double Pi = 3.141592653589793238462;
+
     unsigned int HSIE_SWEEPING_LEVEL =
         1;  // 1 means normal sweeping, 2 means hierarchical sweeping with depth
             // 1, 3 means hierarchical sweeping with depth 2.
