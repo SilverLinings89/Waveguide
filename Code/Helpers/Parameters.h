@@ -21,6 +21,12 @@ const static std::string PrecOptionNames[] = {
 struct Parameters {
     ShapeDescription sd;
 
+    double Solver_Precision;
+
+    unsigned int GMRES_Steps_before_restart;
+
+    unsigned int GMRES_max_steps;
+
     unsigned int MPI_Rank;
 
     unsigned int NumberProcesses;
@@ -73,7 +79,23 @@ struct Parameters {
 
     double Geometry_Size_Z;
 
-    const double Pi = 3.141592653589793238462;
+    unsigned int Number_of_sectors;
+
+    double Sector_thickness;
+
+    double Sector_padding;
+
+    double Pi = 3.141592653589793238462;
+
+    double Omega = 1.0;
+
+    double Lambda = 1.0;
+
+    double Waveguide_value_V = 1.0;
+
+    bool Use_Predefined_Shape = false;
+
+    unsigned int Number_of_Predefined_Shape = 1;
 
     unsigned int HSIE_SWEEPING_LEVEL =
         1;  // 1 means normal sweeping, 2 means hierarchical sweeping with depth

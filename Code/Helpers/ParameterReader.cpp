@@ -1,6 +1,3 @@
-#ifndef ParameterReaderCppFlag
-#define ParameterReaderCppFlag
-
 #include "ParameterReader.h"
 #include <deal.II/base/patterns.h>
 
@@ -13,6 +10,9 @@ void ParameterReader::declare_parameters() {
     prm.enter_subsection("Run parameters");
     {
         prm.declare_entry("Perform optimization", "false", Patterns::Bool());
+        prm.declare_entry("Solver precision", "0.000001", Patterns::Bool());
+        prm.declare_entry("GMRES restart after", "30", Patterns::Integer());
+        prm.declare_entry("GMRES maximum steps", "100", Patterns::Integer());
     }
     prm.leave_subsection();
 
@@ -24,6 +24,8 @@ void ParameterReader::declare_parameters() {
         prm.declare_entry("Processes in y", "1", Patterns::Integer());
         prm.declare_entry("Processes in z", "2", Patterns::Integer());
         prm.declare_entry("HSIE sweeping level", "1", Patterns::Integer());
+        prm.declare_entry("Number of Sectors", "1", Patterns::Integer());
+        prm.declare_entry("Sector padding", "0.1", Patterns::Double());
     }
     prm.leave_subsection();
 
@@ -50,5 +52,3 @@ void ParameterReader::read_parameters(const std::string inputfile) {
     std::ifstream ifile(inputfile, std::ifstream::in);
     prm.parse_input_from_xml(ifile);
 }
-
-#endif

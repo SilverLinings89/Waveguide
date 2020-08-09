@@ -1,5 +1,4 @@
-#ifndef StaticFunctionsFlag
-#define StaticFunctionsFlag
+#pragma once
 
 #include "staticfunctions.h"
 #include <deal.II/base/point.h>
@@ -178,6 +177,8 @@ Parameters GetParameters() {
 
   prm.enter_subsection("Run parameters");
   ret.Perform_Optimization = prm.get_bool("Perform optimization");
+  ret.Solver_Precision = prm.get_bool("Solver precision");
+  ret.GMRES_Steps_before_restart = prm.get_integer("GMRES restart after");
   prm.leave_subsection();
   prm.enter_subsection("Scheme properties");
   ret.kappa_0_angle = prm.get_double("Kappa angle");
@@ -187,6 +188,8 @@ Parameters GetParameters() {
   ret.Blocks_in_y_direction = prm.get_integer("Processes in y");
   ret.Blocks_in_z_direction = prm.get_integer("Processes in z");
   ret.HSIE_SWEEPING_LEVEL = prm.get_integer("HSIE sweeping level");
+  ret.Number_of_sectors = prm.get_integer("Number of Sectors");
+  ret.Sector_padding = prm.get_double("Sector padding");
   prm.leave_subsection();
   prm.enter_subsection("Waveguide properties");
   ret.Width_of_waveguide = prm.get_double("Width of waveguide");
@@ -444,5 +447,3 @@ double sigma(double in_z, double min, double max) {
   if (ret > 1.0) ret = 1.0;
   return ret;
 }
-
-#endif
