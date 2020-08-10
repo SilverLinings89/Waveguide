@@ -6,12 +6,14 @@
 #include <iostream>
 #include <fstream>
 #include <complex>
+#include <deal.II/lac/petsc_sparse_matrix.h>
 #include <deal.II/lac/solver_idr.h>
 #include <deal.II/lac/vector.h>
 
 LocalProblem::LocalProblem() :
     HierarchicalProblem(0), base_problem(), sc(), solver(sc, MPI_COMM_SELF) {
   base_problem.make_grid();
+  matrix = new dealii::PETScWrappers::SparseMatrix();
 }
 
 LocalProblem::~LocalProblem() {}
@@ -237,18 +239,13 @@ void LocalProblem::make_constraints() {
 }
 
 void LocalProblem::assemble() {
-
   std::cout << "Start LocalProblem::assemble()" << std::endl;
-  base_problem.assemble_system(0, matrix, &rhs);
+  base_problem.assemble_system(0, &constraints, matrix, &rhs);
   std::cout << "Done" << std::endl;
   for (unsigned int surface = 0; surface < 6; surface++) {
     std::cout << "Fill Surface Block " << surface << std::endl;
-    surfaces[surface]->fill_matrix(matrix, surface_first_dofs[surface],get_center());
+    surfaces[surface]->fill_matrix(matrix, surface_first_dofs[surface],get_center(), &constraints);
   }
-  std::cout << "Condense" << std::endl;
-  // constraints.condense(matrix, rhs);
-
-  std::cout << "Compress" << std::endl;
   matrix->compress(dealii::VectorOperation::add);
   std::cout << "End LocalProblem::assemble()" << std::endl;
   validate();
@@ -264,12 +261,18 @@ void LocalProblem::reinit() {
     surfaces[surface]->fill_sparsity_pattern(&dsp, surface_first_dofs[surface]);
   }
   constraints.close();
+  // constraints.condense(sp);
+  std::cout << "A" <<std::endl;
+  constraints.condense(dsp);
   sp.copy_from(dsp);
-  constraints.condense(sp);
-  sp.compress();
+  // sp.compress();
   std::vector<unsigned int> local_rows;
   local_rows.push_back(n_own_dofs);
-  matrix->reinit(MPI_COMM_SELF, sp, local_rows, local_rows, 0);
+  std::cout << "B" <<std::endl;
+  std::cout << sp.n_rows() << " " << sp.n_cols() << std::endl;
+  std::cout << local_rows[0] << std::endl;
+  matrix->reinit(sp);
+  std::cout << "C" <<std::endl;
 }
 
 void LocalProblem::initialize_own_dofs() {
