@@ -1,6 +1,8 @@
 subsection Run parameters
     set Perform optimization = false
-
+    set Solver precision = 0.000001
+    set GMRES restart after = 30
+    set GMRES maximum steps = 100
 end 
 subsection Scheme properties
     set Kappa angle = 1
@@ -10,9 +12,7 @@ subsection Scheme properties
     set Processes in y = 1
     set Processes in z = 1
     set HSIE sweeping level = 1
-    set geometry size x = 1.0
-    set geometry size y = 1.0
-    set geometry size z = 1.0
+
 end
 subsection Waveguide properties
     set Width of waveguide = 2
@@ -24,4 +24,7 @@ subsection Waveguide properties
     set mu in = 1.0
     set mu out = 1.0
     set mode amplitude = 1.0
+    set geometry size x = 1.0
+    set geometry size y = 1.0
+    set geometry size z = 1.0
 end

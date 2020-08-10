@@ -15,7 +15,7 @@ private:
   SweepingDirection sweeping_direction;
   bool *is_hsie_surface;
   DofCount total_number_of_dofs_on_level;
-  dealii::PETScWrappers::SparseMatrix *system_matrix;
+  dealii::PETScWrappers::MPI::SparseMatrix *matrix;
   NumericVectorDistributed *system_rhs;
   dealii::IndexSet local_indices;
   dealii::SolverControl sc;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <deal.II/lac/petsc_sparse_matrix.h>
 #include "HierarchicalProblem.h"
 #include "../Core/NumericProblem.h"
 #include "../HSIEPreconditioner/HSIESurface.h"
@@ -14,7 +15,8 @@ public:
   std::array<std::shared_ptr<HSIESurface>,6> surfaces;
   SolverControl sc;
   dealii::PETScWrappers::SparseDirectMUMPS solver;
-  dealii::AffineConstraints<std::complex<double>> constraints;
+  dealii::PETScWrappers::SparseMatrix * matrix;
+  dealii::AffineConstraints<ComplexNumber> constraints;
 
   LocalProblem();
   ~LocalProblem() override;

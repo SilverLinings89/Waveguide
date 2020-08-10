@@ -10,7 +10,7 @@ void ParameterReader::declare_parameters() {
     prm.enter_subsection("Run parameters");
     {
         prm.declare_entry("Perform optimization", "false", Patterns::Bool());
-        prm.declare_entry("Solver precision", "0.000001", Patterns::Bool());
+        prm.declare_entry("Solver precision", "0.000001", Patterns::Double());
         prm.declare_entry("GMRES restart after", "30", Patterns::Integer());
         prm.declare_entry("GMRES maximum steps", "100", Patterns::Integer());
     }

@@ -166,8 +166,46 @@ void PrepareStreams() {
 
 Parameters GetParameters() {
   ParameterHandler prm;
-  ParameterReader param(prm);
-  param.read_parameters(input_file_name);
+  prm.enter_subsection("Run parameters");
+  {
+      prm.declare_entry("Perform optimization", "false", Patterns::Bool());
+      prm.declare_entry("Solver precision", "0.000001", Patterns::Double());
+      prm.declare_entry("GMRES restart after", "30", Patterns::Integer());
+      prm.declare_entry("GMRES maximum steps", "100", Patterns::Integer());
+  }
+  prm.leave_subsection();
+
+  prm.enter_subsection("Scheme properties");
+  {
+      prm.declare_entry("Kappa angle", "1.0", Patterns::Double());
+      prm.declare_entry("HSIE polynomial degree", "5", Patterns::Integer());
+      prm.declare_entry("FEM order", "0", Patterns::Integer());
+      prm.declare_entry("Processes in x", "1", Patterns::Integer());
+      prm.declare_entry("Processes in y", "1", Patterns::Integer());
+      prm.declare_entry("Processes in z", "2", Patterns::Integer());
+      prm.declare_entry("HSIE sweeping level", "1", Patterns::Integer());
+      prm.declare_entry("Number of Sectors", "1", Patterns::Integer());
+      prm.declare_entry("Sector padding", "0.1", Patterns::Double());
+  }
+  prm.leave_subsection();
+
+  prm.enter_subsection("Waveguide properties");
+  {
+      prm.declare_entry("Width of waveguide", "1.0", Patterns::Double());
+      prm.declare_entry("Heigth of waveguide", "1.0", Patterns::Double());
+      prm.declare_entry("X shift", "0.0", Patterns::Double());
+      prm.declare_entry("Y shift", "0.0", Patterns::Double());
+      prm.declare_entry("epsilon in", "1.0", Patterns::Double());
+      prm.declare_entry("epsilon out", "1.0", Patterns::Double());
+      prm.declare_entry("mu in", "1.0", Patterns::Double());
+      prm.declare_entry("mu out", "1.0", Patterns::Double());
+      prm.declare_entry("mode amplitude", "1.0", Patterns::Double());
+      prm.declare_entry("geometry size x", "1.0", Patterns::Double());
+      prm.declare_entry("geometry size y", "1.0", Patterns::Double());
+      prm.declare_entry("geometry size z", "1.0", Patterns::Double());
+  }
+  prm.leave_subsection();
+  prm.parse_input(input_file_name);
   struct Parameters ret;
   
   ret.MPI_Rank = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
@@ -175,7 +213,7 @@ Parameters GetParameters() {
 
   prm.enter_subsection("Run parameters");
   ret.Perform_Optimization = prm.get_bool("Perform optimization");
-  ret.Solver_Precision = prm.get_bool("Solver precision");
+  ret.Solver_Precision = prm.get_double("Solver precision");
   ret.GMRES_Steps_before_restart = prm.get_integer("GMRES restart after");
   prm.leave_subsection();
   prm.enter_subsection("Scheme properties");

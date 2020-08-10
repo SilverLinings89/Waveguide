@@ -11,6 +11,7 @@
 #include <deal.II/lac/block_sparsity_pattern.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/solver.h>
+#include <deal.II/lac/vector_operation.h>
 #include <deal.II/numerics/data_out_dof_data.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <algorithm>
@@ -42,17 +43,6 @@ bool compareConstraintPairs(ConstraintPair v1, ConstraintPair v2) {
   return (v1.left < v2.left);
 }
 
-Tensor<1, 3, std::complex<double>> NumericProblem::Conjugate_Vector(
-    Tensor<1, 3, std::complex<double>> input) {
-  Tensor<1, 3, std::complex<double>> ret;
-
-  for (int i = 0; i < 3; i++) {
-    ret[i].real(input[i].real());
-    ret[i].imag(-input[i].imag());
-  }
-  return ret;
-}
-
 void NumericProblem::make_grid() {
   std::cout << "Make Grid." << std::endl;
   const unsigned int Cells_Per_Direction = 25;
@@ -60,9 +50,9 @@ void NumericProblem::make_grid() {
   repetitions.push_back(Cells_Per_Direction);
   repetitions.push_back(Cells_Per_Direction);
   repetitions.push_back(Cells_Per_Direction);
-  std::cout << "x: ( "<< Geometry.local_x_range.first << " - " << Geometry.local_x_range.second << " )" << std::endl; 
-  std::cout << "y: ( "<< Geometry.local_y_range.first << " - " << Geometry.local_y_range.second << " )" << std::endl;
-  std::cout << "z: ( "<< Geometry.local_z_range.first << " - " << Geometry.local_z_range.second << " )" << std::endl;
+  std::cout << "Geometry: ["<< Geometry.local_x_range.first << "," << Geometry.local_x_range.second 
+    << "] x ["<< Geometry.local_y_range.first << "," << Geometry.local_y_range.second 
+    << "] x ["<< Geometry.local_z_range.first << "," << Geometry.local_z_range.second << "]" << std::endl;
   Position lower(Geometry.local_x_range.first, Geometry.local_y_range.first,
       Geometry.local_z_range.first);
   Position upper(Geometry.local_x_range.second, Geometry.local_y_range.second,
@@ -319,109 +309,185 @@ std::vector<DofIndexAndOrientationAndPosition> NumericProblem::get_surface_dof_v
   return removed_doubles;
 }
 
-void NumericProblem::assemble_system(unsigned int shift,
-    SparseComplexMatrix *matrix,
-    NumericVectorDistributed *rhs) {
-  reinit_rhs();
-
-  QGauss<3> quadrature_formula(2);
-  FEValues<3> fe_values(fe, quadrature_formula,
-                        update_values | update_gradients | update_JxW_values |
-                            update_quadrature_points);
+struct CellwiseAssemblyData {
+  QGauss<3> quadrature_formula; 
+  FEValues<3> fe_values;
   std::vector<Point<3>> quadrature_points;
-  const unsigned int dofs_per_cell = fe.dofs_per_cell;
-  const unsigned int n_q_points = quadrature_formula.size();
-
-  deallog << "Starting Assemblation process" << std::endl;
-
-  FullMatrix<std::complex<double>> cell_matrix_real(dofs_per_cell,
-      dofs_per_cell);
-
-  double e_temp = 1.0;
-  double mu_temp = 1.0;
-
-  const double eps_in = GlobalParams.Epsilon_R_in_waveguide * e_temp;
-  const double eps_out = GlobalParams.Epsilon_R_outside_waveguide * e_temp;
-  const double mu_zero = mu_temp;
-  Vector<std::complex<double>> cell_rhs(dofs_per_cell);
-  cell_rhs = 0;
+  const unsigned int dofs_per_cell;
+  const unsigned int n_q_points;
+  FullMatrix<ComplexNumber> cell_matrix_real;
+  const double eps_in;
+  const double eps_out;
+  const double mu_zero;
+  Vector<ComplexNumber> cell_rhs;
   MaterialTensor transformation;
   MaterialTensor epsilon;
   MaterialTensor mu;
-  std::vector<DofNumber> local_dof_indices(dofs_per_cell);
-  for (unsigned int i = 0; i < 3; i++) {
-    for (unsigned int j = 0; j < 3; j++) {
-      if (i == j) {
-        transformation[i][j] = ComplexNumber(1, 0);
-      } else {
-        transformation[i][j] = ComplexNumber(0, 0);
+  std::vector<DofNumber> local_dof_indices;
+  DofHandler3D::active_cell_iterator cell;
+  DofHandler3D::active_cell_iterator end_cell;
+  const Position bounded_cell;
+  const FEValuesExtractors::Vector fe_field;
+  CellwiseAssemblyData(dealii::FE_NedelecSZ<3> * fe, DofHandler3D * dof_handler):
+  quadrature_formula(2),
+  fe_values(*fe, quadrature_formula,
+                        update_values | update_gradients | update_JxW_values |
+                            update_quadrature_points),
+  dofs_per_cell(fe->dofs_per_cell),
+  n_q_points(quadrature_formula.size()),
+  cell_matrix_real(dofs_per_cell,dofs_per_cell),
+  eps_in(GlobalParams.Epsilon_R_in_waveguide),
+  eps_out(GlobalParams.Epsilon_R_outside_waveguide),
+  mu_zero(1.0),
+  cell_rhs(dofs_per_cell),
+  local_dof_indices(dofs_per_cell),
+  bounded_cell(0.0,0.0,0.0),
+  fe_field(0)
+  {
+    cell_rhs = 0;
+    for (unsigned int i = 0; i < 3; i++) {
+      for (unsigned int j = 0; j < 3; j++) {
+        if (i == j) {
+          transformation[i][j] = ComplexNumber(1, 0);
+        } else {
+          transformation[i][j] = ComplexNumber(0, 0);
+        }
+      }
+    }
+    cell = dof_handler->begin_active();
+    end_cell = dof_handler->end();
+  };
+
+  void prepare_for_current_q_index(unsigned int q_index) {
+    mu = invert(transformation) / mu_zero;
+
+    if (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])) {
+      epsilon = transformation * eps_in;
+    } else {
+      epsilon = transformation * eps_out;
+    }
+
+    const double JxW = fe_values.JxW(q_index);
+    for (unsigned int i = 0; i < dofs_per_cell; i++) {
+      Tensor<1, 3, std::complex<double>> I_Curl;
+      Tensor<1, 3, std::complex<double>> I_Val;
+      I_Curl = fe_values[fe_field].curl(i, q_index);
+      I_Val = fe_values[fe_field].value(i, q_index);
+
+      for (unsigned int j = 0; j < dofs_per_cell; j++) {
+        Tensor<1, 3, std::complex<double>> J_Curl;
+        Tensor<1, 3, std::complex<double>> J_Val;
+        J_Curl = fe_values[fe_field].curl(j, q_index);
+        J_Val = fe_values[fe_field].value(j, q_index);
+
+        cell_matrix_real[i][j] += (mu * I_Curl) * Conjugate_Vector(J_Curl)
+            * JxW
+            - ((epsilon * I_Val) * Conjugate_Vector(J_Val)) * JxW
+                * GlobalParams.Omega * GlobalParams.Omega;
       }
     }
   }
-  auto cell = dof_handler.begin_active();
-  auto endc = dof_handler.end();
 
-  const Position bounded_cell(0.0, 0.0, 0.0);
-  const FEValuesExtractors::Vector fe_field(0);
-  for (; cell != endc; ++cell) {
-    if (!cell->point_inside(bounded_cell)) {
-      cell->get_dof_indices(local_dof_indices);
-      for (unsigned int i = 0; i < local_dof_indices.size(); i++) {
-        local_dof_indices[i] += shift;
+  /**
+   * This function calculates the complex conjugate of every vector entry and
+   * returns the result in a copy. Similar to Conjugate_Tensor(Tensor<2,3,
+   * std::complex<double>> input) this function does not operate in place - it
+   * operates on a copy and hence returns a new object.
+   */
+  Tensor<1, 3, std::complex<double>> Conjugate_Vector(
+      Tensor<1, 3, std::complex<double>> input) {
+    Tensor<1, 3, std::complex<double>> ret;
+
+    for (int i = 0; i < 3; i++) {
+      ret[i].real(input[i].real());
+      ret[i].imag(-input[i].imag());
+    }
+    return ret;
+  }
+
+};
+
+void NumericProblem::assemble_system(unsigned int shift,
+    dealii::AffineConstraints<ComplexNumber> * constraints,
+    dealii::PETScWrappers::SparseMatrix *matrix,
+    NumericVectorDistributed *rhs) {
+  reinit_rhs();
+
+  CellwiseAssemblyData cell_data(&fe, &dof_handler);
+
+  for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
+    if (!cell_data.cell->point_inside(cell_data.bounded_cell)) {
+      cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
+      for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
+        cell_data.local_dof_indices[i] += shift;
       }
-      cell_rhs.reinit(dofs_per_cell, false);
-      fe_values.reinit(cell);
-      quadrature_points = fe_values.get_quadrature_points();
+      cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
+      cell_data.fe_values.reinit(cell_data.cell);
+      cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
       std::vector<types::global_dof_index> input_dofs(fe.dofs_per_line);
       IndexSet input_dofs_local_set(fe.dofs_per_cell);
       std::vector<Position> input_dof_centers(fe.dofs_per_cell);
       std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
 
-      cell_matrix_real = 0;
-      for (unsigned int q_index = 0; q_index < n_q_points; ++q_index) {
-
-        mu = invert(transformation) / mu_zero;
-
-        if (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])) {
-          epsilon = transformation * eps_in;
-        } else {
-          epsilon = transformation * eps_out;
-        }
-
-        const double JxW = fe_values.JxW(q_index);
-        for (unsigned int i = 0; i < dofs_per_cell; i++) {
-          Tensor<1, 3, std::complex<double>> I_Curl;
-          Tensor<1, 3, std::complex<double>> I_Val;
-          I_Curl = fe_values[fe_field].curl(i, q_index);
-          I_Val = fe_values[fe_field].value(i, q_index);
-
-          for (unsigned int j = 0; j < dofs_per_cell; j++) {
-            Tensor<1, 3, std::complex<double>> J_Curl;
-            Tensor<1, 3, std::complex<double>> J_Val;
-            J_Curl = fe_values[fe_field].curl(j, q_index);
-            J_Val = fe_values[fe_field].value(j, q_index);
-
-            cell_matrix_real[i][j] += (mu * I_Curl) * Conjugate_Vector(J_Curl)
-                * JxW
-                - ((epsilon * I_Val) * Conjugate_Vector(J_Val)) * JxW
-                    * GlobalParams.Omega * GlobalParams.Omega;
-          }
-        }
-
-        cm.distribute_local_to_global(cell_matrix_real, cell_rhs,
-            local_dof_indices, *matrix, *rhs, false);
+      cell_data.cell_matrix_real = 0;
+      for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
+        cell_data.prepare_for_current_q_index(q_index);
+        
+        constraints->distribute_local_to_global(cell_data.cell_matrix_real, cell_data.cell_rhs,
+            cell_data.local_dof_indices,*matrix, *rhs, false);
       }
     }
   }
+  matrix->compress(dealii::VectorOperation::add);
+  write_matrix_and_rhs_metrics(matrix, rhs);
+  
+  deallog << "Distributing solution done." << std::endl;
+}
 
+void NumericProblem::assemble_system(unsigned int shift,
+    dealii::AffineConstraints<ComplexNumber> * constraints,
+    dealii::PETScWrappers::MPI::SparseMatrix *matrix,
+    NumericVectorDistributed *rhs) {
+  reinit_rhs();
+
+  CellwiseAssemblyData cell_data(&fe, &dof_handler);
+
+  for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
+    if (!cell_data.cell->point_inside(cell_data.bounded_cell)) {
+      cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
+      for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
+        cell_data.local_dof_indices[i] += shift;
+      }
+      cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
+      cell_data.fe_values.reinit(cell_data.cell);
+      cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
+      std::vector<types::global_dof_index> input_dofs(fe.dofs_per_line);
+      IndexSet input_dofs_local_set(fe.dofs_per_cell);
+      std::vector<Position> input_dof_centers(fe.dofs_per_cell);
+      std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
+
+      cell_data.cell_matrix_real = 0;
+      for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
+        cell_data.prepare_for_current_q_index(q_index);
+        
+        constraints->distribute_local_to_global(cell_data.cell_matrix_real, cell_data.cell_rhs,
+            cell_data.local_dof_indices,*matrix, *rhs, false);
+      }
+    }
+  }
+  matrix->compress(dealii::VectorOperation::add);
+  write_matrix_and_rhs_metrics(matrix, rhs);
+  
+  deallog << "Distributing solution done." << std::endl;
+}
+
+void NumericProblem::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs) {
   std::cout << "System Matrix l_infty norm: " << matrix->linfty_norm()
       << std::endl;
   std::cout << "System Matrix l_1 norm: " << matrix->l1_norm() << std::endl;
 
   std::cout << "Assembling done. L2-Norm of RHS: " << rhs->l2_norm()
       << std::endl;
-
-  deallog << "Distributing solution done." << std::endl;
 }
 
 #endif

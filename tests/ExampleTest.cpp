@@ -221,22 +221,6 @@ TEST_P(TestOrderFixture, AssemblationTestOrder5) {
           * surf.compute_dofs_per_face(false) / 2, surf.face_dof_data.size());
   ASSERT_TRUE(surf.check_number_of_dofs_for_cell_integrity());
   ASSERT_TRUE(surf.check_dof_assignment_integrity());
-  unsigned int total_dof_count = surf.face_dof_data.size()
-      + surf.edge_dof_data.size() + surf.vertex_dof_data.size();
-  IndexSet hsie_dof_indices(total_dof_count);
-  hsie_dof_indices.add_range(0, total_dof_count);
-  dealii::DynamicSparsityPattern dsp(total_dof_count, total_dof_count);
-  surf.fill_sparsity_pattern(&dsp);
-  dealii::SparsityPattern sp;
-  sp.copy_from(dsp);
-  sp.compress();
-  dealii::SparseMatrix<std::complex<double>> sys_matrix(sp);
-  Position center = { 0, 0, 0 };
-  // surf.fill_matrix(&sys_matrix, hsie_dof_indices, center);
-  std::cout << "L1 Norm: " << sys_matrix.l1_norm() << std::endl;
-  std::cout << "L infty Norm: " << sys_matrix.linfty_norm() << std::endl;
-  ASSERT_NE(sys_matrix.linfty_norm(), 0);
-  ASSERT_NE(sys_matrix.l1_norm(), 0);
 }
 
 TEST_P(TestOrderFixture, AssemblationTestOrder10) {
@@ -261,23 +245,6 @@ TEST_P(TestOrderFixture, AssemblationTestOrder10) {
           * surf.compute_dofs_per_face(false) / 2, surf.face_dof_data.size());
   ASSERT_TRUE(surf.check_number_of_dofs_for_cell_integrity());
   ASSERT_TRUE(surf.check_dof_assignment_integrity());
-
-  unsigned int total_dof_count = surf.face_dof_data.size()
-      + surf.edge_dof_data.size() + surf.vertex_dof_data.size();
-  IndexSet hsie_dof_indices(total_dof_count);
-  hsie_dof_indices.add_range(0, total_dof_count);
-  dealii::DynamicSparsityPattern dsp(total_dof_count, total_dof_count);
-  surf.fill_sparsity_pattern(&dsp);
-  dealii::SparsityPattern sp;
-  sp.copy_from(dsp);
-  sp.compress();
-  dealii::SparseMatrix<std::complex<double>> sys_matrix(sp);
-  Position c = { 0, 0, 0 };
-  // surf.fill_matrix(&sys_matrix, hsie_dof_indices, c);
-  std::cout << "L1 Norm: " << sys_matrix.l1_norm() << std::endl;
-  std::cout << "L infty Norm: " << sys_matrix.linfty_norm() << std::endl;
-  ASSERT_NE(sys_matrix.linfty_norm(), 0);
-  ASSERT_NE(sys_matrix.l1_norm(), 0);
 }
 
 // INSTANTIATE_TEST_SUITE_P(HSIESurfaceTests, TestOrderFixture, ::testing::Combine( ::testing::Values(0,1,2), ::testing::Values(5,9)));

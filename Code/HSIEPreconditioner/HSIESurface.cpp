@@ -2,6 +2,7 @@
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/lac/affine_constraints.h>
+#include <deal.II/lac/petsc_sparse_matrix.h>
 #include "../Core/NumericProblem.h"
 #include "DofData.h"
 #include "HSIEPolynomial.h"
@@ -317,132 +318,263 @@ DofDataVector HSIESurface::get_dof_data_for_base_dof_q(
 }
 
 void HSIESurface::fill_matrix(
-    SparseComplexMatrix *matrix,
-    unsigned int lowest_index, const Position &in_V0) {
+    dealii::PETScWrappers::SparseMatrix *matrix,
+    unsigned int lowest_index, const Position &in_V0, dealii::AffineConstraints<ComplexNumber> *constraints) {
   if (!is_metal) {
     IndexSet is;
     is.set_size(lowest_index + dof_counter);
     is.add_range(lowest_index, lowest_index + dof_counter);
-    fill_matrix(matrix, is, in_V0);
+    fill_matrix(matrix, is, in_V0, constraints);
   }
 }
 
 void HSIESurface::fill_matrix(
-    SparseComplexMatrix *matrix,
-    dealii::IndexSet global_indices, const Position &in_V0) {
+    dealii::PETScWrappers::SparseMatrix *matrix,
+    dealii::IndexSet global_indices, const Position &in_V0, dealii::AffineConstraints<ComplexNumber> *constraints) {
   if (!is_metal) {
     set_V0(in_V0);
-  HSIEPolynomial::computeDandI(order + 2, k0);
-  auto it = dof_h_nedelec.begin();
-  auto end = dof_h_nedelec.end();
+    HSIEPolynomial::computeDandI(order + 2, k0);
+    auto it = dof_h_nedelec.begin();
+    auto end = dof_h_nedelec.end();
 
-  QGauss<2> quadrature_formula(2);
-  FEValues<2, 2> fe_q_values(fe_q, quadrature_formula,
-                             update_values | update_gradients |
-                                 update_JxW_values | update_quadrature_points);
-  FEValues<2, 2> fe_n_values(fe_nedelec, quadrature_formula,
-                             update_values | update_gradients |
-                                 update_JxW_values | update_quadrature_points);
-  std::vector<Point<2>> quadrature_points;
-  const unsigned int dofs_per_cell =
-      GeometryInfo<2>::vertices_per_cell * compute_dofs_per_vertex() +
-      GeometryInfo<2>::lines_per_cell * compute_dofs_per_edge(false) +
-      compute_dofs_per_face(false);
-    FullMatrix<std::complex<double>> cell_matrix_real(dofs_per_cell,
-        dofs_per_cell);
-  unsigned int cell_counter = 0;
-  auto it2 = dof_h_q.begin();
-  JacobianForCell jacobian_for_cell = {V0, b_id, additional_coordinate};
-  for (; it != end; ++it) {
-    cell_matrix_real = 0;
-    DofDataVector cell_dofs = this->get_dof_data_for_cell(it, it2);
-    std::vector<HSIEPolynomial> polynomials;
-    std::vector<unsigned int> q_dofs(fe_q.dofs_per_cell);
-    std::vector<unsigned int> n_dofs(fe_nedelec.dofs_per_cell);
-    it2->get_dof_indices(q_dofs);
-    it->get_dof_indices(n_dofs);
-    for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-      polynomials.push_back(HSIEPolynomial(cell_dofs[i], k0));
-    }
-    std::vector<unsigned int> local_related_fe_index;
-    for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-      if (cell_dofs[i].type == DofType::RAY) {
-        for (unsigned int j = 0; j < q_dofs.size(); j++) {
-          if (q_dofs[j] == cell_dofs[i].base_dof_index) {
-            local_related_fe_index.push_back(j);
-            break;
-          }
-        }
-      } else {
-        for (unsigned int j = 0; j < n_dofs.size(); j++) {
-          if (n_dofs[j] == cell_dofs[i].base_dof_index) {
-            local_related_fe_index.push_back(j);
-            break;
-          }
-        }
-      }
-    }
-
-    fe_n_values.reinit(it);
-    fe_q_values.reinit(it2);
-    quadrature_points = fe_q_values.get_quadrature_points();
-    std::vector<double> jxw_values = fe_n_values.get_JxW_values();
-    std::vector<std::vector<HSIEPolynomial>> contribution_value;
-    std::vector<std::vector<HSIEPolynomial>> contribution_curl;
-    JacobianAndTensorData C_G_J;
-    for (unsigned int q_point = 0; q_point < quadrature_points.size();
-        q_point++) {
-      C_G_J = jacobian_for_cell.get_C_G_and_J(quadrature_points[q_point]);
+    QGauss<2> quadrature_formula(2);
+    FEValues<2, 2> fe_q_values(fe_q, quadrature_formula,
+                              update_values | update_gradients |
+                                  update_JxW_values | update_quadrature_points);
+    FEValues<2, 2> fe_n_values(fe_nedelec, quadrature_formula,
+                              update_values | update_gradients |
+                                  update_JxW_values | update_quadrature_points);
+    std::vector<Point<2>> quadrature_points;
+    const unsigned int dofs_per_cell =
+        GeometryInfo<2>::vertices_per_cell * compute_dofs_per_vertex() +
+        GeometryInfo<2>::lines_per_cell * compute_dofs_per_edge(false) +
+        compute_dofs_per_face(false);
+      FullMatrix<std::complex<double>> cell_matrix(dofs_per_cell,
+          dofs_per_cell);
+    unsigned int cell_counter = 0;
+    auto it2 = dof_h_q.begin();
+    JacobianForCell jacobian_for_cell = {V0, b_id, additional_coordinate};
+    for (; it != end; ++it) {
+      cell_matrix = 0;
+      DofDataVector cell_dofs = this->get_dof_data_for_cell(it, it2);
+      std::vector<HSIEPolynomial> polynomials;
+      std::vector<unsigned int> q_dofs(fe_q.dofs_per_cell);
+      std::vector<unsigned int> n_dofs(fe_nedelec.dofs_per_cell);
+      it2->get_dof_indices(q_dofs);
+      it->get_dof_indices(n_dofs);
       for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-        DofData &u = cell_dofs[i];
-        if (cell_dofs[i].type == DofType::RAY
-            || cell_dofs[i].type == DofType::IFFb) {
-          contribution_curl.push_back(
-              build_curl_term_q(u.hsie_order,
-                  fe_q_values.shape_grad(local_related_fe_index[i], q_point)));
-          contribution_value.push_back(
-              build_non_curl_term_q(u.hsie_order,
-                  fe_q_values.shape_value(local_related_fe_index[i], q_point)));
+        polynomials.push_back(HSIEPolynomial(cell_dofs[i], k0));
+      }
+      std::vector<unsigned int> local_related_fe_index;
+      for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+        if (cell_dofs[i].type == DofType::RAY) {
+          for (unsigned int j = 0; j < q_dofs.size(); j++) {
+            if (q_dofs[j] == cell_dofs[i].base_dof_index) {
+              local_related_fe_index.push_back(j);
+              break;
+            }
+          }
         } else {
-          contribution_curl.push_back(
-              build_curl_term_nedelec(u.hsie_order,
-                  fe_n_values.shape_grad_component(local_related_fe_index[i],
-                      q_point, 0),
-                  fe_n_values.shape_grad_component(local_related_fe_index[i],
-                      q_point, 1),
-                  fe_n_values.shape_value_component(local_related_fe_index[i],
-                      q_point, 0),
-                  fe_n_values.shape_value_component(local_related_fe_index[i],
-                      q_point, 1)));
-          contribution_value.push_back(
-              build_non_curl_term_nedelec(u.hsie_order,
-                  fe_n_values.shape_value_component(local_related_fe_index[i],
-                      q_point, 0),
-                  fe_n_values.shape_value_component(local_related_fe_index[i],
-                      q_point, 1)));
+          for (unsigned int j = 0; j < n_dofs.size(); j++) {
+            if (n_dofs[j] == cell_dofs[i].base_dof_index) {
+              local_related_fe_index.push_back(j);
+              break;
+            }
+          }
         }
       }
 
-      double JxW = jxw_values[q_point];
-      for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-        for (unsigned int j = 0; j < cell_dofs.size(); j++) {
-          std::complex<double> part =
-              (evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C)
-              + evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
-              JxW;
-            cell_matrix_real[i][j] += part;
+      fe_n_values.reinit(it);
+      fe_q_values.reinit(it2);
+      quadrature_points = fe_q_values.get_quadrature_points();
+      std::vector<double> jxw_values = fe_n_values.get_JxW_values();
+      std::vector<std::vector<HSIEPolynomial>> contribution_value;
+      std::vector<std::vector<HSIEPolynomial>> contribution_curl;
+      JacobianAndTensorData C_G_J;
+      for (unsigned int q_point = 0; q_point < quadrature_points.size();
+          q_point++) {
+        C_G_J = jacobian_for_cell.get_C_G_and_J(quadrature_points[q_point]);
+        for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+          DofData &u = cell_dofs[i];
+          if (cell_dofs[i].type == DofType::RAY
+              || cell_dofs[i].type == DofType::IFFb) {
+            contribution_curl.push_back(
+                build_curl_term_q(u.hsie_order,
+                    fe_q_values.shape_grad(local_related_fe_index[i], q_point)));
+            contribution_value.push_back(
+                build_non_curl_term_q(u.hsie_order,
+                    fe_q_values.shape_value(local_related_fe_index[i], q_point)));
+          } else {
+            contribution_curl.push_back(
+                build_curl_term_nedelec(u.hsie_order,
+                    fe_n_values.shape_grad_component(local_related_fe_index[i],
+                        q_point, 0),
+                    fe_n_values.shape_grad_component(local_related_fe_index[i],
+                        q_point, 1),
+                    fe_n_values.shape_value_component(local_related_fe_index[i],
+                        q_point, 0),
+                    fe_n_values.shape_value_component(local_related_fe_index[i],
+                        q_point, 1)));
+            contribution_value.push_back(
+                build_non_curl_term_nedelec(u.hsie_order,
+                    fe_n_values.shape_value_component(local_related_fe_index[i],
+                        q_point, 0),
+                    fe_n_values.shape_value_component(local_related_fe_index[i],
+                        q_point, 1)));
+          }
+        }
+
+        double JxW = jxw_values[q_point];
+        for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+          for (unsigned int j = 0; j < cell_dofs.size(); j++) {
+            std::complex<double> part =
+                (evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C)
+                + evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
+                JxW;
+              cell_matrix[i][j] += part;
+          }
         }
       }
+      std::vector<unsigned int> local_indices;
+      for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+        local_indices.push_back(
+            global_indices.nth_index_in_set(cell_dofs[i].global_index));
+      }
+      constraints->distribute_local_to_global(cell_matrix, local_indices, *matrix);
+      it2++;
+      cell_counter++;
     }
-    std::vector<unsigned int> local_indices;
-    for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-      local_indices.push_back(
-          global_indices.nth_index_in_set(cell_dofs[i].global_index));
-    }
-    matrix->add(local_indices, cell_matrix_real);
-    it2++;
-    cell_counter++;
   }
+}
+
+
+void HSIESurface::fill_matrix(
+    dealii::PETScWrappers::MPI::SparseMatrix *matrix,
+    unsigned int lowest_index, const Position &in_V0, dealii::AffineConstraints<ComplexNumber> *constraints) {
+  if (!is_metal) {
+    IndexSet is;
+    is.set_size(lowest_index + dof_counter);
+    is.add_range(lowest_index, lowest_index + dof_counter);
+    fill_matrix(matrix, is, in_V0, constraints);
+  }
+}
+
+void HSIESurface::fill_matrix(
+    dealii::PETScWrappers::MPI::SparseMatrix *matrix,
+    dealii::IndexSet global_indices, const Position &in_V0, dealii::AffineConstraints<ComplexNumber> *constraints) {
+  if (!is_metal) {
+    set_V0(in_V0);
+    HSIEPolynomial::computeDandI(order + 2, k0);
+    auto it = dof_h_nedelec.begin();
+    auto end = dof_h_nedelec.end();
+
+    QGauss<2> quadrature_formula(2);
+    FEValues<2, 2> fe_q_values(fe_q, quadrature_formula,
+                              update_values | update_gradients |
+                                  update_JxW_values | update_quadrature_points);
+    FEValues<2, 2> fe_n_values(fe_nedelec, quadrature_formula,
+                              update_values | update_gradients |
+                                  update_JxW_values | update_quadrature_points);
+    std::vector<Point<2>> quadrature_points;
+    const unsigned int dofs_per_cell =
+        GeometryInfo<2>::vertices_per_cell * compute_dofs_per_vertex() +
+        GeometryInfo<2>::lines_per_cell * compute_dofs_per_edge(false) +
+        compute_dofs_per_face(false);
+      FullMatrix<std::complex<double>> cell_matrix(dofs_per_cell,
+          dofs_per_cell);
+    unsigned int cell_counter = 0;
+    auto it2 = dof_h_q.begin();
+    JacobianForCell jacobian_for_cell = {V0, b_id, additional_coordinate};
+    for (; it != end; ++it) {
+      cell_matrix = 0;
+      DofDataVector cell_dofs = this->get_dof_data_for_cell(it, it2);
+      std::vector<HSIEPolynomial> polynomials;
+      std::vector<unsigned int> q_dofs(fe_q.dofs_per_cell);
+      std::vector<unsigned int> n_dofs(fe_nedelec.dofs_per_cell);
+      it2->get_dof_indices(q_dofs);
+      it->get_dof_indices(n_dofs);
+      for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+        polynomials.push_back(HSIEPolynomial(cell_dofs[i], k0));
+      }
+      std::vector<unsigned int> local_related_fe_index;
+      for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+        if (cell_dofs[i].type == DofType::RAY) {
+          for (unsigned int j = 0; j < q_dofs.size(); j++) {
+            if (q_dofs[j] == cell_dofs[i].base_dof_index) {
+              local_related_fe_index.push_back(j);
+              break;
+            }
+          }
+        } else {
+          for (unsigned int j = 0; j < n_dofs.size(); j++) {
+            if (n_dofs[j] == cell_dofs[i].base_dof_index) {
+              local_related_fe_index.push_back(j);
+              break;
+            }
+          }
+        }
+      }
+
+      fe_n_values.reinit(it);
+      fe_q_values.reinit(it2);
+      quadrature_points = fe_q_values.get_quadrature_points();
+      std::vector<double> jxw_values = fe_n_values.get_JxW_values();
+      std::vector<std::vector<HSIEPolynomial>> contribution_value;
+      std::vector<std::vector<HSIEPolynomial>> contribution_curl;
+      JacobianAndTensorData C_G_J;
+      for (unsigned int q_point = 0; q_point < quadrature_points.size();
+          q_point++) {
+        C_G_J = jacobian_for_cell.get_C_G_and_J(quadrature_points[q_point]);
+        for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+          DofData &u = cell_dofs[i];
+          if (cell_dofs[i].type == DofType::RAY
+              || cell_dofs[i].type == DofType::IFFb) {
+            contribution_curl.push_back(
+                build_curl_term_q(u.hsie_order,
+                    fe_q_values.shape_grad(local_related_fe_index[i], q_point)));
+            contribution_value.push_back(
+                build_non_curl_term_q(u.hsie_order,
+                    fe_q_values.shape_value(local_related_fe_index[i], q_point)));
+          } else {
+            contribution_curl.push_back(
+                build_curl_term_nedelec(u.hsie_order,
+                    fe_n_values.shape_grad_component(local_related_fe_index[i],
+                        q_point, 0),
+                    fe_n_values.shape_grad_component(local_related_fe_index[i],
+                        q_point, 1),
+                    fe_n_values.shape_value_component(local_related_fe_index[i],
+                        q_point, 0),
+                    fe_n_values.shape_value_component(local_related_fe_index[i],
+                        q_point, 1)));
+            contribution_value.push_back(
+                build_non_curl_term_nedelec(u.hsie_order,
+                    fe_n_values.shape_value_component(local_related_fe_index[i],
+                        q_point, 0),
+                    fe_n_values.shape_value_component(local_related_fe_index[i],
+                        q_point, 1)));
+          }
+        }
+
+        double JxW = jxw_values[q_point];
+        for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+          for (unsigned int j = 0; j < cell_dofs.size(); j++) {
+            std::complex<double> part =
+                (evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C)
+                + evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
+                JxW;
+              cell_matrix[i][j] += part;
+          }
+        }
+      }
+      std::vector<unsigned int> local_indices;
+      for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+        local_indices.push_back(
+            global_indices.nth_index_in_set(cell_dofs[i].global_index));
+      }
+      constraints->distribute_local_to_global(cell_matrix, local_indices, *matrix);
+      it2++;
+      cell_counter++;
+    }
   }
 }
 

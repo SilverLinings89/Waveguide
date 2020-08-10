@@ -196,7 +196,13 @@ class NumericProblem {
    * \date 16.11.2015
    */
   void assemble_system(unsigned int shift,
-      SparseComplexMatrix *matrix,
+      dealii::AffineConstraints<ComplexNumber> *constraints,
+      dealii::PETScWrappers::MPI::SparseMatrix *matrix,
+      NumericVectorDistributed *rhs);
+
+  void assemble_system(unsigned int shift,
+      dealii::AffineConstraints<ComplexNumber> *constraints,
+      dealii::PETScWrappers::SparseMatrix *matrix,
       NumericVectorDistributed *rhs);
 
   /**
@@ -204,26 +210,7 @@ class NumericProblem {
    */
   void Compute_Dof_Numbers();
 
-  /**
-   * This function returns the transposed and complex conjugated Matrix for the
-   * given Matrix. The function operates on a copy, it doesn't change the
-   * arguments value. \param input This is the order 2 Tensor (Matrix) to be
-   * transposed (\f$a_{ij} = a'{ji}\f$) and complex conjugated
-   * (\f$\operatorname{Im}(a_{ij}) = - \operatorname{Im}(a'_{ji})\f$)
-   */
-  Tensor<2, 3, std::complex<double>> Conjugate_Tensor(
-      Tensor<2, 3, std::complex<double>> input);
-
-  /**
-   * This function calculates the complex conjugate of every vector entry and
-   * returns the result in a copy. Similar to Conjugate_Tensor(Tensor<2,3,
-   * std::complex<double>> input) this function does not operate in place - it
-   * operates on a copy and hence returns a new object.
-   */
-  Tensor<1, 3, std::complex<double>> Conjugate_Vector(
-      Tensor<1, 3, std::complex<double>> input);
-
-  /**
+   /**
    * Reinitialize all data storage objects.
    */
   void reinit_all();
@@ -293,4 +280,6 @@ class NumericProblem {
       unsigned int shift);
 
   bool get_orientation(const Position &vertex_1, const Position &vertex_2);
+
+  void write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs);
 };

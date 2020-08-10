@@ -11,7 +11,6 @@ HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level) :
     local_level(in_own_level) {
   has_child = in_own_level > 0;
   child = nullptr;
-  matrix = nullptr;
   n_own_dofs = 0;
   first_own_index = 0;
   for (unsigned int i = 0; i < 6; i++) {

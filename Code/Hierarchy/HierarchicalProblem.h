@@ -18,7 +18,6 @@ class HierarchicalProblem {
   dealii::SparsityPattern sp;
   const SweepingLevel local_level;
   DofIndexData indices;
-  SparseComplexMatrix *matrix;
   NumericVectorDistributed rhs;
   NumericVectorDistributed solution;
   DofCount n_own_dofs;
@@ -51,8 +50,8 @@ class HierarchicalProblem {
   virtual LocalProblem* get_local_problem()=0;
   void constrain_identical_dof_sets(std::vector<unsigned int> *set_one,
       std::vector<unsigned int> *set_two,
-      dealii::AffineConstraints<std::complex<double>> *affine_constraints);
-  virtual dealii::Vector<std::complex<double>> get_local_vector_from_global() = 0;
+      dealii::AffineConstraints<ComplexNumber> *affine_constraints);
+  virtual dealii::Vector<ComplexNumber> get_local_vector_from_global() = 0;
   virtual auto get_center() -> Position const = 0;
   virtual auto reinit() -> void = 0;
 };

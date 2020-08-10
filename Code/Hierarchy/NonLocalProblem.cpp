@@ -80,7 +80,7 @@ NonLocalProblem::NonLocalProblem(unsigned int local_level) :
 }
 
 NonLocalProblem::~NonLocalProblem() {
-  delete system_matrix;
+  delete matrix;
   delete system_rhs;
   delete[] is_hsie_surface;
 }
@@ -93,14 +93,14 @@ void NonLocalProblem::assemble() {
 
 }
 
-dealii::Vector<std::complex<double>> NonLocalProblem::get_local_vector_from_global() {
-  dealii::Vector<std::complex<double>> ret(n_own_dofs);
+dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
+  dealii::Vector<ComplexNumber> ret(n_own_dofs);
   return ret;
 }
 
 void NonLocalProblem::solve(NumericVectorDistributed src,
     NumericVectorDistributed &dst) {
-  dealii::Vector<std::complex<double>> inputb(n_own_dofs);
+  dealii::Vector<ComplexNumber> inputb(n_own_dofs);
   for (unsigned int i = 0; i < n_own_dofs; i++) {
     inputb[i] = src(i);
   }
@@ -130,7 +130,7 @@ void NonLocalProblem::reinit() {
     }
   }
   sp.copy_from(dsp);
-  system_matrix->reinit(sp);
+  // matrix->reinit(sp); // TODO: implement this.
 }
 
 void NonLocalProblem::initialize() {
