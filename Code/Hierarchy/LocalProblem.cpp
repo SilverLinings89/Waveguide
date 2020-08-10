@@ -9,6 +9,8 @@
 #include <deal.II/lac/petsc_sparse_matrix.h>
 #include <deal.II/lac/solver_idr.h>
 #include <deal.II/lac/vector.h>
+#include <deal.II/lac/vector_operation.h>
+#include <deal.II/base/timer.h>
 
 LocalProblem::LocalProblem() :
     HierarchicalProblem(0), base_problem(), sc(), solver(sc, MPI_COMM_SELF) {
@@ -292,8 +294,22 @@ void LocalProblem::solve() {
   std::cout << "Solve the system." << std::endl;
   std::cout << "Norm before: " << rhs.l2_norm() << std::endl;
   //solver.factorize(*matrix);
+  rhs.compress(dealii::VectorOperation::add);
+  NumericVectorDistributed solution2;
+  solution2.reinit(MPI_COMM_SELF, n_own_dofs, n_own_dofs, false);
 
+  Timer timer1, timer2;
+  timer1.start ();
   solver.solve(*matrix, solution, rhs);
+  timer1.stop();
+  std::cout << "Elapsed CPU time timer 1: " << timer1.cpu_time() << " seconds." << std::endl;
+  std::cout << "Elapsed CPU time timer 1: " << timer1.wall_time() << " seconds." << std::endl;
+
+  timer2.start ();
+  solver.solve(*matrix, solution, rhs);
+  timer2.stop();
+  std::cout << "Elapsed CPU time timer 2: " << timer2.cpu_time() << " seconds." << std::endl;
+  std::cout << "Elapsed CPU time timer 2: " << timer2.wall_time() << " seconds." << std::endl;
 
   // constraints.distribute(rhs);
   std::cout << "Done solving." << std::endl;
