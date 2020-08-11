@@ -1,5 +1,5 @@
 #include "../Code/HSIEPreconditioner/LaguerreFunction.h"
-#include "gtest/gtest.h"
+#include "../third_party/googletest/googletest/include/gtest/gtest.h"
 #include "../Code/HSIEPreconditioner/HSIESurface.h"
 #include "../Code/HSIEPreconditioner/HSIEPolynomial.h"
 #include "../Code/HSIEPreconditioner/HSIESurface.cpp"

@@ -82,3 +82,4 @@ build
 .vscode
 *.pc
 .clangd
+waveguide_tests
