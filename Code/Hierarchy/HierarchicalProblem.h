@@ -26,6 +26,7 @@ class HierarchicalProblem {
   DofCount dofs_process_below;
   unsigned int n_procs_in_sweep;
   unsigned int rank;
+  dealii::IndexSet own_dofs;
 
   HierarchicalProblem(unsigned int in_own_level);
   virtual ~HierarchicalProblem() =0;

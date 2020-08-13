@@ -45,7 +45,6 @@ auto LocalProblem::get_center() -> Position const {
 }
 
 void LocalProblem::initialize() {
-  base_problem.setup_system();
   for (unsigned int side = 0; side < 6; side++) {
     dealii::Triangulation<2, 3> temp_triangulation;
     const unsigned int component = side / 2;
@@ -93,8 +92,6 @@ void LocalProblem::initialize() {
     }
     dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation,
         b_ids);
-    std::cout << "Additional coordinate: " << additional_coorindate
-        << std::endl;
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
     surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(5, std::ref(surf_tria), side,
           GlobalParams.Nedelec_element_order, k0, additional_coorindate));
@@ -114,27 +111,6 @@ void LocalProblem::validate() {
   std::cout << "N Rows: " << matrix->m() << std::endl;
   std::cout << "N Cols: " << matrix->n() << std::endl;
   std::cout << "Matrix l1 norm: " << matrix->l1_norm() << std::endl;
-  std::complex<double> matrix_entry;
-  unsigned int empty_row_counter = 0;
-  for (unsigned int i = 0; i < matrix->n(); i++) {
-    auto it = matrix->begin(i);
-    auto end = matrix->end(i);
-    unsigned int entries = 0;
-    while (it != end) {
-      matrix_entry = (*it).value();
-      if (std::abs(matrix_entry) != 0.0 ) {
-        entries++;
-      }
-      it++;
-    }
-    if (entries == 0) {
-      empty_row_counter++;
-    }
-  }
-  if (empty_row_counter > 0) {
-    std::cout << " There were " << empty_row_counter << " empty rows."
-        << std::endl;
-  }
 }
 
 DofCount LocalProblem::compute_own_dofs() {
@@ -148,10 +124,6 @@ DofCount LocalProblem::compute_own_dofs() {
       surface_first_dofs.push_back(ret);
     }
   }
-  for (DofNumber i = 0; i < surface_first_dofs.size(); i++) {
-    std::cout << surface_first_dofs[i] << " ";
-  }
-  std::cout << std::endl;
   return ret;
 }
 
@@ -183,9 +155,9 @@ void LocalProblem::make_constraints() {
       ComplexNumber value = { 0, 0 };
       if (from_inner_problem[line].orientation
           == from_surface[line].orientation) {
-        value.real(-1.0);
-      } else {
         value.real(1.0);
+      } else {
+        value.real(-1.0);
       }
       constraints.add_entry(from_inner_problem[line].index,
           from_surface[line].index + surface_first_dofs[surface], value);
@@ -223,9 +195,9 @@ void LocalProblem::make_constraints() {
           ComplexNumber value = { 0, 0 };
           if (lower_face_dofs[dof].orientation
               == upper_face_dofs[dof].orientation) {
-            value.real(-1.0);
-          } else {
             value.real(1.0);
+          } else {
+            value.real(-1.0);
           }
           surface_to_surface_constraints.add_line(dof_a);
           surface_to_surface_constraints.add_entry(dof_a, dof_b, value);
@@ -236,55 +208,47 @@ void LocalProblem::make_constraints() {
     }
   }
   std::cout << "Restraints after phase 2:" << constraints.n_constraints() << std::endl;
-  base_problem.make_constraints(&constraints, 0, n_own_dofs);
+  base_problem.make_constraints(&constraints, 0, own_dofs);
+  std::cout << "Restraints after phase 3:" << constraints.n_constraints() << std::endl;
   std::cout << "End Make Constraints." << std::endl;
 }
 
 void LocalProblem::assemble() {
   std::cout << "Start LocalProblem::assemble()" << std::endl;
   base_problem.assemble_system(0, &constraints, matrix, &rhs);
-  std::cout << "Done" << std::endl;
   for (unsigned int surface = 0; surface < 6; surface++) {
     std::cout << "Fill Surface Block " << surface << std::endl;
-    surfaces[surface]->fill_matrix(matrix, surface_first_dofs[surface],get_center(), &constraints);
+    surfaces[surface]->fill_matrix(matrix, &rhs, surface_first_dofs[surface],get_center(), &constraints);
   }
   matrix->compress(dealii::VectorOperation::add);
   std::cout << "End LocalProblem::assemble()" << std::endl;
-  validate();
 }
 
 void LocalProblem::reinit() {
   dealii::DynamicSparsityPattern dsp = { n_own_dofs };
   rhs.reinit(MPI_COMM_SELF, n_own_dofs, n_own_dofs, false);
   solution.reinit(MPI_COMM_SELF, n_own_dofs, n_own_dofs, false);
-  base_problem.make_sparsity_pattern(&dsp, 0);
   make_constraints();
+  base_problem.make_sparsity_pattern(&dsp, 0, &constraints);
   for (unsigned int surface = 0; surface < 6; surface++) {
-    surfaces[surface]->fill_sparsity_pattern(&dsp, surface_first_dofs[surface]);
+    surfaces[surface]->fill_sparsity_pattern(&dsp, surface_first_dofs[surface], &constraints);
   }
   constraints.close();
-  // constraints.condense(sp);
-  std::cout << "A" <<std::endl;
-  constraints.condense(dsp);
   sp.copy_from(dsp);
-  // sp.compress();
-  std::vector<unsigned int> local_rows;
-  local_rows.push_back(n_own_dofs);
-  std::cout << "B" <<std::endl;
-  std::cout << sp.n_rows() << " " << sp.n_cols() << std::endl;
-  std::cout << local_rows[0] << std::endl;
   matrix->reinit(sp);
-  std::cout << "C" <<std::endl;
 }
 
 void LocalProblem::initialize_own_dofs() {
   n_own_dofs = compute_own_dofs();
+  own_dofs.set_size(n_own_dofs);
+  own_dofs.add_range(0, n_own_dofs);
 }
 
 void LocalProblem::run() {
   std::cout << "Start LocalProblem::run()" << std::endl;
   reinit();
   assemble();
+  validate();
   solve();
   output_results();
   std::cout << "End LocalProblem::run()" << std::endl;
@@ -292,28 +256,19 @@ void LocalProblem::run() {
 
 void LocalProblem::solve() {
   std::cout << "Solve the system." << std::endl;
-  std::cout << "Norm before: " << rhs.l2_norm() << std::endl;
-  //solver.factorize(*matrix);
+  std::cout << "Norm before: " << solution.l2_norm() << std::endl;
+  
   rhs.compress(dealii::VectorOperation::add);
-  NumericVectorDistributed solution2;
-  solution2.reinit(MPI_COMM_SELF, n_own_dofs, n_own_dofs, false);
-
+  constraints.set_zero(solution);
   Timer timer1, timer2;
   timer1.start ();
   solver.solve(*matrix, solution, rhs);
   timer1.stop();
-  std::cout << "Elapsed CPU time timer 1: " << timer1.cpu_time() << " seconds." << std::endl;
-  std::cout << "Elapsed CPU time timer 1: " << timer1.wall_time() << " seconds." << std::endl;
+  std::cout << "Elapsed CPU time: " << timer1.cpu_time() << " seconds." << std::endl;
+  std::cout << "Elapsed walltime: " << timer1.wall_time() << " seconds." << std::endl;
 
-  timer2.start ();
-  solver.solve(*matrix, solution, rhs);
-  timer2.stop();
-  std::cout << "Elapsed CPU time timer 2: " << timer2.cpu_time() << " seconds." << std::endl;
-  std::cout << "Elapsed CPU time timer 2: " << timer2.wall_time() << " seconds." << std::endl;
-
-  // constraints.distribute(rhs);
-  std::cout << "Done solving." << std::endl;
-  std::cout << "Norm after: " << rhs.l2_norm() << std::endl;
+  //constraints.distribute(solution);
+  std::cout << "Norm after: " << solution.l2_norm() << std::endl;
 }
 
 void LocalProblem::initialize_index_sets() {
@@ -355,7 +310,7 @@ dealii::Vector<std::complex<double>> LocalProblem::get_local_vector_from_global(
   std::cout << "Dof handler dofs: " << base_problem.dof_handler.n_dofs()
       << std::endl;
   for (unsigned int i = 0; i < base_problem.n_dofs; i++) {
-    ret[i] = rhs[i];
+    ret[i] = solution[i];
   }
   return ret;
 }

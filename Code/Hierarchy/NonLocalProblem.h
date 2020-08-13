@@ -20,6 +20,7 @@ private:
   dealii::IndexSet local_indices;
   dealii::SolverControl sc;
   dealii::SolverGMRES<NumericVectorDistributed> solver;
+  dealii::AffineConstraints<ComplexNumber> constraints;
  public:
   NonLocalProblem(unsigned int);
   ~NonLocalProblem() override;

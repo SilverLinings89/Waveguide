@@ -35,8 +35,8 @@ Tensor<1, 3, double> crossproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 std::complex<double> matrixD(int in_row, int in_column,
                              std::complex<double> in_k0);
 
-bool compareDofBaseData(std::pair<int, Point<3, double>> c1,
-    std::pair<int, Point<3, double>> c2);
+bool compareDofBaseData(std::pair<DofNumber, Point<3, double>> c1,
+    std::pair<DofNumber, Point<3, double>> c2);
 
 bool compareDofBaseDataAndOrientation(
     DofIndexAndOrientationAndPosition,

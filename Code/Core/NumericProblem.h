@@ -210,26 +210,6 @@ class NumericProblem {
    */
   void Compute_Dof_Numbers();
 
-   /**
-   * Reinitialize all data storage objects.
-   */
-  void reinit_all();
-
-  /**
-   * Reinit only the right hand side vector.
-   */
-  void reinit_rhs();
-
-  /**
-   * Reinit only the system matrix.
-   */
-  void reinit_systemmatrix();
-
-  /**
-   * Reinit only the solution vector.
-   */
-  void reinit_solution();
-
   /**
    * Once a solution has been computed, this function can be used to evaluate it
    * at a point position. This function is similar to the other version but it
@@ -249,8 +229,10 @@ class NumericProblem {
 
   void SortDofsDownstream();
 
-  void make_constraints(dealii::AffineConstraints<std::complex<double>>*,
-      unsigned int shift, unsigned int size);
+  void make_constraints(dealii::AffineConstraints<ComplexNumber>*,
+      unsigned int shift, IndexSet local_constraints_indices);
+
+  void make_constraints();
 
   HomogenousTransformationRectangular space_transformation;
 
@@ -258,18 +240,17 @@ class NumericProblem {
 
   dealii::Triangulation<3> triangulation;
 
-  dealii::SolverControl solver_control;
+  bool local_constraints_made;
 
-  dealii::AffineConstraints<std::complex<double>> cm;
+  dealii::AffineConstraints<ComplexNumber> local_constraints;
 
   unsigned int n_dofs;
 
   DofHandler3D dof_handler;
 
-  // dealii::SparseMatrix<std::complex<double>> system_matrix;
-  // dealii::Vector<std::complex<double>> system_rhs;
-
   dealii::IndexSet fixed_dofs;
+
+  dealii::IndexSet local_dof_indices;
 
   std::vector<DofIndexAndOrientationAndPosition> get_surface_dof_vector_for_boundary_id(
       unsigned int b_id);
@@ -277,9 +258,11 @@ class NumericProblem {
   std::vector<unsigned int> dofs_for_cell_around_point(dealii::Point<3> &in_p);
 
   void make_sparsity_pattern(dealii::DynamicSparsityPattern *in_pattern,
-      unsigned int shift);
+      unsigned int shift, dealii::AffineConstraints<ComplexNumber> *constraints);
 
   bool get_orientation(const Position &vertex_1, const Position &vertex_2);
 
   void write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs);
+  
+  auto select_central_cell() -> DofHandler3D::active_cell_iterator;
 };

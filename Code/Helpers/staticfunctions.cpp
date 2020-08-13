@@ -40,8 +40,8 @@ auto compute_center_of_triangulation(const Mesh *in_mesh) -> Position {
   return {x_average, y_average, z_average};
 }
 
-bool compareDofBaseData(std::pair<int, Point<3, double>> c1,
-    std::pair<int, Point<3, double>> c2) {
+bool compareDofBaseData(std::pair<DofNumber, Point<3, double>> c1,
+    std::pair<DofNumber, Point<3, double>> c2) {
   if (c1.second[2] != c2.second[2]) {
     return c1.second[2] < c2.second[2];
   }

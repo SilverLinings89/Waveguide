@@ -120,12 +120,12 @@ void NonLocalProblem::reinit() {
   DynamicSparsityPattern dsp = { total_number_of_dofs_on_level,
       total_number_of_dofs_on_level, local_indices };
   DofNumber first_index = local_indices.nth_index_in_set(0);
-  get_local_problem()->base_problem.make_sparsity_pattern(&dsp, first_index);
+  get_local_problem()->base_problem.make_sparsity_pattern(&dsp, first_index , &constraints);
   first_index += get_local_problem()->base_problem.n_dofs;
   for (unsigned int i = 0; i < 6; i++) {
     if (is_hsie_surface[i]) {
       get_local_problem()->surfaces[i]->fill_sparsity_pattern(&dsp,
-          first_index);
+          first_index, &constraints);
       first_index += get_local_problem()->surfaces[i]->dof_counter;
     }
   }
