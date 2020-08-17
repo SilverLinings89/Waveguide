@@ -43,23 +43,23 @@ class SpaceTransformation {
 
   SpaceTransformation(int, int);
 
-  virtual Point<3> math_to_phys(Point<3> coord) const = 0;
+  virtual Position math_to_phys(Position coord) const = 0;
 
-  virtual Point<3> phys_to_math(Point<3> coord) const = 0;
+  virtual Position phys_to_math(Position coord) const = 0;
 
-  bool is_identity(Point<3> coord) const;
+  bool is_identity(Position coord) const;
 
-  virtual Tensor<2, 3, std::complex<double>> get_Tensor(
-      Point<3> &coordinate) const = 0;
+  virtual Tensor<2, 3, ComplexNumber> get_Tensor(
+      Position &coordinate) const = 0;
 
   virtual Tensor<2, 3, double> get_Space_Transformation_Tensor(
-      Point<3> &coordinate) const = 0;
+      Position &coordinate) const = 0;
 
   virtual Tensor<2, 3, double> get_Space_Transformation_Tensor_Homogenized(
-      Point<3> &coordinate) const = 0;
+      Position &coordinate) const = 0;
 
-  virtual Tensor<2, 3, std::complex<double>> get_Tensor_for_step(
-      Point<3> &coordinate, unsigned int dof, double step_width);
+  virtual Tensor<2, 3, ComplexNumber> get_Tensor_for_step(
+      Position &coordinate, unsigned int dof, double step_width);
 
 
   /**
@@ -148,7 +148,7 @@ class SpaceTransformation {
 
   virtual std::pair<double, double> dof_support(unsigned int index) const;
 
-  bool point_in_dof_support(Point<3> location, unsigned int dof_index) const;
+  bool point_in_dof_support(Position location, unsigned int dof_index) const;
 
   /**
    * This is a getter for the values of degrees of freedom. A getter-setter

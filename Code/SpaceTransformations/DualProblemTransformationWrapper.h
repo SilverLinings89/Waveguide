@@ -38,33 +38,33 @@ class DualProblemTransformationWrapper : public SpaceTransformation {
    * untransformed coordinate). \param coord the coordinate to be transformed.
    * In this class we simply pass the
    */
-  dealii::Point<3> math_to_phys(dealii::Point<3> coord) const;
+  Position math_to_phys(Position coord) const;
 
   /**
    * This function does the same as math_to_phys only in the opposit direction.
    * \param coord the coordinate to be transformed.
    */
-  dealii::Point<3> phys_to_math(dealii::Point<3> coord) const;
+  Position phys_to_math(Position coord) const;
 
-  dealii::Tensor<2, 3, std::complex<double>> get_Tensor(
-      dealii::Point<3> &coordinate) const;
+  dealii::Tensor<2, 3, ComplexNumber> get_Tensor(
+      Position &coordinate) const;
 
-  dealii::Tensor<2, 3, std::complex<double>> get_Preconditioner_Tensor(
-      dealii::Point<3> &coordinate, int block) const;
+  dealii::Tensor<2, 3, ComplexNumber> get_Preconditioner_Tensor(
+      Position &coordinate, int block) const;
 
-  dealii::Tensor<2, 3, std::complex<double>> Apply_PML_To_Tensor(
-      dealii::Point<3> &coordinate,
+  dealii::Tensor<2, 3, ComplexNumber> Apply_PML_To_Tensor(
+      Position &coordinate,
       dealii::Tensor<2, 3, double> Tensor_input) const;
 
-  dealii::Tensor<2, 3, std::complex<double>> Apply_PML_To_Tensor_For_Preconditioner(
-      dealii::Point<3> &coordinate, dealii::Tensor<2, 3, double> Tensor_input,
+  dealii::Tensor<2, 3, ComplexNumber> Apply_PML_To_Tensor_For_Preconditioner(
+      Position &coordinate, dealii::Tensor<2, 3, double> Tensor_input,
       int block) const;
 
   dealii::Tensor<2, 3, double> get_Space_Transformation_Tensor(
-      dealii::Point<3> &coordinate) const;
+      Position &coordinate) const;
 
   dealii::Tensor<2, 3, double> get_Space_Transformation_Tensor_Homogenized(
-      dealii::Point<3> &coordinate) const;
+      Position &coordinate) const;
 
 
   /**

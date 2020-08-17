@@ -8,6 +8,7 @@
 #include "HSIEPolynomial.h"
 #include "../Helpers/staticfunctions.h"
 #include "JacobianForCell.h"
+#include "../Helpers/staticfunctions.h"
 
 const unsigned int MAX_DOF_NUMBER = INT_MAX;
 
@@ -21,7 +22,7 @@ const std::vector<std::vector<unsigned int>> edge_to_boundary_id = {
 HSIESurface::HSIESurface(unsigned int in_order,
     const dealii::Triangulation<2, 2> &in_surface_triangulation,
     unsigned int in_boundary_id, unsigned int in_inner_order,
-    std::complex<double> in_k0,
+    ComplexNumber in_k0,
     double in_additional_coordinate,
     bool in_is_metal)
     :
@@ -40,6 +41,7 @@ HSIESurface::HSIESurface(unsigned int in_order,
     this->set_mesh_boundary_ids();
     dof_counter = 0;
     k0 = in_k0;
+    std::cout << "HSIE surface setup data: order: "<< order << " kappa_0: "<< k0 << std::endl; 
   }
 }
 
@@ -348,7 +350,7 @@ void HSIESurface::fill_matrix(
     auto temp_it = dof_h_nedelec.begin();
     auto temp_it2 = dof_h_q.begin();
     unsigned int dofs_per_cell = this->get_dof_data_for_cell(temp_it, temp_it2).size();
-    FullMatrix<std::complex<double>> cell_matrix(dofs_per_cell,
+    FullMatrix<ComplexNumber> cell_matrix(dofs_per_cell,
         dofs_per_cell);
     unsigned int cell_counter = 0;
     auto it2 = dof_h_q.begin();
@@ -427,7 +429,7 @@ void HSIESurface::fill_matrix(
         double JxW = jxw_values[q_point];
         for (unsigned int i = 0; i < cell_dofs.size(); i++) {
           for (unsigned int j = 0; j < cell_dofs.size(); j++) {
-            std::complex<double> part =
+            ComplexNumber part =
                 (evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C)
                 + evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
                 JxW;
@@ -482,7 +484,7 @@ void HSIESurface::fill_matrix(
         GeometryInfo<2>::vertices_per_cell * compute_dofs_per_vertex() +
         GeometryInfo<2>::lines_per_cell * compute_dofs_per_edge(false) +
         compute_dofs_per_face(false);
-      FullMatrix<std::complex<double>> cell_matrix(dofs_per_cell,
+      FullMatrix<ComplexNumber> cell_matrix(dofs_per_cell,
           dofs_per_cell);
     unsigned int cell_counter = 0;
     auto it2 = dof_h_q.begin();
@@ -560,7 +562,7 @@ void HSIESurface::fill_matrix(
         double JxW = jxw_values[q_point];
         for (unsigned int i = 0; i < cell_dofs.size(); i++) {
           for (unsigned int j = 0; j < cell_dofs.size(); j++) {
-            std::complex<double> part =
+            ComplexNumber part =
                 (evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C)
                 + evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
                 JxW;
@@ -786,13 +788,13 @@ void HSIESurface::register_new_edge_dofs(
        inner_order++) {
     register_single_dof(cell_nedelec->face_index(edge), -1, inner_order + 1, DofType::EDGE, edge_dof_data, local_dofs[inner_order]);
 
-    Point<3, double> bp = undo_transform(cell_nedelec->face(edge)->center(false, false));
+    Position bp = undo_transform(cell_nedelec->face(edge)->center(false, false));
     DofIndexAndOrientationAndPosition index_and_orientation;
     index_and_orientation.index =
         edge_dof_data[edge_dof_data.size() - 1].global_index;
     index_and_orientation.orientation = get_orientation(
-        cell_nedelec->face(edge)->vertex(0),
-        cell_nedelec->face(edge)->vertex(1));
+        undo_transform(cell_nedelec->face(edge)->vertex(0)),
+        undo_transform(cell_nedelec->face(edge)->vertex(1)));
     index_and_orientation.position = bp;
     add_surface_relevant_dof(index_and_orientation);
   }
@@ -854,12 +856,12 @@ void HSIESurface::register_new_surface_dofs(
        inner_order++) {
     register_single_dof(cell_nedelec->id().to_string(), -1, inner_order, DofType::SURFACE, face_dof_data, surf_dofs.nth_index_in_set(inner_order));
 
-    Point<3, double> bp = undo_transform(cell_nedelec->center());
+    Position bp = undo_transform(cell_nedelec->center());
     DofIndexAndOrientationAndPosition index_and_orientation;
     index_and_orientation.index =
         face_dof_data[face_dof_data.size() - 1].global_index;
-    index_and_orientation.orientation = get_orientation(cell_nedelec->vertex(0),
-        cell_nedelec->vertex(1));
+    index_and_orientation.orientation = get_orientation(undo_transform(cell_nedelec->vertex(0)),
+        undo_transform(cell_nedelec->vertex(1)));
     index_and_orientation.position = bp;
     add_surface_relevant_dof(index_and_orientation);
   }
@@ -913,9 +915,9 @@ unsigned int HSIESurface::register_dof() {
   return this->dof_counter - 1;
 }
 
-std::complex<double> HSIESurface::evaluate_a(
+ComplexNumber HSIESurface::evaluate_a(
     std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, Tensor<2,3,double> G) {
-  std::complex<double> result(0, 0);
+  ComplexNumber result(0, 0);
   for(unsigned int i = 0; i < 3; i++) {
     for (unsigned int j = 0; j < 3; j++) {
       for (unsigned int k = 0; k < std::min(u[i].a.size(), v[j].a.size()); k++) {
@@ -1022,8 +1024,8 @@ void HSIESurface::transform_coordinates_in_place(
   }
 }
 
-dealii::Point<3> HSIESurface::undo_transform(dealii::Point<2> inp) {
-  dealii::Point<3, double> ret;
+Position HSIESurface::undo_transform(dealii::Point<2> inp) {
+  Position ret;
   ret[0] = inp[0];
   ret[1] = inp[1];
   ret[2] = additional_coordinate;
@@ -1049,7 +1051,7 @@ dealii::Point<3> HSIESurface::undo_transform(dealii::Point<2> inp) {
   return ret;
 }
 
-bool is_oriented_positively(dealii::Point<3, double> in_p) {
+bool is_oriented_positively(Position in_p) {
   return (in_p[0] + in_p[1] + in_p[2] > 0);
 }
 
@@ -1151,22 +1153,6 @@ void HSIESurface::clear_user_flags() {
   }
 }
 
-bool HSIESurface::get_orientation(const Position2D &vertex_1,
-    const Position2D &vertex_2) {
-  Position a = undo_transform(vertex_1);
-  Position b = undo_transform(vertex_2);
-  bool ret = false;
-  double abs_max = -1.0;
-  for (unsigned int i = 0; i < 3; i++) {
-    double diff = a[i] - b[i];
-    if (std::abs(diff) > abs_max) {
-      ret = diff > 0;
-      abs_max = std::abs(diff);
-    }
-  }
-  return ret;
-}
-
 std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association_by_boundary_id(
     BoundaryId in_boundary_id) {
   std::vector<DofIndexAndOrientationAndPosition> ret;
@@ -1190,7 +1176,7 @@ std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association_
               DofIndexAndOrientationAndPosition index_and_orientation;
               index_and_orientation.index = it->face_index(edge);
               index_and_orientation.orientation = get_orientation(
-                  it->line(edge)->vertex(0), it->line(edge)->vertex(1));
+                  undo_transform(it->line(edge)->vertex(0)), undo_transform(it->line(edge)->vertex(1)));
               index_and_orientation.position = undo_transform(
                   it->line(edge)->center());
               face_indices_with_point.emplace_back(index_and_orientation);

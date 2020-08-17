@@ -51,9 +51,10 @@ void NumericProblem::make_grid() {
   std::cout << "Make Grid." << std::endl;
   // const unsigned int Cells_Per_Direction = 3;
   std::vector<unsigned int> repetitions;
-  repetitions.push_back(31);
-  repetitions.push_back(31);
-  repetitions.push_back(31);
+  repetitions.push_back(GlobalParams.Cells_in_x);
+  repetitions.push_back(GlobalParams.Cells_in_y);
+  repetitions.push_back(GlobalParams.Cells_in_z);
+  std::cout << "Cells: " << GlobalParams.Cells_in_x << " x " << GlobalParams.Cells_in_y << " x " << GlobalParams.Cells_in_z <<std::endl;
   std::cout << "Geometry: ["<< Geometry.local_x_range.first << "," << Geometry.local_x_range.second 
     << "] x ["<< Geometry.local_y_range.first << "," << Geometry.local_y_range.second 
     << "] x ["<< Geometry.local_z_range.first << "," << Geometry.local_z_range.second << "]" << std::endl;
@@ -76,7 +77,7 @@ bool compareIndexCenterPairs(std::pair<int, double> c1,
 }
 
 std::vector<unsigned int> NumericProblem::dofs_for_cell_around_point(
-    dealii::Point<3> &in_p) {
+    Position &in_p) {
   std::vector<unsigned int> ret(fe.dofs_per_cell);
   std::cout << "DOFS per Cell: " << fe.dofs_per_cell << std::endl;
   auto cell = dof_handler.begin_active();
@@ -121,6 +122,7 @@ auto NumericProblem::select_central_cell() -> DofHandler3D::active_cell_iterator
 
 void NumericProblem::make_constraints() {
   PointSourceField psf;
+  psf.set_cell_diameter(GlobalParams.Geometry_Size_X / GlobalParams.Cells_in_x);
   CellIterator3D central_cell = select_central_cell();
   std::vector<DofCount> local_line_indices(fe.dofs_per_line);
   std::vector<DofCount> local_face_indices(fe.dofs_per_face);
@@ -144,7 +146,6 @@ void NumericProblem::make_constraints() {
       for (unsigned int j = 0; j < 3; j++) {
         dof_value += value[j] * (p0[j] - p1[j]);
       }
-      dof_value /= (p0-p1).norm();
       local_constraints.set_inhomogeneity(local_line_indices[0], dof_value);
       for (unsigned int j = 1; j < fe.dofs_per_line; j++) {
         local_constraints.set_inhomogeneity(local_line_indices[j], ComplexNumber(0, 0));
@@ -177,7 +178,7 @@ void NumericProblem::make_constraints(
 void NumericProblem::SortDofsDownstream() {
   std::cout << "Start Dof Sorting" << std::endl;
   triangulation.clear_user_flags();
-  std::vector<std::pair<DofNumber, Point<3, double>>> current;
+  std::vector<std::pair<DofNumber, Position>> current;
   std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
   std::set<DofNumber> line_set;
   std::vector<DofNumber> local_face_dofs(fe.dofs_per_face);
@@ -230,20 +231,6 @@ void NumericProblem::SortDofsDownstream() {
   }
   dof_handler.renumber_dofs(new_numbering);
   std::cout << "End Dof Sorting" << std::endl;
-}
-
-bool NumericProblem::get_orientation(const Position &vertex_1,
-    const Position &vertex_2) {
-  bool ret = false;
-  double abs_max = -1.0;
-  for (unsigned int i = 0; i < 3; i++) {
-    double diff = vertex_1[i] - vertex_2[i];
-    if (std::abs(diff) > abs_max) {
-      ret = diff > 0;
-      abs_max = std::abs(diff);
-    }
-  }
-  return ret;
 }
 
 std::vector<DofIndexAndOrientationAndPosition> NumericProblem::get_surface_dof_vector_for_boundary_id(
@@ -312,7 +299,7 @@ std::vector<DofIndexAndOrientationAndPosition> NumericProblem::get_surface_dof_v
 struct CellwiseAssemblyData {
   QGauss<3> quadrature_formula; 
   FEValues<3> fe_values;
-  std::vector<Point<3>> quadrature_points;
+  std::vector<Position> quadrature_points;
   const unsigned int dofs_per_cell;
   const unsigned int n_q_points;
   FullMatrix<ComplexNumber> cell_matrix_real;
@@ -369,14 +356,14 @@ struct CellwiseAssemblyData {
 
     const double JxW = fe_values.JxW(q_index);
     for (unsigned int i = 0; i < dofs_per_cell; i++) {
-      Tensor<1, 3, std::complex<double>> I_Curl;
-      Tensor<1, 3, std::complex<double>> I_Val;
+      Tensor<1, 3, ComplexNumber> I_Curl;
+      Tensor<1, 3, ComplexNumber> I_Val;
       I_Curl = fe_values[fe_field].curl(i, q_index);
       I_Val = fe_values[fe_field].value(i, q_index);
 
       for (unsigned int j = 0; j < dofs_per_cell; j++) {
-        Tensor<1, 3, std::complex<double>> J_Curl;
-        Tensor<1, 3, std::complex<double>> J_Val;
+        Tensor<1, 3, ComplexNumber> J_Curl;
+        Tensor<1, 3, ComplexNumber> J_Val;
         J_Curl = fe_values[fe_field].curl(j, q_index);
         J_Val = fe_values[fe_field].value(j, q_index);
 
@@ -386,9 +373,9 @@ struct CellwiseAssemblyData {
     }
   }
 
-  Tensor<1, 3, std::complex<double>> Conjugate_Vector(
-      Tensor<1, 3, std::complex<double>> input) {
-    Tensor<1, 3, std::complex<double>> ret;
+  Tensor<1, 3, ComplexNumber> Conjugate_Vector(
+      Tensor<1, 3, ComplexNumber> input) {
+    Tensor<1, 3, ComplexNumber> ret;
 
     for (int i = 0; i < 3; i++) {
       ret[i].real(input[i].real());

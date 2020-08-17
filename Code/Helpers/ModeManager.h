@@ -14,9 +14,9 @@ class ModeManager {
 
   int number_modes_out();
 
-  double get_input_component(int, dealii::Point<3, double>, int);
+  double get_input_component(int, Position, int);
 
-  double get_output_component(int, dealii::Point<3, double>, int);
+  double get_output_component(int, Position, int);
 
   void load();
 

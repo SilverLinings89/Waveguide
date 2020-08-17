@@ -217,14 +217,14 @@ class NumericProblem {
    * argument.
    */
 
-  void solution_evaluation(Point<3, double> position, double *solution) const;
+  void solution_evaluation(Position position, double *solution) const;
 
   /**
    * Same as solution_evaluation but transforms the coordinate to the dual
    * system first, so if you passed in a coordinate on the input interface, it
    * would return the solution evaluation on the output interface.
    */
-  void adjoint_solution_evaluation(Point<3, double> position,
+  void adjoint_solution_evaluation(Position position,
                                    double *solution) const;
 
   void SortDofsDownstream();
@@ -255,12 +255,10 @@ class NumericProblem {
   std::vector<DofIndexAndOrientationAndPosition> get_surface_dof_vector_for_boundary_id(
       unsigned int b_id);
 
-  std::vector<unsigned int> dofs_for_cell_around_point(dealii::Point<3> &in_p);
+  std::vector<unsigned int> dofs_for_cell_around_point(Position &in_p);
 
   void make_sparsity_pattern(dealii::DynamicSparsityPattern *in_pattern,
       unsigned int shift, dealii::AffineConstraints<ComplexNumber> *constraints);
-
-  bool get_orientation(const Position &vertex_1, const Position &vertex_2);
 
   void write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs);
   

@@ -110,8 +110,8 @@ protected:
     repetitions.push_back(Cells_Per_Direction);
     repetitions.push_back(Cells_Per_Direction);
     repetitions.push_back(Cells_Per_Direction);
-    dealii::Point<3, double> left(-1, -1, -1);
-    dealii::Point<3, double> right(1, 1, 1);
+    Position left(-1, -1, -1);
+    Position right(1, 1, 1);
     dealii::GridGenerator::subdivided_hyper_rectangle(tria, repetitions, left,
         right, true);
     std::set<unsigned int> b_ids;
@@ -145,8 +145,8 @@ protected:
     repetitions.push_back(Cells_Per_Direction);
     repetitions.push_back(Cells_Per_Direction);
     repetitions.push_back(Cells_Per_Direction);
-    dealii::Point<3, double> left(-1, -1, -1);
-    dealii::Point<3, double> right(1, 1, 1);
+    Position left(-1, -1, -1);
+    Position right(1, 1, 1);
     dealii::GridGenerator::subdivided_hyper_rectangle(tria, repetitions, left,
         right, true);
     const unsigned int dest_cells = Cells_Per_Direction * Cells_Per_Direction

@@ -34,7 +34,7 @@ class SquareMeshGenerator {
    * given vector is below the average of input and output radius. \params
    * position This value gives us the location to check for.
    */
-  bool math_coordinate_in_waveguide(Point<3> position) const;
+  bool math_coordinate_in_waveguide(Position position) const;
 
   /**
    * This function checks if the given coordinate is inside the waveguide or
@@ -44,7 +44,7 @@ class SquareMeshGenerator {
    * math_coordinate_in_waveguide(f(x,y,z)). \params position This value gives
    * us the location to check for.
    */
-  bool phys_coordinate_in_waveguide(Point<3> position) const;
+  bool phys_coordinate_in_waveguide(Position position) const;
 
   /**
    * This function takes a triangulation object and prepares it for the further
@@ -56,7 +56,7 @@ class SquareMeshGenerator {
   void prepare_triangulation(Triangulation<3> *in_tria);
 
   unsigned int getDominantComponentAndDirection(
-      dealii::Point<3, double> in_dir) const;
+      Position in_dir) const;
 
   void set_boundary_ids(Triangulation<3> &) const;
 

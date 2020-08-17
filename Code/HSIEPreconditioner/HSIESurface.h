@@ -104,7 +104,6 @@ public:
       std::vector<DofIndexAndOrientationAndPosition>;
   void clear_user_flags();
   void set_b_id_uses_hsie(unsigned int, bool);
-  bool get_orientation(const Position2D &vertex_1, const Position2D &vertex_2);
 };
 
 

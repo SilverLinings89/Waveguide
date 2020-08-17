@@ -25,9 +25,9 @@ InhomogenousTransformationRectangular::InhomogenousTransformationRectangular(
 InhomogenousTransformationRectangular::
     ~InhomogenousTransformationRectangular() {}
 
-Point<3> InhomogenousTransformationRectangular::math_to_phys(
-    Point<3> coord) const {
-  Point<3> ret;
+Position InhomogenousTransformationRectangular::math_to_phys(
+    Position coord) const {
+  Position ret;
   std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
   double m = case_sectors[sec.first].get_m(sec.second);
   ret[0] = coord[0];
@@ -36,9 +36,9 @@ Point<3> InhomogenousTransformationRectangular::math_to_phys(
   return ret;
 }
 
-Point<3> InhomogenousTransformationRectangular::phys_to_math(
-    Point<3> coord) const {
-  Point<3> ret;
+Position InhomogenousTransformationRectangular::phys_to_math(
+    Position coord) const {
+  Position ret;
   std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
   double m = case_sectors[sec.first].get_m(sec.second);
   ret[0] = coord[0];
@@ -47,8 +47,8 @@ Point<3> InhomogenousTransformationRectangular::phys_to_math(
   return ret;
 }
 
-Tensor<2, 3, std::complex<double>>
-InhomogenousTransformationRectangular::get_Tensor(Point<3> &position) const {
+Tensor<2, 3, ComplexNumber>
+InhomogenousTransformationRectangular::get_Tensor(Position &position) const {
   return get_Space_Transformation_Tensor(position);
 }
 
@@ -256,7 +256,7 @@ unsigned int InhomogenousTransformationRectangular::NDofs() const {
 }
 
 Tensor<2, 3, double> InhomogenousTransformationRectangular::
-    get_Space_Transformation_Tensor_Homogenized(Point<3> &position) const {
+    get_Space_Transformation_Tensor_Homogenized(Position &position) const {
   std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
 
   Tensor<2, 3, double> transformation =
@@ -268,7 +268,7 @@ Tensor<2, 3, double> InhomogenousTransformationRectangular::
 
 Tensor<2, 3, double>
 InhomogenousTransformationRectangular::get_Space_Transformation_Tensor(
-    Point<3> &position) const {
+    Position &position) const {
   std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
 
   Tensor<2, 3, double> transformation =

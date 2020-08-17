@@ -53,11 +53,13 @@ public:
 
   void validate();
 
-  dealii::Vector<std::complex<double>> get_local_vector_from_global() override;
+  dealii::Vector<ComplexNumber> get_local_vector_from_global() override;
 
   void output_results();
 
   auto get_center() -> Position const override;
 
   auto reinit() -> void override;
+
+  auto compare_to_exact_solution() -> void;
 };

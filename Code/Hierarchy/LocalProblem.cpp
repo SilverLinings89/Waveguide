@@ -11,6 +11,16 @@
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/vector_operation.h>
 #include <deal.II/base/timer.h>
+#include <deal.II/numerics/vector_tools_common.h>
+#include <deal.II/numerics/vector_tools_integrate_difference.h>
+#include <deal.II/numerics/vector_tools_point_value.h>
+#include "../Helpers/PointSourceField.h"
+
+PointSourceField psf;
+
+static void vector_value(const Position &p, dealii::Vector<ComplexNumber> &vec) {
+  psf.vector_value(p, vec);
+};
 
 LocalProblem::LocalProblem() :
     HierarchicalProblem(0), base_problem(), sc(), solver(sc, MPI_COMM_SELF) {
@@ -49,7 +59,6 @@ void LocalProblem::initialize() {
     dealii::Triangulation<2, 3> temp_triangulation;
     const unsigned int component = side / 2;
     double additional_coorindate = 0;
-    std::complex<double> k0(0, 1);
     bool found = false;
     for (auto it : base_problem.triangulation.active_cell_iterators()) {
       if (it->at_boundary(side)) {
@@ -93,8 +102,8 @@ void LocalProblem::initialize() {
     dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation,
         b_ids);
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
-    surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(5, std::ref(surf_tria), side,
-          GlobalParams.Nedelec_element_order, k0, additional_coorindate));
+    surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(GlobalParams.HSIE_polynomial_degree, std::ref(surf_tria), side,
+          GlobalParams.Nedelec_element_order, GlobalParams.kappa_0, additional_coorindate));
     surfaces[side]->initialize();
   }
 
@@ -267,7 +276,19 @@ void LocalProblem::solve() {
   std::cout << "Elapsed CPU time: " << timer1.cpu_time() << " seconds." << std::endl;
   std::cout << "Elapsed walltime: " << timer1.wall_time() << " seconds." << std::endl;
 
-  //constraints.distribute(solution);
+  constraints.distribute(solution);
+  Mat fact;
+  std::cout << "A" << std::endl;
+  KSPGetPC(solver.solver_data->ksp,&solver.solver_data->pc);
+  std::cout << "B" << std::endl;
+  PCFactorGetMatrix(solver.solver_data->pc,&fact);
+  std::cout << "C" << std::endl;
+  PetscViewerPushFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)),PETSC_VIEWER_ASCII_INFO);
+  std::cout << "D" << std::endl;
+  MatView(fact,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
+  std::cout << "E" << std::endl;
+  PetscViewerPopFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
+
   std::cout << "Norm after: " << solution.l2_norm() << std::endl;
 }
 
@@ -305,8 +326,8 @@ LocalProblem* LocalProblem::get_local_problem() {
   return this;
 }
 
-dealii::Vector<std::complex<double>> LocalProblem::get_local_vector_from_global() {
-  dealii::Vector<std::complex<double>> ret(base_problem.dof_handler.n_dofs());
+dealii::Vector<ComplexNumber> LocalProblem::get_local_vector_from_global() {
+  dealii::Vector<ComplexNumber> ret(base_problem.dof_handler.n_dofs());
   std::cout << "Dof handler dofs: " << base_problem.dof_handler.n_dofs()
       << std::endl;
   for (unsigned int i = 0; i < base_problem.n_dofs; i++) {
@@ -317,11 +338,88 @@ dealii::Vector<std::complex<double>> LocalProblem::get_local_vector_from_global(
 
 void LocalProblem::output_results() {
   dealii::DataOut<3> data_out;
-  dealii::Vector<std::complex<double>> solution =
+  dealii::Vector<ComplexNumber> solution =
       get_local_vector_from_global();
   data_out.attach_dof_handler(base_problem.dof_handler);
   data_out.add_data_vector(solution, "Solution");
   data_out.build_patches();
   std::ofstream outputvtu("solution.vtu");
+  dealii::Vector<double> cellwise_error(base_problem.triangulation.n_active_cells());
+  dealii::VectorTools::integrate_difference(
+    MappingQGeneric<3>(1),
+    base_problem.dof_handler,
+    solution,
+    psf,
+    cellwise_error,
+    dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
+    dealii::VectorTools::NormType::L2_norm );
+  data_out.add_data_vector(cellwise_error, "Cellwise error");
   data_out.write_vtu(outputvtu);
+  const double global_error = dealii::VectorTools::compute_global_error(base_problem.triangulation, cellwise_error, dealii::VectorTools::NormType::L2_norm);
+  std::cout << "Global computed error L2: " << global_error << std::endl;
+  compare_to_exact_solution();
 }
+
+auto LocalProblem::compare_to_exact_solution() -> void {
+  NumericVectorLocal solution_inner(base_problem.n_dofs);
+  for(unsigned int i = 0; i < base_problem.n_dofs; i++) {
+    solution_inner[i] = solution[i];
+  }
+
+  psf.set_cell_diameter(GlobalParams.Geometry_Size_X / GlobalParams.Cells_in_x -0.0001);
+  std::ofstream myfile ("output_z.dat");
+  for(unsigned int i = 0; i < 100; i++) {
+    double z = -GlobalParams.Geometry_Size_X/2.0 + i*GlobalParams.Geometry_Size_X/99.0;
+    Position p = {0,0, z};
+    NumericVectorLocal local_solution(3);
+    NumericVectorLocal exact_solution(3);
+    VectorTools::point_value(base_problem.dof_handler, solution_inner, p, local_solution);
+    psf.vector_value(p, exact_solution);
+    myfile << "0\t0\t" << z << "\t" << local_solution[0].real()<< "\t" << local_solution[0].imag() ;
+    myfile << "\t" << local_solution[1].real()<< "\t"<< local_solution[1].imag();
+    myfile << "\t" << local_solution[2].real()<< "\t"<< local_solution[2].imag();
+    myfile << "\t" << exact_solution[0].real()<< "\t"<< exact_solution[0].imag() ;
+    myfile << "\t" << exact_solution[1].real()<< "\t"<< exact_solution[1].imag();
+    myfile << "\t" << exact_solution[2].real()<< "\t"<< exact_solution[2].imag();
+    myfile << std::endl;
+  }
+  myfile.close();
+  myfile.open("output_y.dat");
+  for(unsigned int i = 0; i < 100; i++) {
+    double y = -GlobalParams.Geometry_Size_X/2.0 + i*GlobalParams.Geometry_Size_X/99.0;
+    Position p = {0,y,0};
+    NumericVectorLocal local_solution(3);
+    NumericVectorLocal exact_solution(3);
+    VectorTools::point_value(base_problem.dof_handler, solution_inner, p, local_solution);
+    psf.vector_value(p, exact_solution);
+    myfile <<"0\t" << y << "\t0\t"<< local_solution[0].real()<< "\t"<< local_solution[0].imag() ;
+    myfile << "\t" << local_solution[1].real()<< "\t"<< local_solution[1].imag();
+    myfile << "\t" << local_solution[2].real()<< "\t"<< local_solution[2].imag();
+    myfile << "\t" << exact_solution[0].real()<< "\t"<< exact_solution[0].imag() ;
+    myfile << "\t" << exact_solution[1].real()<< "\t"<< exact_solution[1].imag();
+    myfile << "\t" << exact_solution[2].real()<< "\t"<< exact_solution[2].imag();
+    myfile << std::endl;
+  }
+  myfile.close();
+  myfile.open("output_x.dat");
+  for(unsigned int i = 0; i < 100; i++) {
+    double x = -GlobalParams.Geometry_Size_X/2.0 + i*GlobalParams.Geometry_Size_X/99.0;
+    Position p = {x,0,0};
+    NumericVectorLocal local_solution(3);
+    NumericVectorLocal exact_solution(3);
+    VectorTools::point_value(base_problem.dof_handler, solution_inner, p, local_solution);
+    psf.vector_value(p, exact_solution);
+    myfile << x << "\t0\t0";
+    myfile << "\t" << local_solution[0].real()<< "\t"<< local_solution[0].imag() ;
+    myfile << "\t" << local_solution[1].real()<< "\t"<< local_solution[1].imag();
+    myfile << "\t" << local_solution[2].real()<< "\t"<< local_solution[2].imag();
+    myfile << "\t" << exact_solution[0].real()<< "\t"<< exact_solution[0].imag() ;
+    myfile << "\t" << exact_solution[1].real()<< "\t"<< exact_solution[1].imag();
+    myfile << "\t" << exact_solution[2].real()<< "\t"<< exact_solution[2].imag();
+    myfile << std::endl;
+  }
+  myfile.close();
+
+
+}
+

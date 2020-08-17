@@ -39,7 +39,7 @@ SquareMeshGenerator::~SquareMeshGenerator() {}
 // in the minus X direction etc.)
 
 unsigned int SquareMeshGenerator::getDominantComponentAndDirection(
-    Point<3> in_dir) const {
+    Position in_dir) const {
   unsigned int comp = 0;
   if (std::abs(in_dir[0]) >= std::abs(in_dir[1]) &&
       std::abs(in_dir[0]) >= std::abs(in_dir[2])) {
@@ -73,9 +73,9 @@ void SquareMeshGenerator::set_boundary_ids(Triangulation<3> &tria) const {
   for (; cell2 != endc2; ++cell2) {
     if (cell2->at_boundary()) {
       for (int j = 0; j < 6; j++) {
-        Point<3> ctr = cell2->face(j)->center();
+        Position ctr = cell2->face(j)->center();
         if (cell2->face(j)->at_boundary()) {
-          dealii::Point<3, double> d2 = -cell2->center() + ctr;
+          Position d2 = -cell2->center() + ctr;
           unsigned int dominant_direction =
               getDominantComponentAndDirection(d2);
           cell2->face(j)->set_all_boundary_ids(dominant_direction);

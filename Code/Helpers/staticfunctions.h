@@ -32,11 +32,11 @@ extern SpaceTransformation *the_st;
  */
 Tensor<1, 3, double> crossproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 
-std::complex<double> matrixD(int in_row, int in_column,
-                             std::complex<double> in_k0);
+ComplexNumber matrixD(int in_row, int in_column,
+                             ComplexNumber in_k0);
 
-bool compareDofBaseData(std::pair<DofNumber, Point<3, double>> c1,
-    std::pair<DofNumber, Point<3, double>> c2);
+bool compareDofBaseData(std::pair<DofNumber, Position> c1,
+    std::pair<DofNumber, Position> c2);
 
 bool compareDofBaseDataAndOrientation(
     DofIndexAndOrientationAndPosition,
@@ -57,34 +57,34 @@ void mesh_info(const Triangulation<dim>);
 
 Parameters GetParameters();
 
-Point<3, double> Triangulation_Shit_To_Local_Geometry(
-    const Point<3, double> &p);
+Position Triangulation_Shit_To_Local_Geometry(
+    const Position &p);
 
-Point<3, double> Transform_4_to_5(const Point<3, double> &p);
+Position Transform_4_to_5(const Position &p);
 
-Point<3, double> Transform_3_to_5(const Point<3, double> &p);
+Position Transform_3_to_5(const Position &p);
 
-Point<3, double> Transform_2_to_5(const Point<3, double> &p);
+Position Transform_2_to_5(const Position &p);
 
-Point<3, double> Transform_1_to_5(const Point<3, double> &p);
+Position Transform_1_to_5(const Position &p);
 
-Point<3, double> Transform_0_to_5(const Point<3, double> &p);
+Position Transform_0_to_5(const Position &p);
 
-Point<3, double> Transform_5_to_4(const Point<3, double> &p);
+Position Transform_5_to_4(const Position &p);
 
-Point<3, double> Transform_5_to_3(const Point<3, double> &p);
+Position Transform_5_to_3(const Position &p);
 
-Point<3, double> Transform_5_to_2(const Point<3, double> &p);
+Position Transform_5_to_2(const Position &p);
 
-Point<3, double> Transform_5_to_1(const Point<3, double> &p);
+Position Transform_5_to_1(const Position &p);
 
-Point<3, double> Transform_5_to_0(const Point<3, double> &p);
+Position Transform_5_to_0(const Position &p);
 
 inline bool file_exists(const std::string &name);
 
 void PrepareStreams();
 
-double Distance2D(Point<3, double>, Point<3, double> = Point<3, double>());
+double Distance2D(Position, Position = Position());
 
 std::vector<types::global_dof_index> Add_Zero_Restraint(
     AffineConstraints<double> *, DoFHandler<3>::active_cell_iterator &,
@@ -92,7 +92,7 @@ std::vector<types::global_dof_index> Add_Zero_Restraint(
 
 void add_vector_of_indices(IndexSet *, std::vector<types::global_dof_index>);
 
-double hmax_for_cell_center(Point<3, double>);
+double hmax_for_cell_center(Position);
 
 double InterpolationPolynomial(double, double, double, double, double);
 
@@ -104,3 +104,13 @@ double InterpolationPolynomialZeroDerivative(double, double, double);
 double sigma(double, double, double);
 
 auto compute_center_of_triangulation(const Mesh*) -> Position;
+
+bool get_orientation(
+    const Position &vertex_1,
+    const Position &vertex_2);
+
+NumericVectorLocal crossproduct(const NumericVectorLocal &u,const NumericVectorLocal &v);
+
+Position crossproduct(const Position &u,const Position &v);
+
+void multiply_in_place(const ComplexNumber factor_1, NumericVectorLocal &factor_2);

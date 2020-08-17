@@ -24,9 +24,9 @@ HomogenousTransformationRectangular::HomogenousTransformationRectangular(
 
 HomogenousTransformationRectangular::~HomogenousTransformationRectangular() {}
 
-Point<3, double> HomogenousTransformationRectangular::math_to_phys(
-    Point<3, double> coord) const {
-  Point<3, double> ret;
+Position HomogenousTransformationRectangular::math_to_phys(
+    Position coord) const {
+  Position ret;
   if (coord[2] < GlobalParams.Geometry_Size_Z / (-2.0)) {
     ret[0] = (2 * GlobalParams.Width_of_waveguide) * coord[0] /
              (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide);
@@ -51,7 +51,7 @@ Point<3, double> HomogenousTransformationRectangular::math_to_phys(
 }
 
 Tensor<2, 3, double> HomogenousTransformationRectangular::get_Space_Transformation_Tensor_Homogenized(
-    Point<3, double> &position) const {
+    Position &position) const {
   std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
 
   Tensor<2, 3, double> transformation =
@@ -75,9 +75,9 @@ Tensor<2, 3, double> HomogenousTransformationRectangular::get_Space_Transformati
   return transformation;
 }
 
-Point<3, double> HomogenousTransformationRectangular::phys_to_math(
-    Point<3, double> coord) const {
-  Point<3, double> ret;
+Position HomogenousTransformationRectangular::phys_to_math(
+    Position coord) const {
+  Position ret;
   if (coord[2] < GlobalParams.Geometry_Size_Z / (-2.0)) {
     ret[0] = (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide) * coord[0] /
              (2 * GlobalParams.Width_of_waveguide);
@@ -101,15 +101,15 @@ Point<3, double> HomogenousTransformationRectangular::phys_to_math(
   return ret;
 }
 
-Tensor<2, 3, std::complex<double>>
+Tensor<2, 3, ComplexNumber>
 HomogenousTransformationRectangular::get_Tensor(
-    Point<3, double> &position) const {
+    Position &position) const {
   return get_Space_Transformation_Tensor_Homogenized(position);
 }
 
 Tensor<2, 3, double>
 HomogenousTransformationRectangular::get_Space_Transformation_Tensor(
-    Point<3, double> &position) const {
+    Position &position) const {
   std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
 
   Tensor<2, 3, double> transformation =

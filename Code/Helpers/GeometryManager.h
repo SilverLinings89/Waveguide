@@ -1,6 +1,6 @@
 #pragma once
 
-#include <deal.II/base/point.h>
+#include "../Core/Types.h"
 #include <utility>
 #include "Enums.h"
 
@@ -43,5 +43,5 @@ class GeometryManager {
   double shape_sector_length;
   unsigned int shape_sector_count;
 
-  bool math_coordinate_in_waveguide(dealii::Point<3, double>) const;
+  bool math_coordinate_in_waveguide(Position) const;
 };

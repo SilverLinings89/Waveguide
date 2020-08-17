@@ -5,21 +5,21 @@
 #include "ExactSolution.h"
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
-#include <complex>
 #include <string>
 #include <vector>
 
 #include "../Core/NumericProblem.h"
 #include "../Core/GlobalObjects.h"
+#include "../Core/Types.h"
 #include "PointVal.h"
 
-double ExactSolution::value(const Point<3> &in_p,
+double ExactSolution::value(const Position &in_p,
                             const unsigned int component) const {
-  Point<3, double> p = in_p;
+  Position p = in_p;
   if (is_dual) p[2] = -in_p[2];
 
   if (is_rectangular) {
-    std::complex<double> ret_val(0.0, 0.0);
+    ComplexNumber ret_val(0.0, 0.0);
     const double delta = abs(mesh_points[0] - mesh_points[1]);
     const int mesh_number = mesh_points.size();
     if (!(abs(p[1]) >= mesh_points[0] || abs(p[0]) >= mesh_points[0])) {
@@ -82,7 +82,7 @@ double ExactSolution::value(const Point<3> &in_p,
         n = std::sqrt(GlobalParams.Epsilon_R_outside_waveguide);
       }
       double k = n * 2 * GlobalParams.Pi / GlobalParams.Lambda;
-      std::complex<double> phase(0.0,
+      ComplexNumber phase(0.0,
           (p[2] - Geometry.global_z_range.first) * k);
       ret_val *= std::exp(phase);
       if (component > 2) {
@@ -98,9 +98,9 @@ double ExactSolution::value(const Point<3> &in_p,
   }
 }
 
-void ExactSolution::vector_value(const Point<3> &in_p,
+void ExactSolution::vector_value(const Position &in_p,
                                  Vector<double> &values) const {
-  Point<3, double> p = in_p;
+  Position p = in_p;
   if (is_dual) p[2] = -in_p[2];
 
   if (is_rectangular) {
@@ -155,11 +155,11 @@ void ExactSolution::vector_value(const Point<3> &in_p,
           n = std::sqrt(GlobalParams.Epsilon_R_outside_waveguide);
         }
         double k = n * 2 * GlobalParams.Pi / GlobalParams.Lambda;
-        std::complex<double> phase(
+        ComplexNumber phase(
             0.0, -(p[2] + GlobalParams.Geometry_Size_Z / 2.0) * k);
         phase = std::exp(phase);
         for (unsigned int komp = 0; komp < 3; komp++) {
-          std::complex<double> entr(values[0 + komp], values[3 + komp]);
+           ComplexNumber entr(values[0 + komp], values[3 + komp]);
           entr *= phase;
           values[0 + komp] = entr.real();
           values[3 + komp] = entr.imag();
@@ -178,10 +178,10 @@ void ExactSolution::vector_value(const Point<3> &in_p,
   }
 }
 
-Tensor<1, 3, std::complex<double>> ExactSolution::curl(
-    const Point<3> &in_p) const {
+Tensor<1, 3, ComplexNumber> ExactSolution::curl(
+    const Position &in_p) const {
   const double h = 0.0001;
-  Tensor<1, 3, std::complex<double>> ret;
+  Tensor<1, 3, ComplexNumber> ret;
   if (is_rectangular) {
     Vector<double> dxF;
     Vector<double> dyF;
@@ -192,7 +192,7 @@ Tensor<1, 3, std::complex<double>> ExactSolution::curl(
     dzF.reinit(6, false);
     val.reinit(6, false);
     this->vector_value(in_p, val);
-    Point<3> deltap = in_p;
+    Position deltap = in_p;
     deltap[0] = deltap[0] + h;
     this->vector_value(deltap, dxF);
     deltap = in_p;
@@ -216,10 +216,10 @@ Tensor<1, 3, std::complex<double>> ExactSolution::curl(
   return ret;
 }
 
-Tensor<1, 3, std::complex<double>> ExactSolution::val(
-    const Point<3> &in_p) const {
-  Tensor<1, 3, std::complex<double>> ret;
-  Vector<double> temp;
+Tensor<1, 3, ComplexNumber> ExactSolution::val(
+    const Position &in_p) const {
+  dealii::Tensor<1, 3, ComplexNumber> ret;
+  dealii::Vector<double> temp;
   temp.reinit(6, false);
   vector_value(in_p, temp);
   ret[0].real(temp[0]);

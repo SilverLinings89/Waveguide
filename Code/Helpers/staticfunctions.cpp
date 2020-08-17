@@ -40,8 +40,8 @@ auto compute_center_of_triangulation(const Mesh *in_mesh) -> Position {
   return {x_average, y_average, z_average};
 }
 
-bool compareDofBaseData(std::pair<DofNumber, Point<3, double>> c1,
-    std::pair<DofNumber, Point<3, double>> c2) {
+bool compareDofBaseData(std::pair<DofNumber, Position> c1,
+    std::pair<DofNumber, Position> c2) {
   if (c1.second[2] != c2.second[2]) {
     return c1.second[2] < c2.second[2];
   }
@@ -83,13 +83,13 @@ void alert() {
   alert_counter++;
 }
 
-std::complex<double> matrixD(int in_row, int in_column,
-                             std::complex<double> in_k0) {
-  std::complex<double> ret(0, 0);
+ComplexNumber matrixD(int in_row, int in_column,
+                             ComplexNumber in_k0) {
+  ComplexNumber ret(0, 0);
   if (std::abs(in_row - in_column) > 1) {
     return ret;
   }
-  std::complex<double> part = 1.0 / (std::complex<double>(0, 2) * in_k0);
+  ComplexNumber part = 1.0 / (ComplexNumber(0, 2) * in_k0);
   if (in_row == 0) {
     if (in_column == 0) {
       return (-1.0 * part) + 1.0;
@@ -108,7 +108,7 @@ std::complex<double> matrixD(int in_row, int in_column,
     }
   }
   if (in_column == in_row) {
-    ret += std::complex<double>(1, 0) - part;
+    ret += ComplexNumber(1, 0) - part;
   }
   if (in_column == in_row + 1) {
     ret += part;
@@ -203,6 +203,9 @@ Parameters GetParameters() {
       prm.declare_entry("geometry size x", "1.0", Patterns::Double());
       prm.declare_entry("geometry size y", "1.0", Patterns::Double());
       prm.declare_entry("geometry size z", "1.0", Patterns::Double());
+      prm.declare_entry("cell count x", "11", Patterns::Integer());
+      prm.declare_entry("cell count y", "11", Patterns::Integer());
+      prm.declare_entry("cell count z", "11", Patterns::Integer());
   }
   prm.leave_subsection();
   prm.parse_input(input_file_name);
@@ -212,40 +215,49 @@ Parameters GetParameters() {
   ret.NumberProcesses = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
 
   prm.enter_subsection("Run parameters");
-  ret.Perform_Optimization = prm.get_bool("Perform optimization");
-  ret.Solver_Precision = prm.get_double("Solver precision");
-  ret.GMRES_Steps_before_restart = prm.get_integer("GMRES restart after");
+  {
+    ret.Perform_Optimization       = prm.get_bool("Perform optimization");
+    ret.Solver_Precision           = prm.get_double("Solver precision");
+    ret.GMRES_Steps_before_restart = prm.get_integer("GMRES restart after");
+  }
   prm.leave_subsection();
   prm.enter_subsection("Scheme properties");
-  ret.kappa_0_angle = prm.get_double("Kappa angle");
-  ret.HSIE_polynomial_degree = prm.get_integer("HSIE polynomial degree");
-  ret.Nedelec_element_order = prm.get_integer("FEM order");
-  ret.Blocks_in_x_direction = prm.get_integer("Processes in x");
-  ret.Blocks_in_y_direction = prm.get_integer("Processes in y");
-  ret.Blocks_in_z_direction = prm.get_integer("Processes in z");
-  ret.HSIE_SWEEPING_LEVEL = prm.get_integer("HSIE sweeping level");
-  ret.Number_of_sectors = prm.get_integer("Number of Sectors");
-  ret.Sector_padding = prm.get_double("Sector padding");
+  {
+    ret.kappa_0_angle          = prm.get_double("Kappa angle");
+    ret.HSIE_polynomial_degree = prm.get_integer("HSIE polynomial degree");
+    ret.Nedelec_element_order  = prm.get_integer("FEM order");
+    ret.Blocks_in_x_direction  = prm.get_integer("Processes in x");
+    ret.Blocks_in_y_direction  = prm.get_integer("Processes in y");
+    ret.Blocks_in_z_direction  = prm.get_integer("Processes in z");
+    ret.HSIE_SWEEPING_LEVEL    = prm.get_integer("HSIE sweeping level");
+    ret.Number_of_sectors      = prm.get_integer("Number of Sectors");
+    ret.Sector_padding         = prm.get_double("Sector padding");
+  }
   prm.leave_subsection();
   prm.enter_subsection("Waveguide properties");
-  ret.Width_of_waveguide = prm.get_double("Width of waveguide");
-  ret.Height_of_waveguide = prm.get_double("Heigth of waveguide");
-  ret.Horizontal_displacement_of_waveguide = prm.get_double("X shift");
-  ret.Vertical_displacement_of_waveguide = prm.get_double("Y shift");
-  ret.Epsilon_R_in_waveguide = prm.get_double("epsilon in");
-  ret.Epsilon_R_outside_waveguide = prm.get_double("epsilon out");
-  ret.Mu_R_in_waveguide = prm.get_double("mu in");
-  ret.Mu_R_outside_waveguide = prm.get_double("mu out");
-  ret.Amplitude_of_input_signal = prm.get_double("mode amplitude");
-  ret.Geometry_Size_X = prm.get_double("geometry size x");
-  ret.Geometry_Size_Y = prm.get_double("geometry size y");
-  ret.Geometry_Size_Z = prm.get_double("geometry size z");
+  {
+    ret.Width_of_waveguide                   = prm.get_double("Width of waveguide");
+    ret.Height_of_waveguide                  = prm.get_double("Heigth of waveguide");
+    ret.Horizontal_displacement_of_waveguide = prm.get_double("X shift");
+    ret.Vertical_displacement_of_waveguide   = prm.get_double("Y shift");
+    ret.Epsilon_R_in_waveguide               = prm.get_double("epsilon in");
+    ret.Epsilon_R_outside_waveguide          = prm.get_double("epsilon out");
+    ret.Mu_R_in_waveguide                    = prm.get_double("mu in");
+    ret.Mu_R_outside_waveguide               = prm.get_double("mu out");
+    ret.Amplitude_of_input_signal            = prm.get_double("mode amplitude");
+    ret.Geometry_Size_X                      = prm.get_double("geometry size x");
+    ret.Geometry_Size_Y                      = prm.get_double("geometry size y");
+    ret.Geometry_Size_Z                      = prm.get_double("geometry size z");
+    ret.Cells_in_x                           = prm.get_integer("cell count x");
+    ret.Cells_in_y                           = prm.get_integer("cell count y");
+    ret.Cells_in_z                           = prm.get_integer("cell count z");
+  }
   prm.leave_subsection();
   ret.complete_data();
   return ret;
 }
 
-double Distance2D(Point<3, double> position, Point<3, double> to) {
+double Distance2D(Position position, Position to) {
   return sqrt((position(0) - to(0)) * (position(0) - to(0)) +
               (position(1) - to(1)) * (position(1) - to(1)));
 }
@@ -318,9 +330,9 @@ void mesh_info(const Triangulation<dim> &tria) {
   }
 }
 
-Point<3, double> Triangulation_Shit_To_Local_Geometry(
-    const Point<3, double> &p) {
-  Point<3, double> q = p;
+Position Triangulation_Shit_To_Local_Geometry(
+    const Position &p) {
+  Position q = p;
 
   if (q[0] < 0) {
     q[0] = Geometry.local_x_range.first;
@@ -340,76 +352,76 @@ Point<3, double> Triangulation_Shit_To_Local_Geometry(
   return q;
 }
 
-Point<3, double> Transform_4_to_5(const Point<3, double> &p) {
-  Point<3, double> q = p;
+Position Transform_4_to_5(const Position &p) {
+  Position q = p;
   q[0] = -p[0];
   return q;
 }
 
-Point<3, double> Transform_3_to_5(const Point<3, double> &p) {
-  Point<3, double> q = p;
+Position Transform_3_to_5(const Position &p) {
+  Position q = p;
   q[0] = p[0];
   q[1] = -p[2];
   q[2] = p[1];
   return q;
 }
 
-Point<3, double> Transform_2_to_5(const Point<3, double> &p) {
-  Point<3, double> q = p;
+Position Transform_2_to_5(const Position &p) {
+  Position q = p;
   q[0] = p[0];
   q[1] = p[2];
   q[2] = p[1];
   return q;
 }
 
-Point<3, double> Transform_1_to_5(const Point<3, double> &p) {
-  Point<3, double> q = p;
+Position Transform_1_to_5(const Position &p) {
+  Position q = p;
   q[0] = -p[2];
   q[1] = p[1];
   q[2] = p[0];
   return q;
 }
 
-Point<3, double> Transform_0_to_5(const Point<3, double> &p) {
-  Point<3, double> q = p;
+Position Transform_0_to_5(const Position &p) {
+  Position q = p;
   q[0] = p[2];
   q[1] = p[1];
   q[2] = p[0];
   return q;
 }
 
-Point<3, double> Transform_5_to_4(const Point<3, double> &p) {
-  Point<3, double> q = p;
+Position Transform_5_to_4(const Position &p) {
+  Position q = p;
   q[0] = -p[0];
   return q;
 }
 
-Point<3, double> Transform_5_to_3(const Point<3, double> &p) {
-  Point<3, double> q = p;
+Position Transform_5_to_3(const Position &p) {
+  Position q = p;
   q[0] = p[0];
   q[1] = p[2];
   q[2] = -p[1];
   return q;
 }
 
-Point<3, double> Transform_5_to_2(const Point<3, double> &p) {
-  Point<3, double> q = p;
+Position Transform_5_to_2(const Position &p) {
+  Position q = p;
   q[0] = p[0];
   q[1] = p[2];
   q[2] = p[1];
   return q;
 }
 
-Point<3, double> Transform_5_to_1(const Point<3, double> &p) {
-  Point<3, double> q = p;
+Position Transform_5_to_1(const Position &p) {
+  Position q = p;
   q[0] = p[2];
   q[1] = p[1];
   q[2] = -p[0];
   return q;
 }
 
-Point<3, double> Transform_5_to_0(const Point<3, double> &p) {
-  Point<3, double> q = p;
+Position Transform_5_to_0(const Position &p) {
+  Position q = p;
   q[0] = p[2];
   q[1] = p[1];
   q[2] = p[0];
@@ -428,7 +440,7 @@ void add_vector_of_indices(dealii::IndexSet *in_index_set,
   }
 }
 
-double hmax_for_cell_center(Point<3, double> in_center) {
+double hmax_for_cell_center(Position in_center) {
   double h_max_in = 0.05;
   double h_max_out = 0.1;
   return (std::abs(in_center[0]) < GlobalParams.Width_of_waveguide / 2.0 &&
@@ -482,4 +494,41 @@ double sigma(double in_z, double min, double max) {
   if (ret < 0.0) ret = 0.0;
   if (ret > 1.0) ret = 1.0;
   return ret;
+}
+
+bool get_orientation(
+    const Position &vertex_1,
+    const Position &vertex_2) {
+  double abs_max = -1.0;
+  unsigned int max_component = 0;
+  for(unsigned int i = 0; i < 3; i++) {
+    const double abs = std::abs(vertex_2[i] - vertex_1[1]);
+    if( abs > abs_max) {
+        max_component = i;
+        abs_max = abs;
+    }
+  }
+  return (vertex_2[max_component] - vertex_1[max_component]) > 0;
+}
+
+NumericVectorLocal crossproduct(const NumericVectorLocal &u,const NumericVectorLocal &v) {
+  NumericVectorLocal ret(3);
+  ret[0]=(u[1]*v[2]- u[2]*v[1]);
+  ret[1]=(u[2]*v[0]- u[0]*v[2]);
+  ret[2]=(u[0]*v[1]- u[1]*v[0]);
+  return ret;
+}
+
+Position crossproduct(const Position &u,const Position &v) {
+  Position ret;
+  ret[0]=(u[1]*v[2]- u[2]*v[1]);
+  ret[1]=(u[2]*v[0]- u[0]*v[2]);
+  ret[2]=(u[0]*v[1]- u[1]*v[0]);
+  return ret;
+}
+
+void multiply_in_place(const ComplexNumber factor_1, NumericVectorLocal &factor_2) {
+  for(unsigned int i = 0; i < factor_2.size(); i++) {
+    factor_2[i] *= factor_1;
+  }
 }

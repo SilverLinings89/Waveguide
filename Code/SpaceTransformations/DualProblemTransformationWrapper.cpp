@@ -31,16 +31,16 @@ DualProblemTransformationWrapper::DualProblemTransformationWrapper(
   homogenized = st->homogenized;
 }
 
-Point<3> DualProblemTransformationWrapper::math_to_phys(Point<3> coord) const {
+Position DualProblemTransformationWrapper::math_to_phys(Position coord) const {
   return st->math_to_phys(coord);
 }
 
-Point<3> DualProblemTransformationWrapper::phys_to_math(Point<3> coord) const {
+Position DualProblemTransformationWrapper::phys_to_math(Position coord) const {
   return st->phys_to_math(coord);
 }
 
-dealii::Point<3, double> transform_position(Point<3> in_position) {
-  Point<3> ret = in_position;
+Position transform_position(Position in_position) {
+  Position ret = in_position;
   ret[2] = -ret[2];
   // ret[2] += GlobalParams.M_BC_Zplus*GlobalParams.Sector_thickness;
   return ret;
@@ -48,7 +48,7 @@ dealii::Point<3, double> transform_position(Point<3> in_position) {
 
 Tensor<2, 3, double>
 DualProblemTransformationWrapper::get_Space_Transformation_Tensor_Homogenized(
-    Point<3> &position) const {
+    Position &position) const {
   std::cout << "This should never be called: "
                "DualProblemTransformationWrapper::get_Space_Transformation_"
                "Tensor_Homogenized"
@@ -58,7 +58,7 @@ DualProblemTransformationWrapper::get_Space_Transformation_Tensor_Homogenized(
 
 Tensor<2, 3, double>
 DualProblemTransformationWrapper::get_Space_Transformation_Tensor(
-    Point<3> &position) const {
+    Position &position) const {
   std::cout
       << "This should never be called: "
          "DualProblemTransformationWrapper::get_Space_Transformation_Tensor"
@@ -66,9 +66,9 @@ DualProblemTransformationWrapper::get_Space_Transformation_Tensor(
   return st->get_Space_Transformation_Tensor(position);
 }
 
-Tensor<2, 3, std::complex<double>> DualProblemTransformationWrapper::get_Tensor(
-    Point<3> &position) const {
-  Point<3> p = transform_position(position);
+Tensor<2, 3, ComplexNumber> DualProblemTransformationWrapper::get_Tensor(
+    Position &position) const {
+  Position p = transform_position(position);
 
   Tensor<2, 3, double> transformation;
 

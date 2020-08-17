@@ -49,7 +49,7 @@ void ModeManager::prepare_mode_out() {
 }
 
 double ModeManager::get_input_component(int in_component,
-                                        dealii::Point<3, double> position,
+                                        Position position,
                                         int mode) {
   if (!in_prepared) {
     prepare_mode_in();
@@ -71,7 +71,7 @@ double ModeManager::get_input_component(int in_component,
 }
 
 double ModeManager::get_output_component(int in_component,
-                                         dealii::Point<3, double> position,
+                                         Position position,
                                          int mode) {
   if (!out_prepared) {
     prepare_mode_out();

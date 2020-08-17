@@ -1,12 +1,11 @@
 #pragma once
 
-#include <complex>
-
+#include "../Core/Types.h"
 class PointVal {
  public:
-  std::complex<double> Ex;
-  std::complex<double> Ey;
-  std::complex<double> Ez;
+   ComplexNumber Ex;
+   ComplexNumber Ey;
+   ComplexNumber Ez;
 
   PointVal();
 

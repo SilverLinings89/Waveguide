@@ -1,42 +1,41 @@
 #pragma once
 
-#include <deal.II/base/point.h>
 #include <deal.II/lac/full_matrix.h>
 #include "DofData.h"
-#include <complex>
+#include "../Core/Types.h"
 
 class HSIEPolynomial {
  public:
-  std::vector<std::complex<double>> a;
-  std::vector<std::complex<double>> da;
-  std::complex<double> k0;
-  std::complex<double> evaluate(std::complex<double> x);
-  std::complex<double> evaluate_dx(std::complex<double> x);
+  std::vector<ComplexNumber> a;
+  std::vector<ComplexNumber> da;
+  ComplexNumber k0;
+  ComplexNumber evaluate(ComplexNumber x);
+  ComplexNumber evaluate_dx(ComplexNumber x);
   void update_derivative();
-  static void computeDandI(unsigned int, std::complex<double>);
-  static HSIEPolynomial PsiMinusOne(std::complex<double> k0);
-  static HSIEPolynomial PsiJ(int j, std::complex<double> k0);
+  static void computeDandI(unsigned int,ComplexNumber );
+  static HSIEPolynomial PsiMinusOne(ComplexNumber k0);
+  static HSIEPolynomial PsiJ(int j, ComplexNumber k0);
   static HSIEPolynomial ZeroPolynomial();
 
-  static HSIEPolynomial PhiMinusOne(std::complex<double> k0);
-  static HSIEPolynomial PhiJ(int j, std::complex<double> k0);
+  static HSIEPolynomial PhiMinusOne(ComplexNumber k0);
+  static HSIEPolynomial PhiJ(int j, ComplexNumber k0);
 
-  HSIEPolynomial(unsigned int, std::complex<double>);
-  HSIEPolynomial(DofData&, std::complex<double>);
-  HSIEPolynomial(std::vector<std::complex<double>> in_a,
-                 std::complex<double> k0);
+  HSIEPolynomial(unsigned int,ComplexNumber );
+  HSIEPolynomial(DofData&, ComplexNumber);
+  HSIEPolynomial(std::vector<ComplexNumber> in_a,
+                 ComplexNumber k0);
 
   static bool matricesLoaded;
-  static dealii::FullMatrix<std::complex<double>> D;
-  static dealii::FullMatrix<std::complex<double>> I;
+  static dealii::FullMatrix<ComplexNumber> D;
+  static dealii::FullMatrix<ComplexNumber> I;
 
   HSIEPolynomial applyD();
   HSIEPolynomial applyI();
 
-  void multiplyBy(std::complex<double> factor);
+  void multiplyBy(ComplexNumber factor);
   void multiplyBy(double factor);
-  void applyTplus(std::complex<double> u_0);
-  void applyTminus(std::complex<double> u_0);
+  void applyTplus(ComplexNumber u_0);
+  void applyTminus(ComplexNumber u_0);
   void applyDerivative();
   void add(HSIEPolynomial b);
 };

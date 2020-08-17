@@ -27,18 +27,18 @@ class InhomogenousTransformationRectangular : public SpaceTransformation {
 
   virtual ~InhomogenousTransformationRectangular();
 
-  dealii::Point<3> math_to_phys(dealii::Point<3> coord) const;
+  Position math_to_phys(Position coord) const;
 
-  dealii::Point<3> phys_to_math(dealii::Point<3> coord) const;
+  Position phys_to_math(Position coord) const;
 
-  dealii::Tensor<2, 3, std::complex<double>> get_Tensor(
-      dealii::Point<3> &coordinate) const;
+  dealii::Tensor<2, 3, ComplexNumber> get_Tensor(
+      Position &coordinate) const;
 
   dealii::Tensor<2, 3, double> get_Space_Transformation_Tensor(
-      dealii::Point<3> &coordinate) const;
+      Position &coordinate) const;
 
   dealii::Tensor<2, 3, double> get_Space_Transformation_Tensor_Homogenized(
-      dealii::Point<3> &coordinate) const;
+      Position &coordinate) const;
 
   /**
    * This member contains all the Sectors who, as a sum, form the complete
@@ -221,10 +221,10 @@ class InhomogenousTransformationRectangular : public SpaceTransformation {
    */
   void Print() const;
 
-  std::complex<double> evaluate_for_z_with_sum(double, double,
+  ComplexNumber evaluate_for_z_with_sum(double, double,
                                                NumericProblem *);
 
-  std::complex<double> evaluate_for_z(double z_in, NumericProblem *);
+  ComplexNumber evaluate_for_z(double z_in, NumericProblem *);
 };
 
 #endif

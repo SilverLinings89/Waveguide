@@ -152,7 +152,7 @@ std::pair<bool, unsigned int> GeometryManager::get_neighbor_for_interface(
 }
 
 bool GeometryManager::math_coordinate_in_waveguide(
-    dealii::Point<3, double> in_position) const {
+    Position in_position) const {
   return std::abs(in_position[0]) <
              (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide) / 2.0 &&
          std::abs(in_position[1]) <

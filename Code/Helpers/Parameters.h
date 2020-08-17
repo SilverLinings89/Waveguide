@@ -71,6 +71,12 @@ struct Parameters {
 
     unsigned int Index_in_z_direction;
 
+    unsigned int Cells_in_x;
+    
+    unsigned int Cells_in_y;
+    
+    unsigned int Cells_in_z;
+
     int current_run_number;
 
     double Geometry_Size_X;

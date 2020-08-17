@@ -6,13 +6,12 @@ subsection Run parameters
 end 
 subsection Scheme properties
     set Kappa angle = 1
-    set HSIE polynomial degree = 5
+    set HSIE polynomial degree = 10
     set FEM order = 0
     set Processes in x = 1
     set Processes in y = 1
     set Processes in z = 1
     set HSIE sweeping level = 1
-
 end
 subsection Waveguide properties
     set Width of waveguide = 2
@@ -27,4 +26,7 @@ subsection Waveguide properties
     set geometry size x = 1.0
     set geometry size y = 1.0
     set geometry size z = 1.0
+    set cell count x = 21
+    set cell count y = 21
+    set cell count z = 21
 end

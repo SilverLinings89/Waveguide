@@ -57,7 +57,7 @@ class ExactSolution: public dealii::Function<3, double> {
    * components 0 to 2 are the real parts of the solution-vector and the
    * components 3-5 are the imaginary parts.
    */
-  double value(const dealii::Point<3> &p, const unsigned int component) const;
+  double value(const Position &p, const unsigned int component) const;
 
   /**
    * This function is the one that gets called from external contexts and calls
@@ -69,14 +69,14 @@ class ExactSolution: public dealii::Function<3, double> {
    * \begin{pmatrix}\operatorname{value}(x,y,z,3)\\\operatorname{value}(x,y,z,4)\\\operatorname{value}(x,y,z,5)\end{pmatrix}.\f]
    */
 
-  void vector_value(const dealii::Point<3> &p,
+  void vector_value(const Position &p,
       dealii::Vector<double> &value) const;
 
   std::vector<std::string> split(std::string) const;
 
-  dealii::Tensor<1, 3, std::complex<double>> curl(
-      const dealii::Point<3> &in_p) const;
+  dealii::Tensor<1, 3, ComplexNumber> curl(
+      const Position &in_p) const;
 
-  dealii::Tensor<1, 3, std::complex<double>> val(
-      const dealii::Point<3> &in_p) const;
+  dealii::Tensor<1, 3, ComplexNumber> val(
+      const Position &in_p) const;
 };

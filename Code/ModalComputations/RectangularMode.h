@@ -19,11 +19,11 @@ class RectangularMode {
 
   FESystem<3> fe;
   FEValuesExtractors::Vector real, imag;
-  AffineConstraints<std::complex<double>> constraints, periodic_constraints;
+  AffineConstraints<ComplexNumber> constraints, periodic_constraints;
   Triangulation<3> triangulation;
   DoFHandler<3> dof_handler;
 
-  SparseMatrix<std::complex<double>> system_matrix;
+  SparseMatrix<ComplexNumber> system_matrix;
 
   RectangularMode(double, double, double, double, double, double, double,
                   unsigned int);

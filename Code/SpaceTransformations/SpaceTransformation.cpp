@@ -50,9 +50,9 @@ double SpaceTransformation::Sector_Length() const {
   return GlobalParams.Sector_thickness;
 }
 
-bool SpaceTransformation::is_identity(Point<3, double> coord) const {
+bool SpaceTransformation::is_identity(Position coord) const {
   double sum = 0.0;
-  Point<3, double> temp = math_to_phys(coord);
+  Position temp = math_to_phys(coord);
   for (unsigned int i = 0; i < 3; i++) {
     sum += std::abs(temp[i] - coord[i]);
   }
@@ -71,7 +71,7 @@ std::pair<double, double> SpaceTransformation::dof_support(
   return ret;
 }
 
-bool SpaceTransformation::point_in_dof_support(Point<3> location,
+bool SpaceTransformation::point_in_dof_support(Position location,
                                                unsigned int dof_index) const {
   std::pair<double, double> temp = dof_support(dof_index);
   if (std::abs(location[2]) > GlobalParams.Geometry_Size_Z / 2.0) {
@@ -81,8 +81,8 @@ bool SpaceTransformation::point_in_dof_support(Point<3> location,
   }
 }
 
-Tensor<2, 3, std::complex<double>> SpaceTransformation::get_Tensor_for_step(
-    Point<3> &coordinate, unsigned int dof, double step_width) {
+Tensor<2, 3, ComplexNumber> SpaceTransformation::get_Tensor_for_step(
+    Position &coordinate, unsigned int dof, double step_width) {
   double old_value = get_dof(dof);
   Tensor<2, 3, double> trafo1 = get_Space_Transformation_Tensor(coordinate);
 

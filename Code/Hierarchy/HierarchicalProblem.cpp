@@ -24,7 +24,7 @@ HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level) :
 
 void HierarchicalProblem::constrain_identical_dof_sets(
     std::vector<unsigned int> *set_one, std::vector<unsigned int> *set_two,
-    dealii::AffineConstraints<std::complex<double>> *affine_constraints) {
+    dealii::AffineConstraints<ComplexNumber> *affine_constraints) {
   const unsigned int n_entries = set_one->size();
   if (n_entries != set_two->size()) {
     std::cout
@@ -35,6 +35,6 @@ void HierarchicalProblem::constrain_identical_dof_sets(
   for (unsigned int index = 0; index < n_entries; index++) {
     affine_constraints->add_line(set_one->operator [](index));
     affine_constraints->add_entry(set_one->operator [](index),
-        set_two->operator [](index), std::complex<double>(-1, 0));
+        set_two->operator [](index), ComplexNumber(-1, 0));
   }
 }
