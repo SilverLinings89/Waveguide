@@ -18,10 +18,6 @@
 
 PointSourceField psf;
 
-static void vector_value(const Position &p, dealii::Vector<ComplexNumber> &vec) {
-  psf.vector_value(p, vec);
-};
-
 LocalProblem::LocalProblem() :
     HierarchicalProblem(0), base_problem(), sc(), solver(sc, MPI_COMM_SELF) {
   base_problem.make_grid();
