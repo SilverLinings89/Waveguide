@@ -342,7 +342,6 @@ void LocalProblem::output_results() {
       get_local_vector_from_global();
   data_out.attach_dof_handler(base_problem.dof_handler);
   data_out.add_data_vector(solution, "Solution");
-  data_out.build_patches();
   std::ofstream outputvtu("solution.vtu");
   dealii::Vector<double> cellwise_error(base_problem.triangulation.n_active_cells());
   dealii::VectorTools::integrate_difference(
@@ -353,10 +352,11 @@ void LocalProblem::output_results() {
     cellwise_error,
     dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
     dealii::VectorTools::NormType::L2_norm );
-  data_out.add_data_vector(cellwise_error, "Cellwise error");
-  data_out.write_vtu(outputvtu);
   const double global_error = dealii::VectorTools::compute_global_error(base_problem.triangulation, cellwise_error, dealii::VectorTools::NormType::L2_norm);
   std::cout << "Global computed error L2: " << global_error << std::endl;
+  data_out.add_data_vector(cellwise_error, "Cellwise_error");
+  data_out.build_patches();
+  data_out.write_vtu(outputvtu);
   compare_to_exact_solution();
 }
 
