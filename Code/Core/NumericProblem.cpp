@@ -109,49 +109,83 @@ void NumericProblem::make_sparsity_pattern(
   }
 }
 
-auto NumericProblem::select_central_cell() -> DofHandler3D::active_cell_iterator {
-  DofHandler3D::active_cell_iterator ret;
-  const Position c = {0,0,0};
+auto NumericProblem::get_central_cells(double radius) -> std::set<std::string> {
+  std::set<std::string> ret;
   for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
-    if(it->point_inside(c)) {
-      return it;
+    if(it->center().norm() < radius) {
+      ret.insert(it->id().to_string());
     }
   }
-  return dof_handler.end();
+  return ret;
+}
+
+auto NumericProblem::get_inner_non_constrained_faces() -> std::set<unsigned int> {
+  std::set<unsigned int> constrained_faces;
+  std::set<unsigned int> inner_faces;
+  for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
+    if(constrained_cells.contains(it->id().to_string())) {
+      for(unsigned int i = 0; i < 6; i++) {
+        if(constrained_faces.contains(it->face_index(i))) {
+          inner_faces.insert(it->face_index(i));
+        } else {
+          constrained_faces.insert(it->face_index(i));
+        }
+      }
+    }
+  }
+  return inner_faces;
 }
 
 void NumericProblem::make_constraints() {
   PointSourceField psf;
-  psf.set_cell_diameter(GlobalParams.Geometry_Size_X / GlobalParams.Cells_in_x);
-  CellIterator3D central_cell = select_central_cell();
+  double inner_cell_radius = 0.2;
+  psf.set_cell_diameter(inner_cell_radius/2.0);
+  constrained_cells = get_central_cells(inner_cell_radius);
+  inner_non_constrained_faces = get_inner_non_constrained_faces();
+  std::cout << "Constrained cell count: " << constrained_cells.size() << std::endl;
   std::vector<DofCount> local_line_indices(fe.dofs_per_line);
   std::vector<DofCount> local_face_indices(fe.dofs_per_face);
   local_dof_indices.set_size(n_dofs);
   local_dof_indices.add_range(0, n_dofs);
   local_constraints.reinit(local_dof_indices);
-  for (unsigned int face = 0; face < dealii::GeometryInfo<3>::faces_per_cell; face++) {
-    central_cell->face(face)->get_dof_indices(local_face_indices);
-    for(auto item : local_face_indices) {
-      local_constraints.add_line(item);
-      local_constraints.set_inhomogeneity(item, ComplexNumber(0, 0));
-    }
-    for(unsigned int line = 0; line < dealii::GeometryInfo<3>::lines_per_face; line++) {
-      central_cell->face(face)->line(line)->get_dof_indices(local_line_indices);
-      Position p0 = central_cell->face(face)->line(line)->vertex(0);
-      Position p1 = central_cell->face(face)->line(line)->vertex(1);
-      dealii::Vector<ComplexNumber> value;
-      value.reinit(3);
-      psf.vector_value(central_cell->face(face)->line(line)->center(), value);
-      ComplexNumber dof_value = { 0, 0 };
-      for (unsigned int j = 0; j < 3; j++) {
-        dof_value += value[j] * (p0[j] - p1[j]);
-      }
-      local_constraints.set_inhomogeneity(local_line_indices[0], dof_value);
-      for (unsigned int j = 1; j < fe.dofs_per_line; j++) {
-        local_constraints.set_inhomogeneity(local_line_indices[j], ComplexNumber(0, 0));
+  unsigned int index = 0;
+  for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
+    if(constrained_cells.contains(it->id().to_string())) {
+      for (unsigned int face = 0; face < dealii::GeometryInfo<3>::faces_per_cell; face++) {
+        it->face(face)->get_dof_indices(local_face_indices);
+        for(auto item : local_face_indices) {
+          local_constraints.add_line(item);
+          local_constraints.set_inhomogeneity(item, ComplexNumber(0, 0));
+        }
       }
     }
   }
+
+  for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
+    if(constrained_cells.contains(it->id().to_string())) {
+      for (unsigned int face = 0; face < dealii::GeometryInfo<3>::faces_per_cell; face++) {
+        it->face(face)->get_dof_indices(local_face_indices);
+        if(!inner_non_constrained_faces.contains(it->face_index(face))) {
+          for(unsigned int line = 0; line < dealii::GeometryInfo<3>::lines_per_face; line++) {
+            it->face(face)->line(line)->get_dof_indices(local_line_indices);
+            Position p0 = it->face(face)->line(line)->vertex(0);
+            Position p1 = it->face(face)->line(line)->vertex(1);
+            dealii::Vector<ComplexNumber> value;
+            value.reinit(3);
+            psf.vector_value(it->face(face)->line(line)->center(), value);
+            ComplexNumber dof_value = { 0, 0 };
+            for (unsigned int j = 0; j < 3; j++) {
+              dof_value += value[j] * (p0[j] - p1[j]);
+            }
+            local_constraints.set_inhomogeneity(local_line_indices[0], dof_value);
+          }
+        }
+        
+      }
+    }
+    index++;
+  }
+  
   local_constraints_made = true;
 }
 
@@ -391,9 +425,9 @@ void NumericProblem::assemble_system(unsigned int shift,
     dealii::PETScWrappers::SparseMatrix *matrix,
     NumericVectorDistributed *rhs) {
   CellwiseAssemblyData cell_data(&fe, &dof_handler);
-
+  unsigned int index = 0;
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
-    if (!cell_data.cell->point_inside(cell_data.bounded_cell)) {
+    if(!constrained_cells.contains(cell_data.cell->id().to_string())) {
       cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
       for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
         cell_data.local_dof_indices[i] += shift;
@@ -413,6 +447,7 @@ void NumericProblem::assemble_system(unsigned int shift,
           cell_data.local_dof_indices,*matrix, *rhs, false);
       }
     }
+    index++;
   }
   matrix->compress(dealii::VectorOperation::add);
   write_matrix_and_rhs_metrics(matrix, rhs);
@@ -420,30 +455,33 @@ void NumericProblem::assemble_system(unsigned int shift,
 
 void NumericProblem::assemble_system(unsigned int shift,
     dealii::AffineConstraints<ComplexNumber> * constraints,
-    dealii::PETScWrappers::MPI::SparseMatrix *matrix,
+    dealii::PETScWrappers::MPI::SparseMatrix * matrix,
     NumericVectorDistributed *rhs) {
   CellwiseAssemblyData cell_data(&fe, &dof_handler);
-
+  unsigned int index = 0;
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
-    cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
-    for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
-      cell_data.local_dof_indices[i] += shift;
-    }
-    cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
-    cell_data.fe_values.reinit(cell_data.cell);
-    cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
-    std::vector<types::global_dof_index> input_dofs(fe.dofs_per_line);
-    IndexSet input_dofs_local_set(fe.dofs_per_cell);
-    std::vector<Position> input_dof_centers(fe.dofs_per_cell);
-    std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
+    if(!constrained_cells.contains(cell_data.cell->id().to_string())) {
+      cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
+      for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
+        cell_data.local_dof_indices[i] += shift;
+      }
+      cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
+      cell_data.fe_values.reinit(cell_data.cell);
+      cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
+      std::vector<types::global_dof_index> input_dofs(fe.dofs_per_line);
+      IndexSet input_dofs_local_set(fe.dofs_per_cell);
+      std::vector<Position> input_dof_centers(fe.dofs_per_cell);
+      std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
 
-    cell_data.cell_matrix_real = 0;
-    for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
-      cell_data.prepare_for_current_q_index(q_index);
-      
-      constraints->distribute_local_to_global(cell_data.cell_matrix_real, cell_data.cell_rhs,
-          cell_data.local_dof_indices,*matrix, *rhs, false);
+      cell_data.cell_matrix_real = 0;
+      for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
+        cell_data.prepare_for_current_q_index(q_index);
+        
+        constraints->distribute_local_to_global(cell_data.cell_matrix_real, cell_data.cell_rhs,
+            cell_data.local_dof_indices,*matrix, *rhs, false);
+      }
     }
+    index++;
   }
   matrix->compress(dealii::VectorOperation::add);
   write_matrix_and_rhs_metrics(matrix, rhs);

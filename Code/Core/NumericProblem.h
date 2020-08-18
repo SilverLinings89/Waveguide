@@ -251,6 +251,9 @@ class NumericProblem {
   dealii::IndexSet fixed_dofs;
 
   dealii::IndexSet local_dof_indices;
+  
+  std::set<std::string> constrained_cells;
+  std::set<unsigned int> inner_non_constrained_faces;
 
   std::vector<DofIndexAndOrientationAndPosition> get_surface_dof_vector_for_boundary_id(
       unsigned int b_id);
@@ -262,5 +265,6 @@ class NumericProblem {
 
   void write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs);
   
-  auto select_central_cell() -> DofHandler3D::active_cell_iterator;
+  auto get_central_cells(double point_source_radius) -> std::set<std::string>;
+  auto get_inner_non_constrained_faces() -> std::set<unsigned int>;
 };

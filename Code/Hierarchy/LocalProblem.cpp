@@ -274,17 +274,11 @@ void LocalProblem::solve() {
 
   constraints.distribute(solution);
   Mat fact;
-  std::cout << "A" << std::endl;
   KSPGetPC(solver.solver_data->ksp,&solver.solver_data->pc);
-  std::cout << "B" << std::endl;
   PCFactorGetMatrix(solver.solver_data->pc,&fact);
-  std::cout << "C" << std::endl;
   PetscViewerPushFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)),PETSC_VIEWER_ASCII_INFO);
-  std::cout << "D" << std::endl;
   MatView(fact,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
-  std::cout << "E" << std::endl;
   PetscViewerPopFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
-
   std::cout << "Norm after: " << solution.l2_norm() << std::endl;
 }
 
@@ -348,6 +342,13 @@ void LocalProblem::output_results() {
     cellwise_error,
     dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
     dealii::VectorTools::NormType::L2_norm );
+  unsigned int index = 0;
+  for(auto it = base_problem.dof_handler.begin_active(); it != base_problem.dof_handler.end(); it++) {
+    if(base_problem.constrained_cells.contains(it->id().to_string())) {
+      cellwise_error[index] = 0;
+    }
+    index++;
+  }
   const double global_error = dealii::VectorTools::compute_global_error(base_problem.triangulation, cellwise_error, dealii::VectorTools::NormType::L2_norm);
   std::cout << "Global computed error L2: " << global_error << std::endl;
   data_out.add_data_vector(cellwise_error, "Cellwise_error");
