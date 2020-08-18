@@ -36,22 +36,9 @@ void PointSourceField::vector_value(const Position &in_p,
   NumericVectorLocal p(3);
   Position p_temp = in_p;
   if(std::abs(in_p[0]) < cell_diameter/2.0 && std::abs(in_p[1]) < cell_diameter/2.0 && std::abs(in_p[2]) < cell_diameter/2.0) {
-    if(in_p.norm() == 0) {
-      vec[0] = 0;
-      vec[1] = 0;
-      vec[2] = 0;
-      return;
-    }
-    unsigned int component = 0;
-    double max_absolute = -1.0;
-    for(unsigned i = 0; i < 3; i++) {
-      if(std::abs(in_p[i])>max_absolute) {
-        component = i;
-        max_absolute = std::abs(in_p[0]);
-      }
-    }
-    double factor = (cell_diameter/2.0) / std::abs(in_p[component]);
-    p_temp *= factor;
+    vec[0] = 0;
+    vec[1] = 0;
+    vec[2] = 0;
   }
   
   const double norm_x = p_temp.norm();

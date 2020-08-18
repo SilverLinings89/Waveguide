@@ -271,7 +271,8 @@ void LocalProblem::solve() {
   timer1.stop();
   std::cout << "Elapsed CPU time: " << timer1.cpu_time() << " seconds." << std::endl;
   std::cout << "Elapsed walltime: " << timer1.wall_time() << " seconds." << std::endl;
-
+  
+  std::cout << "Norm after: " << solution.l2_norm() << std::endl;
   constraints.distribute(solution);
   Mat fact;
   KSPGetPC(solver.solver_data->ksp,&solver.solver_data->pc);
@@ -279,7 +280,6 @@ void LocalProblem::solve() {
   PetscViewerPushFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)),PETSC_VIEWER_ASCII_INFO);
   MatView(fact,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
   PetscViewerPopFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
-  std::cout << "Norm after: " << solution.l2_norm() << std::endl;
 }
 
 void LocalProblem::initialize_index_sets() {
@@ -334,6 +334,7 @@ void LocalProblem::output_results() {
   data_out.add_data_vector(solution, "Solution");
   std::ofstream outputvtu("solution.vtu");
   dealii::Vector<double> cellwise_error(base_problem.triangulation.n_active_cells());
+  dealii::Vector<double> cellwise_norm(base_problem.triangulation.n_active_cells());
   dealii::VectorTools::integrate_difference(
     MappingQGeneric<3>(1),
     base_problem.dof_handler,
@@ -342,15 +343,27 @@ void LocalProblem::output_results() {
     cellwise_error,
     dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
     dealii::VectorTools::NormType::L2_norm );
+  dealii::Vector<ComplexNumber> zero(base_problem.n_dofs);  
+  dealii::VectorTools::integrate_difference(
+    MappingQGeneric<3>(1),
+    base_problem.dof_handler,
+    zero,
+    psf,
+    cellwise_norm,
+    dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
+    dealii::VectorTools::NormType::L2_norm );
   unsigned int index = 0;
   for(auto it = base_problem.dof_handler.begin_active(); it != base_problem.dof_handler.end(); it++) {
     if(base_problem.constrained_cells.contains(it->id().to_string())) {
       cellwise_error[index] = 0;
+      cellwise_norm[index] = 0;
     }
     index++;
   }
   const double global_error = dealii::VectorTools::compute_global_error(base_problem.triangulation, cellwise_error, dealii::VectorTools::NormType::L2_norm);
+  const double global_norm = dealii::VectorTools::compute_global_error(base_problem.triangulation, cellwise_norm, dealii::VectorTools::NormType::L2_norm);
   std::cout << "Global computed error L2: " << global_error << std::endl;
+  std::cout << "Exact solution L2 norm: " << global_norm << std::endl;
   data_out.add_data_vector(cellwise_error, "Cellwise_error");
   data_out.build_patches();
   data_out.write_vtu(outputvtu);
