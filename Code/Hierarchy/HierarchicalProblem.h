@@ -3,6 +3,7 @@
 #include "../Core/Types.h"
 #include "../Helpers/Parameters.h"
 #include "DofIndexData.h"
+#include <deal.II/base/index_set.h>
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/petsc_sparse_matrix.h>
 #include <deal.II/lac/petsc_vector.h> 
@@ -11,6 +12,7 @@ class LocalProblem;
 class HierarchicalProblem {
 
  public:
+  SweepingDirection sweeping_direction;
   std::vector<DofNumber> surface_first_dofs;
   bool is_dof_manager_set;
   bool has_child;
@@ -55,4 +57,5 @@ class HierarchicalProblem {
   virtual dealii::Vector<ComplexNumber> get_local_vector_from_global() = 0;
   virtual auto get_center() -> Position const = 0;
   virtual auto reinit() -> void = 0;
+  virtual auto communicate_sweeping_direction(SweepingDirection) -> void = 0;
 };

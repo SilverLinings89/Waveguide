@@ -48,19 +48,19 @@ NonLocalProblem::NonLocalProblem(unsigned int local_level) :
   if (GlobalParams.Index_in_x_direction == 0) {
     is_hsie_surface[0] = true;
   }
+  if (GlobalParams.Index_in_y_direction == 0) {
+    is_hsie_surface[2] = true;
+  }
+  if (GlobalParams.Index_in_z_direction == 0) {
+    is_hsie_surface[4] = true;
+  }
   if (GlobalParams.Index_in_x_direction
       == GlobalParams.Blocks_in_x_direction - 1) {
     is_hsie_surface[1] = true;
   }
-  if (GlobalParams.Index_in_y_direction == 0) {
-    is_hsie_surface[2] = true;
-  }
   if (GlobalParams.Index_in_y_direction
       == GlobalParams.Blocks_in_y_direction - 1) {
     is_hsie_surface[3] = true;
-  }
-  if (GlobalParams.Index_in_z_direction == 0) {
-    is_hsie_surface[4] = true;
   }
   if (GlobalParams.Index_in_z_direction
       == GlobalParams.Blocks_in_z_direction - 1) {
@@ -77,6 +77,7 @@ NonLocalProblem::NonLocalProblem(unsigned int local_level) :
     is_hsie_surface[5] = true;
   }
   n_own_dofs = 0;
+  communicate_sweeping_direction(sweeping_direction);
 }
 
 NonLocalProblem::~NonLocalProblem() {
@@ -245,3 +246,7 @@ auto NonLocalProblem::get_center() -> Position const {
       GlobalMPI.communicators_by_level[this->local_level]).avg;
   return {x,y,z};
 }
+
+auto NonLocalProblem::communicate_sweeping_direction(SweepingDirection) -> void {
+  child->communicate_sweeping_direction(sweeping_direction);
+};

@@ -12,7 +12,6 @@
 
 class NonLocalProblem: public HierarchicalProblem {
 private:
-  SweepingDirection sweeping_direction;
   bool *is_hsie_surface;
   DofCount total_number_of_dofs_on_level;
   dealii::PETScWrappers::MPI::SparseMatrix *matrix;
@@ -66,4 +65,6 @@ private:
   NumericVectorLocal get_local_vector_from_global() override;
 
   auto get_center() -> Position const override;
+
+  auto communicate_sweeping_direction(SweepingDirection) -> void override;
 };

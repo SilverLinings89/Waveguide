@@ -10,7 +10,6 @@
 
 class LocalProblem: public HierarchicalProblem {
 public:
-
   NumericProblem base_problem;
   std::array<std::shared_ptr<HSIESurface>,6> surfaces;
   SolverControl sc;
@@ -62,4 +61,6 @@ public:
   auto reinit() -> void override;
 
   auto compare_to_exact_solution() -> void;
+
+  auto communicate_sweeping_direction(SweepingDirection) -> void override;
 };
