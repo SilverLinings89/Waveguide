@@ -101,16 +101,15 @@ dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
 
 void NonLocalProblem::solve(NumericVectorDistributed src,
     NumericVectorDistributed &dst) {
-  dealii::Vector<ComplexNumber> inputb(n_own_dofs);
-  for (unsigned int i = 0; i < n_own_dofs; i++) {
-    inputb[i] = src(i);
-  }
+  receive_local_upper_dofs();
+  H_inverse(src, dst);
+  send_local_lower_dofs();
 
-  // solver.solve(system_matrix, dst, system_rhs, this->child);
+  H_inverse(dst, dst);
 
-  for (unsigned int i = 0; i < n_own_dofs; i++) {
-    dst[i] = inputb[i];
-  }
+  receive_local_lower_dofs();
+  H_inverse(src, dst);
+  send_local_upper_dofs();
 }
 
 void NonLocalProblem::run() {
@@ -137,6 +136,8 @@ void NonLocalProblem::reinit() {
 void NonLocalProblem::initialize() {
   child->initialize();
   initialize_own_dofs();
+  dofs_process_above = compute_upper_interface_dof_count();
+  dofs_process_below = compute_lower_interface_dof_count();
   initialize_index_sets();
 }
 
@@ -187,6 +188,22 @@ void NonLocalProblem::initialize_own_dofs() {
   n_own_dofs = compute_own_dofs();
 }
 
+DofCount NonLocalProblem::compute_interface_dofs(BoundaryId interface_id, BoundaryId opposing_interface_id) {
+  DofCount ret = 0;
+  for(unsigned int i = 0; i < 6; i++) {
+    if( i == interface_id) {
+      ret += get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(interface_id).size();
+    } else {
+      if(i != opposing_interface_id) {
+        if(is_hsie_surface[i]) {
+          ret += get_local_problem()->surfaces[i]->get_dof_association_by_boundary_id(i).size();
+        }
+      }
+    }
+  }
+  return ret;
+}
+
 unsigned int NonLocalProblem::compute_own_dofs() {
   unsigned int ret =
       this->get_local_problem()->base_problem.dof_handler.n_dofs();
@@ -225,11 +242,11 @@ auto NonLocalProblem::compute_upper_interface_id() -> BoundaryId {
 }
 
 auto NonLocalProblem::compute_lower_interface_dof_count() -> DofCount {
-  return get_local_problem()->surfaces[compute_lower_interface_id()]->get_dof_association().size();
+  return compute_interace_dofs(compute_lower_interface_id(), compute_upper_interface_id());
 }
 
 auto NonLocalProblem::compute_upper_interface_dof_count() -> DofCount {
-  return get_local_problem()->surfaces[compute_upper_interface_id()]->get_dof_association().size();
+  return compute_interace_dofs(compute_upper_interface_id(), compute_lower_interface_id());
 }
 
 void NonLocalProblem::apply_sweep(NumericVectorDistributed) {
@@ -249,4 +266,114 @@ auto NonLocalProblem::get_center() -> Position const {
 
 auto NonLocalProblem::communicate_sweeping_direction(SweepingDirection) -> void {
   child->communicate_sweeping_direction(sweeping_direction);
+};
+
+void NonLocalProblem::H_inverse(NumericVectorDistributed &, NumericVectorDistributed &) {
+
+};
+
+NumericVectorLocal NonLocalProblem::extract_local_upper_dofs() {
+
+};
+
+NumericVectorLocal NonLocalProblem::extract_local_upper_lower() {
+
+};
+
+bool NonLocalProblem::is_lowest_in_sweeping_direction() {
+  if(sweeping_direction == SweepingDirection::X) {
+    if(GlobalParams.Index_in_x_direction == 0) {
+      return true;
+    }
+  }
+  if(sweeping_direction == SweepingDirection::Y) {
+    if(GlobalParams.Index_in_y_direction == 0) {
+      return true;
+    }
+  }
+  if(sweeping_direction == SweepingDirection::Z) {
+    if(GlobalParams.Index_in_z_direction == 0) {
+      return true;
+    }
+  }
+  return false;
+};
+
+bool NonLocalProblem::is_highest_in_sweeping_direction() {
+  if(sweeping_direction == SweepingDirection::X) {
+    if(GlobalParams.Index_in_x_direction == GlobalParams.Blocks_in_x_direction-1) {
+      return true;
+    }
+  }
+  if(sweeping_direction == SweepingDirection::Y) {
+    if(GlobalParams.Index_in_y_direction == GlobalParams.Blocks_in_y_direction-1) {
+      return true;
+    }
+  }
+  if(sweeping_direction == SweepingDirection::Z) {
+    if(GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction-1) {
+      return true;
+    }
+  }
+  return false;
+};
+
+Direction get_lower_boundary_id_for_sweeping_direction(SweepingDirection in_direction) {
+  if(in_direction == SweepingDirection::X) {
+    return Direction::MinusX;
+  }
+  if(in_direction == SweepingDirection::Y) {
+    return Direction::MinusY;
+  }
+  return Direction::MinusZ;
+}
+
+Direction get_upper_boundary_id_for_sweeping_direction(SweepingDirection in_direction) {
+  if(in_direction == SweepingDirection::X) {
+    return Direction::PlusX;
+  }
+  if(in_direction == SweepingDirection::Y) {
+    return Direction::PlusY;
+  }
+  return Direction::PlusZ;
+}
+
+void NonLocalProblem::send_local_lower_dofs() {
+  if(is_lowest_in_sweeping_direction()) {
+    return;
+  }
+  Direction communication_direction = get_lower_boundary_id_for_sweeping_direction(sweeping_direction);
+  std::pair<bool, unsigned int> neighbour_data =GlobalMPI.get_neighbor_for_interface(communication_direction);
+  ComplexNumber * data = new ComplexNumber(dofs_process_below);
+  MPI_Send(&data[0], dofs_process_below, MPI_C_DOUBLE_COMPLEX, neighbour_data.second, 0, MPI_COMM_WORLD);
+}
+
+void NonLocalProblem::receive_local_lower_dofs() {
+  if(is_lowest_in_sweeping_direction()) {
+    return;
+  }
+  Direction communication_direction = get_lower_boundary_id_for_sweeping_direction(sweeping_direction);
+  std::pair<bool, unsigned int> neighbour_data =GlobalMPI.get_neighbor_for_interface(communication_direction);
+  ComplexNumber * data = new ComplexNumber(dofs_process_below);
+  MPI_Recv(&data[0], dofs_process_below, MPI_C_DOUBLE_COMPLEX, neighbour_data.second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+};
+
+void NonLocalProblem::send_local_upper_dofs() {
+  if(is_highest_in_sweeping_direction()) {
+    return;
+  }
+  Direction communication_direction = get_upper_boundary_id_for_sweeping_direction(sweeping_direction);
+  std::pair<bool, unsigned int> neighbour_data =GlobalMPI.get_neighbor_for_interface(communication_direction);
+  ComplexNumber * data = new ComplexNumber(dofs_process_above);
+  MPI_Send(&data[0], dofs_process_above, MPI_C_DOUBLE_COMPLEX, neighbour_data.second, 0, MPI_COMM_WORLD);
+};
+
+void NonLocalProblem::receive_local_upper_dofs() {
+  if(is_highest_in_sweeping_direction()) {
+    return;
+  }
+  Direction communication_direction = get_upper_boundary_id_for_sweeping_direction(sweeping_direction);
+  std::pair<bool, unsigned int> neighbour_data =GlobalMPI.get_neighbor_for_interface(communication_direction);
+  ComplexNumber * data = new ComplexNumber(dofs_process_above);
+  MPI_Recv(&data[0], dofs_process_above, MPI_C_DOUBLE_COMPLEX, neighbour_data.second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 };

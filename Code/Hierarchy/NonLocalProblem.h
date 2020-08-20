@@ -17,6 +17,8 @@ private:
   dealii::PETScWrappers::MPI::SparseMatrix *matrix;
   NumericVectorDistributed *system_rhs;
   dealii::IndexSet local_indices;
+  dealii::IndexSet upper_interface_dofs;
+  dealii::IndexSet lower_interface_dofs;
   dealii::SolverControl sc;
   dealii::SolverGMRES<NumericVectorDistributed> solver;
   dealii::AffineConstraints<ComplexNumber> constraints;
@@ -31,6 +33,8 @@ private:
   auto compute_lower_interface_dof_count() -> DofCount override;
 
   auto compute_upper_interface_dof_count() -> DofCount override;
+
+  DofCount compute_interface_dofs(BoundaryId interface_id, BoundaryId opposing_interface_id);
 
   auto compute_lower_interface_id() -> BoundaryId;
 
@@ -67,4 +71,22 @@ private:
   auto get_center() -> Position const override;
 
   auto communicate_sweeping_direction(SweepingDirection) -> void override;
+
+  void H_inverse(NumericVectorDistributed &, NumericVectorDistributed &);
+
+  NumericVectorLocal extract_local_upper_dofs();
+
+  NumericVectorLocal extract_local_upper_lower();
+
+  void send_local_lower_dofs();
+
+  void receive_local_lower_dofs();
+
+  void send_local_upper_dofs();
+
+  void receive_local_upper_dofs();
+
+  bool is_lowest_in_sweeping_direction();
+
+  bool is_highest_in_sweeping_direction();
 };
