@@ -91,7 +91,13 @@ void NonLocalProblem::make_constraints() {
 }
 
 void NonLocalProblem::assemble() {
-
+  Position center = get_center();
+  get_local_problem()->base_problem.assemble_system(own_dofs.nth_index_in_set(0), &constraints, matrix, system_rhs);
+  for(unsigned int i = 0; i< 6; i++) {
+    if(is_hsie_surface[i]) {
+      get_local_problem()->surfaces[i]->fill_matrix(matrix, system_rhs, surface_first_dofs[i], center, &constraints);
+    }
+  }
 }
 
 dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
@@ -205,11 +211,15 @@ DofCount NonLocalProblem::compute_interface_dofs(BoundaryId interface_id, Bounda
 }
 
 unsigned int NonLocalProblem::compute_own_dofs() {
-  unsigned int ret =
-      this->get_local_problem()->base_problem.dof_handler.n_dofs();
+  surface_first_dofs.clear();
+  DofCount ret = get_local_problem()->base_problem.dof_handler.n_dofs();
+  surface_first_dofs.push_back(ret);
   for (unsigned int i = 0; i < 6; i++) {
     if (is_hsie_surface[i]) {
       ret += this->get_local_problem()->surfaces[i]->dof_counter;
+    }
+    if (i != 5) {
+      surface_first_dofs.push_back(ret);
     }
   }
   return ret;
