@@ -1216,12 +1216,14 @@ std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association_
       for (unsigned int j = 0; j < edge_dof_data.size(); j++) {
         if (edge_dof_data[j].base_structure_id_non_face
             == face_indices_with_point[i].index) {
-          DofIndexAndOrientationAndPosition index_and_orientation;
-          index_and_orientation.index = edge_dof_data[j].global_index;
-          index_and_orientation.orientation =
-              face_indices_with_point[i].orientation;
-          index_and_orientation.position = face_indices_with_point[i].position;
-          surface_dofs_unsorted.emplace_back(index_and_orientation);
+          if(edge_dof_data[j].hsie_order != -1) {
+            DofIndexAndOrientationAndPosition index_and_orientation;
+            index_and_orientation.index = edge_dof_data[j].global_index;
+            index_and_orientation.orientation =
+                face_indices_with_point[i].orientation;
+            index_and_orientation.position = face_indices_with_point[i].position;
+            surface_dofs_unsorted.emplace_back(index_and_orientation);
+          }
         }
       }
     }
@@ -1232,8 +1234,7 @@ std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association_
           DofIndexAndOrientationAndPosition index_and_orientation;
           index_and_orientation.index = vertex_dof_data[j].global_index;
           index_and_orientation.orientation = true;
-          index_and_orientation.position =
-              vertex_indices_with_point[i].position;
+          index_and_orientation.position = vertex_indices_with_point[i].position;
           surface_dofs_unsorted.emplace_back(index_and_orientation);
         }
       }

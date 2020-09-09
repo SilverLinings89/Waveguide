@@ -20,6 +20,9 @@ HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level) :
   dofs_process_below = 0;
   rank = 0;
   n_procs_in_sweep = 0;
+  for(unsigned int i = 0; i < 6; i++) {
+    is_surface_locked.push_back(false);
+  }
 }
 
 void HierarchicalProblem::constrain_identical_dof_sets(
@@ -36,5 +39,19 @@ void HierarchicalProblem::constrain_identical_dof_sets(
     affine_constraints->add_line(set_one->operator [](index));
     affine_constraints->add_entry(set_one->operator [](index),
         set_two->operator [](index), ComplexNumber(-1, 0));
+  }
+}
+
+void lock_boundary_dofs(BoundaryId in_bid) {
+  if(in_bid < 6 && in_bid >= 0) {
+    is_surface_locked[in_bid] = true;
+    child->lock_boundary_dofs(in_bid);
+  }
+}
+
+void unlock_boundary_dofs(BoundaryId in_bid) {
+  if(in_bid < 6 && in_bid >= 0) {
+    is_surface_locked[in_bid] = false;
+    child->unlock_boundary_dofs(in_bid);
   }
 }

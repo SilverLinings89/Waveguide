@@ -22,6 +22,7 @@ private:
   dealii::SolverControl sc;
   dealii::SolverGMRES<NumericVectorDistributed> solver;
   dealii::AffineConstraints<ComplexNumber> constraints;
+  NumericVectorDistributed current_solution;
  public:
   NonLocalProblem(unsigned int);
   ~NonLocalProblem() override;
@@ -60,8 +61,6 @@ private:
 
   void initialize_index_sets() override;
 
-  void apply_sweep(NumericVectorDistributed) override;
-
   LocalProblem* get_local_problem() override;
 
   void reinit() override;
@@ -76,7 +75,7 @@ private:
 
   NumericVectorLocal extract_local_upper_dofs();
 
-  NumericVectorLocal extract_local_upper_lower();
+  NumericVectorLocal extract_local_lower_dofs();
 
   void send_local_lower_dofs();
 
@@ -89,4 +88,8 @@ private:
   bool is_lowest_in_sweeping_direction();
 
   bool is_highest_in_sweeping_direction();
+
+  void set_boundary_dof_values() override;
+
+  void clear_unlocked_dofs() override;
 };

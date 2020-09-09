@@ -46,8 +46,6 @@ public:
 
   void initialize_index_sets() override;
 
-  void apply_sweep(NumericVectorDistributed);
-
   auto get_local_problem() -> LocalProblem* override;
 
   void validate();

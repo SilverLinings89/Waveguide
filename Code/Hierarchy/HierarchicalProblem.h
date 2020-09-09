@@ -14,6 +14,7 @@ class HierarchicalProblem {
  public:
   SweepingDirection sweeping_direction;
   std::vector<DofNumber> surface_first_dofs;
+  std::vector<bool> is_surface_locked;
   bool is_dof_manager_set;
   bool has_child;
   HierarchicalProblem* child;
@@ -49,7 +50,6 @@ class HierarchicalProblem {
   virtual void make_constraints() = 0;
   virtual void assemble()=0;
   virtual void initialize_index_sets()=0;
-  virtual void apply_sweep(NumericVectorDistributed)=0;
   virtual LocalProblem* get_local_problem()=0;
   void constrain_identical_dof_sets(std::vector<unsigned int> *set_one,
       std::vector<unsigned int> *set_two,
@@ -58,4 +58,12 @@ class HierarchicalProblem {
   virtual auto get_center() -> Position const = 0;
   virtual auto reinit() -> void = 0;
   virtual auto communicate_sweeping_direction(SweepingDirection) -> void = 0;
+
+  virtual void set_boundary_dof_values() = 0;
+
+  void lock_boundary_dofs(BoundaryId);
+
+  void unlock_boundary_dofs(BoundaryId);
+
+  virtual void clear_unlocked_dofs() = 0;
 };

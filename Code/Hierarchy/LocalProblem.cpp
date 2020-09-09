@@ -298,10 +298,6 @@ void LocalProblem::initialize_index_sets() {
   }
 }
 
-void LocalProblem::apply_sweep(NumericVectorDistributed) {
-
-}
-
 unsigned int LocalProblem::compute_lower_interface_dof_count() {
   // For local problems there are not interfaces.
   return 0;
