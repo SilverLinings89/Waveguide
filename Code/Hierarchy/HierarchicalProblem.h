@@ -60,10 +60,7 @@ class HierarchicalProblem {
   virtual auto communicate_sweeping_direction(SweepingDirection) -> void = 0;
 
   virtual void set_boundary_dof_values() = 0;
-
   void lock_boundary_dofs(BoundaryId);
-
   void unlock_boundary_dofs(BoundaryId);
-
   virtual void clear_unlocked_dofs() = 0;
 };

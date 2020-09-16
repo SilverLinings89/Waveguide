@@ -12,6 +12,7 @@
 
 class NonLocalProblem: public HierarchicalProblem {
 private:
+  std::vector<dealii::IndexSet> index_sets_per_process;
   bool *is_hsie_surface;
   DofCount total_number_of_dofs_on_level;
   dealii::PETScWrappers::MPI::SparseMatrix *matrix;

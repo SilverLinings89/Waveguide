@@ -123,6 +123,27 @@ void NonLocalProblem::run() {
 }
 
 void NonLocalProblem::reinit() {
+  generate_sparsity_pattern();
+  std::vector<DofCount> rows_per_process;
+  std::vector<DofCount> columns_per_process;
+  const DofCount max_couplings = get_local_problem()->base_problem.dof_handler.max_couplings_between_dofs();
+  for(unsigned int i = 0; i < index_sets_per_process.size(); i++) {
+    rows_per_process.push_back(index_sets_per_process[i].n_elements());
+    columns_per_process.push_back(max_couplings);
+  }
+  matrix->reinit(GlobalMPI.communicators_by_level[local_level], sp, rows_per_process, columns_per_process, rank);
+}
+
+void NonLocalProblem::initialize() {
+  child->initialize();
+  initialize_own_dofs();
+  dofs_process_above = compute_upper_interface_dof_count();
+  dofs_process_below = compute_lower_interface_dof_count();
+  initialize_index_sets();
+  reinit();
+}
+
+void NonLocalProblem::generate_sparsity_pattern() {
   DynamicSparsityPattern dsp = { total_number_of_dofs_on_level,
       total_number_of_dofs_on_level, local_indices };
   DofNumber first_index = local_indices.nth_index_in_set(0);
@@ -136,23 +157,9 @@ void NonLocalProblem::reinit() {
     }
   }
   sp.copy_from(dsp);
-  // matrix->reinit(sp); // TODO: implement this.
-}
-
-void NonLocalProblem::initialize() {
-  child->initialize();
-  initialize_own_dofs();
-  dofs_process_above = compute_upper_interface_dof_count();
-  dofs_process_below = compute_lower_interface_dof_count();
-  initialize_index_sets();
-}
-
-void NonLocalProblem::generate_sparsity_pattern() {
-
 }
 
 void NonLocalProblem::initialize_index_sets() {
-  std::vector<dealii::IndexSet> index_sets_per_process;
   n_procs_in_sweep = dealii::Utilities::MPI::n_mpi_processes(
       GlobalMPI.communicators_by_level[local_level]);
   rank = dealii::Utilities::MPI::this_mpi_process(
@@ -398,7 +405,7 @@ void NonLocalProblem::receive_local_upper_dofs() {
     return;
   }
   Direction communication_direction = get_upper_boundary_id_for_sweeping_direction(sweeping_direction);
-  std::pair<bool, unsigned int> neighbour_data =GlobalMPI.get_neighbor_for_interface(communication_direction);
+  std::pair<bool, unsigned int> neighbour_data = GlobalMPI.get_neighbor_for_interface(communication_direction);
   ComplexNumber * data = new ComplexNumber(dofs_process_above);
   MPI_Recv(&data[0], dofs_process_above, MPI_C_DOUBLE_COMPLEX, neighbour_data.second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   for(unsigned int i = 0; i < dofs_process_above; i++) {
