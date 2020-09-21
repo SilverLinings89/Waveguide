@@ -42,15 +42,15 @@ void HierarchicalProblem::constrain_identical_dof_sets(
   }
 }
 
-void lock_boundary_dofs(BoundaryId in_bid) {
-  if(in_bid < 6 && in_bid >= 0) {
+void HierarchicalProblem::lock_boundary_dofs(BoundaryId in_bid) {
+  if(in_bid < 6) {
     is_surface_locked[in_bid] = true;
     child->lock_boundary_dofs(in_bid);
   }
 }
 
-void unlock_boundary_dofs(BoundaryId in_bid) {
-  if(in_bid < 6 && in_bid >= 0) {
+void HierarchicalProblem::unlock_boundary_dofs(BoundaryId in_bid) {
+  if(in_bid < 6) {
     is_surface_locked[in_bid] = false;
     child->unlock_boundary_dofs(in_bid);
   }

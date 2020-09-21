@@ -61,4 +61,8 @@ public:
   auto compare_to_exact_solution() -> void;
 
   auto communicate_sweeping_direction(SweepingDirection) -> void override;
+
+  auto set_boundary_dof_values()  -> void override;
+
+  auto clear_unlocked_dofs()  -> void override;
 };
