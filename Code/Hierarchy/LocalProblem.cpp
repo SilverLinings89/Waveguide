@@ -429,4 +429,4 @@ auto LocalProblem::compare_to_exact_solution() -> void {
 
 auto LocalProblem::communicate_sweeping_direction(SweepingDirection sweeping_direction_of_parent) -> void {
   sweeping_direction = sweeping_direction_of_parent;
-};
+}

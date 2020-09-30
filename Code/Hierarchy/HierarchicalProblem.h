@@ -58,3 +58,10 @@ class HierarchicalProblem {
   void unlock_boundary_dofs(BoundaryId);
   virtual void clear_unlocked_dofs() = 0;
 };
+
+typedef struct {
+  dealii::IndexSet child_elements;
+  dealii::IndexSet parent_elements;
+  HierarchicalProblem * child;
+  HierarchicalProblem * parent;
+} SampleShellPC;

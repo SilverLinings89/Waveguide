@@ -111,4 +111,3 @@ struct ConstraintPair {
   unsigned int right;
   bool sign;
 };
-

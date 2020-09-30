@@ -2,8 +2,10 @@
 #include "../Helpers/GeometryManager.h"
 #include "LocalProblem.h"
 #include "../Core/NumericProblem.h"
+#include <deal.II/base/index_set.h>
 #include <deal.II/lac/solver_gmres.h>
 #include <deal.II/lac/sparsity_pattern.h>
+#include <petscsystypes.h>
 
 NonLocalProblem::NonLocalProblem(unsigned int local_level) :
   HierarchicalProblem(local_level),
@@ -411,4 +413,26 @@ void NonLocalProblem::receive_local_upper_dofs() {
   for(unsigned int i = 0; i < dofs_process_above; i++) {
     current_solution[upper_interface_dofs.nth_index_in_set(i)] = data[i];
   }
+}
+
+void get_petsc_index_array_from_index_set(PetscInt* in_array, dealii::IndexSet in_set) {
+  for(unsigned int i = 0; i < in_set.n_elements(); i++) {
+    in_array[i] = in_set.nth_index_in_set(i);
+  }
+}
+
+PetscErrorCode apply(PC in_pc, Vec x_in, Vec x_out) {
+  SampleShellPC  *shell;
+  PCShellGetContext(in_pc,(void**)&shell);
+  NumericVectorLocal fixed_dof_values(shell->parent_elements.n_elements());
+  PetscInt* parent_elements_vec = new PetscInt[shell->parent_elements.n_elements()];
+  PetscInt* child_elements_vec  = new PetscInt[shell->child_elements.n_elements() ];
+  get_petsc_index_array_from_index_set(parent_elements_vec, shell->parent_elements);
+  get_petsc_index_array_from_index_set(child_elements_vec, shell->child_elements);
+
+  shell->child->solve(fixed_dof_values, ret);
+  
+  delete[] parent_elements_vec;
+  delete[] child_elements_vec;
+  return 0;
 }
