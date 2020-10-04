@@ -1,16 +1,32 @@
 #include "NonLocalProblem.h"
 #include "../Helpers/GeometryManager.h"
+#include "HierarchicalProblem.h"
 #include "LocalProblem.h"
 #include "../Core/NumericProblem.h"
 #include <deal.II/base/index_set.h>
+#include <deal.II/lac/petsc_solver.h>
 #include <deal.II/lac/solver_gmres.h>
 #include <deal.II/lac/sparsity_pattern.h>
 #include <petscsystypes.h>
 
+#include <iterator>
+#include <vector>
+
+PetscErrorCode SampleShellPCCreate(SampleShellPC **shell, HierarchicalProblem * parent, HierarchicalProblem * child)
+{
+  SampleShellPC  *newctx;
+  PetscNew(&newctx);
+  newctx->child = child;
+  newctx->parent = parent;
+  // TODO: initialize the element members of child and parent;
+  *shell       = newctx;
+  return 0;
+}
+
 NonLocalProblem::NonLocalProblem(unsigned int local_level) :
   HierarchicalProblem(local_level),
   sc(GlobalParams.GMRES_max_steps, GlobalParams.Solver_Precision, true, true),
-  solver(sc, dealii::SolverGMRES<NumericVectorDistributed>::AdditionalData(GlobalParams.GMRES_Steps_before_restart))
+  solver(sc, GlobalMPI.communicators_by_level[local_level], dealii::PETScWrappers::SolverGMRES::AdditionalData(GlobalParams.GMRES_Steps_before_restart))
 {
     if(local_level > 1) {
     child = new NonLocalProblem(local_level - 1);
@@ -80,6 +96,14 @@ NonLocalProblem::NonLocalProblem(unsigned int local_level) :
   }
   n_own_dofs = 0;
   communicate_sweeping_direction(sweeping_direction);
+  PC pc;
+  SampleShellPC shell;
+  KSPGetPC(solver.solver_data->ksp, &pc);
+  PCSetType(pc,PCSHELL);
+  SampleShellPCCreate(&shell);
+  PCShellSetApply(pc,SampleShellPCApply);
+  PCShellSetContext(pc,shell);
+
 }
 
 NonLocalProblem::~NonLocalProblem() {
@@ -283,8 +307,9 @@ auto NonLocalProblem::communicate_sweeping_direction(SweepingDirection) -> void 
   child->communicate_sweeping_direction(sweeping_direction);
 }
 
-void NonLocalProblem::H_inverse(NumericVectorDistributed &, NumericVectorDistributed &) {
+void NonLocalProblem::H_inverse(NumericVectorDistributed & src, NumericVectorDistributed & dst) {
 
+  solver.solve(matrix, dst, src, )
 }
 
 NumericVectorLocal NonLocalProblem::extract_local_upper_dofs() {
@@ -422,17 +447,24 @@ void get_petsc_index_array_from_index_set(PetscInt* in_array, dealii::IndexSet i
 }
 
 PetscErrorCode apply(PC in_pc, Vec x_in, Vec x_out) {
+  VecCopy(x_in, x_out);
   SampleShellPC  *shell;
   PCShellGetContext(in_pc,(void**)&shell);
-  NumericVectorLocal fixed_dof_values(shell->parent_elements.n_elements());
-  PetscInt* parent_elements_vec = new PetscInt[shell->parent_elements.n_elements()];
-  PetscInt* child_elements_vec  = new PetscInt[shell->child_elements.n_elements() ];
+  const unsigned int n_fixed_dofs = shell->parent_elements.n_elements();
+  NumericVectorLocal fixed_dof_values(n_fixed_dofs);
+  PetscInt* parent_elements_vec = new PetscInt[n_fixed_dofs];
   get_petsc_index_array_from_index_set(parent_elements_vec, shell->parent_elements);
-  get_petsc_index_array_from_index_set(child_elements_vec, shell->child_elements);
-
-  shell->child->solve(fixed_dof_values, ret);
+  ComplexNumber * vals = new ComplexNumber[n_fixed_dofs];
+  VecGetValues(x_in,n_fixed_dofs,parent_elements_vec,vals);
+  // Extract the components from the input vector
+  std::vector<ComplexNumber> values;
+  for(unsigned int i = 0; i < n_fixed_dofs; i++) {
+    values.push_back(vals[i]);
+  }
+  // Set them in the output vector
+  shell->child->solve(values, x_out);
   
   delete[] parent_elements_vec;
-  delete[] child_elements_vec;
+  delete[] vals;
   return 0;
 }

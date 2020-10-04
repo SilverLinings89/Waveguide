@@ -21,7 +21,7 @@ private:
   dealii::IndexSet upper_interface_dofs;
   dealii::IndexSet lower_interface_dofs;
   dealii::SolverControl sc;
-  dealii::SolverGMRES<NumericVectorDistributed> solver;
+  dealii::PETScWrappers::SolverGMRES solver;
   dealii::AffineConstraints<ComplexNumber> constraints;
   NumericVectorDistributed current_solution;
  public:
@@ -48,6 +48,11 @@ private:
       NumericVectorDistributed &dst) override;
 
   auto solve(NumericVectorLocal,
+      NumericVectorLocal &) -> void override {
+        std::cout << "Calling wrong solve on NonLocal Problem." << std::endl;
+      } ;
+
+  auto solve(std::vector<ComplexNumber> fixed_dof_values,
       NumericVectorLocal &) -> void override {
         std::cout << "Calling wrong solve on NonLocal Problem." << std::endl;
       } ;
