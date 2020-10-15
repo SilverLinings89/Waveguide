@@ -12,14 +12,37 @@
 #include <iterator>
 #include <vector>
 
-PetscErrorCode SampleShellPCCreate(SampleShellPC **shell, HierarchicalProblem * parent, HierarchicalProblem * child)
+PetscErrorCode pc_apply(PC in_pc, Vec x_in, Vec x_out) {
+  VecCopy(x_in, x_out);
+  SampleShellPC  *shell;
+  PCShellGetContext(in_pc,(void**)&shell);
+  const unsigned int n_fixed_dofs = shell->parent_elements.n_elements();
+  NumericVectorLocal fixed_dof_values(n_fixed_dofs);
+  PetscInt* parent_elements_vec = new PetscInt[n_fixed_dofs];
+  get_petsc_index_array_from_index_set(parent_elements_vec, shell->parent_elements);
+  ComplexNumber * vals = new ComplexNumber[n_fixed_dofs];
+  VecGetValues(x_in,n_fixed_dofs,parent_elements_vec,vals);
+  // Extract the components from the input vector
+  std::vector<ComplexNumber> values;
+  for(unsigned int i = 0; i < n_fixed_dofs; i++) {
+    values.push_back(vals[i]);
+  }
+  // Set them in the output vector
+  shell->child->solve(values, x_out);
+  
+  delete[] parent_elements_vec;
+  delete[] vals;
+  return 0;
+}
+
+PetscErrorCode pc_create(SampleShellPC *shell, HierarchicalProblem * parent, HierarchicalProblem * child)
 {
   SampleShellPC  *newctx;
   PetscNew(&newctx);
   newctx->child = child;
   newctx->parent = parent;
   // TODO: initialize the element members of child and parent;
-  *shell       = newctx;
+  shell = newctx;
   return 0;
 }
 
@@ -96,14 +119,16 @@ NonLocalProblem::NonLocalProblem(unsigned int local_level) :
   }
   n_own_dofs = 0;
   communicate_sweeping_direction(sweeping_direction);
-  PC pc;
-  SampleShellPC shell;
+  init_solver_and_preconditioner();
+}
+
+void NonLocalProblem::init_solver_and_preconditioner() {
+  std::cout << "Init solver and pc on level " << local_level << std::endl;
   KSPGetPC(solver.solver_data->ksp, &pc);
   PCSetType(pc,PCSHELL);
-  SampleShellPCCreate(&shell);
-  PCShellSetApply(pc,SampleShellPCApply);
-  PCShellSetContext(pc,shell);
-
+  pc_create(&shell, this, child);
+  PCShellSetApply(pc,pc_apply);
+  PCShellSetContext(pc, (void*) &shell);
 }
 
 NonLocalProblem::~NonLocalProblem() {
@@ -308,8 +333,7 @@ auto NonLocalProblem::communicate_sweeping_direction(SweepingDirection) -> void 
 }
 
 void NonLocalProblem::H_inverse(NumericVectorDistributed & src, NumericVectorDistributed & dst) {
-
-  solver.solve(matrix, dst, src, )
+  KSPSolve(solver.solver_data->ksp, src, dst);
 }
 
 NumericVectorLocal NonLocalProblem::extract_local_upper_dofs() {
@@ -446,25 +470,4 @@ void get_petsc_index_array_from_index_set(PetscInt* in_array, dealii::IndexSet i
   }
 }
 
-PetscErrorCode apply(PC in_pc, Vec x_in, Vec x_out) {
-  VecCopy(x_in, x_out);
-  SampleShellPC  *shell;
-  PCShellGetContext(in_pc,(void**)&shell);
-  const unsigned int n_fixed_dofs = shell->parent_elements.n_elements();
-  NumericVectorLocal fixed_dof_values(n_fixed_dofs);
-  PetscInt* parent_elements_vec = new PetscInt[n_fixed_dofs];
-  get_petsc_index_array_from_index_set(parent_elements_vec, shell->parent_elements);
-  ComplexNumber * vals = new ComplexNumber[n_fixed_dofs];
-  VecGetValues(x_in,n_fixed_dofs,parent_elements_vec,vals);
-  // Extract the components from the input vector
-  std::vector<ComplexNumber> values;
-  for(unsigned int i = 0; i < n_fixed_dofs; i++) {
-    values.push_back(vals[i]);
-  }
-  // Set them in the output vector
-  shell->child->solve(values, x_out);
-  
-  delete[] parent_elements_vec;
-  delete[] vals;
-  return 0;
-}
+

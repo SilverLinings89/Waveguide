@@ -55,3 +55,12 @@ void HierarchicalProblem::unlock_boundary_dofs(BoundaryId in_bid) {
     child->unlock_boundary_dofs(in_bid);
   }
 }
+
+auto HierarchicalProblem::opposing_site_bid(BoundaryId in_bid) -> BoundaryId {
+  if((in_bid % 2) == 0) {
+    return in_bid + 1;
+  }
+  else {
+    return in_bid - 1;
+  }
+}

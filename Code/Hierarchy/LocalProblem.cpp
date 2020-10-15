@@ -46,6 +46,11 @@ void LocalProblem::solve(NumericVectorDistributed src,
   solver.solve(*matrix , dst, src);
 }
 
+void LocalProblem::solve(std::vector<ComplexNumber> fixed_dof_values,
+    NumericVectorDistributed &dst) {
+      
+}
+
 auto LocalProblem::get_center() -> Position const {
   return compute_center_of_triangulation(&base_problem.triangulation);
 }

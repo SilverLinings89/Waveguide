@@ -29,7 +29,7 @@ class HierarchicalProblem {
   DofCount dofs_process_below;
   unsigned int n_procs_in_sweep;
   unsigned int rank;
-  dealii:: IndexSet own_dofs;
+  dealii::IndexSet own_dofs;
 
   HierarchicalProblem(unsigned int in_own_level);
   virtual ~HierarchicalProblem() =0;
@@ -38,6 +38,7 @@ class HierarchicalProblem {
   virtual DofCount compute_upper_interface_dof_count()=0;
   virtual void solve(NumericVectorDistributed src, NumericVectorDistributed &dst)=0;
   virtual void solve(NumericVectorLocal src, NumericVectorLocal &dst)=0;
+  virtual void solve(std::vector<ComplexNumber> fixed_dof_values, NumericVectorLocal &dst)=0;
   virtual void initialize()=0;
   virtual void generate_sparsity_pattern()=0;
   virtual DofCount compute_own_dofs()=0;
@@ -57,6 +58,9 @@ class HierarchicalProblem {
   void lock_boundary_dofs(BoundaryId);
   void unlock_boundary_dofs(BoundaryId);
   virtual void clear_unlocked_dofs() = 0;
+  auto opposing_site_bid(BoundaryId) -> BoundaryId;
+  auto set_dofs_in_inner_problem(BoundaryId, NumericVectorLocal);
+  auto set_dofs_in_inner_problem_from_other_process(BoundaryId, std::vector<ComplexNumber>);
 };
 
 typedef struct {

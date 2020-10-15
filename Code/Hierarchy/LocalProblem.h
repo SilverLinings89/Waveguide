@@ -28,6 +28,8 @@ public:
   
   void solve(NumericVectorDistributed src, NumericVectorDistributed &dst) override;
 
+  auto solve(std::vector<ComplexNumber> fixed_dof_values, NumericVectorLocal &) -> void override;
+
   void initialize() override;
 
   void generate_sparsity_pattern() override;

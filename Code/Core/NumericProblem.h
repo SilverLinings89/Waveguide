@@ -80,191 +80,46 @@
  */
 class NumericProblem {
  public:
-  /**
-   * This is the constructor that should be used to initialize objects of this
-   * type.
-   *
-   * \param param This is a reference to a parsed form of the input-file.
-   * \param structure This parameter gives a reference to the structure of the
-   * real Waveguide. This is necessary since during matrix-assembly it is
-   * required to call a function which generates the transformation tensor which
-   * is purely structure-dependent.
-   */
+  SquareMeshGenerator mesh_generator;
+  HomogenousTransformationRectangular space_transformation;
+  dealii::FE_NedelecSZ<3> fe;
+  dealii::Triangulation<3> triangulation;
+  bool local_constraints_made;
+  dealii::AffineConstraints<ComplexNumber> local_constraints;
+  unsigned int n_dofs;
+  DofHandler3D dof_handler;
+  dealii::IndexSet fixed_dofs;
+  dealii::IndexSet local_dof_indices;
+  std::set<std::string> constrained_cells;
+  std::set<unsigned int> outer_constrained_faces;
 
   NumericProblem();
-
   ~NumericProblem();
-
-  /**
-   * To compute the output quality of the signal and it's transmission along the
-   * waveguide-axis, this function performs a comparison of the fundamental mode
-   * of a waveguide and the actual situation. For this purpose we integrate the
-   * product of the two functions over a cross-section of the waveguide in
-   * transformed coordinates. To perform this action we need to use numeric
-   * integration so the integral is decomposed into a sum over local
-   * evaluations. For this to be possible this function can be handed x,y and z
-   * coordinates and returns the according value. \param x gives the
-   * x-coordinate. \param y gives the y-coordinate. \param z gives the
-   * z-coordinate.
-   */
   double evaluate_for_z(double);
-
-  /**
-   * This function has the purpose of filling the qualities array in every
-   * process with the appropriate Values from the other ones. Now it will become
-   * necessary to build an optimization-scheme on top, which can handle this
-   * information on process one and then distribute a new shape to the others.
-   * The function will use the Waveguide-Property execute_rebuild to signal a
-   * need for re-computation.
-   */
   void evaluate();
-
-  /**
-   * The storage has the following purpose: Regarding the optimization-process
-   * there are two kinds of runs. The first one, taking place with no knowledge
-   * of appropriate starting values for the degrees of freedom, and the
-   * following steps, in which the prior results can be used to estimate
-   * appropriate starting values for iterative solvers as well as the
-   * preconditioner. This function switches the behaviour in the following way:
-   * Once it is called, it stores the current solution in a run-independent
-   * variable, making it available for later runs. Also it sets a flag,
-   * indicating, that prior solutions are now available for usage in the
-   * solution process.
-   */
   void store();
-
-  SquareMeshGenerator mesh_generator;
-
-  /**
-   * Grid-generation is a crucial part of any FEM-Code. This function holds all
-   * functionality concerning that topic. In the current implementation we start
-   * with a cubic Mesh. That mesh originally is subdivided in 5 cells per
-   * dimension yielding a total of 5*5*5 = 125 cells. The central cells in the
-   * x-z planes are given a cylindrical manifold-description forcing them to
-   * interpolate the new points during global refinement using a circular shape
-   * rather than linear interpolation. This leads to the description of a
-   * cylinder included within a cube. There are currently three techniques for
-   * mesh-refinement:
-   * 	-# Global refinement: For such refinement-cases, any cell is subdivided
-   * in the middle of any dimension. In this case every cell is split into 8 new
-   * ones, increasing the number of cells massively. Pros: no hanging nodes.
-   * Cons: Very many new dofs that might be in areas, where the resolution of
-   * the mesh is already large enough.
-   * 	-# Inner refinement: In this case, only degrees that were in the
-   * original core-cells, will be refined. These are cells, which in the real
-   * physical simulation are part of the waveguide-core rather then the mantle.
-   * 	-# Boundary-refinement: In this case, cells are refined, that are close
-   * to the boundary of the waveguide (not close to the boundary of the
-   * computational domain!). To see the used definition of close, please see the
-   * code.
-   *
-   * 	Following the creation of the mesh, the dofs are distributed to it using
-   * the function setup_system(). This function only has to be used once even in
-   * optimization runs since the mesh can be reused for every run. This saves a
-   * lot of time especially for large cases and distributed calculations.
-   */
   void make_grid();
-
-  /**
-   * In this function, the first case-specific data is used. First off we number
-   * the degrees of freedom. After completion of this task we start making
-   * boundary-conditions. The creation of appropriate boundary-conditions is
-   * twofold:
-   * 	#- Mathematical boundary conditions as described in the literature on
-   * this matter. In this case we use Dirichlet boundary values that are either
-   * zero-values or alternatively are calculated from the mode-distribution of
-   * the incoming signal.
-   * 	#- Numerical constraints from hanging nodes. The non-global refinement
-   * steps cause hanging-nodes that have to be constrained to their neighbors.
-   * This problem can be solved automatically by deal and uses the same
-   * mechanism (constraints) as mathematical boundary values do.
-   *
-   * 	Constraint matrices (as constructed in this function) can be used
-   * primarily in two ways. Documentation concerning this problem can be found
-   * at [Constraints On Degrees Of
-   * Freedom](https://www.dealii.org/developer/doxygen/deal.II/group__constraints.html).
-   */
   void setup_system();
-
-  /**
-   * Assemble system is the function to build a system-matrix. This can either
-   * happen incrementally or from scratch depending on if a solution has been
-   * stored before or not. Essentially it splits the system in blocks and then
-   * calls assemble_block(unsigned int index) for the individual blocks. This
-   * function will have to be improved for incremental building of the system
-   * matrix in order to proceed to upcoming versions. \author Pascal Kraft
-   * \date 16.11.2015
-   */
   void assemble_system(unsigned int shift,
       dealii::AffineConstraints<ComplexNumber> *constraints,
       dealii::PETScWrappers::MPI::SparseMatrix *matrix,
       NumericVectorDistributed *rhs);
-
   void assemble_system(unsigned int shift,
       dealii::AffineConstraints<ComplexNumber> *constraints,
       dealii::PETScWrappers::SparseMatrix *matrix,
       NumericVectorDistributed *rhs);
-
-  /**
-   * This function executes refined downstream ordering of degrees of freedom.
-   */
   void Compute_Dof_Numbers();
-
-  /**
-   * Once a solution has been computed, this function can be used to evaluate it
-   * at a point position. This function is similar to the other version but it
-   * doesn't return the solution but stores it in the pointer given as an
-   * argument.
-   */
-
   void solution_evaluation(Position position, double *solution) const;
-
-  /**
-   * Same as solution_evaluation but transforms the coordinate to the dual
-   * system first, so if you passed in a coordinate on the input interface, it
-   * would return the solution evaluation on the output interface.
-   */
-  void adjoint_solution_evaluation(Position position,
-                                   double *solution) const;
-
+  void adjoint_solution_evaluation(Position position, double *solution) const;
   void SortDofsDownstream();
-
   void make_constraints(dealii::AffineConstraints<ComplexNumber>*,
       unsigned int shift, IndexSet local_constraints_indices);
-
   void make_constraints();
-
-  HomogenousTransformationRectangular space_transformation;
-
-  dealii::FE_NedelecSZ<3> fe;
-
-  dealii::Triangulation<3> triangulation;
-
-  bool local_constraints_made;
-
-  dealii::AffineConstraints<ComplexNumber> local_constraints;
-
-  unsigned int n_dofs;
-
-  DofHandler3D dof_handler;
-
-  dealii::IndexSet fixed_dofs;
-
-  dealii::IndexSet local_dof_indices;
-  
-  std::set<std::string> constrained_cells;
-  std::set<unsigned int> outer_constrained_faces;
-
-  std::vector<DofIndexAndOrientationAndPosition> get_surface_dof_vector_for_boundary_id(
-      unsigned int b_id);
-
+  std::vector<DofIndexAndOrientationAndPosition> get_surface_dof_vector_for_boundary_id(BoundaryId b_id);
   std::vector<unsigned int> dofs_for_cell_around_point(Position &in_p);
-
   void make_sparsity_pattern(dealii::DynamicSparsityPattern *in_pattern,
       unsigned int shift, dealii::AffineConstraints<ComplexNumber> *constraints);
-
   void write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs);
-  
   auto get_central_cells(double point_source_radius) -> std::set<std::string>;
   auto get_outer_constrained_faces() -> std::set<unsigned int>;
 };

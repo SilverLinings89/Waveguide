@@ -24,8 +24,12 @@ private:
   dealii::PETScWrappers::SolverGMRES solver;
   dealii::AffineConstraints<ComplexNumber> constraints;
   NumericVectorDistributed current_solution;
+  PC pc;
+  SampleShellPC shell;
+
  public:
   NonLocalProblem(unsigned int);
+
   ~NonLocalProblem() override;
 
   auto compute_own_dofs() -> DofCount override;
@@ -54,9 +58,10 @@ private:
 
   auto solve(std::vector<ComplexNumber> fixed_dof_values,
       NumericVectorLocal &) -> void override {
-        std::cout << "Calling wrong solve on NonLocal Problem." << std::endl;
       } ;
 
+  void init_solver_and_preconditioner();
+  
   void run() override;
 
   void initialize() override;
