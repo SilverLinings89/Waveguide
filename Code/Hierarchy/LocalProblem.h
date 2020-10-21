@@ -24,11 +24,7 @@ public:
 
   DofCount compute_upper_interface_dof_count() override;
 
-  void solve(NumericVectorLocal src, NumericVectorLocal &dst) override;
-  
-  void solve(NumericVectorDistributed src, NumericVectorDistributed &dst) override;
-
-  auto solve(std::vector<ComplexNumber> fixed_dof_values, NumericVectorLocal &) -> void override;
+  void solve() override;
 
   void initialize() override;
 
@@ -39,10 +35,6 @@ public:
   void initialize_own_dofs() override;
 
   void make_constraints() override;
-
-  void run() override;
-
-  void solve();
 
   void assemble() override;
 
@@ -67,4 +59,8 @@ public:
   auto set_boundary_dof_values()  -> void override;
 
   auto clear_unlocked_dofs()  -> void override;
+
+  auto set_boundary_values(dealii::IndexSet, std::vector<ComplexNumber>) -> void override;
+  
+  auto release_boundary_values(dealii::IndexSet) -> void override;
 };

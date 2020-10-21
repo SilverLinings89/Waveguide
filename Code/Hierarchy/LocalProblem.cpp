@@ -26,31 +26,6 @@ LocalProblem::LocalProblem() :
 
 LocalProblem::~LocalProblem() {}
 
-void LocalProblem::solve(NumericVectorLocal src,
-    NumericVectorLocal &dst) {
-  NumericVectorDistributed input(MPI_COMM_SELF, n_own_dofs, n_own_dofs);
-  NumericVectorDistributed output(MPI_COMM_SELF, n_own_dofs, n_own_dofs);
-  for (unsigned int i = 0; i < n_own_dofs; i++) {
-    input[i] = src(i);
-  }
-
-  solver.solve(*matrix , output, input);
-
-  for (unsigned int i = 0; i < n_own_dofs; i++) {
-    dst[i] = output[i];
-  }
-}
-
-void LocalProblem::solve(NumericVectorDistributed src,
-    NumericVectorDistributed &dst) {
-  solver.solve(*matrix , dst, src);
-}
-
-void LocalProblem::solve(std::vector<ComplexNumber> fixed_dof_values,
-    NumericVectorDistributed &dst) {
-      
-}
-
 auto LocalProblem::get_center() -> Position const {
   return compute_center_of_triangulation(&base_problem.triangulation);
 }
@@ -254,6 +229,7 @@ void LocalProblem::initialize_own_dofs() {
   own_dofs.add_range(0, n_own_dofs);
 }
 
+/**
 void LocalProblem::run() {
   std::cout << "Start LocalProblem::run()" << std::endl;
   reinit();
@@ -263,6 +239,7 @@ void LocalProblem::run() {
   output_results();
   std::cout << "End LocalProblem::run()" << std::endl;
 }
+**/
 
 void LocalProblem::solve() {
   std::cout << "Solve the system." << std::endl;
@@ -434,4 +411,26 @@ auto LocalProblem::compare_to_exact_solution() -> void {
 
 auto LocalProblem::communicate_sweeping_direction(SweepingDirection sweeping_direction_of_parent) -> void {
   sweeping_direction = sweeping_direction_of_parent;
+}
+
+auto LocalProblem::set_boundary_values(dealii::IndexSet local_indices, std::vector<ComplexNumber> dof_values) -> void {
+  if(local_indices.n_elements() == dof_values.size()) {
+    std::vector<unsigned int> indices;
+    for(auto item: local_indices) {
+      indices.push_back(item);
+    }
+    rhs.set(indices, dof_values);
+  } else {
+    std::cout << "Boundary values were passed incorrectly.";
+  }
+}
+
+auto LocalProblem::release_boundary_values(dealii::IndexSet local_indices) -> void {
+  std::vector<unsigned int> indices;
+  std::vector<ComplexNumber> values;
+  for(auto item: local_indices) {
+    indices.push_back(item);
+    values.push_back(0);
+  }
+  rhs.set(indices, values);
 }

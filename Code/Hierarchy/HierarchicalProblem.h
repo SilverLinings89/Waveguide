@@ -23,6 +23,7 @@ class HierarchicalProblem {
   DofIndexData indices;
   NumericVectorDistributed rhs;
   NumericVectorDistributed solution;
+  NumericVectorDistributed temp_solution;
   DofCount n_own_dofs;
   DofNumber first_own_index;
   DofCount dofs_process_above;
@@ -30,19 +31,18 @@ class HierarchicalProblem {
   unsigned int n_procs_in_sweep;
   unsigned int rank;
   dealii::IndexSet own_dofs;
+  dealii::IndexSet current_upper_sweeping_dofs;
+  dealii::IndexSet current_lower_sweeping_dofs;
 
   HierarchicalProblem(unsigned int in_own_level);
   virtual ~HierarchicalProblem() =0;
 
   virtual DofCount compute_lower_interface_dof_count()=0;
   virtual DofCount compute_upper_interface_dof_count()=0;
-  virtual void solve(NumericVectorDistributed src, NumericVectorDistributed &dst)=0;
-  virtual void solve(NumericVectorLocal src, NumericVectorLocal &dst)=0;
-  virtual void solve(std::vector<ComplexNumber> fixed_dof_values, NumericVectorLocal &dst)=0;
+  virtual void solve()=0;
   virtual void initialize()=0;
   virtual void generate_sparsity_pattern()=0;
   virtual DofCount compute_own_dofs()=0;
-  virtual void run() =0;
   virtual void initialize_own_dofs() =0;
   virtual void make_constraints() = 0;
   virtual void assemble()=0;
@@ -60,12 +60,18 @@ class HierarchicalProblem {
   virtual void clear_unlocked_dofs() = 0;
   auto opposing_site_bid(BoundaryId) -> BoundaryId;
   auto set_dofs_in_inner_problem(BoundaryId, NumericVectorLocal);
-  auto set_dofs_in_inner_problem_from_other_process(BoundaryId, std::vector<ComplexNumber>);
+  auto set_dofs_in_inner_problem_from_other_process(BoundaryId, DofDataVector);
+  virtual auto set_boundary_values(dealii::IndexSet, std::vector<ComplexNumber>) -> void = 0;
+  virtual auto release_boundary_values(dealii::IndexSet) -> void = 0;
+  void copy_temp_to_current_solution();
 };
 
 typedef struct {
-  dealii::IndexSet child_elements;
-  dealii::IndexSet parent_elements;
+  PetscInt * parent_elements_vec_petsc;
+  PetscInt * child_elements_vec_petsc;
+  std::vector<DofNumber> parent_elements_vec;
+  std::vector<DofNumber> child_elements_vec;
+  DofCount n_local_problem_indices;
   HierarchicalProblem * child;
   HierarchicalProblem * parent;
 } SampleShellPC;

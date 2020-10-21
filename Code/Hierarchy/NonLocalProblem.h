@@ -13,7 +13,8 @@
 class NonLocalProblem: public HierarchicalProblem {
 private:
   std::vector<dealii::IndexSet> index_sets_per_process;
-  bool *is_hsie_surface;
+  std::array<bool, 6> is_hsie_surface;
+  std::array<bool, 6> is_sweeping_hsie_surface;
   DofCount total_number_of_dofs_on_level;
   dealii::PETScWrappers::MPI::SparseMatrix *matrix;
   NumericVectorDistributed *system_rhs;
@@ -42,27 +43,17 @@ private:
 
   DofCount compute_interface_dofs(BoundaryId interface_id, BoundaryId opposing_interface_id);
 
+  dealii::IndexSet compute_interface_dof_set(BoundaryId interface_id, BoundaryId opposing_interface_id);
+
   auto compute_lower_interface_id() -> BoundaryId;
 
   auto compute_upper_interface_id() -> BoundaryId;
 
   void assemble() override;
 
-  void solve(NumericVectorDistributed src,
-      NumericVectorDistributed &dst) override;
-
-  auto solve(NumericVectorLocal,
-      NumericVectorLocal &) -> void override {
-        std::cout << "Calling wrong solve on NonLocal Problem." << std::endl;
-      } ;
-
-  auto solve(std::vector<ComplexNumber> fixed_dof_values,
-      NumericVectorLocal &) -> void override {
-      } ;
+  void solve() override;
 
   void init_solver_and_preconditioner();
-  
-  void run() override;
 
   void initialize() override;
 
@@ -103,4 +94,8 @@ private:
   void set_boundary_dof_values() override;
 
   void clear_unlocked_dofs() override;
+
+  auto set_boundary_values(dealii::IndexSet, std::vector<ComplexNumber>) -> void override;
+  
+  auto release_boundary_values(dealii::IndexSet) -> void override;
 };
