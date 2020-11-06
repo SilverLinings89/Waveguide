@@ -54,10 +54,8 @@ class HierarchicalProblem {
   virtual auto get_center() -> Position const = 0;
   virtual auto reinit() -> void = 0;
   virtual auto communicate_sweeping_direction(SweepingDirection) -> void = 0;
-  virtual void set_boundary_dof_values() = 0;
   void lock_boundary_dofs(BoundaryId);
   void unlock_boundary_dofs(BoundaryId);
-  virtual void clear_unlocked_dofs() = 0;
   auto opposing_site_bid(BoundaryId) -> BoundaryId;
   auto set_dofs_in_inner_problem(BoundaryId, NumericVectorLocal);
   auto set_dofs_in_inner_problem_from_other_process(BoundaryId, DofDataVector);

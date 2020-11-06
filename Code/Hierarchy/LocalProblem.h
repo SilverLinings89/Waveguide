@@ -56,10 +56,6 @@ public:
 
   auto communicate_sweeping_direction(SweepingDirection) -> void override;
 
-  auto set_boundary_dof_values()  -> void override;
-
-  auto clear_unlocked_dofs()  -> void override;
-
   auto set_boundary_values(dealii::IndexSet, std::vector<ComplexNumber>) -> void override;
   
   auto release_boundary_values(dealii::IndexSet) -> void override;

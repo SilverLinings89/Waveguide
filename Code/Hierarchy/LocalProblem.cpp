@@ -21,6 +21,8 @@ PointSourceField psf;
 LocalProblem::LocalProblem() :
     HierarchicalProblem(0), base_problem(), sc(), solver(sc, MPI_COMM_SELF) {
   base_problem.make_grid();
+  MPI_Barrier(MPI_COMM_WORLD);
+  print_info("Local Problem", "Done building base problem. Preparing matrix.");
   matrix = new dealii::PETScWrappers::SparseMatrix();
 }
 
@@ -192,9 +194,9 @@ void LocalProblem::make_constraints() {
         dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
     }
   }
-  std::cout << "Restraints after phase 2:" << constraints.n_constraints() << std::endl;
+  std::cout << "Constraints after phase 2:" << constraints.n_constraints() << std::endl;
   base_problem.make_constraints(&constraints, 0, own_dofs);
-  std::cout << "Restraints after phase 3:" << constraints.n_constraints() << std::endl;
+  std::cout << "Constraints after phase 3:" << constraints.n_constraints() << std::endl;
   std::cout << "End Make Constraints." << std::endl;
 }
 

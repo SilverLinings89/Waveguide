@@ -9,4 +9,7 @@ auto Parameters::complete_data() -> void {
         std::cout << "The number of mpi processes does not match the required processes" << std::endl;
         exit(0);
     }
+    Index_in_z_direction = MPI_Rank / (Blocks_in_x_direction*Blocks_in_y_direction);
+    Index_in_y_direction = (MPI_Rank-(Index_in_z_direction * Blocks_in_x_direction*Blocks_in_y_direction)) / Blocks_in_x_direction;
+    Index_in_x_direction = 0; // TODO: implement this.
 }

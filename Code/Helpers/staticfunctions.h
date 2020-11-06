@@ -114,3 +114,8 @@ NumericVectorLocal crossproduct(const NumericVectorLocal &u,const NumericVectorL
 Position crossproduct(const Position &u,const Position &v);
 
 void multiply_in_place(const ComplexNumber factor_1, NumericVectorLocal &factor_2);
+
+void print_info(const std::string label, const std::string message);
+void print_info(const std::string label, const unsigned int message);
+void print_info(const std::string label, const std::vector<unsigned int> message);
+void print_info(const std::string label, const std::array<bool,6> message);

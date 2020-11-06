@@ -91,11 +91,11 @@ private:
 
   bool is_highest_in_sweeping_direction();
 
-  void set_boundary_dof_values() override;
-
-  void clear_unlocked_dofs() override;
-
   auto set_boundary_values(dealii::IndexSet, std::vector<ComplexNumber>) -> void override;
   
   auto release_boundary_values(dealii::IndexSet) -> void override;
+
+  auto make_constraints_for_hsie_surface(unsigned int index) -> void;
+  
+  auto make_constraints_for_non_hsie_surface(unsigned int index) -> void;
 };

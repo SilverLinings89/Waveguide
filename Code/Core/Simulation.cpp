@@ -39,8 +39,6 @@ void Simulation::prepare() {
 void Simulation::run() {
   std::cout << "Start Simulation::run()" << std::endl;
 
-  mainProblem->reinit();
-
   mainProblem->assemble();
 
   // mainProblem->validate();

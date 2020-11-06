@@ -21,6 +21,7 @@ using namespace dealii;
 
 extern Parameters GlobalParams;
 extern GeometryManager Geometry;
+unsigned int message_count = 0;
 
 void set_the_st(SpaceTransformation *in_st) { the_st = in_st; }
 
@@ -531,4 +532,38 @@ void multiply_in_place(const ComplexNumber factor_1, NumericVectorLocal &factor_
   for(unsigned int i = 0; i < factor_2.size(); i++) {
     factor_2[i] *= factor_1;
   }
+}
+
+void print_info(const std::string label, const std::string message) {
+  MPI_Barrier(MPI_COMM_WORLD);
+  std::cout << "[" << GlobalParams.MPI_Rank<< ":" << GlobalParams.Index_in_x_direction << "x" << GlobalParams.Index_in_y_direction << "x" << GlobalParams.Index_in_z_direction << "]" << label << ": " << message << std::endl;
+  MPI_Barrier(MPI_COMM_WORLD);
+}
+
+void print_info(const std::string label, const unsigned int message) {
+  MPI_Barrier(MPI_COMM_WORLD);
+  std::cout << "[" << GlobalParams.MPI_Rank<< ":" << GlobalParams.Index_in_x_direction << "x" << GlobalParams.Index_in_y_direction << "x" << GlobalParams.Index_in_z_direction << "]" << label << ": " << message << std::endl;
+  MPI_Barrier(MPI_COMM_WORLD);
+}
+
+void print_info(const std::string label, const std::vector<unsigned int> message) {
+  MPI_Barrier(MPI_COMM_WORLD);
+  std::cout << "[" << GlobalParams.MPI_Rank<< ":" << GlobalParams.Index_in_x_direction << "x" << GlobalParams.Index_in_y_direction << "x" << GlobalParams.Index_in_z_direction << "]" << label << ": " ;
+  for(unsigned int i = 0; i < message.size(); i++) std::cout << message[i] << " ";
+  std::cout << std::endl;
+  MPI_Barrier(MPI_COMM_WORLD);
+}
+
+void print_info(const std::string label, const std::array<bool,6> message) {
+  MPI_Barrier(MPI_COMM_WORLD);
+  std::cout << "[" << GlobalParams.MPI_Rank<< ":" << GlobalParams.Index_in_x_direction << "x" << GlobalParams.Index_in_y_direction << "x" << GlobalParams.Index_in_z_direction << "]" << label << ": " ;
+  for(unsigned int i = 0; i < message.size(); i++) {
+    if(message[i]) {
+      std::cout << i << " true ";
+    } else {
+      std::cout << i << " false ";
+    }
+  }
+  std::cout << std::endl;
+  MPI_Barrier(MPI_COMM_WORLD);
 }

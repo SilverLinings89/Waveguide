@@ -198,7 +198,7 @@ void NumericProblem::make_constraints(
       }
     }
   }
-  in_constraints->merge(temp, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins);
+  in_constraints->merge(temp, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
 }
 
 void NumericProblem::SortDofsDownstream() {
@@ -211,6 +211,7 @@ void NumericProblem::SortDofsDownstream() {
   std::set<DofNumber> face_set;
   std::vector<DofNumber> local_cell_dofs(fe.dofs_per_cell);
   std::set<DofNumber> cell_set;
+  print_info("Sorting", "Mark 1");
   auto cell = dof_handler.begin_active();
   auto endc = dof_handler.end();
   for (; cell != endc; ++cell) {
@@ -249,12 +250,14 @@ void NumericProblem::SortDofsDownstream() {
       current.emplace_back(dof, cell->center());
     }
   }
+  print_info("Sorting", "Mark 2");
   std::sort(current.begin(), current.end(), compareDofBaseData);
   std::vector<unsigned int> new_numbering;
   new_numbering.resize(current.size());
   for (unsigned int i = 0; i < current.size(); i++) {
     new_numbering[current[i].first] = i;
   }
+  print_info("Sorting", "Mark 3");
   dof_handler.renumber_dofs(new_numbering);
   std::cout << "End Dof Sorting" << std::endl;
 }
@@ -457,7 +460,6 @@ void NumericProblem::assemble_system(unsigned int shift,
     IndexSet input_dofs_local_set(fe.dofs_per_cell);
     std::vector<Position> input_dof_centers(fe.dofs_per_cell);
     std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
-
     cell_data.cell_matrix_real = 0;
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
       cell_data.prepare_for_current_q_index(q_index);
