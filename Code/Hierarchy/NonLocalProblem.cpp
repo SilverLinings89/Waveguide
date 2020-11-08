@@ -242,8 +242,10 @@ void NonLocalProblem::make_constraints_for_non_hsie_surface(unsigned int surface
     x_values[i] = from_inner_problem[i].position[0];
     y_values[i] = from_inner_problem[i].position[1];
     z_values[i] = from_inner_problem[i].position[2];
+    indices[i] = from_inner_problem[i].index + local_indices.nth_index_in_set(0);
   }
-  MPI_Sendrecv_replace(orientations, n_dofs_on_surface, MPI_C_BOOL, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
+  std::cout << "NonLocalProblem " << rank << " connecting to " << std::to_string(partner_index) <<std::endl;
+  MPI_Sendrecv_replace(orientations, n_dofs_on_surface, MPI::BOOL, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
   MPI_Sendrecv_replace(x_values, n_dofs_on_surface, MPI_DOUBLE, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
   MPI_Sendrecv_replace(y_values, n_dofs_on_surface, MPI_DOUBLE, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
   MPI_Sendrecv_replace(z_values, n_dofs_on_surface, MPI_DOUBLE, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
@@ -264,7 +266,7 @@ void NonLocalProblem::make_constraints_for_non_hsie_surface(unsigned int surface
     if(orientations[i] == from_inner_problem[i].orientation) {
       val = -1;
     }
-    constraints.add_entry(from_inner_problem[i].index, orientations[i], val);
+    constraints.add_entry(from_inner_problem[i].index, indices[i], val);
   }
 }
 
@@ -288,6 +290,7 @@ void NonLocalProblem::make_constraints() {
   dealii::AffineConstraints<ComplexNumber> surface_to_surface_constraints;
   for (unsigned int i = 0; i < 6; i++) {
     for (unsigned int j = i + 1; j < 6; j++) {
+      if ( is_hsie_surface[i] && is_hsie_surface[j]) {
       surface_to_surface_constraints.reinit(is);
       bool opposing = ((i % 2) == 0) && (i + 1 == j);
       if (!opposing) {
@@ -324,6 +327,7 @@ void NonLocalProblem::make_constraints() {
       }
       constraints.merge(surface_to_surface_constraints,
         dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
+      }
     }
   }
   std::cout << "Constraints after phase 2:" << constraints.n_constraints() << std::endl;
@@ -334,8 +338,10 @@ void NonLocalProblem::make_constraints() {
 
 void NonLocalProblem::assemble() {
   Position center = get_center();
+  print_info("NonLocalProblem::assemble", "assemble inner system");
   get_local_problem()->base_problem.assemble_system(local_indices.nth_index_in_set(0), &constraints, matrix, system_rhs);
   for(unsigned int i = 0; i< 6; i++) {
+    print_info("NonLocalProblem::assemble", "assemble surface " + std::to_string(i));
     if(is_hsie_surface[i]) {
       get_local_problem()->surfaces[i]->fill_matrix(matrix, system_rhs, surface_first_dofs[i], center, &constraints);
     }
@@ -398,11 +404,11 @@ void NonLocalProblem::generate_sparsity_pattern() {
       get_local_problem()->surfaces[i]->fill_sparsity_pattern(&dsp,
           first_index, &constraints);
       first_index += get_local_problem()->surfaces[i]->dof_counter;
+    } else {
+      // likely need this ...
     }
   }
   sp.copy_from(dsp);
-  print_info("Nonlocal Problem generate dsp rows", dsp.n_rows());
-  print_info("Nonlocal Problem generate dsp cols", dsp.n_cols());
   local_indices.print(std::cout);
 }
 
