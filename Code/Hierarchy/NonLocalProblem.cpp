@@ -226,7 +226,8 @@ void NonLocalProblem::make_constraints_for_non_hsie_surface(unsigned int surface
   std::vector<DofIndexAndOrientationAndPosition> from_inner_problem =
       get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(surface);
   unsigned int n_dofs_on_surface = from_inner_problem.size();
-  
+
+  unsigned int lowest = coupling_dofs.size();
   std::pair<bool, unsigned int> partner_data = GlobalMPI.get_neighbor_for_interface(get_direction_for_boundary_id(surface));
   if(!partner_data.first) {
     std::cout << "There was an error finding the partner process in NonlocalProblem::make_constraints_for_non_hsie_surface" << std::endl;
@@ -243,6 +244,7 @@ void NonLocalProblem::make_constraints_for_non_hsie_surface(unsigned int surface
     y_values[i] = from_inner_problem[i].position[1];
     z_values[i] = from_inner_problem[i].position[2];
     indices[i] = from_inner_problem[i].index + local_indices.nth_index_in_set(0);
+    coupling_dofs.emplace_back(indices[i], 0);
   }
   std::cout << "NonLocalProblem " << rank << " connecting to " << std::to_string(partner_index) <<std::endl;
   MPI_Sendrecv_replace(orientations, n_dofs_on_surface, MPI::BOOL, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
@@ -256,6 +258,7 @@ void NonLocalProblem::make_constraints_for_non_hsie_surface(unsigned int surface
     if(x_values[i] != from_inner_problem[i].position[0]) equals = false;
     if(y_values[i] != from_inner_problem[i].position[1]) equals = false;
     if(z_values[i] != from_inner_problem[i].position[2]) equals = false;
+    coupling_dofs[lowest + i].second = indices[i];
   }
   if(!equals) {
     std::cout << "There was a data comparison error in NonlocalProblem::make_constraints_for_non_hsie_surface" << std::endl;
@@ -276,7 +279,7 @@ void NonLocalProblem::make_constraints() {
   is.set_size(total_number_of_dofs_on_level);
   is.add_range(0, total_number_of_dofs_on_level);
   constraints.reinit(is);
-
+  coupling_dofs.clear();
   // couple surface dofs with inner ones.
   for (unsigned int surface = 0; surface < 6; surface++) {
     if(is_hsie_surface[surface]){
@@ -338,14 +341,17 @@ void NonLocalProblem::make_constraints() {
 
 void NonLocalProblem::assemble() {
   Position center = get_center();
-  print_info("NonLocalProblem::assemble", "assemble inner system");
   get_local_problem()->base_problem.assemble_system(local_indices.nth_index_in_set(0), &constraints, matrix, system_rhs);
+  std::cout << "Done assembling inner system." << std::endl;
   for(unsigned int i = 0; i< 6; i++) {
     print_info("NonLocalProblem::assemble", "assemble surface " + std::to_string(i));
     if(is_hsie_surface[i]) {
       get_local_problem()->surfaces[i]->fill_matrix(matrix, system_rhs, surface_first_dofs[i], center, &constraints);
     }
   }
+  MPI_Barrier(GlobalMPI.communicators_by_level[local_level]);
+  matrix->compress(dealii::VectorOperation::add);
+  std::cout << "Done compressing in " << std::to_string(rank) << std::endl;
   child->assemble();
 }
 
@@ -377,7 +383,9 @@ void NonLocalProblem::reinit() {
     rows_per_process.push_back(index_sets_per_process[i].n_elements());
     columns_per_process.push_back(max_couplings);
   }
-  matrix->reinit(GlobalMPI.communicators_by_level[local_level], sp, rows_per_process, rows_per_process, rank);
+  matrix->reinit(GlobalMPI.communicators_by_level[local_level], total_number_of_dofs_on_level, total_number_of_dofs_on_level, local_indices.n_elements(), local_indices.n_elements(), 150);
+  //matrix->reinit(local_indices, local_indices, dsp, GlobalMPI.communicators_by_level[local_level]);
+  //  matrix->reinit(GlobalMPI.communicators_by_level[local_level], dsp, rows_per_process, rows_per_process, rank, false);
   system_rhs = new dealii::PETScWrappers::MPI::Vector(local_indices, GlobalMPI.communicators_by_level[local_level]);
   constraints.close();
   print_info("Nonlocal reinit", "Reinit done");
@@ -394,8 +402,7 @@ void NonLocalProblem::initialize() {
 }
 
 void NonLocalProblem::generate_sparsity_pattern() {
-  DynamicSparsityPattern dsp = { total_number_of_dofs_on_level,
-      total_number_of_dofs_on_level, local_indices };
+  dsp.reinit( total_number_of_dofs_on_level, total_number_of_dofs_on_level, local_indices);
   DofNumber first_index = local_indices.nth_index_in_set(0);
   get_local_problem()->base_problem.make_sparsity_pattern(&dsp, first_index , &constraints);
   first_index += get_local_problem()->base_problem.n_dofs;
@@ -404,12 +411,12 @@ void NonLocalProblem::generate_sparsity_pattern() {
       get_local_problem()->surfaces[i]->fill_sparsity_pattern(&dsp,
           first_index, &constraints);
       first_index += get_local_problem()->surfaces[i]->dof_counter;
-    } else {
-      // likely need this ...
-    }
+    } 
   }
-  sp.copy_from(dsp);
-  local_indices.print(std::cout);
+  for(unsigned int i=0;i<coupling_dofs.size(); i++) {
+    dsp.add(coupling_dofs[i].first, coupling_dofs[i].second);
+  }
+  dsp.compress();
 }
 
 void NonLocalProblem::initialize_index_sets() {

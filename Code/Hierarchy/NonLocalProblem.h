@@ -25,9 +25,11 @@ private:
   dealii::PETScWrappers::SolverGMRES solver;
   dealii::AffineConstraints<ComplexNumber> constraints;
   NumericVectorDistributed current_solution;
+  std::vector<std::pair<DofNumber, DofNumber>> coupling_dofs;
   PC pc;
   SampleShellPC shell;
-
+  dealii::DynamicSparsityPattern dsp;
+  
  public:
   NonLocalProblem(unsigned int);
 

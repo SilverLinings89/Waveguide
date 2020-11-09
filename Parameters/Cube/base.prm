@@ -26,7 +26,7 @@ subsection Waveguide properties
     set geometry size x = 2.0
     set geometry size y = 2.0
     set geometry size z = 8.0
-    set cell count x = 33
-    set cell count y = 33
-    set cell count z = 33
+    set cell count x = 22
+    set cell count y = 22
+    set cell count z = 22
 end

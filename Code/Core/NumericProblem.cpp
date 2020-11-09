@@ -467,8 +467,8 @@ void NumericProblem::assemble_system(unsigned int shift,
           cell_data.local_dof_indices,*matrix, *rhs, false);
     }
   }
-  matrix->compress(dealii::VectorOperation::add);
-  write_matrix_and_rhs_metrics(matrix, rhs);
+  // matrix->compress(dealii::VectorOperation::add);
+  // write_matrix_and_rhs_metrics(matrix, rhs);
 }
 
 void NumericProblem::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs) {
