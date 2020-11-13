@@ -55,6 +55,8 @@ private:
 
   void solve() override;
 
+  void apply_sweep(Vec x_in, Vec x_out);
+
   void init_solver_and_preconditioner();
 
   void initialize() override;

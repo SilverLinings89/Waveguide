@@ -151,7 +151,7 @@ void LocalProblem::make_constraints() {
     }
 
   }
-  std::cout << "Restraints after phase 1:" << constraints.n_constraints()
+  std::cout << "Constraints after phase 1:" << constraints.n_constraints()
       << std::endl;
   dealii::AffineConstraints<ComplexNumber> surface_to_surface_constraints;
   for (unsigned int i = 0; i < 6; i++) {

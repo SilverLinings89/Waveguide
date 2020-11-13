@@ -9,8 +9,9 @@
 #include <deal.II/lac/petsc_vector.h> 
 
 class LocalProblem;
-class HierarchicalProblem {
+class NonLocalProblem; 
 
+class HierarchicalProblem {
  public:
   SweepingDirection sweeping_direction;
   std:: vector<DofNumber> surface_first_dofs;
@@ -33,6 +34,7 @@ class HierarchicalProblem {
   dealii::IndexSet own_dofs;
   dealii::IndexSet current_upper_sweeping_dofs;
   dealii::IndexSet current_lower_sweeping_dofs;
+  std::array<std::vector<DofIndexAndOrientationAndPosition>, 6> surface_dof_associations;
 
   HierarchicalProblem(unsigned int in_own_level);
   virtual ~HierarchicalProblem() =0;
@@ -62,14 +64,16 @@ class HierarchicalProblem {
   virtual auto set_boundary_values(dealii::IndexSet, std::vector<ComplexNumber>) -> void = 0;
   virtual auto release_boundary_values(dealii::IndexSet) -> void = 0;
   void copy_temp_to_current_solution();
+  std::vector<ComplexNumber> get_surface_values_with_orientation_fix(BoundaryId bid,NumericVectorDistributed vector);
+  void set_surface_values_with_orientation_fix(BoundaryId bid, NumericVectorDistributed * vector, std::vector<ComplexNumber> values);
 };
 
 typedef struct {
-  PetscInt * parent_elements_vec_petsc;
-  PetscInt * child_elements_vec_petsc;
-  std::vector<DofNumber> parent_elements_vec;
-  std::vector<DofNumber> child_elements_vec;
-  DofCount n_local_problem_indices;
-  HierarchicalProblem * child;
-  HierarchicalProblem * parent;
+  // PetscInt * parent_elements_vec_petsc;
+  // PetscInt * child_elements_vec_petsc;
+  // std::vector<DofNumber> parent_elements_vec;
+  // std::vector<DofNumber> child_elements_vec;
+  // DofCount n_local_problem_indices;
+  // HierarchicalProblem * child;
+  NonLocalProblem * parent;
 } SampleShellPC;

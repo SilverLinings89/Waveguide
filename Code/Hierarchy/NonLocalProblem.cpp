@@ -24,6 +24,8 @@ PetscErrorCode pc_apply(PC in_pc, Vec x_in, Vec x_out) {
   SampleShellPC  *shell;
   PCShellGetContext(in_pc,(void**)&shell);
 
+  shell->parent->apply_sweep(x_in, x_out);
+  /**
   // Extract the components from the input vector.
   std::vector<ComplexNumber> vals;
   vals.resize(shell->n_local_problem_indices);
@@ -34,34 +36,26 @@ PetscErrorCode pc_apply(PC in_pc, Vec x_in, Vec x_out) {
   shell->child->solution.set(shell->child_elements_vec, vals);
 
   // Solve one level below.
-  // shell->child->solve();
+  shell->parent->apply_sweep();
   
   // Extract the components from the solution.
   for(unsigned int i = 0; i < shell->n_local_problem_indices; i++) {
-    vals[i] = shell->child->solution[shell->child_elements_vec[i]];
+    vals[i] = shell->parent->solution[shell->child_elements_vec[i]];
   }
 
   // Set them in the parent vector.
   shell->parent->solution.set(shell->parent_elements_vec, vals);
   
   return 0;
+  **/
+  return 0;
 }
 
-PetscErrorCode pc_create(SampleShellPC *shell, HierarchicalProblem * parent, HierarchicalProblem * child)
+PetscErrorCode pc_create(SampleShellPC *shell, NonLocalProblem * parent)
 {
   SampleShellPC  *newctx;
   PetscNew(&newctx);
-  newctx->child = child;
   newctx->parent = parent;
-  newctx->n_local_problem_indices = parent->get_local_problem()->base_problem.n_dofs;
-  newctx->parent_elements_vec_petsc = new PetscInt[parent->get_local_problem()->base_problem.n_dofs];
-  newctx->child_elements_vec_petsc = new PetscInt[child->get_local_problem()->base_problem.n_dofs];
-  for(unsigned int i = 0; i < newctx->n_local_problem_indices; i++) {
-    newctx->parent_elements_vec.push_back(i + parent->first_own_index);
-    newctx->child_elements_vec.push_back(i + child->first_own_index);
-    newctx->parent_elements_vec_petsc[i] = i + parent->first_own_index;
-    newctx->child_elements_vec_petsc[i] = i + child->first_own_index;
-  }
   shell = newctx;
   return 0;
 }
@@ -151,7 +145,7 @@ void NonLocalProblem::init_solver_and_preconditioner() {
   solver.initialize(pc_none);
   KSPGetPC(solver.solver_data->ksp, &pc);
   PCSetType(pc,PCSHELL);
-  pc_create(&shell, this, child);
+  pc_create(&shell, this);
   PCShellSetApply(pc,pc_apply);
   PCShellSetContext(pc, (void*) &shell);
   KSPSetPC(solver.solver_data->ksp, pc);
@@ -361,15 +355,27 @@ dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
 }
 
 void NonLocalProblem::solve() {
+  KSPSolve(solver.solver_data->ksp, *system_rhs, current_solution);
+}
+
+void NonLocalProblem::apply_sweep(Vec x_in, Vec x_out) {
+  std::cout << "Solve in " << std::to_string(rank) << " P1 " << std::endl; 
   receive_local_upper_dofs();
+  std::cout << "Solve in " << std::to_string(rank) << " P2 " << std::endl;
   H_inverse(solution, temp_solution);
+  std::cout << "Solve in " << std::to_string(rank) << " P3 " << std::endl;
   send_local_lower_dofs();
+  std::cout << "Solve in " << std::to_string(rank) << " P4 " << std::endl;
 
   H_inverse(solution, temp_solution);
+  std::cout << "Solve in " << std::to_string(rank) << " P5 " << std::endl;
 
   receive_local_lower_dofs();
+  std::cout << "Solve in " << std::to_string(rank) << " P6 " << std::endl;
   H_inverse(solution, temp_solution);
+  std::cout << "Solve in " << std::to_string(rank) << " P7 " << std::endl;
   send_local_upper_dofs();
+  std::cout << "Solve in " << std::to_string(rank) << " P8 " << std::endl;
 }
 
 void NonLocalProblem::reinit() {
@@ -388,11 +394,15 @@ void NonLocalProblem::reinit() {
   //  matrix->reinit(GlobalMPI.communicators_by_level[local_level], dsp, rows_per_process, rows_per_process, rank, false);
   system_rhs = new dealii::PETScWrappers::MPI::Vector(local_indices, GlobalMPI.communicators_by_level[local_level]);
   constraints.close();
+  child->reinit();
   print_info("Nonlocal reinit", "Reinit done");
 }
 
 void NonLocalProblem::initialize() {
   child->initialize();
+  for(unsigned int i = 0; i < 6; i++) {
+    surface_dof_associations[i] = get_local_problem()->surfaces[i]->get_dof_association();
+  }
   initialize_own_dofs();
   dofs_process_above = compute_upper_interface_dof_count();
   dofs_process_below = compute_lower_interface_dof_count();
@@ -652,7 +662,7 @@ void NonLocalProblem::send_local_lower_dofs() {
   std::pair<bool, unsigned int> neighbour_data =GlobalMPI.get_neighbor_for_interface(communication_direction);
   ComplexNumber * data = new ComplexNumber(dofs_process_below);
   NumericVectorLocal data_temp = extract_local_lower_dofs();
-  for(unsigned int i = 0; i < dofs_process_above; i++) {
+  for(unsigned int i = 0; i < dofs_process_below; i++) {
     data[i] = data_temp[i];
   }
   MPI_Send(&data[0], dofs_process_below, MPI_C_DOUBLE_COMPLEX, neighbour_data.second, 0, MPI_COMM_WORLD);

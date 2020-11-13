@@ -4,6 +4,7 @@
 
 #include "HierarchicalProblem.h"
 #include "../Helpers/Parameters.h"
+#include "../Core/Types.h"
 
 HierarchicalProblem::~HierarchicalProblem() { }
 
@@ -24,6 +25,20 @@ HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level) :
     is_surface_locked.push_back(false);
   }
 }
+
+std::vector<ComplexNumber> HierarchicalProblem::get_surface_values_with_orientation_fix(BoundaryId bid, NumericVectorDistributed vector) {
+  std::vector<ComplexNumber> ret;
+  for(unsigned int i = 0; i < surface_dof_associations[bid].size(); i++) {
+      ret.push_back(vector[first_own_index + surface_dof_associations[bid][i].index] * (surface_dof_associations[bid][i].orientation ? 1.0 : -1.0));
+  }
+  return ret;
+};
+
+void HierarchicalProblem::set_surface_values_with_orientation_fix(BoundaryId bid, NumericVectorDistributed * vector, std::vector<ComplexNumber> values) {
+  for(unsigned int i = 0; i < surface_dof_associations[bid].size(); i++) {
+      (*vector)[first_own_index + surface_dof_associations[bid][i].index] = values[i] * (surface_dof_associations[bid][i].orientation ? 1.0 : -1.0);
+  }
+};
 
 void HierarchicalProblem::constrain_identical_dof_sets(
     std::vector<unsigned int> *set_one, std::vector<unsigned int> *set_two,
