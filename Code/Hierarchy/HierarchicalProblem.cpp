@@ -5,6 +5,7 @@
 #include "HierarchicalProblem.h"
 #include "../Helpers/Parameters.h"
 #include "../Core/Types.h"
+#include "../Helpers/staticfunctions.h"
 
 HierarchicalProblem::~HierarchicalProblem() { }
 
@@ -32,7 +33,7 @@ std::vector<ComplexNumber> HierarchicalProblem::get_surface_values_with_orientat
       ret.push_back(vector[first_own_index + surface_dof_associations[bid][i].index] * (surface_dof_associations[bid][i].orientation ? 1.0 : -1.0));
   }
   return ret;
-};
+}
 
 void HierarchicalProblem::set_surface_values_with_orientation_fix(BoundaryId bid, NumericVectorDistributed * vector, std::vector<ComplexNumber> values) {
   for(unsigned int i = 0; i < surface_dof_associations[bid].size(); i++) {
@@ -45,9 +46,7 @@ void HierarchicalProblem::constrain_identical_dof_sets(
     dealii::AffineConstraints<ComplexNumber> *affine_constraints) {
   const unsigned int n_entries = set_one->size();
   if (n_entries != set_two->size()) {
-    std::cout
-        << "There was an error in constrain_identical_dof_sets. No changes made."
-        << std::endl;
+    print_info("HierarchicalProblem::constrain_identical_dof_sets", "There was an error in constrain_identical_dof_sets. No changes made.", false, LoggingLevel::PRODUCTION_ALL);
   }
 
   for (unsigned int index = 0; index < n_entries; index++) {

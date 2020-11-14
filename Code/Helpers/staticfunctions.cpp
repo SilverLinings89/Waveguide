@@ -302,7 +302,7 @@ void mesh_info(const Triangulation<dim> &tria, const std::string &filename) {
   GridOut grid_out;
   grid_out.write_vtk(tria, out);
   out.close();
-  print_info("mesh_info" + "written to " + filename, false, LoggingLevel::DEBUG_ONE);
+  print_info("mesh_info" , "written to " + filename, false, LoggingLevel::DEBUG_ONE);
 }
 
 template <int dim>
@@ -579,7 +579,8 @@ bool is_visible_message_in_current_logging_level(LoggingLevel level) {
   default:
     break;
   }
-};
+  return false;
+}
 
 void write_print_message(const std::string &label, const std::string &message) {
   std::cout << "[" << GlobalParams.MPI_Rank<< ":" << GlobalParams.Index_in_x_direction << "x" << GlobalParams.Index_in_y_direction << "x" << GlobalParams.Index_in_z_direction << "]" << label << ": " << message << std::endl;
