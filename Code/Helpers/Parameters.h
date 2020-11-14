@@ -109,4 +109,5 @@ struct Parameters {
 
     auto complete_data() -> void;
 
+    LoggingLevel Logging_Level = LoggingLevel::PRODUCTION_ONE;
 };

@@ -48,16 +48,14 @@ bool compareConstraintPairs(ConstraintPair v1, ConstraintPair v2) {
 }
 
 void NumericProblem::make_grid() {
-  std::cout << "Make Grid." << std::endl;
-  // const unsigned int Cells_Per_Direction = 3;
+  print_info("NumericProblem::make_grid", "start");
   std::vector<unsigned int> repetitions;
   repetitions.push_back(GlobalParams.Cells_in_x);
   repetitions.push_back(GlobalParams.Cells_in_y);
   repetitions.push_back(GlobalParams.Cells_in_z);
-  std::cout << "Cells: " << GlobalParams.Cells_in_x << " x " << GlobalParams.Cells_in_y << " x " << GlobalParams.Cells_in_z <<std::endl;
-  std::cout << "Geometry: ["<< Geometry.local_x_range.first << "," << Geometry.local_x_range.second 
-    << "] x ["<< Geometry.local_y_range.first << "," << Geometry.local_y_range.second 
-    << "] x ["<< Geometry.local_z_range.first << "," << Geometry.local_z_range.second << "]" << std::endl;
+  std::string m = "Cells: " + std::to_string(GlobalParams.Cells_in_x) + " x " + std::to_string(GlobalParams.Cells_in_y) + " x " + std::to_string(GlobalParams.Cells_in_z) + "\nGeometry: [" + std::to_string(Geometry.local_x_range.first) + "," + std::to_string(Geometry.local_x_range.second);
+  m += "] x [" + std::to_string(Geometry.local_y_range.first) + "," + std::to_string(Geometry.local_y_range.second) + "] x [" + std::to_string(Geometry.local_z_range.first) + "," + std::to_string(Geometry.local_z_range.second) + "]\n";
+  print_info("NumericProblem::make_grid", m, false, LoggingLevel::PRODUCTION_ONE);
   Position lower(Geometry.local_x_range.first, Geometry.local_y_range.first,
       Geometry.local_z_range.first);
   Position upper(Geometry.local_x_range.second, Geometry.local_y_range.second,
@@ -67,8 +65,8 @@ void NumericProblem::make_grid() {
   dof_handler.distribute_dofs(fe);
   SortDofsDownstream();
   n_dofs = dof_handler.n_dofs();
-  std::cout << "Mesh Preparation finished. System has " << n_dofs
-      << " degrees of freedom." << std::endl;
+  print_info("NumericProblem::make_grid", "Mesh Preparation finished. System has " + std::to_string(n_dofs) + " degrees of freedom.", false, LoggingLevel::PRODUCTION_ONE);
+  print_info("NumericProblem::make_grid", "end");
 }
 
 bool compareIndexCenterPairs(std::pair<int, double> c1,
@@ -79,7 +77,7 @@ bool compareIndexCenterPairs(std::pair<int, double> c1,
 std::vector<unsigned int> NumericProblem::dofs_for_cell_around_point(
     Position &in_p) {
   std::vector<unsigned int> ret(fe.dofs_per_cell);
-  std::cout << "DOFS per Cell: " << fe.dofs_per_cell << std::endl;
+  print_info("NumericProblem::dofs_for_cell_around_point", "Dofs per cell: " + std::to_string(fe.dofs_per_cell), false, LoggingLevel::PRODUCTION_ONE);
   auto cell = dof_handler.begin_active();
   auto endc = dof_handler.end();
   for (; cell != endc; ++cell) {
@@ -141,14 +139,14 @@ void NumericProblem::make_constraints() {
   psf.set_cell_diameter(inner_cell_radius/2.0);
   constrained_cells = get_central_cells(inner_cell_radius+0.0001);
   outer_constrained_faces = get_outer_constrained_faces();
-  std::cout << "Constrained cell count: " << constrained_cells.size() << std::endl;
+  print_info("NumericProblem::make_constraints", "Constrained cell count: " + std::to_string(constrained_cells.size()), false, LoggingLevel::PRODUCTION_ONE);
   std::vector<DofCount> local_line_indices(fe.dofs_per_line);
   std::vector<DofCount> local_face_indices(fe.dofs_per_face);
   local_dof_indices.set_size(n_dofs);
   local_dof_indices.add_range(0, n_dofs);
   local_constraints.reinit(local_dof_indices);
 
-  // Constrain the outer ones correctly
+  // Constrain the outer dofs
   for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
     if(constrained_cells.contains(it->id().to_string())) {
       for (unsigned int face = 0; face < dealii::GeometryInfo<3>::faces_per_cell; face++) {
@@ -202,7 +200,7 @@ void NumericProblem::make_constraints(
 }
 
 void NumericProblem::SortDofsDownstream() {
-  std::cout << "Start Dof Sorting" << std::endl;
+  print_info("NumericProblem::SortDofsDownstream", "Start");
   triangulation.clear_user_flags();
   std::vector<std::pair<DofNumber, Position>> current;
   std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
@@ -211,7 +209,6 @@ void NumericProblem::SortDofsDownstream() {
   std::set<DofNumber> face_set;
   std::vector<DofNumber> local_cell_dofs(fe.dofs_per_cell);
   std::set<DofNumber> cell_set;
-  print_info("Sorting", "Mark 1");
   auto cell = dof_handler.begin_active();
   auto endc = dof_handler.end();
   for (; cell != endc; ++cell) {
@@ -250,16 +247,14 @@ void NumericProblem::SortDofsDownstream() {
       current.emplace_back(dof, cell->center());
     }
   }
-  print_info("Sorting", "Mark 2");
   std::sort(current.begin(), current.end(), compareDofBaseData);
   std::vector<unsigned int> new_numbering;
   new_numbering.resize(current.size());
   for (unsigned int i = 0; i < current.size(); i++) {
     new_numbering[current[i].first] = i;
   }
-  print_info("Sorting", "Mark 3");
   dof_handler.renumber_dofs(new_numbering);
-  std::cout << "End Dof Sorting" << std::endl;
+  print_info("NumericProblem::SortDofsDownstream", "End");
 }
 
 std::vector<DofIndexAndOrientationAndPosition> NumericProblem::get_surface_dof_vector_for_boundary_id(
@@ -275,8 +270,7 @@ std::vector<DofIndexAndOrientationAndPosition> NumericProblem::get_surface_dof_v
       bool found_one = false;
       for (unsigned int face = 0; face < 6; face++) {
         if (cell->face(face)->boundary_id() == b_id && found_one) {
-          std::cout << "Error in get_surface_dof_vector_for_boundary_id"
-              << std::endl;
+          print_info("NumericProblem::get_surface_dof_vector_for_boundary_id", "There was an error!", false, LoggingLevel::PRODUCTION_ALL);
         }
         if (cell->face(face)->boundary_id() == b_id) {
           found_one = true;
@@ -472,9 +466,11 @@ void NumericProblem::assemble_system(unsigned int shift,
 }
 
 void NumericProblem::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs) {
-  std::cout << "System Matrix l_infty norm: " << matrix->linfty_norm() << std::endl;
-  std::cout << "System Matrix l_1 norm: " << matrix->l1_norm() << std::endl;
-  std::cout << "Assembling done. L2-Norm of RHS: " << rhs->l2_norm() << std::endl;
+  print_info("NumericProblem::write_matrix_and_rhs_metrics", "Start", LoggingLevel::DEBUG_ALL);
+  print_info("NumericProblem::write_matrix_and_rhs", "System Matrix l_infty norm: " + std::to_string(matrix->linfty_norm()), false, LoggingLevel::PRODUCTION_ALL);
+  print_info("NumericProblem::write_matrix_and_rhs", "System Matrix l_1 norm: " + std::to_string(matrix->l1_norm()), false, LoggingLevel::PRODUCTION_ALL);
+  print_info("NumericProblem::write_matrix_and_rhs", "Assembling done. L2-Norm of RHS:  " + std::to_string(rhs->l2_norm()), false, LoggingLevel::PRODUCTION_ALL);
+  print_info("NumericProblem::write_matrix_and_rhs_metrics", "End");
 }
 
 #endif

@@ -33,6 +33,7 @@ auto LocalProblem::get_center() -> Position const {
 }
 
 void LocalProblem::initialize() {
+  print_info("LocalProblem::initialize", "Start");
   for (unsigned int side = 0; side < 6; side++) {
     dealii::Triangulation<2, 3> temp_triangulation;
     const unsigned int component = side / 2;
@@ -52,8 +53,7 @@ void LocalProblem::initialize() {
       }
     }
     dealii::Triangulation<2> surf_tria;
-    std::cout << "Initializing surface " << side << " in local problem."
-        << std::endl;
+    print_info("LocalProblem::initialize", "Initializing surface " + std::to_string(side) + " in local problem.", false, LoggingLevel::PRODUCTION_ALL);
     Mesh tria;
     tria.copy_triangulation(base_problem.triangulation);
     std::set<unsigned int> b_ids;
@@ -85,9 +85,10 @@ void LocalProblem::initialize() {
     surfaces[side]->initialize();
   }
 
-  std::cout << "Initialize index sets" << std::endl;
+  print_info("LocalProblem::initialize", "Initialize index sets", false, LoggingLevel::DEBUG_ALL);
   initialize_own_dofs();
-  std::cout << "Number of local dofs: " << n_own_dofs << std::endl;
+  print_info("LocalProblem::initialize", "Number of local dofs: " + std::to_string(n_own_dofs) , false, LoggingLevel::DEBUG_ALL);
+  print_info("LocalProblem::initialize", "End");
 }
 
 void LocalProblem::generate_sparsity_pattern() {

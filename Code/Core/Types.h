@@ -37,6 +37,10 @@ using MathExpression           = dealii::Differentiation::SD::Expression;
 using Mesh                     = dealii::Triangulation<3>;
 using MaterialTensor           = dealii::Tensor<2,3,ComplexNumber>;
 
+enum LoggingLevel {
+  DEBUG_ALL, DEBUG_ONE, PRODUCTION_ALL, PRODUCTION_ONE
+};
+
 struct DofIndexAndOrientationAndPosition {
   DofIndexAndOrientationAndPosition() {
     index = 0;

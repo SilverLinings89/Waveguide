@@ -1,5 +1,6 @@
 #include "NonLocalProblem.h"
 #include "../Helpers/GeometryManager.h"
+#include "../Helpers/staticfunctions.h"
 #include "HierarchicalProblem.h"
 #include "LocalProblem.h"
 #include "../Core/NumericProblem.h"
@@ -12,6 +13,7 @@
 
 #include <iterator>
 #include <vector>
+
 
 void get_petsc_index_array_from_index_set(PetscInt* in_array, dealii::IndexSet in_set) {
   for(unsigned int i = 0; i < in_set.n_elements(); i++) {
@@ -345,6 +347,8 @@ void NonLocalProblem::assemble() {
   }
   MPI_Barrier(GlobalMPI.communicators_by_level[local_level]);
   matrix->compress(dealii::VectorOperation::add);
+  system_rhs->compress(dealii::VectorOperation::add);
+  current_solution.compress(dealii::VectorOperation::add);
   std::cout << "Done compressing in " << std::to_string(rank) << std::endl;
   child->assemble();
 }
@@ -359,6 +363,12 @@ void NonLocalProblem::solve() {
 }
 
 void NonLocalProblem::apply_sweep(Vec x_in, Vec x_out) {
+  std::cout << "Reach apply." << std::endl;
+  ComplexNumber* values = new ComplexNumber[local_indices.n_elements()];
+  VecGetValues(x_in, local_indices.n_elements(), locally_owned_dofs_index_array, values);
+  for(unsigned int i = 0; i < this->local_indices.n_elements(); i++) {
+    current_solution(local_indices.nth_index_in_set(i)) = values[i];
+  }
   std::cout << "Solve in " << std::to_string(rank) << " P1 " << std::endl; 
   receive_local_upper_dofs();
   std::cout << "Solve in " << std::to_string(rank) << " P2 " << std::endl;
@@ -376,6 +386,11 @@ void NonLocalProblem::apply_sweep(Vec x_in, Vec x_out) {
   std::cout << "Solve in " << std::to_string(rank) << " P7 " << std::endl;
   send_local_upper_dofs();
   std::cout << "Solve in " << std::to_string(rank) << " P8 " << std::endl;
+  for(unsigned int i = 0; i < this->local_indices.n_elements(); i++) {
+     values[i] = current_solution[local_indices.nth_index_in_set(i)];
+  }
+  VecSetValues(x_out, local_indices.n_elements(), locally_owned_dofs_index_array, values, INSERT_VALUES);
+  delete[] values;
 }
 
 void NonLocalProblem::reinit() {
@@ -393,6 +408,7 @@ void NonLocalProblem::reinit() {
   //matrix->reinit(local_indices, local_indices, dsp, GlobalMPI.communicators_by_level[local_level]);
   //  matrix->reinit(GlobalMPI.communicators_by_level[local_level], dsp, rows_per_process, rows_per_process, rank, false);
   system_rhs = new dealii::PETScWrappers::MPI::Vector(local_indices, GlobalMPI.communicators_by_level[local_level]);
+  current_solution.reinit(local_indices, GlobalMPI.communicators_by_level[local_level]);
   constraints.close();
   child->reinit();
   print_info("Nonlocal reinit", "Reinit done");
@@ -463,6 +479,8 @@ void NonLocalProblem::initialize_index_sets() {
   }
   upper_interface_dofs = compute_interface_dof_set(compute_upper_interface_id(), compute_lower_interface_id());
   lower_interface_dofs = compute_interface_dof_set(compute_lower_interface_id(), compute_upper_interface_id());
+  locally_owned_dofs_index_array = new PetscInt[local_indices.n_elements()];
+  get_petsc_index_array_from_index_set(locally_owned_dofs_index_array, local_indices);
 }
 
 LocalProblem* NonLocalProblem::get_local_problem() {

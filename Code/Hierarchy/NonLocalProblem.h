@@ -29,6 +29,7 @@ private:
   PC pc;
   SampleShellPC shell;
   dealii::DynamicSparsityPattern dsp;
+  PetscInt* locally_owned_dofs_index_array;
   
  public:
   NonLocalProblem(unsigned int);

@@ -115,7 +115,10 @@ Position crossproduct(const Position &u,const Position &v);
 
 void multiply_in_place(const ComplexNumber factor_1, NumericVectorLocal &factor_2);
 
-void print_info(const std::string label, const std::string message);
-void print_info(const std::string label, const unsigned int message);
-void print_info(const std::string label, const std::vector<unsigned int> message);
-void print_info(const std::string label, const std::array<bool,6> message);
+void print_info(const std::string &label, const std::string &message, bool blocking = false, LoggingLevel level = LoggingLevel::DEBUG_ALL);
+void print_info(const std::string &label, const unsigned int message, bool blocking = false, LoggingLevel level = LoggingLevel::DEBUG_ALL);
+void print_info(const std::string &label, const std::vector<unsigned int> &message, bool blocking = false, LoggingLevel level = LoggingLevel::DEBUG_ALL);
+void print_info(const std::string &label, const std::array<bool,6> &message, bool blocking = false, LoggingLevel level = LoggingLevel::DEBUG_ALL);
+
+bool is_visible_message_in_current_logging_level(LoggingLevel level = LoggingLevel::DEBUG_ALL);
+void write_print_message(const std::string &label, const std::string &message);
