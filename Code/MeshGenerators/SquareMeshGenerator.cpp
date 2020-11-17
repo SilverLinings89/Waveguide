@@ -17,15 +17,12 @@
 using namespace dealii;
 
 void mesh_i(const Triangulation<3, 3> &tria, const std::string &filename) {
-  std::cout << "Mesh info:" << std::endl
-            << " dimension: " << 3 << std::endl
-            << " no. of cells: " << tria.n_active_cells() << std::endl;
-
+  print_info("mesh_i", "Mesh dimension: 3, Number of cells: " + std::to_string(tria.n_active_cells()));
   std::ofstream out(filename.c_str());
   GridOut grid_out;
   grid_out.write_vtk(tria, out);
   out.close();
-  std::cout << " written to " << filename << std::endl << std::endl;
+  print_info("mesh_i", " written to " + filename);
 }
 
 SquareMeshGenerator::SquareMeshGenerator() {}

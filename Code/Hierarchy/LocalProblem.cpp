@@ -95,14 +95,13 @@ void LocalProblem::generate_sparsity_pattern() {
 }
 
 void LocalProblem::validate() {
-  std::cout << "Validate System: " << std::endl;
-  std::cout << "N Rows: " << matrix->m() << std::endl;
-  std::cout << "N Cols: " << matrix->n() << std::endl;
-  std::cout << "Matrix l1 norm: " << matrix->l1_norm() << std::endl;
+  print_info("LocalProblem::validate", "Start");
+  print_info("LocalProblem::validate", "Matrix size: (" + std::to_string(matrix->m()) + " x "  + std::to_string(matrix->n()) + ") and l1-norm " + std::to_string(matrix->l1_norm()), false, LoggingLevel::PRODUCTION_ONE);
+  print_info("LocalProblem::validate", "End");
 }
 
 DofCount LocalProblem::compute_own_dofs() {
-  std::cout << "Begin Compute own dofs: " << std::endl;
+  print_info("LocalProblem::compute_own_dofs", "Start");
   surface_first_dofs.clear();
   DofCount ret = base_problem.dof_handler.n_dofs();
   surface_first_dofs.push_back(ret);
@@ -112,11 +111,12 @@ DofCount LocalProblem::compute_own_dofs() {
       surface_first_dofs.push_back(ret);
     }
   }
+  print_info("LocalProblem::compute_own_dofs", "End");
   return ret;
 }
 
 void LocalProblem::make_constraints() {
-  std::cout << "Making constraints" << std::endl;
+  print_info("LocalProblem::make_constraints", "Start");
   dealii::IndexSet is;
   is.set_size(n_own_dofs);
   is.add_range(0, n_own_dofs);
@@ -152,8 +152,7 @@ void LocalProblem::make_constraints() {
     }
 
   }
-  std::cout << "Constraints after phase 1:" << constraints.n_constraints()
-      << std::endl;
+  print_info("LocalProblem::make_constraints", "Constraints after phase 1: " + std::to_string(constraints.n_constraints()), false, LoggingLevel::DEBUG_ALL );
   dealii::AffineConstraints<ComplexNumber> surface_to_surface_constraints;
   for (unsigned int i = 0; i < 6; i++) {
     for (unsigned int j = i + 1; j < 6; j++) {
@@ -195,21 +194,23 @@ void LocalProblem::make_constraints() {
         dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
     }
   }
-  std::cout << "Constraints after phase 2:" << constraints.n_constraints() << std::endl;
+  print_info("LocalProblem::make_constraints", "Constraints after phase 2: " + std::to_string(constraints.n_constraints()), false, LoggingLevel::DEBUG_ALL );
+
   base_problem.make_constraints(&constraints, 0, own_dofs);
-  std::cout << "Constraints after phase 3:" << constraints.n_constraints() << std::endl;
-  std::cout << "End Make Constraints." << std::endl;
+  print_info("LocalProblem::make_constraints", "Constraints after phase 3: " + std::to_string(constraints.n_constraints()), false, LoggingLevel::DEBUG_ALL );
+
+  print_info("LocalProblem::make_constraints", "End");
 }
 
 void LocalProblem::assemble() {
-  std::cout << "Start LocalProblem::assemble()" << std::endl;
+  print_info("LocalProblem::assemble", "Start");
   base_problem.assemble_system(0, &constraints, matrix, &rhs);
   for (unsigned int surface = 0; surface < 6; surface++) {
-    std::cout << "Fill Surface Block " << surface << std::endl;
+    print_info("LocalProblem::assemble", "Fill Surface Block " + std::to_string(surface));
     surfaces[surface]->fill_matrix(matrix, &rhs, surface_first_dofs[surface],get_center(), &constraints);
   }
   matrix->compress(dealii::VectorOperation::add);
-  std::cout << "End LocalProblem::assemble()" << std::endl;
+  print_info("LocalProblem::assemble", "End");
 }
 
 void LocalProblem::reinit() {
@@ -232,32 +233,18 @@ void LocalProblem::initialize_own_dofs() {
   own_dofs.add_range(0, n_own_dofs);
 }
 
-/**
-void LocalProblem::run() {
-  std::cout << "Start LocalProblem::run()" << std::endl;
-  reinit();
-  assemble();
-  validate();
-  solve();
-  output_results();
-  std::cout << "End LocalProblem::run()" << std::endl;
-}
-**/
-
 void LocalProblem::solve() {
-  std::cout << "Solve the system." << std::endl;
-  std::cout << "Norm before: " << solution.l2_norm() << std::endl;
-  
+  print_info("LocalProblem::solve", "Start");
+  print_info("LocalProblem::solve", "Norm before: " + std::to_string(solution.l2_norm()), false, LoggingLevel::PRODUCTION_ONE);
   rhs.compress(dealii::VectorOperation::add);
   constraints.set_zero(solution);
   Timer timer1, timer2;
   timer1.start ();
   solver.solve(*matrix, solution, rhs);
   timer1.stop();
-  std::cout << "Elapsed CPU time: " << timer1.cpu_time() << " seconds." << std::endl;
-  std::cout << "Elapsed walltime: " << timer1.wall_time() << " seconds." << std::endl;
-  
-  std::cout << "Norm after: " << solution.l2_norm() << std::endl;
+  print_info("LocalProblem::solve", "Elapsed CPU time: " + std::to_string(timer1.cpu_time()) + " seconds.", false, LoggingLevel::PRODUCTION_ONE);
+  print_info("LocalProblem::solve", "Elapsed walltime: " + std::to_string(timer1.wall_time()) + " seconds.", false, LoggingLevel::PRODUCTION_ONE);
+  print_info("LocalProblem::solve", "Norm after: " + std::to_string(solution.l2_norm()) + " seconds.", false, LoggingLevel::PRODUCTION_ONE);
   constraints.distribute(solution);
   Mat fact;
   KSPGetPC(solver.solver_data->ksp,&solver.solver_data->pc);
@@ -265,6 +252,7 @@ void LocalProblem::solve() {
   PetscViewerPushFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)),PETSC_VIEWER_ASCII_INFO);
   MatView(fact,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
   PetscViewerPopFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
+  print_info("LocalProblem::solve", "End");
 }
 
 void LocalProblem::initialize_index_sets() {
@@ -299,8 +287,6 @@ LocalProblem* LocalProblem::get_local_problem() {
 
 dealii::Vector<ComplexNumber> LocalProblem::get_local_vector_from_global() {
   dealii::Vector<ComplexNumber> ret(base_problem.dof_handler.n_dofs());
-  std::cout << "Dof handler dofs: " << base_problem.dof_handler.n_dofs()
-      << std::endl;
   for (unsigned int i = 0; i < base_problem.n_dofs; i++) {
     ret[i] = solution[i];
   }
@@ -343,8 +329,8 @@ void LocalProblem::output_results() {
   }
   const double global_error = dealii::VectorTools::compute_global_error(base_problem.triangulation, cellwise_error, dealii::VectorTools::NormType::L2_norm);
   const double global_norm = dealii::VectorTools::compute_global_error(base_problem.triangulation, cellwise_norm, dealii::VectorTools::NormType::L2_norm);
-  std::cout << "Global computed error L2: " << global_error << std::endl;
-  std::cout << "Exact solution L2 norm: " << global_norm << std::endl;
+  print_info("LocalProblem::output_results", "Global computed error L2: " + std::to_string(global_error), false, LoggingLevel::PRODUCTION_ONE);
+  print_info("LocalProblem::output_results", "Exact solution L2 norm: " + std::to_string(global_norm), false, LoggingLevel::PRODUCTION_ONE);
   data_out.add_data_vector(cellwise_error, "Cellwise_error");
   data_out.build_patches();
   data_out.write_vtu(outputvtu);

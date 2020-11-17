@@ -41,7 +41,6 @@ HSIESurface::HSIESurface(unsigned int in_order,
     this->set_mesh_boundary_ids();
     dof_counter = 0;
     k0 = in_k0;
-    std::cout << "HSIE surface setup data: order: "<< order << " kappa_0: "<< k0 << std::endl; 
   }
 }
 
@@ -849,7 +848,6 @@ void HSIESurface::register_new_surface_dofs(
     }
   }
   surf_dofs.subtract_set(edge_dofs);
-  // std::cout << surf_dofs.n_elements() << std::endl;
   std::string id = cell_q->id().to_string();
   // SURFACE functions
   for (unsigned int inner_order = 0; inner_order < surf_dofs.n_elements();
@@ -1123,8 +1121,6 @@ bool HSIESurface::check_number_of_dofs_for_cell_integrity() {
   for (; it != end; ++it) {
     DofDataVector cell_dofs = this->get_dof_data_for_cell(it, it2);
     if (cell_dofs.size() != dofs_per_cell) {
-      std::cout << cell_dofs.size() << " is not " << dofs_per_cell
-                << " in cell " << counter << std::endl;
       for (unsigned int i = 0; i < 7; i++) {
         unsigned int count = 0;
         for (unsigned int j = 0; j < cell_dofs.size(); ++j) {

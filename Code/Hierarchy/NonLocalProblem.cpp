@@ -140,8 +140,8 @@ NonLocalProblem::NonLocalProblem(unsigned int local_level) :
 }
 
 void NonLocalProblem::init_solver_and_preconditioner() {
-  print_info("NonLocalProblem init solver and preconditioner", "start");
-  std::cout << "Init solver and pc on level " << local_level << std::endl;
+  print_info("NonLocalProblem::init_solver_and_preconditioner", "Start");
+  print_info("NonLocalProblem::init_solver_and_preconditioner", "Init solver and pc on level " + std::to_string(local_level), true, LoggingLevel::PRODUCTION_ONE);
   dealii::PETScWrappers::PreconditionNone pc_none;
   pc_none.initialize(*matrix);
   solver.initialize(pc_none);
@@ -151,7 +151,7 @@ void NonLocalProblem::init_solver_and_preconditioner() {
   PCShellSetApply(pc,pc_apply);
   PCShellSetContext(pc, (void*) &shell);
   KSPSetPC(solver.solver_data->ksp, pc);
-  print_info("NonLocalProblem init solver and preconditioner", "end");
+  print_info("NonLocalProblem::init_solver_and_preconditioner", "End");
 }
 
 NonLocalProblem::~NonLocalProblem() {
@@ -242,7 +242,7 @@ void NonLocalProblem::make_constraints_for_non_hsie_surface(unsigned int surface
     indices[i] = from_inner_problem[i].index + local_indices.nth_index_in_set(0);
     coupling_dofs.emplace_back(indices[i], 0);
   }
-  std::cout << "NonLocalProblem " << rank << " connecting to " << std::to_string(partner_index) <<std::endl;
+  print_info("NonLocalProblem::make_constraints_for_non_hsie_surface", std::to_string(rank) + " connecting to " + std::to_string(partner_index), false, DEBUG_ALL);
   MPI_Sendrecv_replace(orientations, n_dofs_on_surface, MPI::BOOL, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
   MPI_Sendrecv_replace(x_values, n_dofs_on_surface, MPI_DOUBLE, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
   MPI_Sendrecv_replace(y_values, n_dofs_on_surface, MPI_DOUBLE, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
@@ -270,7 +270,7 @@ void NonLocalProblem::make_constraints_for_non_hsie_surface(unsigned int surface
 }
 
 void NonLocalProblem::make_constraints() {
-  std::cout << "Making constraints" << std::endl;
+  print_info("NonLocalProblem::make_constraints", "Start");
   dealii::IndexSet is;
   is.set_size(total_number_of_dofs_on_level);
   is.add_range(0, total_number_of_dofs_on_level);
@@ -284,8 +284,7 @@ void NonLocalProblem::make_constraints() {
       make_constraints_for_non_hsie_surface(surface);
     }
   }
-  std::cout << "Constraints after phase 1:" << constraints.n_constraints()
-      << std::endl;
+  print_info("LocalProblem::make_constraints", "Constraints after phase 1: " + std::to_string(constraints.n_constraints()), false, LoggingLevel::DEBUG_ALL );
   dealii::AffineConstraints<ComplexNumber> surface_to_surface_constraints;
   for (unsigned int i = 0; i < 6; i++) {
     for (unsigned int j = i + 1; j < 6; j++) {
@@ -329,16 +328,16 @@ void NonLocalProblem::make_constraints() {
       }
     }
   }
-  std::cout << "Constraints after phase 2:" << constraints.n_constraints() << std::endl;
+  print_info("LocalProblem::make_constraints", "Constraints after phase 2: " + std::to_string(constraints.n_constraints()), false, LoggingLevel::DEBUG_ALL );
   get_local_problem()->base_problem.make_constraints(&constraints, local_indices.nth_index_in_set(0), local_indices);
-  std::cout << "Constraints after phase 3:" << constraints.n_constraints() << std::endl;
-  std::cout << "End Make Constraints." << std::endl;
+  print_info("LocalProblem::make_constraints", "Constraints after phase 3: " + std::to_string(constraints.n_constraints()), false, LoggingLevel::DEBUG_ALL );
+  print_info("NonLocalProblem::make_constraints", "End");
 }
 
 void NonLocalProblem::assemble() {
+  print_info("NonLocalProblem::assemble", "Start");
   Position center = get_center();
   get_local_problem()->base_problem.assemble_system(local_indices.nth_index_in_set(0), &constraints, matrix, system_rhs);
-  std::cout << "Done assembling inner system." << std::endl;
   for(unsigned int i = 0; i< 6; i++) {
     print_info("NonLocalProblem::assemble", "assemble surface " + std::to_string(i));
     if(is_hsie_surface[i]) {
@@ -349,8 +348,8 @@ void NonLocalProblem::assemble() {
   matrix->compress(dealii::VectorOperation::add);
   system_rhs->compress(dealii::VectorOperation::add);
   current_solution.compress(dealii::VectorOperation::add);
-  std::cout << "Done compressing in " << std::to_string(rank) << std::endl;
   child->assemble();
+  print_info("NonLocalProblem::assemble", "End");
 }
 
 dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
@@ -363,7 +362,7 @@ void NonLocalProblem::solve() {
 }
 
 void NonLocalProblem::apply_sweep(Vec x_in, Vec x_out) {
-  std::cout << "Reach apply." << std::endl;
+  print_info("NonLocalProblem::apply_sweep", "Start");
   ComplexNumber* values = new ComplexNumber[local_indices.n_elements()];
   VecGetValues(x_in, local_indices.n_elements(), locally_owned_dofs_index_array, values);
   for(unsigned int i = 0; i < this->local_indices.n_elements(); i++) {
@@ -391,6 +390,7 @@ void NonLocalProblem::apply_sweep(Vec x_in, Vec x_out) {
   }
   VecSetValues(x_out, local_indices.n_elements(), locally_owned_dofs_index_array, values, INSERT_VALUES);
   delete[] values;
+  print_info("NonLocalProblem::apply_sweep", "End");
 }
 
 void NonLocalProblem::reinit() {
