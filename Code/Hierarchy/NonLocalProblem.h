@@ -56,7 +56,7 @@ private:
 
   void solve() override;
 
-  void apply_sweep(Vec x_in, Vec x_out);
+  void apply_sweep(Vec x_in, Vec x_out, NonLocalProblem * this_);
 
   void init_solver_and_preconditioner();
 
@@ -96,9 +96,9 @@ private:
 
   bool is_highest_in_sweeping_direction();
 
-  auto set_boundary_values(dealii::IndexSet, std::vector<ComplexNumber>) -> void override;
+  auto set_boundary_values(BoundaryId, std::vector<ComplexNumber>) -> void override;
   
-  auto release_boundary_values(dealii::IndexSet) -> void override;
+  auto release_boundary_values(BoundaryId) -> void override;
 
   auto make_constraints_for_hsie_surface(unsigned int index) -> void;
   

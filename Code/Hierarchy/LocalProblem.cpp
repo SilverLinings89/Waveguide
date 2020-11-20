@@ -88,6 +88,12 @@ void LocalProblem::initialize() {
   print_info("LocalProblem::initialize", "Initialize index sets", false, LoggingLevel::DEBUG_ALL);
   initialize_own_dofs();
   print_info("LocalProblem::initialize", "Number of local dofs: " + std::to_string(n_own_dofs) , false, LoggingLevel::DEBUG_ALL);
+  for(unsigned int i = 0; i < 6; i++) {
+    surface_dof_associations[i] = surfaces[i]->get_dof_association();
+    for(unsigned int j = 0; j < surface_dof_associations[i].size(); j++) {
+      surface_dof_index_vectors[i].push_back(first_own_index + surface_dof_associations[i][j].index);
+    }
+  }
   print_info("LocalProblem::initialize", "End");
 }
 
@@ -402,24 +408,15 @@ auto LocalProblem::communicate_sweeping_direction(SweepingDirection sweeping_dir
   sweeping_direction = sweeping_direction_of_parent;
 }
 
-auto LocalProblem::set_boundary_values(dealii::IndexSet local_indices, std::vector<ComplexNumber> dof_values) -> void {
-  if(local_indices.n_elements() == dof_values.size()) {
-    std::vector<unsigned int> indices;
-    for(auto item: local_indices) {
-      indices.push_back(item);
-    }
-    rhs.set(indices, dof_values);
-  } else {
-    std::cout << "Boundary values were passed incorrectly.";
-  }
+auto LocalProblem::set_boundary_values(BoundaryId b_id, std::vector<ComplexNumber> dof_values) -> void {
+  rhs.set(surface_dof_index_vectors[b_id], dof_values);
 }
 
-auto LocalProblem::release_boundary_values(dealii::IndexSet local_indices) -> void {
-  std::vector<unsigned int> indices;
+auto LocalProblem::release_boundary_values(BoundaryId b_id) -> void {
+  const unsigned int n_dofs = surface_dof_index_vectors[b_id].size();
   std::vector<ComplexNumber> values;
-  for(auto item: local_indices) {
-    indices.push_back(item);
-    values.push_back(0);
+  for(unsigned int i = 0; i < n_dofs; i++) {
+    values.emplace_back(0,0);
   }
-  rhs.set(indices, values);
+  rhs.set(surface_dof_index_vectors[b_id], values);
 }

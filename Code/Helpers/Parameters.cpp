@@ -13,4 +13,5 @@ auto Parameters::complete_data() -> void {
     Index_in_z_direction = MPI_Rank / (Blocks_in_x_direction*Blocks_in_y_direction);
     Index_in_y_direction = (MPI_Rank-(Index_in_z_direction * Blocks_in_x_direction*Blocks_in_y_direction)) / Blocks_in_x_direction;
     Index_in_x_direction = 0; // TODO: implement this.
+    Logging_Level = DEBUG_ALL;
 }

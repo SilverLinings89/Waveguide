@@ -35,6 +35,7 @@ class HierarchicalProblem {
   dealii::IndexSet current_upper_sweeping_dofs;
   dealii::IndexSet current_lower_sweeping_dofs;
   std::array<std::vector<DofIndexAndOrientationAndPosition>, 6> surface_dof_associations;
+  std::array<std::vector<DofNumber>, 6> surface_dof_index_vectors;
 
   HierarchicalProblem(unsigned int in_own_level);
   virtual ~HierarchicalProblem() =0;
@@ -61,8 +62,8 @@ class HierarchicalProblem {
   auto opposing_site_bid(BoundaryId) -> BoundaryId;
   auto set_dofs_in_inner_problem(BoundaryId, NumericVectorLocal);
   auto set_dofs_in_inner_problem_from_other_process(BoundaryId, DofDataVector);
-  virtual auto set_boundary_values(dealii::IndexSet, std::vector<ComplexNumber>) -> void = 0;
-  virtual auto release_boundary_values(dealii::IndexSet) -> void = 0;
+  virtual auto set_boundary_values(BoundaryId, std::vector<ComplexNumber>) -> void = 0;
+  virtual auto release_boundary_values(BoundaryId) -> void = 0;
   void copy_temp_to_current_solution();
   std::vector<ComplexNumber> get_surface_values_with_orientation_fix(BoundaryId bid,NumericVectorDistributed vector);
   void set_surface_values_with_orientation_fix(BoundaryId bid, NumericVectorDistributed * vector, std::vector<ComplexNumber> values);

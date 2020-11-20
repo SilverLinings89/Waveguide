@@ -5,7 +5,6 @@
 #include <unistd.h>
 #include <string>
 #include <limits>
-
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/tensor.h>
@@ -18,6 +17,32 @@
 #include "ShapeDescription.h"
 
 using namespace dealii;
+
+#ifndef _COLORS_
+#define _COLORS_
+
+/* FOREGROUND */
+#define RST  "\x1B[0m"
+#define KRED  "\x1B[31m"
+#define KGRN  "\x1B[32m"
+#define KYEL  "\x1B[33m"
+#define KBLU  "\x1B[34m"
+#define KMAG  "\x1B[35m"
+#define KCYN  "\x1B[36m"
+#define KWHT  "\x1B[37m"
+
+#define FRED(x) KRED x RST
+#define FGRN(x) KGRN x RST
+#define FYEL(x) KYEL x RST
+#define FBLU(x) KBLU x RST
+#define FMAG(x) KMAG x RST
+#define FCYN(x) KCYN x RST
+#define FWHT(x) KWHT x RST
+
+#define BOLD(x) "\x1B[1m" x RST
+#define UNDL(x) "\x1B[4m" x RST
+
+#endif  /* _COLORS_ */
 
 extern Parameters GlobalParams;
 extern GeometryManager Geometry;
@@ -583,5 +608,5 @@ bool is_visible_message_in_current_logging_level(LoggingLevel level) {
 }
 
 void write_print_message(const std::string &label, const std::string &message) {
-  std::cout << "[" << GlobalParams.MPI_Rank<< ":" << GlobalParams.Index_in_x_direction << "x" << GlobalParams.Index_in_y_direction << "x" << GlobalParams.Index_in_z_direction << "]" << label << ": " << message << std::endl;
+  std::cout << "[" << GlobalParams.MPI_Rank<< ":" << GlobalParams.Index_in_x_direction << "x" << GlobalParams.Index_in_y_direction << "x" << GlobalParams.Index_in_z_direction << "]" << "\x1B[1m\x1B[31m"  << label << "\x1B[0m\x1B[0m" << ": " << message << std::endl;
 }

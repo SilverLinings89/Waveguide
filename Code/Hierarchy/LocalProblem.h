@@ -56,7 +56,7 @@ public:
 
   auto communicate_sweeping_direction(SweepingDirection) -> void override;
 
-  auto set_boundary_values(dealii::IndexSet, std::vector<ComplexNumber>) -> void override;
+  auto set_boundary_values(BoundaryId, std::vector<ComplexNumber>) -> void override;
   
-  auto release_boundary_values(dealii::IndexSet) -> void override;
+  auto release_boundary_values(BoundaryId) -> void override;
 };

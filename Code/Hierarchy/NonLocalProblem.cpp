@@ -26,7 +26,7 @@ PetscErrorCode pc_apply(PC in_pc, Vec x_in, Vec x_out) {
   SampleShellPC  *shell;
   PCShellGetContext(in_pc,(void**)&shell);
 
-  shell->parent->apply_sweep(x_in, x_out);
+  shell->parent->apply_sweep(x_in, x_out, shell->parent);
   /**
   // Extract the components from the input vector.
   std::vector<ComplexNumber> vals;
@@ -58,7 +58,7 @@ PetscErrorCode pc_create(SampleShellPC *shell, NonLocalProblem * parent)
   SampleShellPC  *newctx;
   PetscNew(&newctx);
   newctx->parent = parent;
-  shell = newctx;
+  *shell = *newctx;
   return 0;
 }
 
@@ -361,34 +361,41 @@ void NonLocalProblem::solve() {
   KSPSolve(solver.solver_data->ksp, *system_rhs, current_solution);
 }
 
-void NonLocalProblem::apply_sweep(Vec x_in, Vec x_out) {
+void NonLocalProblem::apply_sweep(Vec x_in, Vec x_out, NonLocalProblem * this_) {
   print_info("NonLocalProblem::apply_sweep", "Start");
-  ComplexNumber* values = new ComplexNumber[local_indices.n_elements()];
-  VecGetValues(x_in, local_indices.n_elements(), locally_owned_dofs_index_array, values);
-  for(unsigned int i = 0; i < this->local_indices.n_elements(); i++) {
-    current_solution(local_indices.nth_index_in_set(i)) = values[i];
+  std::cout << "Ndofs " << std::to_string(this_->rank) << std::to_string(this_->local_indices.n_elements())<< std::endl; 
+  MPI_Barrier(MPI_COMM_WORLD);
+  ComplexNumber * values = new ComplexNumber[this_->local_indices.n_elements()];
+  std::cout << "Solve in " << std::to_string(this_->rank) << " 0 " << std::endl; 
+  MPI_Barrier(MPI_COMM_WORLD);
+  VecGetValues(x_in, this_->local_indices.n_elements(), this_->locally_owned_dofs_index_array, values);
+  MPI_Barrier(MPI_COMM_WORLD);
+  std::cout << "Solve in " << std::to_string(this_->rank) << " 1 " << std::endl; 
+  for(unsigned int i = 0; i < this_->local_indices.n_elements(); i++) {
+    this_->current_solution(this_->local_indices.nth_index_in_set(i)) = values[i];
   }
-  std::cout << "Solve in " << std::to_string(rank) << " P1 " << std::endl; 
-  receive_local_upper_dofs();
-  std::cout << "Solve in " << std::to_string(rank) << " P2 " << std::endl;
-  H_inverse(solution, temp_solution);
-  std::cout << "Solve in " << std::to_string(rank) << " P3 " << std::endl;
-  send_local_lower_dofs();
-  std::cout << "Solve in " << std::to_string(rank) << " P4 " << std::endl;
+  MPI_Barrier(MPI_COMM_WORLD);
+  std::cout << "Solve in " << std::to_string(this_->rank) << " P1 " << std::endl; 
+  this_->receive_local_upper_dofs();
+  std::cout << "Solve in " << std::to_string(this_->rank) << " P2 " << std::endl;
+  this_->H_inverse(solution, temp_solution);
+  std::cout << "Solve in " << std::to_string(this_->rank) << " P3 " << std::endl;
+  this_->send_local_lower_dofs();
+  std::cout << "Solve in " << std::to_string(this_->rank) << " P4 " << std::endl;
 
-  H_inverse(solution, temp_solution);
-  std::cout << "Solve in " << std::to_string(rank) << " P5 " << std::endl;
+  this_->H_inverse(solution, temp_solution);
+  std::cout << "Solve in " << std::to_string(this_->rank) << " P5 " << std::endl;
 
-  receive_local_lower_dofs();
-  std::cout << "Solve in " << std::to_string(rank) << " P6 " << std::endl;
-  H_inverse(solution, temp_solution);
-  std::cout << "Solve in " << std::to_string(rank) << " P7 " << std::endl;
-  send_local_upper_dofs();
-  std::cout << "Solve in " << std::to_string(rank) << " P8 " << std::endl;
-  for(unsigned int i = 0; i < this->local_indices.n_elements(); i++) {
-     values[i] = current_solution[local_indices.nth_index_in_set(i)];
+  this_->receive_local_lower_dofs();
+  std::cout << "Solve in " << std::to_string(this_->rank) << " P6 " << std::endl;
+  this_->H_inverse(solution, temp_solution);
+  std::cout << "Solve in " << std::to_string(this_->rank) << " P7 " << std::endl;
+  this_->send_local_upper_dofs();
+  std::cout << "Solve in " << std::to_string(this_->rank) << " P8 " << std::endl;
+  for(unsigned int i = 0; i < this_->local_indices.n_elements(); i++) {
+     values[i] = this_->current_solution[this_->local_indices.nth_index_in_set(i)];
   }
-  VecSetValues(x_out, local_indices.n_elements(), locally_owned_dofs_index_array, values, INSERT_VALUES);
+  VecSetValues(x_out, this_->local_indices.n_elements(), this_->locally_owned_dofs_index_array, values, INSERT_VALUES);
   delete[] values;
   print_info("NonLocalProblem::apply_sweep", "End");
 }
@@ -405,8 +412,6 @@ void NonLocalProblem::reinit() {
     columns_per_process.push_back(max_couplings);
   }
   matrix->reinit(GlobalMPI.communicators_by_level[local_level], total_number_of_dofs_on_level, total_number_of_dofs_on_level, local_indices.n_elements(), local_indices.n_elements(), 150);
-  //matrix->reinit(local_indices, local_indices, dsp, GlobalMPI.communicators_by_level[local_level]);
-  //  matrix->reinit(GlobalMPI.communicators_by_level[local_level], dsp, rows_per_process, rows_per_process, rank, false);
   system_rhs = new dealii::PETScWrappers::MPI::Vector(local_indices, GlobalMPI.communicators_by_level[local_level]);
   current_solution.reinit(local_indices, GlobalMPI.communicators_by_level[local_level]);
   constraints.close();
@@ -418,6 +423,9 @@ void NonLocalProblem::initialize() {
   child->initialize();
   for(unsigned int i = 0; i < 6; i++) {
     surface_dof_associations[i] = get_local_problem()->surfaces[i]->get_dof_association();
+    for(unsigned int j = 0; j < surface_dof_associations[i].size(); j++) {
+      surface_dof_index_vectors[i].push_back(first_own_index + surface_dof_associations[i][j].index);
+    }
   }
   initialize_own_dofs();
   dofs_process_above = compute_upper_interface_dof_count();
@@ -692,11 +700,13 @@ void NonLocalProblem::receive_local_lower_dofs() {
   }
   Direction communication_direction = get_lower_boundary_id_for_sweeping_direction(sweeping_direction);
   std::pair<bool, unsigned int> neighbour_data =GlobalMPI.get_neighbor_for_interface(communication_direction);
-  ComplexNumber * data = new ComplexNumber(dofs_process_below);
+  ComplexNumber* data = new ComplexNumber[dofs_process_below];
   MPI_Recv(&data[0], dofs_process_below, MPI_C_DOUBLE_COMPLEX, neighbour_data.second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  std::vector<ComplexNumber> dof_values;
   for(unsigned int i = 0; i < dofs_process_below; i++) {
-    current_solution[lower_interface_dofs.nth_index_in_set(i)] = data[i];
+    dof_values.push_back(data[i]);
   }
+  set_boundary_values(get_lower_boundary_id_for_sweeping_direction(sweeping_direction), dof_values);
 }
 
 void NonLocalProblem::send_local_upper_dofs() {
@@ -719,33 +729,26 @@ void NonLocalProblem::receive_local_upper_dofs() {
   }
   Direction communication_direction = get_upper_boundary_id_for_sweeping_direction(sweeping_direction);
   std::pair<bool, unsigned int> neighbour_data = GlobalMPI.get_neighbor_for_interface(communication_direction);
-  ComplexNumber * data = new ComplexNumber(dofs_process_above);
+  ComplexNumber* data = new ComplexNumber[dofs_process_above];
   MPI_Recv(&data[0], dofs_process_above, MPI_C_DOUBLE_COMPLEX, neighbour_data.second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-  for(unsigned int i = 0; i < dofs_process_above; i++) {
-    current_solution[upper_interface_dofs.nth_index_in_set(i)] = data[i];
+  std::vector<ComplexNumber> dof_values;
+  for(unsigned int i = 0; i < dofs_process_below; i++) {
+    dof_values.push_back(data[i]);
   }
+  set_boundary_values(get_upper_boundary_id_for_sweeping_direction(sweeping_direction), dof_values);
+  delete[] data;
 }
 
-auto NonLocalProblem::set_boundary_values(dealii::IndexSet local_indices, std::vector<ComplexNumber> dof_values) -> void {
-  if(local_indices.n_elements() == dof_values.size()) {
-    std::vector<unsigned int> indices;
-    for(auto item: local_indices) {
-      indices.push_back(item + first_own_index);
-    }
-    rhs.set(indices, dof_values);
-    child->set_boundary_values(local_indices, dof_values);
-  } else {
-    std::cout << "Boundary values were passed incorrectly.";
-  }
+auto NonLocalProblem::set_boundary_values(BoundaryId b_id, std::vector<ComplexNumber> dof_values) -> void {
+  system_rhs->set(surface_dof_index_vectors[b_id], dof_values);
+  child->set_boundary_values(b_id, dof_values);
 }
 
-auto NonLocalProblem::release_boundary_values(dealii::IndexSet local_indices) -> void {
-  std::vector<unsigned int> indices;
+auto NonLocalProblem::release_boundary_values(BoundaryId b_id) -> void {
+  const unsigned int n_dofs = surface_dof_index_vectors[b_id].size();
   std::vector<ComplexNumber> values;
-  for(auto item: local_indices) {
-    indices.push_back(item + first_own_index);
-    values.push_back(0);
+  for(unsigned int i = 0; i < n_dofs; i++) {
+    values.emplace_back(0,0);
   }
-  rhs.set(indices, values);
-  child->release_boundary_values(local_indices);
+  rhs.set(surface_dof_index_vectors[b_id], values);
 }
