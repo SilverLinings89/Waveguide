@@ -32,6 +32,27 @@ auto LocalProblem::get_center() -> Position const {
   return compute_center_of_triangulation(&base_problem.triangulation);
 }
 
+dealii::IndexSet LocalProblem::compute_interface_dof_set(BoundaryId interface_id) {
+  BoundaryId opposing_interface_id = opposing_Boundary_Id(interface_id);
+  dealii::IndexSet ret(n_own_dofs);
+  for(unsigned int i = 0; i < 6; i++) {
+    if( i == interface_id) {
+      std::vector<DofIndexAndOrientationAndPosition> current = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(interface_id);
+      for(unsigned int j = 0; j < current.size(); j++) {
+        ret.add_index(current[j].index + this->first_own_index);
+      }      
+    } else {
+      if(i != opposing_interface_id) {
+        std::vector<DofIndexAndOrientationAndPosition> current = get_local_problem()->surfaces[i]->get_dof_association_by_boundary_id(i);
+        for(unsigned int j = 0; j < current.size(); j++) {
+          ret.add_index(current[j].index + this->first_own_index);
+        }
+      }
+    }
+  }
+  return ret;
+}
+
 void LocalProblem::initialize() {
   print_info("LocalProblem::initialize", "Start");
   for (unsigned int side = 0; side < 6; side++) {
@@ -83,6 +104,9 @@ void LocalProblem::initialize() {
     surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(GlobalParams.HSIE_polynomial_degree, std::ref(surf_tria), side,
           GlobalParams.Nedelec_element_order, GlobalParams.kappa_0, additional_coorindate));
     surfaces[side]->initialize();
+    for(unsigned int i = 0; i < 6; i++) {
+      surface_index_sets[i] = compute_interface_dof_set(i);
+    }
   }
 
   print_info("LocalProblem::initialize", "Initialize index sets", false, LoggingLevel::DEBUG_ALL);
@@ -409,7 +433,10 @@ auto LocalProblem::communicate_sweeping_direction(SweepingDirection sweeping_dir
 }
 
 auto LocalProblem::set_boundary_values(BoundaryId b_id, std::vector<ComplexNumber> dof_values) -> void {
-  rhs.set(surface_dof_index_vectors[b_id], dof_values);
+  for(unsigned int i = 0; i < surface_index_sets[b_id].n_elements(); i++) {
+    rhs[surface_index_sets[b_id].nth_index_in_set(i)] = dof_values[i];
+  }
+  // rhs.set(surface_dof_index_vectors[b_id], dof_values);
 }
 
 auto LocalProblem::release_boundary_values(BoundaryId b_id) -> void {

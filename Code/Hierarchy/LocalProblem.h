@@ -59,4 +59,6 @@ public:
   auto set_boundary_values(BoundaryId, std::vector<ComplexNumber>) -> void override;
   
   auto release_boundary_values(BoundaryId) -> void override;
+
+  dealii::IndexSet compute_interface_dof_set(BoundaryId interface_id);
 };

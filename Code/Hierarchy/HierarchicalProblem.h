@@ -15,6 +15,7 @@ class HierarchicalProblem {
  public:
   SweepingDirection sweeping_direction;
   std:: vector<DofNumber> surface_first_dofs;
+  std::array<dealii::IndexSet, 6> surface_index_sets;
   std:: vector<bool> is_surface_locked;
   bool is_dof_manager_set;
   bool has_child;
