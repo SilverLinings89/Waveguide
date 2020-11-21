@@ -13,6 +13,7 @@
 class NonLocalProblem: public HierarchicalProblem {
 private:
   std::vector<dealii::IndexSet> index_sets_per_process;
+  std::array<dealii::IndexSet, 6> surface_index_sets;
   std::array<bool, 6> is_hsie_surface;
   std::array<bool, 6> is_sweeping_hsie_surface;
   DofCount total_number_of_dofs_on_level;
@@ -30,6 +31,8 @@ private:
   SampleShellPC shell;
   dealii::DynamicSparsityPattern dsp;
   PetscInt* locally_owned_dofs_index_array;
+  unsigned int lower_sweeping_interface_id;
+  unsigned int upper_sweeping_interface_id;
   
  public:
   NonLocalProblem(unsigned int);
@@ -44,9 +47,9 @@ private:
 
   auto compute_upper_interface_dof_count() -> DofCount override;
 
-  DofCount compute_interface_dofs(BoundaryId interface_id, BoundaryId opposing_interface_id);
+  DofCount compute_interface_dofs(BoundaryId interface_id);
 
-  dealii::IndexSet compute_interface_dof_set(BoundaryId interface_id, BoundaryId opposing_interface_id);
+  dealii::IndexSet compute_interface_dof_set(BoundaryId interface_id);
 
   auto compute_lower_interface_id() -> BoundaryId;
 
@@ -78,7 +81,7 @@ private:
 
   auto communicate_sweeping_direction(SweepingDirection) -> void override;
 
-  void H_inverse(NumericVectorDistributed &, NumericVectorDistributed &);
+  void H_inverse();
 
   NumericVectorLocal extract_local_upper_dofs();
 
@@ -103,4 +106,6 @@ private:
   auto make_constraints_for_hsie_surface(unsigned int index) -> void;
   
   auto make_constraints_for_non_hsie_surface(unsigned int index) -> void;
+
+  void propagate_up();
 };

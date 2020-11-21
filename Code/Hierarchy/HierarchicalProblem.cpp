@@ -80,5 +80,5 @@ auto HierarchicalProblem::opposing_site_bid(BoundaryId in_bid) -> BoundaryId {
 }
 
 void HierarchicalProblem::copy_temp_to_current_solution() {
-  solution = temp_solution;
+  // solution = temp_solution;
 }

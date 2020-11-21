@@ -610,3 +610,11 @@ bool is_visible_message_in_current_logging_level(LoggingLevel level) {
 void write_print_message(const std::string &label, const std::string &message) {
   std::cout << "[" << GlobalParams.MPI_Rank<< ":" << GlobalParams.Index_in_x_direction << "x" << GlobalParams.Index_in_y_direction << "x" << GlobalParams.Index_in_z_direction << "]" << "\x1B[1m\x1B[31m"  << label << "\x1B[0m\x1B[0m" << ": " << message << std::endl;
 }
+
+BoundaryId opposing_Boundary_Id(BoundaryId b_id) {
+  if(b_id % 2  == 0) {
+    return b_id + 1;
+  } else {
+    return b_id - 1;
+  }
+}

@@ -22,9 +22,8 @@ class HierarchicalProblem {
   dealii:: SparsityPattern sp;
   const SweepingLevel local_level;
   DofIndexData indices;
-  NumericVectorDistributed rhs;
   NumericVectorDistributed solution;
-  NumericVectorDistributed temp_solution;
+  NumericVectorDistributed rhs;
   DofCount n_own_dofs;
   DofNumber first_own_index;
   DofCount dofs_process_above;

@@ -122,3 +122,5 @@ void print_info(const std::string &label, const std::array<bool,6> &message, boo
 
 bool is_visible_message_in_current_logging_level(LoggingLevel level = LoggingLevel::DEBUG_ALL);
 void write_print_message(const std::string &label, const std::string &message);
+
+BoundaryId opposing_Boundary_Id(BoundaryId b_id);
