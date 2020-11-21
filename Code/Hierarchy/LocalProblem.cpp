@@ -104,9 +104,6 @@ void LocalProblem::initialize() {
     surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(GlobalParams.HSIE_polynomial_degree, std::ref(surf_tria), side,
           GlobalParams.Nedelec_element_order, GlobalParams.kappa_0, additional_coorindate));
     surfaces[side]->initialize();
-    for(unsigned int i = 0; i < 6; i++) {
-      surface_index_sets[i] = compute_interface_dof_set(i);
-    }
   }
 
   print_info("LocalProblem::initialize", "Initialize index sets", false, LoggingLevel::DEBUG_ALL);
@@ -117,6 +114,9 @@ void LocalProblem::initialize() {
     for(unsigned int j = 0; j < surface_dof_associations[i].size(); j++) {
       surface_dof_index_vectors[i].push_back(first_own_index + surface_dof_associations[i][j].index);
     }
+  }
+  for(unsigned int i = 0; i < 6; i++) {
+    surface_index_sets[i] = compute_interface_dof_set(i);
   }
   print_info("LocalProblem::initialize", "End");
 }
