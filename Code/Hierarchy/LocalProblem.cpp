@@ -240,6 +240,7 @@ void LocalProblem::assemble() {
     surfaces[surface]->fill_matrix(matrix, &rhs, surface_first_dofs[surface],get_center(), &constraints);
   }
   matrix->compress(dealii::VectorOperation::add);
+  rhs.compress(dealii::VectorOperation::add);
   print_info("LocalProblem::assemble", "End");
 }
 
@@ -266,22 +267,22 @@ void LocalProblem::initialize_own_dofs() {
 void LocalProblem::solve() {
   print_info("LocalProblem::solve", "Start");
   print_info("LocalProblem::solve", "Norm before: " + std::to_string(solution.l2_norm()), false, LoggingLevel::PRODUCTION_ONE);
-  rhs.compress(dealii::VectorOperation::add);
   constraints.set_zero(solution);
-  Timer timer1, timer2;
+  Timer timer1;
   timer1.start ();
-  solver.solve(*matrix, solution, rhs);
+  dealii::PETScWrappers::MPI::Vector temp_rhs = rhs;
+  solver.solve(*matrix, solution, temp_rhs);
   timer1.stop();
   print_info("LocalProblem::solve", "Elapsed CPU time: " + std::to_string(timer1.cpu_time()) + " seconds.", false, LoggingLevel::PRODUCTION_ONE);
   print_info("LocalProblem::solve", "Elapsed walltime: " + std::to_string(timer1.wall_time()) + " seconds.", false, LoggingLevel::PRODUCTION_ONE);
   print_info("LocalProblem::solve", "Norm after: " + std::to_string(solution.l2_norm()) + " seconds.", false, LoggingLevel::PRODUCTION_ONE);
   constraints.distribute(solution);
-  Mat fact;
-  KSPGetPC(solver.solver_data->ksp,&solver.solver_data->pc);
-  PCFactorGetMatrix(solver.solver_data->pc,&fact);
-  PetscViewerPushFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)),PETSC_VIEWER_ASCII_INFO);
-  MatView(fact,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
-  PetscViewerPopFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
+  // Mat fact;
+  // KSPGetPC(solver.solver_data->ksp,&solver.solver_data->pc);
+  // PCFactorGetMatrix(solver.solver_data->pc,&fact);
+  // PetscViewerPushFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)),PETSC_VIEWER_ASCII_INFO);
+  // MatView(fact,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
+  // PetscViewerPopFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
   print_info("LocalProblem::solve", "End");
 }
 
@@ -316,26 +317,30 @@ LocalProblem* LocalProblem::get_local_problem() {
 }
 
 dealii::Vector<ComplexNumber> LocalProblem::get_local_vector_from_global() {
+  print_info("LocalProblem::get_local_vector_from_global", "Start");
   dealii::Vector<ComplexNumber> ret(base_problem.dof_handler.n_dofs());
   for (unsigned int i = 0; i < base_problem.n_dofs; i++) {
-    ret[i] = solution[i];
+    ret[i] = solution(i);
   }
+  print_info("LocalProblem::get_local_vector_from_global", "End");
   return ret;
 }
 
 void LocalProblem::output_results() {
+  print_info("LocalProblem::output_results()", "Start");
   dealii::DataOut<3> data_out;
-  dealii::Vector<ComplexNumber> solution =
+  dealii::Vector<ComplexNumber> output_solution =
       get_local_vector_from_global();
   data_out.attach_dof_handler(base_problem.dof_handler);
-  data_out.add_data_vector(solution, "Solution");
-  std::ofstream outputvtu("solution.vtu");
+  data_out.add_data_vector(output_solution, "Solution");
+  print_info("LocalProblem::output_results()", "P1");
+  std::ofstream outputvtu("solution_" + std::to_string(rank) + ".vtu");
   dealii::Vector<double> cellwise_error(base_problem.triangulation.n_active_cells());
   dealii::Vector<double> cellwise_norm(base_problem.triangulation.n_active_cells());
   dealii::VectorTools::integrate_difference(
     MappingQGeneric<3>(1),
     base_problem.dof_handler,
-    solution,
+    output_solution,
     psf,
     cellwise_error,
     dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
@@ -350,6 +355,7 @@ void LocalProblem::output_results() {
     dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
     dealii::VectorTools::NormType::L2_norm );
   unsigned int index = 0;
+  print_info("LocalProblem::output_results()", "P2");
   for(auto it = base_problem.dof_handler.begin_active(); it != base_problem.dof_handler.end(); it++) {
     if(base_problem.constrained_cells.contains(it->id().to_string())) {
       cellwise_error[index] = 0;
@@ -362,15 +368,17 @@ void LocalProblem::output_results() {
   print_info("LocalProblem::output_results", "Global computed error L2: " + std::to_string(global_error), false, LoggingLevel::PRODUCTION_ONE);
   print_info("LocalProblem::output_results", "Exact solution L2 norm: " + std::to_string(global_norm), false, LoggingLevel::PRODUCTION_ONE);
   data_out.add_data_vector(cellwise_error, "Cellwise_error");
+  print_info("LocalProblem::output_results()", "P3");
   data_out.build_patches();
   data_out.write_vtu(outputvtu);
-  compare_to_exact_solution();
+  print_info("LocalProblem::output_results()", "End");
+  // compare_to_exact_solution();
 }
 
 auto LocalProblem::compare_to_exact_solution() -> void {
   NumericVectorLocal solution_inner(base_problem.n_dofs);
   for(unsigned int i = 0; i < base_problem.n_dofs; i++) {
-    solution_inner[i] = solution[i];
+    solution_inner[i] = solution(i);
   }
 
   psf.set_cell_diameter(GlobalParams.Geometry_Size_X / GlobalParams.Cells_in_x -0.0001);
@@ -434,9 +442,9 @@ auto LocalProblem::communicate_sweeping_direction(SweepingDirection sweeping_dir
 
 auto LocalProblem::set_boundary_values(BoundaryId b_id, std::vector<ComplexNumber> dof_values) -> void {
   for(unsigned int i = 0; i < surface_index_sets[b_id].n_elements(); i++) {
-    rhs[surface_index_sets[b_id].nth_index_in_set(i)] = dof_values[i];
+    rhs(surface_index_sets[b_id].nth_index_in_set(i)) = dof_values[i];
   }
-  // rhs.set(surface_dof_index_vectors[b_id], dof_values);
+  rhs.compress(VectorOperation::insert);
 }
 
 auto LocalProblem::release_boundary_values(BoundaryId b_id) -> void {
@@ -446,4 +454,14 @@ auto LocalProblem::release_boundary_values(BoundaryId b_id) -> void {
     values.emplace_back(0,0);
   }
   rhs.set(surface_dof_index_vectors[b_id], values);
+  rhs.compress(VectorOperation::insert);
+}
+
+void LocalProblem::compute_solver_factorization() {
+  Timer timer1;
+  print_info("LocalProblem::compute_solver_factorization", "Begin solver factorization: ", true, LoggingLevel::PRODUCTION_ONE);
+  timer1.start();
+  solve();
+  timer1.stop();
+  print_info("LocalProblem::compute_solver_factorization", "Walltime: " + std::to_string(timer1.wall_time()) , true, LoggingLevel::PRODUCTION_ONE);
 }

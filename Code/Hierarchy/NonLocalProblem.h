@@ -26,6 +26,9 @@ private:
   dealii::AffineConstraints<ComplexNumber> constraints;
   NumericVectorDistributed current_solution;
   std::vector<std::pair<DofNumber, DofNumber>> coupling_dofs;
+  std::vector<ComplexNumber> cached_lower_values;
+  std::vector<ComplexNumber> cached_upper_values;
+  ComplexNumber * mpi_cache;
   PC pc;
   SampleShellPC shell;
   dealii::DynamicSparsityPattern dsp;
@@ -37,6 +40,8 @@ private:
   NonLocalProblem(unsigned int);
 
   ~NonLocalProblem() override;
+
+  auto reinit_mpi_cache() -> void;
 
   auto compute_own_dofs() -> DofCount override;
 
@@ -58,7 +63,7 @@ private:
 
   void solve() override;
 
-  void apply_sweep(Vec x_in, Vec x_out, NonLocalProblem * this_);
+  void apply_sweep(Vec x_in, Vec x_out);
 
   void init_solver_and_preconditioner();
 
@@ -107,4 +112,8 @@ private:
   auto make_constraints_for_non_hsie_surface(unsigned int index) -> void;
 
   void propagate_up();
+
+  void compute_solver_factorization() override;
+  
+  void output_results() override;
 };

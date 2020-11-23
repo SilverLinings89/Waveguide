@@ -24,7 +24,7 @@ Simulation::~Simulation() {
 }
 
 void Simulation::prepare() {
-  print_info("Simulation::prepare", "start", true, LoggingLevel::DEBUG_ONE);
+  print_info("Simulation::prepare", "Start", true, LoggingLevel::DEBUG_ONE);
   create_output_directory();
   prepare_transformed_geometry();
   if (GlobalParams.NumberProcesses > 1) {
@@ -33,21 +33,21 @@ void Simulation::prepare() {
     mainProblem = new LocalProblem();
   }
   mainProblem->initialize();
-  print_info("Simulation::prepare", "end", true, LoggingLevel::DEBUG_ONE);
+  print_info("Simulation::prepare", "End", true, LoggingLevel::DEBUG_ONE);
 }
 
 void Simulation::run() {
-  print_info("Simulation::run", "start", true, LoggingLevel::DEBUG_ONE);
+  print_info("Simulation::run", "Start", true, LoggingLevel::PRODUCTION_ONE);
 
   mainProblem->assemble();
 
-  // mainProblem->validate();
+  mainProblem->compute_solver_factorization();
   
   mainProblem->solve();
   
-  // mainProblem->output_results();
-  
-  print_info("Simulation::run", "end", true, LoggingLevel::DEBUG_ONE);
+  mainProblem->output_results();
+
+  print_info("Simulation::run", "End", true, LoggingLevel::PRODUCTION_ONE);
 }
 
 void Simulation::create_output_directory() {

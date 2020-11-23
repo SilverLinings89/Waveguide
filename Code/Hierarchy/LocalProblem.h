@@ -46,7 +46,7 @@ public:
 
   dealii::Vector<ComplexNumber> get_local_vector_from_global() override;
 
-  void output_results();
+  void output_results() override;
 
   auto get_center() -> Position const override;
 
@@ -61,4 +61,6 @@ public:
   auto release_boundary_values(BoundaryId) -> void override;
 
   dealii::IndexSet compute_interface_dof_set(BoundaryId interface_id);
+
+  void compute_solver_factorization() override;
 };

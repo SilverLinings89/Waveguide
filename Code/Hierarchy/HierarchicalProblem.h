@@ -67,6 +67,8 @@ class HierarchicalProblem {
   void copy_temp_to_current_solution();
   std::vector<ComplexNumber> get_surface_values_with_orientation_fix(BoundaryId bid,NumericVectorDistributed vector);
   void set_surface_values_with_orientation_fix(BoundaryId bid, NumericVectorDistributed * vector, std::vector<ComplexNumber> values);
+  virtual void compute_solver_factorization() = 0;
+  virtual void output_results() = 0;
 };
 
 typedef struct {
