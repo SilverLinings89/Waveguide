@@ -333,8 +333,7 @@ void LocalProblem::output_results() {
       get_local_vector_from_global();
   data_out.attach_dof_handler(base_problem.dof_handler);
   data_out.add_data_vector(output_solution, "Solution");
-  print_info("LocalProblem::output_results()", "P1");
-  std::ofstream outputvtu("solution_" + std::to_string(rank) + ".vtu");
+  std::ofstream outputvtu("solution_" + std::to_string(GlobalParams.MPI_Rank) + ".vtu");
   dealii::Vector<double> cellwise_error(base_problem.triangulation.n_active_cells());
   dealii::Vector<double> cellwise_norm(base_problem.triangulation.n_active_cells());
   dealii::VectorTools::integrate_difference(
@@ -355,7 +354,6 @@ void LocalProblem::output_results() {
     dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
     dealii::VectorTools::NormType::L2_norm );
   unsigned int index = 0;
-  print_info("LocalProblem::output_results()", "P2");
   for(auto it = base_problem.dof_handler.begin_active(); it != base_problem.dof_handler.end(); it++) {
     if(base_problem.constrained_cells.contains(it->id().to_string())) {
       cellwise_error[index] = 0;
@@ -368,7 +366,6 @@ void LocalProblem::output_results() {
   print_info("LocalProblem::output_results", "Global computed error L2: " + std::to_string(global_error), false, LoggingLevel::PRODUCTION_ONE);
   print_info("LocalProblem::output_results", "Exact solution L2 norm: " + std::to_string(global_norm), false, LoggingLevel::PRODUCTION_ONE);
   data_out.add_data_vector(cellwise_error, "Cellwise_error");
-  print_info("LocalProblem::output_results()", "P3");
   data_out.build_patches();
   data_out.write_vtu(outputvtu);
   print_info("LocalProblem::output_results()", "End");

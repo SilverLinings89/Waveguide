@@ -22,10 +22,8 @@ void get_petsc_index_array_from_index_set(PetscInt* in_array, dealii::IndexSet i
 }
 
 PetscErrorCode pc_apply(PC in_pc, Vec x_in, Vec x_out) {
-  x_out = x_in;
   SampleShellPC  *shell;
   PCShellGetContext(in_pc,(void**)&shell);
-
   shell->parent->apply_sweep(x_in, x_out);
   return 0;
 }
@@ -375,8 +373,8 @@ void NonLocalProblem::apply_sweep(Vec x_in, Vec x_out) {
   for(unsigned int i = 0; i < local_indices.n_elements(); i++) {
      values[i] = solution[local_indices.nth_index_in_set(i)];
   }
-  VecAssemblyBegin(x_out);
   VecSetValues(x_out, local_indices.n_elements(), locally_owned_dofs_index_array, values, INSERT_VALUES);
+  VecAssemblyBegin(x_out);
   VecAssemblyEnd(x_out);
   MPI_Barrier(MPI_COMM_WORLD);
   delete[] values;
