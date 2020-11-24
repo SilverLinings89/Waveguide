@@ -278,6 +278,22 @@ void NonLocalProblem::make_constraints_for_non_hsie_surface(unsigned int surface
   }
 }
 
+std::vector<bool> NonLocalProblem::get_incoming_dof_orientations() {
+  std::vector<bool> ret;
+  std::vector<DofIndexAndOrientationAndPosition> from_lower_surface =
+    get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(compute_lower_interface_id());
+    std::vector<DofIndexAndOrientationAndPosition> from_upper_surface =
+    get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(compute_upper_interface_id());
+  for(unsigned int i = 0; i < from_lower_surface.size(); i++) {
+    if(from_lower_surface[i].orientation == from_upper_surface[i].orientation) {
+      ret.push_back(true);
+    } else {
+      ret.push_back(false);
+    }
+  }
+  return ret;
+}
+
 void NonLocalProblem::make_constraints() {
   print_info("NonLocalProblem::make_constraints", "Start");
   dealii::IndexSet is;
@@ -358,6 +374,7 @@ void NonLocalProblem::assemble() {
   system_rhs->compress(dealii::VectorOperation::add);
   solution.compress(dealii::VectorOperation::add);
   child->assemble();
+  dof_orientations_identical = get_incoming_dof_orientations();
   print_info("NonLocalProblem::assemble", "End");
 }
 
@@ -745,7 +762,7 @@ void NonLocalProblem::receive_local_lower_dofs() {
   std::pair<bool, unsigned int> neighbour_data = GlobalMPI.get_neighbor_for_interface(communication_direction);
   MPI_Recv(&mpi_cache[0], n_elements, MPI_C_DOUBLE_COMPLEX, neighbour_data.second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   for(unsigned int i = 0; i < n_elements; i++) {
-    cached_lower_values[i] = mpi_cache[i];
+    cached_lower_values[i] = mpi_cache[i] * (dof_orientations_identical[i] ? 1.0 : -1.0);
   }
   child->set_boundary_values(get_lower_boundary_id_for_sweeping_direction(sweeping_direction), cached_lower_values);
 }
@@ -759,7 +776,7 @@ void NonLocalProblem::receive_local_upper_dofs() {
   std::pair<bool, unsigned int> neighbour_data = GlobalMPI.get_neighbor_for_interface(communication_direction);
   MPI_Recv(&mpi_cache[0], upper_interface_dofs.n_elements(), MPI_C_DOUBLE_COMPLEX, neighbour_data.second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   for(unsigned int i = 0; i < upper_interface_dofs.n_elements(); i++) {
-    cached_upper_values[i] = mpi_cache[i];
+    cached_upper_values[i] = mpi_cache[i] * (dof_orientations_identical[i] ? 1.0 : -1.0);
   }
   child->set_boundary_values(get_upper_boundary_id_for_sweeping_direction(sweeping_direction), cached_upper_values);
 }
