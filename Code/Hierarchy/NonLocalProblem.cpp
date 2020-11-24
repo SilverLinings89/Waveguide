@@ -15,6 +15,39 @@
 #include <vector>
 
 
+int convergence_test(KSP , const PetscInt iteration, const PetscReal residual_norm, KSPConvergedReason *reason, void * solver_control_x)
+{
+  std::cout << "Launch convergence_test. Iteration " << std::to_string(iteration) << " residual_norm "<< std::to_string(residual_norm) << std::endl; 
+  SolverControl &solver_control =
+    *reinterpret_cast<SolverControl *>(solver_control_x);
+
+  const SolverControl::State state = solver_control.check(iteration, residual_norm);
+
+  switch (state)
+    {
+      case ::SolverControl::iterate:
+        *reason = KSP_CONVERGED_ITERATING;
+        break;
+
+      case ::SolverControl::success:
+        *reason = static_cast<KSPConvergedReason>(1);
+        break;
+
+      case ::SolverControl::failure:
+        if (solver_control.last_step() > solver_control.max_steps())
+          *reason = KSP_DIVERGED_ITS;
+        else
+          *reason = KSP_DIVERGED_DTOL;
+        break;
+
+      default:
+        Assert(false, ExcNotImplemented());
+    }
+
+  // return without failure
+  return 0;
+}
+
 void get_petsc_index_array_from_index_set(PetscInt* in_array, dealii::IndexSet in_set) {
   for(unsigned int i = 0; i < in_set.n_elements(); i++) {
     in_array[i] = in_set.nth_index_in_set(i);
@@ -334,8 +367,17 @@ dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
 }
 
 void NonLocalProblem::solve() {
+  std::cout << GlobalParams.GMRES_max_steps << std::endl;
+  std::cout << GlobalParams.Solver_Precision << std::endl;
   dealii::PETScWrappers::MPI::Vector rhs = *system_rhs;
-  KSPSolve(solver.solver_data->ksp, rhs, solution);
+  KSPSetConvergenceTest(solver.solver_data->ksp, &convergence_test, reinterpret_cast<void *>(&sc),nullptr);
+  KSPSetTolerances(solver.solver_data->ksp, 0.000001, 1.0, 1000, 20);
+  KSPSetUp(solver.solver_data->ksp);
+  PetscErrorCode ierr = KSPSolve(solver.solver_data->ksp, rhs, solution);
+  if(ierr != 0) {
+    std::cout << "Error code from Petsc: " << std::to_string(ierr) << std::endl;
+    throw new ExcPETScError(ierr);
+  }
 }
 
 void NonLocalProblem::propagate_up(){

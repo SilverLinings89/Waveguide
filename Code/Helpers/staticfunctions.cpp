@@ -279,6 +279,7 @@ Parameters GetParameters() {
     ret.Cells_in_y                           = prm.get_integer("cell count y");
     ret.Cells_in_z                           = prm.get_integer("cell count z");
   }
+  ret.GMRES_max_steps = 30;
   prm.leave_subsection();
   ret.complete_data();
   return ret;
