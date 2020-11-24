@@ -330,8 +330,7 @@ dealii::Vector<ComplexNumber> LocalProblem::get_local_vector_from_global() {
 void LocalProblem::output_results() {
   print_info("LocalProblem::output_results()", "Start");
   dealii::DataOut<3> data_out;
-  dealii::Vector<ComplexNumber> output_solution =
-      get_local_vector_from_global();
+  dealii::Vector<ComplexNumber> output_solution = get_local_vector_from_global();
   data_out.attach_dof_handler(base_problem.dof_handler);
   data_out.add_data_vector(output_solution, "Solution");
   std::ofstream outputvtu("solution_" + std::to_string(GlobalParams.MPI_Rank) + ".vtu");
