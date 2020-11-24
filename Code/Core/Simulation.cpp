@@ -15,8 +15,8 @@
 #include "../Helpers/staticfunctions.h"
 #include "./GlobalObjects.h"
 
-Simulation::Simulation() {
-  initialize_global_variables();
+Simulation::Simulation(const std::string run_file,const std::string case_file) {
+  initialize_global_variables(run_file, case_file);
 }
 
 Simulation::~Simulation() {

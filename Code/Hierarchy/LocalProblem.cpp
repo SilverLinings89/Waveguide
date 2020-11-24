@@ -16,8 +16,6 @@
 #include <deal.II/numerics/vector_tools_point_value.h>
 #include "../Helpers/PointSourceField.h"
 
-PointSourceField psf;
-
 LocalProblem::LocalProblem() :
     HierarchicalProblem(0), base_problem(), sc(), solver(sc, MPI_COMM_SELF) {
   base_problem.make_grid();
@@ -343,7 +341,7 @@ void LocalProblem::output_results() {
     MappingQGeneric<3>(1),
     base_problem.dof_handler,
     output_solution,
-    psf,
+    *GlobalParams.source_field,
     cellwise_error,
     dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
     dealii::VectorTools::NormType::L2_norm );
@@ -352,7 +350,7 @@ void LocalProblem::output_results() {
     MappingQGeneric<3>(1),
     base_problem.dof_handler,
     zero,
-    psf,
+    *GlobalParams.source_field,
     cellwise_norm,
     dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
     dealii::VectorTools::NormType::L2_norm );
@@ -381,7 +379,6 @@ auto LocalProblem::compare_to_exact_solution() -> void {
     solution_inner[i] = solution(i);
   }
 
-  psf.set_cell_diameter(GlobalParams.Geometry_Size_X / GlobalParams.Cells_in_x -0.0001);
   std::ofstream myfile ("output_z.dat");
   for(unsigned int i = 0; i < 100; i++) {
     double z = -GlobalParams.Geometry_Size_X/2.0 + i*GlobalParams.Geometry_Size_X/99.0;
@@ -389,7 +386,7 @@ auto LocalProblem::compare_to_exact_solution() -> void {
     NumericVectorLocal local_solution(3);
     NumericVectorLocal exact_solution(3);
     VectorTools::point_value(base_problem.dof_handler, solution_inner, p, local_solution);
-    psf.vector_value(p, exact_solution);
+    GlobalParams.source_field->vector_value(p, exact_solution);
     myfile << "0\t0\t" << z << "\t" << local_solution[0].real()<< "\t" << local_solution[0].imag() ;
     myfile << "\t" << local_solution[1].real()<< "\t"<< local_solution[1].imag();
     myfile << "\t" << local_solution[2].real()<< "\t"<< local_solution[2].imag();
@@ -406,7 +403,7 @@ auto LocalProblem::compare_to_exact_solution() -> void {
     NumericVectorLocal local_solution(3);
     NumericVectorLocal exact_solution(3);
     VectorTools::point_value(base_problem.dof_handler, solution_inner, p, local_solution);
-    psf.vector_value(p, exact_solution);
+    GlobalParams.source_field->vector_value(p, exact_solution);
     myfile <<"0\t" << y << "\t0\t"<< local_solution[0].real()<< "\t"<< local_solution[0].imag() ;
     myfile << "\t" << local_solution[1].real()<< "\t"<< local_solution[1].imag();
     myfile << "\t" << local_solution[2].real()<< "\t"<< local_solution[2].imag();
@@ -423,7 +420,7 @@ auto LocalProblem::compare_to_exact_solution() -> void {
     NumericVectorLocal local_solution(3);
     NumericVectorLocal exact_solution(3);
     VectorTools::point_value(base_problem.dof_handler, solution_inner, p, local_solution);
-    psf.vector_value(p, exact_solution);
+    GlobalParams.source_field->vector_value(p, exact_solution);
     myfile << x << "\t0\t0";
     myfile << "\t" << local_solution[0].real()<< "\t"<< local_solution[0].imag() ;
     myfile << "\t" << local_solution[1].real()<< "\t"<< local_solution[1].imag();

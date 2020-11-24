@@ -55,7 +55,7 @@ void mesh_info(const Triangulation<dim>, const std::string);
 template <int dim>
 void mesh_info(const Triangulation<dim>);
 
-Parameters GetParameters();
+Parameters GetParameters(const std::string run_file,const std::string case_file);
 
 Position Triangulation_Shit_To_Local_Geometry(
     const Position &p);

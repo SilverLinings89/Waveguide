@@ -92,6 +92,6 @@ std::pair<bool, unsigned int> MPICommunicator::get_neighbor_for_interface(
 }
 
 MPICommunicator::~MPICommunicator() {
-  // TODO Auto-generated destructor stub
+  // Nothing to do here.
 }
 

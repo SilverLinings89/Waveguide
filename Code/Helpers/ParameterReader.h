@@ -33,14 +33,14 @@ class ParameterReader : public Subscriptor {
    * parsing-functionality. An object of that type is included in this one. This
    * constructor simply uses a copy-constructor to initialize it.
    */
-  ParameterReader(ParameterHandler &prmhandler);
+  ParameterReader();
 
   /**
    * This member calls the read_input_from_xml()-function of the contained
    * ParameterHandler and this replaces the default values with the values in
    * the input file.
    */
-  void read_parameters(const std::string inputfile);
+  Parameters read_parameters(const std::string run_file, const std::string case_file);
 
   /**
    * In this function, we add all values descriptions to the parameter-handler.
@@ -61,5 +61,6 @@ class ParameterReader : public Subscriptor {
   void declare_parameters();
 
  private:
-  ParameterHandler &prm;
+  ParameterHandler run_prm;
+  ParameterHandler case_prm;
 };

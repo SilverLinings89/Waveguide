@@ -134,9 +134,7 @@ auto NumericProblem::get_outer_constrained_faces() -> std::set<unsigned int> {
 }
 
 void NumericProblem::make_constraints() {
-  PointSourceField psf;
   double inner_cell_radius = 1.0/11.0;
-  psf.set_cell_diameter(inner_cell_radius/2.0);
   constrained_cells = get_central_cells(inner_cell_radius+0.0001);
   outer_constrained_faces = get_outer_constrained_faces();
   print_info("NumericProblem::make_constraints", "Constrained cell count: " + std::to_string(constrained_cells.size()), false, LoggingLevel::PRODUCTION_ONE);
@@ -157,7 +155,7 @@ void NumericProblem::make_constraints() {
             Position p0 = it->face(face)->line(line)->vertex(0);
             Position p1 = it->face(face)->line(line)->vertex(1);
             NumericVectorLocal value(3);
-            psf.vector_value(it->face(face)->line(line)->center(), value);
+            GlobalParams.source_field->vector_value(it->face(face)->line(line)->center(), value);
             ComplexNumber dof_value = { 0, 0 };
             for (unsigned int j = 0; j < 3; j++) {
               dof_value += value[j] * (p0[j] - p1[j]);

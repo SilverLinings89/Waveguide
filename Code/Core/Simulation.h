@@ -8,7 +8,7 @@ class Simulation {
   HierarchicalProblem *mainProblem;
 
  public:
-  Simulation();
+  Simulation(const std::string run_file,const std::string case_file);
 
   virtual ~Simulation();
 

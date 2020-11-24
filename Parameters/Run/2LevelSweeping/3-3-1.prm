@@ -7,9 +7,9 @@ subsection Run parameters
     set Kappa angle = 1
     set FEM order = 0
     set Processes in x = 1
-    set Processes in y = 1
-    set Processes in z = 4
-    set HSIE sweeping level = 1
+    set Processes in y = 3
+    set Processes in z = 3
+    set HSIE sweeping level = 2
     set cell count x = 22
     set cell count y = 22
     set cell count z = 22

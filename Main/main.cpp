@@ -34,7 +34,6 @@ std::string total_filename = "total.log";
 int StepsR = 10;
 int StepsPhi = 10;
 int alert_counter = 0;
-std::string input_file_name;
 SpaceTransformation *the_st;
 Parameters GlobalParams;
 GeometryManager Geometry;
@@ -42,11 +41,29 @@ MPICommunicator GlobalMPI;
 ModeManager GlobalModeManager;
 
 int main(int argc, char *argv[]) {
+  std::string run_file = "../Parameters/Run/base.prm";
+  std::string case_file = "../Parameters/Case/base.prm";
+  std::vector<std::string> all_args;
 
   if (argc > 1) {
-    input_file_name = argv[1];
-  } else {
-    input_file_name = "../Parameters/Cube/base.xml";
+    all_args.assign(argv, argv + argc);
+  }
+  if (argc >= 3) {
+    if(all_args[1] == "--case") {
+      case_file = all_args[2];
+    }
+    if(all_args[1] == "--run") {
+      run_file = all_args[2];
+    }
+  }
+
+  if (argc >= 5) {
+    if(all_args[3] == "--case") {
+      case_file = all_args[4];
+    }
+    if(all_args[3] == "--run") {
+      run_file = all_args[4];
+    }
   }
 
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
@@ -54,7 +71,7 @@ int main(int argc, char *argv[]) {
   print_info("Main", "Prepare Streams", true);
   PrepareStreams();
 
-  Simulation simulation;
+  Simulation simulation(run_file, case_file);
 
   print_info("Main", "Prepare Simulation", true);
   simulation.prepare();

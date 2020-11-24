@@ -1,0 +1,16 @@
+subsection Run parameters
+    set Perform optimization = false
+    set Solver precision = 0.000001
+    set GMRES restart after = 30
+    set GMRES maximum steps = 100
+    set HSIE polynomial degree = 4
+    set Kappa angle = 1
+    set FEM order = 0
+    set Processes in x = 3
+    set Processes in y = 3
+    set Processes in z = 3
+    set HSIE sweeping level = 3
+    set cell count x = 22
+    set cell count y = 22
+    set cell count z = 22
+end 

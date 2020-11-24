@@ -1,0 +1,11 @@
+subsection Case parameters
+  set epsilon in       = 1.0
+  set epsilon out      = 1.0
+  set geometry size x  = 5.0
+  set geometry size y  = 5.0
+  set geometry size z  = 5.0
+  set mu in            = 1.0
+  set mu out           = 1.0
+  set signal amplitude = 1.0
+  set source type      = 0
+end

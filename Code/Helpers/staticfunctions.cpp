@@ -190,97 +190,15 @@ void PrepareStreams() {
   deallog.attach(log_stream);
 }
 
-Parameters GetParameters() {
-  // TODO: PSE-98 is relevant here.
-  ParameterHandler prm;
-  prm.enter_subsection("Run parameters");
-  {
-      prm.declare_entry("Perform optimization", "false", Patterns::Bool());
-      prm.declare_entry("Solver precision", "0.000001", Patterns::Double());
-      prm.declare_entry("GMRES restart after", "30", Patterns::Integer());
-      prm.declare_entry("GMRES maximum steps", "100", Patterns::Integer());
-  }
-  prm.leave_subsection();
-
-  prm.enter_subsection("Scheme properties");
-  {
-      prm.declare_entry("Kappa angle", "1.0", Patterns::Double());
-      prm.declare_entry("HSIE polynomial degree", "5", Patterns::Integer());
-      prm.declare_entry("FEM order", "0", Patterns::Integer());
-      prm.declare_entry("Processes in x", "1", Patterns::Integer());
-      prm.declare_entry("Processes in y", "1", Patterns::Integer());
-      prm.declare_entry("Processes in z", "2", Patterns::Integer());
-      prm.declare_entry("HSIE sweeping level", "1", Patterns::Integer());
-      prm.declare_entry("Number of Sectors", "1", Patterns::Integer());
-      prm.declare_entry("Sector padding", "0.1", Patterns::Double());
-  }
-  prm.leave_subsection();
-
-  prm.enter_subsection("Waveguide properties");
-  {
-      prm.declare_entry("Width of waveguide", "1.0", Patterns::Double());
-      prm.declare_entry("Heigth of waveguide", "1.0", Patterns::Double());
-      prm.declare_entry("X shift", "0.0", Patterns::Double());
-      prm.declare_entry("Y shift", "0.0", Patterns::Double());
-      prm.declare_entry("epsilon in", "1.0", Patterns::Double());
-      prm.declare_entry("epsilon out", "1.0", Patterns::Double());
-      prm.declare_entry("mu in", "1.0", Patterns::Double());
-      prm.declare_entry("mu out", "1.0", Patterns::Double());
-      prm.declare_entry("mode amplitude", "1.0", Patterns::Double());
-      prm.declare_entry("geometry size x", "1.0", Patterns::Double());
-      prm.declare_entry("geometry size y", "1.0", Patterns::Double());
-      prm.declare_entry("geometry size z", "1.0", Patterns::Double());
-      prm.declare_entry("cell count x", "11", Patterns::Integer());
-      prm.declare_entry("cell count y", "11", Patterns::Integer());
-      prm.declare_entry("cell count z", "11", Patterns::Integer());
-  }
-  prm.leave_subsection();
-  prm.parse_input(input_file_name);
-  struct Parameters ret;
+Parameters GetParameters(std::string run_filename, std::string case_filename) {
+  ParameterReader pr;
+  pr.declare_parameters();
+  
+  struct Parameters ret = pr.read_parameters(run_filename, case_filename);
   
   ret.MPI_Rank = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
   ret.NumberProcesses = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
 
-  prm.enter_subsection("Run parameters");
-  {
-    ret.Perform_Optimization       = prm.get_bool("Perform optimization");
-    ret.Solver_Precision           = prm.get_double("Solver precision");
-    ret.GMRES_Steps_before_restart = prm.get_integer("GMRES restart after");
-  }
-  prm.leave_subsection();
-  prm.enter_subsection("Scheme properties");
-  {
-    ret.kappa_0_angle          = prm.get_double("Kappa angle");
-    ret.HSIE_polynomial_degree = prm.get_integer("HSIE polynomial degree");
-    ret.Nedelec_element_order  = prm.get_integer("FEM order");
-    ret.Blocks_in_x_direction  = prm.get_integer("Processes in x");
-    ret.Blocks_in_y_direction  = prm.get_integer("Processes in y");
-    ret.Blocks_in_z_direction  = prm.get_integer("Processes in z");
-    ret.HSIE_SWEEPING_LEVEL    = prm.get_integer("HSIE sweeping level");
-    ret.Number_of_sectors      = prm.get_integer("Number of Sectors");
-    ret.Sector_padding         = prm.get_double("Sector padding");
-  }
-  prm.leave_subsection();
-  prm.enter_subsection("Waveguide properties");
-  {
-    ret.Width_of_waveguide                   = prm.get_double("Width of waveguide");
-    ret.Height_of_waveguide                  = prm.get_double("Heigth of waveguide");
-    ret.Horizontal_displacement_of_waveguide = prm.get_double("X shift");
-    ret.Vertical_displacement_of_waveguide   = prm.get_double("Y shift");
-    ret.Epsilon_R_in_waveguide               = prm.get_double("epsilon in");
-    ret.Epsilon_R_outside_waveguide          = prm.get_double("epsilon out");
-    ret.Mu_R_in_waveguide                    = prm.get_double("mu in");
-    ret.Mu_R_outside_waveguide               = prm.get_double("mu out");
-    ret.Amplitude_of_input_signal            = prm.get_double("mode amplitude");
-    ret.Geometry_Size_X                      = prm.get_double("geometry size x");
-    ret.Geometry_Size_Y                      = prm.get_double("geometry size y");
-    ret.Geometry_Size_Z                      = prm.get_double("geometry size z");
-    ret.Cells_in_x                           = prm.get_integer("cell count x");
-    ret.Cells_in_y                           = prm.get_integer("cell count y");
-    ret.Cells_in_z                           = prm.get_integer("cell count z");
-  }
-  ret.GMRES_max_steps = 30;
-  prm.leave_subsection();
   ret.complete_data();
   return ret;
 }

@@ -9,4 +9,4 @@ extern Parameters GlobalParams;
 extern GeometryManager Geometry;
 extern MPICommunicator GlobalMPI;
 extern ModeManager GlobalModeManager;
-void initialize_global_variables();
+void initialize_global_variables(const std::string run_file,const std::string case_file);

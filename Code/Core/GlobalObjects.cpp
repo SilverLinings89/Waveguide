@@ -5,9 +5,9 @@
 #include "../Helpers/ModeManager.h"
 #include "GlobalObjects.h"
 
-void initialize_global_variables() {
+void initialize_global_variables(const std::string run_file, const std::string case_file) {
   // Read parameters into Parameter Object
-  GlobalParams = GetParameters();
+  GlobalParams = GetParameters(run_file, case_file);
 
   // Build Global Geometry
   Geometry.initialize();
