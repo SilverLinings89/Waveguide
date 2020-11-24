@@ -14,10 +14,13 @@ auto Parameters::complete_data() -> void {
     Index_in_z_direction = MPI_Rank / (Blocks_in_x_direction*Blocks_in_y_direction);
     Index_in_y_direction = (MPI_Rank-(Index_in_z_direction * Blocks_in_x_direction*Blocks_in_y_direction)) / Blocks_in_x_direction;
     Index_in_x_direction = MPI_Rank - Index_in_z_direction*(Blocks_in_x_direction*Blocks_in_y_direction) - Index_in_y_direction*Blocks_in_x_direction ;
-    Logging_Level = DEBUG_ALL;
+    Logging_Level = PRODUCTION_ALL;
+    MPI_Rank = dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
     if(Point_Source_Type == 2) {
         source_field = new PointSourceFieldHertz(0.5);
+        if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using Hertz-type point source.", false, LoggingLevel::PRODUCTION_ONE);
     } else {
         source_field = new PointSourceFieldCosCos();
+        if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using Cos-Cos-type point source.", false, LoggingLevel::PRODUCTION_ONE);
     }
 }

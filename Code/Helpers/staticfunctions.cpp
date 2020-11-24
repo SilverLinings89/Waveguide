@@ -506,24 +506,14 @@ void print_info(const std::string &label, const std::array<bool,6> &message, boo
 }
 
 bool is_visible_message_in_current_logging_level(LoggingLevel level) {
-  switch (level)
-  {
-  case LoggingLevel::DEBUG_ALL:
-    return GlobalParams.Logging_Level == LoggingLevel::DEBUG_ALL;
-    break;
-  case LoggingLevel::DEBUG_ONE:
-    return (GlobalParams.Logging_Level == LoggingLevel::DEBUG_ALL || GlobalParams.Logging_Level == LoggingLevel::DEBUG_ONE) && (GlobalParams.MPI_Rank == 0);
-    break;
-  case LoggingLevel::PRODUCTION_ALL:
-    return (GlobalParams.Logging_Level == LoggingLevel::DEBUG_ALL || GlobalParams.Logging_Level == LoggingLevel::DEBUG_ONE || GlobalParams.Logging_Level == LoggingLevel::PRODUCTION_ALL) ;
-    break;
-  case LoggingLevel::PRODUCTION_ONE:
-    return GlobalParams.MPI_Rank == 0;
-    break;
-  default:
-    break;
+  if(level == LoggingLevel::DEBUG_ONE || level == LoggingLevel::PRODUCTION_ONE) {
+    if(GlobalParams.MPI_Rank != 0) return false;
   }
-  return false;
+  bool admissible = level >= GlobalParams.Logging_Level;
+  if(level == LoggingLevel::DEBUG_ONE || level == LoggingLevel::PRODUCTION_ONE) {
+    admissible &= GlobalParams.MPI_Rank == 0;
+  }
+  return admissible;
 }
 
 void write_print_message(const std::string &label, const std::string &message) {

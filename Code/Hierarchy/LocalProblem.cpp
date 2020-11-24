@@ -72,7 +72,7 @@ void LocalProblem::initialize() {
       }
     }
     dealii::Triangulation<2> surf_tria;
-    print_info("LocalProblem::initialize", "Initializing surface " + std::to_string(side) + " in local problem.", false, LoggingLevel::PRODUCTION_ALL);
+    print_info("LocalProblem::initialize", "Initializing surface " + std::to_string(side) + " in local problem.", false, LoggingLevel::PRODUCTION_ONE);
     Mesh tria;
     tria.copy_triangulation(base_problem.triangulation);
     std::set<unsigned int> b_ids;
@@ -267,16 +267,16 @@ void LocalProblem::initialize_own_dofs() {
 
 void LocalProblem::solve() {
   print_info("LocalProblem::solve", "Start");
-  print_info("LocalProblem::solve", "Norm before: " + std::to_string(solution.l2_norm()), false, LoggingLevel::PRODUCTION_ONE);
+  print_info("LocalProblem::solve", "Norm before: " + std::to_string(solution.l2_norm()), false, LoggingLevel::DEBUG_ONE);
   constraints.set_zero(solution);
   Timer timer1;
   timer1.start ();
   dealii::PETScWrappers::MPI::Vector temp_rhs = rhs;
   solver.solve(*matrix, solution, temp_rhs);
   timer1.stop();
-  print_info("LocalProblem::solve", "Elapsed CPU time: " + std::to_string(timer1.cpu_time()) + " seconds.", false, LoggingLevel::PRODUCTION_ONE);
-  print_info("LocalProblem::solve", "Elapsed walltime: " + std::to_string(timer1.wall_time()) + " seconds.", false, LoggingLevel::PRODUCTION_ONE);
-  print_info("LocalProblem::solve", "Norm after: " + std::to_string(solution.l2_norm()) + " seconds.", false, LoggingLevel::PRODUCTION_ONE);
+  print_info("LocalProblem::solve", "Elapsed CPU time: " + std::to_string(timer1.cpu_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
+  print_info("LocalProblem::solve", "Elapsed walltime: " + std::to_string(timer1.wall_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
+  print_info("LocalProblem::solve", "Norm after: " + std::to_string(solution.l2_norm()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
   constraints.distribute(solution);
   // Mat fact;
   // KSPGetPC(solver.solver_data->ksp,&solver.solver_data->pc);
