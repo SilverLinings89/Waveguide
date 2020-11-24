@@ -370,7 +370,6 @@ void LocalProblem::output_results() {
   data_out.build_patches();
   data_out.write_vtu(outputvtu);
   print_info("LocalProblem::output_results()", "End");
-  // compare_to_exact_solution();
 }
 
 auto LocalProblem::compare_to_exact_solution() -> void {
