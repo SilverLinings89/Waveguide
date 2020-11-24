@@ -118,6 +118,9 @@ void LocalProblem::initialize() {
   for(unsigned int i = 0; i < 6; i++) {
     surface_index_sets[i] = compute_interface_dof_set(i);
   }
+  if(GlobalParams.NumberProcesses == 1) {
+    reinit();
+  }
   print_info("LocalProblem::initialize", "End");
 }
 

@@ -10,7 +10,7 @@ subsection Scheme properties
     set FEM order = 0
     set Processes in x = 1
     set Processes in y = 1
-    set Processes in z = 4
+    set Processes in z = 1
     set HSIE sweeping level = 1
 end
 subsection Waveguide properties
@@ -25,7 +25,7 @@ subsection Waveguide properties
     set mode amplitude = 1.0
     set geometry size x = 2.0
     set geometry size y = 2.0
-    set geometry size z = 8.0
+    set geometry size z = 2.0
     set cell count x = 22
     set cell count y = 22
     set cell count z = 22
