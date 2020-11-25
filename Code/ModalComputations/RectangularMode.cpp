@@ -23,9 +23,13 @@ RectangularMode::RectangularMode(double x_width_waveguide,
 
 void RectangularMode::run() {
   make_mesh();
+  std::cout << "A" << std::endl;
   make_boundary_conditions();
+  std::cout << "B" << std::endl;
   assemble_system();
+  std::cout << "C" << std::endl;
   output_solution();
+  std::cout << "D" << std::endl;
 }
 
 void RectangularMode::make_mesh() {
@@ -84,8 +88,7 @@ void RectangularMode::make_boundary_conditions() {
       default:
         break;
     }
-    dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation,
-        b_ids);
+    dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation, b_ids);
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
     surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(10, std::ref(surf_tria), side, 0, GlobalParams.kappa_0, additional_coorindate));
     surfaces[side]->initialize();
