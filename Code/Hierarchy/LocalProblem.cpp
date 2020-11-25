@@ -72,7 +72,7 @@ void LocalProblem::initialize() {
       }
     }
     dealii::Triangulation<2> surf_tria;
-    print_info("LocalProblem::initialize", "Initializing surface " + std::to_string(side) + " in local problem.", false, LoggingLevel::PRODUCTION_ONE);
+    print_info("LocalProblem::initialize", "Initializing surface " + std::to_string(side) + " in local problem.", false, LoggingLevel::DEBUG_ALL);
     Mesh tria;
     tria.copy_triangulation(base_problem.triangulation);
     std::set<unsigned int> b_ids;
@@ -99,9 +99,11 @@ void LocalProblem::initialize() {
     dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation,
         b_ids);
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
-    surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(GlobalParams.HSIE_polynomial_degree, std::ref(surf_tria), side,
-          GlobalParams.Nedelec_element_order, GlobalParams.kappa_0, additional_coorindate));
-    surfaces[side]->initialize();
+    if((side != 5 || GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction-1) || GlobalParams.NumberProcesses > 1) {
+      surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(GlobalParams.HSIE_polynomial_degree, std::ref(surf_tria), side,
+            GlobalParams.Nedelec_element_order, GlobalParams.kappa_0, additional_coorindate));
+      surfaces[side]->initialize();
+    }
   }
 
   print_info("LocalProblem::initialize", "Initialize index sets", false, LoggingLevel::DEBUG_ALL);

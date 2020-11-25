@@ -39,6 +39,8 @@ ADD_LIBRARY(Code
         Hierarchy/DofIndexData.cpp
         Hierarchy/LevelDofIndexData.h
         Hierarchy/LevelDofIndexData.cpp
+        ModalComputations/RectangularMode.h
+        ModalComputations/RectangularMode.cpp
         )
 
 DEAL_II_SETUP_TARGET(Code)

@@ -1,0 +1,6 @@
+subsection Run parameters
+  set HSIE sweeping level    = 1
+  set processes in x         = 1
+  set processes in y         = 1
+  set processes in z         = 3
+end

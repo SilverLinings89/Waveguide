@@ -14,6 +14,7 @@
 #include <deal.II/base/mpi.h>
 #include "../Helpers/staticfunctions.h"
 #include "./GlobalObjects.h"
+#include "../ModalComputations/RectangularMode.h"
 
 Simulation::Simulation(const std::string run_file,const std::string case_file) {
   initialize_global_variables(run_file, case_file);
@@ -38,7 +39,10 @@ void Simulation::prepare() {
 
 void Simulation::run() {
   print_info("Simulation::run", "Start", true, LoggingLevel::PRODUCTION_ONE);
-
+  if(GlobalParams.Point_Source_Type == 0) {
+    RectangularMode rm = {1.4, 1.2, 14, 12, 1, 0};
+    rm.run();
+  }
   mainProblem->assemble();
 
   mainProblem->compute_solver_factorization();

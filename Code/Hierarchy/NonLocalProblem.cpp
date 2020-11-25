@@ -17,7 +17,6 @@
 
 int convergence_test(KSP , const PetscInt iteration, const PetscReal residual_norm, KSPConvergedReason *reason, void * solver_control_x)
 {
-  std::cout << "Launch convergence_test. Iteration " << std::to_string(iteration) << " residual_norm "<< std::to_string(residual_norm) << std::endl; 
   SolverControl &solver_control =
     *reinterpret_cast<SolverControl *>(solver_control_x);
 
@@ -384,11 +383,9 @@ dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
 }
 
 void NonLocalProblem::solve() {
-  std::cout << GlobalParams.GMRES_max_steps << std::endl;
-  std::cout << GlobalParams.Solver_Precision << std::endl;
   dealii::PETScWrappers::MPI::Vector rhs = *system_rhs;
   KSPSetConvergenceTest(solver.solver_data->ksp, &convergence_test, reinterpret_cast<void *>(&sc),nullptr);
-  KSPSetTolerances(solver.solver_data->ksp, 0.000001, 1.0, 1000, 20);
+  KSPSetTolerances(solver.solver_data->ksp, 0.000001, 1.0, 1000, 30);
   KSPSetUp(solver.solver_data->ksp);
   PetscErrorCode ierr = KSPSolve(solver.solver_data->ksp, rhs, solution);
   if(ierr != 0) {

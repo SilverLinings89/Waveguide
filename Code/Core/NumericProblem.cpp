@@ -55,7 +55,7 @@ void NumericProblem::make_grid() {
   repetitions.push_back(GlobalParams.Cells_in_z);
   std::string m = "Cells: " + std::to_string(GlobalParams.Cells_in_x) + " x " + std::to_string(GlobalParams.Cells_in_y) + " x " + std::to_string(GlobalParams.Cells_in_z) + "\nGeometry: [" + std::to_string(Geometry.local_x_range.first) + "," + std::to_string(Geometry.local_x_range.second);
   m += "] x [" + std::to_string(Geometry.local_y_range.first) + "," + std::to_string(Geometry.local_y_range.second) + "] x [" + std::to_string(Geometry.local_z_range.first) + "," + std::to_string(Geometry.local_z_range.second) + "]\n";
-  print_info("NumericProblem::make_grid", m, false, LoggingLevel::PRODUCTION_ONE);
+  print_info("NumericProblem::make_grid", m, false, LoggingLevel::PRODUCTION_ALL);
   Position lower(Geometry.local_x_range.first, Geometry.local_y_range.first,
       Geometry.local_z_range.first);
   Position upper(Geometry.local_x_range.second, Geometry.local_y_range.second,
@@ -137,7 +137,7 @@ void NumericProblem::make_constraints() {
   double inner_cell_radius = 1.0/11.0;
   constrained_cells = get_central_cells(inner_cell_radius+0.0001);
   outer_constrained_faces = get_outer_constrained_faces();
-  print_info("NumericProblem::make_constraints", "Constrained cell count: " + std::to_string(constrained_cells.size()), false, LoggingLevel::PRODUCTION_ONE);
+  print_info("NumericProblem::make_constraints", "Constrained cell count: " + std::to_string(constrained_cells.size()), false, LoggingLevel::PRODUCTION_ALL);
   std::vector<DofCount> local_line_indices(fe.dofs_per_line);
   std::vector<DofCount> local_face_indices(fe.dofs_per_face);
   local_dof_indices.set_size(n_dofs);
@@ -465,9 +465,8 @@ void NumericProblem::assemble_system(unsigned int shift,
 
 void NumericProblem::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs) {
   print_info("NumericProblem::write_matrix_and_rhs_metrics", "Start", LoggingLevel::DEBUG_ALL);
-  print_info("NumericProblem::write_matrix_and_rhs", "System Matrix l_infty norm: " + std::to_string(matrix->linfty_norm()), false, LoggingLevel::PRODUCTION_ALL);
   print_info("NumericProblem::write_matrix_and_rhs", "System Matrix l_1 norm: " + std::to_string(matrix->l1_norm()), false, LoggingLevel::PRODUCTION_ALL);
-  print_info("NumericProblem::write_matrix_and_rhs", "Assembling done. L2-Norm of RHS:  " + std::to_string(rhs->l2_norm()), false, LoggingLevel::PRODUCTION_ALL);
+  print_info("NumericProblem::write_matrix_and_rhs", "RHS L_2 norm:  " + std::to_string(rhs->l2_norm()), false, LoggingLevel::PRODUCTION_ALL);
   print_info("NumericProblem::write_matrix_and_rhs_metrics", "End");
 }
 
