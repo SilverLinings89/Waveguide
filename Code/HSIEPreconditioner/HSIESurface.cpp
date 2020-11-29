@@ -320,7 +320,7 @@ DofDataVector HSIESurface::get_dof_data_for_base_dof_q(
 
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::SparseMatrix *matrix, NumericVectorDistributed* rhs, 
-    unsigned int lowest_index, const Position &in_V0, dealii::AffineConstraints<ComplexNumber> *constraints) {
+    unsigned int lowest_index, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
   if (!is_metal) {
     IndexSet is;
     is.set_size(lowest_index + dof_counter);
@@ -331,7 +331,7 @@ void HSIESurface::fill_matrix(
 
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::SparseMatrix *matrix, NumericVectorDistributed* rhs, 
-    dealii::IndexSet global_indices, const Position &in_V0, dealii::AffineConstraints<ComplexNumber> *constraints) {
+    dealii::IndexSet global_indices, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
   if (!is_metal) {
     HSIEPolynomial::computeDandI(order + 2, k0);
     auto it = dof_h_nedelec.begin();
@@ -449,9 +449,19 @@ void HSIESurface::fill_matrix(
   }
 }
 
+auto HSIESurface::build_fad_for_cell(CellIterator2D cell) -> FaceAngelingData {
+  FaceAngelingData ret;
+  for(unsigned int i = 0; i < ret.size(); i++) {
+    ret[i].is_x_angled = false;
+    ret[i].is_y_angled = false;
+    ret[i].position_of_base_point = {};
+  }
+  return ret;
+}
+
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::SparseMatrix *mass_matrix, dealii::PETScWrappers::SparseMatrix *stiffness_matrix, NumericVectorDistributed * rhs, 
-    unsigned int lowest_index, const Position &in_V0, dealii::AffineConstraints<ComplexNumber> *constraints) {
+    unsigned int lowest_index,  std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
   if (!is_metal) {
     IndexSet is;
     is.set_size(lowest_index + dof_counter);
@@ -463,7 +473,7 @@ void HSIESurface::fill_matrix(
 
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::SparseMatrix *mass_matrix, dealii::PETScWrappers::SparseMatrix *stiffness_matrix, NumericVectorDistributed* rhs, 
-    dealii::IndexSet global_indices, const Position &in_V0, dealii::AffineConstraints<ComplexNumber> *constraints) {
+    dealii::IndexSet global_indices, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
   if (!is_metal) {
     HSIEPolynomial::computeDandI(order + 2, k0);
     auto it = dof_h_nedelec.begin();
@@ -585,20 +595,19 @@ void HSIESurface::fill_matrix(
 
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::MPI::SparseMatrix *matrix, NumericVectorDistributed* rhs, 
-    unsigned int lowest_index, const Position &in_V0, dealii::AffineConstraints<ComplexNumber> *constraints) {
+    unsigned int lowest_index, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
   if (!is_metal) {
     IndexSet is;
     is.set_size(lowest_index + dof_counter);
     is.add_range(lowest_index, lowest_index + dof_counter);
-    fill_matrix(matrix, rhs, is, in_V0, constraints);
+    fill_matrix(matrix, rhs, is, surfaces_hsie, constraints);
   }
 }
 
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::MPI::SparseMatrix *matrix, NumericVectorDistributed* rhs, 
-    dealii::IndexSet global_indices, const Position &in_V0, dealii::AffineConstraints<ComplexNumber> *constraints) {
+    dealii::IndexSet global_indices, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
   if (!is_metal) {
-    set_V0(in_V0);
     HSIEPolynomial::computeDandI(order + 2, k0);
     auto it = dof_h_nedelec.begin();
     auto end = dof_h_nedelec.end();
@@ -619,8 +628,9 @@ void HSIESurface::fill_matrix(
           dofs_per_cell);
     unsigned int cell_counter = 0;
     auto it2 = dof_h_q.begin();
-    JacobianForCell jacobian_for_cell = {V0, b_id, additional_coordinate};
     for (; it != end; ++it) {
+      FaceAngelingData fad = build_fad_for_cell(it);
+      JacobianForCell jacobian_for_cell = {fad, b_id, additional_coordinate};
       cell_matrix = 0;
       DofDataVector cell_dofs = this->get_dof_data_for_cell(it, it2);
       std::vector<HSIEPolynomial> polynomials;

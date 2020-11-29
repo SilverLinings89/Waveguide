@@ -365,7 +365,7 @@ void NonLocalProblem::assemble() {
   for(unsigned int i = 0; i< 6; i++) {
     print_info("NonLocalProblem::assemble", "assemble surface " + std::to_string(i));
     if(is_hsie_surface[i]) {
-      get_local_problem()->surfaces[i]->fill_matrix(&matrix, system_rhs, surface_first_dofs[i], is_hsie_surface, &constraints);
+      get_local_problem()->surfaces[i]->fill_matrix(matrix, system_rhs, surface_first_dofs[i], is_hsie_surface, &constraints);
     }
   }
   MPI_Barrier(GlobalMPI.communicators_by_level[local_level]);

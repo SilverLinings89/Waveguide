@@ -329,9 +329,9 @@ void RectangularMode::assemble_system() {
       constraints.distribute_local_to_global(cell_data.cell_stiffness_matrix, cell_data.local_dof_indices, stiffness_matrix);
     }
   }
-
+  std::array<bool, 6> is_hsie = {true, true, true, true, false, false};
   for(unsigned int surf = 0; surf < 4; surf++) {
-    surfaces[surf]->fill_matrix(&mass_matrix, &stiffness_matrix, &rhs, surface_first_dofs[surf], Position(0,0,0), &constraints);
+    surfaces[surf]->fill_matrix(&mass_matrix, &stiffness_matrix, &rhs, surface_first_dofs[surf], is_hsie, &constraints);
   }
   mass_matrix.compress(dealii::VectorOperation::add);
   stiffness_matrix.compress(dealii::VectorOperation::add);
