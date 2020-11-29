@@ -23,30 +23,26 @@ RectangularMode::RectangularMode(double x_width_waveguide,
 
 void RectangularMode::run() {
   make_mesh();
-  std::cout << "A" << std::endl;
   make_boundary_conditions();
-  std::cout << "B" << std::endl;
   assemble_system();
-  std::cout << "C" << std::endl;
   output_solution();
-  std::cout << "D" << std::endl;
 }
 
 void RectangularMode::make_mesh() {
-  Position p1(-x_width_domain / 2.0, -y_width_domain / 2.0, -0.1);
-  Position p2(x_width_domain / 2.0, y_width_domain / 2.0, 0.1);
+  Position p1(-x_width_domain / 2.0, -y_width_domain / 2.0, -0.01);
+  Position p2(x_width_domain / 2.0, y_width_domain / 2.0, 0.01);
   std::vector<unsigned int> repetitions;
-  repetitions.push_back(100);
-  repetitions.push_back(100);
+  repetitions.push_back(30);
+  repetitions.push_back(30);
   repetitions.push_back(1);
   GridGenerator::subdivided_hyper_rectangle(triangulation, repetitions, p1, p2, true);
   dof_handler.distribute_dofs(fe);
 }
 
 void RectangularMode::make_boundary_conditions() {
-  DoFTools::make_periodicity_constraints(dof_handler, 4, 5, 2,
-                                         periodic_constraints);
-  for (unsigned int side = 0; side < 3; side++) {      
+  ComplexNumber factor = std::exp(0.02 / (1.550/sqrt(1.53)) * 2*GlobalParams.Pi * ComplexNumber(0.0,1.0)); 
+  DoFTools::make_periodicity_constraints(dof_handler, 4, 5, 2, periodic_constraints, dealii::ComponentMask() ,factor);
+  for (unsigned int side = 0; side < 4; side++) {      
     dealii::Triangulation<2, 3> temp_triangulation;
     const unsigned int component = side / 2;
     double additional_coorindate = 0;
@@ -99,13 +95,20 @@ void RectangularMode::make_boundary_conditions() {
   surface_first_dofs.push_back(dc);
   for (unsigned int i = 0; i < 4; i++) {
     dc += surfaces[i]->dof_counter;
-    if (i != 5) {
+    if (i != 3) {
       surface_first_dofs.push_back(dc);
     }
   }
 
   constraints.merge(periodic_constraints);
-
+  for(unsigned int surf_index = 0; surf_index < 4; surf_index++) {
+    std::vector<DofIndexAndOrientationAndPosition> side_4 = surfaces[surf_index]->get_dof_association_by_boundary_id(4);
+    std::vector<DofIndexAndOrientationAndPosition> side_5 = surfaces[surf_index]->get_dof_association_by_boundary_id(5);
+    for(unsigned int i = 0; i < side_4.size(); i++) {
+      constraints.add_line(side_4[i].index+surface_first_dofs[surf_index]);
+      constraints.add_entry(side_4[i].index+surface_first_dofs[surf_index], side_5[i].index + surface_first_dofs[surf_index], - factor);
+    }
+  }
   for (unsigned int surface = 0; surface < 4; surface++) {
     std::vector<DofIndexAndOrientationAndPosition> from_surface = surfaces[surface]->get_dof_association();
     std::vector<DofIndexAndOrientationAndPosition> from_inner_problem = get_surface_dof_vector_for_boundary_id(surface);
@@ -249,7 +252,7 @@ struct CellwiseAssemblyData {
   void prepare_for_current_q_index(unsigned int q_index) {
     mu = invert(transformation);
 
-    if (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])) {
+    if (std::abs(quadrature_points[q_index][0]) < 1.0 && std::abs(quadrature_points[q_index][1]) < 0.9 ) {
       epsilon = transformation * eps_in;
     } else {
       epsilon = transformation * eps_out;
@@ -326,12 +329,12 @@ void RectangularMode::assemble_system() {
       constraints.distribute_local_to_global(cell_data.cell_stiffness_matrix, cell_data.local_dof_indices, stiffness_matrix);
     }
   }
-  mass_matrix.compress(dealii::VectorOperation::add);
-  stiffness_matrix.compress(dealii::VectorOperation::add);
 
   for(unsigned int surf = 0; surf < 4; surf++) {
     surfaces[surf]->fill_matrix(&mass_matrix, &stiffness_matrix, &rhs, surface_first_dofs[surf], Position(0,0,0), &constraints);
   }
+  mass_matrix.compress(dealii::VectorOperation::add);
+  stiffness_matrix.compress(dealii::VectorOperation::add);
 
   SolverControl                    solver_control(dof_handler.n_dofs(), 1e-9);
   SLEPcWrappers::SolverKrylovSchur eigensolver(solver_control);
@@ -339,25 +342,33 @@ void RectangularMode::assemble_system() {
   std::vector<PETScWrappers::MPI::Vector> eigenfunctions;
   IndexSet own_dofs(n_dofs_total);
   own_dofs.add_range(0, n_dofs_total);
-  for (unsigned int i = 0; i < eigenfunctions.size(); ++i)
+  const unsigned int efuns = 1;
+  eigenfunctions.resize(efuns);
+  for (unsigned int i = 0; i < efuns; ++i)
     eigenfunctions[i].reinit(own_dofs, MPI_COMM_SELF);
-  eigenfunctions.resize(10);
-  eigenvalues.resize(10);
-  eigensolver.set_which_eigenpairs(EPS_LARGEST_MAGNITUDE);
-  eigensolver.set_problem_type(EPS_GHEP);
+  eigenvalues.resize(efuns);
+  eigensolver.set_which_eigenpairs(EPS_SMALLEST_MAGNITUDE);
+  eigensolver.set_problem_type(EPS_GNHEP);
+  if(mass_matrix.is_hermitian()) std::cout << "Mass Matrix is hermitian" << std::endl;
+  if(stiffness_matrix.is_hermitian()) std::cout << "Stiffness Matrix is hermitian" << std::endl;
+  std::cout << "Starting solve with " << std::to_string(n_dofs_total) << " dofs." << std::endl;
   eigensolver.solve(stiffness_matrix,
                     mass_matrix,
                     eigenvalues,
                     eigenfunctions,
                     eigenfunctions.size());
+  std::cout << "Largest eigenvalue: " << std::to_string(eigenvalues[0].real()) << " " << std::to_string(eigenvalues[0].imag()) << std::endl;
   DataOut<3> data_out;
   data_out.attach_dof_handler(dof_handler);
-  for(unsigned int i = 0; i < 10; i++){
-    dealii::Vector<ComplexNumber> temp (dof_handler.n_dofs());
+  std::vector<dealii::Vector<ComplexNumber>> eigenfunctions_small;
+  eigenfunctions_small.resize(efuns);
+  for(unsigned int i = 0; i < efuns; i++){
+    std::cout << eigenvalues[i] << std::endl;
+    eigenfunctions_small[i].reinit(dof_handler.n_dofs());
     for(unsigned int element = 0; element < dof_handler.n_dofs(); element++) {
-      temp[element] = eigenfunctions[i][element];
+      eigenfunctions_small[i][element] = eigenfunctions[i][element];
     }
-    data_out.add_data_vector(temp, std::string("eigenfunction_") + std::to_string(i));
+    data_out.add_data_vector(eigenfunctions_small[i], std::string("eigenfunction_") + std::to_string(i));
   }
   data_out.build_patches();
   std::ofstream output("eigenvalues.vtu");

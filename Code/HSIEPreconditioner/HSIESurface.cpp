@@ -325,7 +325,7 @@ void HSIESurface::fill_matrix(
     IndexSet is;
     is.set_size(lowest_index + dof_counter);
     is.add_range(lowest_index, lowest_index + dof_counter);
-    fill_matrix(matrix, rhs, is, in_V0, constraints);
+    fill_matrix(matrix, rhs, is, surfaces_hsie, constraints);
   }
 }
 
@@ -333,11 +333,9 @@ void HSIESurface::fill_matrix(
     dealii::PETScWrappers::SparseMatrix *matrix, NumericVectorDistributed* rhs, 
     dealii::IndexSet global_indices, const Position &in_V0, dealii::AffineConstraints<ComplexNumber> *constraints) {
   if (!is_metal) {
-    set_V0(in_V0);
     HSIEPolynomial::computeDandI(order + 2, k0);
     auto it = dof_h_nedelec.begin();
     auto end = dof_h_nedelec.end();
-
     QGauss<2> quadrature_formula(2);
     FEValues<2, 2> fe_q_values(fe_q, quadrature_formula,
                               update_values | update_gradients |
@@ -353,8 +351,9 @@ void HSIESurface::fill_matrix(
         dofs_per_cell);
     unsigned int cell_counter = 0;
     auto it2 = dof_h_q.begin();
-    JacobianForCell jacobian_for_cell = {V0, b_id, additional_coordinate};
     for (; it != end; ++it) {
+      FaceAngelingData fad = build_fad_for_cell(it);
+      JacobianForCell jacobian_for_cell = {fad, b_id, additional_coordinate};
       cell_matrix = 0;
       DofDataVector cell_dofs = this->get_dof_data_for_cell(it, it2);
       std::vector<HSIEPolynomial> polynomials;
@@ -443,7 +442,7 @@ void HSIESurface::fill_matrix(
       }
       Vector<ComplexNumber> cell_rhs(cell_dofs.size());
       cell_rhs = 0;
-      constraints->distribute_local_to_global(cell_matrix, cell_rhs, local_indices, *matrix, *rhs);
+        constraints->distribute_local_to_global(cell_matrix, cell_rhs, local_indices, *matrix, *rhs);
       it2++;
       cell_counter++;
     }
@@ -457,7 +456,7 @@ void HSIESurface::fill_matrix(
     IndexSet is;
     is.set_size(lowest_index + dof_counter);
     is.add_range(lowest_index, lowest_index + dof_counter);
-    fill_matrix(mass_matrix, stiffness_matrix, rhs, is, in_V0, constraints); 
+    fill_matrix(mass_matrix, stiffness_matrix, rhs, is, surfaces_hsie, constraints);
   }
 }
 
@@ -466,7 +465,6 @@ void HSIESurface::fill_matrix(
     dealii::PETScWrappers::SparseMatrix *mass_matrix, dealii::PETScWrappers::SparseMatrix *stiffness_matrix, NumericVectorDistributed* rhs, 
     dealii::IndexSet global_indices, const Position &in_V0, dealii::AffineConstraints<ComplexNumber> *constraints) {
   if (!is_metal) {
-    set_V0(in_V0);
     HSIEPolynomial::computeDandI(order + 2, k0);
     auto it = dof_h_nedelec.begin();
     auto end = dof_h_nedelec.end();
@@ -488,8 +486,9 @@ void HSIESurface::fill_matrix(
         dofs_per_cell);
     unsigned int cell_counter = 0;
     auto it2 = dof_h_q.begin();
-    JacobianForCell jacobian_for_cell = {V0, b_id, additional_coordinate};
     for (; it != end; ++it) {
+      FaceAngelingData fad = build_fad_for_cell(it);
+      JacobianForCell jacobian_for_cell = {fad, b_id, additional_coordinate};
       cell_mass_matrix = 0;
       cell_stiffness_matrix = 0;
       DofDataVector cell_dofs = this->get_dof_data_for_cell(it, it2);

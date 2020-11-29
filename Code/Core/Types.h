@@ -13,6 +13,8 @@
 #include <deal.II/base/index_set.h>
 #include "../HSIEPreconditioner/DofData.h"
 
+struct RayAngelingData;
+
 using EFieldComponent          = std::complex<double>;
 using EFieldValue              = std::array<EFieldComponent, 3>;
 using DofCount                 = unsigned int;
@@ -36,9 +38,16 @@ using DofDataVector            = std::vector<DofData>;
 using MathExpression           = dealii::Differentiation::SD::Expression;
 using Mesh                     = dealii::Triangulation<3>;
 using MaterialTensor           = dealii::Tensor<2,3,ComplexNumber>;
+using FaceAngelingData         = std::array<RayAngelingData, 4>;
 
 enum LoggingLevel {
   DEBUG_ALL, DEBUG_ONE, PRODUCTION_ALL, PRODUCTION_ONE
+};
+
+struct RayAngelingData {
+  bool is_x_angled = false;
+  bool is_y_angled = false;
+  Position2D position_of_base_point;
 };
 
 struct DofIndexAndOrientationAndPosition {

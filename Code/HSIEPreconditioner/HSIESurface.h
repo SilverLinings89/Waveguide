@@ -63,12 +63,12 @@ public:
   void set_V0(Position);
   void fill_sparsity_pattern(dealii::DynamicSparsityPattern *pattern);
   auto get_dof_data_for_cell(CellIterator2D, CellIterator2D) -> DofDataVector;
-  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::IndexSet, const Position &V0, dealii::AffineConstraints<ComplexNumber> *constraints);
-  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::IndexSet, const Position &V0, dealii::AffineConstraints<ComplexNumber> *constraints);
-  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, DofNumber shift, const Position &V0, dealii::AffineConstraints<ComplexNumber> *constraints);
-  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, DofNumber shift,  const Position &V0, dealii::AffineConstraints<ComplexNumber> *constraints);
-  void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, dealii::IndexSet, const Position &V0, dealii::AffineConstraints<ComplexNumber> *constraints);
-  void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, DofNumber shift,  const Position &V0, dealii::AffineConstraints<ComplexNumber> *constraints);
+  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::IndexSet,  std::array<bool, 6> surfaces_hsie,  dealii::AffineConstraints<ComplexNumber> *constraints);
+  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::IndexSet, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints);
+  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, DofNumber shift, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints);
+  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, DofNumber shift, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints);
+  void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, dealii::IndexSet, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints);
+  void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, DofNumber shift, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints);
   void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, DofNumber shift, dealii::AffineConstraints<ComplexNumber> *constraints);
   void make_hanging_node_constraints(dealii::AffineConstraints<ComplexNumber>*, DofNumber shift);
   auto compute_n_edge_dofs() -> DofCountsStruct;
@@ -105,6 +105,7 @@ public:
       std::vector<DofIndexAndOrientationAndPosition>;
   void clear_user_flags();
   void set_b_id_uses_hsie(unsigned int, bool);
+  auto build_fad_for_cell(CellIterator2D cell) -> FaceAngelingData;
 };
 
 

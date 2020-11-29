@@ -360,12 +360,12 @@ void NonLocalProblem::make_constraints() {
 
 void NonLocalProblem::assemble() {
   print_info("NonLocalProblem::assemble", "Start");
-  Position center = get_center();
+
   get_local_problem()->base_problem.assemble_system(local_indices.nth_index_in_set(0), &constraints, matrix, system_rhs);
   for(unsigned int i = 0; i< 6; i++) {
     print_info("NonLocalProblem::assemble", "assemble surface " + std::to_string(i));
     if(is_hsie_surface[i]) {
-      get_local_problem()->surfaces[i]->fill_matrix(matrix, system_rhs, surface_first_dofs[i], center, &constraints);
+      get_local_problem()->surfaces[i]->fill_matrix(&matrix, system_rhs, surface_first_dofs[i], is_hsie_surface, &constraints);
     }
   }
   MPI_Barrier(GlobalMPI.communicators_by_level[local_level]);

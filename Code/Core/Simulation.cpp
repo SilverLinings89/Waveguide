@@ -40,7 +40,7 @@ void Simulation::prepare() {
 void Simulation::run() {
   print_info("Simulation::run", "Start", true, LoggingLevel::PRODUCTION_ONE);
   if(GlobalParams.Point_Source_Type == 0) {
-    RectangularMode rm = {1.4, 1.2, 14, 12, 1, 0};
+    RectangularMode rm = {2.0, 1.8, 20, 18, 1, 0};
     rm.run();
   }
   mainProblem->assemble();

@@ -12,27 +12,33 @@
 #include "../Helpers/staticfunctions.h"
 #include <vector>
 
-JacobianForCell::JacobianForCell(const Position &in_V0, const BoundaryId &in_bid, double in_additional_component) {
-  reinit(in_V0, in_bid, in_additional_component); 
+JacobianForCell::JacobianForCell(FaceAngelingData &in_fad, const BoundaryId &in_bid, double in_additional_component) {
+  reinit(in_fad, in_bid, in_additional_component); 
 }
 
-void JacobianForCell::reinit(const Position &in_V0, const BoundaryId &in_bid, double in_additional_component) {
-    x                    = {"x"};
-    y                    = {"y"};
-    z                    = {"z"};
-    boundary_id          = in_bid;
-    additional_component = in_additional_component;
-    V0x                  = {"V0x"};
-    V0y                  = {"V0y"};
-    V0z                  = {"V0z"};
-    z0                   = {"z0"};
-    V0                   = split_into_triangulation_and_external_part(in_V0);
-  F[0]                   = x + (z-z0)*(x-V0x);
-  F[1]                   = y + (z-z0)*(y-V0y);
-  F[2]                   = (z-z0)*(z0 - V0z);
-  surface_wide_substitution_map[V0x] = MathExpression(V0.first[0]);
-  surface_wide_substitution_map[V0y] = MathExpression(V0.first[1]);
-  surface_wide_substitution_map[V0z] = MathExpression(V0.second);
+void JacobianForCell::reinit(FaceAngelingData &in_fad, const BoundaryId &in_bid, double in_additional_component) {
+  x                    = {"x"};
+  y                    = {"y"};
+  z                    = {"z"};
+  z0                   = {"z0"};
+  boundary_id          = in_bid;
+  additional_component = in_additional_component;
+  bool all_straight = true;
+  for(unsigned int i = 0; i < 4; i++) {
+    if(!in_fad[i].is_x_angled || !in_fad[i].is_y_angled) {
+      all_straight = false;
+    }
+  }
+  if(all_straight) {
+    F[0]                   = x;
+    F[1]                   = y;
+    F[2]                   = (z-z0);
+  } else {
+    // TODO: This needs to be implemented for PSE-103 
+    F[0]                   = x;
+    F[1]                   = y;
+    F[2]                   = (z-z0);
+  }
   surface_wide_substitution_map[z0]  = MathExpression(in_additional_component);
   for(unsigned int i = 0; i <3; i++) {
     F[i] = F[i].substitute(surface_wide_substitution_map);

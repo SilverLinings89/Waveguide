@@ -240,7 +240,7 @@ void LocalProblem::assemble() {
   base_problem.assemble_system(0, &constraints, matrix, &rhs);
   for (unsigned int surface = 0; surface < 6; surface++) {
     print_info("LocalProblem::assemble", "Fill Surface Block " + std::to_string(surface));
-    surfaces[surface]->fill_matrix(matrix, &rhs, surface_first_dofs[surface],get_center(), &constraints);
+    surfaces[surface]->fill_matrix(matrix, &rhs, surface_first_dofs[surface], is_hsie_surface, &constraints);
   }
   matrix->compress(dealii::VectorOperation::add);
   rhs.compress(dealii::VectorOperation::add);
