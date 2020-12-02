@@ -38,6 +38,8 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("mu in", "1.0", Patterns::Double(), "Mu r inside the material.");
         case_prm.declare_entry("mu out", "1.0", Patterns::Double(), "Mu r outside the material.");
         case_prm.declare_entry("signal amplitude", "1.0", Patterns::Double(), "Amplitude of the input signal or PointSourceField");
+        case_prm.declare_entry("width of waveguide", "2.0", Patterns::Double(), "Width of the Waveguide core.");
+        case_prm.declare_entry("height of waveguide", "1.8", Patterns::Double(), "Height of the Waveguide core.");
     }
     case_prm.leave_subsection();
 }
@@ -77,6 +79,8 @@ Parameters ParameterReader::read_parameters(const std::string run_file,const std
         ret.Mu_R_in_waveguide = case_prm.get_double("mu in");
         ret.Mu_R_outside_waveguide = case_prm.get_double("mu out");
         ret.Amplitude_of_input_signal = case_prm.get_double("signal amplitude");
+        ret.Width_of_waveguide = case_prm.get_double("width of waveguide");
+        ret.Width_of_waveguide = case_prm.get_double("height of waveguide");
     }
 
     return ret;

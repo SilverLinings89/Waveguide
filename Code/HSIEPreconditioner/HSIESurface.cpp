@@ -32,7 +32,9 @@ HSIESurface::HSIESurface(unsigned int in_order,
       fe_nedelec(Inner_Element_Order),
       fe_q(Inner_Element_Order + 1),
       additional_coordinate(
-        in_additional_coordinate) {
+        in_additional_coordinate),
+        epsilon(GlobalParams.Epsilon_R_outside_waveguide),
+        kappa(2.0 * GlobalParams.Pi / GlobalParams.Lambda) {
   is_metal = in_is_metal;
   if (!is_metal) {
     surface_triangulation.copy_triangulation(in_surface_triangulation);
@@ -429,7 +431,7 @@ void HSIESurface::fill_matrix(
           for (unsigned int j = 0; j < cell_dofs.size(); j++) {
             ComplexNumber part =
                 (evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C)
-                + evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
+                + kappa * kappa * epsilon * evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
                 JxW;
               cell_matrix[i][j] += part;
           }
@@ -442,7 +444,7 @@ void HSIESurface::fill_matrix(
       }
       Vector<ComplexNumber> cell_rhs(cell_dofs.size());
       cell_rhs = 0;
-        constraints->distribute_local_to_global(cell_matrix, cell_rhs, local_indices, *matrix, *rhs);
+      constraints->distribute_local_to_global(cell_matrix, cell_rhs, local_indices, *matrix, *rhs);
       it2++;
       cell_counter++;
     }
@@ -573,7 +575,7 @@ void HSIESurface::fill_matrix(
         double JxW = jxw_values[q_point];
         for (unsigned int i = 0; i < cell_dofs.size(); i++) {
           for (unsigned int j = 0; j < cell_dofs.size(); j++) {
-            cell_mass_matrix[i][j] += evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G) * JxW;
+            cell_mass_matrix[i][j] += kappa * kappa * epsilon * evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G) * JxW;
             cell_stiffness_matrix[i][j] += evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C) * JxW;
           }
         }
@@ -705,7 +707,7 @@ void HSIESurface::fill_matrix(
           for (unsigned int j = 0; j < cell_dofs.size(); j++) {
             ComplexNumber part =
                 (evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C)
-                + evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
+                + kappa * kappa * epsilon * evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
                 JxW;
               cell_matrix[i][j] += part;
           }

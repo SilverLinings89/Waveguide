@@ -331,9 +331,16 @@ dealii::Vector<ComplexNumber> LocalProblem::get_local_vector_from_global() {
 
 void LocalProblem::output_results() {
   print_info("LocalProblem::output_results()", "Start");
+  dealii::Vector<double> epsilon(base_problem.triangulation.n_active_cells()); 
+  unsigned int cnt = 0;
+  for(auto it = base_problem.triangulation.begin_active(); it != base_problem.triangulation.end(); it++) {
+    epsilon[cnt] = (Geometry.math_coordinate_in_waveguide(it->center())) ? GlobalParams.Epsilon_R_in_waveguide : GlobalParams.Epsilon_R_outside_waveguide;
+    cnt++;
+  }
   dealii::DataOut<3> data_out;
   dealii::Vector<ComplexNumber> output_solution = get_local_vector_from_global();
   data_out.attach_dof_handler(base_problem.dof_handler);
+  data_out.add_data_vector(epsilon,"Epsilon", dealii::DataOut_DoFData<DoFHandler<3, 3>, 3, 3>::type_cell_data);
   data_out.add_data_vector(output_solution, "Solution");
   std::ofstream outputvtu("solution_" + std::to_string(GlobalParams.MPI_Rank) + ".vtu");
   dealii::Vector<double> cellwise_error(base_problem.triangulation.n_active_cells());

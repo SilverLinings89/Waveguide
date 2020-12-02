@@ -134,10 +134,10 @@ auto NumericProblem::get_outer_constrained_faces() -> std::set<unsigned int> {
 }
 
 void NumericProblem::make_constraints() {
-  double inner_cell_radius = 1.0/11.0;
-  constrained_cells = get_central_cells(inner_cell_radius+0.0001);
-  outer_constrained_faces = get_outer_constrained_faces();
-  print_info("NumericProblem::make_constraints", "Constrained cell count: " + std::to_string(constrained_cells.size()), false, LoggingLevel::PRODUCTION_ALL);
+  // double inner_cell_radius = 1.0/11.0;
+  // constrained_cells = get_central_cells(inner_cell_radius+0.0001);
+  // outer_constrained_faces = get_outer_constrained_faces();
+  // print_info("NumericProblem::make_constraints", "Constrained cell count: " + std::to_string(constrained_cells.size()), false, LoggingLevel::PRODUCTION_ALL);
   std::vector<DofCount> local_line_indices(fe.dofs_per_line);
   std::vector<DofCount> local_face_indices(fe.dofs_per_face);
   local_dof_indices.set_size(n_dofs);
@@ -145,6 +145,7 @@ void NumericProblem::make_constraints() {
   local_constraints.reinit(local_dof_indices);
 
   // Constrain the outer dofs
+  /**
   for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
     if(constrained_cells.contains(it->id().to_string())) {
       for (unsigned int face = 0; face < dealii::GeometryInfo<3>::faces_per_cell; face++) {
@@ -174,6 +175,12 @@ void NumericProblem::make_constraints() {
       }
     }
   }
+  **/
+  if(GlobalParams.Index_in_z_direction == 0) {
+    ExactSolution es = {true, false};
+    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 4, local_constraints);
+  }
+
   local_constraints_made = true;
 }
 
@@ -317,13 +324,13 @@ std::vector<DofIndexAndOrientationAndPosition> NumericProblem::get_surface_dof_v
   return ret;
 }
 
-struct CellwiseAssemblyData {
+struct CellwiseAssemblyDataNP {
   QGauss<3> quadrature_formula; 
   FEValues<3> fe_values;
   std::vector<Position> quadrature_points;
   const unsigned int dofs_per_cell;
   const unsigned int n_q_points;
-  FullMatrix<ComplexNumber> cell_matrix_real;
+  FullMatrix<ComplexNumber> cell_matrix;
   const double eps_in;
   const double eps_out;
   const double mu_zero;
@@ -336,14 +343,14 @@ struct CellwiseAssemblyData {
   DofHandler3D::active_cell_iterator end_cell;
   const Position bounded_cell;
   const FEValuesExtractors::Vector fe_field;
-  CellwiseAssemblyData(dealii::FE_NedelecSZ<3> * fe, DofHandler3D * dof_handler):
+  CellwiseAssemblyDataNP(dealii::FE_NedelecSZ<3> * fe, DofHandler3D * dof_handler):
   quadrature_formula(GlobalParams.Nedelec_element_order + 2),
   fe_values(*fe, quadrature_formula,
                         update_values | update_gradients | update_JxW_values |
                             update_quadrature_points),
   dofs_per_cell(fe->dofs_per_cell),
   n_q_points(quadrature_formula.size()),
-  cell_matrix_real(dofs_per_cell,dofs_per_cell),
+  cell_matrix(dofs_per_cell,dofs_per_cell),
   eps_in(GlobalParams.Epsilon_R_in_waveguide),
   eps_out(GlobalParams.Epsilon_R_outside_waveguide),
   mu_zero(1.0),
@@ -368,7 +375,7 @@ struct CellwiseAssemblyData {
 
   void prepare_for_current_q_index(unsigned int q_index) {
     mu = invert(transformation);
-
+    const double eps_kappa_2 = (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])? eps_in : eps_out) * 4 * GlobalParams.Pi * GlobalParams.Pi;
     if (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])) {
       epsilon = transformation * eps_in;
     } else {
@@ -388,8 +395,8 @@ struct CellwiseAssemblyData {
         J_Curl = fe_values[fe_field].curl(j, q_index);
         J_Val = fe_values[fe_field].value(j, q_index);
 
-        cell_matrix_real[i][j] += I_Curl * Conjugate_Vector(J_Curl)* JxW
-            - ( I_Val * Conjugate_Vector(J_Val)) * JxW;
+        cell_matrix[i][j] += I_Curl * Conjugate_Vector(J_Curl)* JxW
+            - (eps_kappa_2 * ( I_Val * Conjugate_Vector(J_Val)) * JxW);
       }
     }
   }
@@ -411,7 +418,7 @@ void NumericProblem::assemble_system(unsigned int shift,
     dealii::AffineConstraints<ComplexNumber> * constraints,
     dealii::PETScWrappers::SparseMatrix *matrix,
     NumericVectorDistributed *rhs) {
-  CellwiseAssemblyData cell_data(&fe, &dof_handler);
+  CellwiseAssemblyDataNP cell_data(&fe, &dof_handler);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
     cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
     for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
@@ -424,10 +431,10 @@ void NumericProblem::assemble_system(unsigned int shift,
     IndexSet input_dofs_local_set(fe.dofs_per_cell);
     std::vector<Position> input_dof_centers(fe.dofs_per_cell);
     std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
-    cell_data.cell_matrix_real = 0;
+    cell_data.cell_matrix = 0;
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
       cell_data.prepare_for_current_q_index(q_index);
-      constraints->distribute_local_to_global(cell_data.cell_matrix_real, cell_data.cell_rhs,
+      constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs,
         cell_data.local_dof_indices,*matrix, *rhs, false);
     }
   }
@@ -439,7 +446,7 @@ void NumericProblem::assemble_system(unsigned int shift,
     dealii::AffineConstraints<ComplexNumber> * constraints,
     dealii::PETScWrappers::MPI::SparseMatrix * matrix,
     NumericVectorDistributed *rhs) {
-  CellwiseAssemblyData cell_data(&fe, &dof_handler);
+  CellwiseAssemblyDataNP cell_data(&fe, &dof_handler);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
     cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
     for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
@@ -452,14 +459,14 @@ void NumericProblem::assemble_system(unsigned int shift,
     IndexSet input_dofs_local_set(fe.dofs_per_cell);
     std::vector<Position> input_dof_centers(fe.dofs_per_cell);
     std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
-    cell_data.cell_matrix_real = 0;
+    cell_data.cell_matrix = 0;
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
       cell_data.prepare_for_current_q_index(q_index);
-      constraints->distribute_local_to_global(cell_data.cell_matrix_real, cell_data.cell_rhs,
+      constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs,
           cell_data.local_dof_indices,*matrix, *rhs, false);
     }
   }
-  // matrix->compress(dealii::VectorOperation::add);
+  matrix->compress(dealii::VectorOperation::add);
   // write_matrix_and_rhs_metrics(matrix, rhs);
 }
 

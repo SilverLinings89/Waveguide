@@ -31,7 +31,7 @@
  * \date 23.11.2015
  */
 
-class ExactSolution: public dealii::Function<3, double> {
+class ExactSolution: public dealii::Function<3, ComplexNumber> {
  private:
   bool is_rectangular;
   bool is_dual;
@@ -57,7 +57,7 @@ class ExactSolution: public dealii::Function<3, double> {
    * components 0 to 2 are the real parts of the solution-vector and the
    * components 3-5 are the imaginary parts.
    */
-  double value(const Position &p, const unsigned int component) const;
+  ComplexNumber value(const Position &p, const unsigned int component) const;
 
   /**
    * This function is the one that gets called from external contexts and calls
@@ -70,7 +70,7 @@ class ExactSolution: public dealii::Function<3, double> {
    */
 
   void vector_value(const Position &p,
-      dealii::Vector<double> &value) const;
+      dealii::Vector<ComplexNumber> &value) const;
 
   std::vector<std::string> split(std::string) const;
 

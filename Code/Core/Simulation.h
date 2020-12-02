@@ -3,9 +3,11 @@
 #include "../Helpers/GeometryManager.h"
 #include "../Helpers/Parameters.h"
 #include "../Hierarchy/NonLocalProblem.h"
+#include "../ModalComputations/RectangularMode.h"
 
 class Simulation {
   HierarchicalProblem *mainProblem;
+  RectangularMode * rmProblem;
 
  public:
   Simulation(const std::string run_file,const std::string case_file);

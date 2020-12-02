@@ -25,6 +25,8 @@ class HSIESurface {
   dealii::FE_NedelecSZ<2> fe_nedelec;
   dealii::FE_Q<2> fe_q;
   ComplexNumber k0;
+  const double epsilon;
+  const double kappa;
   dealii::Triangulation<2> surface_triangulation;
   std::array<std::array<bool,6>,4> edge_ownership_by_level_and_id;
   std::vector<unsigned int> corner_cell_ids;

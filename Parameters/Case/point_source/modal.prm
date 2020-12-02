@@ -3,8 +3,8 @@ subsection Case parameters
     set geometry size x = 2.0
     set geometry size y = 2.0
     set geometry size z = 2.0
-    set epsilon in = 1.53
-    set epsilon out = 1.36
+    set epsilon in = 2.3409
+    set epsilon out = 1.8496
     set mu in = 1.0
     set mu out = 1.0
     set signal amplitude = 1.0

@@ -33,15 +33,15 @@ struct Parameters {
 
     double Amplitude_of_input_signal = 1.0;
 
-    double Width_of_waveguide; // x-direction
+    double Width_of_waveguide = 2.0; // x-direction
 
-    double Height_of_waveguide; // y-direction
+    double Height_of_waveguide = 1.8; // y-direction
 
     double Horizontal_displacement_of_waveguide = 0; // x-direction
 
     double Vertical_displacement_of_waveguide = 0;
 
-    double Epsilon_R_in_waveguide = 1.0;
+    double Epsilon_R_in_waveguide = 7.0;
 
     double Epsilon_R_outside_waveguide = 1.0;
 
@@ -95,7 +95,7 @@ struct Parameters {
 
     double Omega = 1.0;
 
-    double Lambda = 1.0;
+    double Lambda = 1.55;
 
     double Waveguide_value_V = 1.0;
 

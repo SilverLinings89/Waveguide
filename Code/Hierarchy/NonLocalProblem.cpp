@@ -270,7 +270,7 @@ void NonLocalProblem::make_constraints_for_non_hsie_surface(unsigned int surface
   for(unsigned int i = 0; i < n_dofs_on_surface; i++) {
     constraints.add_line(from_inner_problem[i].index);
     double val = 1;
-    if(orientations[i] == from_inner_problem[i].orientation) {
+    if(orientations[i] != from_inner_problem[i].orientation) {
       val = -1;
     }
     constraints.add_entry(from_inner_problem[i].index, indices[i], val);
@@ -398,7 +398,14 @@ void NonLocalProblem::propagate_up(){
   const unsigned int count = get_local_problem()->base_problem.n_dofs;
   // Propagate the inner values. HSIE-dofs can be added later.
   for(unsigned int i = 0; i < count; i++) {
-    solution(first_own_index + i) = child->solution(child->first_own_index + i);
+    solution[first_own_index + i] = child->solution(child->first_own_index + i);
+  }
+  for(unsigned int i = 0; i < 6; i++) {
+    if(child->is_hsie_surface[i] && is_hsie_surface[i]) {
+      for(unsigned int j = 0; j < get_local_problem()->surfaces[i]->dof_counter; j++) {
+        solution[surface_first_dofs[i] + j] = child->solution(child->surface_first_dofs[i] + j);
+      }
+    }
   }
 }
 

@@ -1,47 +1,102 @@
 #include "RectangularMode.h"
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include "../Helpers/staticfunctions.h"
+#include <deal.II/lac/petsc_compatibility.h>
+#include <deal.II/lac/petsc_solver.h>
 #include <deal.II/lac/slepc_solver.h>
 
 using namespace dealii;
 
-RectangularMode::RectangularMode(double x_width_waveguide,
-                                 double y_width_waveguide,
-                                 double x_width_domain, double y_width_domain,
-                                 double beta, unsigned int order)
-    : FEM_order(order),
-      fe(order),
+RectangularMode::RectangularMode()
+    : fe(GlobalParams.Nedelec_element_order),
       triangulation(Triangulation<3>::MeshSmoothing(Triangulation<3>::none)),
-      dof_handler(triangulation)
+      dof_handler(triangulation),
+      layer_thickness(0.05),
+      lambda(1.55)
 {
-  this->x_width_domain = x_width_domain;
-  this->y_width_domain = y_width_domain;
-  this->x_width_waveguide = x_width_waveguide;
-  this->y_width_waveguide = y_width_waveguide;
-  this->beta = beta;
 }
 
 void RectangularMode::run() {
   make_mesh();
+  SortDofsDownstream();
   make_boundary_conditions();
   assemble_system();
+  solve();
   output_solution();
 }
 
 void RectangularMode::make_mesh() {
-  Position p1(-x_width_domain / 2.0, -y_width_domain / 2.0, -0.01);
-  Position p2(x_width_domain / 2.0, y_width_domain / 2.0, 0.01);
+  Position p1(-GlobalParams.Geometry_Size_X / 2.0, -GlobalParams.Geometry_Size_Y / 2.0, 0);
+  Position p2(GlobalParams.Geometry_Size_X / 2.0, GlobalParams.Geometry_Size_Y / 2.0, layer_thickness);
   std::vector<unsigned int> repetitions;
-  repetitions.push_back(30);
-  repetitions.push_back(30);
+  repetitions.push_back(20);
+  repetitions.push_back(20);
   repetitions.push_back(1);
   GridGenerator::subdivided_hyper_rectangle(triangulation, repetitions, p1, p2, true);
   dof_handler.distribute_dofs(fe);
 }
 
+void RectangularMode::SortDofsDownstream() {
+  print_info("RectangularProblem::SortDofsDownstream", "Start");
+  triangulation.clear_user_flags();
+  std::vector<std::pair<DofNumber, Position>> current;
+  std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
+  std::set<DofNumber> line_set;
+  std::vector<DofNumber> local_face_dofs(fe.dofs_per_face);
+  std::set<DofNumber> face_set;
+  std::vector<DofNumber> local_cell_dofs(fe.dofs_per_cell);
+  std::set<DofNumber> cell_set;
+  auto cell = dof_handler.begin_active();
+  auto endc = dof_handler.end();
+  for (; cell != endc; ++cell) {
+    cell->get_dof_indices(local_cell_dofs);
+    cell_set.clear();
+    cell_set.insert(local_cell_dofs.begin(), local_cell_dofs.end());
+    for(unsigned int face = 0; face < GeometryInfo<3>::faces_per_cell; face++) {
+      cell->face(face)->get_dof_indices(local_face_dofs);
+      face_set.clear();
+      face_set.insert(local_face_dofs.begin(), local_face_dofs.end());
+      for(auto firstit : face_set) {
+        cell_set.erase(firstit);
+      }
+      for(unsigned int line = 0; line < GeometryInfo<3>::lines_per_face; line++) {
+        cell->face(face)->line(line)->get_dof_indices(local_line_dofs);
+        line_set.clear();
+        line_set.insert(local_line_dofs.begin(), local_line_dofs.end());
+        for(auto firstit : line_set) {
+          face_set.erase(firstit);
+        }
+        if(!cell->face(face)->line(line)->user_flag_set()){
+          for(auto dof: line_set) {
+            current.emplace_back(dof, cell->face(face)->line(line)->center());
+          }
+          cell->face(face)->line(line)->set_user_flag();
+        }
+      }
+      if(!cell->face(face)->user_flag_set()){
+        for(auto dof: face_set) {
+          current.emplace_back(dof, cell->face(face)->center());
+        }
+        cell->face(face)->set_user_flag();
+      }
+    }
+    for(auto dof: cell_set) {
+      current.emplace_back(dof, cell->center());
+    }
+  }
+  std::sort(current.begin(), current.end(), compareDofBaseData);
+  std::vector<unsigned int> new_numbering;
+  new_numbering.resize(current.size());
+  for (unsigned int i = 0; i < current.size(); i++) {
+    new_numbering[current[i].first] = i;
+  }
+  dof_handler.renumber_dofs(new_numbering);
+  print_info("RectangularProblem::SortDofsDownstream", "End");
+}
+
 void RectangularMode::make_boundary_conditions() {
-  ComplexNumber factor = std::exp(0.02 / (1.550/sqrt(1.53)) * 2*GlobalParams.Pi * ComplexNumber(0.0,1.0)); 
-  DoFTools::make_periodicity_constraints(dof_handler, 4, 5, 2, periodic_constraints, dealii::ComponentMask() ,factor);
+  print_info("RectangularProblem::make_boundary_conditions", "Start");
+  
   for (unsigned int side = 0; side < 4; side++) {      
     dealii::Triangulation<2, 3> temp_triangulation;
     const unsigned int component = side / 2;
@@ -89,7 +144,17 @@ void RectangularMode::make_boundary_conditions() {
     surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(10, std::ref(surf_tria), side, 0, GlobalParams.kappa_0, additional_coorindate));
     surfaces[side]->initialize();
   }
-
+  n_dofs_total = dof_handler.n_dofs();
+  for(unsigned int i = 0; i < 4; i++) {
+    n_dofs_total += surfaces[i]->dof_counter;
+  }
+  dealii::IndexSet is(n_dofs_total);
+  constraints.reinit(is);
+  is.add_range(0,n_dofs_total);
+  periodic_constraints.reinit(is);
+  ComplexNumber factor = std::exp(layer_thickness / (lambda/std::sqrt(GlobalParams.Epsilon_R_in_waveguide)) * 2*GlobalParams.Pi * ComplexNumber(0.0,1.0)); 
+  DoFTools::make_periodicity_constraints(dof_handler, 4, 5, 2, periodic_constraints, dealii::ComponentMask() ,factor);
+  std::cout << "N Constraints: " << periodic_constraints.n_constraints() << std::endl;
   surface_first_dofs.clear();
   DofCount dc = dof_handler.n_dofs();
   surface_first_dofs.push_back(dc);
@@ -100,13 +165,13 @@ void RectangularMode::make_boundary_conditions() {
     }
   }
 
-  constraints.merge(periodic_constraints);
+  constraints.merge(periodic_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::no_conflicts_allowed, true);
   for(unsigned int surf_index = 0; surf_index < 4; surf_index++) {
     std::vector<DofIndexAndOrientationAndPosition> side_4 = surfaces[surf_index]->get_dof_association_by_boundary_id(4);
     std::vector<DofIndexAndOrientationAndPosition> side_5 = surfaces[surf_index]->get_dof_association_by_boundary_id(5);
     for(unsigned int i = 0; i < side_4.size(); i++) {
       constraints.add_line(side_4[i].index+surface_first_dofs[surf_index]);
-      constraints.add_entry(side_4[i].index+surface_first_dofs[surf_index], side_5[i].index + surface_first_dofs[surf_index], - factor);
+      constraints.add_entry(side_4[i].index+surface_first_dofs[surf_index], side_5[i].index + surface_first_dofs[surf_index], factor);
     }
   }
   for (unsigned int surface = 0; surface < 4; surface++) {
@@ -135,7 +200,59 @@ void RectangularMode::make_boundary_conditions() {
     }
   }
 
+  dealii::AffineConstraints<ComplexNumber> surface_to_surface_constraints;
+  for (unsigned int i = 0; i < 4; i++) {
+    for (unsigned int j = i + 1; j < 4; j++) {
+      surface_to_surface_constraints.reinit(is);
+      bool opposing = ((i % 2) == 0) && (i + 1 == j);
+      if (!opposing) {
+        std::vector<DofIndexAndOrientationAndPosition> lower_face_dofs =
+            surfaces[i]->get_dof_association_by_boundary_id(j);
+        std::vector<DofIndexAndOrientationAndPosition> upper_face_dofs =
+            surfaces[j]->get_dof_association_by_boundary_id(i);
+        if (lower_face_dofs.size() != upper_face_dofs.size()) {
+          std::cout << "ERROR: There was a edge dof count error!" << std::endl
+              << "Surface " << i << " offers " << lower_face_dofs.size()
+              << " dofs, " << j << " offers " << upper_face_dofs.size() << "."
+              << std::endl;
+        }
+        for (unsigned int dof = 0; dof < lower_face_dofs.size(); dof++) {
+          if (!areDofsClose(lower_face_dofs[dof], upper_face_dofs[dof])) {
+            std::cout << "Error in face to face_coupling. Positions are lower: "
+                << lower_face_dofs[dof].position << " and upper: "
+                << upper_face_dofs[dof].position << std::endl;
+          }
+          unsigned int dof_a = lower_face_dofs[dof].index
+              + surface_first_dofs[i];
+          unsigned int dof_b = upper_face_dofs[dof].index
+              + surface_first_dofs[j];
+          ComplexNumber value = { 0, 0 };
+          if (lower_face_dofs[dof].orientation
+              == upper_face_dofs[dof].orientation) {
+            value.real(1.0);
+          } else {
+            value.real(-1.0);
+          }
+          surface_to_surface_constraints.add_line(dof_a);
+          surface_to_surface_constraints.add_entry(dof_a, dof_b, value);
+        }
+      }
+      constraints.merge(surface_to_surface_constraints,
+        dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
+    }
+  }
+  
+  /**
+  auto it = dealii::GridTools::find_active_cell_around_point(dof_handler, Position(GlobalParams.Width_of_waveguide/2.0,GlobalParams.Height_of_waveguide/2.0,0));
+  std::vector<DofNumber> local_indices(fe.dofs_per_cell);
+  it->get_dof_indices(local_indices);
+  unsigned int lowest_dof = local_indices[0];
+  print_info("Set value: ", lowest_dof, false, LoggingLevel::PRODUCTION_ONE);
+  constraints.add_line(lowest_dof);
+  constraints.set_inhomogeneity(lowest_dof, ComplexNumber(1.0, 0.0));
+  **/
   constraints.close();
+  print_info("RectangularProblem::make_boundary_conditions", "End");
 }
 
 std::vector<DofIndexAndOrientationAndPosition> RectangularMode::get_surface_dof_vector_for_boundary_id(
@@ -208,17 +325,16 @@ struct CellwiseAssemblyData {
   const unsigned int n_q_points;
   FullMatrix<ComplexNumber> cell_mass_matrix;
   FullMatrix<ComplexNumber> cell_stiffness_matrix;
+  dealii::Vector<ComplexNumber> cell_rhs;
   const double eps_in;
   const double eps_out;
   const double mu_zero;
-  Vector<ComplexNumber> cell_rhs;
   MaterialTensor transformation;
   MaterialTensor epsilon;
   MaterialTensor mu;
   std::vector<DofNumber> local_dof_indices;
   DofHandler3D::active_cell_iterator cell;
   DofHandler3D::active_cell_iterator end_cell;
-  const Position bounded_cell;
   const FEValuesExtractors::Vector fe_field;
   CellwiseAssemblyData(dealii::FE_NedelecSZ<3> * fe, DofHandler3D * dof_handler):
   quadrature_formula(GlobalParams.Nedelec_element_order + 2),
@@ -227,37 +343,23 @@ struct CellwiseAssemblyData {
   n_q_points(quadrature_formula.size()),
   cell_mass_matrix(dofs_per_cell,dofs_per_cell),
   cell_stiffness_matrix(dofs_per_cell,dofs_per_cell),
+  cell_rhs(dofs_per_cell),
   eps_in(GlobalParams.Epsilon_R_in_waveguide),
   eps_out(GlobalParams.Epsilon_R_outside_waveguide),
   mu_zero(1.0),
-  cell_rhs(dofs_per_cell),
   local_dof_indices(dofs_per_cell),
-  bounded_cell(0.0,0.0,0.0),
   fe_field(0)
   {
-    cell_rhs = 0;
-    for (unsigned int i = 0; i < 3; i++) {
-      for (unsigned int j = 0; j < 3; j++) {
-        if (i == j) {
-          transformation[i][j] = ComplexNumber(1, 0);
-        } else {
-          transformation[i][j] = ComplexNumber(0, 0);
-        }
-      }
-    }
     cell = dof_handler->begin_active();
     end_cell = dof_handler->end();
   };
 
   void prepare_for_current_q_index(unsigned int q_index) {
-    mu = invert(transformation);
-
-    if (std::abs(quadrature_points[q_index][0]) < 1.0 && std::abs(quadrature_points[q_index][1]) < 0.9 ) {
-      epsilon = transformation * eps_in;
-    } else {
-      epsilon = transformation * eps_out;
-    }
-
+    cell_rhs = 0;
+    double eps_kappa_2 = 4 * GlobalParams.Pi * GlobalParams.Pi / (GlobalParams.Lambda*GlobalParams.Lambda);
+    double eps = RectangularMode::compute_epsilon_for_Position(quadrature_points[q_index]);
+    eps_kappa_2 *= eps;
+    epsilon = transformation * eps;
     const double JxW = fe_values.JxW(q_index);
     for (unsigned int i = 0; i < dofs_per_cell; i++) {
       Tensor<1, 3, ComplexNumber> I_Curl;
@@ -271,7 +373,7 @@ struct CellwiseAssemblyData {
         J_Curl = fe_values[fe_field].curl(j, q_index);
         J_Val = fe_values[fe_field].value(j, q_index);
         cell_stiffness_matrix[i][j] += I_Curl * Conjugate_Vector(J_Curl)* JxW;
-        cell_mass_matrix[i][j] += - ( I_Val * Conjugate_Vector(J_Val)) * JxW;
+        cell_mass_matrix[i][j] += ( I_Val * Conjugate_Vector(J_Val)) * JxW * eps_kappa_2;
       }
     }
   }
@@ -290,11 +392,8 @@ struct CellwiseAssemblyData {
 };
 
 void RectangularMode::assemble_system() {
-  n_dofs_total = dof_handler.n_dofs();
-  for(unsigned int i = 0; i < 4; i++) {
-    n_dofs_total += surfaces[i]->dof_counter;
-  }
-
+  print_info("RectangularProblem::assemble_system", "Start");
+  std::cout << "Epsilon: " << GlobalParams.Epsilon_R_in_waveguide << std::endl;
   rhs.reinit(MPI_COMM_SELF, n_dofs_total, n_dofs_total, false);
   DynamicSparsityPattern dsp(n_dofs_total, n_dofs_total);
   auto end = dof_handler.end();
@@ -314,13 +413,8 @@ void RectangularMode::assemble_system() {
   CellwiseAssemblyData cell_data(&fe, &dof_handler);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
     cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
-    cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
     cell_data.fe_values.reinit(cell_data.cell);
     cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
-    std::vector<types::global_dof_index> input_dofs(fe.dofs_per_line);
-    IndexSet input_dofs_local_set(fe.dofs_per_cell);
-    std::vector<Position> input_dof_centers(fe.dofs_per_cell);
-    std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
     cell_data.cell_mass_matrix = 0;
     cell_data.cell_stiffness_matrix = 0;
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
@@ -335,35 +429,58 @@ void RectangularMode::assemble_system() {
   }
   mass_matrix.compress(dealii::VectorOperation::add);
   stiffness_matrix.compress(dealii::VectorOperation::add);
+  rhs.compress(dealii::VectorOperation::add);
+  print_info("RectangularProblem::make_boundary_conditions", "End");
+}
 
-  SolverControl                    solver_control(dof_handler.n_dofs(), 1e-9);
-  SLEPcWrappers::SolverKrylovSchur eigensolver(solver_control);
-  std::vector<ComplexNumber>                     eigenvalues;
-  std::vector<PETScWrappers::MPI::Vector> eigenfunctions;
+void RectangularMode::solve() {
+  print_info("RectangularProblem::solve", "Start");
+  dealii::SolverControl                    solver_control(n_dofs_total, 1e-6);
+  dealii::SLEPcWrappers::SolverKrylovSchur eigensolver(solver_control);
   IndexSet own_dofs(n_dofs_total);
   own_dofs.add_range(0, n_dofs_total);
-  const unsigned int efuns = 1;
-  eigenfunctions.resize(efuns);
-  for (unsigned int i = 0; i < efuns; ++i)
+  eigenfunctions.resize(n_eigenfunctions);
+  for (unsigned int i = 0; i < n_eigenfunctions; ++i)
     eigenfunctions[i].reinit(own_dofs, MPI_COMM_SELF);
-  eigenvalues.resize(efuns);
+  eigenvalues.resize(n_eigenfunctions);
   eigensolver.set_which_eigenpairs(EPS_SMALLEST_MAGNITUDE);
   eigensolver.set_problem_type(EPS_GNHEP);
-  if(mass_matrix.is_hermitian()) std::cout << "Mass Matrix is hermitian" << std::endl;
-  if(stiffness_matrix.is_hermitian()) std::cout << "Stiffness Matrix is hermitian" << std::endl;
-  std::cout << "Starting solve with " << std::to_string(n_dofs_total) << " dofs." << std::endl;
+  print_info("RectangularProblem::solve", "Starting solution for a system with " + std::to_string(n_dofs_total) + " degrees of freedom.");
   eigensolver.solve(stiffness_matrix,
                     mass_matrix,
                     eigenvalues,
                     eigenfunctions,
-                    eigenfunctions.size());
-  std::cout << "Largest eigenvalue: " << std::to_string(eigenvalues[0].real()) << " " << std::to_string(eigenvalues[0].imag()) << std::endl;
+                    n_eigenfunctions);
+  for(unsigned int i =0 ; i < n_eigenfunctions; i++) {
+    // constraints.distribute(eigenfunctions[0]);
+    eigenfunctions[i] /= eigenfunctions[i].linfty_norm();
+  }
+  print_info("RectangularProblem::solve", "End");
+}
+
+double RectangularMode::compute_epsilon_for_Position(Position in_p) {
+  double ret = 0; 
+  if (std::abs(in_p[0]) < GlobalParams.Width_of_waveguide/2.0 && std::abs(in_p[1]) < GlobalParams.Height_of_waveguide/2.0 ) {
+    ret = GlobalParams.Epsilon_R_in_waveguide;
+  } else {
+    ret = GlobalParams.Epsilon_R_outside_waveguide;
+  }
+  return ret;
+}
+
+void RectangularMode::output_solution(){
+  dealii::Vector<double> epsilon(triangulation.n_active_cells()); 
+  unsigned int cnt = 0;
+  for(auto it = triangulation.begin_active(); it != triangulation.end(); it++) {
+    epsilon[cnt] = compute_epsilon_for_Position(it->center());
+    cnt++;
+  }
   DataOut<3> data_out;
   data_out.attach_dof_handler(dof_handler);
   std::vector<dealii::Vector<ComplexNumber>> eigenfunctions_small;
-  eigenfunctions_small.resize(efuns);
-  for(unsigned int i = 0; i < efuns; i++){
-    std::cout << eigenvalues[i] << std::endl;
+  eigenfunctions_small.resize(n_eigenfunctions);
+  data_out.add_data_vector(epsilon,"Epsilon", dealii::DataOut_DoFData<DoFHandler<3, 3>, 3, 3>::type_cell_data);
+  for(unsigned int i = 0; i < n_eigenfunctions; i++){
     eigenfunctions_small[i].reinit(dof_handler.n_dofs());
     for(unsigned int element = 0; element < dof_handler.n_dofs(); element++) {
       eigenfunctions_small[i][element] = eigenfunctions[i][element];
@@ -373,9 +490,5 @@ void RectangularMode::assemble_system() {
   data_out.build_patches();
   std::ofstream output("eigenvalues.vtu");
   data_out.write_vtu(output);
-}
-
-void RectangularMode::output_solution(){
-
 }
 

@@ -18,6 +18,8 @@
 
 Simulation::Simulation(const std::string run_file,const std::string case_file) {
   initialize_global_variables(run_file, case_file);
+  create_output_directory();
+  prepare_transformed_geometry();
 }
 
 Simulation::~Simulation() {
@@ -26,31 +28,32 @@ Simulation::~Simulation() {
 
 void Simulation::prepare() {
   print_info("Simulation::prepare", "Start", true, LoggingLevel::DEBUG_ONE);
-  create_output_directory();
-  prepare_transformed_geometry();
-  if (GlobalParams.NumberProcesses > 1) {
-    mainProblem = new NonLocalProblem(GlobalParams.HSIE_SWEEPING_LEVEL);
+  if(GlobalParams.Point_Source_Type == 0) {
+    rmProblem = new RectangularMode();
   } else {
-    mainProblem = new LocalProblem();
+    if (GlobalParams.NumberProcesses > 1) {
+      mainProblem = new NonLocalProblem(GlobalParams.HSIE_SWEEPING_LEVEL);
+    } else {
+      mainProblem = new LocalProblem();
+    }
+    mainProblem->initialize();
   }
-  mainProblem->initialize();
   print_info("Simulation::prepare", "End", true, LoggingLevel::DEBUG_ONE);
 }
 
 void Simulation::run() {
   print_info("Simulation::run", "Start", true, LoggingLevel::PRODUCTION_ONE);
   if(GlobalParams.Point_Source_Type == 0) {
-    RectangularMode rm = {2.0, 1.8, 20, 18, 1, 0};
-    rm.run();
+    rmProblem->run();
+  } else {
+    mainProblem->assemble();
+
+    mainProblem->compute_solver_factorization();
+    
+    mainProblem->solve();
+    
+    mainProblem->output_results();
   }
-  mainProblem->assemble();
-
-  mainProblem->compute_solver_factorization();
-  
-  mainProblem->solve();
-  
-  mainProblem->output_results();
-
   print_info("Simulation::run", "End", true, LoggingLevel::PRODUCTION_ONE);
 }
 
