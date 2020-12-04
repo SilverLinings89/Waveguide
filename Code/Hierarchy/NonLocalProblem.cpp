@@ -274,9 +274,18 @@ void NonLocalProblem::make_constraints_for_non_hsie_surface(unsigned int surface
 
 void remove_double_entries_from_vector(std::vector<DofNumber> * in_vector) {
   std::sort(in_vector->begin(), in_vector->end());
-  for(unsigned int i = in_vector->size() - 1; i > 0; i--) {
-    if( (*in_vector)[i] == (*in_vector)[i-1]) in_vector->erase(in_vector->begin() + i);
+  std::vector<unsigned int> alternative;
+  if(in_vector->size() > 0) alternative.push_back(in_vector->operator[](0));
+  for(unsigned int i = 1; i < in_vector->size(); i++) {
+    if(! ( in_vector->operator[](i) == in_vector->operator[](i-1))) {
+      alternative.push_back(in_vector->operator[](i));
+    }
   }
+  in_vector->clear();
+  for(unsigned int i = 0; i < alternative.size(); i++) {
+    in_vector->push_back(alternative[i]);
+  }
+  if(in_vector->size() == 0) std::cout << "Logic error detected..." << std::endl;
 }
 
 std::vector<std::vector<DofNumber>> NonLocalProblem::make_sparsity_pattern_for_surface(unsigned int surface, DynamicSparsityPattern * dsp) {
@@ -293,6 +302,7 @@ std::vector<std::vector<DofNumber>> NonLocalProblem::make_sparsity_pattern_for_s
   for( ; it != get_local_problem()->base_problem.dof_handler.end(); it++) {
     if(it->at_boundary(surface)) {
       it->get_dof_indices(local_dofs);
+      for(unsigned int i = 0; i< local_dofs.size(); i++) local_dofs[i] += first_own_index;
       for(unsigned int local_dof_index = 0; local_dof_index < local_dofs.size(); local_dof_index++) {
         for(unsigned int index_in_coupling = 0; index_in_coupling < coupling_dofs[surface].size(); index_in_coupling++) {
           if(coupling_dofs[surface][index_in_coupling].first == local_dofs[local_dof_index]) {
@@ -304,25 +314,25 @@ std::vector<std::vector<DofNumber>> NonLocalProblem::make_sparsity_pattern_for_s
       }
     }
   }
-  std::cout << "A" << std::endl;
+  
   MPI_Barrier(MPI_COMM_WORLD);
   for(auto it : couplings) {
     remove_double_entries_from_vector(&it);
   }
-  std::cout << "Pre" << std::endl;
+
   unsigned long max_n_couplings = 0;
-  for(unsigned int i = 0; i < couplings.size(); i++) max_n_couplings = std::max(max_n_couplings, couplings[i].size());
-  std::cout << "Pre2" << std::endl;
+  for(unsigned int i = 0; i < couplings.size(); i++) {
+    if(max_n_couplings < couplings[i].size()) {
+      max_n_couplings = couplings[i].size();
+    }
+  }
   unsigned long send_temp = max_n_couplings;
   MPI_Barrier(MPI_COMM_WORLD);
-  std::cout << "send_temp: " << send_temp << std::endl;
   MPI_Sendrecv_replace(&send_temp, 1, MPI::UNSIGNED_LONG, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
-  std::cout << "Post 1" << std::endl;
   max_n_couplings = std::max(send_temp, max_n_couplings);
   int* cache = new int[max_n_couplings + 1];
   // for each coupling dof
   for(unsigned int i = 0; i < coupling_dofs[surface].size(); i++) {
-    std::cout << "Post 2" << std::endl;
     cache[0] = coupling_dofs[surface][i].first;
     // for each dof it is coupled to locally
     for(unsigned int j = 1; j < couplings[i].size()+1; j++) {
@@ -330,14 +340,14 @@ std::vector<std::vector<DofNumber>> NonLocalProblem::make_sparsity_pattern_for_s
       cache[j] = couplings[i][j-1];
     }
     // Fill the array with -1
-    for(unsigned int j = couplings[i].size()+1; j < max_n_couplings; j++) {
+    for(unsigned int j = couplings[i].size()+1; j < max_n_couplings+1; j++) {
       cache[j] = -1;
     }
-    std::cout << "Post 3" << std::endl;
     MPI_Sendrecv_replace(&cache, max_n_couplings + 1, MPI::INT, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
     for(unsigned int j = 1; j < max_n_couplings+1; j++) {
       if(cache[j] != -1) {
         for(unsigned int local_dof_index = 0; local_dof_index < couplings[i].size(); local_dof_index++) {
+          std::cout << "execute" << std::endl;
           dsp->add(couplings[i][local_dof_index], cache[j]);
         }
       }
