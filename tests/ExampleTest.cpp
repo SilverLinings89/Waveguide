@@ -205,20 +205,12 @@ TEST_P(TestOrderFixture, AssemblationTestOrder5) {
   double additional_coorindate = temp_it->center()[component];
   HSIESurface surf(5, surf_tria, 0, InnerOrder, k0, additional_coorindate);
   surf.initialize();
-  ASSERT_EQ(surf.compute_dofs_per_vertex(), dofs_per_vertex(5) * 2);
-  ASSERT_EQ(surf.compute_dofs_per_edge(false),
-      dofs_per_edge(5, InnerOrder) * 2);
-  ASSERT_EQ(surf.compute_dofs_per_face(false),
-      dofs_per_face(5, InnerOrder) * 2);
-  ASSERT_EQ(
-      (Cells_Per_Direction + 1) * (Cells_Per_Direction + 1)
-          * surf.compute_dofs_per_vertex(), surf.vertex_dof_data.size());
-  ASSERT_EQ(
-      2 * Cells_Per_Direction * (Cells_Per_Direction + 1)
-          * surf.compute_dofs_per_edge(false), surf.edge_dof_data.size());
-  ASSERT_EQ(
-      Cells_Per_Direction * Cells_Per_Direction
-          * surf.compute_dofs_per_face(false) / 2, surf.face_dof_data.size());
+  ASSERT_EQ(surf.compute_dofs_per_vertex(), dofs_per_vertex(5));
+  ASSERT_EQ(surf.compute_dofs_per_edge(false), dofs_per_edge(5, InnerOrder));
+  ASSERT_EQ(surf.compute_dofs_per_face(false), dofs_per_face(5, InnerOrder));
+  ASSERT_EQ( (Cells_Per_Direction + 1) * (Cells_Per_Direction + 1) * surf.compute_dofs_per_vertex(), surf.vertex_dof_data.size());
+  ASSERT_EQ( 2 * Cells_Per_Direction * (Cells_Per_Direction + 1) * surf.compute_dofs_per_edge(false), surf.edge_dof_data.size());
+  ASSERT_EQ( Cells_Per_Direction * Cells_Per_Direction * surf.compute_dofs_per_face(false), surf.face_dof_data.size());
   ASSERT_TRUE(surf.check_number_of_dofs_for_cell_integrity());
   ASSERT_TRUE(surf.check_dof_assignment_integrity());
 }
@@ -229,31 +221,24 @@ TEST_P(TestOrderFixture, AssemblationTestOrder10) {
   double additional_coorindate = temp_it->center()[component];
   HSIESurface surf(10, surf_tria, 0, InnerOrder, k0, additional_coorindate);
   surf.initialize();
-  ASSERT_EQ(surf.compute_dofs_per_vertex(), dofs_per_vertex(10) * 2);
-  ASSERT_EQ(surf.compute_dofs_per_edge(false),
-      dofs_per_edge(10, InnerOrder) * 2);
-  ASSERT_EQ(surf.compute_dofs_per_face(false),
-      dofs_per_face(10, InnerOrder) * 2);
-  ASSERT_EQ(
-      (Cells_Per_Direction + 1) * (Cells_Per_Direction + 1)
+  ASSERT_EQ(surf.compute_dofs_per_vertex(), dofs_per_vertex(10));
+  ASSERT_EQ(surf.compute_dofs_per_edge(false), dofs_per_edge(10, InnerOrder));
+  ASSERT_EQ(surf.compute_dofs_per_face(false), dofs_per_face(10, InnerOrder));
+  ASSERT_EQ((Cells_Per_Direction + 1) * (Cells_Per_Direction + 1)
           * surf.compute_dofs_per_vertex(), surf.vertex_dof_data.size());
-  ASSERT_EQ(
-      2 * Cells_Per_Direction * (Cells_Per_Direction + 1)
+  ASSERT_EQ(2 * Cells_Per_Direction * (Cells_Per_Direction + 1)
           * surf.compute_dofs_per_edge(false), surf.edge_dof_data.size());
-  ASSERT_EQ(
-      Cells_Per_Direction * Cells_Per_Direction
-          * surf.compute_dofs_per_face(false) / 2, surf.face_dof_data.size());
+  ASSERT_EQ(Cells_Per_Direction * Cells_Per_Direction * surf.compute_dofs_per_face(false), surf.face_dof_data.size());
   ASSERT_TRUE(surf.check_number_of_dofs_for_cell_integrity());
   ASSERT_TRUE(surf.check_dof_assignment_integrity());
 }
 
-// INSTANTIATE_TEST_SUITE_P(HSIESurfaceTests, TestOrderFixture, ::testing::Combine( ::testing::Values(0,1,2), ::testing::Values(5,9)));
-// INSTANTIATE_TEST_SUITE_P(HSIESurfaceTests, TestOrderFixture,
-//     ::testing::Combine(::testing::Values(0), ::testing::Values(5, 9)));
+INSTANTIATE_TEST_SUITE_P(HSIESurfaceTests, TestOrderFixture, ::testing::Combine( ::testing::Values(0,1,2), ::testing::Values(5,9)));
+// INSTANTIATE_TEST_SUITE_P(HSIESurfaceTests, TestOrderFixture, ::testing::Combine(::testing::Values(0), ::testing::Values(5, 9)));
 
-// INSTANTIATE_TEST_SUITE_P(MespPreparationTests, TestDirectionFixture,
-//    ::testing::Combine(::testing::Values(0), ::testing::Values(5, 9),
-//        ::testing::Values(0, 1, 2, 3, 4, 5)));
+INSTANTIATE_TEST_SUITE_P(MespPreparationTests, TestDirectionFixture,
+    ::testing::Combine(::testing::Values(0), ::testing::Values(5, 9),
+        ::testing::Values(0, 1, 2, 3, 4, 5)));
 
 TEST(HSIEPolynomialTests, TestOperatorTplus) {
   std::vector<std::complex<double>> in_a;
@@ -419,4 +404,36 @@ TEST(LAGUERRE_FUNCTION_TESTS, FACTORIAL_3) {
 
 TEST(LAGUERRE_FUNCTION_TESTS, FACTORIAL_5) {
   ASSERT_EQ(LaguerreFunction::factorial(5), 120);
+}
+
+TEST(STATIC_FUNCTION_TEST, COMPARISON_TESTS_1) {
+  Position p1 = {0,0,1};
+  Position p2 = {0,0,0};
+  Position p3 = {0,1,1};
+  Position p4 = {0,1,0};
+  Position p5 = {1,0,1};
+  Position p6 = {1,0,0};
+  Position p7 = {1,1,1};
+  Position p8 = {1,1,0};
+  std::pair<DofNumber, Position> pair_1 = {1,p1};
+  std::pair<DofNumber, Position> pair_2 = {2,p2};
+  std::pair<DofNumber, Position> pair_3 = {3,p3};
+  std::pair<DofNumber, Position> pair_4 = {4,p4};
+  std::pair<DofNumber, Position> pair_5 = {5,p5};
+  std::pair<DofNumber, Position> pair_6 = {6,p6};
+  std::pair<DofNumber, Position> pair_7 = {7,p7};
+  std::pair<DofNumber, Position> pair_8 = {8,p8};
+  std::vector<std::pair<DofNumber, Position>> dofs;
+  dofs.push_back(pair_1);
+  dofs.push_back(pair_3);
+  dofs.push_back(pair_5);
+  dofs.push_back(pair_6);
+  dofs.push_back(pair_7);
+  dofs.push_back(pair_2);
+  dofs.push_back(pair_4);
+  dofs.push_back(pair_8);
+  std::sort(dofs.begin(), dofs.end(), compareDofBaseData);
+  std::string ord = "";
+  for(unsigned int i = 0; i < 8; i++) ord += std::to_string(dofs[i].first);
+  ASSERT_EQ(ord, "26481537");
 }

@@ -26,6 +26,7 @@ class HierarchicalProblem {
   DofIndexData indices;
   NumericVectorDistributed solution;
   NumericVectorDistributed rhs;
+  NumericVectorDistributed rhs_mismatch;
   DofCount n_own_dofs;
   DofNumber first_own_index;
   DofCount dofs_process_above;
@@ -70,6 +71,7 @@ class HierarchicalProblem {
   void set_surface_values_with_orientation_fix(BoundaryId bid, NumericVectorDistributed * vector, std::vector<ComplexNumber> values);
   virtual void compute_solver_factorization() = 0;
   virtual void output_results() = 0;
+  virtual void update_mismatch_vector() = 0;
 };
 
 typedef struct {

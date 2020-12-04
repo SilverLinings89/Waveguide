@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Core/Types.h"
+#include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <mpi.h>
 #include <complex>
 #include "HierarchicalProblem.h"
@@ -24,7 +25,7 @@ private:
   dealii::PETScWrappers::SolverGMRES solver;
   dealii::AffineConstraints<ComplexNumber> constraints;
   NumericVectorDistributed current_solution;
-  std::vector<std::pair<DofNumber, DofNumber>> coupling_dofs;
+  std::array<std::vector<std::pair<DofNumber, DofNumber>>,6> coupling_dofs;
   std::vector<ComplexNumber> cached_lower_values;
   std::vector<ComplexNumber> cached_upper_values;
   ComplexNumber * mpi_cache;
@@ -118,4 +119,8 @@ private:
   void output_results() override;
 
   std::vector<bool> get_incoming_dof_orientations();
+
+  void update_mismatch_vector() override;
+
+  auto make_sparsity_pattern_for_surface(unsigned int, DynamicSparsityPattern *) -> std::vector<std::vector<DofNumber>>;
 };

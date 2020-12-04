@@ -22,6 +22,10 @@ LocalProblem::LocalProblem() :
   MPI_Barrier(MPI_COMM_WORLD);
   print_info("Local Problem", "Done building base problem. Preparing matrix.");
   matrix = new dealii::PETScWrappers::SparseMatrix();
+  for(unsigned int i = 0; i < 6; i++) is_hsie_surface[i] = true;
+  if(GlobalParams.NumberProcesses > 1 && GlobalParams.Index_in_z_direction != GlobalParams.Blocks_in_z_direction - 1) {
+    is_hsie_surface[5] = false;
+  }
 }
 
 LocalProblem::~LocalProblem() {}
@@ -40,7 +44,7 @@ dealii::IndexSet LocalProblem::compute_interface_dof_set(BoundaryId interface_id
         ret.add_index(current[j].index + this->first_own_index);
       }      
     } else {
-      if(i != opposing_interface_id) {
+      if(i != opposing_interface_id && is_hsie_surface[i]) {
         std::vector<DofIndexAndOrientationAndPosition> current = get_local_problem()->surfaces[i]->get_dof_association_by_boundary_id(i);
         for(unsigned int j = 0; j < current.size(); j++) {
           ret.add_index(current[j].index + this->first_own_index);
@@ -54,65 +58,68 @@ dealii::IndexSet LocalProblem::compute_interface_dof_set(BoundaryId interface_id
 void LocalProblem::initialize() {
   print_info("LocalProblem::initialize", "Start");
   for (unsigned int side = 0; side < 6; side++) {
-    dealii::Triangulation<2, 3> temp_triangulation;
-    const unsigned int component = side / 2;
-    double additional_coorindate = 0;
-    bool found = false;
-    for (auto it : base_problem.triangulation.active_cell_iterators()) {
-      if (it->at_boundary(side)) {
-        for (auto i = 0; i < 6 && !found; i++) {
-          if (it->face(i)->boundary_id() == side) {
-            found = true;
-            additional_coorindate = it->face(i)->center()[component];
+    if(is_hsie_surface[side]) {
+      dealii::Triangulation<2, 3> temp_triangulation;
+      const unsigned int component = side / 2;
+      double additional_coorindate = 0;
+      bool found = false;
+      for (auto it : base_problem.triangulation.active_cell_iterators()) {
+        if (it->at_boundary(side)) {
+          for (auto i = 0; i < 6 && !found; i++) {
+            if (it->face(i)->boundary_id() == side) {
+              found = true;
+              additional_coorindate = it->face(i)->center()[component];
+            }
           }
         }
+        if (found) {
+          break;
+        }
       }
-      if (found) {
-        break;
+      dealii::Triangulation<2> surf_tria;
+      print_info("LocalProblem::initialize", "Initializing surface " + std::to_string(side) + " in local problem.", false, LoggingLevel::DEBUG_ALL);
+      Mesh tria;
+      tria.copy_triangulation(base_problem.triangulation);
+      std::set<unsigned int> b_ids;
+      b_ids.insert(side);
+      switch (side) {
+        case 0:
+          dealii::GridTools::transform(Transform_0_to_5, tria);
+          break;
+        case 1:
+          dealii::GridTools::transform(Transform_1_to_5, tria);
+          break;
+        case 2:
+          dealii::GridTools::transform(Transform_2_to_5, tria);
+          break;
+        case 3:
+          dealii::GridTools::transform(Transform_3_to_5, tria);
+          break;
+        case 4:
+          dealii::GridTools::transform(Transform_4_to_5, tria);
+          break;
+        default:
+          break;
       }
-    }
-    dealii::Triangulation<2> surf_tria;
-    print_info("LocalProblem::initialize", "Initializing surface " + std::to_string(side) + " in local problem.", false, LoggingLevel::DEBUG_ALL);
-    Mesh tria;
-    tria.copy_triangulation(base_problem.triangulation);
-    std::set<unsigned int> b_ids;
-    b_ids.insert(side);
-    switch (side) {
-    case 0:
-      dealii::GridTools::transform(Transform_0_to_5, tria);
-      break;
-    case 1:
-      dealii::GridTools::transform(Transform_1_to_5, tria);
-      break;
-    case 2:
-      dealii::GridTools::transform(Transform_2_to_5, tria);
-      break;
-    case 3:
-      dealii::GridTools::transform(Transform_3_to_5, tria);
-      break;
-    case 4:
-      dealii::GridTools::transform(Transform_4_to_5, tria);
-      break;
-    default:
-      break;
-    }
-    dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation,
-        b_ids);
-    dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
-    if((side != 5 || GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction-1) || GlobalParams.NumberProcesses > 1) {
+      dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation,
+          b_ids);
+      dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
       surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(GlobalParams.HSIE_polynomial_degree, std::ref(surf_tria), side,
-            GlobalParams.Nedelec_element_order, GlobalParams.kappa_0, additional_coorindate));
+              GlobalParams.Nedelec_element_order, GlobalParams.kappa_0, additional_coorindate));
       surfaces[side]->initialize();
+    } else {
+      surfaces[side] = nullptr;
     }
   }
-
   print_info("LocalProblem::initialize", "Initialize index sets", false, LoggingLevel::DEBUG_ALL);
   initialize_own_dofs();
   print_info("LocalProblem::initialize", "Number of local dofs: " + std::to_string(n_own_dofs) , false, LoggingLevel::DEBUG_ALL);
   for(unsigned int i = 0; i < 6; i++) {
-    surface_dof_associations[i] = surfaces[i]->get_dof_association();
-    for(unsigned int j = 0; j < surface_dof_associations[i].size(); j++) {
-      surface_dof_index_vectors[i].push_back(first_own_index + surface_dof_associations[i][j].index);
+    if(is_hsie_surface[i]){
+      surface_dof_associations[i] = surfaces[i]->get_dof_association();
+      for(unsigned int j = 0; j < surface_dof_associations[i].size(); j++) {
+        surface_dof_index_vectors[i].push_back(first_own_index + surface_dof_associations[i][j].index);
+      }
     }
   }
   for(unsigned int i = 0; i < 6; i++) {
@@ -139,9 +146,15 @@ DofCount LocalProblem::compute_own_dofs() {
   DofCount ret = base_problem.dof_handler.n_dofs();
   surface_first_dofs.push_back(ret);
   for (unsigned int i = 0; i < 6; i++) {
-    ret += surfaces[i]->dof_counter;
-    if (i != 5) {
-      surface_first_dofs.push_back(ret);
+    if(is_hsie_surface[i]) {
+      ret += surfaces[i]->dof_counter;
+      if (i != 5) {
+        surface_first_dofs.push_back(ret);
+      }
+    } else {
+      if (i != 5) {
+        surface_first_dofs.push_back(ret);
+      }
     }
   }
   print_info("LocalProblem::compute_own_dofs", "End");
@@ -157,74 +170,77 @@ void LocalProblem::make_constraints() {
 
   // couple surface dofs with inner ones.
   for (unsigned int surface = 0; surface < 6; surface++) {
-    std::vector<DofIndexAndOrientationAndPosition> from_surface =
-        surfaces[surface]->get_dof_association();
-    std::vector<DofIndexAndOrientationAndPosition> from_inner_problem =
-        base_problem.get_surface_dof_vector_for_boundary_id(surface);
-    if (from_surface.size() != from_inner_problem.size()) {
-      std::cout << "Warning: Size mismatch in make_constraints for surface "
-          << surface << ": Inner: " << from_inner_problem.size()
-          << " != Surface:" << from_surface.size() << "." << std::endl;
-    }
-    for (unsigned int line = 0; line < from_inner_problem.size(); line++) {
-      if (!areDofsClose(from_inner_problem[line], from_surface[line])) {
-        std::cout << "Error in face to inner_coupling. Positions are inner: "
-            << from_inner_problem[line].position << " and surface: "
-            << from_surface[line].position << std::endl;
+    if(is_hsie_surface[surface]) {
+      std::vector<DofIndexAndOrientationAndPosition> from_surface =
+          surfaces[surface]->get_dof_association();
+      std::vector<DofIndexAndOrientationAndPosition> from_inner_problem =
+          base_problem.get_surface_dof_vector_for_boundary_id(surface);
+      if (from_surface.size() != from_inner_problem.size()) {
+        std::cout << "Warning: Size mismatch in make_constraints for surface "
+            << surface << ": Inner: " << from_inner_problem.size()
+            << " != Surface:" << from_surface.size() << "." << std::endl;
       }
-      constraints.add_line(from_inner_problem[line].index);
-      ComplexNumber value = { 0, 0 };
-      if (from_inner_problem[line].orientation
-          == from_surface[line].orientation) {
-        value.real(1.0);
-      } else {
-        value.real(-1.0);
+      for (unsigned int line = 0; line < from_inner_problem.size(); line++) {
+        if (!areDofsClose(from_inner_problem[line], from_surface[line])) {
+          std::cout << "Error in face to inner_coupling. Positions are inner: "
+              << from_inner_problem[line].position << " and surface: "
+              << from_surface[line].position << std::endl;
+        }
+        constraints.add_line(from_inner_problem[line].index);
+        ComplexNumber value = { 0, 0 };
+        if (from_inner_problem[line].orientation
+            == from_surface[line].orientation) {
+          value.real(1.0);
+        } else {
+          value.real(-1.0);
+        }
+        constraints.add_entry(from_inner_problem[line].index,
+            from_surface[line].index + surface_first_dofs[surface], value);
       }
-      constraints.add_entry(from_inner_problem[line].index,
-          from_surface[line].index + surface_first_dofs[surface], value);
     }
-
   }
   print_info("LocalProblem::make_constraints", "Constraints after phase 1: " + std::to_string(constraints.n_constraints()), false, LoggingLevel::DEBUG_ALL );
   dealii::AffineConstraints<ComplexNumber> surface_to_surface_constraints;
   for (unsigned int i = 0; i < 6; i++) {
     for (unsigned int j = i + 1; j < 6; j++) {
-      surface_to_surface_constraints.reinit(is);
-      bool opposing = ((i % 2) == 0) && (i + 1 == j);
-      if (!opposing) {
-        std::vector<DofIndexAndOrientationAndPosition> lower_face_dofs =
-            surfaces[i]->get_dof_association_by_boundary_id(j);
-        std::vector<DofIndexAndOrientationAndPosition> upper_face_dofs =
-            surfaces[j]->get_dof_association_by_boundary_id(i);
-        if (lower_face_dofs.size() != upper_face_dofs.size()) {
-          std::cout << "ERROR: There was a edge dof count error!" << std::endl
-              << "Surface " << i << " offers " << lower_face_dofs.size()
-              << " dofs, " << j << " offers " << upper_face_dofs.size() << "."
-              << std::endl;
-        }
-        for (unsigned int dof = 0; dof < lower_face_dofs.size(); dof++) {
-          if (!areDofsClose(lower_face_dofs[dof], upper_face_dofs[dof])) {
-            std::cout << "Error in face to face_coupling. Positions are lower: "
-                << lower_face_dofs[dof].position << " and upper: "
-                << upper_face_dofs[dof].position << std::endl;
+      if(is_hsie_surface[i] && is_hsie_surface[j]) {
+        surface_to_surface_constraints.reinit(is);
+        bool opposing = ((i % 2) == 0) && (i + 1 == j);
+        if (!opposing) {
+          std::vector<DofIndexAndOrientationAndPosition> lower_face_dofs =
+              surfaces[i]->get_dof_association_by_boundary_id(j);
+          std::vector<DofIndexAndOrientationAndPosition> upper_face_dofs =
+              surfaces[j]->get_dof_association_by_boundary_id(i);
+          if (lower_face_dofs.size() != upper_face_dofs.size()) {
+            std::cout << "ERROR: There was a edge dof count error!" << std::endl
+                << "Surface " << i << " offers " << lower_face_dofs.size()
+                << " dofs, " << j << " offers " << upper_face_dofs.size() << "."
+                << std::endl;
           }
-          unsigned int dof_a = lower_face_dofs[dof].index
-              + surface_first_dofs[i];
-          unsigned int dof_b = upper_face_dofs[dof].index
-              + surface_first_dofs[j];
-          ComplexNumber value = { 0, 0 };
-          if (lower_face_dofs[dof].orientation
-              == upper_face_dofs[dof].orientation) {
-            value.real(1.0);
-          } else {
-            value.real(-1.0);
+          for (unsigned int dof = 0; dof < lower_face_dofs.size(); dof++) {
+            if (!areDofsClose(lower_face_dofs[dof], upper_face_dofs[dof])) {
+              std::cout << "Error in face to face_coupling. Positions are lower: "
+                  << lower_face_dofs[dof].position << " and upper: "
+                  << upper_face_dofs[dof].position << std::endl;
+            }
+            unsigned int dof_a = lower_face_dofs[dof].index
+                + surface_first_dofs[i];
+            unsigned int dof_b = upper_face_dofs[dof].index
+                + surface_first_dofs[j];
+            ComplexNumber value = { 0, 0 };
+            if (lower_face_dofs[dof].orientation
+                == upper_face_dofs[dof].orientation) {
+              value.real(1.0);
+            } else {
+              value.real(-1.0);
+            }
+            surface_to_surface_constraints.add_line(dof_a);
+            surface_to_surface_constraints.add_entry(dof_a, dof_b, value);
           }
-          surface_to_surface_constraints.add_line(dof_a);
-          surface_to_surface_constraints.add_entry(dof_a, dof_b, value);
         }
+        constraints.merge(surface_to_surface_constraints,
+          dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
       }
-      constraints.merge(surface_to_surface_constraints,
-        dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
     }
   }
   print_info("LocalProblem::make_constraints", "Constraints after phase 2: " + std::to_string(constraints.n_constraints()), false, LoggingLevel::DEBUG_ALL );
@@ -239,8 +255,10 @@ void LocalProblem::assemble() {
   print_info("LocalProblem::assemble", "Start");
   base_problem.assemble_system(0, &constraints, matrix, &rhs);
   for (unsigned int surface = 0; surface < 6; surface++) {
-    print_info("LocalProblem::assemble", "Fill Surface Block " + std::to_string(surface));
-    surfaces[surface]->fill_matrix(matrix, &rhs, surface_first_dofs[surface], is_hsie_surface, &constraints);
+    if(is_hsie_surface[surface]) {
+      print_info("LocalProblem::assemble", "Fill Surface Block " + std::to_string(surface));
+      surfaces[surface]->fill_matrix(matrix, &rhs, surface_first_dofs[surface], is_hsie_surface, &constraints);
+    }
   }
   matrix->compress(dealii::VectorOperation::add);
   rhs.compress(dealii::VectorOperation::add);
@@ -254,7 +272,9 @@ void LocalProblem::reinit() {
   make_constraints();
   base_problem.make_sparsity_pattern(&dsp, 0, &constraints);
   for (unsigned int surface = 0; surface < 6; surface++) {
-    surfaces[surface]->fill_sparsity_pattern(&dsp, surface_first_dofs[surface], &constraints);
+    if(is_hsie_surface[surface]) {
+      surfaces[surface]->fill_sparsity_pattern(&dsp, surface_first_dofs[surface], &constraints);
+    }
   }
   constraints.close();
   sp.copy_from(dsp);
@@ -278,7 +298,7 @@ void LocalProblem::solve() {
   timer1.stop();
   print_info("LocalProblem::solve", "Elapsed CPU time: " + std::to_string(timer1.cpu_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
   print_info("LocalProblem::solve", "Elapsed walltime: " + std::to_string(timer1.wall_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
-  print_info("LocalProblem::solve", "Norm after: " + std::to_string(solution.l2_norm()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
+  print_info("LocalProblem::solve", "Norm after: " + std::to_string(solution.l2_norm()) + " seconds.", false, LoggingLevel::DEBUG_ALL);
   constraints.distribute(solution);
   // Mat fact;
   // KSPGetPC(solver.solver_data->ksp,&solver.solver_data->pc);
@@ -446,9 +466,14 @@ auto LocalProblem::communicate_sweeping_direction(SweepingDirection sweeping_dir
 
 auto LocalProblem::set_boundary_values(BoundaryId b_id, std::vector<ComplexNumber> dof_values) -> void {
   for(unsigned int i = 0; i < surface_index_sets[b_id].n_elements(); i++) {
-    rhs(surface_index_sets[b_id].nth_index_in_set(i)) = dof_values[i];
+    rhs(surface_index_sets[b_id].nth_index_in_set(i)) -= dof_values[i];
   }
-  rhs.compress(VectorOperation::insert);
+  rhs.compress(VectorOperation::add);
+}
+
+void LocalProblem::update_mismatch_vector() {
+  rhs_mismatch.reinit( MPI_COMM_SELF, n_own_dofs, n_own_dofs);
+  matrix->vmult(rhs_mismatch, solution);
 }
 
 auto LocalProblem::release_boundary_values(BoundaryId b_id) -> void {

@@ -74,7 +74,6 @@ bool compareDofBaseData(std::pair<DofNumber, Position> c1,
   if (c1.second[1] != c2.second[1]) {
     return c1.second[1] < c2.second[1];
   }
-
   return c1.second[0] < c2.second[0];
 }
 
@@ -96,7 +95,6 @@ bool compareDofBaseDataAndOrientation(
   if (c1.position[1] != c2.position[1]) {
     return c1.position[1] < c2.position[1];
   }
-
   return c1.position[0] < c2.position[0];
 }
 

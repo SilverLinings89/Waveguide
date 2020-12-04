@@ -63,4 +63,6 @@ public:
   dealii::IndexSet compute_interface_dof_set(BoundaryId interface_id);
 
   void compute_solver_factorization() override;
+
+  void update_mismatch_vector() override;
 };

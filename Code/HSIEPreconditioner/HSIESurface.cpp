@@ -19,12 +19,8 @@ const std::vector<std::vector<unsigned int>> edge_to_boundary_id = {
     {4,5,2,3}, {5,4,2,3}, {0,1,4,5}, {0,1,5,4}, {1,0,2,3}, {0,1,2,3}
 };
 
-HSIESurface::HSIESurface(unsigned int in_order,
-    const dealii::Triangulation<2, 2> &in_surface_triangulation,
-    unsigned int in_boundary_id, unsigned int in_inner_order,
-    ComplexNumber in_k0,
-    double in_additional_coordinate,
-    bool in_is_metal)
+HSIESurface::HSIESurface(unsigned int in_order, const dealii::Triangulation<2, 2> &in_surface_triangulation,
+    unsigned int in_boundary_id, unsigned int in_inner_order, ComplexNumber in_k0, double in_additional_coordinate, bool in_is_metal)
     :
     order(in_order), b_id(in_boundary_id),
       dof_h_q(in_surface_triangulation),
@@ -55,17 +51,17 @@ void HSIESurface::set_mesh_boundary_ids() {
     std::vector<double> x;
     std::vector<double> y;
     while(it != this->surface_triangulation.end()){
-        if(it->at_boundary()) {
-            for (unsigned int face = 0; face < GeometryInfo<2>::faces_per_cell; ++face) {
-                if (it->face(face)->at_boundary()) {
-          dealii::Point<2, double> c;
-          c = it->face(face)->center();
-                    x.push_back(c[0]);
-                    y.push_back(c[1]);
-                }
-            }
+      if(it->at_boundary()) {
+        for (unsigned int face = 0; face < GeometryInfo<2>::faces_per_cell; ++face) {
+          if (it->face(face)->at_boundary()) {
+            dealii::Point<2, double> c;
+            c = it->face(face)->center();
+            x.push_back(c[0]);
+            y.push_back(c[1]);
+          }
         }
-        ++it;
+      }
+      ++it;
     }
     double x_max = *max_element(x.begin(), x.end());
     double y_max = *max_element(y.begin(), y.end());
@@ -152,9 +148,7 @@ void HSIESurface::identify_corner_cells() {
   }
 }
 
-DofDataVector HSIESurface::get_dof_data_for_cell(
-    CellIterator2D cell_nedelec,
-    CellIterator2D cell_q) {
+DofDataVector HSIESurface::get_dof_data_for_cell(CellIterator2D cell_nedelec, CellIterator2D cell_q) {
   DofDataVector ret;
 
   // get cell dofs:
@@ -162,6 +156,7 @@ DofDataVector HSIESurface::get_dof_data_for_cell(
   unsigned int *nedelec_edge_ids = new unsigned int[4];
   unsigned int *q_edge_ids = new unsigned int[4];
   unsigned int *vertex_ids = new unsigned int[4];
+  
   // get edge dofs:
   for (unsigned int i = 0; i < 4; i++) {
     nedelec_edge_ids[i] = cell_nedelec->face_index(i);
@@ -178,17 +173,14 @@ DofDataVector HSIESurface::get_dof_data_for_cell(
 
   // add edge-based dofs
   for (unsigned int i = 0; i < this->edge_dof_data.size(); i++) {
-    if (this->edge_dof_data[i].type == DofType::EDGE ||
-        this->edge_dof_data[i].type == DofType::IFFa) {
+    if (this->edge_dof_data[i].type == DofType::EDGE || this->edge_dof_data[i].type == DofType::IFFa) {
       unsigned int idx = this->edge_dof_data[i].base_structure_id_non_face;
-      if (idx == nedelec_edge_ids[0] || idx == nedelec_edge_ids[1] ||
-          idx == nedelec_edge_ids[2] || idx == nedelec_edge_ids[3]) {
+      if (idx == nedelec_edge_ids[0] || idx == nedelec_edge_ids[1] || idx == nedelec_edge_ids[2] || idx == nedelec_edge_ids[3]) {
         ret.push_back(this->edge_dof_data[i]);
       }
     } else {
       unsigned int idx = this->edge_dof_data[i].base_structure_id_non_face;
-      if (idx == q_edge_ids[0] || idx == q_edge_ids[1] ||
-          idx == q_edge_ids[2] || idx == q_edge_ids[3]) {
+      if (idx == q_edge_ids[0] || idx == q_edge_ids[1] || idx == q_edge_ids[2] || idx == q_edge_ids[3]) {
         ret.push_back(this->edge_dof_data[i]);
       }
     }
@@ -197,8 +189,7 @@ DofDataVector HSIESurface::get_dof_data_for_cell(
   // add vertex-based dofs
   for (unsigned int i = 0; i < this->vertex_dof_data.size(); i++) {
     unsigned int idx = this->vertex_dof_data[i].base_structure_id_non_face;
-    if (idx == vertex_ids[0] || idx == vertex_ids[1] || idx == vertex_ids[2] ||
-        idx == vertex_ids[3]) {
+    if (idx == vertex_ids[0] || idx == vertex_ids[1] || idx == vertex_ids[2] || idx == vertex_ids[3]) {
       ret.push_back(this->vertex_dof_data[i]);
     }
   }
@@ -368,8 +359,7 @@ void HSIESurface::fill_matrix(
       }
       std::vector<unsigned int> local_related_fe_index;
       for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-        if (cell_dofs[i].type == DofType::RAY
-              || cell_dofs[i].type == DofType::IFFb) {
+        if (cell_dofs[i].type == DofType::RAY || cell_dofs[i].type == DofType::IFFb) {
           for (unsigned int j = 0; j < q_dofs.size(); j++) {
             if (q_dofs[j] == cell_dofs[i].base_dof_index) {
               local_related_fe_index.push_back(j);
@@ -472,7 +462,6 @@ void HSIESurface::fill_matrix(
   }
 }
 
-
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::SparseMatrix *mass_matrix, dealii::PETScWrappers::SparseMatrix *stiffness_matrix, NumericVectorDistributed* rhs, 
     dealii::IndexSet global_indices, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
@@ -514,8 +503,7 @@ void HSIESurface::fill_matrix(
       }
       std::vector<unsigned int> local_related_fe_index;
       for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-        if (cell_dofs[i].type == DofType::RAY
-              || cell_dofs[i].type == DofType::IFFb) {
+        if (cell_dofs[i].type == DofType::RAY || cell_dofs[i].type == DofType::IFFb) {
           for (unsigned int j = 0; j < q_dofs.size(); j++) {
             if (q_dofs[j] == cell_dofs[i].base_dof_index) {
               local_related_fe_index.push_back(j);
@@ -544,8 +532,7 @@ void HSIESurface::fill_matrix(
         C_G_J = jacobian_for_cell.get_C_G_and_J(quadrature_points[q_point]);
         for (unsigned int i = 0; i < cell_dofs.size(); i++) {
           DofData &u = cell_dofs[i];
-          if (cell_dofs[i].type == DofType::RAY
-              || cell_dofs[i].type == DofType::IFFb) {
+          if (cell_dofs[i].type == DofType::RAY || cell_dofs[i].type == DofType::IFFb) {
             contribution_curl.push_back(
                 build_curl_term_q(u.hsie_order,
                     fe_q_values.shape_grad(local_related_fe_index[i], q_point)));
@@ -645,7 +632,7 @@ void HSIESurface::fill_matrix(
       }
       std::vector<unsigned int> local_related_fe_index;
       for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-        if (cell_dofs[i].type == DofType::RAY) {
+        if (cell_dofs[i].type == DofType::RAY || cell_dofs[i].type == DofType::IFFb) {
           for (unsigned int j = 0; j < q_dofs.size(); j++) {
             if (q_dofs[j] == cell_dofs[i].base_dof_index) {
               local_related_fe_index.push_back(j);
@@ -674,31 +661,22 @@ void HSIESurface::fill_matrix(
         C_G_J = jacobian_for_cell.get_C_G_and_J(quadrature_points[q_point]);
         for (unsigned int i = 0; i < cell_dofs.size(); i++) {
           DofData &u = cell_dofs[i];
-          if (cell_dofs[i].type == DofType::RAY
-              || cell_dofs[i].type == DofType::IFFb) {
+          if (cell_dofs[i].type == DofType::RAY || cell_dofs[i].type == DofType::IFFb) {
             contribution_curl.push_back(
-                build_curl_term_q(u.hsie_order,
-                    fe_q_values.shape_grad(local_related_fe_index[i], q_point)));
+              build_curl_term_q(u.hsie_order, fe_q_values.shape_grad(local_related_fe_index[i], q_point)));
             contribution_value.push_back(
-                build_non_curl_term_q(u.hsie_order,
-                    fe_q_values.shape_value(local_related_fe_index[i], q_point)));
+              build_non_curl_term_q(u.hsie_order, fe_q_values.shape_value(local_related_fe_index[i], q_point)));
           } else {
             contribution_curl.push_back(
-                build_curl_term_nedelec(u.hsie_order,
-                    fe_n_values.shape_grad_component(local_related_fe_index[i],
-                        q_point, 0),
-                    fe_n_values.shape_grad_component(local_related_fe_index[i],
-                        q_point, 1),
-                    fe_n_values.shape_value_component(local_related_fe_index[i],
-                        q_point, 0),
-                    fe_n_values.shape_value_component(local_related_fe_index[i],
-                        q_point, 1)));
+              build_curl_term_nedelec(u.hsie_order,
+                fe_n_values.shape_grad_component(local_related_fe_index[i], q_point, 0),
+                fe_n_values.shape_grad_component(local_related_fe_index[i], q_point, 1),
+                fe_n_values.shape_value_component(local_related_fe_index[i], q_point, 0),
+                fe_n_values.shape_value_component(local_related_fe_index[i], q_point, 1)));
             contribution_value.push_back(
-                build_non_curl_term_nedelec(u.hsie_order,
-                    fe_n_values.shape_value_component(local_related_fe_index[i],
-                        q_point, 0),
-                    fe_n_values.shape_value_component(local_related_fe_index[i],
-                        q_point, 1)));
+              build_non_curl_term_nedelec(u.hsie_order,
+                fe_n_values.shape_value_component(local_related_fe_index[i], q_point, 0),
+                fe_n_values.shape_value_component(local_related_fe_index[i], q_point, 1)));
           }
         }
 
@@ -715,8 +693,7 @@ void HSIESurface::fill_matrix(
       }
       std::vector<unsigned int> local_indices;
       for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-        local_indices.push_back(
-            global_indices.nth_index_in_set(cell_dofs[i].global_index));
+        local_indices.push_back(global_indices.nth_index_in_set(cell_dofs[i].global_index));
       }
       Vector<ComplexNumber> cell_rhs(cell_dofs.size());
       cell_rhs = 0;
@@ -725,17 +702,17 @@ void HSIESurface::fill_matrix(
       cell_counter++;
     }
   }
+  
 }
 
 void HSIESurface::fill_sparsity_pattern(
     dealii::DynamicSparsityPattern *pattern, DofNumber shift, dealii::AffineConstraints<ComplexNumber> *constraints) {
-  if (is_metal)
-    return;
+  if (is_metal) return;
   auto it = dof_h_nedelec.begin_active();
   auto it2 = dof_h_q.begin_active();
   auto end = dof_h_nedelec.end();
   for (; it != end; ++it) {
-    DofDataVector cell_dofs = this->get_dof_data_for_cell(it, it2);
+    DofDataVector cell_dofs = get_dof_data_for_cell(it, it2);
     std::vector<DofNumber> cell_dof_indices;
     for(DofData item : cell_dofs) {
       cell_dof_indices.push_back(item.global_index+shift);
@@ -972,9 +949,7 @@ void HSIESurface::register_new_edge_dofs(
 }
 
 
-void HSIESurface::register_new_surface_dofs(
-    CellIterator2D cell_nedelec,
-    CellIterator2D cell_q) {
+void HSIESurface::register_new_surface_dofs(CellIterator2D cell_nedelec, CellIterator2D cell_q) {
 
   const int max_hsie_order = order;
   std::vector<unsigned int> surface_dofs(fe_nedelec.dofs_per_cell);
@@ -993,41 +968,34 @@ void HSIESurface::register_new_surface_dofs(
   }
   surf_dofs.subtract_set(edge_dofs);
   std::string id = cell_q->id().to_string();
+  
   // SURFACE functions
-  for (unsigned int inner_order = 0; inner_order < surf_dofs.n_elements();
-       inner_order++) {
+  for (unsigned int inner_order = 0; inner_order < surf_dofs.n_elements(); inner_order++) {
     register_single_dof(cell_nedelec->id().to_string(), -1, inner_order, DofType::SURFACE, face_dof_data, surf_dofs.nth_index_in_set(inner_order));
-
     Position bp = undo_transform(cell_nedelec->center());
     DofIndexAndOrientationAndPosition index_and_orientation;
-    index_and_orientation.index =
-        face_dof_data[face_dof_data.size() - 1].global_index;
-    index_and_orientation.orientation = get_orientation(undo_transform(cell_nedelec->vertex(0)),
-        undo_transform(cell_nedelec->vertex(1)));
+    index_and_orientation.index = face_dof_data[face_dof_data.size() - 1].global_index;
+    index_and_orientation.orientation = get_orientation(undo_transform(cell_nedelec->vertex(0)), undo_transform(cell_nedelec->vertex(1)));
     index_and_orientation.position = bp;
     add_surface_relevant_dof(index_and_orientation);
   }
 
   // SEGMENT functions a
-  for (unsigned int inner_order = 0; inner_order < surf_dofs.n_elements();
-       inner_order++) {
+  for (unsigned int inner_order = 0; inner_order < surf_dofs.n_elements(); inner_order++) {
     for (int hsie_order = 0; hsie_order <= max_hsie_order; hsie_order++) {
       register_single_dof(id, hsie_order, inner_order, DofType::SEGMENTa, face_dof_data, surf_dofs.nth_index_in_set(inner_order));
     }
   }
 
-  for (unsigned int inner_order = 0; inner_order < surf_dofs.n_elements() / 2;
-       inner_order++) {
+  for (unsigned int inner_order = 0; inner_order < surf_dofs.n_elements(); inner_order++) {
     for (int hsie_order = -1; hsie_order <= max_hsie_order; hsie_order++) {
-      register_single_dof(id, hsie_order, inner_order, DofType::SEGMENTb, face_dof_data, surf_dofs.nth_index_in_set(inner_order * 2));
+      register_single_dof(id, hsie_order, inner_order, DofType::SEGMENTb, face_dof_data, surf_dofs.nth_index_in_set(inner_order));
     }
   }
 }
 
-void HSIESurface::register_single_dof(
-    std::string in_id, const int in_hsie_order, const int in_inner_order,
-    DofType in_dof_type, DofDataVector &in_vector,
-    unsigned int in_base_dof_index) {
+void HSIESurface::register_single_dof( std::string in_id, const int in_hsie_order, const int in_inner_order,
+    DofType in_dof_type, DofDataVector &in_vector, unsigned int in_base_dof_index) {
   DofData dd(in_id);
   dd.global_index = register_dof();
   dd.hsie_order = in_hsie_order;
@@ -1038,10 +1006,8 @@ void HSIESurface::register_single_dof(
   in_vector.push_back(dd);
 }
 
-void HSIESurface::register_single_dof(
-    unsigned int in_id, const int in_hsie_order, const int in_inner_order,
-    DofType in_dof_type, DofDataVector &in_vector,
-    unsigned int in_base_dof_index) {
+void HSIESurface::register_single_dof( unsigned int in_id, const int in_hsie_order, const int in_inner_order,
+    DofType in_dof_type, DofDataVector &in_vector, unsigned int in_base_dof_index) {
   DofData dd(in_id);
   dd.global_index = register_dof();
   dd.hsie_order = in_hsie_order;
@@ -1270,8 +1236,8 @@ bool HSIESurface::check_number_of_dofs_for_cell_integrity() {
         for (unsigned int j = 0; j < cell_dofs.size(); ++j) {
           if (cell_dofs[j].type == i) count++;
         }
-        std::cout << "For type " << i << " I found " << count << " dofs"
-                  << std::endl;
+        std::cout << cell_dofs.size() << " vs. " << dofs_per_cell << std::endl;
+        std::cout << "For type " << i << " I found " << count << " dofs" << std::endl;
       }
       return false;
     }

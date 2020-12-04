@@ -105,13 +105,13 @@ struct Parameters {
 
     unsigned int Point_Source_Type = 0;
 
-    unsigned int HSIE_SWEEPING_LEVEL =
-        1;  // 1 means normal sweeping, 2 means hierarchical sweeping with depth
-            // 1, 3 means hierarchical sweeping with depth 2.
+    // 1 means normal sweeping, 2 means hierarchical sweeping with depth
+    // 1, 3 means hierarchical sweeping with depth 2.
+    unsigned int HSIE_SWEEPING_LEVEL = 1;  
 
     auto complete_data() -> void;
 
-    LoggingLevel Logging_Level = LoggingLevel::PRODUCTION_ONE;
+    LoggingLevel Logging_Level = LoggingLevel::DEBUG_ALL;
 
     dealii::Function<3, ComplexNumber> * source_field;
 };

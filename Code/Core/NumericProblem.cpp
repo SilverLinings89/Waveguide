@@ -89,21 +89,15 @@ std::vector<unsigned int> NumericProblem::dofs_for_cell_around_point(
   return ret;
 }
 
-void NumericProblem::make_sparsity_pattern(
-    dealii::DynamicSparsityPattern *in_pattern,
-    unsigned int shift,
-    dealii::AffineConstraints<ComplexNumber> *constraints) {
-  
+void NumericProblem::make_sparsity_pattern( dealii::DynamicSparsityPattern *in_pattern, unsigned int shift, dealii::AffineConstraints<ComplexNumber> *in_constraints) {
   auto end = dof_handler.end();
   std::vector<DofNumber> cell_dof_indices(fe.dofs_per_cell);
   for(auto cell = dof_handler.begin_active(); cell != end; cell++) {
     cell->get_dof_indices(cell_dof_indices);
-    if(shift!=0) {
-      for(unsigned int i = 0; i < fe.dofs_per_cell; i++) {
-        cell_dof_indices[i] += shift; 
-      }
+    for(unsigned int i = 0; i < fe.dofs_per_cell; i++) {
+      cell_dof_indices[i] += shift; 
     }
-    constraints->add_entries_local_to_global(cell_dof_indices, *in_pattern);
+    in_constraints->add_entries_local_to_global(cell_dof_indices, *in_pattern);
   }
 }
 
@@ -178,6 +172,7 @@ void NumericProblem::make_constraints() {
   **/
   if(GlobalParams.Index_in_z_direction == 0) {
     ExactSolution es = {true, false};
+    std::cout << "In function where only one should be!" << std::endl;
     VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 4, local_constraints);
   }
 
