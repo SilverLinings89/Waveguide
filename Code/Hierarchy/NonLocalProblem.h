@@ -118,9 +118,11 @@ private:
   
   void output_results() override;
 
-  std::vector<bool> get_incoming_dof_orientations();
+  auto get_incoming_dof_orientations() -> std::vector<bool>;
 
   void update_mismatch_vector() override;
 
-  auto make_sparsity_pattern_for_surface(unsigned int, DynamicSparsityPattern *) -> std::vector<std::vector<DofNumber>>;
+  auto make_sparsity_pattern_for_surface(unsigned int, DynamicSparsityPattern *) -> void;
+
+  void fill_dsp_over_mpi(BoundaryId surface, dealii::DynamicSparsityPattern * in_dsp);
 };

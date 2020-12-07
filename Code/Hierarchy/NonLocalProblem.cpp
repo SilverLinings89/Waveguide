@@ -288,9 +288,7 @@ void remove_double_entries_from_vector(std::vector<DofNumber> * in_vector) {
   if(in_vector->size() == 0) std::cout << "Logic error detected..." << std::endl;
 }
 
-std::vector<std::vector<DofNumber>> NonLocalProblem::make_sparsity_pattern_for_surface(unsigned int surface, DynamicSparsityPattern * dsp) {
-  MPI_Barrier(MPI_COMM_WORLD);
-  std::cout << "Rank " << rank << " called the function for surface " << surface << std::endl;
+void NonLocalProblem::make_sparsity_pattern_for_surface(unsigned int surface, DynamicSparsityPattern * dsp) {
   std::pair<bool, unsigned int> partner_data = GlobalMPI.get_neighbor_for_interface(get_direction_for_boundary_id(surface));
   if(!partner_data.first) {
     std::cout << "There was an error finding the partner process in NonlocalProblem::make_constraints_for_non_hsie_surface" << std::endl;
@@ -314,12 +312,9 @@ std::vector<std::vector<DofNumber>> NonLocalProblem::make_sparsity_pattern_for_s
       }
     }
   }
-  
-  MPI_Barrier(MPI_COMM_WORLD);
   for(auto it : couplings) {
     remove_double_entries_from_vector(&it);
   }
-
   unsigned long max_n_couplings = 0;
   for(unsigned int i = 0; i < couplings.size(); i++) {
     if(max_n_couplings < couplings[i].size()) {
@@ -327,7 +322,6 @@ std::vector<std::vector<DofNumber>> NonLocalProblem::make_sparsity_pattern_for_s
     }
   }
   unsigned long send_temp = max_n_couplings;
-  MPI_Barrier(MPI_COMM_WORLD);
   MPI_Sendrecv_replace(&send_temp, 1, MPI::UNSIGNED_LONG, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
   max_n_couplings = std::max(send_temp, max_n_couplings);
   int* cache = new int[max_n_couplings + 1];
@@ -343,17 +337,17 @@ std::vector<std::vector<DofNumber>> NonLocalProblem::make_sparsity_pattern_for_s
     for(unsigned int j = couplings[i].size()+1; j < max_n_couplings+1; j++) {
       cache[j] = -1;
     }
-    MPI_Sendrecv_replace(&cache, max_n_couplings + 1, MPI::INT, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
+    
+    MPI_Sendrecv_replace(cache, max_n_couplings + 1, MPI::INT, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
     for(unsigned int j = 1; j < max_n_couplings+1; j++) {
       if(cache[j] != -1) {
         for(unsigned int local_dof_index = 0; local_dof_index < couplings[i].size(); local_dof_index++) {
-          std::cout << "execute" << std::endl;
           dsp->add(couplings[i][local_dof_index], cache[j]);
         }
       }
     }
   }
-  std::cout << "Rank " << rank << " done" << std::endl;
+  fill_dsp_over_mpi(surface, dsp);
 }
 
 std::vector<bool> NonLocalProblem::get_incoming_dof_orientations() {
@@ -586,7 +580,7 @@ void NonLocalProblem::generate_sparsity_pattern() {
       make_sparsity_pattern_for_surface(surface, & dsp);
     }
   }
-  // matrix->reinit(GlobalMPI.communicators_by_level[local_level], total_number_of_dofs_on_level, total_number_of_dofs_on_level, local_indices.n_elements(), local_indices.n_elements(), 1000);
+  
   sp.copy_from(dsp);
   sp.compress();
 }
@@ -924,4 +918,54 @@ void NonLocalProblem::output_results() {
     get_local_problem()->solution[dof] = solution[first_own_index + dof];
   }
   get_local_problem()->output_results();
+}
+
+void NonLocalProblem::fill_dsp_over_mpi(BoundaryId surface, dealii::DynamicSparsityPattern * in_dsp) {
+  // fill a local dsp object
+  dealii::DynamicSparsityPattern local_dsp(total_number_of_dofs_on_level, total_number_of_dofs_on_level);
+  std::vector<DofNumber> dof_indices(get_local_problem()->base_problem.fe.dofs_per_cell);
+  for(auto it = get_local_problem()->base_problem.dof_handler.begin(); it != get_local_problem()->base_problem.dof_handler.end(); it++) {
+    if(it->at_boundary(surface)) {
+      it->get_dof_indices(dof_indices);
+      for(unsigned int i = 0; i < dof_indices.size(); i++) {
+        dof_indices[i] += first_own_index;
+      }
+      constraints.add_entries_local_to_global(dof_indices, local_dsp);
+    }
+  }
+  // Extract all couplings into a vector
+  const unsigned int n_entries = local_dsp.n_nonzero_elements();
+  DofNumber * rows = new DofNumber[n_entries];
+  DofNumber * cols = new DofNumber[n_entries];
+  unsigned int counter = 0;
+  for(auto it = local_dsp.begin(); it != local_dsp.end(); it++) {
+    rows[counter] = it->row();
+    cols[counter] = it->column();
+    counter ++;
+  }
+  // Send the vector via MPI to the partner
+  unsigned long send_temp = n_entries;
+  std::pair<bool, unsigned int> partner_data = GlobalMPI.get_neighbor_for_interface(get_direction_for_boundary_id(surface));
+  unsigned int partner_index = partner_data.second;
+  MPI_Sendrecv_replace(&send_temp, 1, MPI::UNSIGNED_LONG, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
+  if(send_temp != n_entries) {
+    std::cout << "Size missmatch in fill_dsp_over_mpi" << std::endl;
+  }
+  MPI_Sendrecv_replace(rows, n_entries, MPI::UNSIGNED, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
+  MPI_Sendrecv_replace(cols, n_entries, MPI::UNSIGNED, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
+  // In the received vectors, replace the boundary dof ids of the other process with the own.
+  for(unsigned int i = 0; i < coupling_dofs[surface].size(); i++) {
+    for(unsigned int j = 0; j < n_entries; j++) {
+      if(rows[j] == coupling_dofs[surface][i].second) {
+        rows[j] = coupling_dofs[surface][i].first;
+      }
+      if(cols[j] == coupling_dofs[surface][i].second) {
+        cols[j] = coupling_dofs[surface][i].first;
+      }
+    }
+  }
+  // Fill the argument dsp with the values received over MPI
+  for(unsigned int i = 0; i < n_entries; i++) {
+    in_dsp->add(rows[i], cols[i]);
+  }
 }
