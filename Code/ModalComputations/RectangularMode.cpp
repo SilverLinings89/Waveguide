@@ -3,7 +3,7 @@
 #include "../Helpers/staticfunctions.h"
 #include <deal.II/lac/petsc_compatibility.h>
 #include <deal.II/lac/petsc_solver.h>
-#include <deal.II/lac/slepc_solver.h>
+// #include <deal.II/lac/slepc_solver.h>
 
 using namespace dealii;
 
@@ -436,21 +436,23 @@ void RectangularMode::assemble_system() {
 void RectangularMode::solve() {
   print_info("RectangularProblem::solve", "Start");
   dealii::SolverControl                    solver_control(n_dofs_total, 1e-6);
-  dealii::SLEPcWrappers::SolverKrylovSchur eigensolver(solver_control);
+  // dealii::SLEPcWrappers::SolverKrylovSchur eigensolver(solver_control);
   IndexSet own_dofs(n_dofs_total);
   own_dofs.add_range(0, n_dofs_total);
   eigenfunctions.resize(n_eigenfunctions);
   for (unsigned int i = 0; i < n_eigenfunctions; ++i)
     eigenfunctions[i].reinit(own_dofs, MPI_COMM_SELF);
   eigenvalues.resize(n_eigenfunctions);
-  eigensolver.set_which_eigenpairs(EPS_SMALLEST_MAGNITUDE);
-  eigensolver.set_problem_type(EPS_GNHEP);
+  // eigensolver.set_which_eigenpairs(EPS_SMALLEST_MAGNITUDE);
+  // eigensolver.set_problem_type(EPS_GNHEP);
   print_info("RectangularProblem::solve", "Starting solution for a system with " + std::to_string(n_dofs_total) + " degrees of freedom.");
+  /**
   eigensolver.solve(stiffness_matrix,
                     mass_matrix,
                     eigenvalues,
                     eigenfunctions,
                     n_eigenfunctions);
+                    **/
   for(unsigned int i =0 ; i < n_eigenfunctions; i++) {
     // constraints.distribute(eigenfunctions[0]);
     eigenfunctions[i] /= eigenfunctions[i].linfty_norm();
