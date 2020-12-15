@@ -18,7 +18,6 @@ private:
   DofCount total_number_of_dofs_on_level;
   dealii::PETScWrappers::MPI::SparseMatrix *matrix;
   NumericVectorDistributed *system_rhs;
-  dealii::IndexSet local_indices;
   dealii::IndexSet upper_interface_dofs;
   dealii::IndexSet lower_interface_dofs;
   dealii::SolverControl sc;
@@ -125,4 +124,8 @@ private:
   auto make_sparsity_pattern_for_surface(unsigned int, DynamicSparsityPattern *) -> void;
 
   void fill_dsp_over_mpi(BoundaryId surface, dealii::DynamicSparsityPattern * in_dsp);
+
+  auto UpperBlockProductAfterH() -> std::vector<ComplexNumber>;
+
+  auto HAfterLowerBlockProduct() -> std::vector<ComplexNumber>;
 };

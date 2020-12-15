@@ -10,6 +10,7 @@
 
 class LocalProblem: public HierarchicalProblem {
 public:
+  unsigned int solve_counter = 0;
   NumericProblem base_problem;
   std::array<std::shared_ptr<HSIESurface>,6> surfaces;
   SolverControl sc;

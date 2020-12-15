@@ -23,8 +23,9 @@ LocalProblem::LocalProblem() :
   print_info("Local Problem", "Done building base problem. Preparing matrix.");
   matrix = new dealii::PETScWrappers::SparseMatrix();
   for(unsigned int i = 0; i < 6; i++) is_hsie_surface[i] = true;
-  if(GlobalParams.NumberProcesses > 1 && GlobalParams.Index_in_z_direction != GlobalParams.Blocks_in_z_direction - 1) {
-    is_hsie_surface[5] = false;
+  if(GlobalParams.NumberProcesses > 1) is_hsie_surface[4] = false;
+  if(GlobalParams.NumberProcesses > 1 && GlobalParams.Index_in_z_direction == 0) {
+    is_hsie_surface[4] = false;
   }
 }
 
@@ -288,25 +289,31 @@ void LocalProblem::initialize_own_dofs() {
 }
 
 void LocalProblem::solve() {
-  print_info("LocalProblem::solve", "Start");
-  print_info("LocalProblem::solve", "Norm before: " + std::to_string(solution.l2_norm()), false, LoggingLevel::DEBUG_ONE);
+  // print_info("LocalProblem::solve", "Start");
+  // print_info("LocalProblem::solve", "Norm before: " + std::to_string(solution.l2_norm()), false, LoggingLevel::DEBUG_ONE);
   constraints.set_zero(solution);
   Timer timer1;
   timer1.start ();
   dealii::PETScWrappers::MPI::Vector temp_rhs = rhs;
+  std::cout << rhs.l2_norm() << std::endl;
   solver.solve(*matrix, solution, temp_rhs);
+  std::cout << solution.l2_norm() << std::endl;
   timer1.stop();
-  print_info("LocalProblem::solve", "Elapsed CPU time: " + std::to_string(timer1.cpu_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
-  print_info("LocalProblem::solve", "Elapsed walltime: " + std::to_string(timer1.wall_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
-  print_info("LocalProblem::solve", "Norm after: " + std::to_string(solution.l2_norm()) + " seconds.", false, LoggingLevel::DEBUG_ALL);
-  constraints.distribute(solution);
+  // print_info("LocalProblem::solve", "Elapsed CPU time: " + std::to_string(timer1.cpu_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
+  // print_info("LocalProblem::solve", "Elapsed walltime: " + std::to_string(timer1.wall_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
+  // print_info("LocalProblem::solve", "Norm after: " + std::to_string(solution.l2_norm()) + " seconds.", false, LoggingLevel::DEBUG_ALL);
+  // constraints.distribute(solution);
   // Mat fact;
   // KSPGetPC(solver.solver_data->ksp,&solver.solver_data->pc);
   // PCFactorGetMatrix(solver.solver_data->pc,&fact);
   // PetscViewerPushFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)),PETSC_VIEWER_ASCII_INFO);
   // MatView(fact,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
   // PetscViewerPopFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
-  print_info("LocalProblem::solve", "End");
+  // print_info("LocalProblem::solve", "End");
+  if(solve_counter == 1) {
+    output_results();
+  }
+  solve_counter++;
 }
 
 void LocalProblem::initialize_index_sets() {
@@ -466,9 +473,9 @@ auto LocalProblem::communicate_sweeping_direction(SweepingDirection sweeping_dir
 
 auto LocalProblem::set_boundary_values(BoundaryId b_id, std::vector<ComplexNumber> dof_values) -> void {
   for(unsigned int i = 0; i < surface_index_sets[b_id].n_elements(); i++) {
-    rhs(surface_index_sets[b_id].nth_index_in_set(i)) -= dof_values[i];
+    rhs(surface_index_sets[b_id].nth_index_in_set(i)) = dof_values[i];
   }
-  rhs.compress(VectorOperation::add);
+  rhs.compress(VectorOperation::insert);
 }
 
 void LocalProblem::update_mismatch_vector() {
