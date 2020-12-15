@@ -535,7 +535,7 @@ void NonLocalProblem::apply_sweep(Vec x_in, Vec x_out) {
   
   ComplexNumber * values = new ComplexNumber[own_dofs.n_elements()];
   for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
-     values[i] = solution[own_dofs.nth_index_in_set(i)];
+     values[i] = u[own_dofs.nth_index_in_set(i)];
   }
   VecSetValues(x_out, own_dofs.n_elements(), locally_owned_dofs_index_array, values, INSERT_VALUES);
   VecAssemblyBegin(x_out);
@@ -868,6 +868,7 @@ void NonLocalProblem::receive_local_lower_dofs_and_H() {
       }
     }
   }
+  u.compress(VectorOperation::add);
 }
 
 void NonLocalProblem::receive_local_upper_dofs() {
@@ -878,6 +879,7 @@ void NonLocalProblem::receive_local_upper_dofs() {
   for(unsigned int i = 0; i < upper_interface_dofs.n_elements(); i++) {
     u[upper_interface_dofs.nth_index_in_set(i)] -= mpi_cache[i] * (dof_orientations_identical[i] ? 1.0 : -1.0);
   }
+  u.compress(VectorOperation::add);
 }
 
 void NonLocalProblem::send_local_upper_dofs(std::vector<ComplexNumber> values) {
@@ -1051,6 +1053,7 @@ void NonLocalProblem::setSolutionFromVector(Vec x_in) {
   for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
     u(own_dofs.nth_index_in_set(i)) = values[i]; 
   }
+  u.compress(VectorOperation::insert);
   delete[] values;
 }
 
