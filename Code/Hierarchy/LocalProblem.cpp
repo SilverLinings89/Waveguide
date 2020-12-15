@@ -24,9 +24,6 @@ LocalProblem::LocalProblem() :
   matrix = new dealii::PETScWrappers::SparseMatrix();
   for(unsigned int i = 0; i < 6; i++) is_hsie_surface[i] = true;
   if(GlobalParams.NumberProcesses > 1) is_hsie_surface[4] = false;
-  if(GlobalParams.NumberProcesses > 1 && GlobalParams.Index_in_z_direction == 0) {
-    is_hsie_surface[4] = false;
-  }
 }
 
 LocalProblem::~LocalProblem() {}

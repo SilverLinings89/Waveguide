@@ -23,7 +23,7 @@ private:
   dealii::SolverControl sc;
   dealii::PETScWrappers::SolverGMRES solver;
   dealii::AffineConstraints<ComplexNumber> constraints;
-  NumericVectorDistributed current_solution;
+  NumericVectorDistributed u;
   std::array<std::vector<std::pair<DofNumber, DofNumber>>,6> coupling_dofs;
   std::vector<ComplexNumber> cached_lower_values;
   std::vector<ComplexNumber> cached_upper_values;
@@ -41,7 +41,7 @@ private:
 
   ~NonLocalProblem() override;
 
-  auto reinit_mpi_cache() -> void;
+  auto reinit_mpi_cache(DofCount) -> void;
 
   auto compute_own_dofs() -> DofCount override;
 
@@ -91,11 +91,11 @@ private:
 
   NumericVectorLocal extract_local_lower_dofs();
 
-  void send_local_lower_dofs();
+  void send_local_lower_dofs(std::vector<ComplexNumber>);
 
-  void receive_local_lower_dofs();
+  void receive_local_lower_dofs_and_H();
 
-  void send_local_upper_dofs();
+  void send_local_upper_dofs(std::vector<ComplexNumber>);
 
   void receive_local_upper_dofs();
 
@@ -127,5 +127,11 @@ private:
 
   auto UpperBlockProductAfterH() -> std::vector<ComplexNumber>;
 
-  auto HAfterLowerBlockProduct() -> std::vector<ComplexNumber>;
+  auto LowerBlockProduct() -> std::vector<ComplexNumber>;
+
+  void setSolutionFromVector(Vec x_in);
+
+  void setChildSolutionComponentsFromU();
+
+  void setChildRhsComponentsFromU();
 };
