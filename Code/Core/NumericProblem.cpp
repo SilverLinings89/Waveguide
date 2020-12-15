@@ -172,7 +172,6 @@ void NumericProblem::make_constraints() {
   **/
   if(GlobalParams.Index_in_z_direction == 0) {
     ExactSolution es = {true, false};
-    std::cout << "In function where only one should be!" << std::endl;
     VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 4, local_constraints);
   }
 

@@ -149,8 +149,6 @@ NonLocalProblem::NonLocalProblem(unsigned int local_level) :
 }
 
 void NonLocalProblem::init_solver_and_preconditioner() {
-  print_info("NonLocalProblem::init_solver_and_preconditioner", "Start");
-  print_info("NonLocalProblem::init_solver_and_preconditioner", "Init solver and pc on level " + std::to_string(local_level), true, LoggingLevel::PRODUCTION_ONE);
   dealii::PETScWrappers::PreconditionNone pc_none;
   pc_none.initialize(*matrix);
   solver.initialize(pc_none);
@@ -160,7 +158,10 @@ void NonLocalProblem::init_solver_and_preconditioner() {
   PCShellSetApply(pc,pc_apply);
   PCShellSetContext(pc, (void*) &shell);
   KSPSetPC(solver.solver_data->ksp, pc);
-  print_info("NonLocalProblem::init_solver_and_preconditioner", "End");
+}
+
+void NonLocalProblem::reinit_rhs() {
+  system_rhs->reinit(own_dofs, GlobalMPI.communicators_by_level[local_level]);
 }
 
 NonLocalProblem::~NonLocalProblem() {
@@ -468,12 +469,12 @@ void NonLocalProblem::propagate_up(){
   const unsigned int count = get_local_problem()->base_problem.n_dofs;
   // Propagate the inner values. HSIE-dofs can be added later.
   for(unsigned int i = 0; i < count; i++) {
-    u[first_own_index + i] = child->solution(child->first_own_index + i);
+    u[i] = child->solution(child->first_own_index + i);
   }
   for(unsigned int i = 0; i < 6; i++) {
     if(child->is_hsie_surface[i] && is_hsie_surface[i]) {
       for(unsigned int j = 0; j < get_local_problem()->surfaces[i]->dof_counter; j++) {
-        u[surface_first_dofs[i] + j] = child->solution(child->surface_first_dofs[i] + j);
+        u[surface_first_dofs[i] - first_own_index + j] = child->solution(child->surface_first_dofs[i] + j);
       }
     }
   }
@@ -517,10 +518,10 @@ void NonLocalProblem::apply_sweep(Vec x_in, Vec x_out) {
     }
   }
   
-  setChildSolutionComponentsFromU(); // sets rhs in child.
+  setChildRhsComponentsFromU(); // sets rhs in child.
   child->solve(); // applies H^{-1} or S^{-1}.
   propagate_up(); // updates u.
-
+  
   if(is_lowest_in_sweeping_direction()) {
     std::vector<ComplexNumber> rhs_values = LowerBlockProduct();
     send_local_upper_dofs(rhs_values);
@@ -532,10 +533,9 @@ void NonLocalProblem::apply_sweep(Vec x_in, Vec x_out) {
     }
   }
   
-  
   ComplexNumber * values = new ComplexNumber[own_dofs.n_elements()];
   for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
-     values[i] = u[own_dofs.nth_index_in_set(i)];
+     values[i] = u[own_dofs.nth_index_in_set(i) - first_own_index];
   }
   VecSetValues(x_out, own_dofs.n_elements(), locally_owned_dofs_index_array, values, INSERT_VALUES);
   VecAssemblyBegin(x_out);
@@ -553,7 +553,7 @@ void NonLocalProblem::reinit() {
   generate_sparsity_pattern();
   
   system_rhs = new dealii::PETScWrappers::MPI::Vector(own_dofs, GlobalMPI.communicators_by_level[local_level]);
-  u.reinit(own_dofs, GlobalMPI.communicators_by_level[local_level]);
+  u.resize(n_own_dofs);
   solution.reinit(own_dofs, GlobalMPI.communicators_by_level[local_level]);
   rhs_mismatch.reinit(own_dofs, GlobalMPI.communicators_by_level[local_level]);
   std::vector<DofCount> n_dofs_by_proc; 
@@ -852,23 +852,22 @@ void NonLocalProblem::receive_local_lower_dofs_and_H() {
   Direction communication_direction = get_lower_boundary_id_for_sweeping_direction(sweeping_direction);
   std::pair<bool, unsigned int> neighbour_data = GlobalMPI.get_neighbor_for_interface(communication_direction);
   MPI_Recv(&mpi_cache[0], n_elements, MPI_C_DOUBLE_COMPLEX, neighbour_data.second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-  child->rhs = 0;
+  child->reinit_rhs();
   for(unsigned int i = 0; i < n_elements; i++) {
     child->rhs[lower_interface_dofs.nth_index_in_set(i) - first_own_index + child->first_own_index] = mpi_cache[i] * (dof_orientations_identical[i] ? 1.0 : -1.0);
   }
   child->solve();
   const unsigned int count = get_local_problem()->base_problem.n_dofs;
   for(unsigned int i = 0; i < count; i++) {
-    u[first_own_index + i] -= child->solution(child->first_own_index + i);
+    u[i] -= (ComplexNumber)child->solution(child->first_own_index + i);
   }
   for(unsigned int i = 0; i < 6; i++) {
     if(child->is_hsie_surface[i] && is_hsie_surface[i]) {
       for(unsigned int j = 0; j < get_local_problem()->surfaces[i]->dof_counter; j++) {
-        u[surface_first_dofs[i] + j] -= child->solution(child->surface_first_dofs[i] + j);
+        u[surface_first_dofs[i] - first_own_index + j] -= (ComplexNumber)child->solution(child->surface_first_dofs[i] + j);
       }
     }
   }
-  u.compress(VectorOperation::add);
 }
 
 void NonLocalProblem::receive_local_upper_dofs() {
@@ -877,9 +876,8 @@ void NonLocalProblem::receive_local_upper_dofs() {
   std::pair<bool, unsigned int> neighbour_data = GlobalMPI.get_neighbor_for_interface(communication_direction);
   MPI_Recv(&mpi_cache[0], upper_interface_dofs.n_elements(), MPI_C_DOUBLE_COMPLEX, neighbour_data.second, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   for(unsigned int i = 0; i < upper_interface_dofs.n_elements(); i++) {
-    u[upper_interface_dofs.nth_index_in_set(i)] -= mpi_cache[i] * (dof_orientations_identical[i] ? 1.0 : -1.0);
+    u[upper_interface_dofs.nth_index_in_set(i) - first_own_index] -= mpi_cache[i] * (dof_orientations_identical[i] ? 1.0 : -1.0);
   }
-  u.compress(VectorOperation::add);
 }
 
 void NonLocalProblem::send_local_upper_dofs(std::vector<ComplexNumber> values) {
@@ -1022,7 +1020,7 @@ void NonLocalProblem::fill_dsp_over_mpi(BoundaryId surface, dealii::DynamicSpars
 std::vector<ComplexNumber> NonLocalProblem::UpperBlockProductAfterH() {
   BoundaryId bid = get_lower_boundary_id_for_sweeping_direction(sweeping_direction);
   IndexSet is = child->surface_index_sets[bid];
-  setChildSolutionComponentsFromU();
+  setChildRhsComponentsFromU();
   child->solve();
   child->update_mismatch_vector();
   
@@ -1035,14 +1033,12 @@ std::vector<ComplexNumber> NonLocalProblem::UpperBlockProductAfterH() {
 }
 
 std::vector<ComplexNumber> NonLocalProblem::LowerBlockProduct() {
-  BoundaryId bid = get_upper_boundary_id_for_sweeping_direction(sweeping_direction);
-  IndexSet is = child->surface_index_sets[bid];
   setChildRhsComponentsFromU();
   child->update_mismatch_vector();
   std::vector<ComplexNumber> ret;
-  ret.resize(is.n_elements());
-  for(unsigned int i = 0; i < is.n_elements(); i++) {
-    ret[i] = child->rhs_mismatch[is.nth_index_in_set(i)];
+  ret.resize(upper_interface_dofs.n_elements());
+  for(unsigned int i = 0; i < upper_interface_dofs.n_elements(); i++) {
+    ret[i] = child->rhs_mismatch[upper_interface_dofs.nth_index_in_set(i) - first_own_index + child->first_own_index];
   }
   return ret;
 }
@@ -1051,20 +1047,19 @@ void NonLocalProblem::setSolutionFromVector(Vec x_in) {
   ComplexNumber * values = new ComplexNumber[own_dofs.n_elements()];
   VecGetValues(x_in, own_dofs.n_elements(), locally_owned_dofs_index_array, values);
   for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
-    u(own_dofs.nth_index_in_set(i)) = values[i]; 
+    u[own_dofs.nth_index_in_set(i) - first_own_index] = values[i]; 
   }
-  u.compress(VectorOperation::insert);
   delete[] values;
 }
 
 void NonLocalProblem::setChildSolutionComponentsFromU() {
   for(unsigned int i = 0; i < get_local_problem()->base_problem.n_dofs; i++) {
-    child->solution[child->first_own_index + i] = u[first_own_index + i];
+    child->solution[child->first_own_index + i] = u[i];
   }
   for(unsigned int surface = 0; surface < 6; surface++) {
     if(is_hsie_surface[surface] && child->is_hsie_surface[surface]) {
       for(unsigned int i = 0; i < get_local_problem()->surfaces[surface]->dof_counter; i++) {
-        child->solution[child->surface_first_dofs[surface] + i] = u[surface_first_dofs[surface] + i];
+        child->solution[child->surface_first_dofs[surface] + i] = u[surface_first_dofs[surface] - first_own_index + i];
       }
     } else {
       if(child->is_hsie_surface[surface]) {
@@ -1078,12 +1073,12 @@ void NonLocalProblem::setChildSolutionComponentsFromU() {
 
 void NonLocalProblem::setChildRhsComponentsFromU() {
   for(unsigned int i = 0; i < get_local_problem()->base_problem.n_dofs; i++) {
-    child->rhs[child->first_own_index + i] = u[first_own_index + i];
+    child->rhs[child->first_own_index + i] = u[i];
   }
   for(unsigned int surface = 0; surface < 6; surface++) {
     if(is_hsie_surface[surface] && child->is_hsie_surface[surface]) {
       for(unsigned int i = 0; i < get_local_problem()->surfaces[surface]->dof_counter; i++) {
-        child->rhs[child->surface_first_dofs[surface] + i] = u[surface_first_dofs[surface] + i];
+        child->rhs[child->surface_first_dofs[surface] + i] = u[surface_first_dofs[surface] - first_own_index + i];
       }
     } else {
       if(child->is_hsie_surface[surface]) {
@@ -1093,4 +1088,5 @@ void NonLocalProblem::setChildRhsComponentsFromU() {
       }
     }
   }
+  child->rhs.compress(VectorOperation::insert);
 }

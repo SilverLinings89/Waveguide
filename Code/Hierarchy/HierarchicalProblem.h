@@ -72,6 +72,7 @@ class HierarchicalProblem {
   virtual void compute_solver_factorization() = 0;
   virtual void output_results() = 0;
   virtual void update_mismatch_vector() = 0;
+  virtual void reinit_rhs() = 0;
 };
 
 typedef struct {

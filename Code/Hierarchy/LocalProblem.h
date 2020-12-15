@@ -53,6 +53,8 @@ public:
 
   auto reinit() -> void override;
 
+  auto reinit_rhs() -> void override;
+
   auto compare_to_exact_solution() -> void;
 
   auto communicate_sweeping_direction(SweepingDirection) -> void override;

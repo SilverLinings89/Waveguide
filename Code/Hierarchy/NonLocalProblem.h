@@ -23,7 +23,7 @@ private:
   dealii::SolverControl sc;
   dealii::PETScWrappers::SolverGMRES solver;
   dealii::AffineConstraints<ComplexNumber> constraints;
-  NumericVectorDistributed u;
+  std::vector<ComplexNumber> u;
   std::array<std::vector<std::pair<DofNumber, DofNumber>>,6> coupling_dofs;
   std::vector<ComplexNumber> cached_lower_values;
   std::vector<ComplexNumber> cached_upper_values;
@@ -134,4 +134,6 @@ private:
   void setChildSolutionComponentsFromU();
 
   void setChildRhsComponentsFromU();
+
+  void reinit_rhs() override;
 };

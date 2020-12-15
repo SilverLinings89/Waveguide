@@ -250,22 +250,23 @@ void LocalProblem::make_constraints() {
 }
 
 void LocalProblem::assemble() {
-  print_info("LocalProblem::assemble", "Start");
   base_problem.assemble_system(0, &constraints, matrix, &rhs);
   for (unsigned int surface = 0; surface < 6; surface++) {
     if(is_hsie_surface[surface]) {
-      print_info("LocalProblem::assemble", "Fill Surface Block " + std::to_string(surface));
       surfaces[surface]->fill_matrix(matrix, &rhs, surface_first_dofs[surface], is_hsie_surface, &constraints);
     }
   }
   matrix->compress(dealii::VectorOperation::add);
   rhs.compress(dealii::VectorOperation::add);
-  print_info("LocalProblem::assemble", "End");
+}
+
+void LocalProblem::reinit_rhs() {
+  rhs.reinit(MPI_COMM_SELF, n_own_dofs, n_own_dofs, false);
 }
 
 void LocalProblem::reinit() {
   dealii::DynamicSparsityPattern dsp = { n_own_dofs };
-  rhs.reinit(MPI_COMM_SELF, n_own_dofs, n_own_dofs, false);
+  reinit_rhs();
   solution.reinit(MPI_COMM_SELF, n_own_dofs, n_own_dofs, false);
   make_constraints();
   base_problem.make_sparsity_pattern(&dsp, 0, &constraints);
@@ -288,13 +289,11 @@ void LocalProblem::initialize_own_dofs() {
 void LocalProblem::solve() {
   // print_info("LocalProblem::solve", "Start");
   // print_info("LocalProblem::solve", "Norm before: " + std::to_string(solution.l2_norm()), false, LoggingLevel::DEBUG_ONE);
-  constraints.set_zero(solution);
+  // constraints.set_zero(solution);
   Timer timer1;
   timer1.start ();
   dealii::PETScWrappers::MPI::Vector temp_rhs = rhs;
-  std::cout << rhs.l2_norm() << std::endl;
   solver.solve(*matrix, solution, temp_rhs);
-  std::cout << solution.l2_norm() << std::endl;
   timer1.stop();
   // print_info("LocalProblem::solve", "Elapsed CPU time: " + std::to_string(timer1.cpu_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
   // print_info("LocalProblem::solve", "Elapsed walltime: " + std::to_string(timer1.wall_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
@@ -307,10 +306,6 @@ void LocalProblem::solve() {
   // MatView(fact,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
   // PetscViewerPopFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
   // print_info("LocalProblem::solve", "End");
-  if(solve_counter == 1) {
-    output_results();
-  }
-  solve_counter++;
 }
 
 void LocalProblem::initialize_index_sets() {
