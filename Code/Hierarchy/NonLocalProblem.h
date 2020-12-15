@@ -22,12 +22,12 @@ private:
   dealii::SolverControl sc;
   KSP ksp;
   dealii::AffineConstraints<ComplexNumber> constraints;
-  std::vector<ComplexNumber> u;
+  ComplexNumber * u;
   std::array<std::vector<std::pair<DofNumber, DofNumber>>,6> coupling_dofs;
   ComplexNumber * mpi_cache;
+  bool is_mpi_cache_ready;
   PC pc;
   SampleShellPC shell;
-  dealii::DynamicSparsityPattern dsp;
   PetscInt* locally_owned_dofs_index_array;
   unsigned int lower_sweeping_interface_id;
   unsigned int upper_sweeping_interface_id;

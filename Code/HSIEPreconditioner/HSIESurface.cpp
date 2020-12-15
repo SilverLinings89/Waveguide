@@ -1272,19 +1272,16 @@ std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association_
     std::vector<DofIndexAndOrientationAndPosition> vertex_indices_with_point;
     std::vector<DofIndexAndOrientationAndPosition> face_indices_with_point;
     std::vector<unsigned int> vertex_indices;
-    std::vector<unsigned int> face_indices;
     for (; it != end; ++it) {
       if (it->at_boundary()) {
         for (unsigned int edge = 0; edge < 4; edge++) {
           if (it->line(edge)->boundary_id() == in_boundary_id) {
             if (!it->line(edge)->user_flag_set()) {
-              face_indices.push_back(it->face_index(edge));
               DofIndexAndOrientationAndPosition index_and_orientation;
-              index_and_orientation.index = it->face_index(edge);
+              index_and_orientation.index = it->line_index(edge);
               index_and_orientation.orientation = get_orientation(
                   undo_transform(it->line(edge)->vertex(0)), undo_transform(it->line(edge)->vertex(1)));
-              index_and_orientation.position = undo_transform(
-                  it->line(edge)->center());
+              index_and_orientation.position = undo_transform(it->line(edge)->center());
               face_indices_with_point.emplace_back(index_and_orientation);
               it->line(edge)->set_user_flag();
               const unsigned int first_index = it->line(edge)->vertex_index(0);
@@ -1316,6 +1313,7 @@ std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association_
         }
       }
     }
+    face_indices_with_point.shrink_to_fit();
     std::vector<DofIndexAndOrientationAndPosition> surface_dofs_unsorted;
     // Collect dof data
     for (unsigned int i = 0; i < face_indices_with_point.size(); i++) {
@@ -1345,12 +1343,12 @@ std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association_
         }
       }
     }
-    std::sort(surface_dofs_unsorted.begin(), surface_dofs_unsorted.end(),
-        compareDofBaseDataAndOrientation);
+    std::sort(surface_dofs_unsorted.begin(), surface_dofs_unsorted.end(), compareDofBaseDataAndOrientation);
 
     for (unsigned int i = 0; i < surface_dofs_unsorted.size(); i++) {
       ret.push_back(surface_dofs_unsorted[i]);
     }
+    ret.shrink_to_fit();
     return ret;
   }
 }

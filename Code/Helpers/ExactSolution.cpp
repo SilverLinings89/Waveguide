@@ -225,12 +225,6 @@ ExactSolution::ExactSolution(bool in_rectangular, bool in_dual)
   is_dual = in_dual;
   is_rectangular = in_rectangular;
   if (is_rectangular) {
-    deallog << "Preparing exact solution for rectangular waveguide."
-            << std::endl;
-  } else {
-    deallog << "Preparing exact solution for circular waveguide." << std::endl;
-  }
-  if (is_rectangular) {
     std::ifstream input("../Modes/mode_1550nm.dat");
     std::string line;
     double l_val = 3.0;
@@ -246,13 +240,11 @@ ExactSolution::ExactSolution(bool in_rectangular, bool in_dual)
       }
       cnt_a++;
     }
-    deallog << cnt_a << " - " << mesh_points.size() << std::endl;
     unsigned int cnt = mesh_points.size();
     vals = new PointVal *[cnt];
     for (unsigned int i = 0; i < cnt; i++) {
       vals[i] = new PointVal[cnt];
     }
-    deallog << cnt << std::endl;
     std::ifstream input2("../Modes/mode_1550nm.dat");
     std::string line2;
     double max = 0.0;
@@ -284,7 +276,6 @@ ExactSolution::ExactSolution(bool in_rectangular, bool in_dual)
     deallog << " Mesh constant: " << abs(mesh_points[0] - mesh_points[1])
             << std::endl;
   }
-  deallog << "Done Preparing exact solution." << std::endl;
 }
 
 #endif
