@@ -73,8 +73,7 @@ PetscErrorCode pc_create(SampleShellPC *shell, NonLocalProblem * parent)
 
 NonLocalProblem::NonLocalProblem(unsigned int local_level) :
   HierarchicalProblem(local_level),
-  sc(GlobalParams.GMRES_max_steps, GlobalParams.Solver_Precision, true, true),
-  solver(sc, GlobalMPI.communicators_by_level[local_level], dealii::PETScWrappers::SolverGMRES::AdditionalData(GlobalParams.GMRES_Steps_before_restart))
+  sc(GlobalParams.GMRES_max_steps, GlobalParams.Solver_Precision, true, true)
 {
     if(local_level > 1) {
     child = new NonLocalProblem(local_level - 1);
@@ -149,15 +148,17 @@ NonLocalProblem::NonLocalProblem(unsigned int local_level) :
 }
 
 void NonLocalProblem::init_solver_and_preconditioner() {
-  dealii::PETScWrappers::PreconditionNone pc_none;
-  pc_none.initialize(*matrix);
-  solver.initialize(pc_none);
-  KSPGetPC(solver.solver_data->ksp, &pc);
+  // dealii::PETScWrappers::PreconditionNone pc_none;
+  // pc_none.initialize(*matrix);
+  KSPCreate(GlobalMPI.communicators_by_level[local_level], &ksp);
+  KSPGetPC(ksp, &pc);
+  KSPSetOperators(ksp, *matrix, *matrix);
+  KSPSetType(ksp, KSPGMRES);
   PCSetType(pc,PCSHELL);
   pc_create(&shell, this);
   PCShellSetApply(pc,pc_apply);
   PCShellSetContext(pc, (void*) &shell);
-  KSPSetPC(solver.solver_data->ksp, pc);
+  KSPSetPC(ksp, pc);
 }
 
 void NonLocalProblem::reinit_rhs() {
@@ -462,10 +463,10 @@ dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
 
 void NonLocalProblem::solve() {
   // dealii::PETScWrappers::MPI::Vector local_rhs = *rhs;
-  KSPSetConvergenceTest(solver.solver_data->ksp, &convergence_test, reinterpret_cast<void *>(&sc),nullptr);
-  KSPSetTolerances(solver.solver_data->ksp, 0.000001, 1.0, 1000, 30);
-  KSPSetUp(solver.solver_data->ksp);
-  PetscErrorCode ierr = KSPSolve(solver.solver_data->ksp, rhs, solution);
+  KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc),nullptr);
+  KSPSetTolerances(ksp, 0.000001, 1.0, 1000, 30);
+  KSPSetUp(ksp);
+  PetscErrorCode ierr = KSPSolve(ksp, rhs, solution);
   if(ierr != 0) {
     std::cout << "Error code from Petsc: " << std::to_string(ierr) << std::endl;
     throw new ExcPETScError(ierr);

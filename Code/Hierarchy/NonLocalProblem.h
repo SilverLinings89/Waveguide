@@ -20,7 +20,7 @@ private:
   dealii::IndexSet upper_interface_dofs;
   dealii::IndexSet lower_interface_dofs;
   dealii::SolverControl sc;
-  dealii::PETScWrappers::SolverGMRES solver;
+  KSP ksp;
   dealii::AffineConstraints<ComplexNumber> constraints;
   std::vector<ComplexNumber> u;
   std::array<std::vector<std::pair<DofNumber, DofNumber>>,6> coupling_dofs;

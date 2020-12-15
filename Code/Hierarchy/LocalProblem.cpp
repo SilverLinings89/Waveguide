@@ -261,10 +261,8 @@ void LocalProblem::assemble() {
 }
 
 void LocalProblem::reinit_rhs() {
-  std::cout << "A" << std::endl;
   // rhs = new NumericVectorDistributed(MPI_COMM_SELF, n_own_dofs, n_own_dofs);
   // rhs = new dealii::PETScWrappers::MPI::Vector(own_dofs, GlobalMPI.communicators_by_level[local_level]);
-  std::cout << "B" << std::endl;
 }
 
 void LocalProblem::reinit() {
