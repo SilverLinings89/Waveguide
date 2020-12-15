@@ -261,12 +261,16 @@ void LocalProblem::assemble() {
 }
 
 void LocalProblem::reinit_rhs() {
-  rhs.reinit(MPI_COMM_SELF, n_own_dofs, n_own_dofs, false);
+  std::cout << "A" << std::endl;
+  // rhs = new NumericVectorDistributed(MPI_COMM_SELF, n_own_dofs, n_own_dofs);
+  // rhs = new dealii::PETScWrappers::MPI::Vector(own_dofs, GlobalMPI.communicators_by_level[local_level]);
+  std::cout << "B" << std::endl;
 }
 
 void LocalProblem::reinit() {
   dealii::DynamicSparsityPattern dsp = { n_own_dofs };
   reinit_rhs();
+  rhs = dealii::PETScWrappers::MPI::Vector(own_dofs, GlobalMPI.communicators_by_level[local_level]);
   solution.reinit(MPI_COMM_SELF, n_own_dofs, n_own_dofs, false);
   make_constraints();
   base_problem.make_sparsity_pattern(&dsp, 0, &constraints);
@@ -292,8 +296,8 @@ void LocalProblem::solve() {
   // constraints.set_zero(solution);
   Timer timer1;
   timer1.start ();
-  dealii::PETScWrappers::MPI::Vector temp_rhs = rhs;
-  solver.solve(*matrix, solution, temp_rhs);
+  // dealii::PETScWrappers::MPI::Vector temp_rhs = *rhs;
+  solver.solve(*matrix, solution, rhs);
   timer1.stop();
   // print_info("LocalProblem::solve", "Elapsed CPU time: " + std::to_string(timer1.cpu_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
   // print_info("LocalProblem::solve", "Elapsed walltime: " + std::to_string(timer1.wall_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
@@ -463,26 +467,9 @@ auto LocalProblem::communicate_sweeping_direction(SweepingDirection sweeping_dir
   sweeping_direction = sweeping_direction_of_parent;
 }
 
-auto LocalProblem::set_boundary_values(BoundaryId b_id, std::vector<ComplexNumber> dof_values) -> void {
-  for(unsigned int i = 0; i < surface_index_sets[b_id].n_elements(); i++) {
-    rhs(surface_index_sets[b_id].nth_index_in_set(i)) = dof_values[i];
-  }
-  rhs.compress(VectorOperation::insert);
-}
-
 void LocalProblem::update_mismatch_vector() {
   rhs_mismatch.reinit( MPI_COMM_SELF, n_own_dofs, n_own_dofs);
   matrix->vmult(rhs_mismatch, solution);
-}
-
-auto LocalProblem::release_boundary_values(BoundaryId b_id) -> void {
-  const unsigned int n_dofs = surface_dof_index_vectors[b_id].size();
-  std::vector<ComplexNumber> values;
-  for(unsigned int i = 0; i < n_dofs; i++) {
-    values.emplace_back(0,0);
-  }
-  rhs.set(surface_dof_index_vectors[b_id], values);
-  rhs.compress(VectorOperation::insert);
 }
 
 void LocalProblem::compute_solver_factorization() {

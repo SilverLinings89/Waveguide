@@ -17,7 +17,6 @@ private:
   std::array<bool, 6> is_sweeping_hsie_surface;
   DofCount total_number_of_dofs_on_level;
   dealii::PETScWrappers::MPI::SparseMatrix *matrix;
-  NumericVectorDistributed *system_rhs;
   dealii::IndexSet upper_interface_dofs;
   dealii::IndexSet lower_interface_dofs;
   dealii::SolverControl sc;
@@ -25,8 +24,6 @@ private:
   dealii::AffineConstraints<ComplexNumber> constraints;
   std::vector<ComplexNumber> u;
   std::array<std::vector<std::pair<DofNumber, DofNumber>>,6> coupling_dofs;
-  std::vector<ComplexNumber> cached_lower_values;
-  std::vector<ComplexNumber> cached_upper_values;
   ComplexNumber * mpi_cache;
   PC pc;
   SampleShellPC shell;
@@ -102,10 +99,6 @@ private:
   bool is_lowest_in_sweeping_direction();
 
   bool is_highest_in_sweeping_direction();
-
-  auto set_boundary_values(BoundaryId, std::vector<ComplexNumber>) -> void override;
-  
-  auto release_boundary_values(BoundaryId) -> void override;
 
   auto make_constraints_for_hsie_surface(unsigned int index) -> void;
   

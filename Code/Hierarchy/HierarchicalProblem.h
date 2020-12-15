@@ -59,16 +59,8 @@ class HierarchicalProblem {
   virtual auto get_center() -> Position const = 0;
   virtual auto reinit() -> void = 0;
   virtual auto communicate_sweeping_direction(SweepingDirection) -> void = 0;
-  void lock_boundary_dofs(BoundaryId);
-  void unlock_boundary_dofs(BoundaryId);
   auto opposing_site_bid(BoundaryId) -> BoundaryId;
-  auto set_dofs_in_inner_problem(BoundaryId, NumericVectorLocal);
-  auto set_dofs_in_inner_problem_from_other_process(BoundaryId, DofDataVector);
-  virtual auto set_boundary_values(BoundaryId, std::vector<ComplexNumber>) -> void = 0;
-  virtual auto release_boundary_values(BoundaryId) -> void = 0;
-  void copy_temp_to_current_solution();
-  std::vector<ComplexNumber> get_surface_values_with_orientation_fix(BoundaryId bid,NumericVectorDistributed vector);
-  void set_surface_values_with_orientation_fix(BoundaryId bid, NumericVectorDistributed * vector, std::vector<ComplexNumber> values);
+
   virtual void compute_solver_factorization() = 0;
   virtual void output_results() = 0;
   virtual void update_mismatch_vector() = 0;

@@ -58,11 +58,7 @@ public:
   auto compare_to_exact_solution() -> void;
 
   auto communicate_sweeping_direction(SweepingDirection) -> void override;
-
-  auto set_boundary_values(BoundaryId, std::vector<ComplexNumber>) -> void override;
   
-  auto release_boundary_values(BoundaryId) -> void override;
-
   dealii::IndexSet compute_interface_dof_set(BoundaryId interface_id);
 
   void compute_solver_factorization() override;
