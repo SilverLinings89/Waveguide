@@ -16,6 +16,13 @@
 #include <iterator>
 #include <vector>
 
+double l2_norm_of_vector(std::vector<ComplexNumber> input) {
+  double norm = 0;
+  for(unsigned int i = 0; i< input.size(); i++) {
+    norm += std::abs(input[i]);
+  }
+  return std::sqrt(norm);
+}
 
 int convergence_test(KSP , const PetscInt iteration, const PetscReal residual_norm, KSPConvergedReason *reason, void * solver_control_x)
 {
@@ -467,10 +474,12 @@ dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
 
 void NonLocalProblem::solve() {
   // dealii::PETScWrappers::MPI::Vector local_rhs = *rhs;
+  constraints.set_zero(solution);
   KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc),nullptr);
   KSPSetTolerances(ksp, 0.000001, 1.0, 1000, 30);
   KSPSetUp(ksp);
   PetscErrorCode ierr = KSPSolve(ksp, rhs, solution);
+  constraints.distribute(solution);
   if(ierr != 0) {
     std::cout << "Error code from Petsc: " << std::to_string(ierr) << std::endl;
     throw new ExcPETScError(ierr);
@@ -608,11 +617,6 @@ void NonLocalProblem::initialize() {
     }
   }
   initialize_index_sets();
-  std::cout << "Surface first dofs on rank " << rank << std::endl;
-  for(unsigned int surface = 0; surface < 6; surface++) {
-    std::cout << surface_first_dofs[surface] << " ";
-  }
-  std::cout << std::endl;
   reinit();
   init_solver_and_preconditioner();
 }
@@ -644,7 +648,6 @@ void NonLocalProblem::initialize_index_sets() {
   for (unsigned int i = 0; i < n_procs_in_sweep; i++) {
     total_number_of_dofs_on_level += index_sets_per_process[i].n_elements();
   }
-  std::cout << "Rank " << rank << " has " << n_own_dofs << " dofs. The computed total is "<< total_number_of_dofs_on_level << std::endl;
   DofCount n_inner_dofs = get_local_problem()->base_problem.dof_handler.n_dofs() + own_dofs.nth_index_in_set(0);
   
   if (rank > 0) {
@@ -658,9 +661,7 @@ void NonLocalProblem::initialize_index_sets() {
   }
   
   lower_interface_dofs = compute_interface_dof_set(lower_sweeping_interface_id);
-  std::cout << rank << " :Lower interface dofs size: " << lower_interface_dofs.n_elements() << std::endl;
   upper_interface_dofs = compute_interface_dof_set(upper_sweeping_interface_id);
-  std::cout << rank << " :Upper interface dofs size: " << upper_interface_dofs.n_elements() << std::endl;
   locally_owned_dofs_index_array = new PetscInt[own_dofs.n_elements()];
   get_petsc_index_array_from_index_set(locally_owned_dofs_index_array, own_dofs);
 }
@@ -695,7 +696,6 @@ dealii::IndexSet NonLocalProblem::compute_interface_dof_set(BoundaryId interface
   dealii::IndexSet ret(total_number_of_dofs_on_level);
   std::vector<DofIndexAndOrientationAndPosition> current = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(interface_id);
   MPI_Barrier(MPI_COMM_WORLD);
-  std::cout << " FOR INTERFACE " << interface_id <<std::endl;
   for(unsigned int j = 0; j < current.size(); j++) {
     ret.add_index(current[j].index + first_own_index);
   }    
@@ -711,7 +711,6 @@ dealii::IndexSet NonLocalProblem::compute_interface_dof_set(BoundaryId interface
     }
     MPI_Barrier(MPI_COMM_WORLD);
   }
-  std::cout << "Rank " << rank << " has " << ret.n_elements() << std::endl; 
   return ret;
 }
 
@@ -860,8 +859,6 @@ void NonLocalProblem::send_local_lower_dofs(std::vector<ComplexNumber> values) {
 
 void NonLocalProblem::receive_local_lower_dofs_and_H() {
   const unsigned int n_elements = lower_interface_dofs.n_elements();
-  std::vector<DofNumber> indices(n_elements);
-  std::vector<ComplexNumber> values(n_elements);
   reinit_mpi_cache(n_elements);
   Direction communication_direction = get_lower_boundary_id_for_sweeping_direction(sweeping_direction);
   std::pair<bool, unsigned int> neighbour_data = GlobalMPI.get_neighbor_for_interface(communication_direction);
@@ -870,12 +867,12 @@ void NonLocalProblem::receive_local_lower_dofs_and_H() {
   const unsigned int count = get_local_problem()->base_problem.n_dofs;
   for(unsigned int i = 0; i < n_elements; i++) {
     const DofNumber dof = lower_interface_dofs.nth_index_in_set(i) - first_own_index + child->first_own_index;
-    indices[i] = dof;
-    values[i] = mpi_cache[i] * (dof_orientations_identical[i] ? 1.0 : -1.0);
+    child->rhs[dof] = mpi_cache[i] * (dof_orientations_identical[i] ? 1.0 : -1.0);
   }
-  child->rhs.set(indices, values);
   child->rhs.compress(VectorOperation::insert);
+  std::cout << "After receiving rhs has norm " << child->rhs.l2_norm() << std::endl;
   child->solve();
+  std::cout << "After solve rhs has norm " << child->solution.l2_norm() << std::endl;
   for(unsigned int i = 0; i < count; i++) {
     u[i] -= (ComplexNumber)child->solution(child->first_own_index + i);
   }
@@ -957,7 +954,8 @@ NumericVectorLocal NonLocalProblem::extract_local_lower_dofs() {
 }
 
 void NonLocalProblem::compute_solver_factorization() {
-  this->child->compute_solver_factorization();
+  child->compute_solver_factorization();
+  child->output_results();
 }
 
 void NonLocalProblem::output_results() {
@@ -1027,26 +1025,26 @@ std::vector<ComplexNumber> NonLocalProblem::UpperBlockProductAfterH() {
   for(unsigned int i = 0; i < is.n_elements(); i++) {
     ret[i] = child->rhs_mismatch[is.nth_index_in_set(i) - first_own_index];
   }
+  std::cout << "In rank " << rank << " Upper Block Product Norm is " << l2_norm_of_vector(ret) << std::endl;
   return ret;
 }
 
 std::vector<ComplexNumber> NonLocalProblem::LowerBlockProduct() {
-  setChildRhsComponentsFromU();
+  setChildSolutionComponentsFromU();
   child->update_mismatch_vector();
-  std::cout << "Upper interface dof count: " << upper_interface_dofs.n_elements() << std::endl;
-  std::cout << "Lower interface dof count: " << lower_interface_dofs.n_elements() << std::endl;
   std::vector<ComplexNumber> ret(upper_interface_dofs.n_elements());
   for(unsigned int i = 0; i < upper_interface_dofs.n_elements(); i++) {
     ret[i] = child->rhs_mismatch[upper_interface_dofs.nth_index_in_set(i) - first_own_index + child->first_own_index];
   }
+  std::cout << "In rank " << rank << " Lower Block Product Norm is " << l2_norm_of_vector(ret) << " and rhs_mismatch norm " << child->rhs_mismatch.l2_norm() << std::endl;
   return ret;
 }
 
 void NonLocalProblem::setSolutionFromVector(Vec x_in) {
   ComplexNumber * values = new ComplexNumber[own_dofs.n_elements()];
   VecGetValues(x_in, own_dofs.n_elements(), locally_owned_dofs_index_array, values);
-  for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
-    u[own_dofs.nth_index_in_set(i) - first_own_index] = values[i]; 
+  for(unsigned int i = 0; i < n_own_dofs; i++) {
+    u[i] = values[i]; 
   }
   delete[] values;
 }
@@ -1068,6 +1066,7 @@ void NonLocalProblem::setChildSolutionComponentsFromU() {
       }
     }
   }
+  child->solution.compress(VectorOperation::insert);
 }
 
 void NonLocalProblem::setChildRhsComponentsFromU() {

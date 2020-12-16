@@ -295,7 +295,9 @@ void LocalProblem::solve() {
   Timer timer1;
   timer1.start ();
   // dealii::PETScWrappers::MPI::Vector temp_rhs = *rhs;
+  constraints.set_zero(solution);
   solver.solve(*matrix, solution, rhs);
+  constraints.distribute(solution);
   timer1.stop();
   // print_info("LocalProblem::solve", "Elapsed CPU time: " + std::to_string(timer1.cpu_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
   // print_info("LocalProblem::solve", "Elapsed walltime: " + std::to_string(timer1.wall_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
@@ -468,6 +470,7 @@ auto LocalProblem::communicate_sweeping_direction(SweepingDirection sweeping_dir
 void LocalProblem::update_mismatch_vector() {
   rhs_mismatch.reinit( MPI_COMM_SELF, n_own_dofs, n_own_dofs);
   matrix->vmult(rhs_mismatch, solution);
+  std::cout << "RHS Mismatch on " << rank << " is " << rhs_mismatch.l2_norm() << " for input norm " << solution.l2_norm() << std::endl; 
 }
 
 void LocalProblem::compute_solver_factorization() {
