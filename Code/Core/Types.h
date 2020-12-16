@@ -50,6 +50,16 @@ struct RayAngelingData {
   Position2D position_of_base_point;
 };
 
+struct BoundaryInformation {
+  BoundaryInformation(unsigned int in_coord, bool neg) {
+    inner_coordinate = in_coord;
+    negate_value = neg;
+  }
+
+  unsigned int inner_coordinate;
+  bool negate_value;
+};
+
 struct DofIndexAndOrientationAndPosition {
   DofIndexAndOrientationAndPosition() {
     index = 0;

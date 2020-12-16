@@ -317,7 +317,6 @@ Position Transform_2_to_5(const Position &p) {
 Position Transform_1_to_5(const Position &p) {
   Position q = p;
   q[0] = -p[2];
-  q[1] = p[1];
   q[2] = p[0];
   return q;
 }
@@ -325,7 +324,6 @@ Position Transform_1_to_5(const Position &p) {
 Position Transform_0_to_5(const Position &p) {
   Position q = p;
   q[0] = p[2];
-  q[1] = p[1];
   q[2] = p[0];
   return q;
 }
@@ -355,7 +353,6 @@ Position Transform_5_to_2(const Position &p) {
 Position Transform_5_to_1(const Position &p) {
   Position q = p;
   q[0] = p[2];
-  q[1] = p[1];
   q[2] = -p[0];
   return q;
 }
@@ -363,7 +360,6 @@ Position Transform_5_to_1(const Position &p) {
 Position Transform_5_to_0(const Position &p) {
   Position q = p;
   q[0] = p[2];
-  q[1] = p[1];
   q[2] = p[0];
   return q;
 }

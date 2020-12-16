@@ -14,6 +14,7 @@ struct DofData {
       base_dof_index;
   std::string base_structure_id_face;
   unsigned int base_structure_id_non_face;
+  bool orientation = true; 
 
   DofData() {
     base_structure_id_face = "";

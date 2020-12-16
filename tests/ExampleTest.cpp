@@ -123,6 +123,77 @@ protected:
   }
 };
 
+class FullCubeFixture: public ::testing::Test {
+public:
+  unsigned int InnerOrder;
+  dealii::Triangulation<3> full_tria;
+  dealii::Triangulation<2, 3> temp_triangulation;
+  dealii::Triangulation<2> surf_tria;
+  std::complex<double> k0;
+  std::array<std::shared_ptr<HSIESurface>,6> surfaces;
+protected:
+  void SetUp() override {
+    InnerOrder = 5;
+    k0 = { 0.0, -1.0 };
+    std::vector<unsigned int> repetitions;
+    repetitions.push_back(3);
+    repetitions.push_back(4);
+    repetitions.push_back(5);
+    Position left(-1, -1, -1);
+    Position right(1, 1, 1);
+    dealii::GridGenerator::subdivided_hyper_rectangle(full_tria, repetitions, left, right, true);
+
+    for(unsigned int side = 0; side < 6; side++) {
+      dealii::Triangulation<2, 3> temp_triangulation;
+      const unsigned int component = side / 2;
+      double additional_coorindate = 0;
+      bool found = false;
+      for (auto it : full_tria.active_cell_iterators()) {
+        if (it->at_boundary(side)) {
+          for (auto i = 0; i < 6 && !found; i++) {
+            if (it->face(i)->boundary_id() == side) {
+              found = true;
+              additional_coorindate = it->face(i)->center()[component];
+            }
+          }
+        }
+        if (found) {
+          break;
+        }
+      }
+      dealii::Triangulation<2> surf_tria;
+      Mesh tria;
+      tria.copy_triangulation(full_tria);
+      std::set<unsigned int> b_ids;
+      b_ids.insert(side);
+      switch (side) {
+        case 0:
+          dealii::GridTools::transform(Transform_0_to_5, tria);
+          break;
+        case 1:
+          dealii::GridTools::transform(Transform_1_to_5, tria);
+          break;
+        case 2:
+          dealii::GridTools::transform(Transform_2_to_5, tria);
+          break;
+        case 3:
+          dealii::GridTools::transform(Transform_3_to_5, tria);
+          break;
+        case 4:
+          dealii::GridTools::transform(Transform_4_to_5, tria);
+          break;
+        default:
+          break;
+      }
+      dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation, b_ids);
+      dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
+      surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(GlobalParams.HSIE_polynomial_degree, std::ref(surf_tria), side,
+              GlobalParams.Nedelec_element_order, GlobalParams.kappa_0, additional_coorindate));
+      surfaces[side]->initialize();
+    }
+  }
+};
+
 class TestDirectionFixture: public ::testing::TestWithParam<
     std::tuple<unsigned int, unsigned int, unsigned int>> {
 public:
@@ -154,22 +225,22 @@ protected:
     ASSERT_EQ(tria.n_active_cells(), dest_cells);
     b_ids.insert(boundary_id);
     switch (boundary_id) {
-    case 0:
-      dealii::GridTools::transform(Transform_0_to_5, tria);
-      break;
-    case 1:
-      dealii::GridTools::transform(Transform_1_to_5, tria);
-      break;
-    case 2:
-      dealii::GridTools::transform(Transform_2_to_5, tria);
-      break;
-    case 3:
-      dealii::GridTools::transform(Transform_3_to_5, tria);
-      break;
-    case 4:
-      dealii::GridTools::transform(Transform_4_to_5, tria);
-      break;
-    }
+      case 0:
+        dealii::GridTools::transform(Transform_0_to_5, tria);
+        break;
+      case 1:
+        dealii::GridTools::transform(Transform_1_to_5, tria);
+        break;
+      case 2:
+        dealii::GridTools::transform(Transform_2_to_5, tria);
+        break;
+      case 3:
+        dealii::GridTools::transform(Transform_3_to_5, tria);
+        break;
+      case 4:
+        dealii::GridTools::transform(Transform_4_to_5, tria);
+        break;
+      }
   }
 };
 
@@ -197,6 +268,122 @@ TEST_P(TestDirectionFixture, DofNumberingTest1) {
   auto it = std::find(boundary_ids_of_flattened_mesh.begin(),
       boundary_ids_of_flattened_mesh.end(), boundary_id);
   ASSERT_EQ(boundary_ids_of_flattened_mesh.end(), it);
+}
+
+TEST_F(FullCubeFixture, ExtremeCoordinates) {
+  for(unsigned int i = 0; i < 6; i++) {
+    surfaces[i]->compute_extreme_vertex_coordinates();
+    for(unsigned int coord = 0; coord < 6; coord++) {
+      ASSERT_TRUE(surfaces[i]->boundary_vertex_coordinates[coord] == -1 || surfaces[i]->boundary_vertex_coordinates[coord] == 1);
+    }
+  }
+}
+
+TEST_F(FullCubeFixture, BoundaryVertexTest1) {
+  for(unsigned int i = 0; i < 6; i++) {
+    for(unsigned int j = 0; j < 6; j++) {
+      if(!are_opposing_sites(i,j)) {
+        ASSERT_EQ(surfaces[i]->get_vertices_for_boundary_id(j).size(), surfaces[j]->get_vertices_for_boundary_id(i).size());
+      }
+    }  
+  }
+}
+
+TEST_F(FullCubeFixture, BoundaryVertexTest2) {
+  for(unsigned int i = 0; i < 6; i++) {
+    for(unsigned int j = 0; j < 6; j++) {
+      if(! are_opposing_sites(i,j)) {
+        std::vector<unsigned int> first_indices = surfaces[i]->get_vertices_for_boundary_id(j);
+        std::vector<Position> positions_first = surfaces[i]->vertex_positions_for_ids(first_indices);
+        std::vector<unsigned int> second_indices = surfaces[j]->get_vertices_for_boundary_id(i);
+        std::vector<Position> positions_second = surfaces[j]->vertex_positions_for_ids(second_indices);
+        ASSERT_TRUE(positions_second.size() > 0);
+        ASSERT_TRUE(positions_second.size() == positions_first.size());
+      }
+    }  
+  }
+}
+
+TEST_F(FullCubeFixture, BoundaryCouplingTest1) {
+  for(unsigned int i = 0; i < 6; i++) {
+    for(unsigned int j = 0; j < 6; j++) {
+      if(! are_opposing_sites(i,j)) {
+        std::vector<DofIndexAndOrientationAndPosition> first_dofs = surfaces[i]->get_dof_association_by_boundary_id(j);
+        std::vector<DofIndexAndOrientationAndPosition> second_dofs = surfaces[j]->get_dof_association_by_boundary_id(i);
+        ASSERT_TRUE(first_dofs.size() ==  second_dofs.size());
+        ASSERT_TRUE(first_dofs.size() > 0 );
+        for(unsigned int dof = 0; dof < first_dofs.size(); dof++) {
+          ASSERT_EQ(first_dofs[dof].position, second_dofs[dof].position);
+        }
+      }
+    }  
+  }
+}
+
+TEST_F(FullCubeFixture, BoundaryCouplingTest2) {
+  for(unsigned int i = 0; i < 6; i++) {
+    for(unsigned int j = 0; j < 6; j++) {
+      if(! are_opposing_sites(i,j)) {
+        std::vector<DofIndexAndOrientationAndPosition> first_dofs = surfaces[i]->get_dof_association_by_boundary_id(j);
+        ASSERT_TRUE(first_dofs.size() > 0 );
+        for(unsigned int dof = 0; dof < first_dofs.size(); dof++) {
+          ASSERT_TRUE(first_dofs[dof].position[0] >= -1);
+          ASSERT_TRUE(first_dofs[dof].position[0] <= 1);
+          ASSERT_TRUE(first_dofs[dof].position[1] >= -1);
+          ASSERT_TRUE(first_dofs[dof].position[1] <= 1);
+          ASSERT_TRUE(first_dofs[dof].position[2] >= -1);
+          ASSERT_TRUE(first_dofs[dof].position[2] <= 1);
+        }
+      }
+    }  
+  }
+}
+
+TEST_F(FullCubeFixture, BoundaryCouplingTest3) {
+  for(unsigned int i = 0; i < 6; i++) {
+    for(unsigned int j = 0; j < 6; j++) {
+      if(! are_opposing_sites(i,j)) {
+        std::vector<unsigned int> first_dofs = surfaces[i]->get_vertices_for_boundary_id(j);
+        std::vector<Position> positions_first = surfaces[i]->vertex_positions_for_ids(first_dofs);
+        ASSERT_TRUE(positions_first.size() > 0 );
+        for(unsigned int dof = 0; dof < first_dofs.size(); dof++) {
+          ASSERT_TRUE(positions_first[dof][0] >= -1);
+          ASSERT_TRUE(positions_first[dof][0] <= 1);
+          ASSERT_TRUE(positions_first[dof][1] >= -1);
+          ASSERT_TRUE(positions_first[dof][1] <= 1);
+          ASSERT_TRUE(positions_first[dof][2] >= -1);
+          ASSERT_TRUE(positions_first[dof][2] <= 1);
+        }
+      }
+    }  
+  }
+}
+
+TEST_F(FullCubeFixture, BoundaryLineTest1) {
+  for(unsigned int i = 0; i < 6; i++) {
+    for(unsigned int j = 0; j < 6; j++) {
+      if(! are_opposing_sites(i,j)) {
+        ASSERT_EQ(surfaces[i]->get_lines_for_boundary_id(j).size(), surfaces[j]->get_lines_for_boundary_id(i).size());
+      }
+    }
+  }
+}
+
+TEST_F(FullCubeFixture, OpposingSideTests) {
+  for(unsigned int i = 0; i < 6; i++) {
+    for(unsigned int j = 0; j < 6; j++) {
+      if(are_opposing_sites(i,j)) {
+        ASSERT_EQ(surfaces[i]->get_lines_for_boundary_id(j).size(), 0);
+        ASSERT_EQ(surfaces[i]->get_vertices_for_boundary_id(j).size(), 0);
+        ASSERT_EQ(surfaces[j]->get_lines_for_boundary_id(i).size(), 0);
+        ASSERT_EQ(surfaces[j]->get_vertices_for_boundary_id(i).size(), 0);
+        std::vector<DofIndexAndOrientationAndPosition> first_dofs = surfaces[i]->get_dof_association_by_boundary_id(j);
+        std::vector<DofIndexAndOrientationAndPosition> second_dofs = surfaces[j]->get_dof_association_by_boundary_id(i);
+        ASSERT_EQ(first_dofs.size(), 0);
+        ASSERT_EQ(second_dofs.size(), 0);
+      }
+    }
+  }
 }
 
 TEST_P(TestOrderFixture, AssemblationTestOrder5) {

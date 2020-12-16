@@ -1,5 +1,6 @@
 #include "HSIESurface.h"
 #include <deal.II/dofs/dof_accessor.h>
+#include <deal.II/grid/tria.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/petsc_sparse_matrix.h>
@@ -9,6 +10,10 @@
 #include "../Helpers/staticfunctions.h"
 #include "JacobianForCell.h"
 #include "../Helpers/staticfunctions.h"
+
+bool are_opposing_sites(BoundaryId a, BoundaryId b) {
+  return a != b && a/2 == b/2;
+}
 
 const unsigned int MAX_DOF_NUMBER = INT_MAX;
 
@@ -94,44 +99,6 @@ void HSIESurface::set_mesh_boundary_ids() {
     }
     ++it;
   }
-}
-
-void HSIESurface::compute_edge_ownership_object(Parameters params) {
-  for(unsigned int level = 0; level < 5; ++level) {
-    this->edge_ownership_by_level_and_id[level][1] = true;
-    this->edge_ownership_by_level_and_id[level][3] = true;
-    this->edge_ownership_by_level_and_id[level][5] = true;
-  }
-  // level 0;
-  this->edge_ownership_by_level_and_id[0][0] = true ;
-  this->edge_ownership_by_level_and_id[0][2] = true ;
-  this->edge_ownership_by_level_and_id[0][4] = true ;
-
-  // level 1;
-  this->edge_ownership_by_level_and_id[1][0] = params.Index_in_x_direction == 0
-      || GlobalParams.HSIE_SWEEPING_LEVEL == 3;
-  this->edge_ownership_by_level_and_id[1][2] = params.Index_in_y_direction == 0
-      || GlobalParams.HSIE_SWEEPING_LEVEL == 2;
-  this->edge_ownership_by_level_and_id[1][4] = params.Index_in_z_direction == 0
-      || GlobalParams.HSIE_SWEEPING_LEVEL == 1;
-
-  // level 2;
-  if (GlobalParams.HSIE_SWEEPING_LEVEL == 2) {
-    this->edge_ownership_by_level_and_id[2][0] = true;
-    this->edge_ownership_by_level_and_id[2][2] = params.Index_in_y_direction == 0 || false;
-    this->edge_ownership_by_level_and_id[2][4] = params.Index_in_z_direction == 0 || false;
-  }
-  if (GlobalParams.HSIE_SWEEPING_LEVEL == 3) {
-    this->edge_ownership_by_level_and_id[2][0] = params.Index_in_x_direction == 0 || false;
-    this->edge_ownership_by_level_and_id[2][2] = params.Index_in_y_direction == 0 || false;
-    this->edge_ownership_by_level_and_id[2][4] = true;
-  }
-
-  // level 3;
-  this->edge_ownership_by_level_and_id[3][0] = params.Index_in_x_direction == 0;
-  this->edge_ownership_by_level_and_id[3][2] = params.Index_in_y_direction == 0;
-  this->edge_ownership_by_level_and_id[3][4] = params.Index_in_z_direction == 0;
-
 }
 
 void HSIESurface::identify_corner_cells() {
@@ -904,17 +871,21 @@ void HSIESurface::register_new_edge_dofs(
   // EDGE Dofs
   std::vector<unsigned int> local_dofs(fe_nedelec.dofs_per_line);
   cell_nedelec->line(edge)->get_dof_indices(local_dofs);
+  bool orientation = false;
+  if(cell_nedelec->line(edge)->vertex_index(0) > cell_nedelec->line(edge)->vertex_index(1)) {
+    orientation = get_orientation(undo_transform(cell_nedelec->line(edge)->vertex(0)), undo_transform(cell_nedelec->line(edge)->vertex(1)));
+  } else {
+    orientation = get_orientation(undo_transform(cell_nedelec->line(edge)->vertex(1)), undo_transform(cell_nedelec->line(edge)->vertex(0)));
+  }
+  
   for (int inner_order = 0; inner_order < static_cast<int>(fe_nedelec.dofs_per_line);
        inner_order++) {
-    register_single_dof(cell_nedelec->face_index(edge), -1, inner_order + 1, DofType::EDGE, edge_dof_data, local_dofs[inner_order]);
+    register_single_dof(cell_nedelec->face_index(edge), -1, inner_order + 1, DofType::EDGE, edge_dof_data, local_dofs[inner_order], orientation);
 
     Position bp = undo_transform(cell_nedelec->face(edge)->center(false, false));
     DofIndexAndOrientationAndPosition index_and_orientation;
-    index_and_orientation.index =
-        edge_dof_data[edge_dof_data.size() - 1].global_index;
-    index_and_orientation.orientation = get_orientation(
-        undo_transform(cell_nedelec->face(edge)->vertex(0)),
-        undo_transform(cell_nedelec->face(edge)->vertex(1)));
+    index_and_orientation.index = edge_dof_data[edge_dof_data.size() - 1].global_index;
+    index_and_orientation.orientation = orientation;
     index_and_orientation.position = bp;
     add_surface_relevant_dof(index_and_orientation);
   }
@@ -923,7 +894,7 @@ void HSIESurface::register_new_edge_dofs(
   for (int inner_order = 0; inner_order < static_cast<int>(fe_nedelec.dofs_per_line);
        inner_order++) {
     for (int hsie_order = 0; hsie_order <= max_hsie_order; hsie_order++) {
-      register_single_dof(cell_nedelec->face_index(edge), hsie_order, inner_order + 1, DofType::IFFa, edge_dof_data, local_dofs[inner_order]);
+      register_single_dof(cell_nedelec->face_index(edge), hsie_order, inner_order + 1, DofType::IFFa, edge_dof_data, local_dofs[inner_order], orientation);
     }
   }
   // INFINITE FACE Dofs Type b
@@ -943,7 +914,7 @@ void HSIESurface::register_new_edge_dofs(
   for (int inner_order = 0; inner_order < static_cast<int>(line_dofs.n_elements());
        inner_order++) {
     for (int hsie_order = -1; hsie_order <= max_hsie_order; hsie_order++) {
-      register_single_dof(cell_q->face_index(edge), hsie_order, inner_order, DofType::IFFb, edge_dof_data, line_dofs.nth_index_in_set(inner_order));
+      register_single_dof(cell_q->face_index(edge), hsie_order, inner_order, DofType::IFFb, edge_dof_data, line_dofs.nth_index_in_set(inner_order), orientation);
     }
   }
 }
@@ -1007,12 +978,13 @@ void HSIESurface::register_single_dof( std::string in_id, const int in_hsie_orde
 }
 
 void HSIESurface::register_single_dof( unsigned int in_id, const int in_hsie_order, const int in_inner_order,
-    DofType in_dof_type, DofDataVector &in_vector, unsigned int in_base_dof_index) {
+    DofType in_dof_type, DofDataVector &in_vector, unsigned int in_base_dof_index, bool orientation) {
   DofData dd(in_id);
   dd.global_index = register_dof();
   dd.hsie_order = in_hsie_order;
   dd.inner_order = in_inner_order;
   dd.type = in_dof_type;
+  dd.orientation = orientation;
   dd.set_base_dof(in_base_dof_index);
   dd.update_nodal_basis_flag();
   in_vector.push_back(dd);
@@ -1259,98 +1231,96 @@ void HSIESurface::clear_user_flags() {
   }
 }
 
+Position2D get_vertex_position_for_vertex_index_in_tria(dealii::Triangulation<2> * in_tria, unsigned int vertex_id) {
+  for(auto it : *in_tria) {
+    for(unsigned int i = 0; i < 4; i++) {
+      if(it.vertex_index(i) == vertex_id) {
+        return it.vertex(i);
+      }
+    }
+  }
+  std::cout << "There was an error locating a vertex by id." << std::endl;
+  return Position2D();
+}
+
+Position2D get_line_position_for_line_index_in_tria(dealii::Triangulation<2> * in_tria, unsigned int line_id) {
+  for(auto it : *in_tria) {
+    for(unsigned int i = 0; i < 4; i++) {
+      if(it.line_index(i) == line_id) {
+        return it.line(i)->center();
+      }
+    }
+  }
+  std::cout << "There was an error locating a vertex by id." << std::endl;
+  return Position2D();
+}
+
+std::vector<Position> HSIESurface::vertex_positions_for_ids(std::vector<unsigned int> ids) {
+  std::vector<Position> ret(ids.size());
+  for(unsigned int vertex_index_in_array = 0; vertex_index_in_array < ids.size(); vertex_index_in_array++) {
+    Position p = undo_transform(get_vertex_position_for_vertex_index_in_tria(&surface_triangulation, ids[vertex_index_in_array]));
+    ret[vertex_index_in_array] = p;
+  }
+  return ret;
+}
+
+std::vector<Position> HSIESurface::line_positions_for_ids(std::vector<unsigned int> ids) {
+  std::vector<Position> ret(ids.size());
+  for(unsigned int line_index_in_array = 0; line_index_in_array < ids.size(); line_index_in_array++) {
+    Position p  = undo_transform(get_line_position_for_line_index_in_tria(&surface_triangulation, ids[line_index_in_array]));
+    ret[line_index_in_array] = p;  
+  }
+  return ret;
+}
+
 std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association_by_boundary_id(
     BoundaryId in_boundary_id) {
-  std::vector<DofIndexAndOrientationAndPosition> ret;
-
-  if (in_boundary_id == this->b_id) {
+  if (in_boundary_id == b_id) {
     return this->get_dof_association();
-  } else {
-    clear_user_flags();
-    auto it = dof_h_nedelec.begin_active();
-    auto end = dof_h_nedelec.end();
-    std::vector<DofIndexAndOrientationAndPosition> vertex_indices_with_point;
-    std::vector<DofIndexAndOrientationAndPosition> face_indices_with_point;
-    std::vector<unsigned int> vertex_indices;
-    for (; it != end; ++it) {
-      if (it->at_boundary()) {
-        for (unsigned int edge = 0; edge < 4; edge++) {
-          if (it->line(edge)->boundary_id() == in_boundary_id) {
-            if (!it->line(edge)->user_flag_set()) {
-              DofIndexAndOrientationAndPosition index_and_orientation;
-              index_and_orientation.index = it->line_index(edge);
-              index_and_orientation.orientation = get_orientation(
-                  undo_transform(it->line(edge)->vertex(0)), undo_transform(it->line(edge)->vertex(1)));
-              index_and_orientation.position = undo_transform(it->line(edge)->center());
-              face_indices_with_point.emplace_back(index_and_orientation);
-              it->line(edge)->set_user_flag();
-              const unsigned int first_index = it->line(edge)->vertex_index(0);
-              const unsigned int second_index = it->line(edge)->vertex_index(
-                  1);
-              auto search = find(vertex_indices.begin(), vertex_indices.end(),
-                  first_index);
-              if (search == vertex_indices.end()) {
-                vertex_indices.push_back(first_index);
-                DofIndexAndOrientationAndPosition index_and_orientation;
-                index_and_orientation.index = first_index;
-                index_and_orientation.orientation = true;
-                index_and_orientation.position = undo_transform(
-                    it->line(edge)->vertex(0));
-                vertex_indices_with_point.emplace_back(index_and_orientation);
-              }
-              search = find(vertex_indices.begin(), vertex_indices.end(),
-                  second_index);
-              if (search == vertex_indices.end()) {
-                DofIndexAndOrientationAndPosition index_and_orientation;
-                index_and_orientation.index = second_index;
-                index_and_orientation.orientation = true;
-                index_and_orientation.position = undo_transform(
-                    it->line(edge)->vertex(1));
-                vertex_indices_with_point.emplace_back(index_and_orientation);
-              }
-            }
-          }
-        }
-      }
-    }
-    face_indices_with_point.shrink_to_fit();
-    std::vector<DofIndexAndOrientationAndPosition> surface_dofs_unsorted;
-    // Collect dof data
-    for (unsigned int i = 0; i < face_indices_with_point.size(); i++) {
-      for (unsigned int j = 0; j < edge_dof_data.size(); j++) {
-        if (edge_dof_data[j].base_structure_id_non_face
-            == face_indices_with_point[i].index) {
-          if(edge_dof_data[j].hsie_order != -1) {
-            DofIndexAndOrientationAndPosition index_and_orientation;
-            index_and_orientation.index = edge_dof_data[j].global_index;
-            index_and_orientation.orientation =
-                face_indices_with_point[i].orientation;
-            index_and_orientation.position = face_indices_with_point[i].position;
-            surface_dofs_unsorted.emplace_back(index_and_orientation);
-          }
-        }
-      }
-    }
-    for (unsigned int i = 0; i < vertex_indices_with_point.size(); i++) {
-      for (unsigned int j = 0; j < vertex_dof_data.size(); j++) {
-        if (vertex_dof_data[j].base_structure_id_non_face
-            == vertex_indices_with_point[i].index) {
-          DofIndexAndOrientationAndPosition index_and_orientation;
-          index_and_orientation.index = vertex_dof_data[j].global_index;
-          index_and_orientation.orientation = true;
-          index_and_orientation.position = vertex_indices_with_point[i].position;
-          surface_dofs_unsorted.emplace_back(index_and_orientation);
-        }
-      }
-    }
-    std::sort(surface_dofs_unsorted.begin(), surface_dofs_unsorted.end(), compareDofBaseDataAndOrientation);
+  } 
 
-    for (unsigned int i = 0; i < surface_dofs_unsorted.size(); i++) {
-      ret.push_back(surface_dofs_unsorted[i]);
+  if (are_opposing_sites(in_boundary_id, b_id)) {
+    std::vector<DofIndexAndOrientationAndPosition> surface_dofs_unsorted(0);
+    return surface_dofs_unsorted;
+  } 
+  std::vector<DofIndexAndOrientationAndPosition> surface_dofs_unsorted;
+  std::vector<unsigned int> vertex_ids = get_vertices_for_boundary_id(in_boundary_id);
+  std::vector<unsigned int> line_ids = get_lines_for_boundary_id(in_boundary_id);
+  std::vector<Position> vertex_positions = vertex_positions_for_ids(vertex_ids);
+  std::vector<Position> line_positions = line_positions_for_ids(line_ids);
+  for(unsigned int index = 0; index < vertex_dof_data.size(); index++) {
+    DofData dof = vertex_dof_data[index];
+    for(unsigned int index_in_ids = 0; index_in_ids < vertex_ids.size(); index_in_ids++) {
+      if(vertex_ids[index_in_ids] == vertex_dof_data[index].base_structure_id_non_face) {
+        DofIndexAndOrientationAndPosition new_item;
+        new_item.index = dof.global_index;
+        new_item.orientation = dof.orientation;
+        new_item.position = vertex_positions[index_in_ids];
+        surface_dofs_unsorted.push_back(new_item);
+      }
     }
-    ret.shrink_to_fit();
-    return ret;
   }
+
+  // Construct containers with base points, orientation and index
+  for(unsigned int index = 0; index < edge_dof_data.size(); index++) {
+    DofData dof = edge_dof_data[index];
+    for(unsigned int index_in_ids = 0; index_in_ids < line_ids.size(); index_in_ids++) {
+      if(line_ids[index_in_ids] == edge_dof_data[index].base_structure_id_non_face) {
+        DofIndexAndOrientationAndPosition new_item;
+        new_item.index = dof.global_index;
+        new_item.orientation = dof.orientation;
+        new_item.position = line_positions[index_in_ids];
+        surface_dofs_unsorted.push_back(new_item);
+      }
+    }
+  }
+  
+  surface_dofs_unsorted.shrink_to_fit();
+  
+  // Sort the vectors.
+  std::sort(surface_dofs_unsorted.begin(), surface_dofs_unsorted.end(), compareDofBaseDataAndOrientation);
+  
+  return surface_dofs_unsorted;
 }
 
 unsigned int HSIESurface::get_dof_count_by_boundary_id(BoundaryId in_boundary_id) {
@@ -1399,4 +1369,63 @@ void HSIESurface::add_surface_relevant_dof(
 
 void HSIESurface::set_V0(Position in_V0) {
   V0 = in_V0;
+}
+
+void HSIESurface::compute_extreme_vertex_coordinates() {
+  std::array<double, 3> upper_coordinates = {-100000, -100000, -100000};
+  std::array<double, 3> lower_coordinates = {100000, 100000, 100000};
+  
+  for(auto it = surface_triangulation.begin(); it != surface_triangulation.end(); it++) {
+    for(unsigned int ind = 0; ind < 4; ind++) {
+      Position vertex_position = undo_transform(it->vertex(ind));
+      for(unsigned int i = 0; i < 3; i++) {
+        if(vertex_position[i] > upper_coordinates[i]) {
+          upper_coordinates[i] = vertex_position[i];
+        }
+        if(vertex_position[i] < lower_coordinates[i]) {
+          lower_coordinates[i] = vertex_position[i];
+        }
+      }
+    }
+  }
+  boundary_vertex_coordinates[0] = lower_coordinates[0];
+  boundary_vertex_coordinates[1] = upper_coordinates[0];
+  boundary_vertex_coordinates[2] = lower_coordinates[1];
+  boundary_vertex_coordinates[3] = upper_coordinates[1];
+  boundary_vertex_coordinates[4] = lower_coordinates[2];
+  boundary_vertex_coordinates[5] = upper_coordinates[2];
+  boundary_coordinates_computed = true;
+}
+
+bool HSIESurface::is_point_at_boundary(Position2D in_p, BoundaryId in_bid) {
+  if(!boundary_coordinates_computed) {
+    compute_extreme_vertex_coordinates();
+  }
+  if(are_opposing_sites(in_bid, b_id)) return false;
+  if(in_bid == b_id) return true;
+  Position full_position = undo_transform(in_p);
+  unsigned int component = in_bid / 2;
+  return full_position[component] == boundary_vertex_coordinates[in_bid];
+}
+
+std::vector<unsigned int> HSIESurface::get_vertices_for_boundary_id(BoundaryId in_boundary_id) {
+  std::vector<unsigned int> vertices;
+  for(auto it = surface_triangulation.begin_vertex(); it != surface_triangulation.end_vertex(); it++) {
+    if(is_point_at_boundary(it->center(), in_boundary_id)) {
+      vertices.push_back(it->index());
+    }
+  }
+  vertices.shrink_to_fit();
+  return vertices;
+}
+
+std::vector<unsigned int> HSIESurface::get_lines_for_boundary_id(BoundaryId in_boundary_id) {
+  std::vector<unsigned int> edges;
+  for(auto it = surface_triangulation.begin_active_face(); it != surface_triangulation.end_face(); it++) {
+    if(is_point_at_boundary(it->center(), in_boundary_id)) {
+      edges.push_back(it->index());
+    }
+  }
+  edges.shrink_to_fit();
+  return edges;
 }

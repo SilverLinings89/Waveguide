@@ -36,8 +36,10 @@ class HSIESurface {
   dealii::Tensor<2,3,double> C;
   dealii::Tensor<2,3,double> G;
   Position V0;
+  bool boundary_coordinates_computed = false;
 
 public:
+  std::array<double, 6> boundary_vertex_coordinates;
   DofCount dof_counter;
   DofDataVector face_dof_data;
   DofDataVector edge_dof_data;
@@ -52,7 +54,6 @@ public:
       double in_additional_coordinate,
       bool in_is_metal = false);
   void identify_corner_cells();
-  void compute_edge_ownership_object(Parameters params);
   std::vector<HSIEPolynomial> build_curl_term_q(unsigned int,
                                                 const dealii::Tensor<1, 2>);
   std::vector<HSIEPolynomial> build_curl_term_nedelec(
@@ -73,6 +74,11 @@ public:
   void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, DofNumber shift, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints);
   void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, DofNumber shift, dealii::AffineConstraints<ComplexNumber> *constraints);
   void make_hanging_node_constraints(dealii::AffineConstraints<ComplexNumber>*, DofNumber shift);
+  bool is_point_at_boundary(Position2D in_p, BoundaryId in_bid);
+  auto get_vertices_for_boundary_id(BoundaryId) -> std::vector<unsigned int>;
+  auto get_n_vertices_for_boundary_id(BoundaryId) -> unsigned int;
+  auto get_lines_for_boundary_id(BoundaryId) -> std::vector<unsigned int>;
+  auto get_n_lines_for_boundary_id(BoundaryId) -> unsigned int;
   auto compute_n_edge_dofs() -> DofCountsStruct;
   auto compute_n_vertex_dofs() -> DofCountsStruct;
   auto compute_n_face_dofs() -> DofCountsStruct;
@@ -89,7 +95,7 @@ public:
   void register_new_surface_dofs(CellIterator2D cell, CellIterator2D cell2);
   auto register_dof() -> DofNumber;
   void register_single_dof(std::string in_id, int in_hsie_order, int in_inner_order, DofType in_dof_type, DofDataVector &, unsigned int);
-  void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, DofType in_dof_type, DofDataVector &, unsigned int);
+  void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, DofType in_dof_type, DofDataVector &, unsigned int, bool orientation = true);
   static ComplexNumber evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, dealii::Tensor<2,3,double> G);
   void transform_coordinates_in_place(std::vector<HSIEPolynomial> *);
   bool check_dof_assignment_integrity();
@@ -108,6 +114,9 @@ public:
   void clear_user_flags();
   void set_b_id_uses_hsie(unsigned int, bool);
   auto build_fad_for_cell(CellIterator2D cell) -> FaceAngelingData;
+  void compute_extreme_vertex_coordinates();
+  auto vertex_positions_for_ids(std::vector<unsigned int> ids) -> std::vector<Position>;
+  auto line_positions_for_ids(std::vector<unsigned int> ids) -> std::vector<Position>;
 };
 
 
