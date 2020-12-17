@@ -86,9 +86,7 @@ bool areDofsClose(const DofIndexAndOrientationAndPosition &a,
   return std::sqrt(dist) < 0.001;
 }
 
-bool compareDofBaseDataAndOrientation(
-    DofIndexAndOrientationAndPosition c1,
-    DofIndexAndOrientationAndPosition c2) {
+bool compareDofBaseDataAndOrientation(DofIndexAndOrientationAndPosition c1, DofIndexAndOrientationAndPosition c2) {
   if (c1.position[2] != c2.position[2]) {
     return c1.position[2] < c2.position[2];
   }
@@ -98,6 +96,9 @@ bool compareDofBaseDataAndOrientation(
   return c1.position[0] < c2.position[0];
 }
 
+bool compareDofDataByGlobalIndex(DofIndexAndOrientationAndPosition c1, DofIndexAndOrientationAndPosition c2) {
+  return c1.index < c2.index;
+}
 
 void alert() {
   MPI_Barrier(MPI_COMM_WORLD);

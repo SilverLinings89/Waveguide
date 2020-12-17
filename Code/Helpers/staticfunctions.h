@@ -35,12 +35,11 @@ Tensor<1, 3, double> crossproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 ComplexNumber matrixD(int in_row, int in_column,
                              ComplexNumber in_k0);
 
-bool compareDofBaseData(std::pair<DofNumber, Position> c1,
-    std::pair<DofNumber, Position> c2);
+bool compareDofBaseData(std::pair<DofNumber, Position> c1, std::pair<DofNumber, Position> c2);
 
-bool compareDofBaseDataAndOrientation(
-    DofIndexAndOrientationAndPosition,
-    DofIndexAndOrientationAndPosition);
+bool compareDofBaseDataAndOrientation(DofIndexAndOrientationAndPosition, DofIndexAndOrientationAndPosition);
+
+bool compareDofDataByGlobalIndex(DofIndexAndOrientationAndPosition, DofIndexAndOrientationAndPosition);
 
 bool areDofsClose(const DofIndexAndOrientationAndPosition &a,
     const DofIndexAndOrientationAndPosition &b);
@@ -96,8 +95,7 @@ double hmax_for_cell_center(Position);
 
 double InterpolationPolynomial(double, double, double, double, double);
 
-double InterpolationPolynomialDerivative(double, double, double, double,
-                                         double);
+double InterpolationPolynomialDerivative(double, double, double, double, double);
 
 double InterpolationPolynomialZeroDerivative(double, double, double);
 
@@ -105,9 +103,7 @@ double sigma(double, double, double);
 
 auto compute_center_of_triangulation(const Mesh*) -> Position;
 
-bool get_orientation(
-    const Position &vertex_1,
-    const Position &vertex_2);
+bool get_orientation(const Position &vertex_1, const Position &vertex_2);
 
 NumericVectorLocal crossproduct(const NumericVectorLocal &u,const NumericVectorLocal &v);
 

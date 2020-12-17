@@ -63,5 +63,5 @@ public:
 
   void compute_solver_factorization() override;
 
-  void update_mismatch_vector() override;
+  void update_mismatch_vector(BoundaryId interface) override;
 };

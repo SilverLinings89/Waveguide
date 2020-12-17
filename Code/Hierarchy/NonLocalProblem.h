@@ -112,7 +112,7 @@ private:
 
   auto get_incoming_dof_orientations() -> std::vector<bool>;
 
-  void update_mismatch_vector() override;
+  void update_mismatch_vector(BoundaryId) override;
 
   auto make_sparsity_pattern_for_surface(unsigned int, DynamicSparsityPattern *) -> void;
 

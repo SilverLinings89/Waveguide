@@ -467,10 +467,18 @@ auto LocalProblem::communicate_sweeping_direction(SweepingDirection sweeping_dir
   sweeping_direction = sweeping_direction_of_parent;
 }
 
-void LocalProblem::update_mismatch_vector() {
+void LocalProblem::update_mismatch_vector(BoundaryId in_bid) {
   rhs_mismatch.reinit( MPI_COMM_SELF, n_own_dofs, n_own_dofs);
+  for(unsigned int i = 0; i < surfaces[in_bid]->dof_counter; i++) {
+    solution[surface_first_dofs[in_bid] + i] = 0;
+  }
+  std::vector<DofIndexAndOrientationAndPosition> current = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(in_bid);
+  for(unsigned int i = 0; i < current.size(); i++) {
+    solution[current[i].index + first_own_index] = 0;
+  }
+  solution.compress(VectorOperation::insert);
   matrix->vmult(rhs_mismatch, solution);
-  std::cout << "RHS Mismatch on " << rank << " is " << rhs_mismatch.l2_norm() << " for input norm " << solution.l2_norm() << std::endl; 
+  std::cout << "RHS Mismatch on is " << rhs_mismatch.l2_norm() << " for input norm " << solution.l2_norm() << std::endl; 
 }
 
 void LocalProblem::compute_solver_factorization() {
