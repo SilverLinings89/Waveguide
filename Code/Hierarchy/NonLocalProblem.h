@@ -108,7 +108,7 @@ private:
 
   void compute_solver_factorization() override;
   
-  void output_results() override;
+  void output_results(std::string) override;
 
   auto get_incoming_dof_orientations() -> std::vector<bool>;
 

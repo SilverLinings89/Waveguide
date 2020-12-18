@@ -291,8 +291,11 @@ std::vector<DofIndexAndOrientationAndPosition> NumericProblem::get_surface_dof_v
                 DofIndexAndOrientationAndPosition new_item;
                 new_item.index = line_dofs[j];
                 new_item.position = cell->face(face)->line(i)->center();
-                new_item.orientation = get_orientation(cell->face(face)->line(i)->vertex(0),
-                            cell->face(face)->line(i)->vertex(1));
+                if(cell->face(face)->line(i)->vertex_index(0) < cell->face(face)->line(i)->vertex_index(1)) {
+                  new_item.orientation = get_orientation(cell->face(face)->line(i)->vertex(1),cell->face(face)->line(i)->vertex(0));
+                } else {
+                  new_item.orientation = get_orientation(cell->face(face)->line(i)->vertex(0),cell->face(face)->line(i)->vertex(1));
+                }
                 cell_dofs_and_orientations_and_points.emplace_back(new_item);
               }
               cell->face(face)->line(i)->set_user_flag();

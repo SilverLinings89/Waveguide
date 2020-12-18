@@ -52,7 +52,7 @@ void Simulation::run() {
     
     mainProblem->solve();
     
-    mainProblem->output_results();
+    mainProblem->output_results("solution_");
   }
   print_info("Simulation::run", "End", true, LoggingLevel::PRODUCTION_ONE);
 }
