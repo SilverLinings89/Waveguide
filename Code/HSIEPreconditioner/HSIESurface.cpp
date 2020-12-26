@@ -11,10 +11,6 @@
 #include "JacobianForCell.h"
 #include "../Helpers/staticfunctions.h"
 
-bool are_opposing_sites(BoundaryId a, BoundaryId b) {
-  return a != b && a/2 == b/2;
-}
-
 const unsigned int MAX_DOF_NUMBER = INT_MAX;
 
 // The ith entry in this vector means the values are for the surface with b_id i.

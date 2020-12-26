@@ -702,10 +702,9 @@ dealii::IndexSet NonLocalProblem::compute_interface_dof_set(BoundaryId interface
   for(unsigned int j = 0; j < current.size(); j++) {
     ret.add_index(current[j].index + first_own_index);
   }
-  /**
-  MPI_Barrier(MPI_COMM_WORLD);
+  
   for(unsigned int i = 0; i < 6; i++) {
-    if( i != interface_id ) {
+    if( i != interface_id && !are_opposing_sites(i,interface_id)) {
       if(is_hsie_surface[i] && get_local_problem()->is_hsie_surface[i]) {
         std::vector<DofIndexAndOrientationAndPosition> current = get_local_problem()->surfaces[i]->get_dof_association_by_boundary_id(interface_id);
         for(unsigned int j = 0; j < current.size(); j++) {
@@ -713,9 +712,7 @@ dealii::IndexSet NonLocalProblem::compute_interface_dof_set(BoundaryId interface
         }
       }
     }
-    MPI_Barrier(MPI_COMM_WORLD);
   }
-  **/
   return ret;
 }
 
@@ -1072,7 +1069,9 @@ void NonLocalProblem::setChildSolutionComponentsFromU() {
           while(vec[index].index < i){
             index++;
           }
-          if(i != vec[index].index) child->solution[child->surface_first_dofs[surface] + i] = 0;
+          if(i != vec[index].index){
+            child->solution[child->surface_first_dofs[surface] + i] = 0;
+          } 
         }
       }
     }

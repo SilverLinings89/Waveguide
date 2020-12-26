@@ -22,7 +22,10 @@
 #include "../Code/SpaceTransformations/DualProblemTransformationWrapper.h"
 #include "../Code/MeshGenerators/SquareMeshGenerator.h"
 #include "../Code/Helpers/ShapeDescription.h"
-#include "../Code/Core/Simulation.h"
+#include "../Code/Runners/Simulation.h"
+#include "../Code/Runners/ParameterSweep.h"
+#include "../Code/Runners/SingleCoreRun.h"
+#include "../Code/Runners/SweepingRun.h"
 
 std::string solutionpath = "";
 std::ofstream log_stream;
@@ -70,15 +73,30 @@ int main(int argc, char *argv[]) {
 
   print_info("Main", "Prepare Streams", true);
   PrepareStreams();
-
-  Simulation simulation(run_file, case_file);
+  initialize_global_variables(run_file, case_file);
+  Simulation * simulation;
+  if (GlobalParams.NumberProcesses == 0) {
+    if (GlobalParams.Enable_Parameter_Run) {
+      simulation = new ParameterSweep();
+    } else {
+      simulation = new SingleCoreRun();
+    }
+  } else {
+    if (GlobalParams.Enable_Parameter_Run) {
+      simulation = new ParameterSweep();
+    } else {
+      simulation = new SweepingRun();
+    }
+  }
+  
+  simulation->create_output_directory();
+  simulation->prepare_transformed_geometry();
 
   print_info("Main", "Prepare Simulation", true);
-  simulation.prepare();
+  simulation->prepare();
 
   print_info("Main", "Run Simulation", true);
-  simulation.run();
+  simulation->run();
 
   return 0;
-
 }

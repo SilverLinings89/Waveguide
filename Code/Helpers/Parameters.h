@@ -114,4 +114,12 @@ struct Parameters {
     LoggingLevel Logging_Level = LoggingLevel::DEBUG_ALL;
 
     dealii::Function<3, ComplexNumber> * source_field;
+
+    bool Enable_Parameter_Run = false;
+
+    unsigned int N_Kappa_0_Steps = 20;
+
+    unsigned int Min_HSIE_Order = 1;
+
+    unsigned int Max_HSIE_Order = 10;
 };

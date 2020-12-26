@@ -64,4 +64,6 @@ public:
   void compute_solver_factorization() override;
 
   void update_mismatch_vector(BoundaryId interface) override;
+
+  double compute_L2_error();
 };

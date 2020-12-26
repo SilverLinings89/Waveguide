@@ -4,9 +4,12 @@ ADD_LIBRARY(Code
         Core/Sector.cpp
         Core/SolutionWeight.cpp
         Core/NumericProblem.cpp
-        Core/Simulation.cpp
         Core/GlobalObjects.cpp
         Core/Types.h
+        Runners/Simulation.cpp
+        Runners/ParameterSweep.cpp
+        Runners/SingleCoreRun.cpp
+        Runners/SweepingRun.cpp
         Helpers/GeometryManager.cpp
         Helpers/ExactSolution.cpp
         Helpers/ModeManager.cpp

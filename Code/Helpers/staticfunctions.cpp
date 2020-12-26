@@ -522,3 +522,7 @@ BoundaryId opposing_Boundary_Id(BoundaryId b_id) {
     return b_id - 1;
   }
 }
+
+bool are_opposing_sites(BoundaryId a, BoundaryId b) {
+  return a != b && a/2 == b/2;
+}

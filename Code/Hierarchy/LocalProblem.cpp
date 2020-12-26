@@ -489,3 +489,20 @@ void LocalProblem::compute_solver_factorization() {
   timer1.stop();
   print_info("LocalProblem::compute_solver_factorization", "Walltime: " + std::to_string(timer1.wall_time()) , true, LoggingLevel::PRODUCTION_ONE);
 }
+
+double LocalProblem::compute_L2_error() {
+NumericVectorLocal solution_inner(base_problem.n_dofs);
+  for(unsigned int i = 0; i < base_problem.n_dofs; i++) {
+    solution_inner[i] = solution(i);
+  }
+  dealii::Vector<double> cellwise_error(base_problem.triangulation.n_active_cells());
+  dealii::VectorTools::integrate_difference(
+    MappingQGeneric<3>(1),
+    base_problem.dof_handler,
+    solution_inner,
+    *GlobalParams.source_field,
+    cellwise_error,
+    dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
+    dealii::VectorTools::NormType::L2_norm );
+  return dealii::VectorTools::compute_global_error(base_problem.triangulation, cellwise_error, dealii::VectorTools::NormType::L2_norm);
+}

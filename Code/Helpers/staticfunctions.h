@@ -120,3 +120,5 @@ bool is_visible_message_in_current_logging_level(LoggingLevel level = LoggingLev
 void write_print_message(const std::string &label, const std::string &message);
 
 BoundaryId opposing_Boundary_Id(BoundaryId b_id);
+
+bool are_opposing_sites(BoundaryId a, BoundaryId b);
