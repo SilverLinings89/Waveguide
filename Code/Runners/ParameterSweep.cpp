@@ -28,10 +28,6 @@ void ParameterSweep::prepare() {
   if(GlobalParams.Point_Source_Type == 0) {
     rmProblem = new RectangularMode();
   } 
-  
-  mainProblem = new LocalProblem();
-  mainProblem->initialize();
-
   print_info("ParameterSweep::prepare", "End", true, LoggingLevel::DEBUG_ONE);
 }
 
@@ -54,6 +50,9 @@ void ParameterSweep::run() {
       unsigned int rank = GlobalParams.MPI_Rank;
       if(order % n_procs == rank) {
         mainProblem = new LocalProblem();
+
+        mainProblem->initialize();
+
         mainProblem->assemble();
 
         mainProblem->compute_solver_factorization();
