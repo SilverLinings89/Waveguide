@@ -268,7 +268,7 @@ void LocalProblem::reinit_rhs() {
 void LocalProblem::reinit() {
   dealii::DynamicSparsityPattern dsp = { n_own_dofs };
   reinit_rhs();
-  rhs = dealii::PETScWrappers::MPI::Vector(own_dofs, GlobalMPI.communicators_by_level[local_level]);
+  rhs = dealii::PETScWrappers::MPI::Vector(own_dofs, MPI_COMM_SELF);
   solution.reinit(MPI_COMM_SELF, n_own_dofs, n_own_dofs, false);
   make_constraints();
   base_problem.make_sparsity_pattern(&dsp, 0, &constraints);
