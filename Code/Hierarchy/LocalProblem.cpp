@@ -368,6 +368,7 @@ void LocalProblem::output_results(std::string filename) {
   std::ofstream outputvtu(filename + std::to_string(GlobalParams.MPI_Rank) + ".vtu");
   dealii::Vector<double> cellwise_error(base_problem.triangulation.n_active_cells());
   dealii::Vector<double> cellwise_norm(base_problem.triangulation.n_active_cells());
+  std::cout << "a" << std::endl;
   dealii::VectorTools::integrate_difference(
     MappingQGeneric<3>(1),
     base_problem.dof_handler,
@@ -376,7 +377,9 @@ void LocalProblem::output_results(std::string filename) {
     cellwise_error,
     dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
     dealii::VectorTools::NormType::L2_norm );
+  std::cout << "b" << std::endl;
   dealii::Vector<ComplexNumber> zero(base_problem.n_dofs);  
+  std::cout << "c" << std::endl;
   dealii::VectorTools::integrate_difference(
     MappingQGeneric<3>(1),
     base_problem.dof_handler,
@@ -386,6 +389,7 @@ void LocalProblem::output_results(std::string filename) {
     dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
     dealii::VectorTools::NormType::L2_norm );
   unsigned int index = 0;
+  std::cout << "d" << std::endl;
   for(auto it = base_problem.dof_handler.begin_active(); it != base_problem.dof_handler.end(); it++) {
     if(base_problem.constrained_cells.contains(it->id().to_string())) {
       cellwise_error[index] = 0;
@@ -393,6 +397,7 @@ void LocalProblem::output_results(std::string filename) {
     }
     index++;
   }
+  std::cout << "e" << std::endl;
   const double global_error = dealii::VectorTools::compute_global_error(base_problem.triangulation, cellwise_error, dealii::VectorTools::NormType::L2_norm);
   const double global_norm = dealii::VectorTools::compute_global_error(base_problem.triangulation, cellwise_norm, dealii::VectorTools::NormType::L2_norm);
   print_info("LocalProblem::output_results", "Global computed error L2: " + std::to_string(global_error), false, LoggingLevel::PRODUCTION_ONE);
@@ -491,7 +496,7 @@ void LocalProblem::compute_solver_factorization() {
 }
 
 double LocalProblem::compute_L2_error() {
-NumericVectorLocal solution_inner(base_problem.n_dofs);
+  NumericVectorLocal solution_inner(base_problem.n_dofs);
   for(unsigned int i = 0; i < base_problem.n_dofs; i++) {
     solution_inner[i] = solution(i);
   }

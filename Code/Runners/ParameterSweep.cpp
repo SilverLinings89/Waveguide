@@ -32,28 +32,29 @@ void ParameterSweep::prepare() {
 
 void ParameterSweep::run() {
   print_info("ParameterSweep::run", "Start", true, LoggingLevel::PRODUCTION_ONE);
+  const unsigned int n_order_steps = GlobalParams.Max_HSIE_Order - GlobalParams.Min_HSIE_Order;
   double ** errors = new double*[GlobalParams.N_Kappa_0_Steps];
   for(unsigned int i = 0; i < GlobalParams.N_Kappa_0_Steps; i++) {
     errors[i] = new double [GlobalParams.Max_HSIE_Order - GlobalParams.Min_HSIE_Order];
-    for (unsigned int j = 0; j < (GlobalParams.Max_HSIE_Order - GlobalParams.Min_HSIE_Order); j++) {
+    for (unsigned int j = 0; j < n_order_steps; j++) {
       errors[i][j] = 0;
     }
   }
   for(unsigned int kappa_step = 0; kappa_step < GlobalParams.N_Kappa_0_Steps; kappa_step++) {
     GlobalParams.kappa_0_angle = (2*GlobalParams.Pi / GlobalParams.N_Kappa_0_Steps) * kappa_step;
     GlobalParams.kappa_0 = {std::sin(GlobalParams.kappa_0_angle), std::cos(GlobalParams.kappa_0_angle)};
-    for (unsigned int order_index = 0; order_index < GlobalParams.Max_HSIE_Order - GlobalParams.Min_HSIE_Order; order_index++) {
+    for (unsigned int order_index = 0; order_index < n_order_steps; order_index++) {
       unsigned int order = GlobalParams.Min_HSIE_Order + order_index;
-      print_info("ParameterSweep::run",
-                 "Performing parameter study for kappa (" +
-                     std::to_string(GlobalParams.kappa_0.real()) + " + " +
-                     std::to_string(GlobalParams.kappa_0.imag()) +
-                     ") and order " + std::to_string(order),
-                 false, LoggingLevel::PRODUCTION_ALL);
       GlobalParams.HSIE_polynomial_degree = order;
       unsigned int n_procs = GlobalParams.NumberProcesses;
       unsigned int rank = GlobalParams.MPI_Rank;
       if ((kappa_step * GlobalParams.N_Kappa_0_Steps + order_index) % n_procs == rank) {
+        print_info("ParameterSweep::run",
+                  "Performing parameter study for kappa (" +
+                      std::to_string(GlobalParams.kappa_0.real()) + " + " +
+                      std::to_string(GlobalParams.kappa_0.imag()) +
+                      ") and order " + std::to_string(order),
+                  false, LoggingLevel::PRODUCTION_ALL);
         mainProblem = new LocalProblem();
 
         mainProblem->initialize();
@@ -68,8 +69,11 @@ void ParameterSweep::run() {
         mainProblem->output_results("kappa" +
                                     std::to_string(GlobalParams.kappa_0_angle) +
                                     "order" + std::to_string(order));
-
-        errors[kappa_step][order_index] = mainProblem->compute_L2_error();
+        const double error_run =  mainProblem->compute_L2_error();
+        print_info("ParameterSweep::run", "Found error " + std::to_string(error_run) + " for order " + std::to_string(order) + " and kappa" +
+                                    std::to_string(GlobalParams.kappa_0_angle));
+        errors[kappa_step][order_index] = error_run;
+        delete mainProblem;
       }
     }
   }
@@ -77,8 +81,8 @@ void ParameterSweep::run() {
   MPI_Barrier(MPI_COMM_WORLD);
 
   for(unsigned int kappa_step = 0; kappa_step < GlobalParams.N_Kappa_0_Steps; kappa_step++) {
-    for(unsigned int order = GlobalParams.Min_HSIE_Order; order < GlobalParams.Max_HSIE_Order; order ++){
-      errors[kappa_step][order] = dealii::Utilities::MPI::sum(errors[kappa_step][order], MPI_COMM_WORLD);
+    for (unsigned int order_index = 0; order_index < n_order_steps; order_index++) {
+      errors[kappa_step][order_index] = dealii::Utilities::MPI::sum(errors[kappa_step][order_index], MPI_COMM_WORLD);
     }
   }
   if(GlobalParams.MPI_Rank == 0) {

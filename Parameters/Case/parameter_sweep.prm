@@ -1,5 +1,5 @@
 subsection Case parameters
-    set source type = 3
+    set source type = 0
     set geometry size x = 4.0
     set geometry size y = 3.2
     set geometry size z = 2.0
