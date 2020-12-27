@@ -18,8 +18,6 @@ class SweepingRun: public Simulation {
 
   void run() override;
 
-  void overwrite_parameters_from_console() override;
-
   void prepare_transformed_geometry() override;
 
 };

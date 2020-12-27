@@ -51,6 +51,6 @@ void SweepingRun::run() {
     print_info("Simulation::run", "End", true, LoggingLevel::PRODUCTION_ONE);
 }
 
-void Simulation::prepare_transformed_geometry() {
+void SweepingRun::prepare_transformed_geometry() {
 }
 

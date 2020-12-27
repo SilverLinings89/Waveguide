@@ -29,7 +29,7 @@ void ParameterReader::declare_parameters() {
 
     case_prm.enter_subsection("Case parameters");
     {
-        case_prm.declare_entry("source type", "0", Patterns::Integer(), "PointSourceField is 0: empty, 1: cos()cos(), 2: Hertz Dipole.");
+        case_prm.declare_entry("source type", "0", Patterns::Integer(), "PointSourceField is 0: empty, 1: cos()cos(), 2: Hertz Dipole, 3: Waveguide");
         case_prm.declare_entry("geometry size x", "5.0", Patterns::Double(), "Size of the computational domain in x-direction.");
         case_prm.declare_entry("geometry size y", "5.0", Patterns::Double(), "Size of the computational domain in y-direction.");
         case_prm.declare_entry("geometry size z", "5.0", Patterns::Double(), "Size of the computational domain in z-direction.");
@@ -41,9 +41,9 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("width of waveguide", "2.0", Patterns::Double(), "Width of the Waveguide core.");
         case_prm.declare_entry("height of waveguide", "1.8", Patterns::Double(), "Height of the Waveguide core.");
         case_prm.declare_entry("Enable Parameter Run", "false", Patterns::Bool(), "For a series of Local solves, this can be set to true");
-        case_prm.declare_entry("N_Kappa_0_Steps", "20", Patterns::Integer(), "Steps for kappa discretization.");
-        case_prm.declare_entry("Min_HSIE_Order", "1", Patterns::Integer(), "Minimal HSIE Element order for parameter run.");
-        case_prm.declare_entry("Max_HSIE_Order", "21", Patterns::Integer(), "Maximal HSIE Element order for parameter run.");
+        case_prm.declare_entry("N Kappa 0 Steps", "20", Patterns::Integer(), "Steps for kappa discretization.");
+        case_prm.declare_entry("Min HSIE Order", "1", Patterns::Integer(), "Minimal HSIE Element order for parameter run.");
+        case_prm.declare_entry("Max HSIE Order", "21", Patterns::Integer(), "Maximal HSIE Element order for parameter run.");
     }
     case_prm.leave_subsection();
 }

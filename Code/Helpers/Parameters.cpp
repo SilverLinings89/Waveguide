@@ -2,6 +2,7 @@
 #include <iostream>
 #include "Parameters.h"
 #include "../Helpers/staticfunctions.h"
+#include "../Helpers/ExactSolution.h"
 #include "PointSourceField.h"
 
 auto Parameters::complete_data() -> void {
@@ -19,8 +20,13 @@ auto Parameters::complete_data() -> void {
     if(Point_Source_Type == 2) {
         source_field = new PointSourceFieldHertz(0.5);
         if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using Hertz-type point source.", false, LoggingLevel::PRODUCTION_ONE);
-    } else {
+    }
+    if(Point_Source_Type == 1) {
         source_field = new PointSourceFieldCosCos();
         if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using Cos-Cos-type point source.", false, LoggingLevel::PRODUCTION_ONE);
+    }
+    if(Point_Source_Type == 0) {
+        source_field = new ExactSolution(true, false);
+        if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using mode for rectangular waveguide.", false, LoggingLevel::PRODUCTION_ONE);
     }
 }

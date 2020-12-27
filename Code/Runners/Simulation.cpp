@@ -18,7 +18,7 @@
 
 Simulation::Simulation() {
 
-};
+}
 
 Simulation::~Simulation() {
     delete rmProblem;

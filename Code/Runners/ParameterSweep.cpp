@@ -48,6 +48,7 @@ void ParameterSweep::run() {
     GlobalParams.kappa_0_angle = (2*GlobalParams.Pi / GlobalParams.N_Kappa_0_Steps) * kappa_step;
     GlobalParams.kappa_0 = {std::sin(GlobalParams.kappa_0_angle), std::cos(GlobalParams.kappa_0_angle)};
     for(unsigned int order = GlobalParams.Min_HSIE_Order; order < GlobalParams.Max_HSIE_Order; order ++){
+      print_info("ParameterSweep::run", "Performing parameter study for kappa (" + std::to_string(GlobalParams.kappa_0.real()) + " + " + std::to_string(GlobalParams.kappa_0.imag()) + ") and order " + std::to_string(order), false, LoggingLevel::PRODUCTION_ALL);
       GlobalParams.HSIE_polynomial_degree = order*2;
       unsigned int n_procs = GlobalParams.NumberProcesses;
       unsigned int rank = GlobalParams.MPI_Rank;
@@ -94,4 +95,3 @@ void ParameterSweep::run() {
 }
 
 void ParameterSweep::prepare_transformed_geometry() { }
-

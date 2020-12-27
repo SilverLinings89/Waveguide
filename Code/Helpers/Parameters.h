@@ -15,9 +15,6 @@
  * available globally. \author: Pascal Kraft \date: 28.11.2016
  */
 
-const static std::string PrecOptionNames[] = {
-    "Sweeping", "FastSweeping", "HSIESweeping", "HSIEFastSweeping"};
-
 struct Parameters {
     ShapeDescription sd;
 
@@ -103,6 +100,7 @@ struct Parameters {
 
     unsigned int Number_of_Predefined_Shape = 1;
 
+    // 0: empty, 1: cos()cos(), 2: Hertz Dipole, 3: Waveguide
     unsigned int Point_Source_Type = 0;
 
     // 1 means normal sweeping, 2 means hierarchical sweeping with depth

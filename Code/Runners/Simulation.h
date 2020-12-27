@@ -18,8 +18,6 @@ class Simulation {
 
   virtual void run() = 0;
 
-  virtual void overwrite_parameters_from_console() = 0;
-
   virtual void prepare_transformed_geometry() = 0;
 
   void create_output_directory();
