@@ -74,16 +74,10 @@ ComplexNumber ExactSolution::value(const Position &in_p,
             break;
         }
       }
-      double n;
-      if (abs(p[0]) <= GlobalParams.Width_of_waveguide &&
-          abs(p[1]) <= GlobalParams.Height_of_waveguide) {
-        n = std::sqrt(GlobalParams.Epsilon_R_in_waveguide);
-      } else {
-        n = std::sqrt(GlobalParams.Epsilon_R_outside_waveguide);
-      }
-      double k = n * 2 * GlobalParams.Pi / GlobalParams.Lambda;
-      ComplexNumber phase(0.0,
-          (p[2] - Geometry.global_z_range.first) * k);
+      double n = std::sqrt(GlobalParams.Epsilon_R_in_waveguide);
+      double lambda = GlobalParams.Lambda / n;
+      double z =  - p[2] + Geometry.global_z_range.first;
+      ComplexNumber phase(0.0, 2.0 * GlobalParams.Pi * z / lambda);
       ret_val *= std::exp(phase);
       return ret_val;
     } else {
@@ -132,14 +126,10 @@ void ExactSolution::vector_value(const Position &in_p,
                     m1m1 * vals[ix - 1][iy - 1].Ez +
                     m1p1 * vals[ix - 1][iy].Ez;
         double n;
-        if (abs(p[0]) <= GlobalParams.Width_of_waveguide &&
-            abs(p[1]) <= GlobalParams.Height_of_waveguide) {
-          n = std::sqrt(GlobalParams.Epsilon_R_in_waveguide);
-        } else {
-          n = std::sqrt(GlobalParams.Epsilon_R_outside_waveguide);
-        }
-        double k = n * 2 * GlobalParams.Pi / GlobalParams.Lambda;
-        ComplexNumber phase(0.0, -(p[2] + GlobalParams.Geometry_Size_Z / 2.0) * k);
+        n = std::sqrt(GlobalParams.Epsilon_R_in_waveguide);
+        double lambda = GlobalParams.Lambda / n;
+        double z =  - p[2] + Geometry.global_z_range.first;
+        ComplexNumber phase(0.0, 2.0 * GlobalParams.Pi * z / lambda);
         phase = std::exp(phase);
         for (unsigned int komp = 0; komp < 3; komp++) {
           values[komp] *= phase;
@@ -272,9 +262,6 @@ ExactSolution::ExactSolution(bool in_rectangular, bool in_dual)
         vals[j][i].rescale(1.0 / max);
       }
     }
-
-    deallog << " Mesh constant: " << abs(mesh_points[0] - mesh_points[1])
-            << std::endl;
   }
 }
 

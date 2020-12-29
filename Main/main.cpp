@@ -75,15 +75,11 @@ int main(int argc, char *argv[]) {
   PrepareStreams();
   initialize_global_variables(run_file, case_file);
   Simulation * simulation;
-  if (GlobalParams.NumberProcesses == 0) {
-    if (GlobalParams.Enable_Parameter_Run) {
-      simulation = new ParameterSweep();
-    } else {
-      simulation = new SingleCoreRun();
-    }
+  if (GlobalParams.Enable_Parameter_Run) {
+    simulation = new ParameterSweep();
   } else {
-    if (GlobalParams.Enable_Parameter_Run) {
-      simulation = new ParameterSweep();
+    if (GlobalParams.NumberProcesses == 1) {
+      simulation = new SingleCoreRun();
     } else {
       simulation = new SweepingRun();
     }

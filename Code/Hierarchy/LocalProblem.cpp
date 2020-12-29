@@ -19,11 +19,10 @@
 LocalProblem::LocalProblem() :
     HierarchicalProblem(0), base_problem(), sc(), solver(sc, MPI_COMM_SELF) {
   base_problem.make_grid();
-  MPI_Barrier(MPI_COMM_WORLD);
   print_info("Local Problem", "Done building base problem. Preparing matrix.");
   matrix = new dealii::PETScWrappers::SparseMatrix();
   for(unsigned int i = 0; i < 6; i++) is_hsie_surface[i] = true;
-  if(GlobalParams.NumberProcesses > 1) is_hsie_surface[4] = false;
+  is_hsie_surface[4] = false;
 }
 
 LocalProblem::~LocalProblem() {}
@@ -169,10 +168,8 @@ void LocalProblem::make_constraints() {
   // couple surface dofs with inner ones.
   for (unsigned int surface = 0; surface < 6; surface++) {
     if(is_hsie_surface[surface]) {
-      std::vector<DofIndexAndOrientationAndPosition> from_surface =
-          surfaces[surface]->get_dof_association();
-      std::vector<DofIndexAndOrientationAndPosition> from_inner_problem =
-          base_problem.get_surface_dof_vector_for_boundary_id(surface);
+      std::vector<DofIndexAndOrientationAndPosition> from_surface = surfaces[surface]->get_dof_association();
+      std::vector<DofIndexAndOrientationAndPosition> from_inner_problem = base_problem.get_surface_dof_vector_for_boundary_id(surface);
       if (from_surface.size() != from_inner_problem.size()) {
         std::cout << "Warning: Size mismatch in make_constraints for surface "
             << surface << ": Inner: " << from_inner_problem.size()
@@ -236,8 +233,8 @@ void LocalProblem::make_constraints() {
             surface_to_surface_constraints.add_entry(dof_a, dof_b, value);
           }
         }
-        constraints.merge(surface_to_surface_constraints,
-          dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
+        // constraints.merge(surface_to_surface_constraints,
+        //   dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
       }
     }
   }
@@ -368,7 +365,6 @@ void LocalProblem::output_results(std::string filename) {
   std::ofstream outputvtu(filename + std::to_string(GlobalParams.MPI_Rank) + ".vtu");
   dealii::Vector<double> cellwise_error(base_problem.triangulation.n_active_cells());
   dealii::Vector<double> cellwise_norm(base_problem.triangulation.n_active_cells());
-  std::cout << "a" << std::endl;
   dealii::VectorTools::integrate_difference(
     MappingQGeneric<3>(1),
     base_problem.dof_handler,
@@ -377,9 +373,7 @@ void LocalProblem::output_results(std::string filename) {
     cellwise_error,
     dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
     dealii::VectorTools::NormType::L2_norm );
-  std::cout << "b" << std::endl;
   dealii::Vector<ComplexNumber> zero(base_problem.n_dofs);  
-  std::cout << "c" << std::endl;
   dealii::VectorTools::integrate_difference(
     MappingQGeneric<3>(1),
     base_problem.dof_handler,
@@ -389,7 +383,6 @@ void LocalProblem::output_results(std::string filename) {
     dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
     dealii::VectorTools::NormType::L2_norm );
   unsigned int index = 0;
-  std::cout << "d" << std::endl;
   for(auto it = base_problem.dof_handler.begin_active(); it != base_problem.dof_handler.end(); it++) {
     if(base_problem.constrained_cells.contains(it->id().to_string())) {
       cellwise_error[index] = 0;
@@ -397,7 +390,6 @@ void LocalProblem::output_results(std::string filename) {
     }
     index++;
   }
-  std::cout << "e" << std::endl;
   const double global_error = dealii::VectorTools::compute_global_error(base_problem.triangulation, cellwise_error, dealii::VectorTools::NormType::L2_norm);
   const double global_norm = dealii::VectorTools::compute_global_error(base_problem.triangulation, cellwise_norm, dealii::VectorTools::NormType::L2_norm);
   print_info("LocalProblem::output_results", "Global computed error L2: " + std::to_string(global_error), false, LoggingLevel::PRODUCTION_ONE);
@@ -405,7 +397,33 @@ void LocalProblem::output_results(std::string filename) {
   data_out.add_data_vector(cellwise_error, "Cellwise_error");
   data_out.build_patches();
   data_out.write_vtu(outputvtu);
+  write_phase_plot();
   print_info("LocalProblem::output_results()", "End");
+}
+
+auto LocalProblem::write_phase_plot() -> void {
+  dealii::Vector<ComplexNumber> output_solution = get_local_vector_from_global();
+  const unsigned int n_points = 50;
+  std::ofstream outfile;
+  outfile.open("Phase_Plot" + std::to_string(GlobalParams.MPI_Rank) + ".dat");
+  for(unsigned int i = 0; i < n_points; i++) {
+    dealii::Vector<ComplexNumber> numeric_solution(3);
+    dealii::Vector<ComplexNumber> exact_solution(3);
+    Point<3, double> location = Point<3,double>(0,0, Geometry.global_z_range.first + i * (Geometry.global_z_range.second - Geometry.global_z_range.first)/n_points);
+    dealii::VectorTools::point_value(base_problem.dof_handler, output_solution, location , numeric_solution);
+    GlobalParams.source_field->vector_value(location, exact_solution);
+    outfile << location[2] << "\t";
+    for(unsigned int j = 0; j < 3; j++) {
+      outfile << exact_solution[j].real() << "\t"<< exact_solution[j].imag() << "\t";
+    }
+    for(unsigned int j = 0; j < 3; j++) {
+      outfile << numeric_solution[j].real() << "\t"<< numeric_solution[j].imag() << "\t";
+    }
+    for(unsigned int j = 0; j < 3; j++) {
+      outfile << numeric_solution[j].real() - exact_solution[j].real() << "\t"<< numeric_solution[j].imag()  - exact_solution[j].imag()<< "\t";
+    }
+    outfile << std::endl;
+  }
 }
 
 auto LocalProblem::compare_to_exact_solution() -> void {
@@ -488,11 +506,11 @@ void LocalProblem::update_mismatch_vector(BoundaryId in_bid) {
 
 void LocalProblem::compute_solver_factorization() {
   Timer timer1;
-  print_info("LocalProblem::compute_solver_factorization", "Begin solver factorization: ", true, LoggingLevel::PRODUCTION_ONE);
+  // print_info("LocalProblem::compute_solver_factorization", "Begin solver factorization: ", true, LoggingLevel::PRODUCTION_ONE);
   timer1.start();
   solve();
   timer1.stop();
-  print_info("LocalProblem::compute_solver_factorization", "Walltime: " + std::to_string(timer1.wall_time()) , true, LoggingLevel::PRODUCTION_ONE);
+  // print_info("LocalProblem::compute_solver_factorization", "Walltime: " + std::to_string(timer1.wall_time()) , true, LoggingLevel::PRODUCTION_ONE);
 }
 
 double LocalProblem::compute_L2_error() {

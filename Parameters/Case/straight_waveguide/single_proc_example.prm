@@ -1,5 +1,6 @@
 subsection Case parameters
     set source type = 0
+    set fem order = 1
     set geometry size x = 4.0
     set geometry size y = 3.6
     set geometry size z = 2.02
@@ -8,8 +9,4 @@ subsection Case parameters
     set mu in = 1.0
     set mu out = 1.0
     set signal amplitude = 1.0
-    set Enable Parameter Run = true
-    set N Kappa 0 Steps = 1
-    set Min HSIE Order = 1
-    set Max HSIE Order = 16
 end

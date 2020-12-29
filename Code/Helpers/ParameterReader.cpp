@@ -16,7 +16,6 @@ void ParameterReader::declare_parameters() {
         run_prm.declare_entry("GMRES maximum steps" , "100", Patterns::Integer(), "Number of maximum GMRES steps until failure.");
         run_prm.declare_entry("HSIE polynomial degree" , "4", Patterns::Integer(), "Polynomial degree of the Hardy-space polynomials for HSIE surfaces.");
         run_prm.declare_entry("kappa angle" , "1.0", Patterns::Double(), "Phase of the complex value kappa with norm 1 that is used in HSIEs.");
-        run_prm.declare_entry("fem order" , "0", Patterns::Integer(), "Degree of nedelec elements in the interior.");
         run_prm.declare_entry("processes in x" , "1", Patterns::Integer(), "Number of processes in x-direction.");
         run_prm.declare_entry("processes in y" , "1", Patterns::Integer(), "Number of processes in y-direction.");
         run_prm.declare_entry("processes in z" , "1", Patterns::Integer(), "Number of processes in z-direction.");
@@ -37,6 +36,7 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("epsilon out", "1.0", Patterns::Double(), "Epsilon r outside the material.");
         case_prm.declare_entry("mu in", "1.0", Patterns::Double(), "Mu r inside the material.");
         case_prm.declare_entry("mu out", "1.0", Patterns::Double(), "Mu r outside the material.");
+        case_prm.declare_entry("fem order" , "0", Patterns::Integer(), "Degree of nedelec elements in the interior.");
         case_prm.declare_entry("signal amplitude", "1.0", Patterns::Double(), "Amplitude of the input signal or PointSourceField");
         case_prm.declare_entry("width of waveguide", "2.0", Patterns::Double(), "Width of the Waveguide core.");
         case_prm.declare_entry("height of waveguide", "1.8", Patterns::Double(), "Height of the Waveguide core.");
@@ -62,7 +62,6 @@ Parameters ParameterReader::read_parameters(const std::string run_file,const std
         ret.GMRES_max_steps = run_prm.get_integer("GMRES maximum steps");
         ret.HSIE_polynomial_degree = run_prm.get_integer("HSIE polynomial degree");
         ret.kappa_0_angle = run_prm.get_double("kappa angle");
-        ret.Nedelec_element_order = run_prm.get_integer("fem order");
         ret.Blocks_in_x_direction = run_prm.get_integer("processes in x");
         ret.Blocks_in_y_direction = run_prm.get_integer("processes in y");
         ret.Blocks_in_z_direction = run_prm.get_integer("processes in z");
@@ -83,6 +82,7 @@ Parameters ParameterReader::read_parameters(const std::string run_file,const std
         ret.Mu_R_in_waveguide = case_prm.get_double("mu in");
         ret.Mu_R_outside_waveguide = case_prm.get_double("mu out");
         ret.Amplitude_of_input_signal = case_prm.get_double("signal amplitude");
+        ret.Nedelec_element_order = case_prm.get_integer("fem order");
         ret.Width_of_waveguide = case_prm.get_double("width of waveguide");
         ret.Width_of_waveguide = case_prm.get_double("height of waveguide");
         ret.Enable_Parameter_Run = case_prm.get_bool("Enable Parameter Run");

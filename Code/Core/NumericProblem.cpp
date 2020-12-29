@@ -1,5 +1,4 @@
-#ifndef WaveguideCppFlag
-#define WaveguideCppFlag
+#pragma once
 
 #include "NumericProblem.h"
 
@@ -128,51 +127,14 @@ auto NumericProblem::get_outer_constrained_faces() -> std::set<unsigned int> {
 }
 
 void NumericProblem::make_constraints() {
-  // double inner_cell_radius = 1.0/11.0;
-  // constrained_cells = get_central_cells(inner_cell_radius+0.0001);
-  // outer_constrained_faces = get_outer_constrained_faces();
-  // print_info("NumericProblem::make_constraints", "Constrained cell count: " + std::to_string(constrained_cells.size()), false, LoggingLevel::PRODUCTION_ALL);
   std::vector<DofCount> local_line_indices(fe.dofs_per_line);
   std::vector<DofCount> local_face_indices(fe.dofs_per_face);
   local_dof_indices.set_size(n_dofs);
   local_dof_indices.add_range(0, n_dofs);
   local_constraints.reinit(local_dof_indices);
 
-  // Constrain the outer dofs
-  /**
-  for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
-    if(constrained_cells.contains(it->id().to_string())) {
-      for (unsigned int face = 0; face < dealii::GeometryInfo<3>::faces_per_cell; face++) {
-        it->face(face)->get_dof_indices(local_face_indices);
-        if(outer_constrained_faces.contains(it->face_index(face))) {
-          for(unsigned int line = 0; line < dealii::GeometryInfo<3>::lines_per_face; line++) {
-            it->face(face)->line(line)->get_dof_indices(local_line_indices);
-            Position p0 = it->face(face)->line(line)->vertex(0);
-            Position p1 = it->face(face)->line(line)->vertex(1);
-            NumericVectorLocal value(3);
-            GlobalParams.source_field->vector_value(it->face(face)->line(line)->center(), value);
-            ComplexNumber dof_value = { 0, 0 };
-            for (unsigned int j = 0; j < 3; j++) {
-              dof_value += value[j] * (p0[j] - p1[j]);
-            }
-            if(std::abs(dof_value) >= 1000.0) {
-              dof_value = 1000.0 * (dof_value / std::abs(dof_value));
-            }
-            local_constraints.add_line(local_line_indices[0]);
-            local_constraints.set_inhomogeneity(local_line_indices[0], dof_value);
-            for(unsigned int j = 1; j < fe.dofs_per_line; j++) {
-              local_constraints.add_line(local_line_indices[j]);
-              local_constraints.set_inhomogeneity(local_line_indices[j], ComplexNumber(0,0));
-            }
-          }
-        }
-      }
-    }
-  }
-  **/
   if(GlobalParams.Index_in_z_direction == 0) {
-    ExactSolution es = {true, false};
-    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, es, 4, local_constraints);
+    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, *GlobalParams.source_field, 4, local_constraints);
   }
 
   local_constraints_made = true;
@@ -373,7 +335,7 @@ struct CellwiseAssemblyDataNP {
 
   void prepare_for_current_q_index(unsigned int q_index) {
     mu = invert(transformation);
-    const double eps_kappa_2 = (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])? eps_in : eps_out) * 4 * GlobalParams.Pi * GlobalParams.Pi;
+    const double eps_kappa_2 = (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])? eps_in : eps_out) * 4 * std::pow(GlobalParams.Pi, 2);
     if (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])) {
       epsilon = transformation * eps_in;
     } else {
@@ -474,5 +436,3 @@ void NumericProblem::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixB
   // print_info("NumericProblem::write_matrix_and_rhs", "RHS L_2 norm:  " + std::to_string(rhs->l2_norm()), false, LoggingLevel::PRODUCTION_ALL);
   // print_info("NumericProblem::write_matrix_and_rhs_metrics", "End");
 }
-
-#endif

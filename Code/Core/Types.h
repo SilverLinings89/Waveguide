@@ -40,6 +40,18 @@ using Mesh                     = dealii::Triangulation<3>;
 using MaterialTensor           = dealii::Tensor<2,3,ComplexNumber>;
 using FaceAngelingData         = std::array<RayAngelingData, 4>;
 
+enum FileType {
+  ConvergenceCSV, ParaviewVTU, TexReport, MetaText
+};
+
+enum LoggerEntryType {
+  ConvergenceHistoryEntry, FinalConvergenceStep, SolverMetaData, 
+};
+
+struct FileMetaData {
+  unsigned int hsie_level;
+};
+
 enum LoggingLevel {
   DEBUG_ALL, DEBUG_ONE, PRODUCTION_ALL, PRODUCTION_ONE
 };

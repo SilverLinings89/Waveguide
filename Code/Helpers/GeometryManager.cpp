@@ -22,24 +22,21 @@ void GeometryManager::initialize() {
 
 void GeometryManager::set_x_range(std::pair<double, double> in_range) {
   this->local_x_range = in_range;
-  std::pair<double, double> global_range(0.0, 0.0);
-  global_range.first = -GlobalParams.Geometry_Size_X / 2.0;
+  std::pair<double, double> global_range(-GlobalParams.Geometry_Size_X / 2.0, GlobalParams.Geometry_Size_X / 2.0);
   this->global_x_range = global_range;
   return;
 }
 
 void GeometryManager::set_y_range(std::pair<double, double> in_range) {
   this->local_y_range = in_range;
-  std::pair<double, double> global_range(0.0, 0.0);
-  global_range.first = -GlobalParams.Geometry_Size_Y / 2.0;
+  std::pair<double, double> global_range(-GlobalParams.Geometry_Size_Y / 2.0, GlobalParams.Geometry_Size_Y / 2.0);
   this->global_y_range = global_range;
   return;
 }
 
 void GeometryManager::set_z_range(std::pair<double, double> in_range) {
   this->local_z_range = in_range;
-  std::pair<double, double> global_range(0.0, 0.0);
-  global_range.first = -GlobalParams.Geometry_Size_Z / 2.0;
+  std::pair<double, double> global_range(0.0, GlobalParams.Geometry_Size_Z);
   this->global_z_range = global_range;
   return;
 }
@@ -79,8 +76,8 @@ std::pair<double, double> GeometryManager::compute_y_range() {
 
 std::pair<double, double> GeometryManager::compute_z_range() {
   if (GlobalParams.Blocks_in_z_direction == 1) {
-    return std::pair<double, double>(-GlobalParams.Geometry_Size_Z / 2.0,
-        GlobalParams.Geometry_Size_Z / 2.0);
+    return std::pair<double, double>(0,
+        GlobalParams.Geometry_Size_Z);
   } else {
     double length =
         GlobalParams.Geometry_Size_Z
@@ -89,7 +86,7 @@ std::pair<double, double> GeometryManager::compute_z_range() {
         GlobalParams.Blocks_in_x_direction
         * GlobalParams.Blocks_in_y_direction;
     int block_index = GlobalParams.MPI_Rank / block_processor_count;
-    double min = -GlobalParams.Geometry_Size_Z / 2.0 + block_index * length;
+    double min = block_index * length;
     return std::pair<double, double>(min, min + length);
   }
 }

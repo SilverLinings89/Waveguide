@@ -66,4 +66,6 @@ public:
   void update_mismatch_vector(BoundaryId interface) override;
 
   double compute_L2_error();
+
+  auto write_phase_plot() -> void;
 };

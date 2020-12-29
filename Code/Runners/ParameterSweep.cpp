@@ -32,7 +32,7 @@ void ParameterSweep::prepare() {
 
 void ParameterSweep::run() {
   print_info("ParameterSweep::run", "Start", true, LoggingLevel::PRODUCTION_ONE);
-  const unsigned int n_order_steps = GlobalParams.Max_HSIE_Order - GlobalParams.Min_HSIE_Order;
+  const unsigned int n_order_steps = (GlobalParams.Max_HSIE_Order - GlobalParams.Min_HSIE_Order) / 3;
   double ** errors = new double*[GlobalParams.N_Kappa_0_Steps];
   for(unsigned int i = 0; i < GlobalParams.N_Kappa_0_Steps; i++) {
     errors[i] = new double [GlobalParams.Max_HSIE_Order - GlobalParams.Min_HSIE_Order];
@@ -42,9 +42,9 @@ void ParameterSweep::run() {
   }
   for(unsigned int kappa_step = 0; kappa_step < GlobalParams.N_Kappa_0_Steps; kappa_step++) {
     GlobalParams.kappa_0_angle = (2*GlobalParams.Pi / GlobalParams.N_Kappa_0_Steps) * kappa_step;
-    GlobalParams.kappa_0 = {std::sin(GlobalParams.kappa_0_angle), std::cos(GlobalParams.kappa_0_angle)};
+    GlobalParams.kappa_0 = {7, -1};
     for (unsigned int order_index = 0; order_index < n_order_steps; order_index++) {
-      unsigned int order = GlobalParams.Min_HSIE_Order + order_index;
+      unsigned int order = GlobalParams.Min_HSIE_Order + order_index*3;
       GlobalParams.HSIE_polynomial_degree = order;
       unsigned int n_procs = GlobalParams.NumberProcesses;
       unsigned int rank = GlobalParams.MPI_Rank;
