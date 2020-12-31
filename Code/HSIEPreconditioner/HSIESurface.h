@@ -96,7 +96,7 @@ public:
   auto register_dof() -> DofNumber;
   void register_single_dof(std::string in_id, int in_hsie_order, int in_inner_order, DofType in_dof_type, DofDataVector &, unsigned int);
   void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, DofType in_dof_type, DofDataVector &, unsigned int, bool orientation = true);
-  static ComplexNumber evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, dealii::Tensor<2,3,double> G);
+  ComplexNumber evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, dealii::Tensor<2,3,double> G);
   void transform_coordinates_in_place(std::vector<HSIEPolynomial> *);
   bool check_dof_assignment_integrity();
   bool check_number_of_dofs_for_cell_integrity();

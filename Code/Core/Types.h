@@ -40,6 +40,23 @@ using Mesh                     = dealii::Triangulation<3>;
 using MaterialTensor           = dealii::Tensor<2,3,ComplexNumber>;
 using FaceAngelingData         = std::array<RayAngelingData, 4>;
 
+struct EdgeAngelingData {
+  unsigned int edge_index;
+  bool angled_in_x = false;
+  bool angled_in_y = false;
+};
+
+struct VertexAngelingData {
+  unsigned int vertex_index;
+  bool angled_in_x = false;
+  bool angled_in_y = false;
+};
+
+struct CellAngelingData {
+  EdgeAngelingData edge_data; 
+  VertexAngelingData vertex_data;
+};
+
 enum FileType {
   ConvergenceCSV, ParaviewVTU, TexReport, MetaText
 };

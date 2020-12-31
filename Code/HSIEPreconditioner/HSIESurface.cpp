@@ -1001,7 +1001,11 @@ ComplexNumber HSIESurface::evaluate_a(
       }
     }
   }
-  return result;
+  if(b_id % 2 == 0) {
+    return -1.0 * result;
+  } else {
+    return result;
+  }
 }
 
 std::vector<HSIEPolynomial> HSIESurface::build_curl_term_nedelec(

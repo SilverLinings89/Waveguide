@@ -134,7 +134,10 @@ void NumericProblem::make_constraints() {
   local_constraints.reinit(local_dof_indices);
 
   if(GlobalParams.Index_in_z_direction == 0) {
-    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, *GlobalParams.source_field, 4, local_constraints);
+    // FIX THIS
+    for(unsigned int i = 0; i < 5; i++) {
+      VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, *GlobalParams.source_field, i, local_constraints);
+    }
   }
 
   local_constraints_made = true;
@@ -214,7 +217,7 @@ void NumericProblem::SortDofsDownstream() {
   for (unsigned int i = 0; i < current.size(); i++) {
     new_numbering[current[i].first] = i;
   }
-  dof_handler.renumber_dofs(new_numbering);
+  // dof_handler.renumber_dofs(new_numbering);
   print_info("NumericProblem::SortDofsDownstream", "End");
 }
 
@@ -265,7 +268,6 @@ std::vector<DofIndexAndOrientationAndPosition> NumericProblem::get_surface_dof_v
           }
           for (auto item: face_set) {
             DofIndexAndOrientationAndPosition new_item;
-
             new_item.index = item;
             new_item.position = cell->face(face)->center();
             new_item.orientation = get_orientation(cell->face(face)->vertex(0),
@@ -335,7 +337,7 @@ struct CellwiseAssemblyDataNP {
 
   void prepare_for_current_q_index(unsigned int q_index) {
     mu = invert(transformation);
-    const double eps_kappa_2 = (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])? eps_in : eps_out) * 4 * std::pow(GlobalParams.Pi, 2);
+    const double eps_kappa_2 = (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])? eps_in : eps_out) * 2 * std::pow(GlobalParams.Pi, 2);
     if (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])) {
       epsilon = transformation * eps_in;
     } else {

@@ -74,10 +74,10 @@ ComplexNumber ExactSolution::value(const Position &in_p,
             break;
         }
       }
-      double n = std::sqrt(GlobalParams.Epsilon_R_in_waveguide);
+      double n = std::sqrt(GlobalParams.Epsilon_R_in_waveguide)*0.8;
       double lambda = GlobalParams.Lambda / n;
       double z =  - p[2] + Geometry.global_z_range.first;
-      ComplexNumber phase(0.0, 2.0 * GlobalParams.Pi * z / lambda);
+      ComplexNumber phase(0.0, 0.5 * GlobalParams.Pi + (2.0 * GlobalParams.Pi * z / lambda));
       ret_val *= std::exp(phase);
       return ret_val;
     } else {
@@ -129,7 +129,7 @@ void ExactSolution::vector_value(const Position &in_p,
         n = std::sqrt(GlobalParams.Epsilon_R_in_waveguide);
         double lambda = GlobalParams.Lambda / n;
         double z =  - p[2] + Geometry.global_z_range.first;
-        ComplexNumber phase(0.0, 2.0 * GlobalParams.Pi * z / lambda);
+        ComplexNumber phase(0.0, 0.5 * GlobalParams.Pi + ( 2.0 * GlobalParams.Pi * z / lambda));
         phase = std::exp(phase);
         for (unsigned int komp = 0; komp < 3; komp++) {
           values[komp] *= phase;

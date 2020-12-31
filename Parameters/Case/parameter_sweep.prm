@@ -9,7 +9,8 @@ subsection Case parameters
     set mu out = 1.0
     set signal amplitude = 1.0
     set Enable Parameter Run = true
-    set N Kappa 0 Steps = 1
+    set Kappa 0 Real = 7.0
+    set Kappa 0 Imaginary = -1.0
     set Min HSIE Order = 1
     set Max HSIE Order = 16
 end

@@ -41,7 +41,8 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("width of waveguide", "2.0", Patterns::Double(), "Width of the Waveguide core.");
         case_prm.declare_entry("height of waveguide", "1.8", Patterns::Double(), "Height of the Waveguide core.");
         case_prm.declare_entry("Enable Parameter Run", "false", Patterns::Bool(), "For a series of Local solves, this can be set to true");
-        case_prm.declare_entry("N Kappa 0 Steps", "20", Patterns::Integer(), "Steps for kappa discretization.");
+        case_prm.declare_entry("Kappa 0 Real", "5", Patterns::Double(), "Real part of kappa_0 for HSIE.");
+        case_prm.declare_entry("Kappa 0 Imaginary", "-1", Patterns::Double(), "Imaginary part of kappa_0 for HSIE.");
         case_prm.declare_entry("Min HSIE Order", "1", Patterns::Integer(), "Minimal HSIE Element order for parameter run.");
         case_prm.declare_entry("Max HSIE Order", "21", Patterns::Integer(), "Maximal HSIE Element order for parameter run.");
     }
@@ -61,7 +62,6 @@ Parameters ParameterReader::read_parameters(const std::string run_file,const std
         ret.GMRES_Steps_before_restart = run_prm.get_integer("GMRES restart after");
         ret.GMRES_max_steps = run_prm.get_integer("GMRES maximum steps");
         ret.HSIE_polynomial_degree = run_prm.get_integer("HSIE polynomial degree");
-        ret.kappa_0_angle = run_prm.get_double("kappa angle");
         ret.Blocks_in_x_direction = run_prm.get_integer("processes in x");
         ret.Blocks_in_y_direction = run_prm.get_integer("processes in y");
         ret.Blocks_in_z_direction = run_prm.get_integer("processes in z");
@@ -79,6 +79,9 @@ Parameters ParameterReader::read_parameters(const std::string run_file,const std
         ret.Geometry_Size_Z = case_prm.get_double("geometry size z");
         ret.Epsilon_R_in_waveguide = case_prm.get_double("epsilon in");
         ret.Epsilon_R_outside_waveguide = case_prm.get_double("epsilon out");
+        ret.kappa_0 = 0;
+        ret.kappa_0.real(case_prm.get_integer("Kappa 0 Real"));
+        ret.kappa_0.imag(case_prm.get_integer("Kappa 0 Imaginary"));
         ret.Mu_R_in_waveguide = case_prm.get_double("mu in");
         ret.Mu_R_outside_waveguide = case_prm.get_double("mu out");
         ret.Amplitude_of_input_signal = case_prm.get_double("signal amplitude");
@@ -86,7 +89,6 @@ Parameters ParameterReader::read_parameters(const std::string run_file,const std
         ret.Width_of_waveguide = case_prm.get_double("width of waveguide");
         ret.Width_of_waveguide = case_prm.get_double("height of waveguide");
         ret.Enable_Parameter_Run = case_prm.get_bool("Enable Parameter Run");
-        ret.N_Kappa_0_Steps = case_prm.get_integer("N Kappa 0 Steps");
         ret.Min_HSIE_Order = case_prm.get_integer("Min HSIE Order");
         ret.Max_HSIE_Order = case_prm.get_integer("Max HSIE Order");
     }

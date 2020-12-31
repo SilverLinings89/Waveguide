@@ -21,8 +21,9 @@ LocalProblem::LocalProblem() :
   base_problem.make_grid();
   print_info("Local Problem", "Done building base problem. Preparing matrix.");
   matrix = new dealii::PETScWrappers::SparseMatrix();
-  for(unsigned int i = 0; i < 6; i++) is_hsie_surface[i] = true;
+  for(unsigned int i = 0; i < 6; i++) is_hsie_surface[i] = false;
   is_hsie_surface[4] = false;
+  is_hsie_surface[5] = true;
 }
 
 LocalProblem::~LocalProblem() {}
@@ -169,6 +170,7 @@ void LocalProblem::make_constraints() {
   for (unsigned int surface = 0; surface < 6; surface++) {
     if(is_hsie_surface[surface]) {
       std::vector<DofIndexAndOrientationAndPosition> from_surface = surfaces[surface]->get_dof_association();
+      std::cout << "From surface has " << from_surface.size() << " Elements." << std::endl;
       std::vector<DofIndexAndOrientationAndPosition> from_inner_problem = base_problem.get_surface_dof_vector_for_boundary_id(surface);
       if (from_surface.size() != from_inner_problem.size()) {
         std::cout << "Warning: Size mismatch in make_constraints for surface "
