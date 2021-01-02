@@ -217,7 +217,7 @@ void NumericProblem::SortDofsDownstream() {
   for (unsigned int i = 0; i < current.size(); i++) {
     new_numbering[current[i].first] = i;
   }
-  // dof_handler.renumber_dofs(new_numbering);
+  dof_handler.renumber_dofs(new_numbering);
   print_info("NumericProblem::SortDofsDownstream", "End");
 }
 
@@ -337,7 +337,7 @@ struct CellwiseAssemblyDataNP {
 
   void prepare_for_current_q_index(unsigned int q_index) {
     mu = invert(transformation);
-    const double eps_kappa_2 = (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])? eps_in : eps_out) * 2 * std::pow(GlobalParams.Pi, 2);
+    const double eps_kappa_2 = Geometry.eps_kappa_2(quadrature_points[q_index]);
     if (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])) {
       epsilon = transformation * eps_in;
     } else {

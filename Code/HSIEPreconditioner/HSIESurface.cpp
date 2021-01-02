@@ -16,12 +16,12 @@ const unsigned int MAX_DOF_NUMBER = INT_MAX;
 // The ith entry in this vector means the values are for the surface with b_id i.
 // In that entry, there are 4 values, which correspond to the adjacent faces.
 // First for (new) -x direction, then +x then -y then +y.
-const std::vector<std::vector<unsigned int>> edge_to_boundary_id = {
+const std::vector<std::vector<unsigned int>>  edge_to_boundary_id = {
     {4,5,2,3}, {5,4,2,3}, {0,1,4,5}, {0,1,5,4}, {1,0,2,3}, {0,1,2,3}
 };
 
 HSIESurface::HSIESurface(unsigned int in_order, const dealii::Triangulation<2, 2> &in_surface_triangulation,
-    unsigned int in_boundary_id, unsigned int in_inner_order, ComplexNumber in_k0, double in_additional_coordinate, bool in_is_metal)
+    unsigned int in_boundary_id, unsigned int in_inner_order, ComplexNumber in_k0, double in_additional_coordinate)
     :
     order(in_order), b_id(in_boundary_id),
       dof_h_q(in_surface_triangulation),
@@ -30,10 +30,7 @@ HSIESurface::HSIESurface(unsigned int in_order, const dealii::Triangulation<2, 2
       fe_q(Inner_Element_Order + 1),
       additional_coordinate(
         in_additional_coordinate),
-        epsilon(GlobalParams.Epsilon_R_outside_waveguide),
         kappa(2.0 * GlobalParams.Pi / GlobalParams.Lambda) {
-  is_metal = in_is_metal;
-  if (!is_metal) {
     surface_triangulation.copy_triangulation(in_surface_triangulation);
     dof_h_nedelec.initialize(surface_triangulation, fe_nedelec);
     dof_h_q.initialize(surface_triangulation, fe_q);
@@ -41,7 +38,6 @@ HSIESurface::HSIESurface(unsigned int in_order, const dealii::Triangulation<2, 2
     dof_counter = 0;
     k0 = in_k0;
   }
-}
 
 std::vector<unsigned int> HSIESurface::get_boundary_ids() {
     return (this->surface_triangulation.get_boundary_ids());
@@ -277,18 +273,15 @@ DofDataVector HSIESurface::get_dof_data_for_base_dof_q(
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::SparseMatrix *matrix, NumericVectorDistributed* rhs, 
     unsigned int lowest_index, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
-  if (!is_metal) {
-    IndexSet is;
-    is.set_size(lowest_index + dof_counter);
-    is.add_range(lowest_index, lowest_index + dof_counter);
-    fill_matrix(matrix, rhs, is, surfaces_hsie, constraints);
-  }
+  IndexSet is;
+  is.set_size(lowest_index + dof_counter);
+  is.add_range(lowest_index, lowest_index + dof_counter);
+  fill_matrix(matrix, rhs, is, surfaces_hsie, constraints);
 }
 
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::SparseMatrix *matrix, NumericVectorDistributed* rhs, 
     dealii::IndexSet global_indices, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
-  if (!is_metal) {
     HSIEPolynomial::computeDandI(order + 2, k0);
     auto it = dof_h_nedelec.begin();
     auto end = dof_h_nedelec.end();
@@ -380,11 +373,12 @@ void HSIESurface::fill_matrix(
         }
 
         double JxW = jxw_values[q_point];
+        const double eps_kappa_2 = Geometry.eps_kappa_2(undo_transform(quadrature_points[q_point]));
         for (unsigned int i = 0; i < cell_dofs.size(); i++) {
           for (unsigned int j = 0; j < cell_dofs.size(); j++) {
             ComplexNumber part =
                 (evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C)
-                + kappa * kappa * epsilon * evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
+                + eps_kappa_2 * evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
                 JxW;
               cell_matrix[i][j] += part;
           }
@@ -401,7 +395,6 @@ void HSIESurface::fill_matrix(
       it2++;
       cell_counter++;
     }
-  }
 }
 
 auto HSIESurface::build_fad_for_cell(CellIterator2D cell) -> FaceAngelingData {
@@ -417,18 +410,15 @@ auto HSIESurface::build_fad_for_cell(CellIterator2D cell) -> FaceAngelingData {
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::SparseMatrix *mass_matrix, dealii::PETScWrappers::SparseMatrix *stiffness_matrix, NumericVectorDistributed * rhs, 
     unsigned int lowest_index,  std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
-  if (!is_metal) {
     IndexSet is;
     is.set_size(lowest_index + dof_counter);
     is.add_range(lowest_index, lowest_index + dof_counter);
     fill_matrix(mass_matrix, stiffness_matrix, rhs, is, surfaces_hsie, constraints);
-  }
 }
 
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::SparseMatrix *mass_matrix, dealii::PETScWrappers::SparseMatrix *stiffness_matrix, NumericVectorDistributed* rhs, 
     dealii::IndexSet global_indices, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
-  if (!is_metal) {
     HSIEPolynomial::computeDandI(order + 2, k0);
     auto it = dof_h_nedelec.begin();
     auto end = dof_h_nedelec.end();
@@ -523,9 +513,10 @@ void HSIESurface::fill_matrix(
         }
 
         double JxW = jxw_values[q_point];
+        const double eps_kappa_2 = Geometry.eps_kappa_2(undo_transform(quadrature_points[q_point]));
         for (unsigned int i = 0; i < cell_dofs.size(); i++) {
           for (unsigned int j = 0; j < cell_dofs.size(); j++) {
-            cell_mass_matrix[i][j] += kappa * kappa * epsilon * evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G) * JxW;
+            cell_mass_matrix[i][j] += eps_kappa_2 * evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G) * JxW;
             cell_stiffness_matrix[i][j] += evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C) * JxW;
           }
         }
@@ -542,24 +533,20 @@ void HSIESurface::fill_matrix(
       it2++;
       cell_counter++;
     }
-  }
 }
 
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::MPI::SparseMatrix *matrix, NumericVectorDistributed* rhs, 
     unsigned int lowest_index, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
-  if (!is_metal) {
     IndexSet is;
     is.set_size(lowest_index + dof_counter);
     is.add_range(lowest_index, lowest_index + dof_counter);
     fill_matrix(matrix, rhs, is, surfaces_hsie, constraints);
-  }
 }
 
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::MPI::SparseMatrix *matrix, NumericVectorDistributed* rhs, 
     dealii::IndexSet global_indices, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
-  if (!is_metal) {
     HSIEPolynomial::computeDandI(order + 2, k0);
     auto it = dof_h_nedelec.begin();
     auto end = dof_h_nedelec.end();
@@ -644,11 +631,12 @@ void HSIESurface::fill_matrix(
         }
 
         double JxW = jxw_values[q_point];
+        const double eps_kappa_2 = Geometry.eps_kappa_2(undo_transform(quadrature_points[q_point]));
         for (unsigned int i = 0; i < cell_dofs.size(); i++) {
           for (unsigned int j = 0; j < cell_dofs.size(); j++) {
             ComplexNumber part =
                 (evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C)
-                + kappa * kappa * epsilon * evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
+                + eps_kappa_2 * evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
                 JxW;
               cell_matrix[i][j] += part;
           }
@@ -664,13 +652,10 @@ void HSIESurface::fill_matrix(
       it2++;
       cell_counter++;
     }
-  }
-  
 }
 
 void HSIESurface::fill_sparsity_pattern(
     dealii::DynamicSparsityPattern *pattern, DofNumber shift, dealii::AffineConstraints<ComplexNumber> *constraints) {
-  if (is_metal) return;
   auto it = dof_h_nedelec.begin_active();
   auto it2 = dof_h_q.begin_active();
   auto end = dof_h_nedelec.end();
@@ -686,13 +671,6 @@ void HSIESurface::fill_sparsity_pattern(
 }
 
 DofCountsStruct HSIESurface::compute_n_edge_dofs() {
-  if (is_metal) {
-    DofCountsStruct ret;
-    ret.hsie = 0;
-    ret.non_hsie = 0;
-    ret.total = 0;
-    return ret;
-  }
   DoFHandler<2>::active_cell_iterator cell;
   DoFHandler<2>::active_cell_iterator cell2;
   DoFHandler<2>::active_cell_iterator endc;
@@ -714,13 +692,6 @@ DofCountsStruct HSIESurface::compute_n_edge_dofs() {
 }
 
 DofCountsStruct HSIESurface::compute_n_vertex_dofs() {
-  if (is_metal) {
-    DofCountsStruct ret;
-    ret.hsie = 0;
-    ret.non_hsie = 0;
-    ret.total = 0;
-    return ret;
-  }
   std::set<unsigned int> touched_vertices;
   DoFHandler<2>::active_cell_iterator cell;
   DoFHandler<2>::active_cell_iterator endc;
@@ -744,13 +715,6 @@ DofCountsStruct HSIESurface::compute_n_vertex_dofs() {
 }
 
 DofCountsStruct HSIESurface::compute_n_face_dofs() {
-  if (is_metal) {
-    DofCountsStruct ret;
-    ret.hsie = 0;
-    ret.non_hsie = 0;
-    ret.total = 0;
-    return ret;
-  }
   std::set<std::string> touched_faces;
   DoFHandler<2>::active_cell_iterator cell;
   DoFHandler<2>::active_cell_iterator cell2;
@@ -770,8 +734,6 @@ DofCountsStruct HSIESurface::compute_n_face_dofs() {
 }
 
 unsigned int HSIESurface::compute_dofs_per_edge(bool only_hsie_dofs) {
-  if (is_metal)
-    return 0;
   unsigned int ret = 0;
   const unsigned int INNER_REAL_DOFS_PER_LINE = fe_nedelec.dofs_per_line;
 
@@ -786,8 +748,6 @@ unsigned int HSIESurface::compute_dofs_per_edge(bool only_hsie_dofs) {
 }
 
 unsigned int HSIESurface::compute_dofs_per_face(bool only_hsie_dofs) {
-  if (is_metal)
-    return 0;
   unsigned int ret = 0;
   const unsigned int INNER_REAL_NEDELEC_DOFS_PER_FACE =
       fe_nedelec.dofs_per_cell -
@@ -801,17 +761,13 @@ unsigned int HSIESurface::compute_dofs_per_face(bool only_hsie_dofs) {
 }
 
 unsigned int HSIESurface::compute_dofs_per_vertex() {
-  if (is_metal)
-    return 0;
   unsigned int ret = order + 2;
 
   return ret;
 }
 
 void HSIESurface::initialize() {
-  if (!is_metal) {
-    initialize_dof_handlers_and_fe();
-  }
+  initialize_dof_handlers_and_fe();
   compute_n_edge_dofs();
   compute_n_face_dofs();
   compute_n_vertex_dofs();
@@ -1324,8 +1280,6 @@ std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association_
 }
 
 unsigned int HSIESurface::get_dof_count_by_boundary_id(BoundaryId in_boundary_id) {
-  if (is_metal)
-    return 0;
   unsigned int ret = 0;
   if (in_boundary_id == this->b_id) {
     return this->dof_counter;

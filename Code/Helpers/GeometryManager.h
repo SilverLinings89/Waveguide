@@ -12,6 +12,8 @@ class GeometryManager {
 
   void initialize();
 
+  double eps_kappa_2(Position);
+
   std::pair<double, double> local_x_range;
   std::pair<double, double> local_y_range;
   std::pair<double, double> local_z_range;

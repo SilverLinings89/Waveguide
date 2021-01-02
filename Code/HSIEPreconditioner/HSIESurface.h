@@ -20,12 +20,10 @@ class HSIESurface {
   const BoundaryId b_id;
   DofHandler2D dof_h_nedelec;
   DofHandler2D dof_h_q;
-  bool is_metal = false;
   const unsigned int Inner_Element_Order;
   dealii::FE_NedelecSZ<2> fe_nedelec;
   dealii::FE_Q<2> fe_q;
   ComplexNumber k0;
-  const double epsilon;
   const double kappa;
   dealii::Triangulation<2> surface_triangulation;
   std::array<std::array<bool,6>,4> edge_ownership_by_level_and_id;
@@ -51,8 +49,7 @@ public:
       const dealii::Triangulation<2, 2> &in_surf_tria,
       BoundaryId in_boundary_id,
       NedelecElementOrder in_inner_order, ComplexNumber k0,
-      double in_additional_coordinate,
-      bool in_is_metal = false);
+      double in_additional_coordinate);
   void identify_corner_cells();
   std::vector<HSIEPolynomial> build_curl_term_q(unsigned int,
                                                 const dealii::Tensor<1, 2>);
