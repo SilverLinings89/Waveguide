@@ -651,7 +651,6 @@ void NonLocalProblem::initialize_index_sets() {
   for (unsigned int i = 0; i < n_procs_in_sweep; i++) {
     total_number_of_dofs_on_level += index_sets_per_process[i].n_elements();
   }
-  DofCount n_inner_dofs = get_local_problem()->base_problem.dof_handler.n_dofs() + own_dofs.nth_index_in_set(0);
   
   if (rank > 0) {
     dofs_process_below = index_sets_per_process[rank - 1].n_elements();
@@ -695,7 +694,6 @@ DofCount NonLocalProblem::compute_interface_dofs(BoundaryId interface_id) {
 }
 
 dealii::IndexSet NonLocalProblem::compute_interface_dof_set(BoundaryId interface_id) {
-  BoundaryId opposing_interface_id = opposing_Boundary_Id(interface_id);
   dealii::IndexSet ret(total_number_of_dofs_on_level);
   std::vector<DofIndexAndOrientationAndPosition> current = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(interface_id);
   MPI_Barrier(MPI_COMM_WORLD);
@@ -907,7 +905,7 @@ void NonLocalProblem::send_local_upper_dofs(std::vector<ComplexNumber> values) {
   MPI_Send(&mpi_cache[0], values.size(), MPI_C_DOUBLE_COMPLEX, neighbour_data.second, 0, MPI_COMM_WORLD);
 }
 
-void NonLocalProblem::update_mismatch_vector(BoundaryId in_bid) {
+void NonLocalProblem::update_mismatch_vector(BoundaryId) {
   // rhs_mismatch.reinit(own_dofs, GlobalMPI.communicators_by_level[local_level]);
   NumericVectorDistributed temp_solution(child->own_dofs, GlobalMPI.communicators_by_level[child->local_level]);
   NumericVectorDistributed temp_rhs(child->own_dofs, GlobalMPI.communicators_by_level[child->local_level]);

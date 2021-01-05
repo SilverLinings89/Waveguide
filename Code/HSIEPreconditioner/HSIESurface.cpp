@@ -28,9 +28,8 @@ HSIESurface::HSIESurface(unsigned int in_order, const dealii::Triangulation<2, 2
       Inner_Element_Order(in_inner_order),
       fe_nedelec(Inner_Element_Order),
       fe_q(Inner_Element_Order + 1),
-      additional_coordinate(
-        in_additional_coordinate),
-        kappa(2.0 * GlobalParams.Pi / GlobalParams.Lambda) {
+      kappa(2.0 * GlobalParams.Pi / GlobalParams.Lambda),
+      additional_coordinate(in_additional_coordinate) {
     surface_triangulation.copy_triangulation(in_surface_triangulation);
     dof_h_nedelec.initialize(surface_triangulation, fe_nedelec);
     dof_h_q.initialize(surface_triangulation, fe_q);
@@ -281,7 +280,7 @@ void HSIESurface::fill_matrix(
 
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::SparseMatrix *matrix, NumericVectorDistributed* rhs, 
-    dealii::IndexSet global_indices, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
+    dealii::IndexSet global_indices, std::array<bool, 6>, dealii::AffineConstraints<ComplexNumber> *constraints) {
     HSIEPolynomial::computeDandI(order + 2, k0);
     auto it = dof_h_nedelec.begin();
     auto end = dof_h_nedelec.end();
@@ -296,8 +295,7 @@ void HSIESurface::fill_matrix(
     auto temp_it = dof_h_nedelec.begin();
     auto temp_it2 = dof_h_q.begin();
     unsigned int dofs_per_cell = this->get_dof_data_for_cell(temp_it, temp_it2).size();
-    FullMatrix<ComplexNumber> cell_matrix(dofs_per_cell,
-        dofs_per_cell);
+    FullMatrix<ComplexNumber> cell_matrix(dofs_per_cell, dofs_per_cell);
     unsigned int cell_counter = 0;
     auto it2 = dof_h_q.begin();
     for (; it != end; ++it) {
@@ -397,7 +395,7 @@ void HSIESurface::fill_matrix(
     }
 }
 
-auto HSIESurface::build_fad_for_cell(CellIterator2D cell) -> FaceAngelingData {
+auto HSIESurface::build_fad_for_cell(CellIterator2D) -> FaceAngelingData {
   FaceAngelingData ret;
   for(unsigned int i = 0; i < ret.size(); i++) {
     ret[i].is_x_angled = false;
@@ -418,7 +416,7 @@ void HSIESurface::fill_matrix(
 
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::SparseMatrix *mass_matrix, dealii::PETScWrappers::SparseMatrix *stiffness_matrix, NumericVectorDistributed* rhs, 
-    dealii::IndexSet global_indices, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
+    dealii::IndexSet global_indices, std::array<bool, 6>, dealii::AffineConstraints<ComplexNumber> *constraints) {
     HSIEPolynomial::computeDandI(order + 2, k0);
     auto it = dof_h_nedelec.begin();
     auto end = dof_h_nedelec.end();
@@ -546,7 +544,7 @@ void HSIESurface::fill_matrix(
 
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::MPI::SparseMatrix *matrix, NumericVectorDistributed* rhs, 
-    dealii::IndexSet global_indices, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
+    dealii::IndexSet global_indices, std::array<bool, 6>, dealii::AffineConstraints<ComplexNumber> *constraints) {
     HSIEPolynomial::computeDandI(order + 2, k0);
     auto it = dof_h_nedelec.begin();
     auto end = dof_h_nedelec.end();

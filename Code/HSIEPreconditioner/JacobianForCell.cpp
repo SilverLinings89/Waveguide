@@ -94,6 +94,7 @@ Position JacobianForCell::transform_to_3D_space(Position2D in_position){
   if (boundary_id == 5) {
     return ret;
   }
+  return ret;
 }
 
 std::pair<Position2D,double> JacobianForCell::split_into_triangulation_and_external_part(const Position in_point) {

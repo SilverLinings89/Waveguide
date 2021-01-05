@@ -1,5 +1,3 @@
-#pragma once
-
 #include "NumericProblem.h"
 
 #include <functional>
@@ -433,8 +431,8 @@ void NumericProblem::assemble_system(unsigned int shift,
 }
 
 void NumericProblem::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs) {
-  // print_info("NumericProblem::write_matrix_and_rhs_metrics", "Start", LoggingLevel::DEBUG_ALL);
-  // print_info("NumericProblem::write_matrix_and_rhs", "System Matrix l_1 norm: " + std::to_string(matrix->l1_norm()), false, LoggingLevel::PRODUCTION_ALL);
-  // print_info("NumericProblem::write_matrix_and_rhs", "RHS L_2 norm:  " + std::to_string(rhs->l2_norm()), false, LoggingLevel::PRODUCTION_ALL);
-  // print_info("NumericProblem::write_matrix_and_rhs_metrics", "End");
+  print_info("NumericProblem::write_matrix_and_rhs_metrics", "Start", LoggingLevel::DEBUG_ALL);
+  print_info("NumericProblem::write_matrix_and_rhs", "System Matrix l_1 norm: " + std::to_string(matrix->l1_norm()), false, LoggingLevel::PRODUCTION_ALL);
+  print_info("NumericProblem::write_matrix_and_rhs", "RHS L_2 norm:  " + std::to_string(rhs->l2_norm()), false, LoggingLevel::PRODUCTION_ALL);
+  print_info("NumericProblem::write_matrix_and_rhs_metrics", "End");
 }
