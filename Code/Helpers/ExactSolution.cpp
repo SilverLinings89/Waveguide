@@ -1,6 +1,4 @@
-
-#ifndef ExactSolutionFlag_CPP
-#define ExactSolutionFlag_CPP
+#pragma once
 
 #include "ExactSolution.h"
 #include <deal.II/base/point.h>
@@ -264,5 +262,3 @@ ExactSolution::ExactSolution(bool in_rectangular, bool in_dual)
     }
   }
 }
-
-#endif

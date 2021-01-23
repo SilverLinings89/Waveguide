@@ -40,7 +40,7 @@
 #include <deal.II/lac/petsc_sparse_matrix.h>
 #include <deal.II/lac/la_parallel_vector.h>
 #include "../Core/Types.h"
-#include "../HSIEPreconditioner/HSIESurface.h"
+#include "../BoundaryCondition/HSIESurface.h"
 
 using namespace dealii;
 

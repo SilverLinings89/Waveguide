@@ -3,7 +3,8 @@
 #include <deal.II/lac/petsc_sparse_matrix.h>
 #include "HierarchicalProblem.h"
 #include "../Core/NumericProblem.h"
-#include "../HSIEPreconditioner/HSIESurface.h"
+#include "../BoundaryCondition/HSIESurface.h"
+#include "../BoundaryCondition/BoundaryCondition.h"
 #include "deal.II/lac/petsc_solver.h"
 #include <array>
 #include <memory>
@@ -12,7 +13,7 @@ class LocalProblem: public HierarchicalProblem {
 public:
   unsigned int solve_counter = 0;
   NumericProblem base_problem;
-  std::array<std::shared_ptr<HSIESurface>,6> surfaces;
+  std::array<std::shared_ptr<BoundaryCondition>,6> surfaces;
   SolverControl sc;
   dealii::PETScWrappers::SparseDirectMUMPS solver;
   dealii::PETScWrappers::SparseMatrix * matrix;

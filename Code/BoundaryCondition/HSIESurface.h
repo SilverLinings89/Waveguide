@@ -14,10 +14,10 @@
 #include "DofData.h"
 #include "HSIEPolynomial.h"
 #include "../Helpers/Parameters.h"
+#include "./BoundaryCondition.h"
 
-class HSIESurface {
+class HSIESurface : public BoundaryCondition {
   const HSIEElementOrder order;
-  const BoundaryId b_id;
   DofHandler2D dof_h_nedelec;
   DofHandler2D dof_h_q;
   const unsigned int Inner_Element_Order;
@@ -25,20 +25,12 @@ class HSIESurface {
   dealii::FE_Q<2> fe_q;
   ComplexNumber k0;
   const double kappa;
-  dealii::Triangulation<2> surface_triangulation;
   std::array<std::array<bool,6>,4> edge_ownership_by_level_and_id;
-  std::vector<unsigned int> corner_cell_ids;
-  const double additional_coordinate;
-  std::vector<DofIndexAndOrientationAndPosition> surface_dofs;
-  bool surface_dof_sorting_done;
   dealii::Tensor<2,3,double> C;
   dealii::Tensor<2,3,double> G;
   Position V0;
-  bool boundary_coordinates_computed = false;
 
 public:
-  std::array<double, 6> boundary_vertex_coordinates;
-  DofCount dof_counter;
   DofDataVector face_dof_data;
   DofDataVector edge_dof_data;
   DofDataVector vertex_dof_data;
@@ -50,28 +42,23 @@ public:
       BoundaryId in_boundary_id,
       NedelecElementOrder in_inner_order, ComplexNumber k0,
       double in_additional_coordinate);
-  void identify_corner_cells();
-  std::vector<HSIEPolynomial> build_curl_term_q(unsigned int,
-                                                const dealii::Tensor<1, 2>);
-  std::vector<HSIEPolynomial> build_curl_term_nedelec(
-      unsigned int, const dealii::Tensor<1, 2>, const dealii::Tensor<1, 2>,
-      const double, const double);
+  ~HSIESurface();
+  
+  void identify_corner_cells() override;
+  std::vector<HSIEPolynomial> build_curl_term_q(unsigned int, const dealii::Tensor<1, 2>);
+  std::vector<HSIEPolynomial> build_curl_term_nedelec(unsigned int, const dealii::Tensor<1, 2>, const dealii::Tensor<1, 2>, const double, const double);
   std::vector<HSIEPolynomial> build_non_curl_term_q(unsigned int, const double);
-  std::vector<HSIEPolynomial> build_non_curl_term_nedelec(unsigned int,
-                                                          const double,
-                                                          const double);
+  std::vector<HSIEPolynomial> build_non_curl_term_nedelec(unsigned int, const double, const double);
   void set_V0(Position);
-  void fill_sparsity_pattern(dealii::DynamicSparsityPattern *pattern);
   auto get_dof_data_for_cell(CellIterator2D, CellIterator2D) -> DofDataVector;
-  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::IndexSet,  std::array<bool, 6> surfaces_hsie,  dealii::AffineConstraints<ComplexNumber> *constraints);
-  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::IndexSet, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints);
-  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, DofNumber shift, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints);
-  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, DofNumber shift, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints);
-  void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, dealii::IndexSet, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints);
-  void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, DofNumber shift, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints);
-  void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, DofNumber shift, dealii::AffineConstraints<ComplexNumber> *constraints);
-  void make_hanging_node_constraints(dealii::AffineConstraints<ComplexNumber>*, DofNumber shift);
-  bool is_point_at_boundary(Position2D in_p, BoundaryId in_bid);
+  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::IndexSet,  std::array<bool, 6> surfaces_hsie,  dealii::AffineConstraints<ComplexNumber> *constraints) override;
+  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::IndexSet, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) override;
+  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, DofNumber shift, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) override;
+  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, DofNumber shift, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) override;
+  void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, dealii::IndexSet, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) override;
+  void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, DofNumber shift, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) override;
+  void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, DofNumber shift, dealii::AffineConstraints<ComplexNumber> *constraints) override;
+  bool is_point_at_boundary(Position2D in_p, BoundaryId in_bid) override;
   auto get_vertices_for_boundary_id(BoundaryId) -> std::vector<unsigned int>;
   auto get_n_vertices_for_boundary_id(BoundaryId) -> unsigned int;
   auto get_lines_for_boundary_id(BoundaryId) -> std::vector<unsigned int>;
@@ -82,7 +69,7 @@ public:
   auto compute_dofs_per_edge(bool only_hsie_dofs) -> DofCount;
   auto compute_dofs_per_face(bool only_hsie_dofs) -> DofCount;
   auto compute_dofs_per_vertex() -> DofCount;
-  void initialize();
+  void initialize() override;
   void initialize_dof_handlers_and_fe();
   void update_dof_counts_for_edge(CellIterator2D cell, unsigned int edge, DofCountsStruct&);
   void update_dof_counts_for_face(CellIterator2D cell, DofCountsStruct&);
@@ -97,17 +84,13 @@ public:
   void transform_coordinates_in_place(std::vector<HSIEPolynomial> *);
   bool check_dof_assignment_integrity();
   bool check_number_of_dofs_for_cell_integrity();
-  void set_mesh_boundary_ids();
-  auto get_boundary_ids() -> std::vector<BoundaryId>;
   auto get_dof_data_for_base_dof_nedelec(DofNumber base_dof_index) -> DofDataVector;
   auto get_dof_data_for_base_dof_q(DofNumber base_dof_index) -> DofDataVector;
-  auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount;
-  auto get_dof_association() -> std::vector<DofIndexAndOrientationAndPosition>;
+  auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount override;
+  auto get_dof_association() -> std::vector<DofIndexAndOrientationAndPosition> override;
   auto undo_transform(dealii::Point<2>) -> Position;
-  void add_surface_relevant_dof(
-      DofIndexAndOrientationAndPosition in_gindex_and_orientation);
-  auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) ->
-      std::vector<DofIndexAndOrientationAndPosition>;
+  void add_surface_relevant_dof(DofIndexAndOrientationAndPosition in_gindex_and_orientation);
+  auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<DofIndexAndOrientationAndPosition> override;
   void clear_user_flags();
   void set_b_id_uses_hsie(unsigned int, bool);
   auto build_fad_for_cell(CellIterator2D cell) -> FaceAngelingData;

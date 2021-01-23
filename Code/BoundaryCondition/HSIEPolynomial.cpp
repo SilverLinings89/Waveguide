@@ -1,10 +1,7 @@
-//
-// Created by kraft on 08.11.19.
-//
-
-#include "HSIEPolynomial.h"
+#include "./HSIEPolynomial.h"
 #include "../Helpers/staticfunctions.h"
 #include "DofData.h"
+#include "../Core/Types.h"
 
 bool HSIEPolynomial::matricesLoaded = false;
 dealii::FullMatrix<ComplexNumber> HSIEPolynomial::D;

@@ -1,11 +1,13 @@
-#include "../Code/HSIEPreconditioner/LaguerreFunction.h"
+#include "../Code/BoundaryCondition/LaguerreFunction.h"
 #include "../third_party/googletest/googletest/include/gtest/gtest.h"
-#include "../Code/HSIEPreconditioner/HSIESurface.h"
-#include "../Code/HSIEPreconditioner/HSIEPolynomial.h"
-#include "../Code/HSIEPreconditioner/HSIESurface.cpp"
+#include "../Code/BoundaryCondition/HSIESurface.h"
+#include "../Code/BoundaryCondition/HSIEPolynomial.h"
+#include "../Code/BoundaryCondition/BoundaryCondition.h"
 #include "../Code/Core/Types.h"
+#include "../Code/Helpers/staticfunctions.h"
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/base/tensor.h>
+#include <deal.II/grid/grid_tools.h>
 
 Parameters GlobalParams;
 GeometryManager Geometry;
@@ -24,8 +26,8 @@ int alert_counter = 0;
 std::string input_file_name;
 SpaceTransformation *the_st;
 
-static HSIEPolynomial random_poly(unsigned int Order, std::complex<double> k0) {
-  std::vector<std::complex<double>> a;
+static HSIEPolynomial random_poly(unsigned int Order, ComplexNumber k0) {
+  std::vector<ComplexNumber> a;
   for (unsigned int i = 0; i < Order; i++) {
     a.emplace_back(rand() % 10, rand() % 10);
   }
@@ -99,7 +101,7 @@ public:
   dealii::Triangulation<3> tria;
   dealii::Triangulation<2, 3> temp_triangulation;
   dealii::Triangulation<2> surf_tria;
-  std::complex<double> k0;
+  ComplexNumber k0;
 protected:
   void SetUp() override {
     std::tuple<unsigned int, unsigned int> Params = GetParam();
@@ -129,7 +131,7 @@ public:
   dealii::Triangulation<3> full_tria;
   dealii::Triangulation<2, 3> temp_triangulation;
   dealii::Triangulation<2> surf_tria;
-  std::complex<double> k0;
+  ComplexNumber k0;
   std::array<std::shared_ptr<HSIESurface>,6> surfaces;
 protected:
   void SetUp() override {
@@ -203,7 +205,7 @@ public:
   dealii::Triangulation<3> tria;
   dealii::Triangulation<2, 3> temp_triangulation;
   dealii::Triangulation<2> surf_tria;
-  std::complex<double> k0;
+  ComplexNumber k0;
   std::set<unsigned int> b_ids;
 protected:
   void SetUp() override {
@@ -218,10 +220,8 @@ protected:
     repetitions.push_back(Cells_Per_Direction);
     Position left(-1, -1, -1);
     Position right(1, 1, 1);
-    dealii::GridGenerator::subdivided_hyper_rectangle(tria, repetitions, left,
-        right, true);
-    const unsigned int dest_cells = Cells_Per_Direction * Cells_Per_Direction
-        * Cells_Per_Direction;
+    dealii::GridGenerator::subdivided_hyper_rectangle(tria, repetitions, left, right, true);
+    const unsigned int dest_cells = Cells_Per_Direction * Cells_Per_Direction * Cells_Per_Direction;
     ASSERT_EQ(tria.n_active_cells(), dest_cells);
     b_ids.insert(boundary_id);
     switch (boundary_id) {
@@ -262,8 +262,7 @@ TEST_P(TestDirectionFixture, DofNumberingTest1) {
   HSIESurface surf(5, surf_tria, boundary_id, InnerOrder, k0,
       additional_coorindate);
   surf.initialize();
-  std::vector<types::boundary_id> boundary_ids_of_flattened_mesh =
-      surf.get_boundary_ids();
+  std::vector<types::boundary_id> boundary_ids_of_flattened_mesh = surf.get_boundary_ids();
   ASSERT_EQ(boundary_ids_of_flattened_mesh.size(), 4);
   auto it = std::find(boundary_ids_of_flattened_mesh.begin(),
       boundary_ids_of_flattened_mesh.end(), boundary_id);
@@ -428,33 +427,33 @@ INSTANTIATE_TEST_SUITE_P(MespPreparationTests, TestDirectionFixture,
         ::testing::Values(0, 1, 2, 3, 4, 5)));
 
 TEST(HSIEPolynomialTests, TestOperatorTplus) {
-  std::vector<std::complex<double>> in_a;
+  std::vector<ComplexNumber> in_a;
   in_a.emplace_back(0.0, 0.0);
   in_a.emplace_back(0.0, 0.0);
   in_a.emplace_back(1.0, 0.0);
   in_a.emplace_back(0.0, 1.0);
   in_a.emplace_back(0.0, 0.0);
-  std::complex<double> k0(0.0, 1.0);
+  ComplexNumber k0(0.0, 1.0);
   HSIEPolynomial poly(in_a, k0);
-  poly.applyTplus(std::complex<double>(1, -1));
-  ASSERT_EQ(poly.a[0], std::complex<double>(0.5, -0.5));
-  ASSERT_EQ(poly.a[1], std::complex<double>(0, 0));
-  ASSERT_EQ(poly.a[2], std::complex<double>(0.5, 0));
-  ASSERT_EQ(poly.a[3], std::complex<double>(0.5, 0.5));
-  ASSERT_EQ(poly.a[4], std::complex<double>(0, 0.5));
+  poly.applyTplus(ComplexNumber(1, -1));
+  ASSERT_EQ(poly.a[0], ComplexNumber(0.5, -0.5));
+  ASSERT_EQ(poly.a[1], ComplexNumber(0, 0));
+  ASSERT_EQ(poly.a[2], ComplexNumber(0.5, 0));
+  ASSERT_EQ(poly.a[3], ComplexNumber(0.5, 0.5));
+  ASSERT_EQ(poly.a[4], ComplexNumber(0, 0.5));
 }
 
 TEST(HSIEPolynomialTests, ProductOfDandIShouldBeIdentity) {
-  std::vector<std::complex<double>> in_a;
+  std::vector<ComplexNumber> in_a;
   in_a.emplace_back(0.0, 0.0);
   in_a.emplace_back(0.0, 0.0);
   in_a.emplace_back(1.0, 0.0);
   in_a.emplace_back(0.0, 1.0);
   in_a.emplace_back(0.0, 0.0);
-  std::complex<double> k0(0.0, 1.0);
+  ComplexNumber k0(0.0, 1.0);
   HSIEPolynomial poly(in_a, k0);
   poly.applyD();
-  dealii::FullMatrix<std::complex<double>> product(HSIEPolynomial::D.size(0),
+  dealii::FullMatrix<ComplexNumber> product(HSIEPolynomial::D.size(0),
       HSIEPolynomial::D.size(1));
   HSIEPolynomial::D.mmult(product, HSIEPolynomial::I, false);
   ASSERT_NEAR(product.frobenius_norm(), std::sqrt(HSIEPolynomial::I.size(0)),
@@ -462,8 +461,8 @@ TEST(HSIEPolynomialTests, ProductOfDandIShouldBeIdentity) {
 }
 
 TEST_F(FullCubeFixture, EvaluationOfA) {
-  std::complex<double> k0(0, -1);
-  std::vector<std::complex<double>> zeroes;
+  ComplexNumber k0(0, -1);
+  std::vector<ComplexNumber> zeroes;
   
   for (unsigned k = 0; k < 10; k++) {
     zeroes.emplace_back(0, 0);
@@ -482,7 +481,7 @@ TEST_F(FullCubeFixture, EvaluationOfA) {
       G[0][0] = 1;
       G[1][1] = 1;
       G[2][2] = 1;
-      std::complex<double> res = surfaces[0]->evaluate_a(u, v, G);
+      ComplexNumber res = surfaces[0]->evaluate_a(u, v, G);
       if (j != i) {
         ASSERT_NEAR(0, res.real(), 0.001);
         ASSERT_NEAR(0, res.imag(), 0.001);
@@ -496,8 +495,8 @@ TEST_F(FullCubeFixture, EvaluationOfA) {
 }
 
 TEST_F(FullCubeFixture, RandomPolynomialProductTest) {
-  std::complex<double> k0(0, -1);
-  std::vector<std::complex<double>> zeroes;
+  ComplexNumber k0(0, -1);
+  std::vector<ComplexNumber> zeroes;
   for (unsigned k = 0; k < 10; k++) {
     zeroes.emplace_back(0, 0);
   }
@@ -514,8 +513,8 @@ TEST_F(FullCubeFixture, RandomPolynomialProductTest) {
   G[0][0] = 1;
   G[1][1] = 1;
   G[2][2] = 1;
-  std::complex<double> res = surfaces[0]->evaluate_a(u, v, G);
-  std::complex<double> expected_result(0, 0);
+  ComplexNumber res = surfaces[0]->evaluate_a(u, v, G);
+  ComplexNumber expected_result(0, 0);
   for (unsigned j = 0; j < 3; j++) {
     for (unsigned int i = 0; i < 10; i++) {
       expected_result += u[j].a[i] * v[j].a[i];

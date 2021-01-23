@@ -12,6 +12,7 @@ ADD_LIBRARY(Code
         Runners/SweepingRun.cpp
         Helpers/GeometryManager.cpp
         Helpers/ExactSolution.cpp
+        Helpers/ExactSolutionRamped.cpp
         Helpers/ModeManager.cpp
         Helpers/ParameterReader.cpp
         Helpers/PointSourceField.cpp
@@ -25,11 +26,14 @@ ADD_LIBRARY(Code
         SpaceTransformations/HomogenousTransformationRectangular.cpp
         SpaceTransformations/InhomogenousTransformationRectangular.cpp
         SpaceTransformations/SpaceTransformation.cpp
-        HSIEPreconditioner/HSIEPolynomial.cpp
-        HSIEPreconditioner/HSIEPreconditioner.cpp
-        HSIEPreconditioner/HSIESurface.cpp
-        HSIEPreconditioner/LaguerreFunction.cpp
-        HSIEPreconditioner/JacobianForCell.cpp
+        BoundaryCondition/JacobianForCell.cpp
+        BoundaryCondition/DofData.cpp
+        BoundaryCondition/BoundaryCondition.cpp
+        BoundaryCondition/PMLSurface.cpp
+        BoundaryCondition/HSIEPolynomial.cpp
+        BoundaryCondition/HSIESurface.cpp
+        BoundaryCondition/LaguerreFunction.cpp
+        BoundaryCondition/JacobianForCell.cpp
         Hierarchy/HierarchicalProblem.cpp 
         Hierarchy/HierarchicalProblem.h 
         Hierarchy/NonLocalProblem.cpp 

@@ -1,6 +1,7 @@
 #include "../Core/Types.h"
 #include "LocalProblem.h"
-#include "../HSIEPreconditioner/HSIESurface.h"
+#include "../BoundaryCondition/HSIESurface.h"
+#include "../BoundaryCondition/BoundaryCondition.h"
 #include "../Helpers/staticfunctions.h"
 #include <cmath>
 #include <iostream>
@@ -102,7 +103,7 @@ void LocalProblem::initialize() {
       dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation,
           b_ids);
       dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
-      surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(GlobalParams.HSIE_polynomial_degree, std::ref(surf_tria), side,
+      surfaces[side] = std::shared_ptr<BoundaryCondition>(new HSIESurface(GlobalParams.HSIE_polynomial_degree, std::ref(surf_tria), side,
               GlobalParams.Nedelec_element_order, GlobalParams.kappa_0, additional_coorindate));
       surfaces[side]->initialize();
     } else {
@@ -170,7 +171,6 @@ void LocalProblem::make_constraints() {
   for (unsigned int surface = 0; surface < 6; surface++) {
     if(is_hsie_surface[surface]) {
       std::vector<DofIndexAndOrientationAndPosition> from_surface = surfaces[surface]->get_dof_association();
-      std::cout << "From surface has " << from_surface.size() << " Elements." << std::endl;
       std::vector<DofIndexAndOrientationAndPosition> from_inner_problem = base_problem.get_surface_dof_vector_for_boundary_id(surface);
       if (from_surface.size() != from_inner_problem.size()) {
         std::cout << "Warning: Size mismatch in make_constraints for surface "

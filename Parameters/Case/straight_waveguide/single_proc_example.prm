@@ -1,9 +1,9 @@
 subsection Case parameters
     set source type = 0
     set fem order = 0
-    set geometry size x = 4.0
-    set geometry size y = 3.6
-    set geometry size z = 2.02
+    set geometry size x = 8.0
+    set geometry size y = 7.2
+    set geometry size z = 2.5
     set epsilon in = 2.3409
     set epsilon out = 1.8496
     set mu in = 1.0

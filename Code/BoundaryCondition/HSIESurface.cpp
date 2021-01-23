@@ -8,103 +8,30 @@
 #include "DofData.h"
 #include "HSIEPolynomial.h"
 #include "../Helpers/staticfunctions.h"
-#include "JacobianForCell.h"
+#include "./JacobianForCell.h"
 #include "../Helpers/staticfunctions.h"
+#include <vector>
+#include "./BoundaryCondition.h"
 
 const unsigned int MAX_DOF_NUMBER = INT_MAX;
 
-// The ith entry in this vector means the values are for the surface with b_id i.
-// In that entry, there are 4 values, which correspond to the adjacent faces.
-// First for (new) -x direction, then +x then -y then +y.
-const std::vector<std::vector<unsigned int>>  edge_to_boundary_id = {
-    {4,5,2,3}, {5,4,2,3}, {0,1,4,5}, {0,1,5,4}, {1,0,2,3}, {0,1,2,3}
-};
-
 HSIESurface::HSIESurface(unsigned int in_order, const dealii::Triangulation<2, 2> &in_surface_triangulation,
     unsigned int in_boundary_id, unsigned int in_inner_order, ComplexNumber in_k0, double in_additional_coordinate)
-    :
-    order(in_order), b_id(in_boundary_id),
+    : BoundaryCondition(in_boundary_id, in_additional_coordinate, in_surface_triangulation),
+      order(in_order),
       dof_h_q(in_surface_triangulation),
       Inner_Element_Order(in_inner_order),
       fe_nedelec(Inner_Element_Order),
       fe_q(Inner_Element_Order + 1),
-      kappa(2.0 * GlobalParams.Pi / GlobalParams.Lambda),
-      additional_coordinate(in_additional_coordinate) {
-    surface_triangulation.copy_triangulation(in_surface_triangulation);
+      kappa(2.0 * GlobalParams.Pi / GlobalParams.Lambda) {
     dof_h_nedelec.initialize(surface_triangulation, fe_nedelec);
     dof_h_q.initialize(surface_triangulation, fe_q);
-    this->set_mesh_boundary_ids();
+    set_mesh_boundary_ids();
     dof_counter = 0;
     k0 = in_k0;
-  }
-
-std::vector<unsigned int> HSIESurface::get_boundary_ids() {
-    return (this->surface_triangulation.get_boundary_ids());
 }
 
-void HSIESurface::set_mesh_boundary_ids() {
-    auto it = this->surface_triangulation.begin_active();
-    std::vector<double> x;
-    std::vector<double> y;
-    while(it != this->surface_triangulation.end()){
-      if(it->at_boundary()) {
-        for (unsigned int face = 0; face < GeometryInfo<2>::faces_per_cell; ++face) {
-          if (it->face(face)->at_boundary()) {
-            dealii::Point<2, double> c;
-            c = it->face(face)->center();
-            x.push_back(c[0]);
-            y.push_back(c[1]);
-          }
-        }
-      }
-      ++it;
-    }
-    double x_max = *max_element(x.begin(), x.end());
-    double y_max = *max_element(y.begin(), y.end());
-    double x_min = *min_element(x.begin(), x.end());
-    double y_min = *min_element(y.begin(), y.end());
-    it = this->surface_triangulation.begin_active();
-    while(it != this->surface_triangulation.end()){
-    if (it->at_boundary()) {
-      for (unsigned int face = 0; face < GeometryInfo<2>::faces_per_cell;
-          ++face) {
-        Point<2, double> center;
-        center = it->face(face)->center();
-        if (std::abs(center[0] - x_min) < 0.0001) {
-          it->face(face)->set_all_boundary_ids(
-              edge_to_boundary_id[this->b_id][0]);
-        }
-        if (std::abs(center[0] - x_max) < 0.0001) {
-          it->face(face)->set_all_boundary_ids(
-              edge_to_boundary_id[this->b_id][1]);
-        }
-        if (std::abs(center[1] - y_min) < 0.0001) {
-          it->face(face)->set_all_boundary_ids(
-              edge_to_boundary_id[this->b_id][2]);
-        }
-        if (std::abs(center[1] - y_max) < 0.0001) {
-          it->face(face)->set_all_boundary_ids(
-              edge_to_boundary_id[this->b_id][3]);
-        }
-        }
-    }
-    ++it;
-  }
-}
-
-void HSIESurface::identify_corner_cells() {
-  auto it = surface_triangulation.begin_active();
-  auto end = surface_triangulation.end();
-  for(; it != end; ++it) {
-    unsigned int outside_edges = 0;
-    for(unsigned int i = 0; i< dealii::GeometryInfo<2>::faces_per_cell; ++i) {
-      if(it->face(i)->at_boundary()) outside_edges++;
-    }
-    if(outside_edges == 2) {
-      this->corner_cell_ids.push_back(it->index());
-    }
-  }
-}
+HSIESurface::~HSIESurface() {}
 
 DofDataVector HSIESurface::get_dof_data_for_cell(CellIterator2D cell_nedelec, CellIterator2D cell_q) {
   DofDataVector ret;
@@ -153,66 +80,6 @@ DofDataVector HSIESurface::get_dof_data_for_cell(CellIterator2D cell_nedelec, Ce
   }
 
   return ret;
-}
-
-void HSIESurface::make_hanging_node_constraints(
-    dealii::AffineConstraints<ComplexNumber> *in_constraints,
-    DofNumber shift) {
-  dealii::AffineConstraints<double> *nedelec_base_constraints =
-      new dealii::AffineConstraints<double>(
-          this->dof_h_nedelec.locally_owned_dofs());
-  dealii::AffineConstraints<double> *q_base_constraints =
-      new dealii::AffineConstraints<double>(
-      this->dof_h_q.locally_owned_dofs());
-  dealii::DoFTools::make_hanging_node_constraints(this->dof_h_nedelec,
-      *nedelec_base_constraints);
-  dealii::DoFTools::make_hanging_node_constraints(this->dof_h_nedelec,
-      *q_base_constraints);
-
-  for (unsigned int i = 0; i < dof_h_nedelec.n_dofs(); i++) {
-    if (nedelec_base_constraints->is_constrained(i)) {
-      auto constraints =
-          nedelec_base_constraints->get_constraint_entries(i);
-      DofDataVector related_hsie_dofs =
-          this->get_dof_data_for_base_dof_nedelec(i);
-      std::vector<DofDataVector> constraint_related_hsie_dofs;
-      for (unsigned int c = 0; c < constraints->size(); c++) {
-        constraint_related_hsie_dofs[c] =
-            this->get_dof_data_for_base_dof_nedelec(
-                constraints->operator [](c).first);
-      }
-
-      for (unsigned int n_dof = 0; n_dof < related_hsie_dofs.size(); n_dof++) {
-        in_constraints->add_line(related_hsie_dofs[n_dof].global_index + shift);
-        for (unsigned int j = 0; j < constraints->size(); j++) {
-          in_constraints->add_entry(related_hsie_dofs[n_dof].global_index + shift,
-              constraints->operator [](j).first + shift,
-              ComplexNumber{constraints->operator [](j).second,0});
-        }
-      }
-    }
-  }
-
-  for (unsigned int i = 0; i < dof_h_q.n_dofs(); i++) {
-    if (q_base_constraints->is_constrained(i)) {
-      auto constraints = q_base_constraints->get_constraint_entries(i);
-      DofDataVector related_hsie_dofs =
-          this->get_dof_data_for_base_dof_q(i);
-      std::vector<DofDataVector> constraint_related_hsie_dofs;
-      for (unsigned int c = 0; c < constraints->size(); c++) {
-        constraint_related_hsie_dofs[c] = this->get_dof_data_for_base_dof_q(
-            constraints->operator[](c).first);
-      }
-      for (unsigned int n_dof = 0; n_dof < related_hsie_dofs.size(); n_dof++) {
-        in_constraints->add_line(related_hsie_dofs[n_dof].global_index + shift);
-        for (unsigned int j = 0; j < constraints->size(); j++) {
-          in_constraints->add_entry(related_hsie_dofs[n_dof].global_index + shift,
-              constraints->operator [](j).first + shift,
-              ComplexNumber{constraints->operator [](j).second,0});
-        }
-      }
-    }
-  }
 }
 
 DofDataVector HSIESurface::get_dof_data_for_base_dof_nedelec(
@@ -1093,6 +960,10 @@ std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association(
   std::sort(surface_dofs.begin(), surface_dofs.end(),
         compareDofBaseDataAndOrientation);
   return surface_dofs;
+}
+
+void HSIESurface::identify_corner_cells() {
+
 }
 
 bool HSIESurface::check_dof_assignment_integrity() {

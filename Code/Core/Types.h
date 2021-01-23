@@ -11,7 +11,7 @@
 #include <deal.II/lac/petsc_sparse_matrix.h>
 #include <deal.II/lac/petsc_vector.h> 
 #include <deal.II/base/index_set.h>
-#include "../HSIEPreconditioner/DofData.h"
+#include "../BoundaryCondition/DofData.h"
 
 struct RayAngelingData;
 
