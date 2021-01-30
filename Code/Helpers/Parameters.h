@@ -120,4 +120,14 @@ struct Parameters {
     unsigned int Min_HSIE_Order = 1;
 
     unsigned int Max_HSIE_Order = 10;
+
+    double PML_Sigma_Max = 5.0;
+
+    unsigned int PML_N_Layers = 8;
+
+    double PML_thickness = 1.0;
+
+    unsigned int PML_skaling_order = 3;
+
+    BoundaryConditionType BoundaryCondition = BoundaryConditionType::HSIE;
 };

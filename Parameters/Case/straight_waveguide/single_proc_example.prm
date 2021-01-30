@@ -9,4 +9,5 @@ subsection Case parameters
     set mu in = 1.0
     set mu out = 1.0
     set signal amplitude = 1.0
+    set Boundary Method = PML
 end

@@ -1,5 +1,3 @@
-#pragma once
-
 #include "ExactSolutionRamped.h"
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
@@ -48,4 +46,4 @@ double ExactSolutionRamped::get_ramping_factor_for_position(const Position &in_p
   const double length = max_z - min_z;
   const double current = in_p[2] - min_z;
   return length / current;
-};
+}

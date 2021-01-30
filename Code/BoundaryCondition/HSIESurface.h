@@ -37,13 +37,9 @@ public:
   DofCount n_edge_dofs;
   DofCount n_face_dofs;
   DofCount n_vertex_dofs;
-  HSIESurface(HSIEElementOrder in_order,
-      const dealii::Triangulation<2, 2> &in_surf_tria,
-      BoundaryId in_boundary_id,
-      NedelecElementOrder in_inner_order, ComplexNumber k0,
-      double in_additional_coordinate);
-  ~HSIESurface();
   
+  HSIESurface(HSIEElementOrder in_order, const dealii::Triangulation<2, 2> &in_surf_tria, BoundaryId in_boundary_id, NedelecElementOrder in_inner_order, ComplexNumber k0, double in_additional_coordinate);
+  ~HSIESurface();  
   void identify_corner_cells() override;
   std::vector<HSIEPolynomial> build_curl_term_q(unsigned int, const dealii::Tensor<1, 2>);
   std::vector<HSIEPolynomial> build_curl_term_nedelec(unsigned int, const dealii::Tensor<1, 2>, const dealii::Tensor<1, 2>, const double, const double);

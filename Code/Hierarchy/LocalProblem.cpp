@@ -1,6 +1,7 @@
 #include "../Core/Types.h"
 #include "LocalProblem.h"
 #include "../BoundaryCondition/HSIESurface.h"
+#include "../BoundaryCondition/PMLSurface.h"
 #include "../BoundaryCondition/BoundaryCondition.h"
 #include "../Helpers/staticfunctions.h"
 #include <cmath>
@@ -22,7 +23,7 @@ LocalProblem::LocalProblem() :
   base_problem.make_grid();
   print_info("Local Problem", "Done building base problem. Preparing matrix.");
   matrix = new dealii::PETScWrappers::SparseMatrix();
-  for(unsigned int i = 0; i < 6; i++) is_hsie_surface[i] = false;
+  for(unsigned int i = 0; i < 6; i++) is_hsie_surface[i] = true;
   is_hsie_surface[4] = false;
   is_hsie_surface[5] = true;
 }
@@ -103,8 +104,13 @@ void LocalProblem::initialize() {
       dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation,
           b_ids);
       dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
-      surfaces[side] = std::shared_ptr<BoundaryCondition>(new HSIESurface(GlobalParams.HSIE_polynomial_degree, std::ref(surf_tria), side,
-              GlobalParams.Nedelec_element_order, GlobalParams.kappa_0, additional_coorindate));
+      if(GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE) {
+        print_info("LocalProblem::initialize", "Using HSIE as Boundary Method");
+        surfaces[side] = std::shared_ptr<BoundaryCondition>(new HSIESurface(GlobalParams.HSIE_polynomial_degree, std::ref(surf_tria), side, GlobalParams.Nedelec_element_order, GlobalParams.kappa_0, additional_coorindate));
+      } else {
+        print_info("LocalProblem::initialize", "Using PML as Boundary Method");
+        surfaces[side] = std::shared_ptr<BoundaryCondition>(new PMLSurface(side, additional_coorindate, std::ref(surf_tria)));
+      }
       surfaces[side]->initialize();
     } else {
       surfaces[side] = nullptr;

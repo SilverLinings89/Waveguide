@@ -3,21 +3,21 @@
 #include <deal.II/grid/grid_tools.h>
 #include "../Core/GlobalObjects.h"
 #include "../Helpers/staticfunctions.h"
- #include <deal.II/dofs/dof_tools.h>
-  #include <deal.II/lac/affine_constraints.h>
+#include <deal.II/dofs/dof_tools.h>
+#include <deal.II/lac/affine_constraints.h>
+#include "./BoundaryCondition.h"
 
-PMLSurface::PMLSurface(unsigned int in_bid, double in_additional_coordinate, dealii::Triangulation<2> & in_surf_tria, unsigned int in_layers, double in_thickness, unsigned int in_skaling_order)
+PMLSurface::PMLSurface(unsigned int in_bid, double in_additional_coordinate, dealii::Triangulation<2> & in_surf_tria)
     :BoundaryCondition(in_bid, in_additional_coordinate, in_surf_tria),
-    cell_layers(in_layers),
-    thickness(in_thickness),
-    pml_skaling_order(in_skaling_order),
     fe_nedelec(GlobalParams.Nedelec_element_order)
 {
     constraints_made = false;   
 }
 
+PMLSurface::~PMLSurface() {}
+
 void PMLSurface::prepare_mesh() {
-    dealii::GridGenerator::extrude_triangulation(surface_triangulation, cell_layers, thickness, triangulation);
+    dealii::GridGenerator::extrude_triangulation(surface_triangulation, GlobalParams.PML_N_Layers, GlobalParams.PML_thickness, triangulation);
     if(b_id == 4) {
         dealii::GridTools::transform(Transform_5_to_4, triangulation);
     }
@@ -70,6 +70,20 @@ void PMLSurface::init_fe() {
     dof_h_nedelec.distribute_dofs(fe_nedelec);
     dof_counter = dof_h_nedelec.n_dofs();
     sort_dofs();
+}
+
+void PMLSurface::identify_corner_cells() {
+
+}
+
+void PMLSurface::initialize() {
+  prepare_mesh();
+  init_fe();
+  make_inner_constraints();
+}
+
+bool PMLSurface::is_point_at_boundary(Position2D in_p, BoundaryId in_bid) {
+  return false;
 }
 
 void PMLSurface::sort_dofs() {
@@ -202,13 +216,13 @@ DofCount PMLSurface::get_dof_count_by_boundary_id(BoundaryId in_bid) {
 double PMLSurface::fraction_of_pml_direction(Position in_p) {
     double delta = 0;
     if(b_id == 0 || b_id == 1) {
-        delta = std::abs(in_p[0]-additional_coordinate) / thickness;
+        delta = std::abs(in_p[0]-additional_coordinate) / GlobalParams.PML_thickness;
     }
     if(b_id == 2 || b_id == 3) {
-        delta = std::abs(in_p[1]-additional_coordinate) / thickness;
+        delta = std::abs(in_p[1]-additional_coordinate) / GlobalParams.PML_thickness;
     }
     if(b_id == 4 || b_id == 5) {
-        delta = std::abs(in_p[2]-additional_coordinate) / thickness;
+        delta = std::abs(in_p[2]-additional_coordinate) / GlobalParams.PML_thickness;
     }
     return delta;
 }
@@ -227,7 +241,7 @@ dealii::Tensor<2,3,ComplexNumber> PMLSurface::get_pml_tensor_mu(Position in_p) {
 dealii::Tensor<2,3,ComplexNumber> PMLSurface::get_pml_tensor(Position in_p) {
     dealii::Tensor<2,3,ComplexNumber> ret;
     double fraction = fraction_of_pml_direction(in_p);
-    ComplexNumber part_a = {1 , std::pow(fraction, pml_skaling_order) * 5};
+    ComplexNumber part_a = {1 , std::pow(fraction, GlobalParams.PML_skaling_order) * GlobalParams.PML_Sigma_Max};
     for(unsigned int i = 0; i < 3; i++) {
         for(unsigned int j = 0; j < 3; j++) {
             ret[i][j] = 0;

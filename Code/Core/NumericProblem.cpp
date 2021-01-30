@@ -132,10 +132,7 @@ void NumericProblem::make_constraints() {
   local_constraints.reinit(local_dof_indices);
 
   if(GlobalParams.Index_in_z_direction == 0) {
-    // FIX THIS
-    for(unsigned int i = 0; i < 5; i++) {
-      VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, *GlobalParams.source_field, i, local_constraints);
-    }
+    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, *GlobalParams.source_field, 4, local_constraints);
   }
 
   local_constraints_made = true;

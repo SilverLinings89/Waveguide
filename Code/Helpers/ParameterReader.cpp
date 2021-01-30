@@ -43,8 +43,13 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("Enable Parameter Run", "false", Patterns::Bool(), "For a series of Local solves, this can be set to true");
         case_prm.declare_entry("Kappa 0 Real", "5", Patterns::Double(), "Real part of kappa_0 for HSIE.");
         case_prm.declare_entry("Kappa 0 Imaginary", "-1", Patterns::Double(), "Imaginary part of kappa_0 for HSIE.");
+        case_prm.declare_entry("PML sigma max", "5.0", Patterns::Double(), "Parameter Sigma Max for all PML layers.");
         case_prm.declare_entry("Min HSIE Order", "1", Patterns::Integer(), "Minimal HSIE Element order for parameter run.");
         case_prm.declare_entry("Max HSIE Order", "21", Patterns::Integer(), "Maximal HSIE Element order for parameter run.");
+        case_prm.declare_entry("Boundary Method", "HSIE", Patterns::Selection("HSIE|PML"), "Choose the boundary element method (options are PML and HSIE).");
+        case_prm.declare_entry("PML thickness", "1.0", Patterns::Double(), "Thickness of PML layers.");
+        case_prm.declare_entry("PML skaling order", "3", Patterns::Integer(), "PML skaling order is the exponent with wich the imaginary part grows towards the outer boundary.");
+        case_prm.declare_entry("PML n layers", "8", Patterns::Integer(), "Number of cell layers used in the PML medium.");
     }
     case_prm.leave_subsection();
 }
@@ -91,7 +96,14 @@ Parameters ParameterReader::read_parameters(const std::string run_file,const std
         ret.Enable_Parameter_Run = case_prm.get_bool("Enable Parameter Run");
         ret.Min_HSIE_Order = case_prm.get_integer("Min HSIE Order");
         ret.Max_HSIE_Order = case_prm.get_integer("Max HSIE Order");
+        if(case_prm.get("Boundary Method") == "PML") {
+            ret.BoundaryCondition = BoundaryConditionType::PML;
+        } else {
+            ret.BoundaryCondition = BoundaryConditionType::HSIE;
+        }
+        ret.PML_N_Layers = case_prm.get_integer("PML n layers");
+        ret.PML_skaling_order = case_prm.get_integer("PML skaling order");
+        ret.PML_thickness = case_prm.get_double("PML thickness");
     }
-
     return ret;
 }

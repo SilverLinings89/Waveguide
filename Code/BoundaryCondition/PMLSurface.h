@@ -6,9 +6,6 @@
  #include <deal.II/lac/affine_constraints.h>
 
 class PMLSurface : public BoundaryCondition {
-    const unsigned int cell_layers;
-    const unsigned int thickness;
-    const unsigned int pml_skaling_order;
     ComplexNumber sigma_0;
     dealii::Triangulation<3> triangulation;
     unsigned int inner_boundary_id;
@@ -18,7 +15,9 @@ class PMLSurface : public BoundaryCondition {
     dealii::AffineConstraints<ComplexNumber> constraints;
     bool constraints_made;
 
-    PMLSurface(unsigned int in_bid, double in_additional_coordinate, dealii::Triangulation<2> & in_surf_tria, unsigned int layers, double in_thickness, unsigned int in_skaling_order);
+  public: 
+    PMLSurface(unsigned int in_bid, double in_additional_coordinate, dealii::Triangulation<2> & in_surf_tria);
+    ~PMLSurface();
     void identify_corner_cells() override;
     void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, DofNumber shift, dealii::AffineConstraints<ComplexNumber> *constraints) override;
     void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::IndexSet,  std::array<bool, 6> surfaces_hsie,  dealii::AffineConstraints<ComplexNumber> *constraints) override;

@@ -38,7 +38,7 @@ ADD_SUBDIRECTORY(Main)
 add_executable(waveguide_tests)
 target_sources(waveguide_tests
     PRIVATE
-        tests/ExampleTest.cpp
+        tests/BoundaryMethodTests.cpp
 )
 set_target_properties(waveguide_tests PROPERTIES
     COMPILE_FLAGS "${cxx_strict}"
