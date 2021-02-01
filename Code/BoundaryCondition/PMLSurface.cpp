@@ -143,7 +143,7 @@ void PMLSurface::sort_dofs() {
 }
 
 std::vector<DofIndexAndOrientationAndPosition> PMLSurface::get_dof_association_by_boundary_id(unsigned int in_bid) {
-    std::vector<DofIndexAndOrientationAndPosition> ret;
+  std::vector<DofIndexAndOrientationAndPosition> ret;
   std::vector<types::global_dof_index> local_line_dofs(fe_nedelec.dofs_per_line);
   std::set<DofNumber> line_set;
   std::vector<DofNumber> local_face_dofs(fe_nedelec.dofs_per_face);

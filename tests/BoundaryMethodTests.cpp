@@ -46,6 +46,22 @@ TEST_F(FullCubeFixture, ExtremeCoordinates) {
   }
 }
 
+TEST_F(PMLCubeFixture, DofCountTests) {
+  for(unsigned int i = 0; i < 6; i++) {
+    for(unsigned int j = 0; j < 6; j++) {
+      unsigned int dof_count_i = surfaces[i]->get_dof_count_by_boundary_id(j);
+      unsigned int dof_count_j = surfaces[j]->get_dof_count_by_boundary_id(i);
+      ASSERT_EQ(dof_count_i, dof_count_j);
+    }
+  }
+}
+
+TEST_F(PMLCubeFixture, PMLLayerSideDofCounts) {
+  for(unsigned int i = 0; i < 6; i++) {
+    
+  }
+}
+
 TEST_F(FullCubeFixture, BoundaryVertexTest1) {
   for(unsigned int i = 0; i < 6; i++) {
     for(unsigned int j = 0; j < 6; j++) {

@@ -2,9 +2,10 @@
 
 #include "../Code/BoundaryCondition/LaguerreFunction.h"
 #include "../third_party/googletest/googletest/include/gtest/gtest.h"
+#include "../Code/BoundaryCondition/BoundaryCondition.h"
 #include "../Code/BoundaryCondition/HSIESurface.h"
 #include "../Code/BoundaryCondition/HSIEPolynomial.h"
-#include "../Code/BoundaryCondition/BoundaryCondition.h"
+#include "../Code/BoundaryCondition/PMLSurface.h"
 #include "../Code/Core/Types.h"
 #include "../Code/Helpers/staticfunctions.h"
 #include <deal.II/grid/grid_generator.h>
@@ -114,6 +115,77 @@ protected:
     }
   }
 };
+
+class PMLCubeFixture: public ::testing::Test {
+public:
+  unsigned int InnerOrder;
+  dealii::Triangulation<3> full_tria;
+  dealii::Triangulation<2, 3> temp_triangulation;
+  dealii::Triangulation<2> surf_tria;
+  ComplexNumber k0;
+  std::array<std::shared_ptr<PMLSurface>,6> surfaces;
+protected:
+  void SetUp() override {
+    InnerOrder = 5;
+    k0 = { 0.0, -1.0 };
+    std::vector<unsigned int> repetitions;
+    repetitions.push_back(3);
+    repetitions.push_back(4);
+    repetitions.push_back(5);
+    Position left(-1, -1, -1);
+    Position right(1, 1, 1);
+    dealii::GridGenerator::subdivided_hyper_rectangle(full_tria, repetitions, left, right, true);
+
+    for(unsigned int side = 0; side < 6; side++) {
+      dealii::Triangulation<2, 3> temp_triangulation;
+      const unsigned int component = side / 2;
+      double additional_coorindate = 0;
+      bool found = false;
+      for (auto it : full_tria.active_cell_iterators()) {
+        if (it->at_boundary(side)) {
+          for (auto i = 0; i < 6 && !found; i++) {
+            if (it->face(i)->boundary_id() == side) {
+              found = true;
+              additional_coorindate = it->face(i)->center()[component];
+            }
+          }
+        }
+        if (found) {
+          break;
+        }
+      }
+      dealii::Triangulation<2> surf_tria;
+      Mesh tria;
+      tria.copy_triangulation(full_tria);
+      std::set<unsigned int> b_ids;
+      b_ids.insert(side);
+      switch (side) {
+        case 0:
+          dealii::GridTools::transform(Transform_0_to_5, tria);
+          break;
+        case 1:
+          dealii::GridTools::transform(Transform_1_to_5, tria);
+          break;
+        case 2:
+          dealii::GridTools::transform(Transform_2_to_5, tria);
+          break;
+        case 3:
+          dealii::GridTools::transform(Transform_3_to_5, tria);
+          break;
+        case 4:
+          dealii::GridTools::transform(Transform_4_to_5, tria);
+          break;
+        default:
+          break;
+      }
+      dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation, b_ids);
+      dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
+      surfaces[side] = std::shared_ptr<PMLSurface>(new PMLSurface(side, additional_coorindate, std::ref(surf_tria)));
+      surfaces[side]->initialize();
+    }
+  }
+};
+
 
 class TestDirectionFixture: public ::testing::TestWithParam<std::tuple<unsigned int, unsigned int, unsigned int>> {
 public:
