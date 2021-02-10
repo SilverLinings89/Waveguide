@@ -3,6 +3,7 @@
 #include "Parameters.h"
 #include "../Helpers/staticfunctions.h"
 #include "../Helpers/ExactSolution.h"
+#include "../Helpers/ExactSolutionRamped.h"
 #include "PointSourceField.h"
 
 auto Parameters::complete_data() -> void {

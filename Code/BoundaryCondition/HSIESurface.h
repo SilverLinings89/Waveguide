@@ -93,6 +93,8 @@ public:
   void compute_extreme_vertex_coordinates();
   auto vertex_positions_for_ids(std::vector<unsigned int> ids) -> std::vector<Position>;
   auto line_positions_for_ids(std::vector<unsigned int> ids) -> std::vector<Position>;
+  void setup_neighbor_couplings(std::array<bool, 6> is_b_id_truncated) override;
+  void reset_neighbor_couplings(std::array<bool, 6> is_b_id_truncated) override;
 };
 
 

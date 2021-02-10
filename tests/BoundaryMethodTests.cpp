@@ -46,12 +46,109 @@ TEST_F(FullCubeFixture, ExtremeCoordinates) {
   }
 }
 
-TEST_F(PMLCubeFixture, DofCountTests) {
+TEST_F(PMLCubeFixture, PMLCellCountTests) {
+  const unsigned int default_layers = GlobalParams.PML_N_Layers - 1;
+  ASSERT_EQ(surfaces[0]->triangulation.n_active_cells(), 4 * 5 * default_layers);
+  ASSERT_EQ(surfaces[1]->triangulation.n_active_cells(), 4 * 5 * default_layers);
+  ASSERT_EQ(surfaces[2]->triangulation.n_active_cells(), 3 * 5 * default_layers);
+  ASSERT_EQ(surfaces[3]->triangulation.n_active_cells(), 3 * 5 * default_layers);
+  ASSERT_EQ(surfaces[4]->triangulation.n_active_cells(), 3 * 4 * default_layers);
+  ASSERT_EQ(surfaces[5]->triangulation.n_active_cells(), 3 * 4 * default_layers);
+}
+
+TEST_F(PMLCubeFixture, PMLSurfaceStructureCounts) {
+  ASSERT_EQ(surfaces[0]->edge_ids_by_boundary_id[0].size(), 5*5+4*6);
+  ASSERT_EQ(surfaces[0]->edge_ids_by_boundary_id[1].size(), 5*5+4*6);
+
+  ASSERT_EQ(surfaces[0]->edge_ids_by_boundary_id[2].size(), 6*7+5*8);
+  ASSERT_EQ(surfaces[0]->edge_ids_by_boundary_id[3].size(), 6*7+5*8);
+
+  ASSERT_EQ(surfaces[0]->edge_ids_by_boundary_id[4].size(), 5*7+4*8);
+  ASSERT_EQ(surfaces[0]->edge_ids_by_boundary_id[5].size(), 5*7+4*8);
+}
+
+TEST_F(PMLCubeFixture, PMLDomainMeasurements) {
+  ASSERT_EQ(surfaces[0]->x_range.first, -2.0);
+  ASSERT_EQ(surfaces[0]->x_range.second, -1.0);
+  ASSERT_EQ(surfaces[0]->y_range.first, -1.0);
+  ASSERT_EQ(surfaces[0]->y_range.second, 1.0);
+  ASSERT_EQ(surfaces[0]->z_range.first, -1.0);
+  ASSERT_EQ(surfaces[0]->z_range.second, 1.0);
+
+  ASSERT_EQ(surfaces[1]->x_range.first, 1.0);
+  ASSERT_EQ(surfaces[1]->x_range.second, 2.0);
+  ASSERT_EQ(surfaces[1]->y_range.first, -1.0);
+  ASSERT_EQ(surfaces[1]->y_range.second, 1.0);
+  ASSERT_EQ(surfaces[1]->z_range.first, -1.0);
+  ASSERT_EQ(surfaces[1]->z_range.second, 1.0);
+
+  ASSERT_EQ(surfaces[2]->x_range.first, -1.0);
+  ASSERT_EQ(surfaces[2]->x_range.second, 1.0);
+  ASSERT_EQ(surfaces[2]->y_range.first, -2.0);
+  ASSERT_EQ(surfaces[2]->y_range.second, -1.0);
+  ASSERT_EQ(surfaces[2]->z_range.first, -1.0);
+  ASSERT_EQ(surfaces[2]->z_range.second, 1.0);
+
+  ASSERT_EQ(surfaces[3]->x_range.first, -1.0);
+  ASSERT_EQ(surfaces[3]->x_range.second, 1.0);
+  ASSERT_EQ(surfaces[3]->y_range.first, 1.0);
+  ASSERT_EQ(surfaces[3]->y_range.second, 2.0);
+  ASSERT_EQ(surfaces[3]->z_range.first, -1.0);
+  ASSERT_EQ(surfaces[3]->z_range.second, 1.0);
+
+  ASSERT_EQ(surfaces[4]->x_range.first, -1.0);
+  ASSERT_EQ(surfaces[4]->x_range.second, 1.0);
+  ASSERT_EQ(surfaces[4]->y_range.first, -1.0);
+  ASSERT_EQ(surfaces[4]->y_range.second, 1.0);
+  ASSERT_EQ(surfaces[4]->z_range.first, -2.0);
+  ASSERT_EQ(surfaces[4]->z_range.second, -1.0);
+
+  ASSERT_EQ(surfaces[5]->x_range.first, -1.0);
+  ASSERT_EQ(surfaces[5]->x_range.second, 1.0);
+  ASSERT_EQ(surfaces[5]->y_range.first, -1.0);
+  ASSERT_EQ(surfaces[5]->y_range.second, 1.0);
+  ASSERT_EQ(surfaces[5]->z_range.first, 1.0);
+  ASSERT_EQ(surfaces[5]->z_range.second, 2.0);
+}
+
+TEST_F(PMLCubeFixture, PMLSurfaceDofCountTests) {
+  const unsigned int default_layers = GlobalParams.PML_N_Layers - 1;
+  std::array<unsigned int, 3> cells_by_direction;
+  
+  cells_by_direction[0] = 3;
+  cells_by_direction[1] = 4;
+  cells_by_direction[2] = 5;
+
   for(unsigned int i = 0; i < 6; i++) {
     for(unsigned int j = 0; j < 6; j++) {
-      unsigned int dof_count_i = surfaces[i]->get_dof_count_by_boundary_id(j);
-      unsigned int dof_count_j = surfaces[j]->get_dof_count_by_boundary_id(i);
-      ASSERT_EQ(dof_count_i, dof_count_j);
+      std::cout << "i: " << i << " j: " << j << std::endl; 
+      if(i / 2 == j / 2) {
+        if(i/2 == 0) {
+          ASSERT_EQ(surfaces[i]->get_dof_count_by_boundary_id(j), (cells_by_direction[1] + 1) * cells_by_direction[2] + (cells_by_direction[2] + 1) * cells_by_direction[1]);
+        }
+        if(i/2 == 1) {
+          ASSERT_EQ(surfaces[i]->get_dof_count_by_boundary_id(j), (cells_by_direction[2] + 1) * cells_by_direction[0] + (cells_by_direction[0] + 1) * cells_by_direction[2]);
+        }
+        if(i/2 == 2) {
+          ASSERT_EQ(surfaces[i]->get_dof_count_by_boundary_id(j), (cells_by_direction[0] + 1) * cells_by_direction[1] + (cells_by_direction[1] + 1) * cells_by_direction[0]);
+        }
+      } else {
+        unsigned int directional_component = third_number_in_zero_one_two(i/2, j/2);
+        ASSERT_EQ(surfaces[i]->get_dof_count_by_boundary_id(j), cells_by_direction[directional_component] * GlobalParams.PML_N_Layers + (cells_by_direction[directional_component]+1) * (GlobalParams.PML_N_Layers-1));
+      }
+    }
+  }
+}
+
+TEST_F(PMLCubeFixture, BoundaryToBoundaryAssociationTests) {
+  for(unsigned int i = 0; i < 6; i++) {
+    for(unsigned int j = 0; j < 6; j++) {
+      if(i/2 != j/2) {
+        unsigned int dof_count_i = surfaces[i]->get_dof_count_by_boundary_id(j);
+        unsigned int dof_count_j = surfaces[j]->get_dof_count_by_boundary_id(i);
+        std::cout << "Pair " << i << " - " << j << std::endl;
+        ASSERT_EQ(dof_count_i, dof_count_j);
+      }
     }
   }
 }

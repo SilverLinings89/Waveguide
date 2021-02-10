@@ -26,6 +26,7 @@
 #include "./GlobalObjects.h"
 #include "../SpaceTransformations/HomogenousTransformationRectangular.h"
 #include "../Helpers/PointSourceField.h"
+#include "../Helpers/ExactSolutionRamped.h"
 
 NumericProblem::NumericProblem()
     :
@@ -132,7 +133,12 @@ void NumericProblem::make_constraints() {
   local_constraints.reinit(local_dof_indices);
 
   if(GlobalParams.Index_in_z_direction == 0) {
-    VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, *GlobalParams.source_field, 4, local_constraints);
+    std::vector<DofIndexAndOrientationAndPosition> srf_dofs = get_surface_dof_vector_for_boundary_id(4);
+    for(unsigned int i = 0; i < srf_dofs.size(); i++) {
+      local_constraints.add_line(srf_dofs[i].index);
+      local_constraints.set_inhomogeneity(srf_dofs[i].index, 0);
+    }
+    // VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, *GlobalParams.source_field, 4, local_constraints);
   }
 
   local_constraints_made = true;
@@ -298,13 +304,11 @@ struct CellwiseAssemblyDataNP {
   std::vector<DofNumber> local_dof_indices;
   DofHandler3D::active_cell_iterator cell;
   DofHandler3D::active_cell_iterator end_cell;
-  const Position bounded_cell;
+  ExactSolutionRamped exact_solution_ramped;
   const FEValuesExtractors::Vector fe_field;
   CellwiseAssemblyDataNP(dealii::FE_NedelecSZ<3> * fe, DofHandler3D * dof_handler):
   quadrature_formula(GlobalParams.Nedelec_element_order + 2),
-  fe_values(*fe, quadrature_formula,
-                        update_values | update_gradients | update_JxW_values |
-                            update_quadrature_points),
+  fe_values(*fe, quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points),
   dofs_per_cell(fe->dofs_per_cell),
   n_q_points(quadrature_formula.size()),
   cell_matrix(dofs_per_cell,dofs_per_cell),
@@ -313,9 +317,9 @@ struct CellwiseAssemblyDataNP {
   mu_zero(1.0),
   cell_rhs(dofs_per_cell),
   local_dof_indices(dofs_per_cell),
-  bounded_cell(0.0,0.0,0.0),
-  fe_field(0)
-  {
+  fe_field(0),
+  exact_solution_ramped(0,1,true, false)
+  {    
     cell_rhs = 0;
     for (unsigned int i = 0; i < 3; i++) {
       for (unsigned int j = 0; j < 3; j++) {
@@ -345,15 +349,19 @@ struct CellwiseAssemblyDataNP {
       Tensor<1, 3, ComplexNumber> I_Val;
       I_Curl = fe_values[fe_field].curl(i, q_index);
       I_Val = fe_values[fe_field].value(i, q_index);
-
+      Tensor<1,3,ComplexNumber> Ex_Curl = exact_solution_ramped.curl(quadrature_points[q_index]);
+      Tensor<1,3,ComplexNumber> Ex_Val;
+      for(unsigned int comp = 0; comp < 3; comp++) {
+        Ex_Val[comp] = exact_solution_ramped.value(quadrature_points[q_index], comp);
+      }
+      cell_rhs[i] +=  I_Curl * Conjugate_Vector(Ex_Curl)* JxW - (eps_kappa_2 * ( I_Val * Conjugate_Vector(Ex_Val)) * JxW);
       for (unsigned int j = 0; j < dofs_per_cell; j++) {
         Tensor<1, 3, ComplexNumber> J_Curl;
         Tensor<1, 3, ComplexNumber> J_Val;
         J_Curl = fe_values[fe_field].curl(j, q_index);
         J_Val = fe_values[fe_field].value(j, q_index);
 
-        cell_matrix[i][j] += I_Curl * Conjugate_Vector(J_Curl)* JxW
-            - (eps_kappa_2 * ( I_Val * Conjugate_Vector(J_Val)) * JxW);
+        cell_matrix[i][j] += I_Curl * Conjugate_Vector(J_Curl)* JxW - (eps_kappa_2 * ( I_Val * Conjugate_Vector(J_Val)) * JxW);
       }
     }
   }

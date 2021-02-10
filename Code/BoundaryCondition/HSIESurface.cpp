@@ -519,8 +519,7 @@ void HSIESurface::fill_matrix(
     }
 }
 
-void HSIESurface::fill_sparsity_pattern(
-    dealii::DynamicSparsityPattern *pattern, DofNumber shift, dealii::AffineConstraints<ComplexNumber> *constraints) {
+void HSIESurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *pattern, DofNumber shift, dealii::AffineConstraints<ComplexNumber> *constraints) {
   auto it = dof_h_nedelec.begin_active();
   auto it2 = dof_h_q.begin_active();
   auto end = dof_h_nedelec.end();
@@ -822,11 +821,7 @@ ComplexNumber HSIESurface::evaluate_a(
       }
     }
   }
-  if(b_id % 2 == 0) {
-    return -1.0 * result;
-  } else {
-    return result;
-  }
+  return result;
 }
 
 std::vector<HSIEPolynomial> HSIESurface::build_curl_term_nedelec(
@@ -1251,4 +1246,12 @@ std::vector<unsigned int> HSIESurface::get_lines_for_boundary_id(BoundaryId in_b
   }
   edges.shrink_to_fit();
   return edges;
+}
+
+void HSIESurface::setup_neighbor_couplings(std::array<bool, 6>) {
+
+}
+
+void HSIESurface::reset_neighbor_couplings(std::array<bool, 6>) {
+
 }

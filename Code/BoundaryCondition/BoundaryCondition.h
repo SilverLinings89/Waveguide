@@ -37,4 +37,6 @@ public:
   virtual auto get_dof_association() -> std::vector<DofIndexAndOrientationAndPosition> = 0;
   virtual auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<DofIndexAndOrientationAndPosition> = 0;
   void compute_extreme_vertex_coordinates();
+  virtual void setup_neighbor_couplings(std::array<bool, 6> is_b_id_truncated) = 0;
+  virtual void reset_neighbor_couplings(std::array<bool, 6> is_b_id_truncated) = 0;
 };

@@ -183,11 +183,10 @@ void LocalProblem::make_constraints() {
             << surface << ": Inner: " << from_inner_problem.size()
             << " != Surface:" << from_surface.size() << "." << std::endl;
       }
+      bool found_incompatible_surface_dof = false;
       for (unsigned int line = 0; line < from_inner_problem.size(); line++) {
         if (!areDofsClose(from_inner_problem[line], from_surface[line])) {
-          std::cout << "Error in face to inner_coupling. Positions are inner: "
-              << from_inner_problem[line].position << " and surface: "
-              << from_surface[line].position << std::endl;
+          found_incompatible_surface_dof = true;
         }
         constraints.add_line(from_inner_problem[line].index);
         ComplexNumber value = { 0, 0 };
@@ -200,10 +199,14 @@ void LocalProblem::make_constraints() {
         constraints.add_entry(from_inner_problem[line].index,
             from_surface[line].index + surface_first_dofs[surface], value);
       }
+      if(found_incompatible_surface_dof) std::cout << "There was atleast one incompatible dof for " << surface << std::endl;
     }
   }
   print_info("LocalProblem::make_constraints", "Constraints after phase 1: " + std::to_string(constraints.n_constraints()), false, LoggingLevel::DEBUG_ALL );
   dealii::AffineConstraints<ComplexNumber> surface_to_surface_constraints;
+  for (unsigned int i = 0; i < 6; i++) {
+    if(is_hsie_surface[i]) surfaces[i]->setup_neighbor_couplings(is_hsie_surface);
+  }
   for (unsigned int i = 0; i < 6; i++) {
     for (unsigned int j = i + 1; j < 6; j++) {
       if(is_hsie_surface[i] && is_hsie_surface[j]) {
@@ -220,16 +223,13 @@ void LocalProblem::make_constraints() {
                 << " dofs, " << j << " offers " << upper_face_dofs.size() << "."
                 << std::endl;
           }
+          bool found_incompatible_dof = false;
           for (unsigned int dof = 0; dof < lower_face_dofs.size(); dof++) {
             if (!areDofsClose(lower_face_dofs[dof], upper_face_dofs[dof])) {
-              std::cout << "Error in face to face_coupling. Positions are lower: "
-                  << lower_face_dofs[dof].position << " and upper: "
-                  << upper_face_dofs[dof].position << std::endl;
+              found_incompatible_dof = true;
             }
-            unsigned int dof_a = lower_face_dofs[dof].index
-                + surface_first_dofs[i];
-            unsigned int dof_b = upper_face_dofs[dof].index
-                + surface_first_dofs[j];
+            unsigned int dof_a = lower_face_dofs[dof].index + surface_first_dofs[i];
+            unsigned int dof_b = upper_face_dofs[dof].index + surface_first_dofs[j];
             ComplexNumber value = { 0, 0 };
             if (lower_face_dofs[dof].orientation
                 == upper_face_dofs[dof].orientation) {
@@ -240,11 +240,14 @@ void LocalProblem::make_constraints() {
             surface_to_surface_constraints.add_line(dof_a);
             surface_to_surface_constraints.add_entry(dof_a, dof_b, value);
           }
+          if(found_incompatible_dof) std::cout << "For surface " << i << " and " << j << ": Found incompatible dof." << std::endl;
         }
-        // constraints.merge(surface_to_surface_constraints,
-        //   dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
+        constraints.merge(surface_to_surface_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
       }
     }
+  }
+  for (unsigned int i = 0; i < 6; i++) {
+    if(is_hsie_surface[i]) surfaces[i]->reset_neighbor_couplings(is_hsie_surface);
   }
   print_info("LocalProblem::make_constraints", "Constraints after phase 2: " + std::to_string(constraints.n_constraints()), false, LoggingLevel::DEBUG_ALL );
 
@@ -256,8 +259,15 @@ void LocalProblem::make_constraints() {
 
 void LocalProblem::assemble() {
   base_problem.assemble_system(0, &constraints, matrix, &rhs);
+  // 0 broken
+  // 1 works
+  // 2 broken
+  // 3 works
+  // 4 broken
+  // 5 works
   for (unsigned int surface = 0; surface < 6; surface++) {
     if(is_hsie_surface[surface]) {
+      std::cout << "Surface " << surface << std::endl;
       surfaces[surface]->fill_matrix(matrix, &rhs, surface_first_dofs[surface], is_hsie_surface, &constraints);
     }
   }
@@ -277,12 +287,13 @@ void LocalProblem::reinit() {
   solution.reinit(MPI_COMM_SELF, n_own_dofs, n_own_dofs, false);
   make_constraints();
   base_problem.make_sparsity_pattern(&dsp, 0, &constraints);
+  constraints.close();
   for (unsigned int surface = 0; surface < 6; surface++) {
     if(is_hsie_surface[surface]) {
+      std::cout << "Fill surface sparsity pattern for " << surface << std::endl;
       surfaces[surface]->fill_sparsity_pattern(&dsp, surface_first_dofs[surface], &constraints);
     }
   }
-  constraints.close();
   sp.copy_from(dsp);
   matrix->reinit(sp);
 }
