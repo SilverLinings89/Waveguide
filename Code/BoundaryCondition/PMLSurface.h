@@ -48,8 +48,8 @@ class PMLSurface : public BoundaryCondition {
     auto make_inner_constraints() -> void;
     void copy_constraints(dealii::AffineConstraints<ComplexNumber> *, unsigned int shift);
     auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount override;
-    auto get_dof_association() -> std::vector<DofIndexAndOrientationAndPosition> override;
-    auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<DofIndexAndOrientationAndPosition> override;
+    auto get_dof_association() -> std::vector<InterfaceDofData> override;
+    auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> override;
     void sort_dofs();
     void compute_coordinate_ranges();
     void set_boundary_ids();

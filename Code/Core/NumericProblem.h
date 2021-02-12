@@ -115,7 +115,7 @@ class NumericProblem {
   void make_constraints(dealii::AffineConstraints<ComplexNumber>*,
       unsigned int shift, IndexSet local_constraints_indices);
   void make_constraints();
-  std::vector<DofIndexAndOrientationAndPosition> get_surface_dof_vector_for_boundary_id(BoundaryId b_id);
+  std::vector<InterfaceDofData> get_surface_dof_vector_for_boundary_id(BoundaryId b_id);
   std::vector<unsigned int> dofs_for_cell_around_point(Position &in_p);
   void make_sparsity_pattern(dealii::DynamicSparsityPattern *in_pattern,
       unsigned int shift, dealii::AffineConstraints<ComplexNumber> *constraints);

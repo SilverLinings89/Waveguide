@@ -73,7 +73,7 @@ class RectangularMode {
   static auto compute_epsilon_for_Position(Position in_position) -> double;
   void SortDofsDownstream();
   IndexSet get_dofs_for_boundary_id(types::boundary_id);
-  std::vector<DofIndexAndOrientationAndPosition> get_surface_dof_vector_for_boundary_id(unsigned int b_id);
+  std::vector<InterfaceDofData> get_surface_dof_vector_for_boundary_id(unsigned int b_id);
 };
 
 #endif  // WAVEGUIDEPROBLEM_RECTANGULARMODE_H

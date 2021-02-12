@@ -180,8 +180,8 @@ NonLocalProblem::~NonLocalProblem() {
 
 void NonLocalProblem::make_constraints_for_hsie_surface(unsigned int surface) {
 
-  std::vector<DofIndexAndOrientationAndPosition> from_surface = get_local_problem()->surfaces[surface]->get_dof_association();
-  std::vector<DofIndexAndOrientationAndPosition> from_inner_problem = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(surface);
+  std::vector<InterfaceDofData> from_surface = get_local_problem()->surfaces[surface]->get_dof_association();
+  std::vector<InterfaceDofData> from_inner_problem = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(surface);
   if (from_surface.size() != from_inner_problem.size()) {
     std::cout << "Warning: Size mismatch in make_constraints for surface "
         << surface << ": Inner: " << from_inner_problem.size()
@@ -238,7 +238,7 @@ void NonLocalProblem::make_constraints_for_non_hsie_surface(unsigned int surface
   if(GlobalParams.Index_in_z_direction == 0 && surface == 4) {
 
   } else {
-    std::vector<DofIndexAndOrientationAndPosition> from_inner_problem = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(surface);
+    std::vector<InterfaceDofData> from_inner_problem = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(surface);
     unsigned int n_dofs_on_surface = from_inner_problem.size();
     std::pair<bool, unsigned int> partner_data = GlobalMPI.get_neighbor_for_interface(get_direction_for_boundary_id(surface));
     if(!partner_data.first) {
@@ -368,9 +368,9 @@ void NonLocalProblem::make_sparsity_pattern_for_surface(unsigned int surface, Dy
 
 std::vector<bool> NonLocalProblem::get_incoming_dof_orientations() {
   std::vector<bool> ret;
-  std::vector<DofIndexAndOrientationAndPosition> from_lower_surface =
+  std::vector<InterfaceDofData> from_lower_surface =
     get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(compute_lower_interface_id());
-    std::vector<DofIndexAndOrientationAndPosition> from_upper_surface =
+    std::vector<InterfaceDofData> from_upper_surface =
     get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(compute_upper_interface_id());
   for(unsigned int i = 0; i < from_lower_surface.size(); i++) {
     if(from_lower_surface[i].orientation == from_upper_surface[i].orientation) {
@@ -412,8 +412,8 @@ void NonLocalProblem::make_constraints() {
       surface_to_surface_constraints.reinit(own_dofs);
       bool opposing = ((i % 2) == 0) && (i + 1 == j);
       if (!opposing) {
-        std::vector<DofIndexAndOrientationAndPosition> lower_face_dofs = get_local_problem()->surfaces[i]->get_dof_association_by_boundary_id(j);
-        std::vector<DofIndexAndOrientationAndPosition> upper_face_dofs = get_local_problem()->surfaces[j]->get_dof_association_by_boundary_id(i);
+        std::vector<InterfaceDofData> lower_face_dofs = get_local_problem()->surfaces[i]->get_dof_association_by_boundary_id(j);
+        std::vector<InterfaceDofData> upper_face_dofs = get_local_problem()->surfaces[j]->get_dof_association_by_boundary_id(i);
         if (lower_face_dofs.size() != upper_face_dofs.size()) {
           std::cout << "ERROR: There was a edge dof count error!" << std::endl
               << "Surface " << i << " offers " << lower_face_dofs.size()
@@ -695,7 +695,7 @@ DofCount NonLocalProblem::compute_interface_dofs(BoundaryId interface_id) {
 
 dealii::IndexSet NonLocalProblem::compute_interface_dof_set(BoundaryId interface_id) {
   dealii::IndexSet ret(total_number_of_dofs_on_level);
-  std::vector<DofIndexAndOrientationAndPosition> current = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(interface_id);
+  std::vector<InterfaceDofData> current = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(interface_id);
   MPI_Barrier(MPI_COMM_WORLD);
   for(unsigned int j = 0; j < current.size(); j++) {
     ret.add_index(current[j].index + first_own_index);
@@ -704,7 +704,7 @@ dealii::IndexSet NonLocalProblem::compute_interface_dof_set(BoundaryId interface
   for(unsigned int i = 0; i < 6; i++) {
     if( i != interface_id && !are_opposing_sites(i,interface_id)) {
       if(is_hsie_surface[i] && get_local_problem()->is_hsie_surface[i]) {
-        std::vector<DofIndexAndOrientationAndPosition> current = get_local_problem()->surfaces[i]->get_dof_association_by_boundary_id(interface_id);
+        std::vector<InterfaceDofData> current = get_local_problem()->surfaces[i]->get_dof_association_by_boundary_id(interface_id);
         for(unsigned int j = 0; j < current.size(); j++) {
           ret.add_index(current[j].index + surface_first_dofs[i]); 
         }
@@ -1060,7 +1060,7 @@ void NonLocalProblem::setChildSolutionComponentsFromU() {
       }
     } else {
       if(child->is_hsie_surface[surface]) {
-        std::vector<DofIndexAndOrientationAndPosition> vec = get_local_problem()->surfaces[surface]->get_dof_association();
+        std::vector<InterfaceDofData> vec = get_local_problem()->surfaces[surface]->get_dof_association();
         std::sort(vec.begin(), vec.end(), compareDofDataByGlobalIndex);
         unsigned int index = 0;
         for(unsigned int i = 0; i < get_local_problem()->surfaces[surface]->dof_counter; i++) {

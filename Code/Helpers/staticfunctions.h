@@ -37,12 +37,11 @@ ComplexNumber matrixD(int in_row, int in_column,
 
 bool compareDofBaseData(std::pair<DofNumber, Position> c1, std::pair<DofNumber, Position> c2);
 
-bool compareDofBaseDataAndOrientation(DofIndexAndOrientationAndPosition, DofIndexAndOrientationAndPosition);
+bool compareDofBaseDataAndOrientation(InterfaceDofData, InterfaceDofData);
 
-bool compareDofDataByGlobalIndex(DofIndexAndOrientationAndPosition, DofIndexAndOrientationAndPosition);
+bool compareDofDataByGlobalIndex(InterfaceDofData, InterfaceDofData);
 
-bool areDofsClose(const DofIndexAndOrientationAndPosition &a,
-    const DofIndexAndOrientationAndPosition &b);
+bool areDofsClose(const InterfaceDofData &a, const InterfaceDofData &b);
 
 void set_the_st(SpaceTransformation *);
 
@@ -122,3 +121,7 @@ void write_print_message(const std::string &label, const std::string &message);
 BoundaryId opposing_Boundary_Id(BoundaryId b_id);
 
 bool are_opposing_sites(BoundaryId a, BoundaryId b);
+
+bool compute_edge_orientation(Position vertex_a, Position vertex_b, DofNumber index_a, DofNumber index_b);
+
+std::vector<DofCouplingInformation> get_coupling_information(std::vector<InterfaceDofData> dofs_interface_1, std::vector<InterfaceDofData> dofs_interface_2);

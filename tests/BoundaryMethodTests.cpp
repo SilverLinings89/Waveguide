@@ -188,8 +188,8 @@ TEST_F(FullCubeFixture, BoundaryCouplingTest1) {
   for(unsigned int i = 0; i < 6; i++) {
     for(unsigned int j = 0; j < 6; j++) {
       if(! are_opposing_sites(i,j)) {
-        std::vector<DofIndexAndOrientationAndPosition> first_dofs = surfaces[i]->get_dof_association_by_boundary_id(j);
-        std::vector<DofIndexAndOrientationAndPosition> second_dofs = surfaces[j]->get_dof_association_by_boundary_id(i);
+        std::vector<InterfaceDofData> first_dofs = surfaces[i]->get_dof_association_by_boundary_id(j);
+        std::vector<InterfaceDofData> second_dofs = surfaces[j]->get_dof_association_by_boundary_id(i);
         ASSERT_TRUE(first_dofs.size() ==  second_dofs.size());
         ASSERT_TRUE(first_dofs.size() > 0 );
         for(unsigned int dof = 0; dof < first_dofs.size(); dof++) {
@@ -204,7 +204,7 @@ TEST_F(FullCubeFixture, BoundaryCouplingTest2) {
   for(unsigned int i = 0; i < 6; i++) {
     for(unsigned int j = 0; j < 6; j++) {
       if(! are_opposing_sites(i,j)) {
-        std::vector<DofIndexAndOrientationAndPosition> first_dofs = surfaces[i]->get_dof_association_by_boundary_id(j);
+        std::vector<InterfaceDofData> first_dofs = surfaces[i]->get_dof_association_by_boundary_id(j);
         ASSERT_TRUE(first_dofs.size() > 0 );
         for(unsigned int dof = 0; dof < first_dofs.size(); dof++) {
           ASSERT_TRUE(first_dofs[dof].position[0] >= -1);
@@ -257,8 +257,8 @@ TEST_F(FullCubeFixture, OpposingSideTests) {
         ASSERT_EQ(surfaces[i]->get_vertices_for_boundary_id(j).size(), 0);
         ASSERT_EQ(surfaces[j]->get_lines_for_boundary_id(i).size(), 0);
         ASSERT_EQ(surfaces[j]->get_vertices_for_boundary_id(i).size(), 0);
-        std::vector<DofIndexAndOrientationAndPosition> first_dofs = surfaces[i]->get_dof_association_by_boundary_id(j);
-        std::vector<DofIndexAndOrientationAndPosition> second_dofs = surfaces[j]->get_dof_association_by_boundary_id(i);
+        std::vector<InterfaceDofData> first_dofs = surfaces[i]->get_dof_association_by_boundary_id(j);
+        std::vector<InterfaceDofData> second_dofs = surfaces[j]->get_dof_association_by_boundary_id(i);
         ASSERT_EQ(first_dofs.size(), 0);
         ASSERT_EQ(second_dofs.size(), 0);
       }

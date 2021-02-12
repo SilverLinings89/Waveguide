@@ -47,7 +47,7 @@ using namespace dealii;
 extern Parameters GlobalParams;
 extern GeometryManager Geometry;
 unsigned int message_count = 0;
-
+const double FLOATING_PRECISION = 0.00001;
 void set_the_st(SpaceTransformation *in_st) { the_st = in_st; }
 
 auto compute_center_of_triangulation(const Mesh *in_mesh) -> Position {
@@ -66,37 +66,53 @@ auto compute_center_of_triangulation(const Mesh *in_mesh) -> Position {
   return {x_average, y_average, z_average};
 }
 
-bool compareDofBaseData(std::pair<DofNumber, Position> c1,
-    std::pair<DofNumber, Position> c2) {
-  if (c1.second[2] != c2.second[2]) {
-    return c1.second[2] < c2.second[2];
+bool comparePositions(const Position pos_a,const Position pos_b) {
+  if (pos_a[2] != pos_b[2]) {
+    return pos_a[2] < pos_b[2];
   }
-  if (c1.second[1] != c2.second[1]) {
-    return c1.second[1] < c2.second[1];
+  if (pos_a[1] != pos_b[1]) {
+    return pos_a[1] < pos_b[1];
   }
-  return c1.second[0] < c2.second[0];
+  return pos_a[0] < pos_b[0];
 }
 
-bool areDofsClose(const DofIndexAndOrientationAndPosition &a,
-    const DofIndexAndOrientationAndPosition &b) {
+bool compareDofBaseData(std::pair<DofNumber, Position> c1, std::pair<DofNumber, Position> c2) {
+  return comparePositions(c1.second, c2.second);
+}
+
+bool areDofsClose(const InterfaceDofData &a,
+    const InterfaceDofData &b) {
   double dist = 0;
   for (unsigned int i = 0; i < 3; i++) {
-    dist += (a.position[i] - b.position[i]) * (a.position[i] - b.position[i]);
+    dist += (a.base_point[i] - b.base_point[i]) * (a.base_point[i] - b.base_point[i]);
   }
   return std::sqrt(dist) < 0.001;
 }
 
-bool compareDofBaseDataAndOrientation(DofIndexAndOrientationAndPosition c1, DofIndexAndOrientationAndPosition c2) {
-  if (c1.position[2] != c2.position[2]) {
-    return c1.position[2] < c2.position[2];
+bool compare_non_position_data(InterfaceDofData c1, InterfaceDofData c2) {
+  if(c1.order == c2.order) {
+    for(unsigned int comp = 0; comp < 3; comp++) {
+      if(std::abs(c1.shape_val_at_base_point[comp]) != std::abs(c2.shape_val_at_base_point[comp])) {
+        return std::abs(c1.shape_val_at_base_point[comp]) < std::abs(c2.shape_val_at_base_point[comp]);
+      }
+    }
+    std::cout << "INDICISIVE CASE FOR SORTING." << std::endl;
+    return c1.index < c2.index;
+  } else {
+    return c1.order < c2.order;
   }
-  if (c1.position[1] != c2.position[1]) {
-    return c1.position[1] < c2.position[1];
-  }
-  return c1.position[0] < c2.position[0];
 }
 
-bool compareDofDataByGlobalIndex(DofIndexAndOrientationAndPosition c1, DofIndexAndOrientationAndPosition c2) {
+bool compareDofBaseDataAndOrientation(InterfaceDofData c1, InterfaceDofData c2) {
+  const dealii::Tensor<1,3,double> pos = c1.base_point - c2.base_point;
+  if(pos.norm() < FLOATING_PRECISION) {
+    return compare_non_position_data(c1, c2);
+  } else {
+    return comparePositions(c1.base_point, c2.base_point);
+  }
+}
+
+bool compareDofDataByGlobalIndex(InterfaceDofData c1, InterfaceDofData c2) {
   return c1.index < c2.index;
 }
 
@@ -271,8 +287,7 @@ void mesh_info(const Triangulation<dim> &tria) {
   }
 }
 
-Position Triangulation_Shit_To_Local_Geometry(
-    const Position &p) {
+Position Triangulation_Shit_To_Local_Geometry(const Position &p) {
   Position q = p;
 
   if (q[0] < 0) {
@@ -525,4 +540,91 @@ BoundaryId opposing_Boundary_Id(BoundaryId b_id) {
 
 bool are_opposing_sites(BoundaryId a, BoundaryId b) {
   return a != b && a/2 == b/2;
+}
+
+bool compute_edge_orientation(Position vertex_a, Position vertex_b, DofNumber index_a1, DofNumber index_a2, DofNumber index_b1, DofNumber index_b2) {
+  bool ret = comparePositions(vertex_a, vertex_b);
+  bool are_dofs_equally_aligned = (index_a1 < index_a2 && index_b1 < index_b2) || (index_a1 > index_a2 && index_b1 > index_b2);
+  if(are_dofs_equally_aligned) {
+    return ret;
+  } else {
+    return !ret;
+  }
+}
+
+DofCouplingInformation get_coupling_for_single_pair(const InterfaceDofData &dof_a, const InterfaceDofData &dof_b) {
+  DofCouplingInformation ret;
+  ret.first_dof = dof_a.index;
+  ret.second_dof = dof_b.index;
+  bool done = false;
+  ret.coupling_value = 1.0;
+  if((dof_a.shape_val_at_base_point - dof_b.shape_val_at_base_point).norm() < FLOATING_PRECISION) {
+    done = true;
+  }
+  if((dof_a.shape_val_at_base_point + dof_b.shape_val_at_base_point).norm() < FLOATING_PRECISION) {
+    done = true;
+    ret.coupling_value = -1.0;
+  }
+  if(!done) {
+    std::cout << "There is a non aligned-dof." << std::endl;
+  }
+  return ret;
+}
+
+std::vector<DofCouplingInformation> get_coupling_information_for_group(std::vector<InterfaceDofData> dofs_interface_1, std::vector<InterfaceDofData> dofs_interface_2) {
+  std::vector<DofCouplingInformation> ret;
+  // TODO: This is only relevant for higher order nedelec elements.
+  return ret;
+}
+
+std::vector<DofCouplingInformation> get_coupling_information(std::vector<InterfaceDofData> dofs_interface_1, std::vector<InterfaceDofData> dofs_interface_2) {
+  std::vector<DofCouplingInformation> ret;
+  if(dofs_interface_1.size() != dofs_interface_2.size()) {
+      std::cout << "Error in Get_Coupling_Information. Unequal input vector sizes." << std::endl;
+  }
+  // Sort the input just in case.
+  std::sort(dofs_interface_1.begin(), dofs_interface_1.end(), compareDofBaseData);
+  std::sort(dofs_interface_2.begin(), dofs_interface_2.end(), compareDofBaseData);
+
+  std::vector<InterfaceDofData> group_a;
+  std::vector<InterfaceDofData> group_b;
+  const unsigned int n_total_dofs = dofs_interface_1.size();
+  for (unsigned int index = 0; index < n_total_dofs; index++) {
+    DofCouplingInformation item = get_coupling_for_single_pair(dofs_interface_1[index], dofs_interface_2[index]);
+    ret.push_back(item);
+  }
+  return ret;
+}
+
+bool is_orientation_similar(const InterfaceDofData &dof_a, const InterfaceDofData &dof_b) {
+  double norm_diff = 0;
+  for(unsigned int i = 0; i < 3; i++) {
+    norm_diff += (dof_a.shape_val_at_base_point[i] - dof_b.shape_val_at_base_point[i]) * (dof_a.shape_val_at_base_point[i] - dof_b.shape_val_at_base_point[i]);
+  }
+  return std::sqrt(norm_diff) < FLOATING_PRECISION;
+}
+
+bool is_orientation_oposite(const InterfaceDofData &dof_a, const InterfaceDofData &dof_b) {
+  double norm_diff = 0;
+  for(unsigned int i = 0; i < 3; i++) {
+    norm_diff += (dof_a.shape_val_at_base_point[i] + dof_b.shape_val_at_base_point[i]) * (dof_a.shape_val_at_base_point[i] + dof_b.shape_val_at_base_point[i]);
+  }
+  return std::sqrt(norm_diff) < FLOATING_PRECISION;
+}
+
+bool is_shape_function_similar(const InterfaceDofData &dof_a, const InterfaceDofData &dof_b) {
+  return is_orientation_oposite(dof_a, dof_b) || is_orientation_similar(dof_a, dof_b);
+}
+
+bool are_dofs_similar(const InterfaceDofData &dof_a, const InterfaceDofData &dof_b) {
+  if(!areDofsClose(dof_a, dof_b)) {
+    return false;
+  }
+  if(!is_shape_function_similar(dof_a, dof_b)) {
+    return false;
+  }
+  if(dof_a.order != dof_b.order) {
+    return false;
+  }
+  return true;
 }

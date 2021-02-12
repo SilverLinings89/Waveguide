@@ -215,8 +215,8 @@ void PMLSurface::prepare_id_sets_for_boundaries(){
   }
 }
 
-std::vector<DofIndexAndOrientationAndPosition> PMLSurface::get_dof_association_by_boundary_id(unsigned int in_bid) {
-  std::vector<DofIndexAndOrientationAndPosition> ret;
+std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(unsigned int in_bid) {
+  std::vector<InterfaceDofData> ret;
   for(auto it = dof_h_nedelec.begin(); it != dof_h_nedelec.end(); it++) {
     it->clear_user_flag();
     for(auto face = 0; face < 6; face++) {
@@ -245,12 +245,12 @@ std::vector<DofIndexAndOrientationAndPosition> PMLSurface::get_dof_association_b
             if(!it->face(face)->line(line)->user_flag_set()) {
               if(edge_ids_by_boundary_id[in_bid].contains(it->face(face)->line_index(line))) {
                 for(unsigned int i = 0; i < fe_nedelec.n_dofs_per_line(); i++) {
-                  DofIndexAndOrientationAndPosition entry;
+                  InterfaceDofData entry;
                   entry.index = line_dofs[i];
-                  if(it->face(face)->line(i)->vertex_index(0) < it->face(face)->line(i)->vertex_index(1)) {
-                    entry.orientation = get_orientation(it->face(face)->line(i)->vertex(1),it->face(face)->line(i)->vertex(0));
+                  if(it->face(face)->line(i)->vertex_index(0) < it->face(face)->line(line)->vertex_index(1)) {
+                    entry.orientation = get_orientation(it->face(face)->line(line)->vertex(1),it->face(face)->line(line)->vertex(0));
                   } else {
-                    entry.orientation = get_orientation(it->face(face)->line(i)->vertex(0),it->face(face)->line(i)->vertex(1));
+                    entry.orientation = get_orientation(it->face(face)->line(line)->vertex(0),it->face(face)->line(line)->vertex(1));
                   }
                   entry.position = it->face(face)->line(line)->center();
                   ret.push_back(entry);
@@ -262,7 +262,7 @@ std::vector<DofIndexAndOrientationAndPosition> PMLSurface::get_dof_association_b
           if(GlobalParams.Nedelec_element_order > 0) {
             if(face_ids_by_boundary_id[in_bid].contains(it->face_index(face)) && face_dof_indices.size() > 0) {
               for(unsigned int f = 0; f < face_dof_indices.size(); f++) {
-                DofIndexAndOrientationAndPosition entry;
+                InterfaceDofData entry;
                 entry.index = face_dof_indices[f];
                 entry.orientation = get_orientation(it->face(face)->vertex(0), it->face(face)->vertex(1));
                 entry.position = it->face(face)->center();
@@ -280,7 +280,7 @@ std::vector<DofIndexAndOrientationAndPosition> PMLSurface::get_dof_association_b
   return ret;
 }
 
-std::vector<DofIndexAndOrientationAndPosition> PMLSurface::get_dof_association() {
+std::vector<InterfaceDofData> PMLSurface::get_dof_association() {
     return get_dof_association_by_boundary_id(inner_boundary_id);
 }
 

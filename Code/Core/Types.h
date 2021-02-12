@@ -89,21 +89,29 @@ struct BoundaryInformation {
   bool negate_value;
 };
 
-struct DofIndexAndOrientationAndPosition {
-  DofIndexAndOrientationAndPosition() {
+struct DofCouplingInformation {
+  DofNumber first_dof;
+  DofNumber second_dof;
+  double coupling_value;
+};
+
+struct InterfaceDofData {
+
+  InterfaceDofData() {
     index = 0;
-    orientation = false;
-    position = { 0, 0, 0 };
+    base_point = { 0, 0, 0 };
   }
-  DofIndexAndOrientationAndPosition(const DofNumber &in_index,
-      const bool &in_orientation, const Position &in_position) {
+
+  InterfaceDofData(const DofNumber &in_index, const Position &in_position, dealii::Tensor<1,3,double> in_shape_val_at_base_point) {
     index = in_index;
-    orientation = in_orientation;
-    position = in_position;
+    base_point = in_position;
+    shape_val_at_base_point = in_shape_val_at_base_point;
   }
+
+  dealii::Tensor<1,3,double> shape_val_at_base_point;
   DofNumber index;
-  bool orientation;
-  Position position;
+  Position base_point;
+  unsigned int order;
 };
 
 struct DofAssociation {

@@ -13,7 +13,7 @@ public:
   const double additional_coordinate;
   dealii::Triangulation<2> surface_triangulation;
   std::vector<unsigned int> corner_cell_ids;
-  std::vector<DofIndexAndOrientationAndPosition> surface_dofs;
+  std::vector<InterfaceDofData> surface_dofs;
   bool surface_dof_sorting_done;
   bool boundary_coordinates_computed = false;
   std::array<double, 6> boundary_vertex_coordinates;
@@ -34,8 +34,8 @@ public:
   void set_mesh_boundary_ids();
   auto get_boundary_ids() -> std::vector<BoundaryId>;
   virtual auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount = 0;
-  virtual auto get_dof_association() -> std::vector<DofIndexAndOrientationAndPosition> = 0;
-  virtual auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<DofIndexAndOrientationAndPosition> = 0;
+  virtual auto get_dof_association() -> std::vector<InterfaceDofData> = 0;
+  virtual auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> = 0;
   void compute_extreme_vertex_coordinates();
   virtual void setup_neighbor_couplings(std::array<bool, 6> is_b_id_truncated) = 0;
   virtual void reset_neighbor_couplings(std::array<bool, 6> is_b_id_truncated) = 0;

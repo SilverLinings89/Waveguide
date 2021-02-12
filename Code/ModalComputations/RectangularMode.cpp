@@ -167,16 +167,16 @@ void RectangularMode::make_boundary_conditions() {
 
   constraints.merge(periodic_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::no_conflicts_allowed, true);
   for(unsigned int surf_index = 0; surf_index < 4; surf_index++) {
-    std::vector<DofIndexAndOrientationAndPosition> side_4 = surfaces[surf_index]->get_dof_association_by_boundary_id(4);
-    std::vector<DofIndexAndOrientationAndPosition> side_5 = surfaces[surf_index]->get_dof_association_by_boundary_id(5);
+    std::vector<InterfaceDofData> side_4 = surfaces[surf_index]->get_dof_association_by_boundary_id(4);
+    std::vector<InterfaceDofData> side_5 = surfaces[surf_index]->get_dof_association_by_boundary_id(5);
     for(unsigned int i = 0; i < side_4.size(); i++) {
       constraints.add_line(side_4[i].index+surface_first_dofs[surf_index]);
       constraints.add_entry(side_4[i].index+surface_first_dofs[surf_index], side_5[i].index + surface_first_dofs[surf_index], factor);
     }
   }
   for (unsigned int surface = 0; surface < 4; surface++) {
-    std::vector<DofIndexAndOrientationAndPosition> from_surface = surfaces[surface]->get_dof_association();
-    std::vector<DofIndexAndOrientationAndPosition> from_inner_problem = get_surface_dof_vector_for_boundary_id(surface);
+    std::vector<InterfaceDofData> from_surface = surfaces[surface]->get_dof_association();
+    std::vector<InterfaceDofData> from_inner_problem = get_surface_dof_vector_for_boundary_id(surface);
     if (from_surface.size() != from_inner_problem.size()) {
       std::cout << "Warning: Size mismatch in make_constraints for surface "
           << surface << ": Inner: " << from_inner_problem.size()
@@ -206,9 +206,9 @@ void RectangularMode::make_boundary_conditions() {
       surface_to_surface_constraints.reinit(is);
       bool opposing = ((i % 2) == 0) && (i + 1 == j);
       if (!opposing) {
-        std::vector<DofIndexAndOrientationAndPosition> lower_face_dofs =
+        std::vector<InterfaceDofData> lower_face_dofs =
             surfaces[i]->get_dof_association_by_boundary_id(j);
-        std::vector<DofIndexAndOrientationAndPosition> upper_face_dofs =
+        std::vector<InterfaceDofData> upper_face_dofs =
             surfaces[j]->get_dof_association_by_boundary_id(i);
         if (lower_face_dofs.size() != upper_face_dofs.size()) {
           std::cout << "ERROR: There was a edge dof count error!" << std::endl
@@ -255,9 +255,9 @@ void RectangularMode::make_boundary_conditions() {
   print_info("RectangularProblem::make_boundary_conditions", "End");
 }
 
-std::vector<DofIndexAndOrientationAndPosition> RectangularMode::get_surface_dof_vector_for_boundary_id(
+std::vector<InterfaceDofData> RectangularMode::get_surface_dof_vector_for_boundary_id(
     unsigned int b_id) {
-  std::vector<DofIndexAndOrientationAndPosition> ret;
+  std::vector<InterfaceDofData> ret;
   std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
   std::set<DofNumber> line_set;
   std::vector<DofNumber> local_face_dofs(fe.dofs_per_face);
@@ -276,7 +276,7 @@ std::vector<DofIndexAndOrientationAndPosition> RectangularMode::get_surface_dof_
           cell->face(face)->get_dof_indices(face_dofs_indices);
           face_set.clear();
           face_set.insert(face_dofs_indices.begin(), face_dofs_indices.end());
-          std::vector<DofIndexAndOrientationAndPosition> cell_dofs_and_orientations_and_points;
+          std::vector<InterfaceDofData> cell_dofs_and_orientations_and_points;
           for (unsigned int i = 0; i < dealii::GeometryInfo<3>::lines_per_face; i++) {
             std::vector<DofNumber> line_dofs(fe.dofs_per_line);
             cell->face(face)->line(i)->get_dof_indices(line_dofs);
@@ -287,7 +287,7 @@ std::vector<DofIndexAndOrientationAndPosition> RectangularMode::get_surface_dof_
             }
             if(!cell->face(face)->line(i)->user_flag_set()) {
               for (unsigned int j = 0; j < fe.dofs_per_line; j++) {
-                DofIndexAndOrientationAndPosition new_item;
+                InterfaceDofData new_item;
                 new_item.index = line_dofs[j];
                 new_item.position = cell->face(face)->line(i)->center();
                 new_item.orientation = get_orientation(cell->face(face)->line(i)->vertex(0),
@@ -298,7 +298,7 @@ std::vector<DofIndexAndOrientationAndPosition> RectangularMode::get_surface_dof_
             }
           }
           for (auto item: face_set) {
-            DofIndexAndOrientationAndPosition new_item;
+            InterfaceDofData new_item;
 
             new_item.index = item;
             new_item.position = cell->face(face)->center();

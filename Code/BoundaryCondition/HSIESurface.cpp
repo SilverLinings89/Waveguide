@@ -699,7 +699,7 @@ void HSIESurface::register_new_edge_dofs(
     register_single_dof(cell_nedelec->face_index(edge), -1, inner_order + 1, DofType::EDGE, edge_dof_data, local_dofs[inner_order], orientation);
 
     Position bp = undo_transform(cell_nedelec->face(edge)->center(false, false));
-    DofIndexAndOrientationAndPosition index_and_orientation;
+    InterfaceDofData index_and_orientation;
     index_and_orientation.index = edge_dof_data[edge_dof_data.size() - 1].global_index;
     index_and_orientation.orientation = orientation;
     index_and_orientation.position = bp;
@@ -760,7 +760,7 @@ void HSIESurface::register_new_surface_dofs(CellIterator2D cell_nedelec, CellIte
   for (unsigned int inner_order = 0; inner_order < surf_dofs.n_elements(); inner_order++) {
     register_single_dof(cell_nedelec->id().to_string(), -1, inner_order, DofType::SURFACE, face_dof_data, surf_dofs.nth_index_in_set(inner_order));
     Position bp = undo_transform(cell_nedelec->center());
-    DofIndexAndOrientationAndPosition index_and_orientation;
+    InterfaceDofData index_and_orientation;
     index_and_orientation.index = face_dof_data[face_dof_data.size() - 1].global_index;
     index_and_orientation.orientation = get_orientation(undo_transform(cell_nedelec->vertex(0)), undo_transform(cell_nedelec->vertex(1)));
     index_and_orientation.position = bp;
@@ -951,7 +951,7 @@ bool is_oriented_positively(Position in_p) {
   return (in_p[0] + in_p[1] + in_p[2] > 0);
 }
 
-std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association() {
+std::vector<InterfaceDofData> HSIESurface::get_dof_association() {
   std::sort(surface_dofs.begin(), surface_dofs.end(),
         compareDofBaseDataAndOrientation);
   return surface_dofs;
@@ -1093,17 +1093,17 @@ std::vector<Position> HSIESurface::line_positions_for_ids(std::vector<unsigned i
   return ret;
 }
 
-std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association_by_boundary_id(
+std::vector<InterfaceDofData> HSIESurface::get_dof_association_by_boundary_id(
     BoundaryId in_boundary_id) {
   if (in_boundary_id == b_id) {
     return this->get_dof_association();
   } 
 
   if (are_opposing_sites(in_boundary_id, b_id)) {
-    std::vector<DofIndexAndOrientationAndPosition> surface_dofs_unsorted(0);
+    std::vector<InterfaceDofData> surface_dofs_unsorted(0);
     return surface_dofs_unsorted;
   } 
-  std::vector<DofIndexAndOrientationAndPosition> surface_dofs_unsorted;
+  std::vector<InterfaceDofData> surface_dofs_unsorted;
   std::vector<unsigned int> vertex_ids = get_vertices_for_boundary_id(in_boundary_id);
   std::vector<unsigned int> line_ids = get_lines_for_boundary_id(in_boundary_id);
   std::vector<Position> vertex_positions = vertex_positions_for_ids(vertex_ids);
@@ -1112,7 +1112,7 @@ std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association_
     DofData dof = vertex_dof_data[index];
     for(unsigned int index_in_ids = 0; index_in_ids < vertex_ids.size(); index_in_ids++) {
       if(vertex_ids[index_in_ids] == vertex_dof_data[index].base_structure_id_non_face) {
-        DofIndexAndOrientationAndPosition new_item;
+        InterfaceDofData new_item;
         new_item.index = dof.global_index;
         new_item.orientation = dof.orientation;
         new_item.position = vertex_positions[index_in_ids];
@@ -1126,7 +1126,7 @@ std::vector<DofIndexAndOrientationAndPosition> HSIESurface::get_dof_association_
     DofData dof = edge_dof_data[index];
     for(unsigned int index_in_ids = 0; index_in_ids < line_ids.size(); index_in_ids++) {
       if(line_ids[index_in_ids] == edge_dof_data[index].base_structure_id_non_face) {
-        DofIndexAndOrientationAndPosition new_item;
+        InterfaceDofData new_item;
         new_item.index = dof.global_index;
         new_item.orientation = dof.orientation;
         new_item.position = line_positions[index_in_ids];
@@ -1181,7 +1181,7 @@ unsigned int HSIESurface::get_dof_count_by_boundary_id(BoundaryId in_boundary_id
 }
 
 void HSIESurface::add_surface_relevant_dof(
-    DofIndexAndOrientationAndPosition dof_data) {
+    InterfaceDofData dof_data) {
   surface_dofs.emplace_back(dof_data);
 }
 

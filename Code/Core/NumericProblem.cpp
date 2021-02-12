@@ -133,7 +133,7 @@ void NumericProblem::make_constraints() {
   local_constraints.reinit(local_dof_indices);
 
   if(GlobalParams.Index_in_z_direction == 0) {
-    std::vector<DofIndexAndOrientationAndPosition> srf_dofs = get_surface_dof_vector_for_boundary_id(4);
+    std::vector<InterfaceDofData> srf_dofs = get_surface_dof_vector_for_boundary_id(4);
     for(unsigned int i = 0; i < srf_dofs.size(); i++) {
       local_constraints.add_line(srf_dofs[i].index);
       local_constraints.set_inhomogeneity(srf_dofs[i].index, 0);
@@ -222,9 +222,9 @@ void NumericProblem::SortDofsDownstream() {
   print_info("NumericProblem::SortDofsDownstream", "End");
 }
 
-std::vector<DofIndexAndOrientationAndPosition> NumericProblem::get_surface_dof_vector_for_boundary_id(
+std::vector<InterfaceDofData> NumericProblem::get_surface_dof_vector_for_boundary_id(
     unsigned int b_id) {
-  std::vector<DofIndexAndOrientationAndPosition> ret;
+  std::vector<InterfaceDofData> ret;
   std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
   std::set<DofNumber> line_set;
   std::vector<DofNumber> local_face_dofs(fe.dofs_per_face);
@@ -243,7 +243,7 @@ std::vector<DofIndexAndOrientationAndPosition> NumericProblem::get_surface_dof_v
           cell->face(face)->get_dof_indices(face_dofs_indices);
           face_set.clear();
           face_set.insert(face_dofs_indices.begin(), face_dofs_indices.end());
-          std::vector<DofIndexAndOrientationAndPosition> cell_dofs_and_orientations_and_points;
+          std::vector<InterfaceDofData> cell_dofs_and_orientations_and_points;
           for (unsigned int i = 0; i < dealii::GeometryInfo<3>::lines_per_face; i++) {
             std::vector<DofNumber> line_dofs(fe.dofs_per_line);
             cell->face(face)->line(i)->get_dof_indices(line_dofs);
@@ -254,7 +254,7 @@ std::vector<DofIndexAndOrientationAndPosition> NumericProblem::get_surface_dof_v
             }
             if(!cell->face(face)->line(i)->user_flag_set()) {
               for (unsigned int j = 0; j < fe.dofs_per_line; j++) {
-                DofIndexAndOrientationAndPosition new_item;
+                InterfaceDofData new_item;
                 new_item.index = line_dofs[j];
                 new_item.position = cell->face(face)->line(i)->center();
                 if(cell->face(face)->line(i)->vertex_index(0) < cell->face(face)->line(i)->vertex_index(1)) {
@@ -268,7 +268,7 @@ std::vector<DofIndexAndOrientationAndPosition> NumericProblem::get_surface_dof_v
             }
           }
           for (auto item: face_set) {
-            DofIndexAndOrientationAndPosition new_item;
+            InterfaceDofData new_item;
             new_item.index = item;
             new_item.position = cell->face(face)->center();
             new_item.orientation = get_orientation(cell->face(face)->vertex(0),
@@ -366,8 +366,7 @@ struct CellwiseAssemblyDataNP {
     }
   }
 
-  Tensor<1, 3, ComplexNumber> Conjugate_Vector(
-      Tensor<1, 3, ComplexNumber> input) {
+  Tensor<1, 3, ComplexNumber> Conjugate_Vector(Tensor<1, 3, ComplexNumber> input) {
     Tensor<1, 3, ComplexNumber> ret;
 
     for (int i = 0; i < 3; i++) {

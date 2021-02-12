@@ -36,7 +36,7 @@ class HierarchicalProblem {
   dealii::IndexSet own_dofs;
   dealii::IndexSet current_upper_sweeping_dofs;
   dealii::IndexSet current_lower_sweeping_dofs;
-  std::array<std::vector<DofIndexAndOrientationAndPosition>, 6> surface_dof_associations;
+  std::array<std::vector<InterfaceDofData>, 6> surface_dof_associations;
   std::array<std::vector<DofNumber>, 6> surface_dof_index_vectors;
 
   HierarchicalProblem(unsigned int in_own_level);

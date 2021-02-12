@@ -39,13 +39,13 @@ dealii::IndexSet LocalProblem::compute_interface_dof_set(BoundaryId interface_id
   dealii::IndexSet ret(n_own_dofs);
   for(unsigned int i = 0; i < 6; i++) {
     if( i == interface_id) {
-      std::vector<DofIndexAndOrientationAndPosition> current = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(interface_id);
+      std::vector<InterfaceDofData> current = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(interface_id);
       for(unsigned int j = 0; j < current.size(); j++) {
         ret.add_index(current[j].index + this->first_own_index);
       }      
     } else {
       if(i != opposing_interface_id && is_hsie_surface[i]) {
-        std::vector<DofIndexAndOrientationAndPosition> current = get_local_problem()->surfaces[i]->get_dof_association_by_boundary_id(i);
+        std::vector<InterfaceDofData> current = get_local_problem()->surfaces[i]->get_dof_association_by_boundary_id(i);
         for(unsigned int j = 0; j < current.size(); j++) {
           ret.add_index(current[j].index + this->first_own_index);
         }
@@ -176,8 +176,8 @@ void LocalProblem::make_constraints() {
   // couple surface dofs with inner ones.
   for (unsigned int surface = 0; surface < 6; surface++) {
     if(is_hsie_surface[surface]) {
-      std::vector<DofIndexAndOrientationAndPosition> from_surface = surfaces[surface]->get_dof_association();
-      std::vector<DofIndexAndOrientationAndPosition> from_inner_problem = base_problem.get_surface_dof_vector_for_boundary_id(surface);
+      std::vector<InterfaceDofData> from_surface = surfaces[surface]->get_dof_association();
+      std::vector<InterfaceDofData> from_inner_problem = base_problem.get_surface_dof_vector_for_boundary_id(surface);
       if (from_surface.size() != from_inner_problem.size()) {
         std::cout << "Warning: Size mismatch in make_constraints for surface "
             << surface << ": Inner: " << from_inner_problem.size()
@@ -190,14 +190,12 @@ void LocalProblem::make_constraints() {
         }
         constraints.add_line(from_inner_problem[line].index);
         ComplexNumber value = { 0, 0 };
-        if (from_inner_problem[line].orientation
-            == from_surface[line].orientation) {
+        if (from_inner_problem[line].orientation == from_surface[line].orientation) {
           value.real(1.0);
         } else {
           value.real(-1.0);
         }
-        constraints.add_entry(from_inner_problem[line].index,
-            from_surface[line].index + surface_first_dofs[surface], value);
+        constraints.add_entry(from_inner_problem[line].index, from_surface[line].index + surface_first_dofs[surface], value);
       }
       if(found_incompatible_surface_dof) std::cout << "There was atleast one incompatible dof for " << surface << std::endl;
     }
@@ -213,10 +211,8 @@ void LocalProblem::make_constraints() {
         surface_to_surface_constraints.reinit(is);
         bool opposing = ((i % 2) == 0) && (i + 1 == j);
         if (!opposing) {
-          std::vector<DofIndexAndOrientationAndPosition> lower_face_dofs =
-              surfaces[i]->get_dof_association_by_boundary_id(j);
-          std::vector<DofIndexAndOrientationAndPosition> upper_face_dofs =
-              surfaces[j]->get_dof_association_by_boundary_id(i);
+          std::vector<InterfaceDofData> lower_face_dofs = surfaces[i]->get_dof_association_by_boundary_id(j);
+          std::vector<InterfaceDofData> upper_face_dofs = surfaces[j]->get_dof_association_by_boundary_id(i);
           if (lower_face_dofs.size() != upper_face_dofs.size()) {
             std::cout << "ERROR: There was a edge dof count error!" << std::endl
                 << "Surface " << i << " offers " << lower_face_dofs.size()
@@ -226,13 +222,12 @@ void LocalProblem::make_constraints() {
           bool found_incompatible_dof = false;
           for (unsigned int dof = 0; dof < lower_face_dofs.size(); dof++) {
             if (!areDofsClose(lower_face_dofs[dof], upper_face_dofs[dof])) {
-              found_incompatible_dof = true;
+              found_incompatible_dof = true;0
             }
             unsigned int dof_a = lower_face_dofs[dof].index + surface_first_dofs[i];
             unsigned int dof_b = upper_face_dofs[dof].index + surface_first_dofs[j];
             ComplexNumber value = { 0, 0 };
-            if (lower_face_dofs[dof].orientation
-                == upper_face_dofs[dof].orientation) {
+            if (lower_face_dofs[dof].orientation == upper_face_dofs[dof].orientation) {
               value.real(1.0);
             } else {
               value.real(-1.0);
@@ -514,7 +509,7 @@ void LocalProblem::update_mismatch_vector(BoundaryId in_bid) {
   for(unsigned int i = 0; i < surfaces[in_bid]->dof_counter; i++) {
     solution[surface_first_dofs[in_bid] + i] = 0;
   }
-  std::vector<DofIndexAndOrientationAndPosition> current = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(in_bid);
+  std::vector<InterfaceDofData> current = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(in_bid);
   for(unsigned int i = 0; i < current.size(); i++) {
     solution[current[i].index + first_own_index] = 0;
   }

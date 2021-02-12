@@ -83,10 +83,10 @@ public:
   auto get_dof_data_for_base_dof_nedelec(DofNumber base_dof_index) -> DofDataVector;
   auto get_dof_data_for_base_dof_q(DofNumber base_dof_index) -> DofDataVector;
   auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount override;
-  auto get_dof_association() -> std::vector<DofIndexAndOrientationAndPosition> override;
+  auto get_dof_association() -> std::vector<InterfaceDofData> override;
   auto undo_transform(dealii::Point<2>) -> Position;
-  void add_surface_relevant_dof(DofIndexAndOrientationAndPosition in_gindex_and_orientation);
-  auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<DofIndexAndOrientationAndPosition> override;
+  void add_surface_relevant_dof(InterfaceDofData in_gindex_and_orientation);
+  auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> override;
   void clear_user_flags();
   void set_b_id_uses_hsie(unsigned int, bool);
   auto build_fad_for_cell(CellIterator2D cell) -> FaceAngelingData;
