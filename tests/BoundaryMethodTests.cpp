@@ -193,7 +193,7 @@ TEST_F(FullCubeFixture, BoundaryCouplingTest1) {
         ASSERT_TRUE(first_dofs.size() ==  second_dofs.size());
         ASSERT_TRUE(first_dofs.size() > 0 );
         for(unsigned int dof = 0; dof < first_dofs.size(); dof++) {
-          ASSERT_EQ(first_dofs[dof].position, second_dofs[dof].position);
+          ASSERT_EQ(first_dofs[dof].base_point, second_dofs[dof].base_point);
         }
       }
     }  
@@ -207,12 +207,12 @@ TEST_F(FullCubeFixture, BoundaryCouplingTest2) {
         std::vector<InterfaceDofData> first_dofs = surfaces[i]->get_dof_association_by_boundary_id(j);
         ASSERT_TRUE(first_dofs.size() > 0 );
         for(unsigned int dof = 0; dof < first_dofs.size(); dof++) {
-          ASSERT_TRUE(first_dofs[dof].position[0] >= -1);
-          ASSERT_TRUE(first_dofs[dof].position[0] <= 1);
-          ASSERT_TRUE(first_dofs[dof].position[1] >= -1);
-          ASSERT_TRUE(first_dofs[dof].position[1] <= 1);
-          ASSERT_TRUE(first_dofs[dof].position[2] >= -1);
-          ASSERT_TRUE(first_dofs[dof].position[2] <= 1);
+          ASSERT_TRUE(first_dofs[dof].base_point[0] >= -1);
+          ASSERT_TRUE(first_dofs[dof].base_point[0] <= 1);
+          ASSERT_TRUE(first_dofs[dof].base_point[1] >= -1);
+          ASSERT_TRUE(first_dofs[dof].base_point[1] <= 1);
+          ASSERT_TRUE(first_dofs[dof].base_point[2] >= -1);
+          ASSERT_TRUE(first_dofs[dof].base_point[2] <= 1);
         }
       }
     }  

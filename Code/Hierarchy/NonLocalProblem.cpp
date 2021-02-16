@@ -187,21 +187,10 @@ void NonLocalProblem::make_constraints_for_hsie_surface(unsigned int surface) {
         << surface << ": Inner: " << from_inner_problem.size()
         << " != Surface:" << from_surface.size() << "." << std::endl;
   }
-  for (unsigned int line = 0; line < from_inner_problem.size(); line++) {
-    if (!areDofsClose(from_inner_problem[line], from_surface[line])) {
-      std::cout << "Error in face to inner_coupling. Positions are inner: "
-          << from_inner_problem[line].position << " and surface: "
-          << from_surface[line].position << std::endl;
-    }
-    constraints.add_line(from_inner_problem[line].index + first_own_index);
-    ComplexNumber value = { 0, 0 };
-    if (from_inner_problem[line].orientation == from_surface[line].orientation) {
-      value.real(1.0);
-    } else {
-      value.real(-1.0);
-    }
-    constraints.add_entry(from_inner_problem[line].index + first_own_index, from_surface[line].index + surface_first_dofs[surface], value);
-  }
+  shift_interface_dof_data(&from_surface, surface_first_dofs[surface]);
+  shift_interface_dof_data(&from_inner_problem, first_own_index);
+  AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(from_surface, from_inner_problem, total_number_of_dofs_on_level);
+  constraints.merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins, true);
   
 }
 
@@ -239,47 +228,64 @@ void NonLocalProblem::make_constraints_for_non_hsie_surface(unsigned int surface
 
   } else {
     std::vector<InterfaceDofData> from_inner_problem = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(surface);
+    shift_interface_dof_data(&from_inner_problem, first_own_index);
     unsigned int n_dofs_on_surface = from_inner_problem.size();
     std::pair<bool, unsigned int> partner_data = GlobalMPI.get_neighbor_for_interface(get_direction_for_boundary_id(surface));
     if(!partner_data.first) {
       std::cout << "There was an error finding the partner process in NonlocalProblem::make_constraints_for_non_hsie_surface" << std::endl;
     }
     unsigned int partner_index = partner_data.second;
-    bool * orientations = new bool[n_dofs_on_surface];
     double * x_values = new double[n_dofs_on_surface];
     double * y_values = new double[n_dofs_on_surface];
     double * z_values = new double[n_dofs_on_surface];
+    double * x_shape = new double[n_dofs_on_surface];
+    double * y_shape = new double[n_dofs_on_surface];
+    double * z_shape = new double[n_dofs_on_surface];
+    unsigned int * orders = new unsigned int[n_dofs_on_surface];
     DofNumber * indices = new unsigned int[n_dofs_on_surface];
     for(unsigned int i = 0; i < n_dofs_on_surface; i++) {
-      orientations[i] = from_inner_problem[i].orientation;
-      x_values[i] = from_inner_problem[i].position[0];
-      y_values[i] = from_inner_problem[i].position[1];
-      z_values[i] = from_inner_problem[i].position[2];
-      indices[i] = from_inner_problem[i].index + first_own_index;
+      x_values[i] = from_inner_problem[i].base_point[0];
+      y_values[i] = from_inner_problem[i].base_point[1];
+      z_values[i] = from_inner_problem[i].base_point[2];
+      x_shape[i] = from_inner_problem[i].shape_val_at_base_point[0];
+      y_shape[i] = from_inner_problem[i].shape_val_at_base_point[1];
+      z_shape[i] = from_inner_problem[i].shape_val_at_base_point[2];
+      indices[i] = from_inner_problem[i].index;
       coupling_dofs[surface].emplace_back(indices[i], 0);
     }
     print_info("NonLocalProblem::make_constraints_for_non_hsie_surface", std::to_string(rank) + " connecting to " + std::to_string(partner_index), false, DEBUG_ALL);
-    MPI_Sendrecv_replace(orientations, n_dofs_on_surface, MPI::BOOL, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
     MPI_Sendrecv_replace(x_values, n_dofs_on_surface, MPI_DOUBLE, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
     MPI_Sendrecv_replace(y_values, n_dofs_on_surface, MPI_DOUBLE, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
     MPI_Sendrecv_replace(z_values, n_dofs_on_surface, MPI_DOUBLE, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
     MPI_Sendrecv_replace(indices, n_dofs_on_surface, MPI_UNSIGNED, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
+    MPI_Sendrecv_replace(x_shape, n_dofs_on_surface, MPI_DOUBLE, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
+    MPI_Sendrecv_replace(y_shape, n_dofs_on_surface, MPI_DOUBLE, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
+    MPI_Sendrecv_replace(z_shape, n_dofs_on_surface, MPI_DOUBLE, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
+    MPI_Sendrecv_replace(orders, n_dofs_on_surface, MPI_UNSIGNED, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
     bool equals = true;
+    std::vector<InterfaceDofData> from_other_process;
     for(unsigned int i = 0; i < n_dofs_on_surface; i++) {
       // if(orientations[i] != from_inner_problem[i].orientation) equals = false;
-      if(x_values[i] != from_inner_problem[i].position[0]) equals = false;
-      if(y_values[i] != from_inner_problem[i].position[1]) equals = false;
-      if(z_values[i] != from_inner_problem[i].position[2]) equals = false;
+      if(x_values[i] != from_inner_problem[i].base_point[0]) equals = false;
+      if(y_values[i] != from_inner_problem[i].base_point[1]) equals = false;
+      if(z_values[i] != from_inner_problem[i].base_point[2]) equals = false;
       coupling_dofs[surface][i].second = indices[i];
+      InterfaceDofData item;
+      item.base_point[0] = x_values[i];
+      item.base_point[1] = y_values[i];
+      item.base_point[2] = z_values[i];
+      item.order = orders[i];
+      item.index = indices[i];
+      item.shape_val_at_base_point[0] = x_shape[i];
+      item.shape_val_at_base_point[1] = y_shape[i];
+      item.shape_val_at_base_point[2] = z_shape[i];
+      from_other_process.push_back(item);
     }
     if(!equals) {
       std::cout << "There was a data comparison error in NonlocalProblem::make_constraints_for_non_hsie_surface" << std::endl;
     }
-    for(unsigned int i = 0; i < n_dofs_on_surface; i++) {
-      double coupling_value = (orientations[i] != from_inner_problem[i].orientation) ? -1.0: 1.0;
-      constraints.add_line(coupling_dofs[surface][i].first);
-      constraints.add_entry(coupling_dofs[surface][i].first, coupling_dofs[surface][i].second, coupling_value);
-    }
+    AffineConstraints<ComplexNumber> temp_constraints = get_affine_constraints_for_InterfaceData(from_inner_problem, from_other_process, total_number_of_dofs_on_level);
+    constraints.merge(temp_constraints, AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
     
   }
 }
@@ -368,16 +374,10 @@ void NonLocalProblem::make_sparsity_pattern_for_surface(unsigned int surface, Dy
 
 std::vector<bool> NonLocalProblem::get_incoming_dof_orientations() {
   std::vector<bool> ret;
-  std::vector<InterfaceDofData> from_lower_surface =
-    get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(compute_lower_interface_id());
-    std::vector<InterfaceDofData> from_upper_surface =
-    get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(compute_upper_interface_id());
+  std::vector<InterfaceDofData> from_lower_surface = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(compute_lower_interface_id());
+  std::vector<InterfaceDofData> from_upper_surface = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(compute_upper_interface_id());
   for(unsigned int i = 0; i < from_lower_surface.size(); i++) {
-    if(from_lower_surface[i].orientation == from_upper_surface[i].orientation) {
-      ret.push_back(true);
-    } else {
-      ret.push_back(false);
-    }
+    ret.push_back(is_orientation_similar(from_lower_surface[i], from_upper_surface[i]));
   }
   const unsigned int total_interface_count = compute_interface_dofs(compute_lower_interface_dof_count());
   for(unsigned int i = from_lower_surface.size(); i < total_interface_count; i++ ) {
@@ -405,40 +405,24 @@ void NonLocalProblem::make_constraints() {
   print_info("LocalProblem::make_constraints", "Constraints after phase 1: " + std::to_string(constraints.n_constraints()), false, LoggingLevel::DEBUG_ALL );
   
   // Edge2Edge Dofs.
-  dealii::AffineConstraints<ComplexNumber> surface_to_surface_constraints;
   for (unsigned int i = 0; i < 6; i++) {
     for (unsigned int j = i + 1; j < 6; j++) {
       if ( is_hsie_surface[i] && is_hsie_surface[j]) {
-      surface_to_surface_constraints.reinit(own_dofs);
-      bool opposing = ((i % 2) == 0) && (i + 1 == j);
-      if (!opposing) {
-        std::vector<InterfaceDofData> lower_face_dofs = get_local_problem()->surfaces[i]->get_dof_association_by_boundary_id(j);
-        std::vector<InterfaceDofData> upper_face_dofs = get_local_problem()->surfaces[j]->get_dof_association_by_boundary_id(i);
-        if (lower_face_dofs.size() != upper_face_dofs.size()) {
-          std::cout << "ERROR: There was a edge dof count error!" << std::endl
-              << "Surface " << i << " offers " << lower_face_dofs.size()
-              << " dofs, " << j << " offers " << upper_face_dofs.size() << "."
-              << std::endl;
-        }
-        for (unsigned int dof = 0; dof < lower_face_dofs.size(); dof++) {
-          if (!areDofsClose(lower_face_dofs[dof], upper_face_dofs[dof])) {
-            std::cout << "Error in face to face_coupling. Positions are lower: "
-                << lower_face_dofs[dof].position << " and upper: "
-                << upper_face_dofs[dof].position << std::endl;
+        bool opposing = ((i % 2) == 0) && (i + 1 == j);
+        if (!opposing) {
+          std::vector<InterfaceDofData> lower_face_dofs = get_local_problem()->surfaces[i]->get_dof_association_by_boundary_id(j);
+          std::vector<InterfaceDofData> upper_face_dofs = get_local_problem()->surfaces[j]->get_dof_association_by_boundary_id(i);
+          if (lower_face_dofs.size() != upper_face_dofs.size()) {
+            std::cout << "ERROR: There was a edge dof count error!" << std::endl
+                << "Surface " << i << " offers " << lower_face_dofs.size()
+                << " dofs, " << j << " offers " << upper_face_dofs.size() << "."
+                << std::endl;
           }
-          unsigned int dof_a = lower_face_dofs[dof].index + surface_first_dofs[i];
-          unsigned int dof_b = upper_face_dofs[dof].index + surface_first_dofs[j];
-          ComplexNumber value = { 0, 0 };
-          if (lower_face_dofs[dof].orientation == upper_face_dofs[dof].orientation) {
-            value.real(1.0);
-          } else {
-            value.real(-1.0);
-          }
-          surface_to_surface_constraints.add_line(dof_a);
-          surface_to_surface_constraints.add_entry(dof_a, dof_b, value);
+          shift_interface_dof_data(&lower_face_dofs, surface_first_dofs[i]);
+          shift_interface_dof_data(&upper_face_dofs, surface_first_dofs[j]);
+          AffineConstraints surf_to_surf = get_affine_constraints_for_InterfaceData(lower_face_dofs, upper_face_dofs, total_number_of_dofs_on_level);
+          constraints.merge(surf_to_surf, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins, true);
         }
-      }
-      constraints.merge(surface_to_surface_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins, true);
       }
     }
   }

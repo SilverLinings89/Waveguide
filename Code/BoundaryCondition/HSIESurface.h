@@ -85,6 +85,7 @@ public:
   auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount override;
   auto get_dof_association() -> std::vector<InterfaceDofData> override;
   auto undo_transform(dealii::Point<2>) -> Position;
+  auto undo_transform_for_shape_function(dealii::Point<2>) -> Position;
   void add_surface_relevant_dof(InterfaceDofData in_gindex_and_orientation);
   auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> override;
   void clear_user_flags();

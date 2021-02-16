@@ -229,6 +229,7 @@ std::vector<InterfaceDofData> NumericProblem::get_surface_dof_vector_for_boundar
   std::set<DofNumber> line_set;
   std::vector<DofNumber> local_face_dofs(fe.dofs_per_face);
   std::set<DofNumber> face_set;
+  dealii::Vector<ComplexNumber> base_vector(dof_handler.n_dofs());
   triangulation.clear_user_flags();
   for (auto cell : dof_handler.active_cell_iterators()) {
     if (cell->at_boundary(b_id)) {
@@ -256,24 +257,31 @@ std::vector<InterfaceDofData> NumericProblem::get_surface_dof_vector_for_boundar
               for (unsigned int j = 0; j < fe.dofs_per_line; j++) {
                 InterfaceDofData new_item;
                 new_item.index = line_dofs[j];
-                new_item.position = cell->face(face)->line(i)->center();
-                if(cell->face(face)->line(i)->vertex_index(0) < cell->face(face)->line(i)->vertex_index(1)) {
-                  new_item.orientation = get_orientation(cell->face(face)->line(i)->vertex(1),cell->face(face)->line(i)->vertex(0));
-                } else {
-                  new_item.orientation = get_orientation(cell->face(face)->line(i)->vertex(0),cell->face(face)->line(i)->vertex(1));
-                }
-                cell_dofs_and_orientations_and_points.emplace_back(new_item);
+                new_item.base_point = cell->face(face)->line(i)->center();
+                new_item.order = j;
+                base_vector = 0;
+                base_vector[line_dofs[j]] = 1;
+                NumericVectorLocal field_value(3);
+                dealii::VectorTools::point_value(dof_handler, base_vector,new_item.base_point, field_value);
+                new_item.shape_val_at_base_point = deal_vector_to_position(field_value);
+                cell_dofs_and_orientations_and_points.push_back(new_item);
               }
               cell->face(face)->line(i)->set_user_flag();
             }
           }
+          unsigned int index = 0;
           for (auto item: face_set) {
             InterfaceDofData new_item;
             new_item.index = item;
-            new_item.position = cell->face(face)->center();
-            new_item.orientation = get_orientation(cell->face(face)->vertex(0),
-                    cell->face(face)->vertex(1));
-            cell_dofs_and_orientations_and_points.emplace_back(new_item);
+            new_item.base_point = cell->face(face)->center();
+            new_item.order = 0;
+            base_vector = 0;
+            base_vector[item] = 1;
+            NumericVectorLocal field_value(3);
+            dealii::VectorTools::point_value(dof_handler, base_vector,new_item.base_point, field_value);
+            new_item.shape_val_at_base_point = deal_vector_to_position(field_value);    
+            cell_dofs_and_orientations_and_points.push_back(new_item);
+            index++;
           }
           for (auto item: cell_dofs_and_orientations_and_points) {
             ret.push_back(item);

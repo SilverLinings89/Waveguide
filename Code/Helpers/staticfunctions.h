@@ -55,8 +55,7 @@ void mesh_info(const Triangulation<dim>);
 
 Parameters GetParameters(const std::string run_file,const std::string case_file);
 
-Position Triangulation_Shit_To_Local_Geometry(
-    const Position &p);
+Position Triangulation_Shit_To_Local_Geometry(const Position &p);
 
 Position Transform_4_to_5(const Position &p);
 
@@ -124,4 +123,12 @@ bool are_opposing_sites(BoundaryId a, BoundaryId b);
 
 bool compute_edge_orientation(Position vertex_a, Position vertex_b, DofNumber index_a, DofNumber index_b);
 
-std::vector<DofCouplingInformation> get_coupling_information(std::vector<InterfaceDofData> dofs_interface_1, std::vector<InterfaceDofData> dofs_interface_2);
+std::vector<DofCouplingInformation> get_coupling_information(std::vector<InterfaceDofData> &dofs_interface_1, std::vector<InterfaceDofData> &dofs_interface_2);
+
+Position deal_vector_to_position(NumericVectorLocal &inp);
+
+auto get_affine_constraints_for_InterfaceData(std::vector<InterfaceDofData> &dofs_interface_1, std::vector<InterfaceDofData> &dofs_interface_2, const unsigned int max_dof) -> dealii::AffineConstraints<ComplexNumber>;
+
+void shift_interface_dof_data(std::vector<InterfaceDofData> * dofs_interface_1, unsigned int shift);
+
+bool is_orientation_similar(const InterfaceDofData &dof_a, const InterfaceDofData &dof_b);

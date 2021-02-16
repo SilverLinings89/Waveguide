@@ -96,7 +96,7 @@ bool compare_non_position_data(InterfaceDofData c1, InterfaceDofData c2) {
         return std::abs(c1.shape_val_at_base_point[comp]) < std::abs(c2.shape_val_at_base_point[comp]);
       }
     }
-    std::cout << "INDICISIVE CASE FOR SORTING." << std::endl;
+    // std::cout << "INDICISIVE CASE FOR SORTING." << std::endl;
     return c1.index < c2.index;
   } else {
     return c1.order < c2.order;
@@ -571,20 +571,32 @@ DofCouplingInformation get_coupling_for_single_pair(const InterfaceDofData &dof_
   return ret;
 }
 
-std::vector<DofCouplingInformation> get_coupling_information_for_group(std::vector<InterfaceDofData> dofs_interface_1, std::vector<InterfaceDofData> dofs_interface_2) {
+std::vector<DofCouplingInformation> get_coupling_information_for_group(const std::vector<InterfaceDofData> dofs_interface_1, const std::vector<InterfaceDofData> dofs_interface_2) {
   std::vector<DofCouplingInformation> ret;
   // TODO: This is only relevant for higher order nedelec elements.
   return ret;
 }
 
-std::vector<DofCouplingInformation> get_coupling_information(std::vector<InterfaceDofData> dofs_interface_1, std::vector<InterfaceDofData> dofs_interface_2) {
+dealii::AffineConstraints<ComplexNumber> get_affine_constraints_for_InterfaceData(std::vector<InterfaceDofData> &dofs_interface_1, std::vector<InterfaceDofData> &dofs_interface_2, const unsigned int max_dof) {
+  dealii::IndexSet is(max_dof);
+  is.add_range(0,max_dof);
+  dealii::AffineConstraints<ComplexNumber> ret(is);
+  std::vector<DofCouplingInformation> coupling_data = get_coupling_information(dofs_interface_1, dofs_interface_2);
+  for(unsigned int i = 0; i < coupling_data.size(); i++) {
+    ret.add_line(coupling_data[i].first_dof);
+    ret.add_entry(coupling_data[i].first_dof, coupling_data[i].second_dof, coupling_data[i].coupling_value);
+  }
+  return ret;
+}
+
+std::vector<DofCouplingInformation> get_coupling_information(std::vector<InterfaceDofData> &dofs_interface_1, std::vector<InterfaceDofData> &dofs_interface_2) {
   std::vector<DofCouplingInformation> ret;
   if(dofs_interface_1.size() != dofs_interface_2.size()) {
       std::cout << "Error in Get_Coupling_Information. Unequal input vector sizes." << std::endl;
   }
   // Sort the input just in case.
-  std::sort(dofs_interface_1.begin(), dofs_interface_1.end(), compareDofBaseData);
-  std::sort(dofs_interface_2.begin(), dofs_interface_2.end(), compareDofBaseData);
+  std::sort(dofs_interface_1.begin(), dofs_interface_1.end(), compareDofBaseDataAndOrientation);
+  std::sort(dofs_interface_2.begin(), dofs_interface_2.end(), compareDofBaseDataAndOrientation);
 
   std::vector<InterfaceDofData> group_a;
   std::vector<InterfaceDofData> group_b;
@@ -627,4 +639,18 @@ bool are_dofs_similar(const InterfaceDofData &dof_a, const InterfaceDofData &dof
     return false;
   }
   return true;
+}
+
+Position deal_vector_to_position(NumericVectorLocal &inp) {
+  Position ret;
+  ret[0] = inp[0].real();
+  ret[1] = inp[1].real();
+  ret[2] = inp[2].real();
+  return ret;
+}
+
+void shift_interface_dof_data(std::vector<InterfaceDofData> * dofs_interface, unsigned int shift) {
+  for(unsigned int i = 0; i < dofs_interface->size(); i++) {
+    (*dofs_interface)[i].index += shift;
+  }
 }

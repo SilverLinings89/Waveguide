@@ -2,6 +2,7 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_out.h>
 #include <deal.II/grid/grid_tools.h>
+#include <deal.II/numerics/vector_tools.h>
 #include "../Core/GlobalObjects.h"
 #include "../Helpers/staticfunctions.h"
 #include <deal.II/dofs/dof_tools.h>
@@ -226,6 +227,7 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(uns
       }
     }
   }
+  dealii::Vector<ComplexNumber> base_vector(dof_counter);
   for(auto it = dof_h_nedelec.begin(); it != dof_h_nedelec.end(); it++) {
     if(it->at_boundary()) {
       for(unsigned int face = 0; face < 6; face++) {
@@ -247,12 +249,13 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(uns
                 for(unsigned int i = 0; i < fe_nedelec.n_dofs_per_line(); i++) {
                   InterfaceDofData entry;
                   entry.index = line_dofs[i];
-                  if(it->face(face)->line(i)->vertex_index(0) < it->face(face)->line(line)->vertex_index(1)) {
-                    entry.orientation = get_orientation(it->face(face)->line(line)->vertex(1),it->face(face)->line(line)->vertex(0));
-                  } else {
-                    entry.orientation = get_orientation(it->face(face)->line(line)->vertex(0),it->face(face)->line(line)->vertex(1));
-                  }
-                  entry.position = it->face(face)->line(line)->center();
+                  entry.base_point = it->face(face)->line(line)->center();
+                  entry.order = i;
+                  base_vector = 0;
+                  base_vector[line_dofs[i]] = 1;
+                  NumericVectorLocal field_value(3);
+                  dealii::VectorTools::point_value(dof_h_nedelec, base_vector, entry.base_point, field_value);
+                  entry.shape_val_at_base_point = deal_vector_to_position(field_value);
                   ret.push_back(entry);
                 }
               }
@@ -264,8 +267,13 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(uns
               for(unsigned int f = 0; f < face_dof_indices.size(); f++) {
                 InterfaceDofData entry;
                 entry.index = face_dof_indices[f];
-                entry.orientation = get_orientation(it->face(face)->vertex(0), it->face(face)->vertex(1));
-                entry.position = it->face(face)->center();
+                entry.base_point = it->face(face)->center();
+                entry.order = f;
+                base_vector = 0;
+                base_vector[face_dof_indices[f]] = 1;
+                NumericVectorLocal field_value(3);
+                dealii::VectorTools::point_value(dof_h_nedelec, base_vector, entry.base_point, field_value);
+                entry.shape_val_at_base_point = deal_vector_to_position(field_value);
                 ret.push_back(entry);
               }
               it->face(face)->set_user_flag();

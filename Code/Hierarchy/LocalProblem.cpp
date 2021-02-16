@@ -183,32 +183,20 @@ void LocalProblem::make_constraints() {
             << surface << ": Inner: " << from_inner_problem.size()
             << " != Surface:" << from_surface.size() << "." << std::endl;
       }
-      bool found_incompatible_surface_dof = false;
-      for (unsigned int line = 0; line < from_inner_problem.size(); line++) {
-        if (!areDofsClose(from_inner_problem[line], from_surface[line])) {
-          found_incompatible_surface_dof = true;
-        }
-        constraints.add_line(from_inner_problem[line].index);
-        ComplexNumber value = { 0, 0 };
-        if (from_inner_problem[line].orientation == from_surface[line].orientation) {
-          value.real(1.0);
-        } else {
-          value.real(-1.0);
-        }
-        constraints.add_entry(from_inner_problem[line].index, from_surface[line].index + surface_first_dofs[surface], value);
-      }
-      if(found_incompatible_surface_dof) std::cout << "There was atleast one incompatible dof for " << surface << std::endl;
+      shift_interface_dof_data(&from_surface, surface_first_dofs[surface]);
+      // Dont need to shift the inner dofs because they start at 0.
+      AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(from_surface, from_inner_problem, n_own_dofs);
+      constraints.merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins, true);
     }
   }
   print_info("LocalProblem::make_constraints", "Constraints after phase 1: " + std::to_string(constraints.n_constraints()), false, LoggingLevel::DEBUG_ALL );
-  dealii::AffineConstraints<ComplexNumber> surface_to_surface_constraints;
+  
   for (unsigned int i = 0; i < 6; i++) {
     if(is_hsie_surface[i]) surfaces[i]->setup_neighbor_couplings(is_hsie_surface);
   }
   for (unsigned int i = 0; i < 6; i++) {
     for (unsigned int j = i + 1; j < 6; j++) {
       if(is_hsie_surface[i] && is_hsie_surface[j]) {
-        surface_to_surface_constraints.reinit(is);
         bool opposing = ((i % 2) == 0) && (i + 1 == j);
         if (!opposing) {
           std::vector<InterfaceDofData> lower_face_dofs = surfaces[i]->get_dof_association_by_boundary_id(j);
@@ -219,25 +207,11 @@ void LocalProblem::make_constraints() {
                 << " dofs, " << j << " offers " << upper_face_dofs.size() << "."
                 << std::endl;
           }
-          bool found_incompatible_dof = false;
-          for (unsigned int dof = 0; dof < lower_face_dofs.size(); dof++) {
-            if (!areDofsClose(lower_face_dofs[dof], upper_face_dofs[dof])) {
-              found_incompatible_dof = true;0
-            }
-            unsigned int dof_a = lower_face_dofs[dof].index + surface_first_dofs[i];
-            unsigned int dof_b = upper_face_dofs[dof].index + surface_first_dofs[j];
-            ComplexNumber value = { 0, 0 };
-            if (lower_face_dofs[dof].orientation == upper_face_dofs[dof].orientation) {
-              value.real(1.0);
-            } else {
-              value.real(-1.0);
-            }
-            surface_to_surface_constraints.add_line(dof_a);
-            surface_to_surface_constraints.add_entry(dof_a, dof_b, value);
-          }
-          if(found_incompatible_dof) std::cout << "For surface " << i << " and " << j << ": Found incompatible dof." << std::endl;
+          shift_interface_dof_data(&lower_face_dofs, surface_first_dofs[i]);
+          shift_interface_dof_data(&upper_face_dofs, surface_first_dofs[j]);
+          AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(lower_face_dofs, upper_face_dofs, n_own_dofs);
+          constraints.merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins, true);
         }
-        constraints.merge(surface_to_surface_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
       }
     }
   }

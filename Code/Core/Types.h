@@ -108,7 +108,7 @@ struct InterfaceDofData {
     shape_val_at_base_point = in_shape_val_at_base_point;
   }
 
-  dealii::Tensor<1,3,double> shape_val_at_base_point;
+  Position shape_val_at_base_point;
   DofNumber index;
   Position base_point;
   unsigned int order;

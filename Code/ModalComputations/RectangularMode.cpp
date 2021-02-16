@@ -182,21 +182,17 @@ void RectangularMode::make_boundary_conditions() {
           << surface << ": Inner: " << from_inner_problem.size()
           << " != Surface:" << from_surface.size() << "." << std::endl;
     }
+    shift_interface_dof_data(&from_surface, surface_first_dofs[surface]);
+    AffineConstraints<ComplexNumber> temp_constraints;
     for (unsigned int line = 0; line < from_inner_problem.size(); line++) {
       if (!areDofsClose(from_inner_problem[line], from_surface[line])) {
         std::cout << "Error in face to inner_coupling. Positions are inner: "
-            << from_inner_problem[line].position << " and surface: "
-            << from_surface[line].position << std::endl;
+            << from_inner_problem[line].base_point << " and surface: "
+            << from_surface[line].base_point << std::endl;
       }
-      constraints.add_line(from_inner_problem[line].index);
-      ComplexNumber value = { 0, 0 };
-      if (from_inner_problem[line].orientation
-          == from_surface[line].orientation) {
-        value.real(1.0);
-      } else {
-        value.real(-1.0);
-      }
-      constraints.add_entry(from_inner_problem[line].index, from_surface[line].index + surface_first_dofs[surface], value);
+      temp_constraints = get_affine_constraints_for_InterfaceData(from_surface, from_inner_problem, n_dofs_total);
+      constraints.merge(temp_constraints, AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins, true);
+      temp_constraints.clear();
     }
   }
 
@@ -206,39 +202,20 @@ void RectangularMode::make_boundary_conditions() {
       surface_to_surface_constraints.reinit(is);
       bool opposing = ((i % 2) == 0) && (i + 1 == j);
       if (!opposing) {
-        std::vector<InterfaceDofData> lower_face_dofs =
-            surfaces[i]->get_dof_association_by_boundary_id(j);
-        std::vector<InterfaceDofData> upper_face_dofs =
-            surfaces[j]->get_dof_association_by_boundary_id(i);
+        std::vector<InterfaceDofData> lower_face_dofs = surfaces[i]->get_dof_association_by_boundary_id(j);
+        shift_interface_dof_data(&lower_face_dofs, surface_first_dofs[i]);
+        std::vector<InterfaceDofData> upper_face_dofs = surfaces[j]->get_dof_association_by_boundary_id(i);
+        shift_interface_dof_data(&upper_face_dofs, surface_first_dofs[j]);
         if (lower_face_dofs.size() != upper_face_dofs.size()) {
           std::cout << "ERROR: There was a edge dof count error!" << std::endl
               << "Surface " << i << " offers " << lower_face_dofs.size()
               << " dofs, " << j << " offers " << upper_face_dofs.size() << "."
               << std::endl;
         }
-        for (unsigned int dof = 0; dof < lower_face_dofs.size(); dof++) {
-          if (!areDofsClose(lower_face_dofs[dof], upper_face_dofs[dof])) {
-            std::cout << "Error in face to face_coupling. Positions are lower: "
-                << lower_face_dofs[dof].position << " and upper: "
-                << upper_face_dofs[dof].position << std::endl;
-          }
-          unsigned int dof_a = lower_face_dofs[dof].index
-              + surface_first_dofs[i];
-          unsigned int dof_b = upper_face_dofs[dof].index
-              + surface_first_dofs[j];
-          ComplexNumber value = { 0, 0 };
-          if (lower_face_dofs[dof].orientation
-              == upper_face_dofs[dof].orientation) {
-            value.real(1.0);
-          } else {
-            value.real(-1.0);
-          }
-          surface_to_surface_constraints.add_line(dof_a);
-          surface_to_surface_constraints.add_entry(dof_a, dof_b, value);
-        }
+        surface_to_surface_constraints = get_affine_constraints_for_InterfaceData(lower_face_dofs, upper_face_dofs, n_dofs_total); 
+        constraints.merge(surface_to_surface_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
+        surface_to_surface_constraints.clear();
       }
-      constraints.merge(surface_to_surface_constraints,
-        dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
     }
   }
   
@@ -263,6 +240,7 @@ std::vector<InterfaceDofData> RectangularMode::get_surface_dof_vector_for_bounda
   std::vector<DofNumber> local_face_dofs(fe.dofs_per_face);
   std::set<DofNumber> face_set;
   triangulation.clear_user_flags();
+  dealii::Vector<ComplexNumber> base_vector(dof_handler.n_dofs());
   for (auto cell : dof_handler.active_cell_iterators()) {
     if (cell->at_boundary(b_id)) {
       bool found_one = false;
@@ -289,22 +267,30 @@ std::vector<InterfaceDofData> RectangularMode::get_surface_dof_vector_for_bounda
               for (unsigned int j = 0; j < fe.dofs_per_line; j++) {
                 InterfaceDofData new_item;
                 new_item.index = line_dofs[j];
-                new_item.position = cell->face(face)->line(i)->center();
-                new_item.orientation = get_orientation(cell->face(face)->line(i)->vertex(0),
-                            cell->face(face)->line(i)->vertex(1));
+                new_item.base_point = cell->face(face)->line(i)->center();
+                base_vector = 0;
+                base_vector[line_dofs[i]] = 1;
+                NumericVectorLocal field_value(3);
+                dealii::VectorTools::point_value(dof_handler, base_vector, new_item.base_point, field_value);
+                new_item.shape_val_at_base_point = deal_vector_to_position(field_value);
                 cell_dofs_and_orientations_and_points.emplace_back(new_item);
               }
               cell->face(face)->line(i)->set_user_flag();
             }
           }
+          unsigned int order = 0;
           for (auto item: face_set) {
             InterfaceDofData new_item;
-
+            new_item.order = order;
             new_item.index = item;
-            new_item.position = cell->face(face)->center();
-            new_item.orientation = get_orientation(cell->face(face)->vertex(0),
-                    cell->face(face)->vertex(1));
+            new_item.base_point = cell->face(face)->center();
+            base_vector = 0;
+            base_vector[item] = 1;
+            NumericVectorLocal field_value(3);
+            dealii::VectorTools::point_value(dof_handler, base_vector, new_item.base_point, field_value);
+            new_item.shape_val_at_base_point = deal_vector_to_position(field_value);
             cell_dofs_and_orientations_and_points.emplace_back(new_item);
+            order++;
           }
           for (auto item: cell_dofs_and_orientations_and_points) {
             ret.push_back(item);
