@@ -32,8 +32,9 @@ extern SpaceTransformation *the_st;
  */
 Tensor<1, 3, double> crossproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 
-ComplexNumber matrixD(int in_row, int in_column,
-                             ComplexNumber in_k0);
+ComplexNumber matrixD(int in_row, int in_column, ComplexNumber in_k0);
+
+bool comparePositions(Position p1, Position p2);
 
 bool compareDofBaseData(std::pair<DofNumber, Position> c1, std::pair<DofNumber, Position> c2);
 
@@ -121,8 +122,6 @@ BoundaryId opposing_Boundary_Id(BoundaryId b_id);
 
 bool are_opposing_sites(BoundaryId a, BoundaryId b);
 
-bool compute_edge_orientation(Position vertex_a, Position vertex_b, DofNumber index_a, DofNumber index_b);
-
 std::vector<DofCouplingInformation> get_coupling_information(std::vector<InterfaceDofData> &dofs_interface_1, std::vector<InterfaceDofData> &dofs_interface_2);
 
 Position deal_vector_to_position(NumericVectorLocal &inp);
@@ -131,4 +130,4 @@ auto get_affine_constraints_for_InterfaceData(std::vector<InterfaceDofData> &dof
 
 void shift_interface_dof_data(std::vector<InterfaceDofData> * dofs_interface_1, unsigned int shift);
 
-bool is_orientation_similar(const InterfaceDofData &dof_a, const InterfaceDofData &dof_b);
+dealii::Triangulation<3> reforge_triangulation(dealii::Triangulation<3> * original_triangulation);

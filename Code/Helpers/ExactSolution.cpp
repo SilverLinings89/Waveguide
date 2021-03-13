@@ -9,8 +9,7 @@
 #include "../Core/Types.h"
 #include "PointVal.h"
 
-ComplexNumber ExactSolution::value(const Position &in_p,
-                            const unsigned int component) const {
+ComplexNumber ExactSolution::value(const Position &in_p, const unsigned int component) const {
   Position p = in_p;
   if (is_dual) p[2] = -in_p[2];
 
@@ -18,6 +17,8 @@ ComplexNumber ExactSolution::value(const Position &in_p,
     ComplexNumber ret_val(0.0, 0.0);
     const double delta = abs(mesh_points[0] - mesh_points[1]);
     const int mesh_number = mesh_points.size();
+    const double Lambda_eff = (GlobalParams.Lambda / std::sqrt(GlobalParams.Epsilon_R_effective));
+    const ComplexNumber imag = {0,1};
     if (!(abs(p[1]) >= mesh_points[0] || abs(p[0]) >= mesh_points[0])) {
       int ix = 0;
       int iy = 0;
@@ -34,46 +35,31 @@ ComplexNumber ExactSolution::value(const Position &in_p,
         double p1m1 = (1.0 - dx) * dy;
         switch (component % 3) {
           case 0:
-            ret_val.real(p1p1 * vals[ix][iy].Ex.real() +
-                         p1m1 * vals[ix][iy - 1].Ex.real() +
-                         m1m1 * vals[ix - 1][iy - 1].Ex.real() +
-                         m1p1 * vals[ix - 1][iy].Ex.real());
-            ret_val.imag(p1p1 * vals[ix][iy].Ex.imag() +
-                         p1m1 * vals[ix][iy - 1].Ex.imag() +
-                         m1m1 * vals[ix - 1][iy - 1].Ex.imag() +
-                         m1p1 * vals[ix - 1][iy].Ex.imag());
-            // ret_val *= -1.0;
+            ret_val += p1p1 * vals[ix][iy].Ex;
+            ret_val += p1m1 * vals[ix][iy-1].Ex;
+            ret_val += m1p1 * vals[ix-1][iy].Ex;
+            ret_val += m1m1 * vals[ix-1][iy-1].Ex;
             break;
           case 1:
-            ret_val.real(p1p1 * vals[ix][iy].Ey.real() +
-                         p1m1 * vals[ix][iy - 1].Ey.real() +
-                         m1m1 * vals[ix - 1][iy - 1].Ey.real() +
-                         m1p1 * vals[ix - 1][iy].Ey.real());
-            ret_val.imag(p1p1 * vals[ix][iy].Ey.imag() +
-                         p1m1 * vals[ix][iy - 1].Ey.imag() +
-                         m1m1 * vals[ix - 1][iy - 1].Ey.imag() +
-                         m1p1 * vals[ix - 1][iy].Ey.imag());
+            ret_val += p1p1 * vals[ix][iy].Ey;
+            ret_val += p1m1 * vals[ix][iy-1].Ey;
+      
+            ret_val += m1p1 * vals[ix-1][iy].Ey;
+            ret_val += m1m1 * vals[ix-1][iy-1].Ey;
             break;
           case 2:
-            ret_val.real(p1p1 * vals[ix][iy].Ez.real() +
-                         p1m1 * vals[ix][iy - 1].Ez.real() +
-                         m1m1 * vals[ix - 1][iy - 1].Ez.real() +
-                         m1p1 * vals[ix - 1][iy].Ez.real());
-            ret_val.imag(p1p1 * vals[ix][iy].Ez.imag() +
-                         p1m1 * vals[ix][iy - 1].Ez.imag() +
-                         m1m1 * vals[ix - 1][iy - 1].Ez.imag() +
-                         m1p1 * vals[ix - 1][iy].Ez.imag());
-            break;
-          default:
-            ret_val.real(0.0);
-            ret_val.imag(0.0);
+            ret_val += p1p1 * vals[ix][iy].Ez;
+            ret_val += p1m1 * vals[ix][iy-1].Ez;
+            ret_val += m1p1 * vals[ix-1][iy].Ez;
+            ret_val += m1m1 * vals[ix-1][iy-1].Ez;
             break;
         }
       }
-      double n = std::sqrt(GlobalParams.Epsilon_R_in_waveguide)*0.8;
-      double lambda = GlobalParams.Lambda / n;
-      double z =  - p[2] + Geometry.global_z_range.first;
-      ComplexNumber phase(0.0, 0.5 * GlobalParams.Pi + (2.0 * GlobalParams.Pi * z / lambda));
+      // double n = std::sqrt(GlobalParams.Epsilon_R_in_waveguide);
+      // double lambda = GlobalParams.Lambda / n;
+      const double z =  - p[2] + Geometry.global_z_range.first;
+      const double phi = 2.0 * GlobalParams.Pi * z / Lambda_eff;
+      const ComplexNumber phase = phi * imag;
       ret_val *= std::exp(phase);
       return ret_val;
     } else {
@@ -84,9 +70,10 @@ ComplexNumber ExactSolution::value(const Position &in_p,
   }
 }
 
-void ExactSolution::vector_value(const Position &in_p,
-                                 Vector<ComplexNumber> &values) const {
+void ExactSolution::vector_value(const Position &in_p, Vector<ComplexNumber> &values) const {
   Position p = in_p;
+  const double Lambda_eff = (GlobalParams.Lambda / std::sqrt(GlobalParams.Epsilon_R_effective));
+  const ComplexNumber imag = {0,1};
   if (is_dual) p[2] = -in_p[2];
 
   if (is_rectangular) {
@@ -109,24 +96,21 @@ void ExactSolution::vector_value(const Position &in_p,
         double m1p1 = dx * (1.0 - dy);
         double p1p1 = (1.0 - dx) * (1.0 - dy);
         double p1m1 = (1.0 - dx) * dy;
-        values[0] = p1p1 * vals[ix][iy].Ex +
-                    p1m1 * vals[ix][iy - 1].Ex +
-                    m1m1 * vals[ix - 1][iy - 1].Ex +
-                    m1p1 * vals[ix - 1][iy].Ex;
-        values[1] = p1p1 * vals[ix][iy].Ey +
-                    p1m1 * vals[ix][iy - 1].Ey +
-                    m1m1 * vals[ix - 1][iy - 1].Ey +
-                    m1p1 * vals[ix - 1][iy].Ey;
-        values[2] = p1p1 * vals[ix][iy].Ez +
-                    p1m1 * vals[ix][iy - 1].Ez +
-                    m1m1 * vals[ix - 1][iy - 1].Ez +
-                    m1p1 * vals[ix - 1][iy].Ez;
-        double n;
-        n = std::sqrt(GlobalParams.Epsilon_R_in_waveguide);
-        double lambda = GlobalParams.Lambda / n;
-        double z =  - p[2] + Geometry.global_z_range.first;
-        ComplexNumber phase(0.0, 0.5 * GlobalParams.Pi + ( 2.0 * GlobalParams.Pi * z / lambda));
-        phase = std::exp(phase);
+        values[0] = p1p1 * vals[ix]   [iy].Ex +
+                    p1m1 * vals[ix]   [iy-1].Ex +
+                    m1m1 * vals[ix-1] [iy-1].Ex +
+                    m1p1 * vals[ix-1] [iy].Ex;
+        values[1] = p1p1 * vals[ix]   [iy].Ey +
+                    p1m1 * vals[ix]   [iy-1].Ey +
+                    m1m1 * vals[ix-1] [iy-1].Ey +
+                    m1p1 * vals[ix-1] [iy].Ey;
+        values[2] = p1p1 * vals[ix]   [iy].Ez +
+                    p1m1 * vals[ix]   [iy-1].Ez +
+                    m1m1 * vals[ix-1] [iy-1].Ez +
+                    m1p1 * vals[ix-1] [iy].Ez;
+        const double z =  - p[2] + Geometry.global_z_range.first;
+        const double phi = 2.0 * GlobalParams.Pi * z / Lambda_eff;
+        const ComplexNumber phase = phi * imag;
         for (unsigned int komp = 0; komp < 3; komp++) {
           values[komp] *= phase;
         }
@@ -179,8 +163,7 @@ Tensor<1, 3, ComplexNumber> ExactSolution::curl(
   return ret;
 }
 
-Tensor<1, 3, ComplexNumber> ExactSolution::val(
-    const Position &in_p) const {
+Tensor<1, 3, ComplexNumber> ExactSolution::val(const Position &in_p) const {
   dealii::Tensor<1, 3, ComplexNumber> ret;
   dealii::Vector<ComplexNumber> temp;
   temp.reinit(3, false);
@@ -233,7 +216,6 @@ ExactSolution::ExactSolution(bool in_rectangular, bool in_dual)
     }
     std::ifstream input2("../Modes/mode_1550nm.dat");
     std::string line2;
-    double max = 0.0;
     for (unsigned int i = 0; i < cnt; ++i) {
       for (unsigned int j = 0; j < cnt; ++j) {
         getline(input2, line2);
@@ -244,13 +226,14 @@ ExactSolution::ExactSolution(bool in_rectangular, bool in_dual)
         double d4 = scientific_string_to_double(ls[7]);
         double d5 = scientific_string_to_double(ls[8]);
         double d6 = scientific_string_to_double(ls[6]);
-        if (d1 > max) max = d1;
-        if (d2 > max) max = d2;
-        if (d3 > max) max = d3;
-        if (d4 > max) max = d4;
-        if (d5 > max) max = d5;
-        if (d6 > max) max = d6;
         vals[i][j].set(d1, d2, d3, d4, d5, d6);
+      }
+    }
+    double max = 0.0;
+    for (unsigned int i = 0; i < cnt; ++i) {
+      for (unsigned int j = 0; j < cnt; ++j) {
+        double norm = std::sqrt( std::abs(vals[j][i].Ex)*std::abs(vals[j][i].Ex) + std::abs(vals[j][i].Ey)*std::abs(vals[j][i].Ey) + std::abs(vals[j][i].Ez)*std::abs(vals[j][i].Ez));
+        if(norm > max) max = norm;
       }
     }
     for (unsigned int i = 0; i < cnt; ++i) {

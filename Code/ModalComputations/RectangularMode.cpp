@@ -26,13 +26,15 @@ void RectangularMode::run() {
 }
 
 void RectangularMode::make_mesh() {
+  Triangulation<3> temp_tria;
   Position p1(-GlobalParams.Geometry_Size_X / 2.0, -GlobalParams.Geometry_Size_Y / 2.0, 0);
   Position p2(GlobalParams.Geometry_Size_X / 2.0, GlobalParams.Geometry_Size_Y / 2.0, layer_thickness);
   std::vector<unsigned int> repetitions;
   repetitions.push_back(20);
   repetitions.push_back(20);
   repetitions.push_back(1);
-  GridGenerator::subdivided_hyper_rectangle(triangulation, repetitions, p1, p2, true);
+  GridGenerator::subdivided_hyper_rectangle(temp_tria, repetitions, p1, p2, true);
+  triangulation = reforge_triangulation(&temp_tria);
   dof_handler.distribute_dofs(fe);
 }
 
@@ -240,7 +242,6 @@ std::vector<InterfaceDofData> RectangularMode::get_surface_dof_vector_for_bounda
   std::vector<DofNumber> local_face_dofs(fe.dofs_per_face);
   std::set<DofNumber> face_set;
   triangulation.clear_user_flags();
-  dealii::Vector<ComplexNumber> base_vector(dof_handler.n_dofs());
   for (auto cell : dof_handler.active_cell_iterators()) {
     if (cell->at_boundary(b_id)) {
       bool found_one = false;
@@ -268,11 +269,6 @@ std::vector<InterfaceDofData> RectangularMode::get_surface_dof_vector_for_bounda
                 InterfaceDofData new_item;
                 new_item.index = line_dofs[j];
                 new_item.base_point = cell->face(face)->line(i)->center();
-                base_vector = 0;
-                base_vector[line_dofs[i]] = 1;
-                NumericVectorLocal field_value(3);
-                dealii::VectorTools::point_value(dof_handler, base_vector, new_item.base_point, field_value);
-                new_item.shape_val_at_base_point = deal_vector_to_position(field_value);
                 cell_dofs_and_orientations_and_points.emplace_back(new_item);
               }
               cell->face(face)->line(i)->set_user_flag();
@@ -284,11 +280,6 @@ std::vector<InterfaceDofData> RectangularMode::get_surface_dof_vector_for_bounda
             new_item.order = order;
             new_item.index = item;
             new_item.base_point = cell->face(face)->center();
-            base_vector = 0;
-            base_vector[item] = 1;
-            NumericVectorLocal field_value(3);
-            dealii::VectorTools::point_value(dof_handler, base_vector, new_item.base_point, field_value);
-            new_item.shape_val_at_base_point = deal_vector_to_position(field_value);
             cell_dofs_and_orientations_and_points.emplace_back(new_item);
             order++;
           }

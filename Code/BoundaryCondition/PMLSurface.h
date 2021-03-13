@@ -55,5 +55,6 @@ class PMLSurface : public BoundaryCondition {
     void set_boundary_ids();
     void setup_neighbor_couplings(std::array<bool, 6> is_b_id_truncated) override;
     void reset_neighbor_couplings(std::array<bool, 6> is_b_id_truncated) override;
-    void fix_apply_negative_Jacobian_transformation();
+    void fix_apply_negative_Jacobian_transformation(dealii::Triangulation<3> * in_tria);
+    void output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
 };

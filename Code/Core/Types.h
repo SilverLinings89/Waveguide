@@ -57,6 +57,10 @@ struct CellAngelingData {
   VertexAngelingData vertex_data;
 };
 
+enum SignalTaperingType {
+  C1, C0
+};
+
 enum FileType {
   ConvergenceCSV, ParaviewVTU, TexReport, MetaText
 };
@@ -96,19 +100,16 @@ struct DofCouplingInformation {
 };
 
 struct InterfaceDofData {
-
   InterfaceDofData() {
     index = 0;
     base_point = { 0, 0, 0 };
   }
 
-  InterfaceDofData(const DofNumber &in_index, const Position &in_position, dealii::Tensor<1,3,double> in_shape_val_at_base_point) {
+  InterfaceDofData(const DofNumber &in_index, const Position &in_position) {
     index = in_index;
     base_point = in_position;
-    shape_val_at_base_point = in_shape_val_at_base_point;
   }
 
-  Position shape_val_at_base_point;
   DofNumber index;
   Position base_point;
   unsigned int order;

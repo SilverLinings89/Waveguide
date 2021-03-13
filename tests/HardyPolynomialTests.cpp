@@ -1,6 +1,6 @@
 #include "../Code/Core/Types.h"
 #include "../Code/BoundaryCondition/HSIEPolynomial.h"
-
+#include "../third_party/googletest/googletest/include/gtest/gtest.h"
 #include <deal.II/lac/full_matrix.h>
 
 TEST(HSIEPolynomialTests, TestOperatorTplus) {

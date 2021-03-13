@@ -39,6 +39,9 @@ add_executable(waveguide_tests)
 target_sources(waveguide_tests
     PRIVATE
         tests/BoundaryMethodTests.cpp
+        tests/ExactSolutionTests.cpp
+        tests/HardyPolynomialTests.cpp
+        tests/MeshTests.cpp
 )
 set_target_properties(waveguide_tests PROPERTIES
     COMPILE_FLAGS "${cxx_strict}"

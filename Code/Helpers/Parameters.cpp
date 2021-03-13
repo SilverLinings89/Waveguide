@@ -39,4 +39,8 @@ auto Parameters::complete_data() -> void {
         source_field = new ExactSolution(true, false);
         if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using mode for rectangular waveguide.", false, LoggingLevel::PRODUCTION_ONE);
     }
+    if(Point_Source_Type == 3) {
+        source_field = new ExactSolution(true, false);
+        if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using mode for rectangular waveguide.", false, LoggingLevel::PRODUCTION_ONE);
+    }
 }

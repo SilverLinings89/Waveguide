@@ -685,7 +685,6 @@ void HSIESurface::register_new_edge_dofs(CellIterator2D cell_nedelec, CellIterat
   cell_nedelec->line(edge)->get_dof_indices(local_dofs);
   bool orientation = false;
   const unsigned int nedelec_dof_count = dof_h_nedelec.n_dofs();
-  dealii::Vector<ComplexNumber> vec_temp(nedelec_dof_count);
   if(cell_nedelec->line(edge)->vertex_index(0) > cell_nedelec->line(edge)->vertex_index(1)) {
     orientation = get_orientation(undo_transform(cell_nedelec->line(edge)->vertex(0)), undo_transform(cell_nedelec->line(edge)->vertex(1)));
   } else {
@@ -699,18 +698,11 @@ void HSIESurface::register_new_edge_dofs(CellIterator2D cell_nedelec, CellIterat
     dof_data.index = edge_dof_data[edge_dof_data.size() - 1].global_index;
     dof_data.order = inner_order;
     dof_data.base_point = bp;
-    vec_temp = 0;
-    vec_temp[local_dofs[inner_order]] = 1;
-    dealii::Vector<ComplexNumber> val(2);
-    VectorTools::point_value(dof_h_nedelec, vec_temp, cell_nedelec->center(), val);
-    Point<2, double> pos(val[0].real(),val[1].real());
-    dof_data.shape_val_at_base_point = undo_transform_for_shape_function(pos);
     add_surface_relevant_dof(dof_data);
   }
 
   // INFINITE FACE Dofs Type a
-  for (int inner_order = 0; inner_order < static_cast<int>(fe_nedelec.dofs_per_line);
-       inner_order++) {
+  for (int inner_order = 0; inner_order < static_cast<int>(fe_nedelec.dofs_per_line); inner_order++) {
     for (int hsie_order = 0; hsie_order <= max_hsie_order; hsie_order++) {
       register_single_dof(cell_nedelec->face_index(edge), hsie_order, inner_order + 1, DofType::IFFa, edge_dof_data, local_dofs[inner_order], orientation);
     }
@@ -765,12 +757,6 @@ void HSIESurface::register_new_surface_dofs(CellIterator2D cell_nedelec, CellIte
     dof_data.index = face_dof_data[face_dof_data.size() - 1].global_index;
     dof_data.base_point = bp;
     dof_data.order = inner_order;
-    vec_temp = 0;
-    vec_temp[surface_dofs[inner_order]] = 1;
-    dealii::Vector<ComplexNumber> val(2);
-    VectorTools::point_value(dof_h_nedelec, vec_temp, cell_nedelec->center(), val);
-    Point<2, double> pos(val[0].real(),val[1].real());
-    dof_data.shape_val_at_base_point = undo_transform_for_shape_function(pos);
     add_surface_relevant_dof(dof_data);
   }
 
@@ -1135,10 +1121,6 @@ std::vector<InterfaceDofData> HSIESurface::get_dof_association_by_boundary_id(Bo
     std::vector<InterfaceDofData> surface_dofs_unsorted(0);
     return surface_dofs_unsorted;
   } 
-  Position base_function;
-  base_function[0] = 0;
-  base_function[1] = 0;
-  base_function[2] = 1;
   std::vector<InterfaceDofData> surface_dofs_unsorted;
   std::vector<unsigned int> vertex_ids = get_vertices_for_boundary_id(in_boundary_id);
   std::vector<unsigned int> line_ids = get_lines_for_boundary_id(in_boundary_id);
@@ -1152,7 +1134,6 @@ std::vector<InterfaceDofData> HSIESurface::get_dof_association_by_boundary_id(Bo
         new_item.index = dof.global_index;
         new_item.base_point = vertex_positions[index_in_ids];
         new_item.order = (dof.inner_order+1) * (dof.nodal_basis + 1);
-        new_item.shape_val_at_base_point = base_function;
         surface_dofs_unsorted.push_back(new_item);
       }
     }
@@ -1167,7 +1148,6 @@ std::vector<InterfaceDofData> HSIESurface::get_dof_association_by_boundary_id(Bo
         new_item.index = dof.global_index;
         new_item.base_point = line_positions[index_in_ids];
         new_item.order = (dof.inner_order+1) * (dof.nodal_basis + 1);
-        new_item.shape_val_at_base_point = base_function;
         surface_dofs_unsorted.push_back(new_item);
       }
     }
@@ -1291,4 +1271,8 @@ void HSIESurface::setup_neighbor_couplings(std::array<bool, 6>) {
 
 void HSIESurface::reset_neighbor_couplings(std::array<bool, 6>) {
 
+}
+
+void HSIESurface::output_results(const dealii::Vector<ComplexNumber> & , std::string) {
+  
 }

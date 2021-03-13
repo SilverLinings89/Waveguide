@@ -24,8 +24,9 @@ LocalProblem::LocalProblem() :
   print_info("Local Problem", "Done building base problem. Preparing matrix.");
   matrix = new dealii::PETScWrappers::SparseMatrix();
   for(unsigned int i = 0; i < 6; i++) is_hsie_surface[i] = true;
-  is_hsie_surface[4] = false;
-  is_hsie_surface[5] = true;
+  if(GlobalParams.prescribe_0_on_input_side && GlobalParams.Index_in_z_direction == 0) {
+    is_hsie_surface[4] = false;
+  }
 }
 
 LocalProblem::~LocalProblem() {}
@@ -77,7 +78,6 @@ void LocalProblem::initialize() {
         }
       }
       dealii::Triangulation<2> surf_tria;
-      print_info("LocalProblem::initialize", "Initializing surface " + std::to_string(side) + " in local problem.", false, LoggingLevel::DEBUG_ALL);
       Mesh tria;
       tria.copy_triangulation(base_problem.triangulation);
       std::set<unsigned int> b_ids;
@@ -105,10 +105,8 @@ void LocalProblem::initialize() {
           b_ids);
       dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
       if(GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE) {
-        print_info("LocalProblem::initialize", "Using HSIE as Boundary Method");
         surfaces[side] = std::shared_ptr<BoundaryCondition>(new HSIESurface(GlobalParams.HSIE_polynomial_degree, std::ref(surf_tria), side, GlobalParams.Nedelec_element_order, GlobalParams.kappa_0, additional_coorindate));
       } else {
-        print_info("LocalProblem::initialize", "Using PML as Boundary Method");
         surfaces[side] = std::shared_ptr<BoundaryCondition>(new PMLSurface(side, additional_coorindate, std::ref(surf_tria)));
       }
       surfaces[side]->initialize();
@@ -228,15 +226,8 @@ void LocalProblem::make_constraints() {
 
 void LocalProblem::assemble() {
   base_problem.assemble_system(0, &constraints, matrix, &rhs);
-  // 0 broken
-  // 1 works
-  // 2 broken
-  // 3 works
-  // 4 broken
-  // 5 works
   for (unsigned int surface = 0; surface < 6; surface++) {
     if(is_hsie_surface[surface]) {
-      std::cout << "Surface " << surface << std::endl;
       surfaces[surface]->fill_matrix(matrix, &rhs, surface_first_dofs[surface], is_hsie_surface, &constraints);
     }
   }
@@ -259,7 +250,6 @@ void LocalProblem::reinit() {
   constraints.close();
   for (unsigned int surface = 0; surface < 6; surface++) {
     if(is_hsie_surface[surface]) {
-      std::cout << "Fill surface sparsity pattern for " << surface << std::endl;
       surfaces[surface]->fill_sparsity_pattern(&dsp, surface_first_dofs[surface], &constraints);
     }
   }
@@ -386,6 +376,18 @@ void LocalProblem::output_results(std::string filename) {
   data_out.build_patches();
   data_out.write_vtu(outputvtu);
   write_phase_plot();
+  if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML) {
+    for(unsigned int i = 0; i < 6; i++){
+      if(is_hsie_surface[i]){
+        dealii::Vector<ComplexNumber> ds (surfaces[i]->dof_counter);
+        for(unsigned int index = 0; index < surfaces[i]->dof_counter; index++) {
+          ds[index] = solution(index + surface_first_dofs[i]);
+        }
+        surfaces[i]->output_results(ds, filename);
+      }
+    }
+  }
+
   print_info("LocalProblem::output_results()", "End");
 }
 

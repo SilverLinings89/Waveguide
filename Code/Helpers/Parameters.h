@@ -38,9 +38,11 @@ struct Parameters {
 
     double Vertical_displacement_of_waveguide = 0;
 
-    double Epsilon_R_in_waveguide = 7.0;
+    double Epsilon_R_in_waveguide = 2.3409;
 
-    double Epsilon_R_outside_waveguide = 1.0;
+    double Epsilon_R_outside_waveguide = 1.8496;
+
+    double Epsilon_R_effective = 2.1588449;
 
     double Mu_R_in_waveguide = 1.0;
 
@@ -130,4 +132,10 @@ struct Parameters {
     unsigned int PML_skaling_order = 3;
 
     BoundaryConditionType BoundaryCondition = BoundaryConditionType::HSIE;
+
+    bool use_tapered_input_signal = false;
+
+    SignalTaperingType Signal_tapering_type = SignalTaperingType::C1;
+
+    bool prescribe_0_on_input_side = false;
 };

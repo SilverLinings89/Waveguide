@@ -2,6 +2,7 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_out.h>
 #include <deal.II/grid/grid_tools.h>
+#include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
 #include "../Core/GlobalObjects.h"
 #include "../Helpers/staticfunctions.h"
@@ -23,7 +24,8 @@ PMLSurface::PMLSurface(unsigned int in_bid, double in_additional_coordinate, dea
 PMLSurface::~PMLSurface() {}
 
 void PMLSurface::prepare_mesh() {
-    dealii::GridGenerator::extrude_triangulation(surface_triangulation, GlobalParams.PML_N_Layers, GlobalParams.PML_thickness, triangulation);
+    Triangulation<3> temp_tria;
+    dealii::GridGenerator::extrude_triangulation(surface_triangulation, GlobalParams.PML_N_Layers, GlobalParams.PML_thickness, temp_tria);
     outer_boundary_id = b_id;
     dealii::Tensor<1, 3> shift_vector;
     for(unsigned int i = 0; i < 3; i++) {
@@ -37,23 +39,23 @@ void PMLSurface::prepare_mesh() {
     switch (b_id)
     {
     case 0:
-      dealii::GridTools::transform(Transform_5_to_0, triangulation);
+      dealii::GridTools::transform(Transform_5_to_0, temp_tria);
       shift_vector[0] = additional_coordinate - GlobalParams.PML_thickness;
       break;
     case 1:
-      dealii::GridTools::transform(Transform_5_to_1, triangulation);
+      dealii::GridTools::transform(Transform_5_to_1, temp_tria);
       shift_vector[0] = additional_coordinate;
       break;
     case 2:
-      dealii::GridTools::transform(Transform_5_to_2, triangulation);
+      dealii::GridTools::transform(Transform_5_to_2, temp_tria);
       shift_vector[1] = additional_coordinate - GlobalParams.PML_thickness;
       break;
     case 3:
-      dealii::GridTools::transform(Transform_5_to_3, triangulation);
+      dealii::GridTools::transform(Transform_5_to_3, temp_tria);
       shift_vector[1] = additional_coordinate;
       break;
     case 4:
-      dealii::GridTools::transform(Transform_5_to_4, triangulation);
+      dealii::GridTools::transform(Transform_5_to_4, temp_tria);
       shift_vector[2] = additional_coordinate - GlobalParams.PML_thickness;
       break;
     case 5:
@@ -64,10 +66,11 @@ void PMLSurface::prepare_mesh() {
     default:
       break;
     }
-    dealii::GridTools::shift(shift_vector, triangulation);
+    dealii::GridTools::shift(shift_vector, temp_tria);
     if(b_id % 2 == 0) {
-      fix_apply_negative_Jacobian_transformation();
+      fix_apply_negative_Jacobian_transformation(&temp_tria);
     }
+    triangulation = reforge_triangulation(&temp_tria);
 }
 
 unsigned int PMLSurface::cells_for_boundary_id(unsigned int boundary_id) {
@@ -251,11 +254,6 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(uns
                   entry.index = line_dofs[i];
                   entry.base_point = it->face(face)->line(line)->center();
                   entry.order = i;
-                  base_vector = 0;
-                  base_vector[line_dofs[i]] = 1;
-                  NumericVectorLocal field_value(3);
-                  dealii::VectorTools::point_value(dof_h_nedelec, base_vector, entry.base_point, field_value);
-                  entry.shape_val_at_base_point = deal_vector_to_position(field_value);
                   ret.push_back(entry);
                 }
               }
@@ -269,11 +267,6 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(uns
                 entry.index = face_dof_indices[f];
                 entry.base_point = it->face(face)->center();
                 entry.order = f;
-                base_vector = 0;
-                base_vector[face_dof_indices[f]] = 1;
-                NumericVectorLocal field_value(3);
-                dealii::VectorTools::point_value(dof_h_nedelec, base_vector, entry.base_point, field_value);
-                entry.shape_val_at_base_point = deal_vector_to_position(field_value);
                 ret.push_back(entry);
               }
               it->face(face)->set_user_flag();
@@ -297,17 +290,7 @@ DofCount PMLSurface::get_dof_count_by_boundary_id(BoundaryId in_bid) {
 }
 
 double PMLSurface::fraction_of_pml_direction(Position in_p) {
-    double delta = 0;
-    if(b_id == 0 || b_id == 1) {
-        delta = std::abs(in_p[0]-additional_coordinate) / GlobalParams.PML_thickness;
-    }
-    if(b_id == 2 || b_id == 3) {
-        delta = std::abs(in_p[1]-additional_coordinate) / GlobalParams.PML_thickness;
-    }
-    if(b_id == 4 || b_id == 5) {
-        delta = std::abs(in_p[2]-additional_coordinate) / GlobalParams.PML_thickness;
-    }
-    return delta;
+  return std::abs(in_p[b_id/2]-additional_coordinate) / GlobalParams.PML_thickness;
 }
 
 dealii::Tensor<2,3,ComplexNumber> PMLSurface::get_pml_tensor_epsilon(Position in_p) {
@@ -388,7 +371,6 @@ struct CellwiseAssemblyDataPML {
   }
 
   void prepare_for_current_q_index(unsigned int q_index, dealii::Tensor<2, 3, ComplexNumber> epsilon, dealii::Tensor<2,3,ComplexNumber> mu_inverse) {
-    
     const double JxW = fe_values.JxW(q_index);
     for (unsigned int i = 0; i < dofs_per_cell; i++) {
       Tensor<1, 3, ComplexNumber> I_Curl;
@@ -600,13 +582,30 @@ double min_z_center_in_triangulation(dealii::Triangulation<3, 3> & in_tria) {
   return ret;
 }
 
-void PMLSurface::fix_apply_negative_Jacobian_transformation() {
-  double min_z_before = min_z_center_in_triangulation(triangulation);
-  GridTools::transform(invert_z, triangulation);
-  double min_z_after = min_z_center_in_triangulation(triangulation);
+void PMLSurface::fix_apply_negative_Jacobian_transformation(dealii::Triangulation<3> * in_tria) {
+  double min_z_before = min_z_center_in_triangulation(*in_tria);
+  GridTools::transform(invert_z, *in_tria);
+  double min_z_after = min_z_center_in_triangulation(*in_tria);
   Tensor<1,3> shift;
   shift[0] = 0;
   shift[1] = 0;
   shift[2] = min_z_before - min_z_after;
-  GridTools::shift(shift, triangulation);
+  GridTools::shift(shift, *in_tria);
+}
+
+void PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_data, std::string filename) {
+  print_info("PMSurface::output_results()", "Start");
+  dealii::DataOut<3> data_out;
+  data_out.attach_dof_handler(dof_h_nedelec);
+  data_out.add_data_vector(in_data, "Solution");
+  std::ofstream outputvtu(
+    filename 
+    + std::to_string(GlobalParams.MPI_Rank) 
+    + "-bid-" 
+    + std::to_string(b_id) 
+    + ".vtu");
+  unsigned int index = 0;
+  data_out.build_patches();
+  data_out.write_vtu(outputvtu);
+  print_info("PMSurface::output_results()", "End");
 }

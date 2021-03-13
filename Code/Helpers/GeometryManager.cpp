@@ -1,10 +1,3 @@
-/*
- * GemoetryManager.cpp
- *
- *  Created on: Jun 19, 2019
- *      Author: kraft
- */
-
 #include "../Core/GlobalObjects.h"
 #include "GeometryManager.h"
 #include "../Core/NumericProblem.h"
@@ -21,7 +14,7 @@ void GeometryManager::initialize() {
 }
 
 double GeometryManager::eps_kappa_2(Position in_p) {
-  return (math_coordinate_in_waveguide(in_p)? GlobalParams.Epsilon_R_in_waveguide : GlobalParams.Epsilon_R_outside_waveguide) * 2 * std::pow(GlobalParams.Pi, 2);
+  return (math_coordinate_in_waveguide(in_p)? GlobalParams.Epsilon_R_in_waveguide : GlobalParams.Epsilon_R_outside_waveguide) * 4 * GlobalParams.Pi * GlobalParams.Pi;
 }
 
 void GeometryManager::set_x_range(std::pair<double, double> in_range) {

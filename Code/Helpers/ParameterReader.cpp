@@ -32,8 +32,9 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("geometry size x", "5.0", Patterns::Double(), "Size of the computational domain in x-direction.");
         case_prm.declare_entry("geometry size y", "5.0", Patterns::Double(), "Size of the computational domain in y-direction.");
         case_prm.declare_entry("geometry size z", "5.0", Patterns::Double(), "Size of the computational domain in z-direction.");
-        case_prm.declare_entry("epsilon in", "1.0", Patterns::Double(), "Epsilon r inside the material.");
-        case_prm.declare_entry("epsilon out", "1.0", Patterns::Double(), "Epsilon r outside the material.");
+        case_prm.declare_entry("epsilon in", "2.3409", Patterns::Double(), "Epsilon r inside the material.");
+        case_prm.declare_entry("epsilon out", "1.8496", Patterns::Double(), "Epsilon r outside the material.");
+        case_prm.declare_entry("epsilon effective", "2.1588449", Patterns::Double(), "Epsilon r outside the material.");
         case_prm.declare_entry("mu in", "1.0", Patterns::Double(), "Mu r inside the material.");
         case_prm.declare_entry("mu out", "1.0", Patterns::Double(), "Mu r outside the material.");
         case_prm.declare_entry("fem order" , "0", Patterns::Integer(), "Degree of nedelec elements in the interior.");
@@ -50,6 +51,9 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("PML thickness", "1.0", Patterns::Double(), "Thickness of PML layers.");
         case_prm.declare_entry("PML skaling order", "3", Patterns::Integer(), "PML skaling order is the exponent with wich the imaginary part grows towards the outer boundary.");
         case_prm.declare_entry("PML n layers", "8", Patterns::Integer(), "Number of cell layers used in the PML medium.");
+        case_prm.declare_entry("Input Signal Method", "Dirichlet", Patterns::Selection("Dirichlet|Taper"), "Taper uses a tapered exact solution to build a right hand side. Dirichlet applies dirichlet boundary values.");
+        case_prm.declare_entry("Signal tapering type", "C1", Patterns::Selection("C0|C1"), "Tapering type for signal input");
+        case_prm.declare_entry("Prescribe input zero", "false", Patterns::Bool(), "If this is set to zero, there will be a dirichlet zero condition enforced on the global input interface (Process index z: 0, boundary id: 4).");
     }
     case_prm.leave_subsection();
 }
@@ -84,6 +88,7 @@ Parameters ParameterReader::read_parameters(const std::string run_file,const std
         ret.Geometry_Size_Z = case_prm.get_double("geometry size z");
         ret.Epsilon_R_in_waveguide = case_prm.get_double("epsilon in");
         ret.Epsilon_R_outside_waveguide = case_prm.get_double("epsilon out");
+        ret.Epsilon_R_effective = case_prm.get_double("epsilon effective");
         ret.kappa_0 = 0;
         ret.kappa_0.real(case_prm.get_integer("Kappa 0 Real"));
         ret.kappa_0.imag(case_prm.get_integer("Kappa 0 Imaginary"));
@@ -104,6 +109,11 @@ Parameters ParameterReader::read_parameters(const std::string run_file,const std
         ret.PML_N_Layers = case_prm.get_integer("PML n layers");
         ret.PML_skaling_order = case_prm.get_integer("PML skaling order");
         ret.PML_thickness = case_prm.get_double("PML thickness");
+        ret.use_tapered_input_signal = case_prm.get("Input Signal Method") == "Taper";
+        if(case_prm.get("Signal tapering type") == "C0") {
+            ret.Signal_tapering_type = SignalTaperingType::C0;
+        }
+        ret.prescribe_0_on_input_side = case_prm.get_bool("Prescribe input zero");
     }
     return ret;
 }

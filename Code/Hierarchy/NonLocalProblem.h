@@ -31,7 +31,6 @@ private:
   PetscInt* locally_owned_dofs_index_array;
   unsigned int lower_sweeping_interface_id;
   unsigned int upper_sweeping_interface_id;
-  std::vector<bool> dof_orientations_identical;
   
  public:
   NonLocalProblem(unsigned int);
@@ -109,8 +108,6 @@ private:
   void compute_solver_factorization() override;
   
   void output_results(std::string) override;
-
-  auto get_incoming_dof_orientations() -> std::vector<bool>;
 
   void update_mismatch_vector(BoundaryId) override;
 

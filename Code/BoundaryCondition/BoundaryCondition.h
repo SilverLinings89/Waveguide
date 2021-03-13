@@ -39,4 +39,5 @@ public:
   void compute_extreme_vertex_coordinates();
   virtual void setup_neighbor_couplings(std::array<bool, 6> is_b_id_truncated) = 0;
   virtual void reset_neighbor_couplings(std::array<bool, 6> is_b_id_truncated) = 0;
+  virtual void output_results(const dealii::Vector<ComplexNumber> & , std::string) = 0;
 };

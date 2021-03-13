@@ -1,8 +1,11 @@
 #include "staticfunctions.h"
+#include <deal.II/base/geometry_info.h>
 #include <deal.II/base/point.h>
+#include <deal.II/grid/tria_description.h>
 #include <mpi.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <algorithm>
 #include <string>
 #include <limits>
 #include <deal.II/base/logstream.h>
@@ -91,12 +94,7 @@ bool areDofsClose(const InterfaceDofData &a,
 
 bool compare_non_position_data(InterfaceDofData c1, InterfaceDofData c2) {
   if(c1.order == c2.order) {
-    for(unsigned int comp = 0; comp < 3; comp++) {
-      if(std::abs(c1.shape_val_at_base_point[comp]) != std::abs(c2.shape_val_at_base_point[comp])) {
-        return std::abs(c1.shape_val_at_base_point[comp]) < std::abs(c2.shape_val_at_base_point[comp]);
-      }
-    }
-    // std::cout << "INDICISIVE CASE FOR SORTING." << std::endl;
+    std::cout << "INDICISIVE CASE FOR SORTING." << std::endl;
     return c1.index < c2.index;
   } else {
     return c1.order < c2.order;
@@ -542,32 +540,11 @@ bool are_opposing_sites(BoundaryId a, BoundaryId b) {
   return a != b && a/2 == b/2;
 }
 
-bool compute_edge_orientation(Position vertex_a, Position vertex_b, DofNumber index_a1, DofNumber index_a2, DofNumber index_b1, DofNumber index_b2) {
-  bool ret = comparePositions(vertex_a, vertex_b);
-  bool are_dofs_equally_aligned = (index_a1 < index_a2 && index_b1 < index_b2) || (index_a1 > index_a2 && index_b1 > index_b2);
-  if(are_dofs_equally_aligned) {
-    return ret;
-  } else {
-    return !ret;
-  }
-}
-
 DofCouplingInformation get_coupling_for_single_pair(const InterfaceDofData &dof_a, const InterfaceDofData &dof_b) {
   DofCouplingInformation ret;
   ret.first_dof = dof_a.index;
   ret.second_dof = dof_b.index;
-  bool done = false;
   ret.coupling_value = 1.0;
-  if((dof_a.shape_val_at_base_point - dof_b.shape_val_at_base_point).norm() < FLOATING_PRECISION) {
-    done = true;
-  }
-  if((dof_a.shape_val_at_base_point + dof_b.shape_val_at_base_point).norm() < FLOATING_PRECISION) {
-    done = true;
-    ret.coupling_value = -1.0;
-  }
-  if(!done) {
-    std::cout << "There is a non aligned-dof." << std::endl;
-  }
   return ret;
 }
 
@@ -608,31 +585,8 @@ std::vector<DofCouplingInformation> get_coupling_information(std::vector<Interfa
   return ret;
 }
 
-bool is_orientation_similar(const InterfaceDofData &dof_a, const InterfaceDofData &dof_b) {
-  double norm_diff = 0;
-  for(unsigned int i = 0; i < 3; i++) {
-    norm_diff += (dof_a.shape_val_at_base_point[i] - dof_b.shape_val_at_base_point[i]) * (dof_a.shape_val_at_base_point[i] - dof_b.shape_val_at_base_point[i]);
-  }
-  return std::sqrt(norm_diff) < FLOATING_PRECISION;
-}
-
-bool is_orientation_oposite(const InterfaceDofData &dof_a, const InterfaceDofData &dof_b) {
-  double norm_diff = 0;
-  for(unsigned int i = 0; i < 3; i++) {
-    norm_diff += (dof_a.shape_val_at_base_point[i] + dof_b.shape_val_at_base_point[i]) * (dof_a.shape_val_at_base_point[i] + dof_b.shape_val_at_base_point[i]);
-  }
-  return std::sqrt(norm_diff) < FLOATING_PRECISION;
-}
-
-bool is_shape_function_similar(const InterfaceDofData &dof_a, const InterfaceDofData &dof_b) {
-  return is_orientation_oposite(dof_a, dof_b) || is_orientation_similar(dof_a, dof_b);
-}
-
 bool are_dofs_similar(const InterfaceDofData &dof_a, const InterfaceDofData &dof_b) {
   if(!areDofsClose(dof_a, dof_b)) {
-    return false;
-  }
-  if(!is_shape_function_similar(dof_a, dof_b)) {
     return false;
   }
   if(dof_a.order != dof_b.order) {
@@ -653,4 +607,81 @@ void shift_interface_dof_data(std::vector<InterfaceDofData> * dofs_interface, un
   for(unsigned int i = 0; i < dofs_interface->size(); i++) {
     (*dofs_interface)[i].index += shift;
   }
+}
+
+dealii::Triangulation<3> reforge_triangulation(dealii::Triangulation<3> * original_triangulation) {
+  const unsigned int n_vertices = original_triangulation->n_vertices();
+  SubCellData sub_cell_data;
+  std::vector<std::pair<unsigned int, Position>> old_vertices;
+  std::vector<Position> new_vertex_list(n_vertices);
+  std::set<unsigned int> boundary_lines_handled;
+  std::set<unsigned int> boundary_faces_handled;
+  std::vector<bool> vertex_handled(n_vertices);
+  std::vector<CellData<3>> cell_data;
+  for(unsigned int i = 0; i < n_vertices; i++){
+    vertex_handled[i] = false;
+  }
+  std::vector<CellData<3>> old_cell_data(original_triangulation->n_cells());
+  for(auto cell = original_triangulation->begin(); cell != original_triangulation->end(); cell++) {
+    for(unsigned int face_index = 0; face_index < GeometryInfo<3>::faces_per_cell; face_index++) {
+      if(!boundary_faces_handled.contains(cell->face_index(face_index))){
+        CellData<2> new_surface_cell;
+        for(unsigned int i = 0; i < 4; i++) {
+          new_surface_cell.vertices[i] = cell->face(face_index)->vertex_index(i);
+        }
+        new_surface_cell.boundary_id = cell->face(face_index)->boundary_id();
+        sub_cell_data.boundary_quads.push_back(new_surface_cell);
+        boundary_faces_handled.insert(cell->face_index(face_index));
+      }
+    }
+    for(unsigned int line_index = 0; line_index < GeometryInfo<3>::lines_per_cell; line_index++) {
+      if(!boundary_lines_handled.contains(cell->line_index(line_index))) {
+        CellData<1> new_surface_line;
+        for(unsigned int i = 0; i < 2; i++) {
+          new_surface_line.vertices[i] = cell->line(line_index)->vertex_index(i);
+        }
+        new_surface_line.boundary_id = cell->line(line_index)->boundary_id();
+        sub_cell_data.boundary_lines.push_back(new_surface_line);
+        boundary_lines_handled.insert(cell->line_index(line_index));
+      }
+    }
+    for(unsigned int vertex_index = 0;  vertex_index < GeometryInfo<3>::vertices_per_cell; vertex_index++) {
+      if(!vertex_handled[cell->vertex_index(vertex_index)]) {
+        std::pair<unsigned int, Position> new_item;
+        new_item.first = cell->vertex_index(vertex_index);
+        new_item.second = cell->vertex(vertex_index);
+        old_vertices.push_back(new_item);
+        vertex_handled[cell->vertex_index(vertex_index)] = true;
+      }
+    }
+    CellData<3> cd;
+    for(unsigned int vertex_index = 0; vertex_index < GeometryInfo<3>::vertices_per_cell; vertex_index++) {
+      cd.vertices[vertex_index] = cell->vertex_index(vertex_index);
+    }
+    cell_data.push_back(cd);
+  }
+  std::sort(old_vertices.begin(), old_vertices.end(), compareDofBaseData);
+  std::vector<DofNumber> new_vertex_numbers(old_vertices.size());
+  for(unsigned int i = 0; i < old_vertices.size(); i++) {
+    new_vertex_list[i] = old_vertices[i].second;
+    new_vertex_numbers[old_vertices[i].first] = i;
+  }
+  for(unsigned int i = 0; i < cell_data.size(); i++) {
+    for(unsigned int j = 0; j < GeometryInfo<3>::vertices_per_cell; j++) {
+      cell_data[i].vertices[j] = new_vertex_numbers[cell_data[i].vertices[j]];
+    }
+  }
+  for(unsigned int i = 0; i < sub_cell_data.boundary_lines.size(); i++) {
+    for(unsigned int j = 0; j < 2; j++) {
+      sub_cell_data.boundary_lines[i].vertices[j] = new_vertex_numbers[sub_cell_data.boundary_lines[i].vertices[j]];
+    }
+  }
+  for(unsigned int i = 0; i < sub_cell_data.boundary_quads.size(); i++) {
+    for(unsigned int j = 0; j < 4; j++) {
+      sub_cell_data.boundary_quads[i].vertices[j] = new_vertex_numbers[sub_cell_data.boundary_quads[i].vertices[j]];
+    }
+  }
+  Triangulation<3> return_triangulation;
+  return_triangulation.create_triangulation(new_vertex_list, cell_data, sub_cell_data);
+  return return_triangulation;
 }

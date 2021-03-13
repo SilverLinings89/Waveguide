@@ -5,6 +5,7 @@
 #include <deal.II/base/timer.h>
 #include <deal.II/distributed/shared_tria.h>
 #include <deal.II/dofs/dof_handler.h>
+#include <deal.II/dofs/dof_tools.h>
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/block_sparsity_pattern.h>
@@ -47,6 +48,7 @@ bool compareConstraintPairs(ConstraintPair v1, ConstraintPair v2) {
 
 void NumericProblem::make_grid() {
   print_info("NumericProblem::make_grid", "start");
+  Triangulation<3> temp_tria;
   std::vector<unsigned int> repetitions;
   repetitions.push_back(GlobalParams.Cells_in_x);
   repetitions.push_back(GlobalParams.Cells_in_y);
@@ -58,8 +60,9 @@ void NumericProblem::make_grid() {
       Geometry.local_z_range.first);
   Position upper(Geometry.local_x_range.second, Geometry.local_y_range.second,
       Geometry.local_z_range.second);
-  dealii::GridGenerator::subdivided_hyper_rectangle(triangulation, repetitions,
+  dealii::GridGenerator::subdivided_hyper_rectangle(temp_tria, repetitions,
       lower, upper, true);
+  triangulation = reforge_triangulation(&temp_tria);
   dof_handler.distribute_dofs(fe);
   SortDofsDownstream();
   n_dofs = dof_handler.n_dofs();
@@ -126,21 +129,18 @@ auto NumericProblem::get_outer_constrained_faces() -> std::set<unsigned int> {
 }
 
 void NumericProblem::make_constraints() {
-  std::vector<DofCount> local_line_indices(fe.dofs_per_line);
-  std::vector<DofCount> local_face_indices(fe.dofs_per_face);
   local_dof_indices.set_size(n_dofs);
   local_dof_indices.add_range(0, n_dofs);
   local_constraints.reinit(local_dof_indices);
-
   if(GlobalParams.Index_in_z_direction == 0) {
-    std::vector<InterfaceDofData> srf_dofs = get_surface_dof_vector_for_boundary_id(4);
-    for(unsigned int i = 0; i < srf_dofs.size(); i++) {
-      local_constraints.add_line(srf_dofs[i].index);
-      local_constraints.set_inhomogeneity(srf_dofs[i].index, 0);
+    if(GlobalParams.prescribe_0_on_input_side) {
+      DoFTools::make_zero_boundary_constraints(dof_handler, 4, local_constraints);
+    } else {
+      if(!GlobalParams.use_tapered_input_signal) {
+        VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, *GlobalParams.source_field, 4, local_constraints);
+      }
     }
-    // VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, *GlobalParams.source_field, 4, local_constraints);
   }
-
   local_constraints_made = true;
 }
 
@@ -229,7 +229,6 @@ std::vector<InterfaceDofData> NumericProblem::get_surface_dof_vector_for_boundar
   std::set<DofNumber> line_set;
   std::vector<DofNumber> local_face_dofs(fe.dofs_per_face);
   std::set<DofNumber> face_set;
-  dealii::Vector<ComplexNumber> base_vector(dof_handler.n_dofs());
   triangulation.clear_user_flags();
   for (auto cell : dof_handler.active_cell_iterators()) {
     if (cell->at_boundary(b_id)) {
@@ -259,11 +258,6 @@ std::vector<InterfaceDofData> NumericProblem::get_surface_dof_vector_for_boundar
                 new_item.index = line_dofs[j];
                 new_item.base_point = cell->face(face)->line(i)->center();
                 new_item.order = j;
-                base_vector = 0;
-                base_vector[line_dofs[j]] = 1;
-                NumericVectorLocal field_value(3);
-                dealii::VectorTools::point_value(dof_handler, base_vector,new_item.base_point, field_value);
-                new_item.shape_val_at_base_point = deal_vector_to_position(field_value);
                 cell_dofs_and_orientations_and_points.push_back(new_item);
               }
               cell->face(face)->line(i)->set_user_flag();
@@ -275,11 +269,6 @@ std::vector<InterfaceDofData> NumericProblem::get_surface_dof_vector_for_boundar
             new_item.index = item;
             new_item.base_point = cell->face(face)->center();
             new_item.order = 0;
-            base_vector = 0;
-            base_vector[item] = 1;
-            NumericVectorLocal field_value(3);
-            dealii::VectorTools::point_value(dof_handler, base_vector,new_item.base_point, field_value);
-            new_item.shape_val_at_base_point = deal_vector_to_position(field_value);    
             cell_dofs_and_orientations_and_points.push_back(new_item);
             index++;
           }
@@ -357,18 +346,19 @@ struct CellwiseAssemblyDataNP {
       Tensor<1, 3, ComplexNumber> I_Val;
       I_Curl = fe_values[fe_field].curl(i, q_index);
       I_Val = fe_values[fe_field].value(i, q_index);
-      Tensor<1,3,ComplexNumber> Ex_Curl = exact_solution_ramped.curl(quadrature_points[q_index]);
-      Tensor<1,3,ComplexNumber> Ex_Val;
-      for(unsigned int comp = 0; comp < 3; comp++) {
-        Ex_Val[comp] = exact_solution_ramped.value(quadrature_points[q_index], comp);
+      if(GlobalParams.use_tapered_input_signal) {
+        Tensor<1,3,ComplexNumber> Ex_Curl = exact_solution_ramped.curl(quadrature_points[q_index]);
+        Tensor<1,3,ComplexNumber> Ex_Val;
+        for(unsigned int comp = 0; comp < 3; comp++) {
+          Ex_Val[comp] = exact_solution_ramped.value(quadrature_points[q_index], comp);
+        }
+        cell_rhs[i] +=  I_Curl * Conjugate_Vector(Ex_Curl)* JxW - (eps_kappa_2 * ( I_Val * Conjugate_Vector(Ex_Val)) * JxW);
       }
-      cell_rhs[i] +=  I_Curl * Conjugate_Vector(Ex_Curl)* JxW - (eps_kappa_2 * ( I_Val * Conjugate_Vector(Ex_Val)) * JxW);
       for (unsigned int j = 0; j < dofs_per_cell; j++) {
         Tensor<1, 3, ComplexNumber> J_Curl;
         Tensor<1, 3, ComplexNumber> J_Val;
         J_Curl = fe_values[fe_field].curl(j, q_index);
         J_Val = fe_values[fe_field].value(j, q_index);
-
         cell_matrix[i][j] += I_Curl * Conjugate_Vector(J_Curl)* JxW - (eps_kappa_2 * ( I_Val * Conjugate_Vector(J_Val)) * JxW);
       }
     }
@@ -376,7 +366,6 @@ struct CellwiseAssemblyDataNP {
 
   Tensor<1, 3, ComplexNumber> Conjugate_Vector(Tensor<1, 3, ComplexNumber> input) {
     Tensor<1, 3, ComplexNumber> ret;
-
     for (int i = 0; i < 3; i++) {
       ret[i].real(input[i].real());
       ret[i].imag(-input[i].imag());
@@ -431,7 +420,7 @@ void NumericProblem::assemble_system(unsigned int shift,
     IndexSet input_dofs_local_set(fe.dofs_per_cell);
     std::vector<Position> input_dof_centers(fe.dofs_per_cell);
     std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
-    cell_data.cell_matrix = 0;
+    cell_data.cell_matrix = std::complex<double>(0.);
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
       cell_data.prepare_for_current_q_index(q_index);
       constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs,
