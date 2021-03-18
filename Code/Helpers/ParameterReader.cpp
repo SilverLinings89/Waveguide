@@ -53,12 +53,12 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("PML n layers", "8", Patterns::Integer(), "Number of cell layers used in the PML medium.");
         case_prm.declare_entry("Input Signal Method", "Dirichlet", Patterns::Selection("Dirichlet|Taper"), "Taper uses a tapered exact solution to build a right hand side. Dirichlet applies dirichlet boundary values.");
         case_prm.declare_entry("Signal tapering type", "C1", Patterns::Selection("C0|C1"), "Tapering type for signal input");
-        case_prm.declare_entry("Prescribe input zero", "false", Patterns::Bool(), "If this is set to zero, there will be a dirichlet zero condition enforced on the global input interface (Process index z: 0, boundary id: 4).");
+        case_prm.declare_entry("Prescribe input zero", "false", Patterns::Bool(), "If this is set to true, there will be a dirichlet zero condition enforced on the global input interface (Process index z: 0, boundary id: 4).");
     }
     case_prm.leave_subsection();
 }
 
-Parameters ParameterReader::read_parameters(const std::string run_file,const std::string case_file) {
+Parameters ParameterReader::read_parameters(const std::string run_file, const std::string case_file) {
     std::ifstream run_file_stream(run_file, std::ifstream::in);
     std::ifstream case_file_stream(case_file, std::ifstream::in);
     struct Parameters ret;

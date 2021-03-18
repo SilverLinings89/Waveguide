@@ -68,7 +68,7 @@ double ExactSolutionRamped::ramping_delta(const Position &in_p) const {
     return 1.0;
   }
   const double length = max_z - min_z;
-  return in_p[2] / length;
+  return (in_p[2] - min_z) / length;
 }
 
 double ExactSolutionRamped::compute_ramp_for_c0(const Position &in_p) const {

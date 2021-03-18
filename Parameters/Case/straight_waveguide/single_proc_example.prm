@@ -9,8 +9,9 @@ subsection Case parameters
     set mu in = 1.0
     set mu out = 1.0
     set signal amplitude = 1.0
-    set Boundary Method = PML
+    set Boundary Method = HSIE
     set PML n layers = 16
-    set Input Signal Method = Taper
+    set Input Signal Method = Dirichlet
     set PML skaling order = 1
+    set Prescribe input zero = false
 end

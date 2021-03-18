@@ -8,15 +8,33 @@
 #include <iostream>
 #include <fstream>
 #include <complex>
+#include <deal.II/base/vectorization.h>
 #include <deal.II/lac/petsc_sparse_matrix.h>
 #include <deal.II/lac/solver_idr.h>
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/vector_operation.h>
 #include <deal.II/base/timer.h>
 #include <deal.II/numerics/vector_tools_common.h>
+#include <deal.II/numerics/vector_tools.h>
+#include <deal.II/numerics/vector_tools_project.h>
+#include <deal.II/numerics/vector_tools_project.templates.h>
 #include <deal.II/numerics/vector_tools_integrate_difference.h>
+#include <deal.II/numerics/vector_tools_interpolate.h>
 #include <deal.II/numerics/vector_tools_point_value.h>
+#include <deal.II/matrix_free/matrix_free.h>
+#include <deal.II/matrix_free/matrix_free.templates.h>
 #include "../Helpers/PointSourceField.h"
+
+
+template void dealii::VectorTools::project<3,dealii::Vector<ComplexNumber>,3>(const dealii::Mapping<3, 3> &,
+        const dealii::DoFHandler<3, 3> &,
+        const dealii::AffineConstraints<ComplexNumber> &,
+        const dealii::Quadrature<3> &,
+        const dealii::Function<3, ComplexNumber> &,
+        dealii::Vector<ComplexNumber> &,
+        const bool,
+        const dealii::Quadrature<2> &,
+        const bool);
 
 LocalProblem::LocalProblem() :
     HierarchicalProblem(0), base_problem(), sc(), solver(sc, MPI_COMM_SELF) {
@@ -343,6 +361,10 @@ void LocalProblem::output_results(std::string filename) {
   std::ofstream outputvtu(filename + std::to_string(GlobalParams.MPI_Rank) + ".vtu");
   dealii::Vector<double> cellwise_error(base_problem.triangulation.n_active_cells());
   dealii::Vector<double> cellwise_norm(base_problem.triangulation.n_active_cells());
+  dealii::Vector<ComplexNumber> interpolated_exact_solution(output_solution.size());
+  base_problem.local_constraints.close();
+  VectorTools::project(base_problem.dof_handler, base_problem.local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *GlobalParams.source_field, interpolated_exact_solution);
+  data_out.add_data_vector(interpolated_exact_solution, "Exact_Solution");
   dealii::VectorTools::integrate_difference(
     MappingQGeneric<3>(1),
     base_problem.dof_handler,

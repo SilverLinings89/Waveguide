@@ -14,7 +14,8 @@ void GeometryManager::initialize() {
 }
 
 double GeometryManager::eps_kappa_2(Position in_p) {
-  return (math_coordinate_in_waveguide(in_p)? GlobalParams.Epsilon_R_in_waveguide : GlobalParams.Epsilon_R_outside_waveguide) * 4 * GlobalParams.Pi * GlobalParams.Pi;
+  const double factor = 1.0;
+  return (math_coordinate_in_waveguide(in_p)? GlobalParams.Epsilon_R_in_waveguide : GlobalParams.Epsilon_R_outside_waveguide) * 4 * GlobalParams.Pi * GlobalParams.Pi * factor;
 }
 
 void GeometryManager::set_x_range(std::pair<double, double> in_range) {
@@ -76,9 +77,7 @@ std::pair<double, double> GeometryManager::compute_z_range() {
     return std::pair<double, double>(0,
         GlobalParams.Geometry_Size_Z);
   } else {
-    double length =
-        GlobalParams.Geometry_Size_Z
-        / ((double) GlobalParams.Blocks_in_z_direction);
+    double length = GlobalParams.Geometry_Size_Z / ((double) GlobalParams.Blocks_in_z_direction);
     int block_processor_count =
         GlobalParams.Blocks_in_x_direction
         * GlobalParams.Blocks_in_y_direction;

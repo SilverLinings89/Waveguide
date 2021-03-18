@@ -315,7 +315,7 @@ struct CellwiseAssemblyDataNP {
   cell_rhs(dofs_per_cell),
   local_dof_indices(dofs_per_cell),
   fe_field(0),
-  exact_solution_ramped(0,1,true, false)
+  exact_solution_ramped(0,0.5,true, false)
   {    
     cell_rhs = 0;
     for (unsigned int i = 0; i < 3; i++) {
