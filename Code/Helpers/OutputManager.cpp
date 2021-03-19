@@ -33,7 +33,7 @@ void OutputManager::initialize() {
     if (seperate_solutions) {
         out << pPath << "/";
     }
-    out << "Solutions/run" << i;
+    out << "../Solutions/run" << i;
     output_folder_path = out.str();
     std::cout << "Solution path: " << output_folder_path << std::endl;
     mkdir(output_folder_path.c_str(), ACCESSPERMS);

@@ -13,6 +13,7 @@ Parameters GlobalParams;
 GeometryManager Geometry;
 MPICommunicator GlobalMPI;
 ModeManager GlobalModeManager;
+OutputManager GlobalOutputManager;
 std::string solutionpath = "";
 std::ofstream log_stream;
 std::string constraints_filename = "constraints.log";

@@ -16,6 +16,7 @@
 #include <deal.II/dofs/dof_handler.h>
 #include "GeometryManager.h"
 #include "ParameterReader.h"
+#include "OutputManager.h"
 #include "Parameters.h"
 #include "ShapeDescription.h"
 
@@ -49,6 +50,7 @@ using namespace dealii;
 
 extern Parameters GlobalParams;
 extern GeometryManager Geometry;
+extern OutputManager GlobalOutputManager;
 unsigned int message_count = 0;
 const double FLOATING_PRECISION = 0.00001;
 void set_the_st(SpaceTransformation *in_st) { the_st = in_st; }
@@ -504,7 +506,13 @@ DofCouplingInformation get_coupling_for_single_pair(const InterfaceDofData &dof_
 
 std::vector<DofCouplingInformation> get_coupling_information_for_group(const std::vector<InterfaceDofData> dofs_interface_1, const std::vector<InterfaceDofData> dofs_interface_2) {
   std::vector<DofCouplingInformation> ret;
-  // TODO: This is only relevant for higher order nedelec elements.
+  for(unsigned int i = 0; i < dofs_interface_1.size(); i++) {
+    DofCouplingInformation coupling; 
+    coupling.first_dof = dofs_interface_1[i].index;
+    coupling.second_dof = dofs_interface_2[i].index;
+    coupling.coupling_value = 1.0;
+  }
+  // This should work. I should check this at some later point.
   return ret;
 }
 
