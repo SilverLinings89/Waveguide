@@ -11,6 +11,7 @@ ADD_LIBRARY(Code
         Runners/SingleCoreRun.cpp
         Runners/SweepingRun.cpp
         Helpers/GeometryManager.cpp
+        Helpers/OutputManager.cpp
         Helpers/ExactSolution.cpp
         Helpers/ExactSolutionRamped.cpp
         Helpers/ModeManager.cpp

@@ -17,4 +17,6 @@ void initialize_global_variables(const std::string run_file, const std::string c
 
   // Build Mode Manager
   GlobalModeManager.load();
+
+  GlobalOutputManager.initialize();
 }

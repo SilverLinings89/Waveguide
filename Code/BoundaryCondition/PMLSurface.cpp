@@ -593,18 +593,13 @@ void PMLSurface::fix_apply_negative_Jacobian_transformation(dealii::Triangulatio
   GridTools::shift(shift, *in_tria);
 }
 
-void PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_data, std::string filename) {
+void PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_data, std::string in_filename) {
   print_info("PMSurface::output_results()", "Start");
   dealii::DataOut<3> data_out;
   data_out.attach_dof_handler(dof_h_nedelec);
   data_out.add_data_vector(in_data, "Solution");
-  std::ofstream outputvtu(
-    filename 
-    + std::to_string(GlobalParams.MPI_Rank) 
-    + "-bid-" 
-    + std::to_string(b_id) 
-    + ".vtu");
-  unsigned int index = 0;
+  const std::string filename = GlobalOutputManager.get_numbered_filename(in_filename, GlobalParams.MPI_Rank, "vtu");
+  std::ofstream outputvtu(filename);
   data_out.build_patches();
   data_out.write_vtu(outputvtu);
   print_info("PMSurface::output_results()", "End");

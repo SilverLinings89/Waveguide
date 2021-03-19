@@ -3,9 +3,7 @@
 
 using namespace dealii;
 
-ParameterReader::ParameterReader() {
-
-}
+ParameterReader::ParameterReader() { }
 
 void ParameterReader::declare_parameters() {
     run_prm.enter_subsection("Run parameters");

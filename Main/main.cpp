@@ -14,6 +14,7 @@
 #include "../Code/Core/Sector.h"
 #include "../Code/Helpers/PointVal.h"
 #include "../Code/Helpers/ExactSolution.h"
+#include "../Code/Helpers/OutputManager.h"
 #include "../Code/Core/SolutionWeight.h"
 #include "../Code/OutputGenerators/Console/GradientTable.h"
 #include "../Code/SpaceTransformations/SpaceTransformation.h"
@@ -42,6 +43,7 @@ Parameters GlobalParams;
 GeometryManager Geometry;
 MPICommunicator GlobalMPI;
 ModeManager GlobalModeManager;
+OutputManager GlobalOutputManager;
 
 int main(int argc, char *argv[]) {
   std::string run_file = "../Parameters/Run/base.prm";
@@ -72,7 +74,6 @@ int main(int argc, char *argv[]) {
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
   print_info("Main", "Prepare Streams", true);
-  PrepareStreams();
   initialize_global_variables(run_file, case_file);
   Simulation * simulation;
   if (GlobalParams.Enable_Parameter_Run) {

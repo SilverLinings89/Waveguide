@@ -80,8 +80,6 @@ Position Transform_5_to_0(const Position &p);
 
 inline bool file_exists(const std::string &name);
 
-void PrepareStreams();
-
 double Distance2D(Position, Position = Position());
 
 std::vector<types::global_dof_index> Add_Zero_Restraint(

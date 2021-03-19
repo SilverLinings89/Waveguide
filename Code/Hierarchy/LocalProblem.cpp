@@ -362,9 +362,14 @@ void LocalProblem::output_results(std::string filename) {
   dealii::Vector<double> cellwise_error(base_problem.triangulation.n_active_cells());
   dealii::Vector<double> cellwise_norm(base_problem.triangulation.n_active_cells());
   dealii::Vector<ComplexNumber> interpolated_exact_solution(output_solution.size());
+  dealii::Vector<ComplexNumber> error(output_solution.size());
   base_problem.local_constraints.close();
   VectorTools::project(base_problem.dof_handler, base_problem.local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *GlobalParams.source_field, interpolated_exact_solution);
   data_out.add_data_vector(interpolated_exact_solution, "Exact_Solution");
+  for(unsigned int i = 0; i < error.size(); i++) {
+    error[i] = interpolated_exact_solution[i] - output_solution[i];
+  }
+  data_out.add_data_vector(error, "error");
   dealii::VectorTools::integrate_difference(
     MappingQGeneric<3>(1),
     base_problem.dof_handler,
@@ -417,7 +422,8 @@ auto LocalProblem::write_phase_plot() -> void {
   dealii::Vector<ComplexNumber> output_solution = get_local_vector_from_global();
   const unsigned int n_points = 50;
   std::ofstream outfile;
-  outfile.open("Phase_Plot" + std::to_string(GlobalParams.MPI_Rank) + ".dat");
+  std::string filename = GlobalOutputManager.get_full_filename("Phase_Plot" + std::to_string(GlobalParams.MPI_Rank) + ".dat");
+  outfile.open(filename);
   for(unsigned int i = 0; i < n_points; i++) {
     dealii::Vector<ComplexNumber> numeric_solution(3);
     dealii::Vector<ComplexNumber> exact_solution(3);

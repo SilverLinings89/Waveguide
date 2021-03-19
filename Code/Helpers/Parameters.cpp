@@ -43,4 +43,5 @@ auto Parameters::complete_data() -> void {
         source_field = new ExactSolution(true, false);
         if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using mode for rectangular waveguide.", false, LoggingLevel::PRODUCTION_ONE);
     }
+    Omega = 2.0 * Pi / Lambda;
 }

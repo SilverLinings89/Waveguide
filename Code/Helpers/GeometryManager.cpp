@@ -14,8 +14,7 @@ void GeometryManager::initialize() {
 }
 
 double GeometryManager::eps_kappa_2(Position in_p) {
-  const double factor = 1.0;
-  return (math_coordinate_in_waveguide(in_p)? GlobalParams.Epsilon_R_in_waveguide : GlobalParams.Epsilon_R_outside_waveguide) * 4 * GlobalParams.Pi * GlobalParams.Pi * factor;
+  return (math_coordinate_in_waveguide(in_p)? GlobalParams.Epsilon_R_in_waveguide : GlobalParams.Epsilon_R_outside_waveguide) * GlobalParams.Omega * GlobalParams.Omega;
 }
 
 void GeometryManager::set_x_range(std::pair<double, double> in_range) {
