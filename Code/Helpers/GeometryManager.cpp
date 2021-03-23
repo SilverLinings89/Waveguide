@@ -13,6 +13,29 @@ void GeometryManager::initialize() {
   set_z_range(compute_z_range());
 }
 
+dealii::Tensor<2,3> GeometryManager::get_epsilon_tensor(const Position & in_p) {
+  dealii::Tensor<2,3> ret;
+  const double local_epsilon = get_epsilon_for_point(in_p);
+  for(unsigned int i = 0; i < 3; i++) {
+    for(unsigned int j = 0; j < 3; j++) {
+      if(i == j) {
+        ret[i][j] = local_epsilon;
+      } else {
+        ret[i][j] = 0;
+      }
+    }
+  }
+  return ret;
+}
+
+double GeometryManager::get_epsilon_for_point(const Position & in_p) {
+  if(math_coordinate_in_waveguide(in_p)) {
+    return GlobalParams.Epsilon_R_in_waveguide;
+  } else {
+    return GlobalParams.Epsilon_R_outside_waveguide;
+  }
+}
+
 double GeometryManager::eps_kappa_2(Position in_p) {
   return (math_coordinate_in_waveguide(in_p)? GlobalParams.Epsilon_R_in_waveguide : GlobalParams.Epsilon_R_outside_waveguide) * GlobalParams.Omega * GlobalParams.Omega;
 }
@@ -86,8 +109,7 @@ std::pair<double, double> GeometryManager::compute_z_range() {
   }
 }
 
-std::pair<bool, unsigned int> GeometryManager::get_neighbor_for_interface(
-    Direction in_direction) {
+std::pair<bool, unsigned int> GeometryManager::get_neighbor_for_interface(Direction in_direction) {
   std::pair<bool, unsigned int> ret(true, 0);
   switch (in_direction) {
     case Direction::MinusX:
@@ -143,8 +165,6 @@ std::pair<bool, unsigned int> GeometryManager::get_neighbor_for_interface(
   return ret;
 }
 
-bool GeometryManager::math_coordinate_in_waveguide(
-    Position in_position) const {
-  return std::abs(in_position[0]) < (GlobalParams.Width_of_waveguide  / 2.0) &&
-         std::abs(in_position[1]) < (GlobalParams.Height_of_waveguide / 2.0);
+bool GeometryManager::math_coordinate_in_waveguide(Position in_position) const {
+  return (std::abs(in_position[0]) < (GlobalParams.Width_of_waveguide  / 2.0)) && (std::abs(in_position[1]) < (GlobalParams.Height_of_waveguide / 2.0));
 }

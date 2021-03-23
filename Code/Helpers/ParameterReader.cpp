@@ -108,6 +108,7 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.PML_skaling_order = case_prm.get_integer("PML skaling order");
         ret.PML_thickness = case_prm.get_double("PML thickness");
         ret.use_tapered_input_signal = case_prm.get("Input Signal Method") == "Taper";
+        ret.PML_Sigma_Max = case_prm.get_double("PML sigma max");
         if(case_prm.get("Signal tapering type") == "C0") {
             ret.Signal_tapering_type = SignalTaperingType::C0;
         }

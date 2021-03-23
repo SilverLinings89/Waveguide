@@ -295,7 +295,8 @@ double PMLSurface::fraction_of_pml_direction(Position in_p) {
 
 dealii::Tensor<2,3,ComplexNumber> PMLSurface::get_pml_tensor_epsilon(Position in_p) {
     dealii::Tensor<2,3,ComplexNumber> ret = get_pml_tensor(in_p);
-    ret *= (Geometry.math_coordinate_in_waveguide(in_p))? GlobalParams.Epsilon_R_in_waveguide : GlobalParams.Epsilon_R_outside_waveguide;
+    ret *= Geometry.get_epsilon_for_point(in_p);
+    ret *= GlobalParams.Omega * GlobalParams.Omega;
     return ret;
 }
 
@@ -305,22 +306,22 @@ dealii::Tensor<2,3,ComplexNumber> PMLSurface::get_pml_tensor_mu(Position in_p) {
 }
 
 dealii::Tensor<2,3,ComplexNumber> PMLSurface::get_pml_tensor(Position in_p) {
-    dealii::Tensor<2,3,ComplexNumber> ret;
-    double fraction = fraction_of_pml_direction(in_p);
-    ComplexNumber part_a = {1 , std::pow(fraction, GlobalParams.PML_skaling_order) * GlobalParams.PML_Sigma_Max};
-    for(unsigned int i = 0; i < 3; i++) {
-        for(unsigned int j = 0; j < 3; j++) {
-            ret[i][j] = 0;
-        }
-    }
-    for(unsigned int i = 0; i < 3; i++) {
-        if(i == b_id/2) {
-            ret[i][i] = 1.0 / part_a;
-        } else {
-            ret[i][i] = part_a;
-        }
-    }
-    return ret;
+  dealii::Tensor<2,3,ComplexNumber> ret;
+  double fraction = fraction_of_pml_direction(in_p);
+  ComplexNumber part_a = {1 , std::pow(fraction, GlobalParams.PML_skaling_order) * GlobalParams.PML_Sigma_Max};
+  for(unsigned int i = 0; i < 3; i++) {
+      for(unsigned int j = 0; j < 3; j++) {
+          ret[i][j] = 0;
+      }
+  }
+  for(unsigned int i = 0; i < 3; i++) {
+      if(i == b_id/2) {
+          ret[i][i] = 1.0 / part_a;
+      } else {
+          ret[i][i] = part_a;
+      }
+  }
+  return ret;
 }
 
 void PMLSurface::make_inner_constraints() {

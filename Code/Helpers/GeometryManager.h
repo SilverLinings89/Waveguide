@@ -46,4 +46,6 @@ class GeometryManager {
   unsigned int shape_sector_count;
 
   bool math_coordinate_in_waveguide(Position) const;
+  dealii::Tensor<2,3> get_epsilon_tensor(const Position &);
+  double get_epsilon_for_point(const Position &);
 };

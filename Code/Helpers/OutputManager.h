@@ -19,4 +19,5 @@ class OutputManager {
     std::string get_full_filename(std::string filename);
     std::string get_numbered_filename(std::string filename, unsigned int number, std::string extension);
     void write_log_ling(std::string in_line);
+    void write_run_description();
 };
