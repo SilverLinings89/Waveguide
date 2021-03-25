@@ -149,7 +149,7 @@ Tensor<1, 3, ComplexNumber> ExactSolution::curl(
     deltap[1] = deltap[1] + h;
     this->vector_value(deltap, dyF);
     deltap = in_p;
-    deltap[1] = deltap[1] + h;
+    deltap[2] = deltap[2] + h;
     this->vector_value(deltap, dzF);
     for (int i = 0; i < 3; i++) {
       dxF[i] = (dxF[i] - val[i]) / h;

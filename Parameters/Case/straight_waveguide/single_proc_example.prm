@@ -13,5 +13,5 @@ subsection Case parameters
     set PML n layers = 20
     set Input Signal Method = Taper
     set PML skaling order = 1
-    set Prescribe input zero = false
+    set Prescribe input zero = true
 end

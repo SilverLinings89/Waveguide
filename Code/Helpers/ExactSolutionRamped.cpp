@@ -22,14 +22,36 @@ void ExactSolutionRamped::vector_value(const Position &in_p, dealii::Vector<Comp
 }
 
 dealii::Tensor<1, 3, ComplexNumber> ExactSolutionRamped::curl(const Position &in_p) const {
-  const double factor = get_ramping_factor_for_position(in_p);
-  dealii::Tensor<1,3, ComplexNumber> f_curl_u = inner_field.curl(in_p) * factor;
-  const double derivative_of_factor = get_ramping_factor_derivative_for_position(in_p);
-  dealii::Tensor<1,3, ComplexNumber> u_curl_f;
-  u_curl_f[0] =  -1.0 * inner_field.val(in_p)[0] * derivative_of_factor;
-  u_curl_f[1] =  inner_field.val(in_p)[1] * derivative_of_factor;
-  u_curl_f[2] =  0;
-  return f_curl_u + u_curl_f;
+  const double h = 0.0001;
+  dealii::Tensor<1, 3, ComplexNumber> ret;
+  dealii::Vector<ComplexNumber> dxF;
+  dealii::Vector<ComplexNumber> dyF;
+  dealii::Vector<ComplexNumber> dzF;
+  dealii::Vector<ComplexNumber> val;
+  dxF.reinit(6, false);
+  dyF.reinit(6, false);
+  dzF.reinit(6, false);
+  val.reinit(6, false);
+  this->vector_value(in_p, val);
+  Position deltap = in_p;
+  deltap[0] = deltap[0] + h;
+  this->vector_value(deltap, dxF);
+  deltap = in_p;
+  deltap[1] = deltap[1] + h;
+  this->vector_value(deltap, dyF);
+  deltap = in_p;
+  deltap[2] = deltap[2] + h;
+  this->vector_value(deltap, dzF);
+  for (int i = 0; i < 3; i++) {
+    dxF[i] = (dxF[i] - val[i]) / h;
+    dyF[i] = (dyF[i] - val[i]) / h;
+    dzF[i] = (dzF[i] - val[i]) / h;
+  }
+  ret[0] = dyF[2] - dzF[1];
+  ret[1] = dzF[0] - dxF[2];
+  ret[2] = dxF[1] - dyF[0];
+
+  return ret;
 }
 
 dealii::Tensor<1, 3, ComplexNumber> ExactSolutionRamped::val(const Position &in_p) const {
