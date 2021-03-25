@@ -908,14 +908,14 @@ NumericVectorLocal NonLocalProblem::extract_local_lower_dofs() {
 
 void NonLocalProblem::compute_solver_factorization() {
   child->compute_solver_factorization();
-  child->output_results("factorization_result");
+  child->output_results();
 }
 
-void NonLocalProblem::output_results(std::string filename) {
+void NonLocalProblem::output_results() {
   for(unsigned int dof = 0; dof < get_local_problem()->base_problem.n_dofs; dof++) {
     get_local_problem()->solution[dof] = solution[first_own_index + dof];
   }
-  get_local_problem()->output_results(filename);
+  get_local_problem()->output_results();
 }
 
 void NonLocalProblem::fill_dsp_over_mpi(BoundaryId surface, dealii::DynamicSparsityPattern * in_dsp) {

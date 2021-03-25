@@ -45,3 +45,16 @@ auto Parameters::complete_data() -> void {
     }
     Omega = 2.0 * Pi / Lambda;
 }
+
+auto Parameters::check_validity() -> bool {
+    bool valid = true;
+
+    // prescribing zero on the input interface should only be used with tapered input. Otherewise there are two Dirichlet constraints on the same interface
+    if(prescribe_0_on_input_side && !use_tapered_input_signal) valid = false;
+
+    // check if the waveguide edges are resolved
+    // TODO.
+
+
+    return valid;
+}

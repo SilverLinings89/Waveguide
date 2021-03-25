@@ -452,8 +452,8 @@ void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, Numeri
           dealii::Tensor<2,3,ComplexNumber> epsilon = get_pml_tensor_epsilon(pos);
           dealii::Tensor<2,3,ComplexNumber> mu = get_pml_tensor_mu(pos);
           cell_data.prepare_for_current_q_index(q_index, epsilon, mu);
-          constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, false);
       }
+      constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, false);
   }
   matrix->compress(dealii::VectorOperation::add);
     reset_neighbor_couplings(surfaces_hsie);
@@ -481,12 +481,12 @@ void PMLSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, N
     std::vector<Tensor<1, 3, double>> input_dof_dirs(fe_nedelec.dofs_per_cell);
     cell_data.cell_matrix = 0;
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
-        Position pos = cell_data.get_position_for_q_index(q_index);
-        dealii::Tensor<2,3,ComplexNumber> epsilon = get_pml_tensor_epsilon(pos);
-        dealii::Tensor<2,3,ComplexNumber> mu = get_pml_tensor_mu(pos);
-        cell_data.prepare_for_current_q_index(q_index, epsilon, mu);
-        constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, false);
+      Position pos = cell_data.get_position_for_q_index(q_index);
+      dealii::Tensor<2,3,ComplexNumber> epsilon = get_pml_tensor_epsilon(pos);
+      dealii::Tensor<2,3,ComplexNumber> mu = get_pml_tensor_mu(pos);
+      cell_data.prepare_for_current_q_index(q_index, epsilon, mu);
     }
+    constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, false);
   }
   matrix->compress(dealii::VectorOperation::add);
   reset_neighbor_couplings(surfaces_hsie);
@@ -599,7 +599,7 @@ void PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_data, s
   dealii::DataOut<3> data_out;
   data_out.attach_dof_handler(dof_h_nedelec);
   data_out.add_data_vector(in_data, "Solution");
-  const std::string filename = GlobalOutputManager.get_numbered_filename(in_filename, GlobalParams.MPI_Rank, "vtu");
+  const std::string filename = GlobalOutputManager.get_numbered_filename(in_filename + "-" + std::to_string(b_id) + "-", GlobalParams.MPI_Rank, "vtu");
   std::ofstream outputvtu(filename);
   data_out.build_patches();
   data_out.write_vtu(outputvtu);

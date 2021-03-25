@@ -66,9 +66,8 @@ void ParameterSweep::run() {
         
         mainProblem->solve();
 
-        mainProblem->output_results("kappa" +
-                                    std::to_string(GlobalParams.kappa_0_angle) +
-                                    "order" + std::to_string(order));
+        mainProblem->output_results();
+        
         const double error_run =  mainProblem->compute_L2_error();
         print_info("ParameterSweep::run", "Found error " + std::to_string(error_run) + " for order " + std::to_string(order) + " and kappa" +
                                     std::to_string(GlobalParams.kappa_0_angle));

@@ -385,6 +385,7 @@ void NumericProblem::assemble_system(unsigned int shift,
     for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
       cell_data.local_dof_indices[i] += shift;
     }
+    cell_data.cell_matrix = 0;
     cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
     cell_data.fe_values.reinit(cell_data.cell);
     cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
@@ -392,15 +393,13 @@ void NumericProblem::assemble_system(unsigned int shift,
     IndexSet input_dofs_local_set(fe.dofs_per_cell);
     std::vector<Position> input_dof_centers(fe.dofs_per_cell);
     std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
-    cell_data.cell_matrix = 0;
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
       cell_data.prepare_for_current_q_index(q_index);
-      constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs,
-        cell_data.local_dof_indices,*matrix, *rhs, false);
     }
+    constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs,  cell_data.local_dof_indices,*matrix, *rhs, false);
   }
   matrix->compress(dealii::VectorOperation::add);
-  write_matrix_and_rhs_metrics(matrix, rhs);
+  // write_matrix_and_rhs_metrics(matrix, rhs);
 }
 
 void NumericProblem::assemble_system(unsigned int shift,
@@ -413,6 +412,7 @@ void NumericProblem::assemble_system(unsigned int shift,
     for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
       cell_data.local_dof_indices[i] += shift;
     }
+    cell_data.cell_matrix = 0;
     cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
     cell_data.fe_values.reinit(cell_data.cell);
     cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
@@ -420,12 +420,10 @@ void NumericProblem::assemble_system(unsigned int shift,
     IndexSet input_dofs_local_set(fe.dofs_per_cell);
     std::vector<Position> input_dof_centers(fe.dofs_per_cell);
     std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
-    cell_data.cell_matrix = std::complex<double>(0.);
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
       cell_data.prepare_for_current_q_index(q_index);
-      constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs,
-          cell_data.local_dof_indices,*matrix, *rhs, false);
     }
+    constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, false);
   }
   matrix->compress(dealii::VectorOperation::add);
   // write_matrix_and_rhs_metrics(matrix, rhs);

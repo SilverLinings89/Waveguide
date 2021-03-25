@@ -42,7 +42,7 @@ LocalProblem::LocalProblem() :
   print_info("Local Problem", "Done building base problem. Preparing matrix.");
   matrix = new dealii::PETScWrappers::SparseMatrix();
   for(unsigned int i = 0; i < 6; i++) is_hsie_surface[i] = true;
-  if(GlobalParams.prescribe_0_on_input_side && GlobalParams.Index_in_z_direction == 0) {
+  if((GlobalParams.prescribe_0_on_input_side || (!GlobalParams.use_tapered_input_signal)) && GlobalParams.Index_in_z_direction == 0) {
     is_hsie_surface[4] = false;
   }
 }
@@ -345,7 +345,7 @@ dealii::Vector<ComplexNumber> LocalProblem::get_local_vector_from_global() {
   return ret;
 }
 
-void LocalProblem::output_results(std::string filename) {
+void LocalProblem::output_results() {
   print_info("LocalProblem::output_results()", "Start");
   dealii::Vector<double> epsilon(base_problem.triangulation.n_active_cells()); 
   unsigned int cnt = 0;
@@ -358,7 +358,8 @@ void LocalProblem::output_results(std::string filename) {
   data_out.attach_dof_handler(base_problem.dof_handler);
   data_out.add_data_vector(epsilon,"Epsilon", dealii::DataOut_DoFData<DoFHandler<3, 3>, 3, 3>::type_cell_data);
   data_out.add_data_vector(output_solution, "Solution");
-  std::ofstream outputvtu(filename + std::to_string(GlobalParams.MPI_Rank) + ".vtu");
+  std::string filename = GlobalOutputManager.get_numbered_filename("solution", GlobalParams.MPI_Rank, "vtu");
+  std::ofstream outputvtu(filename);
   dealii::Vector<double> cellwise_error(base_problem.triangulation.n_active_cells());
   dealii::Vector<double> cellwise_norm(base_problem.triangulation.n_active_cells());
   dealii::Vector<ComplexNumber> interpolated_exact_solution(output_solution.size());
@@ -410,7 +411,7 @@ void LocalProblem::output_results(std::string filename) {
         for(unsigned int index = 0; index < surfaces[i]->dof_counter; index++) {
           ds[index] = solution(index + surface_first_dofs[i]);
         }
-        surfaces[i]->output_results(ds, filename);
+        surfaces[i]->output_results(ds, "PML_domain");
       }
     }
   }

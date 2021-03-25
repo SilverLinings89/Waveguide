@@ -44,7 +44,7 @@ void SingleCoreRun::run() {
   
   mainProblem->solve();
   
-  mainProblem->output_results("solution_");
+  mainProblem->output_results();
   
   print_info("SingleCoreRun::run", "End", false, LoggingLevel::PRODUCTION_ONE);
 }

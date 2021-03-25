@@ -49,7 +49,7 @@ public:
 
   dealii::Vector<ComplexNumber> get_local_vector_from_global() override;
 
-  void output_results(std::string) override;
+  void output_results() override;
 
   auto get_center() -> Position const override;
 

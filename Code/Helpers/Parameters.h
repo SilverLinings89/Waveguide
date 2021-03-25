@@ -109,8 +109,6 @@ struct Parameters {
     // 1, 3 means hierarchical sweeping with depth 2.
     unsigned int HSIE_SWEEPING_LEVEL = 1;  
 
-    auto complete_data() -> void;
-
     LoggingLevel Logging_Level = LoggingLevel::DEBUG_ALL;
 
     dealii::Function<3, ComplexNumber> * source_field;
@@ -138,4 +136,7 @@ struct Parameters {
     SignalTaperingType Signal_tapering_type = SignalTaperingType::C1;
 
     bool prescribe_0_on_input_side = false;
+    
+    auto complete_data() -> void;
+    auto check_validity() -> bool;
 };

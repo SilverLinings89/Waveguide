@@ -54,6 +54,7 @@ void OutputManager::write_run_description() {
     out << "n_procs\t" << GlobalParams.NumberProcesses << std::endl;
     out << "trunc_method\t" << ((GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE)? "HSIE" : "PML") << std::endl;
     out << "in_signal\t" << (GlobalParams.use_tapered_input_signal ? "Taper" : "Dirichlet") << std::endl;
+    out << "input_dirichlet_zero" << (GlobalParams.prescribe_0_on_input_side ? "true" : "false") << std::endl;
     out.close();
 }
 

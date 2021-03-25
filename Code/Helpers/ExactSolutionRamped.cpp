@@ -25,7 +25,10 @@ dealii::Tensor<1, 3, ComplexNumber> ExactSolutionRamped::curl(const Position &in
   const double factor = get_ramping_factor_for_position(in_p);
   dealii::Tensor<1,3, ComplexNumber> f_curl_u = inner_field.curl(in_p) * factor;
   const double derivative_of_factor = get_ramping_factor_derivative_for_position(in_p);
-  dealii::Tensor<1,3, ComplexNumber> u_curl_f = inner_field.val(in_p) * derivative_of_factor;
+  dealii::Tensor<1,3, ComplexNumber> u_curl_f;
+  u_curl_f[0] =  -1.0 * inner_field.val(in_p)[0] * derivative_of_factor;
+  u_curl_f[1] =  inner_field.val(in_p)[1] * derivative_of_factor;
+  u_curl_f[2] =  0;
   return f_curl_u + u_curl_f;
 }
 

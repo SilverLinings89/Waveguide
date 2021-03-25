@@ -396,9 +396,9 @@ void RectangularMode::assemble_system() {
     cell_data.cell_stiffness_matrix = 0;
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
       cell_data.prepare_for_current_q_index(q_index);
-      constraints.distribute_local_to_global(cell_data.cell_mass_matrix, cell_data.local_dof_indices, mass_matrix);
-      constraints.distribute_local_to_global(cell_data.cell_stiffness_matrix, cell_data.local_dof_indices, stiffness_matrix);
     }
+    constraints.distribute_local_to_global(cell_data.cell_mass_matrix, cell_data.local_dof_indices, mass_matrix);
+    constraints.distribute_local_to_global(cell_data.cell_stiffness_matrix, cell_data.local_dof_indices, stiffness_matrix);
   }
   std::array<bool, 6> is_hsie = {true, true, true, true, false, false};
   for(unsigned int surf = 0; surf < 4; surf++) {

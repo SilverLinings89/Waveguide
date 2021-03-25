@@ -107,7 +107,7 @@ private:
 
   void compute_solver_factorization() override;
   
-  void output_results(std::string) override;
+  void output_results() override;
 
   void update_mismatch_vector(BoundaryId) override;
 

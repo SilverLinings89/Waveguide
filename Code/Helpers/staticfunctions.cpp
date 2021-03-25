@@ -96,7 +96,6 @@ bool areDofsClose(const InterfaceDofData &a,
 
 bool compare_non_position_data(InterfaceDofData c1, InterfaceDofData c2) {
   if(c1.order == c2.order) {
-    std::cout << "INDICISIVE CASE FOR SORTING." << std::endl;
     return c1.index < c2.index;
   } else {
     return c1.order < c2.order;
