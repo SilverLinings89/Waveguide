@@ -352,7 +352,7 @@ struct CellwiseAssemblyDataNP {
         for(unsigned int comp = 0; comp < 3; comp++) {
           Ex_Val[comp] = exact_solution_ramped.value(quadrature_points[q_index], comp);
         }
-        cell_rhs[i] +=  I_Curl * Conjugate_Vector(Ex_Curl)* JxW - (eps_kappa_2 * ( I_Val * Conjugate_Vector(Ex_Val)) * JxW);
+        cell_rhs[i] += Ex_Curl * Conjugate_Vector(I_Curl) * JxW - (eps_kappa_2 * (Ex_Val * Conjugate_Vector(I_Val)) * JxW);
       }
       for (unsigned int j = 0; j < dofs_per_cell; j++) {
         Tensor<1, 3, ComplexNumber> J_Curl;
