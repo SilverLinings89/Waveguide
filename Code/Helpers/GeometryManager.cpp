@@ -11,6 +11,9 @@ void GeometryManager::initialize() {
   set_x_range(compute_x_range());
   set_y_range(compute_y_range());
   set_z_range(compute_z_range());
+  h_x = (local_x_range.second - local_x_range.first) / GlobalParams.Cells_in_x;
+  h_y = (local_y_range.second - local_y_range.first) / GlobalParams.Cells_in_y;
+  h_z = (local_z_range.second - local_z_range.first) / GlobalParams.Cells_in_z;
 }
 
 dealii::Tensor<2,3> GeometryManager::get_epsilon_tensor(const Position & in_p) {

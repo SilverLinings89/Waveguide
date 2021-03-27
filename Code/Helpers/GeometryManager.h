@@ -22,6 +22,10 @@ class GeometryManager {
   std::pair<double, double> global_y_range;
   std::pair<double, double> global_z_range;
 
+  double h_x;
+  double h_y;
+  double h_z;
+
   std::pair<double, double> compute_x_range();
 
   std::pair<double, double> compute_y_range();

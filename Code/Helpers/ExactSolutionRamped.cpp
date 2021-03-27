@@ -89,7 +89,7 @@ double ExactSolutionRamped::ramping_delta(const Position &in_p) const {
   if(in_p[2] <= min_z) {
     return 0.0;
   }
-  if(in_p[2] <= max_z) {
+  if(in_p[2] >= max_z) {
     return 1.0;
   }
   const double length = max_z - min_z;
@@ -97,11 +97,23 @@ double ExactSolutionRamped::ramping_delta(const Position &in_p) const {
 }
 
 double ExactSolutionRamped::compute_ramp_for_c0(const Position &in_p) const {
+  if(in_p[2] <= min_z) {
+    return 1.0;
+  }
+  if(in_p[2] >= max_z) {
+    return 0.0;
+  }
   const double delta = ramping_delta(in_p);
   return - delta + 1;
 }
 
 double ExactSolutionRamped::compute_ramp_for_c1(const Position &in_p) const {
+  if(in_p[2] <= min_z) {
+    return 1.0;
+  }
+  if(in_p[2] >= max_z) {
+    return 0.0;
+  }
   const double x = ramping_delta(in_p);
   return 2*std::pow(x,3) - 3*x*x + 1;
 }
