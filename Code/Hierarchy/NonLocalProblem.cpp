@@ -81,7 +81,7 @@ PetscErrorCode pc_create(SampleShellPC *shell, NonLocalProblem * parent)
 }
 
 NonLocalProblem::NonLocalProblem(unsigned int local_level) :
-  HierarchicalProblem(local_level, static_cast<SweepingDirection> (GlobalParams.HSIE_SWEEPING_LEVEL - local_level)),
+  HierarchicalProblem(local_level, static_cast<SweepingDirection> (2 + GlobalParams.HSIE_SWEEPING_LEVEL - local_level)),
   sc(GlobalParams.GMRES_max_steps, GlobalParams.Solver_Precision, true, true)
 {
   if(local_level > 1) {
@@ -97,24 +97,22 @@ NonLocalProblem::NonLocalProblem(unsigned int local_level) :
 
   switch (sweeping_direction) {
     case SweepingDirection::X:
-      is_hsie_surface[0] = GlobalParams.Blocks_in_x_direction == 0;
-      is_hsie_surface[1] = GlobalParams.Blocks_in_x_direction == GlobalParams.Blocks_in_x_direction - 1;
+      is_hsie_surface[0] = GlobalParams.Index_in_x_direction == 0;
+      is_hsie_surface[1] = GlobalParams.Index_in_x_direction == GlobalParams.Blocks_in_x_direction - 1;
       is_sweeping_hsie_surface[0] = !is_hsie_surface[0];
       is_sweeping_hsie_surface[1] = !is_hsie_surface[1];
       break;
     case SweepingDirection::Y:
-      is_hsie_surface[2] = GlobalParams.Blocks_in_y_direction == 0;
-      is_hsie_surface[3] = GlobalParams.Blocks_in_y_direction == GlobalParams.Blocks_in_y_direction - 1;
+      is_hsie_surface[2] = GlobalParams.Index_in_y_direction == 0;
+      is_hsie_surface[3] = GlobalParams.Index_in_y_direction == GlobalParams.Blocks_in_y_direction - 1;
       is_sweeping_hsie_surface[2] = !is_hsie_surface[2];
       is_sweeping_hsie_surface[3] = !is_hsie_surface[3];
       break;
     case SweepingDirection::Z:
-      is_hsie_surface[4] = GlobalParams.Blocks_in_z_direction == 0;
-      is_hsie_surface[5] = GlobalParams.Blocks_in_z_direction == GlobalParams.Blocks_in_z_direction - 1;
+      is_hsie_surface[4] = GlobalParams.Index_in_z_direction == 0;
+      is_hsie_surface[5] = GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction - 1;
       is_sweeping_hsie_surface[4] = !is_hsie_surface[4];
       is_sweeping_hsie_surface[5] = !is_hsie_surface[5];
-    default: 
-      std::cout << "Error in Nonlocal Problem Constructor." << std::endl;
   }
 
   n_own_dofs = 0;
@@ -145,15 +143,10 @@ NonLocalProblem::~NonLocalProblem() {
   delete[] mpi_cache;
 }
 
-void NonLocalProblem::make_constraints_for_hsie_surface(unsigned int surface) {
+void NonLocalProblem::make_constraints_for_local_surface(unsigned int surface) {
 
   std::vector<InterfaceDofData> from_surface = get_local_problem()->surfaces[surface]->get_dof_association();
   std::vector<InterfaceDofData> from_inner_problem = get_local_problem()->base_problem.get_surface_dof_vector_for_boundary_id(surface);
-  if (from_surface.size() != from_inner_problem.size()) {
-    std::cout << "Warning: Size mismatch in make_constraints for surface "
-        << surface << ": Inner: " << from_inner_problem.size()
-        << " != Surface:" << from_surface.size() << "." << std::endl;
-  }
   shift_interface_dof_data(&from_surface, surface_first_dofs[surface]);
   shift_interface_dof_data(&from_inner_problem, first_own_index);
   AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(from_surface, from_inner_problem, total_number_of_dofs_on_level);
@@ -190,7 +183,7 @@ Direction get_direction_for_boundary_id(BoundaryId bid) {
   }
 }
 
-void NonLocalProblem::make_constraints_for_non_hsie_surface(unsigned int surface) {
+void NonLocalProblem::make_constraints_for_non_local_surface(unsigned int surface) {
   if(GlobalParams.Index_in_z_direction == 0 && surface == 4) {
 
   } else {
@@ -199,7 +192,7 @@ void NonLocalProblem::make_constraints_for_non_hsie_surface(unsigned int surface
     unsigned int n_dofs_on_surface = from_inner_problem.size();
     std::pair<bool, unsigned int> partner_data = GlobalMPI.get_neighbor_for_interface(get_direction_for_boundary_id(surface));
     if(!partner_data.first) {
-      std::cout << "There was an error finding the partner process in NonlocalProblem::make_constraints_for_non_hsie_surface" << std::endl;
+      std::cout << "There was an error finding the partner process in NonlocalProblem::make_constraints_for_non_local_surface" << std::endl;
     }
     unsigned int partner_index = partner_data.second;
     double * x_values = new double[n_dofs_on_surface];
@@ -214,7 +207,7 @@ void NonLocalProblem::make_constraints_for_non_hsie_surface(unsigned int surface
       indices[i] = from_inner_problem[i].index;
       coupling_dofs[surface].emplace_back(indices[i], 0);
     }
-    print_info("NonLocalProblem::make_constraints_for_non_hsie_surface", std::to_string(rank) + " connecting to " + std::to_string(partner_index), false, DEBUG_ALL);
+    print_info("NonLocalProblem::make_constraints_for_non_local_surface", std::to_string(rank) + " connecting to " + std::to_string(partner_index), false, DEBUG_ALL);
     MPI_Sendrecv_replace(x_values, n_dofs_on_surface, MPI_DOUBLE, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
     MPI_Sendrecv_replace(y_values, n_dofs_on_surface, MPI_DOUBLE, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
     MPI_Sendrecv_replace(z_values, n_dofs_on_surface, MPI_DOUBLE, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
@@ -328,10 +321,10 @@ void NonLocalProblem::make_constraints() {
   };
   // couple surface dofs with inner ones.
   for (unsigned int surface = 0; surface < 6; surface++) {
-    if(is_hsie_surface[surface]){
-      make_constraints_for_hsie_surface(surface);
+    if(is_sweeping_hsie_surface[surface]) {
+      make_constraints_for_non_local_surface(surface);
     } else {
-      make_constraints_for_non_hsie_surface(surface);
+      make_constraints_for_local_surface(surface);
     }
   }
   print_info("LocalProblem::make_constraints", "Constraints after phase 1: " + std::to_string(constraints.n_constraints()), false, LoggingLevel::DEBUG_ALL );

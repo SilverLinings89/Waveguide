@@ -97,9 +97,9 @@ private:
 
   bool is_highest_in_sweeping_direction();
 
-  auto make_constraints_for_hsie_surface(unsigned int index) -> void;
+  auto make_constraints_for_local_surface(unsigned int index) -> void;
   
-  auto make_constraints_for_non_hsie_surface(unsigned int index) -> void;
+  auto make_constraints_for_non_local_surface(unsigned int index) -> void;
 
   void propagate_up();
 
