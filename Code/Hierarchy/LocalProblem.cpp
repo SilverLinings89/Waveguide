@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <complex>
+#include <string>
 #include <deal.II/base/vectorization.h>
 #include <deal.II/lac/petsc_sparse_matrix.h>
 #include <deal.II/lac/solver_idr.h>
@@ -24,11 +25,11 @@
 #include <deal.II/matrix_free/matrix_free.h>
 #include <deal.II/matrix_free/matrix_free.templates.h>
 #include "../Helpers/PointSourceField.h"
+#include "../Solutions/ExactSolutionRamped.h"
+#include "../Solutions/ExactSolutionConjugate.h"
 
 
-template void dealii::VectorTools::project<3,dealii::Vector<ComplexNumber>,3>(const dealii::Mapping<3, 3> &,
-        const dealii::DoFHandler<3, 3> &,
-        const dealii::AffineConstraints<ComplexNumber> &,
+template void dealii::VectorTools::project<3,dealii::Vector<ComplexNumber>,3>(const dealii::Mapping<3, 3> &, const dealii::DoFHandler<3, 3> &, const dealii::AffineConstraints<ComplexNumber> &,
         const dealii::Quadrature<3> &,
         const dealii::Function<3, ComplexNumber> &,
         dealii::Vector<ComplexNumber> &,
@@ -37,14 +38,17 @@ template void dealii::VectorTools::project<3,dealii::Vector<ComplexNumber>,3>(co
         const bool);
 
 LocalProblem::LocalProblem() :
-    HierarchicalProblem(0), base_problem(), sc(), solver(sc, MPI_COMM_SELF) {
-  base_problem.make_grid();
-  print_info("Local Problem", "Done building base problem. Preparing matrix.");
-  matrix = new dealii::PETScWrappers::SparseMatrix();
-  for(unsigned int i = 0; i < 6; i++) is_hsie_surface[i] = true;
-  if((GlobalParams.prescribe_0_on_input_side || (!GlobalParams.use_tapered_input_signal)) && GlobalParams.Index_in_z_direction == 0) {
-    is_hsie_surface[4] = false;
-  }
+  HierarchicalProblem(0, SweepingDirection::Z), 
+  base_problem(), 
+  sc(), 
+  solver(sc, MPI_COMM_SELF) {
+    base_problem.make_grid();
+    print_info("Local Problem", "Done building base problem. Preparing matrix.");
+    matrix = new dealii::PETScWrappers::SparseMatrix();
+    for(unsigned int i = 0; i < 6; i++) is_hsie_surface[i] = true;
+    if((GlobalParams.prescribe_0_on_input_side || (!GlobalParams.use_tapered_input_signal)) && GlobalParams.Index_in_z_direction == 0) {
+      is_hsie_surface[4] = false;
+    }
 }
 
 LocalProblem::~LocalProblem() {}
@@ -347,60 +351,30 @@ dealii::Vector<ComplexNumber> LocalProblem::get_local_vector_from_global() {
 
 void LocalProblem::output_results() {
   print_info("LocalProblem::output_results()", "Start");
-  dealii::Vector<double> epsilon(base_problem.triangulation.n_active_cells()); 
-  unsigned int cnt = 0;
-  for(auto it = base_problem.triangulation.begin_active(); it != base_problem.triangulation.end(); it++) {
-    epsilon[cnt] = (Geometry.math_coordinate_in_waveguide(it->center())) ? GlobalParams.Epsilon_R_in_waveguide : GlobalParams.Epsilon_R_outside_waveguide;
-    cnt++;
-  }
   dealii::DataOut<3> data_out;
   dealii::Vector<ComplexNumber> output_solution = get_local_vector_from_global();
   data_out.attach_dof_handler(base_problem.dof_handler);
-  data_out.add_data_vector(epsilon,"Epsilon", dealii::DataOut_DoFData<DoFHandler<3, 3>, 3, 3>::type_cell_data);
   data_out.add_data_vector(output_solution, "Solution");
   std::string filename = GlobalOutputManager.get_numbered_filename("solution", GlobalParams.MPI_Rank, "vtu");
   std::ofstream outputvtu(filename);
-  dealii::Vector<double> cellwise_error(base_problem.triangulation.n_active_cells());
-  dealii::Vector<double> cellwise_norm(base_problem.triangulation.n_active_cells());
+  base_problem.local_constraints.close();  
+
+  Function<3,ComplexNumber> * esc;
+  if(GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE) {
+    esc = GlobalParams.source_field;
+  } else {
+    esc = new ExactSolutionConjugate(true, false);
+  }
   dealii::Vector<ComplexNumber> interpolated_exact_solution(output_solution.size());
-  dealii::Vector<ComplexNumber> error(output_solution.size());
-  base_problem.local_constraints.close();
-  VectorTools::project(base_problem.dof_handler, base_problem.local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *GlobalParams.source_field, interpolated_exact_solution);
+  VectorTools::project(base_problem.dof_handler, base_problem.local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *esc, interpolated_exact_solution);
   data_out.add_data_vector(interpolated_exact_solution, "Exact_Solution");
-  for(unsigned int i = 0; i < error.size(); i++) {
-    error[i] = interpolated_exact_solution[i] - output_solution[i];
+  // compute_error(dealii::VectorTools::NormType::H1_norm, esc, output_solution, &data_out);
+  compute_error(dealii::VectorTools::NormType::L2_norm, esc, output_solution, &data_out);
+  dealii::Vector<ComplexNumber> error_field(output_solution.size());
+  for(unsigned int i = 0; i < error_field.size(); i++) {
+    error_field[i] = conjugate(interpolated_exact_solution[i]) - output_solution[i];
   }
-  data_out.add_data_vector(error, "error");
-  dealii::VectorTools::integrate_difference(
-    MappingQGeneric<3>(1),
-    base_problem.dof_handler,
-    output_solution,
-    *GlobalParams.source_field,
-    cellwise_error,
-    dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
-    dealii::VectorTools::NormType::L2_norm );
-  dealii::Vector<ComplexNumber> zero(base_problem.n_dofs);  
-  dealii::VectorTools::integrate_difference(
-    MappingQGeneric<3>(1),
-    base_problem.dof_handler,
-    zero,
-    *GlobalParams.source_field,
-    cellwise_norm,
-    dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
-    dealii::VectorTools::NormType::L2_norm );
-  unsigned int index = 0;
-  for(auto it = base_problem.dof_handler.begin_active(); it != base_problem.dof_handler.end(); it++) {
-    if(base_problem.constrained_cells.contains(it->id().to_string())) {
-      cellwise_error[index] = 0;
-      cellwise_norm[index] = 0;
-    }
-    index++;
-  }
-  const double global_error = dealii::VectorTools::compute_global_error(base_problem.triangulation, cellwise_error, dealii::VectorTools::NormType::L2_norm);
-  const double global_norm = dealii::VectorTools::compute_global_error(base_problem.triangulation, cellwise_norm, dealii::VectorTools::NormType::L2_norm);
-  print_info("LocalProblem::output_results", "Global computed error L2: " + std::to_string(global_error), false, LoggingLevel::PRODUCTION_ONE);
-  print_info("LocalProblem::output_results", "Exact solution L2 norm: " + std::to_string(global_norm), false, LoggingLevel::PRODUCTION_ONE);
-  data_out.add_data_vector(cellwise_error, "Cellwise_error");
+  data_out.add_data_vector(error_field, "error");
   data_out.build_patches();
   data_out.write_vtu(outputvtu);
   write_phase_plot();
@@ -505,10 +479,6 @@ auto LocalProblem::compare_to_exact_solution() -> void {
   myfile.close();
 }
 
-auto LocalProblem::communicate_sweeping_direction(SweepingDirection sweeping_direction_of_parent) -> void {
-  sweeping_direction = sweeping_direction_of_parent;
-}
-
 void LocalProblem::update_mismatch_vector(BoundaryId in_bid) {
   rhs_mismatch.reinit( MPI_COMM_SELF, n_own_dofs, n_own_dofs);
   for(unsigned int i = 0; i < surfaces[in_bid]->dof_counter; i++) {
@@ -532,6 +502,38 @@ void LocalProblem::compute_solver_factorization() {
   // print_info("LocalProblem::compute_solver_factorization", "Walltime: " + std::to_string(timer1.wall_time()) , true, LoggingLevel::PRODUCTION_ONE);
 }
 
+double LocalProblem::compute_error(dealii::VectorTools::NormType in_norm, Function<3,ComplexNumber> * in_exact, dealii::Vector<ComplexNumber> & in_solution, dealii::DataOut<3> * in_data_out) {
+  Timer timer;
+  timer.start ();
+  double error = 0;
+  dealii::Vector<double> cellwise_error(base_problem.triangulation.n_active_cells());
+  dealii::VectorTools::integrate_difference(base_problem.dof_handler, in_solution, *in_exact, cellwise_error, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), in_norm);
+  unsigned int idx = 0;
+  for(auto it = base_problem.dof_handler.begin_active(); it != base_problem.dof_handler.end(); it++) {
+    bool zero_component = false;
+    if(GlobalParams.use_tapered_input_signal) {
+      const double z = it->center()[2];
+      if(z >= GlobalParams.tapering_min_z && z < GlobalParams.tapering_max_z) {
+        zero_component = true;
+      }
+    }
+    if(zero_component) {
+      cellwise_error[idx] = 0;
+    }
+    idx++;
+  }
+  error = dealii::VectorTools::compute_global_error(base_problem.triangulation, cellwise_error, in_norm);
+  timer.stop ();
+  std::string error_name ="";
+  if(in_norm == dealii::VectorTools::NormType::H1_norm) {
+    error_name = "H1";
+  } else {
+    error_name = "L2";
+  }
+  in_data_out->add_data_vector(cellwise_error, "Cellwise " + error_name + " error");
+  print_info("LocalProblem::compute_error", error_name + " Error: " + std::to_string(error) + " ( computed in " + std::to_string(timer.cpu_time()) + "s)");
+}
+
 double LocalProblem::compute_L2_error() {
   NumericVectorLocal solution_inner(base_problem.n_dofs);
   for(unsigned int i = 0; i < base_problem.n_dofs; i++) {
@@ -547,4 +549,20 @@ double LocalProblem::compute_L2_error() {
     dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
     dealii::VectorTools::NormType::L2_norm );
   return dealii::VectorTools::compute_global_error(base_problem.triangulation, cellwise_error, dealii::VectorTools::NormType::L2_norm);
+}
+
+DofOwner LocalProblem::get_dof_owner(unsigned int dof) {
+  DofOwner ret;
+  ret.owner = 0;
+  ret.is_boundary_dof = dof < surface_first_dofs[0];
+  if(ret.is_boundary_dof) {
+    for(unsigned int i = 0; i < 5; i++) {
+      if(dof < surface_first_dofs[i+1]) {
+        ret.surface_id = i;
+        return ret;
+      }
+    }
+  }
+  ret.surface_id = 5;
+  return ret;
 }

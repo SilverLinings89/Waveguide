@@ -646,3 +646,9 @@ dealii::Triangulation<3> reforge_triangulation(dealii::Triangulation<3> * origin
   return_triangulation.create_triangulation(new_vertex_list, cell_data, sub_cell_data);
   return return_triangulation;
 }
+
+ComplexNumber conjugate(const ComplexNumber & in_number) {
+  ComplexNumber ret = in_number;
+  ret.imag(- in_number.imag());
+  return ret;
+}

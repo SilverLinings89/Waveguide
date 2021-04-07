@@ -79,8 +79,6 @@ private:
 
   auto get_center() -> Position const override;
 
-  auto communicate_sweeping_direction(SweepingDirection) -> void override;
-
   void H_inverse();
 
   NumericVectorLocal extract_local_upper_dofs();
@@ -126,4 +124,12 @@ private:
   void setChildRhsComponentsFromU();
 
   void reinit_rhs() override;
+  
+  DofOwner get_dof_owner(unsigned int id) override;
+
+  auto print_dof_details(unsigned int dof) -> void;
+
+  auto is_dof_locally_owned(unsigned int dof) -> bool;
+
+  auto print_diagnosis_data() -> void;
 };

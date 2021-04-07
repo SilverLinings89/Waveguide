@@ -12,12 +12,11 @@ void ParameterReader::declare_parameters() {
         run_prm.declare_entry("solver precision" , "1e-6", Patterns::Double(), "Absolute precision for solver convergence.");
         run_prm.declare_entry("GMRES restart after" , "30", Patterns::Integer(), "Number of steps until GMRES restarts.");
         run_prm.declare_entry("GMRES maximum steps" , "100", Patterns::Integer(), "Number of maximum GMRES steps until failure.");
-        run_prm.declare_entry("HSIE polynomial degree" , "4", Patterns::Integer(), "Polynomial degree of the Hardy-space polynomials for HSIE surfaces.");
         run_prm.declare_entry("kappa angle" , "1.0", Patterns::Double(), "Phase of the complex value kappa with norm 1 that is used in HSIEs.");
         run_prm.declare_entry("processes in x" , "1", Patterns::Integer(), "Number of processes in x-direction.");
         run_prm.declare_entry("processes in y" , "1", Patterns::Integer(), "Number of processes in y-direction.");
         run_prm.declare_entry("processes in z" , "1", Patterns::Integer(), "Number of processes in z-direction.");
-        run_prm.declare_entry("HSIE sweeping level" , "1", Patterns::Integer(), "Hierarchy level to be used. 1: normal sweeping. 2: two level hierarchy, i.e sweeping in sweeping. 3: three level sweeping, i.e. sweeping in sweeping in swepping.");
+        run_prm.declare_entry("sweeping level" , "1", Patterns::Integer(), "Hierarchy level to be used. 1: normal sweeping. 2: two level hierarchy, i.e sweeping in sweeping. 3: three level sweeping, i.e. sweeping in sweeping in swepping.");
         run_prm.declare_entry("cell count x" , "20", Patterns::Integer(), "Number of cells a single process has in x-direction.");
         run_prm.declare_entry("cell count y" , "20", Patterns::Integer(), "Number of cells a single process has in y-direction.");
         run_prm.declare_entry("cell count z" , "20", Patterns::Integer(), "Number of cells a single process has in z-direction.");
@@ -43,6 +42,7 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("Kappa 0 Real", "5", Patterns::Double(), "Real part of kappa_0 for HSIE.");
         case_prm.declare_entry("Kappa 0 Imaginary", "-1", Patterns::Double(), "Imaginary part of kappa_0 for HSIE.");
         case_prm.declare_entry("PML sigma max", "5.0", Patterns::Double(), "Parameter Sigma Max for all PML layers.");
+        case_prm.declare_entry("HSIE polynomial degree" , "4", Patterns::Integer(), "Polynomial degree of the Hardy-space polynomials for HSIE surfaces.");
         case_prm.declare_entry("Min HSIE Order", "1", Patterns::Integer(), "Minimal HSIE Element order for parameter run.");
         case_prm.declare_entry("Max HSIE Order", "21", Patterns::Integer(), "Maximal HSIE Element order for parameter run.");
         case_prm.declare_entry("Boundary Method", "HSIE", Patterns::Selection("HSIE|PML"), "Choose the boundary element method (options are PML and HSIE).");
@@ -68,11 +68,10 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.Solver_Precision = run_prm.get_double("solver precision");
         ret.GMRES_Steps_before_restart = run_prm.get_integer("GMRES restart after");
         ret.GMRES_max_steps = run_prm.get_integer("GMRES maximum steps");
-        ret.HSIE_polynomial_degree = run_prm.get_integer("HSIE polynomial degree");
         ret.Blocks_in_x_direction = run_prm.get_integer("processes in x");
         ret.Blocks_in_y_direction = run_prm.get_integer("processes in y");
         ret.Blocks_in_z_direction = run_prm.get_integer("processes in z");
-        ret.HSIE_SWEEPING_LEVEL = run_prm.get_integer("HSIE sweeping level");
+        ret.HSIE_SWEEPING_LEVEL = run_prm.get_integer("sweeping level");
         ret.Cells_in_x = run_prm.get_integer("cell count x");
         ret.Cells_in_y = run_prm.get_integer("cell count y");
         ret.Cells_in_z = run_prm.get_integer("cell count z");
@@ -107,6 +106,7 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.PML_N_Layers = case_prm.get_integer("PML n layers");
         ret.PML_skaling_order = case_prm.get_integer("PML skaling order");
         ret.PML_thickness = case_prm.get_double("PML thickness");
+        ret.HSIE_polynomial_degree = case_prm.get_integer("HSIE polynomial degree");
         ret.use_tapered_input_signal = case_prm.get("Input Signal Method") == "Taper";
         ret.PML_Sigma_Max = case_prm.get_double("PML sigma max");
         if(case_prm.get("Signal tapering type") == "C0") {

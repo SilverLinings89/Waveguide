@@ -3,14 +3,15 @@ subsection Case parameters
     set fem order = 0
     set geometry size x = 4.0
     set geometry size y = 3.6
-    set geometry size z = 2.5
+    set geometry size z = 8
     set epsilon in = 2.3409
     set epsilon out = 1.8496
     set mu in = 1.0
     set mu out = 1.0
     set signal amplitude = 1.0
     set Boundary Method = HSIE
-    set PML n layers = 20
+    set HSIE polynomial degree = 5
+    set PML n layers = 8
     set Input Signal Method = Taper
     set PML skaling order = 1
     set Prescribe input zero = true

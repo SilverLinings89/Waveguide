@@ -27,7 +27,7 @@
 #include "./GlobalObjects.h"
 #include "../SpaceTransformations/HomogenousTransformationRectangular.h"
 #include "../Helpers/PointSourceField.h"
-#include "../Helpers/ExactSolutionRamped.h"
+#include "../Solutions/ExactSolutionRamped.h"
 
 NumericProblem::NumericProblem()
     :
@@ -315,7 +315,7 @@ struct CellwiseAssemblyDataNP {
   cell_rhs(dofs_per_cell),
   local_dof_indices(dofs_per_cell),
   fe_field(0),
-  exact_solution_ramped(0,0.5,true, false)
+  exact_solution_ramped(true, false)
   {    
     cell_rhs = 0;
     for (unsigned int i = 0; i < 3; i++) {
@@ -352,14 +352,14 @@ struct CellwiseAssemblyDataNP {
         for(unsigned int comp = 0; comp < 3; comp++) {
           Ex_Val[comp] = exact_solution_ramped.value(quadrature_points[q_index], comp);
         }
-        cell_rhs[i] += Ex_Curl * Conjugate_Vector(I_Curl) * JxW - (eps_kappa_2 * (Ex_Val * Conjugate_Vector(I_Val)) * JxW);
+        cell_rhs[i] -= I_Curl *  Conjugate_Vector(Ex_Curl) * JxW - (eps_kappa_2 * (I_Val * Conjugate_Vector(Ex_Val)) * JxW);
       }
       for (unsigned int j = 0; j < dofs_per_cell; j++) {
         Tensor<1, 3, ComplexNumber> J_Curl;
         Tensor<1, 3, ComplexNumber> J_Val;
         J_Curl = fe_values[fe_field].curl(j, q_index);
         J_Val = fe_values[fe_field].value(j, q_index);
-        cell_matrix[i][j] += I_Curl * Conjugate_Vector(J_Curl)* JxW - (eps_kappa_2 * ( I_Val * Conjugate_Vector(J_Val)) * JxW);
+        cell_matrix[i][j] += I_Curl * Conjugate_Vector(J_Curl) * JxW - (eps_kappa_2 * ( I_Val * Conjugate_Vector(J_Val)) * JxW);
       }
     }
   }

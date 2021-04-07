@@ -129,3 +129,5 @@ auto get_affine_constraints_for_InterfaceData(std::vector<InterfaceDofData> &dof
 void shift_interface_dof_data(std::vector<InterfaceDofData> * dofs_interface_1, unsigned int shift);
 
 dealii::Triangulation<3> reforge_triangulation(dealii::Triangulation<3> * original_triangulation);
+
+ComplexNumber conjugate(const ComplexNumber & in_number);

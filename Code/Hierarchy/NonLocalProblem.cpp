@@ -14,6 +14,8 @@
 #include <petscsystypes.h>
 
 #include <iterator>
+#include <ratio>
+#include <string>
 #include <vector>
 
 double l2_norm_of_vector(std::vector<ComplexNumber> input) {
@@ -79,84 +81,44 @@ PetscErrorCode pc_create(SampleShellPC *shell, NonLocalProblem * parent)
 }
 
 NonLocalProblem::NonLocalProblem(unsigned int local_level) :
-  HierarchicalProblem(local_level),
+  HierarchicalProblem(local_level, static_cast<SweepingDirection> (GlobalParams.HSIE_SWEEPING_LEVEL - local_level)),
   sc(GlobalParams.GMRES_max_steps, GlobalParams.Solver_Precision, true, true)
 {
-    if(local_level > 1) {
+  if(local_level > 1) {
     child = new NonLocalProblem(local_level - 1);
-    } else {
+  } else {
     child = new LocalProblem();
-    }
-  switch (GlobalParams.HSIE_SWEEPING_LEVEL) {
-    case 1:
-      this->sweeping_direction = SweepingDirection::Z;
-      break;
-    case 2:
-      if (local_level == 1) {
-        this->sweeping_direction = SweepingDirection::Y;
-      } else {
-        this->sweeping_direction = SweepingDirection::Z;
-      }
-      break;
-    case 3:
-      if (local_level == 1) {
-        this->sweeping_direction = SweepingDirection::X;
-      } else {
-        if (local_level == 2) {
-          this->sweeping_direction = SweepingDirection::Y;
-        } else {
-          this->sweeping_direction = SweepingDirection::Z;
-        }
-      }
-      break;
-    default:
-      this->sweeping_direction = SweepingDirection::Z;
-      break;
   }
-
-  for (unsigned int i = 0; i < 6; i++) {
-    is_hsie_surface[i] = false;
+  
+  for(unsigned int i = 0; i < 6; i++) {
+    is_hsie_surface[i] = child->is_hsie_surface[i];
     is_sweeping_hsie_surface[i] = false;
   }
-  if (GlobalParams.Index_in_x_direction == 0) {
-    is_hsie_surface[0] = true;
-  }
-  if (GlobalParams.Index_in_y_direction == 0) {
-    is_hsie_surface[2] = true;
-  }
-  if (GlobalParams.Index_in_z_direction == 0) {
-    if(GlobalParams.prescribe_0_on_input_side) {
-      is_hsie_surface[4] = false;
-    } else {
-      is_hsie_surface[4] = true;
-    }
-  }
-  if (GlobalParams.Index_in_x_direction
-      == GlobalParams.Blocks_in_x_direction - 1) {
-    is_hsie_surface[1] = true;
-  }
-  if (GlobalParams.Index_in_y_direction
-      == GlobalParams.Blocks_in_y_direction - 1) {
-    is_hsie_surface[3] = true;
-  }
-  if (GlobalParams.Index_in_z_direction
-      == GlobalParams.Blocks_in_z_direction - 1) {
-    is_hsie_surface[5] = true;
-  }
-  if (GlobalParams.HSIE_SWEEPING_LEVEL == local_level + 1) {
-    is_hsie_surface[4] = true;
-    is_hsie_surface[5] = true;
-  }
-  if (GlobalParams.HSIE_SWEEPING_LEVEL == local_level + 2) {
-    is_hsie_surface[2] = true;
-    is_hsie_surface[3] = true;
-    is_hsie_surface[4] = true;
-    is_hsie_surface[5] = true;
+
+  switch (sweeping_direction) {
+    case SweepingDirection::X:
+      is_hsie_surface[0] = GlobalParams.Blocks_in_x_direction == 0;
+      is_hsie_surface[1] = GlobalParams.Blocks_in_x_direction == GlobalParams.Blocks_in_x_direction - 1;
+      is_sweeping_hsie_surface[0] = !is_hsie_surface[0];
+      is_sweeping_hsie_surface[1] = !is_hsie_surface[1];
+      break;
+    case SweepingDirection::Y:
+      is_hsie_surface[2] = GlobalParams.Blocks_in_y_direction == 0;
+      is_hsie_surface[3] = GlobalParams.Blocks_in_y_direction == GlobalParams.Blocks_in_y_direction - 1;
+      is_sweeping_hsie_surface[2] = !is_hsie_surface[2];
+      is_sweeping_hsie_surface[3] = !is_hsie_surface[3];
+      break;
+    case SweepingDirection::Z:
+      is_hsie_surface[4] = GlobalParams.Blocks_in_z_direction == 0;
+      is_hsie_surface[5] = GlobalParams.Blocks_in_z_direction == GlobalParams.Blocks_in_z_direction - 1;
+      is_sweeping_hsie_surface[4] = !is_hsie_surface[4];
+      is_sweeping_hsie_surface[5] = !is_hsie_surface[5];
+    default: 
+      std::cout << "Error in Nonlocal Problem Constructor." << std::endl;
   }
 
   n_own_dofs = 0;
   matrix = new dealii::PETScWrappers::MPI::SparseMatrix();
-  communicate_sweeping_direction(sweeping_direction);
   is_mpi_cache_ready = false;
 }
 
@@ -407,8 +369,39 @@ void NonLocalProblem::make_constraints() {
   print_info("NonLocalProblem::make_constraints", "End");
 }
 
+void NonLocalProblem::print_diagnosis_data() {
+  std::cout << "Temp dof data:" << std::endl;
+  if(rank == 0) {
+    std::cout << "Pair 1:" << std::endl;
+  }
+  print_dof_details(133560);
+  print_dof_details(432433);
+  MPI_Barrier(MPI_COMM_WORLD);
+  if(rank == 0) {
+    std::cout << "Pair 2:" << std::endl;
+  }
+  print_dof_details(376488);
+  print_dof_details(675361);
+  MPI_Barrier(MPI_COMM_WORLD);
+  if(rank == 0) {
+    std::cout << "Pair 3:" << std::endl;
+  }
+  print_dof_details(485856);
+  print_dof_details(449093);
+  MPI_Barrier(MPI_COMM_WORLD);
+  if(rank == 0) {
+    std::cout << "Pair 4:" << std::endl;
+  }
+  print_dof_details(728784);
+  print_dof_details(692021);
+  MPI_Barrier(MPI_COMM_WORLD);
+  std::cout << "Temp dof data end" << std::endl;
+}
+
 void NonLocalProblem::assemble() {
+  print_diagnosis_data();
   get_local_problem()->base_problem.assemble_system(first_own_index, &constraints, matrix, &rhs);
+  print_info("NonLocalProblem::assemble", "Inner assembly done. Assembling boundaries.");
   for(unsigned int i = 0; i< 6; i++) {
     if(is_hsie_surface[i]) {
       get_local_problem()->surfaces[i]->fill_matrix(matrix, &rhs, surface_first_dofs[i], is_hsie_surface, &constraints);
@@ -720,10 +713,6 @@ auto NonLocalProblem::get_center() -> Position const {
   double z = dealii::Utilities::MPI::min_max_avg(local_contribution[2],
       GlobalMPI.communicators_by_level[this->local_level]).avg;
   return {x,y,z};
-}
-
-auto NonLocalProblem::communicate_sweeping_direction(SweepingDirection) -> void {
-  child->communicate_sweeping_direction(sweeping_direction);
 }
 
 void NonLocalProblem::H_inverse() {
@@ -1048,4 +1037,40 @@ void NonLocalProblem::setChildRhsComponentsFromU() {
     }
   }
   child->rhs.compress(VectorOperation::insert);
+}
+
+DofOwner NonLocalProblem::get_dof_owner(unsigned int dof) {
+  DofOwner ret;
+  if(dof < first_own_index || dof > first_own_index + n_own_dofs) {
+    std::cout << "get_dof_data was called for a dof that is not locally owned" << std::endl;
+    return ret;
+  }
+  ret.owner = rank;
+  ret.is_boundary_dof = dof < surface_first_dofs[0];
+  if(ret.is_boundary_dof) {
+    for(unsigned int i = 0; i < 5; i++) {
+      if(dof < surface_first_dofs[i+1]) {
+        ret.surface_id = i;
+        return ret;
+      }
+    }
+  }
+  ret.surface_id = 5;
+  return ret;
+}
+
+void NonLocalProblem::print_dof_details(unsigned int dof) {
+  if(is_dof_locally_owned(dof)) {
+    DofOwner data = get_dof_owner(dof);
+    if(!data.is_boundary_dof) {
+      std::cout << "Dof " + std::to_string(dof) + " is a inner dof on process " + std::to_string(rank) << std::endl;
+    } else {
+      std::cout << "Dof " + std::to_string(dof) + " is a boundary dof on process " + std::to_string(rank) + " for boundary " + std::to_string(data.surface_id)<< std::endl;
+    }
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+}
+
+bool NonLocalProblem::is_dof_locally_owned(unsigned int dof) {
+  return (dof >= first_own_index && dof < first_own_index + n_own_dofs);
 }

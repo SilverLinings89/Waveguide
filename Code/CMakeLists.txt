@@ -12,8 +12,6 @@ ADD_LIBRARY(Code
         Runners/SweepingRun.cpp
         Helpers/GeometryManager.cpp
         Helpers/OutputManager.cpp
-        Helpers/ExactSolution.cpp
-        Helpers/ExactSolutionRamped.cpp
         Helpers/ModeManager.cpp
         Helpers/ParameterReader.cpp
         Helpers/PointSourceField.cpp
@@ -22,6 +20,9 @@ ADD_LIBRARY(Code
         Helpers/QuadratureFormulaCircle.cpp
         Helpers/staticfunctions.cpp
         Helpers/ShapeDescription.cpp
+        Solutions/ExactSolution.cpp
+        Solutions/ExactSolutionRamped.cpp
+        Solutions/ExactSolutionConjugate.cpp
         MeshGenerators/SquareMeshGenerator.cpp
         SpaceTransformations/DualProblemTransformationWrapper.cpp
         SpaceTransformations/HomogenousTransformationRectangular.cpp

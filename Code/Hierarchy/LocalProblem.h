@@ -58,8 +58,6 @@ public:
   auto reinit_rhs() -> void override;
 
   auto compare_to_exact_solution() -> void;
-
-  auto communicate_sweeping_direction(SweepingDirection) -> void override;
   
   dealii::IndexSet compute_interface_dof_set(BoundaryId interface_id);
 
@@ -69,5 +67,9 @@ public:
 
   double compute_L2_error();
 
+  double compute_error(dealii::VectorTools::NormType, Function<3,ComplexNumber> *, dealii::Vector<ComplexNumber> & , dealii::DataOut<3> *);
+
   auto write_phase_plot() -> void;
+
+  DofOwner get_dof_owner(unsigned int id);
 };

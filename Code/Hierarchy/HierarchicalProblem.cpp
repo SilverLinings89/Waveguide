@@ -9,8 +9,9 @@
 
 HierarchicalProblem::~HierarchicalProblem() { }
 
-HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level) :
-    local_level(in_own_level) {
+HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level, SweepingDirection in_direction) :
+  sweeping_direction(in_direction),
+  local_level(in_own_level) {
   has_child = in_own_level > 0;
   child = nullptr;
   n_own_dofs = 0;

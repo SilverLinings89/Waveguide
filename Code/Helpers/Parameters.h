@@ -133,6 +133,10 @@ struct Parameters {
 
     bool use_tapered_input_signal = false;
 
+    double tapering_min_z = 0.0;
+
+    double tapering_max_z = 1.0;
+
     SignalTaperingType Signal_tapering_type = SignalTaperingType::C1;
 
     bool prescribe_0_on_input_side = false;

@@ -499,7 +499,7 @@ void HSIESurface::fill_matrix(
           for (unsigned int j = 0; j < cell_dofs.size(); j++) {
             ComplexNumber part =
                 (evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C)
-                + eps_kappa_2 * evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
+                - eps_kappa_2 * evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
                 JxW;
               cell_matrix[i][j] += part;
           }

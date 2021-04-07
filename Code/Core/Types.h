@@ -57,6 +57,12 @@ struct CellAngelingData {
   VertexAngelingData vertex_data;
 };
 
+struct DofOwner {
+  unsigned int owner = 0;
+  bool is_boundary_dof = false;
+  unsigned int surface_id = 0;
+};
+
 enum SignalTaperingType {
   C1, C0
 };
