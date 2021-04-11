@@ -111,6 +111,10 @@ bool compareDofBaseDataAndOrientation(InterfaceDofData c1, InterfaceDofData c2) 
   }
 }
 
+bool compareSurfaceCellData(SurfaceCellData c1, SurfaceCellData c2) {
+  return comparePositions(c1.surface_face_center, c2.surface_face_center);
+}
+
 bool compareDofDataByGlobalIndex(InterfaceDofData c1, InterfaceDofData c2) {
   return c1.index < c2.index;
 }

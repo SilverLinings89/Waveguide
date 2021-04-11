@@ -132,4 +132,6 @@ private:
   auto is_dof_locally_owned(unsigned int dof) -> bool;
 
   auto print_diagnosis_data() -> void;
+
+  auto validate_constraints_range() -> bool;
 };

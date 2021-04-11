@@ -97,6 +97,8 @@ public:
   void setup_neighbor_couplings(std::array<bool, 6> is_b_id_truncated) override;
   void reset_neighbor_couplings(std::array<bool, 6> is_b_id_truncated) override;
   void output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
+  void fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int own_first_dof, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
+  void fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, const unsigned int own_first_dof_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
 };
 
 

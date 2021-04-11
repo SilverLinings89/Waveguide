@@ -1265,14 +1265,16 @@ std::vector<unsigned int> HSIESurface::get_lines_for_boundary_id(BoundaryId in_b
   return edges;
 }
 
-void HSIESurface::setup_neighbor_couplings(std::array<bool, 6>) {
+void HSIESurface::setup_neighbor_couplings(std::array<bool, 6>) { }
 
+void HSIESurface::reset_neighbor_couplings(std::array<bool, 6>) { }
+
+void HSIESurface::output_results(const dealii::Vector<ComplexNumber> & , std::string) { }
+
+void HSIESurface::fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int own_first_dof, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
+  // TODO implement
 }
 
-void HSIESurface::reset_neighbor_couplings(std::array<bool, 6>) {
-
-}
-
-void HSIESurface::output_results(const dealii::Vector<ComplexNumber> & , std::string) {
-  
+void HSIESurface::fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, const unsigned int own_first_dof_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
+  // TODO implement
 }

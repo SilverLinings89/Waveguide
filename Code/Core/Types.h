@@ -178,3 +178,8 @@ struct ConstraintPair {
   unsigned int right;
   bool sign;
 };
+
+struct SurfaceCellData {
+  std::vector<DofNumber> dof_numbers;
+  Position surface_face_center;
+};

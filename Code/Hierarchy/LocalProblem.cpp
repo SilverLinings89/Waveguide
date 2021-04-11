@@ -142,9 +142,6 @@ void LocalProblem::initialize() {
   for(unsigned int i = 0; i < 6; i++) {
     if(is_hsie_surface[i]){
       surface_dof_associations[i] = surfaces[i]->get_dof_association();
-      for(unsigned int j = 0; j < surface_dof_associations[i].size(); j++) {
-        surface_dof_index_vectors[i].push_back(first_own_index + surface_dof_associations[i][j].index);
-      }
     }
   }
   for(unsigned int i = 0; i < 6; i++) {
@@ -403,7 +400,7 @@ auto LocalProblem::write_phase_plot() -> void {
   for(unsigned int i = 0; i < n_points; i++) {
     dealii::Vector<ComplexNumber> numeric_solution(3);
     dealii::Vector<ComplexNumber> exact_solution(3);
-    Point<3, double> location = Point<3,double>(0,0, Geometry.global_z_range.first + i * (Geometry.global_z_range.second - Geometry.global_z_range.first)/n_points);
+    Point<3, double> location = Point<3,double>(0,0, Geometry.local_z_range.first + i * (Geometry.local_z_range.second - Geometry.local_z_range.first)/n_points);
     dealii::VectorTools::point_value(base_problem.dof_handler, output_solution, location , numeric_solution);
     GlobalParams.source_field->vector_value(location, exact_solution);
     outfile << location[2] << "\t";
@@ -531,7 +528,7 @@ double LocalProblem::compute_error(dealii::VectorTools::NormType in_norm, Functi
   } else {
     error_name = "L2";
   }
-  in_data_out->add_data_vector(cellwise_error, "Cellwise " + error_name + " error");
+  in_data_out->add_data_vector(cellwise_error, "Cellwise_" + error_name + "_error");
   print_info("LocalProblem::compute_error", error_name + " Error: " + std::to_string(error) + " ( computed in " + std::to_string(timer.cpu_time()) + "s)");
 }
 

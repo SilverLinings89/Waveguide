@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deal.II/lac/affine_constraints.h>
+#include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include "../Core/Types.h"
 #include "./HSIEPolynomial.h"
 
@@ -40,4 +42,6 @@ public:
   virtual void setup_neighbor_couplings(std::array<bool, 6> is_b_id_truncated) = 0;
   virtual void reset_neighbor_couplings(std::array<bool, 6> is_b_id_truncated) = 0;
   virtual void output_results(const dealii::Vector<ComplexNumber> & , std::string) = 0;
+  virtual void fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int own_first_dof_index, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) = 0;
+  virtual void fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, const unsigned int own_first_dof_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) = 0;
 };

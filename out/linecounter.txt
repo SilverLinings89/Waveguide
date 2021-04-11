@@ -1,0 +1,1536 @@
+===============================================================================
+EXTENSION NAME : linecounter
+EXTENSION VERSION : 0.2.7
+-------------------------------------------------------------------------------
+count time : 2021-04-09 21:17:35
+count workspace : /home/silver_linings/workspace/waveguidesolver
+total files : 1485
+total code lines : 864016
+total comment lines : 92158
+total blank lines : 23441
+
+    statistics
+   |      extension|     total code|  total comment|    total blank|percent|
+   -------------------------------------------------------------------------
+   |            .sh|            115|            240|             31|  0.013|
+   |           .log|            979|             16|            114|   0.11|
+   |         .marks|             12|              0|              0| 0.0014|
+   |         .cmake|           1967|              2|            958|   0.23|
+   |          .make|         240267|              0|            492|     28|
+   |           .txt|          55405|            458|            333|    6.4|
+   |   .check_cache|              2|              0|              0|0.00023|
+   |               |           5163|              3|           1907|   0.60|
+   |             .c|           1014|            100|            228|   0.12|
+   |           .cpp|          33469|            487|           1238|    3.9|
+   |           .dat|         110175|              0|              1|     13|
+   |           .ini|             36|              9|              6| 0.0042|
+   |           .vtu|           8449|           2298|            169|   0.98|
+   |          .json|           5184|              0|             19|   0.60|
+   |      .internal|         239679|              0|             14|     28|
+   |            .pc|             70|              8|              8| 0.0081|
+   |  .includecache|             14|              0|              0| 0.0016|
+   |             .m|           4774|           2485|            803|   0.55|
+   |             .h|          15692|          11285|           4257|    1.8|
+   |           .tex|            493|              4|             37|  0.057|
+   |            .gp|             16|              0|              0| 0.0019|
+   |            .md|           4558|            258|           1287|   0.53|
+   |           .prm|            142|              0|              0|  0.016|
+   |         .prefs|            277|              1|              0|  0.032|
+   |           .xml|             15|              0|              0| 0.0017|
+   |           .obj|          91128|          60512|              0|     11|
+   |            .py|           7288|           2060|           2295|   0.84|
+   |           .csv|             93|              0|              0|  0.011|
+   |           .dox|              0|             50|              2|    0.0|
+   |            .cc|          36309|          11655|           9037|    4.2|
+   |          .pump|            144|            163|             62|  0.017|
+   |            .in|             99|              4|             17|  0.011|
+   |         .bazel|            768|              0|             80|  0.089|
+   |           .yml|            147|             58|             22|  0.017|
+   |      .cppclean|             73|              2|             24| 0.0084|
+   -------------------------------------------------------------------------
+.clang-format, code is 1, comment is 0, blank is 0.
+.clangd/index/BoundaryCondition.cpp.C02B180F6AC772E2.idx, it is a binary file.
+.clangd/index/BoundaryCondition.h.8C753A6281238334.idx, it is a binary file.
+.clangd/index/BoundaryMethodTests.cpp.71743E2F994BDD25.idx, it is a binary file.
+.clangd/index/DofData.cpp.6719322CDFAE3B86.idx, it is a binary file.
+.clangd/index/DofData.h.7A5B5723DCF694CD.idx, it is a binary file.
+.clangd/index/DofIndexData.cpp.F1FF0529B2B3289C.idx, it is a binary file.
+.clangd/index/DofIndexData.h.983D07C4B3FDDAC2.idx, it is a binary file.
+.clangd/index/DualProblemTransformationWrapper.cpp.5095B5D7249883CA.idx, it is a binary file.
+.clangd/index/DualProblemTransformationWrapper.h.BE5F5684A067EA5F.idx, it is a binary file.
+.clangd/index/Enums.h.8F6A1C665C44597E.idx, it is a binary file.
+.clangd/index/ExactSolution.cpp.3B8F22A694317D8E.idx, it is a binary file.
+.clangd/index/ExactSolution.cpp.D2574A2A4B350F9C.idx, it is a binary file.
+.clangd/index/ExactSolution.h.D2C33F79BFB118B0.idx, it is a binary file.
+.clangd/index/ExactSolution.h.E7E31668132E9C90.idx, it is a binary file.
+.clangd/index/ExactSolutionConjugate.cpp.EB48723EA500AFED.idx, it is a binary file.
+.clangd/index/ExactSolutionConjugate.h.873903613C88C8BD.idx, it is a binary file.
+.clangd/index/ExactSolutionRamped.cpp.B39360DC74E3C903.idx, it is a binary file.
+.clangd/index/ExactSolutionRamped.cpp.D8E04DD6B43E4C82.idx, it is a binary file.
+.clangd/index/ExactSolutionRamped.h.09C9C42F7E561520.idx, it is a binary file.
+.clangd/index/ExactSolutionRamped.h.1A5EC70737893F94.idx, it is a binary file.
+.clangd/index/ExactSolutionRampedC0.cpp.C9DDE486CCDA94DA.idx, it is a binary file.
+.clangd/index/ExactSolutionRampedC0.h.511BE3B24F13BBE4.idx, it is a binary file.
+.clangd/index/ExactSolutionTests.cpp.AA6D220B0979B564.idx, it is a binary file.
+.clangd/index/Fixtures.h.524AA0982FD7F0F0.idx, it is a binary file.
+.clangd/index/GeometryManager.cpp.8D19A766A49328BD.idx, it is a binary file.
+.clangd/index/GeometryManager.h.D28F72606414E432.idx, it is a binary file.
+.clangd/index/GlobalObjects.cpp.1BB9745EE0938174.idx, it is a binary file.
+.clangd/index/GlobalObjects.h.08138E49FEB42E79.idx, it is a binary file.
+.clangd/index/gmock-actions.h.82EFCBD0582B60C8.idx, it is a binary file.
+.clangd/index/gmock-all.cc.864094315D63500D.idx, it is a binary file.
+.clangd/index/gmock-cardinalities.cc.98E5CED466C5E9D8.idx, it is a binary file.
+.clangd/index/gmock-cardinalities.h.22B3798F734BF1E2.idx, it is a binary file.
+.clangd/index/gmock-function-mocker.h.20B10199EE70AA4E.idx, it is a binary file.
+.clangd/index/gmock-generated-actions.h.3CB3B8F66E25D7E7.idx, it is a binary file.
+.clangd/index/gmock-generated-actions.h.A17877265463A3E4.idx, it is a binary file.
+.clangd/index/gmock-internal-utils.cc.6B23EDE216BDF023.idx, it is a binary file.
+.clangd/index/gmock-internal-utils.h.7286EDD233E64B1B.idx, it is a binary file.
+.clangd/index/gmock-matchers.cc.FF05C7074215EBA7.idx, it is a binary file.
+.clangd/index/gmock-matchers.h.5F6EED6648725F3F.idx, it is a binary file.
+.clangd/index/gmock-matchers.h.AE0BBCF07790071A.idx, it is a binary file.
+.clangd/index/gmock-more-actions.h.472DE9C98CF333FC.idx, it is a binary file.
+.clangd/index/gmock-more-matchers.h.5DC135BB8996023D.idx, it is a binary file.
+.clangd/index/gmock-nice-strict.h.DA760C423C53FEC2.idx, it is a binary file.
+.clangd/index/gmock-port.h.85BFE9901D03412E.idx, it is a binary file.
+.clangd/index/gmock-port.h.B3DFCAE2E8EBA63C.idx, it is a binary file.
+.clangd/index/gmock-pp.h.537C477EFE572E27.idx, it is a binary file.
+.clangd/index/gmock-spec-builders.cc.C227D6CE850D8920.idx, it is a binary file.
+.clangd/index/gmock-spec-builders.h.09EC225C219DA667.idx, it is a binary file.
+.clangd/index/gmock.cc.2C9AC930C8648C5C.idx, it is a binary file.
+.clangd/index/gmock.h.AFA01093173E61B5.idx, it is a binary file.
+.clangd/index/gmock_main.cc.1733FC0A0045AABC.idx, it is a binary file.
+.clangd/index/GradientTable.h.7B4CD7168C204BCD.idx, it is a binary file.
+.clangd/index/gtest-all.cc.C5645AE0E2916E9A.idx, it is a binary file.
+.clangd/index/gtest-death-test-internal.h.62617863F26A6616.idx, it is a binary file.
+.clangd/index/gtest-death-test.cc.6B145BA5B7659A01.idx, it is a binary file.
+.clangd/index/gtest-death-test.h.EFD74912198B5953.idx, it is a binary file.
+.clangd/index/gtest-filepath.cc.CEF33D87274B9C43.idx, it is a binary file.
+.clangd/index/gtest-filepath.h.AA224089F3760088.idx, it is a binary file.
+.clangd/index/gtest-internal-inl.h.9C00CB1E2DA6C44C.idx, it is a binary file.
+.clangd/index/gtest-internal.h.63D4892BF5763A94.idx, it is a binary file.
+.clangd/index/gtest-matchers.cc.420A735786BE6C80.idx, it is a binary file.
+.clangd/index/gtest-matchers.h.3C2D92D84A4BFC98.idx, it is a binary file.
+.clangd/index/gtest-message.h.1EB7BBCB2F44AD7A.idx, it is a binary file.
+.clangd/index/gtest-param-test.h.E10B8F0539272CDC.idx, it is a binary file.
+.clangd/index/gtest-param-util.h.7406CFDA30F69665.idx, it is a binary file.
+.clangd/index/gtest-port-arch.h.85E6ACB5201ABC79.idx, it is a binary file.
+.clangd/index/gtest-port.cc.35BC58961624B3A2.idx, it is a binary file.
+.clangd/index/gtest-port.h.4543DEA189E21BAF.idx, it is a binary file.
+.clangd/index/gtest-port.h.AEC33DF012627699.idx, it is a binary file.
+.clangd/index/gtest-printers.cc.60104B6AAF0DA092.idx, it is a binary file.
+.clangd/index/gtest-printers.h.270C8E60CE6D6C30.idx, it is a binary file.
+.clangd/index/gtest-printers.h.EAC8520C77081563.idx, it is a binary file.
+.clangd/index/gtest-spi.h.C7E969D99CE8F3D5.idx, it is a binary file.
+.clangd/index/gtest-string.h.CE6E8B7437A67DCC.idx, it is a binary file.
+.clangd/index/gtest-test-part.cc.D21A8C0C164A91C0.idx, it is a binary file.
+.clangd/index/gtest-test-part.h.412EB2BFF3B6D992.idx, it is a binary file.
+.clangd/index/gtest-type-util.h.F41F1E8A85D7C198.idx, it is a binary file.
+.clangd/index/gtest-typed-test.cc.091E35109063EE63.idx, it is a binary file.
+.clangd/index/gtest-typed-test.h.4B910BEA6BDED4A1.idx, it is a binary file.
+.clangd/index/gtest.cc.77E651B3DFE9AE2A.idx, it is a binary file.
+.clangd/index/gtest.h.4F0BD263B439C16C.idx, it is a binary file.
+.clangd/index/gtest.h.991B8A2DF5E061FD.idx, it is a binary file.
+.clangd/index/gtest_main.cc.B711948D225201D4.idx, it is a binary file.
+.clangd/index/gtest_pred_impl.h.5DCDA9E5239A2E21.idx, it is a binary file.
+.clangd/index/gtest_prod.h.38BA6E6332CDC20E.idx, it is a binary file.
+.clangd/index/HardyPolynomialTests.cpp.85507D3370F0A954.idx, it is a binary file.
+.clangd/index/HierarchicalProblem.cpp.8C16BC3DB5A0EE4B.idx, it is a binary file.
+.clangd/index/HierarchicalProblem.h.DFDEF746C17EE480.idx, it is a binary file.
+.clangd/index/HomogenousTransformationRectangular.cpp.22E68DF57534FAB2.idx, it is a binary file.
+.clangd/index/HomogenousTransformationRectangular.h.C3CE6B10DC84991B.idx, it is a binary file.
+.clangd/index/HSIEPolynomial.cpp.9B5F6221FE27099D.idx, it is a binary file.
+.clangd/index/HSIEPolynomial.h.65467AABF7D8ABA8.idx, it is a binary file.
+.clangd/index/HSIESurface.cpp.525228749236FA82.idx, it is a binary file.
+.clangd/index/HSIESurface.h.9D8C7BD7BDC70723.idx, it is a binary file.
+.clangd/index/InhomogenousTransformationRectangular.cpp.C3C67AC2C9C68AE8.idx, it is a binary file.
+.clangd/index/InhomogenousTransformationRectangular.h.324B60F4735E2F02.idx, it is a binary file.
+.clangd/index/JacobianForCell.cpp.E5460F5F0F56A40B.idx, it is a binary file.
+.clangd/index/JacobianForCell.h.A3D3E8F88A25E600.idx, it is a binary file.
+.clangd/index/LaguerreFunction.cpp.9DF2D4BC5524E255.idx, it is a binary file.
+.clangd/index/LaguerreFunction.h.3E52A7D4BE0FBF3B.idx, it is a binary file.
+.clangd/index/LevelDofIndexData.cpp.AC0E4CD0F2DAF09E.idx, it is a binary file.
+.clangd/index/LevelDofIndexData.h.C616A68C03CBF4CE.idx, it is a binary file.
+.clangd/index/LocalProblem.cpp.6209C4C3230ADEE2.idx, it is a binary file.
+.clangd/index/LocalProblem.h.ABDAF966BDAA8B61.idx, it is a binary file.
+.clangd/index/main.cpp.692AB716993D26DE.idx, it is a binary file.
+.clangd/index/MeshTests.cpp.FB659EC22E5FE6CF.idx, it is a binary file.
+.clangd/index/ModeManager.cpp.09307E65C05E1B3F.idx, it is a binary file.
+.clangd/index/ModeManager.h.BAB305EFB208CB06.idx, it is a binary file.
+.clangd/index/MPICommunicator.cpp.750F349BE6D52C90.idx, it is a binary file.
+.clangd/index/MPICommunicator.h.0F45584E04D9180F.idx, it is a binary file.
+.clangd/index/NonLocalProblem.cpp.EDC0A51433C98BB5.idx, it is a binary file.
+.clangd/index/NonLocalProblem.h.B22D26E29EA3ECB4.idx, it is a binary file.
+.clangd/index/NumericProblem.cpp.135FF9B5688EEBAA.idx, it is a binary file.
+.clangd/index/NumericProblem.h.58DACBD9396E75CD.idx, it is a binary file.
+.clangd/index/OutputManager.cpp.AEE82605A100641E.idx, it is a binary file.
+.clangd/index/OutputManager.h.B6A77EA357C4396F.idx, it is a binary file.
+.clangd/index/ParameterReader.cpp.697DC5D53224E655.idx, it is a binary file.
+.clangd/index/ParameterReader.h.2788B81906BF32C9.idx, it is a binary file.
+.clangd/index/Parameters.cpp.7736AEC8F7D78693.idx, it is a binary file.
+.clangd/index/Parameters.h.2A9963C3EA34CB73.idx, it is a binary file.
+.clangd/index/ParameterSweep.cpp.29A55E912A6D9392.idx, it is a binary file.
+.clangd/index/ParameterSweep.h.00CC4FE01406A0FB.idx, it is a binary file.
+.clangd/index/PMLMeshTransformation.cpp.ADB8F9EF85F4B068.idx, it is a binary file.
+.clangd/index/PMLMeshTransformation.h.EAFFC2EC1B183103.idx, it is a binary file.
+.clangd/index/PMLSurface.cpp.41FBCA63857C6745.idx, it is a binary file.
+.clangd/index/PMLSurface.h.72A94087E1A7B6D7.idx, it is a binary file.
+.clangd/index/PointSourceField.cpp.BABAD4F141C2B48E.idx, it is a binary file.
+.clangd/index/PointSourceField.h.877C744520E1637F.idx, it is a binary file.
+.clangd/index/PointVal.cpp.7599EABF8C6E38D3.idx, it is a binary file.
+.clangd/index/PointVal.h.8C214563A2A75400.idx, it is a binary file.
+.clangd/index/QuadratureFormulaCircle.cpp.A48F3B236EDC7DAB.idx, it is a binary file.
+.clangd/index/RectangularMode.cpp.1A9CE108CDB5241D.idx, it is a binary file.
+.clangd/index/RectangularMode.h.52C504DE40566B9A.idx, it is a binary file.
+.clangd/index/Sector.cpp.213006934E6DC8C0.idx, it is a binary file.
+.clangd/index/Sector.h.8F7D7C427C67A5EF.idx, it is a binary file.
+.clangd/index/ShapeDescription.cpp.724E1F1349F277DC.idx, it is a binary file.
+.clangd/index/ShapeDescription.h.573811F2CB7B05F4.idx, it is a binary file.
+.clangd/index/Simulation.cpp.24E0E7D9059FA2FD.idx, it is a binary file.
+.clangd/index/Simulation.h.7089B35E1E65E82B.idx, it is a binary file.
+.clangd/index/SingleCoreRun.cpp.95311B5A0A1E8DF4.idx, it is a binary file.
+.clangd/index/SingleCoreRun.h.BB6F564C03E42B03.idx, it is a binary file.
+.clangd/index/SolutionWeight.cpp.C0C626811A956057.idx, it is a binary file.
+.clangd/index/SolutionWeight.h.4C341B8A3A62B1D3.idx, it is a binary file.
+.clangd/index/SpaceTransformation.cpp.1658957282E0DE78.idx, it is a binary file.
+.clangd/index/SpaceTransformation.h.A424A312D14D10C7.idx, it is a binary file.
+.clangd/index/SquareMeshGenerator.cpp.2A12EEF4493E96BC.idx, it is a binary file.
+.clangd/index/SquareMeshGenerator.h.7EC095CD52596DF9.idx, it is a binary file.
+.clangd/index/staticfunctions.cpp.D31E94833B78139D.idx, it is a binary file.
+.clangd/index/staticfunctions.h.362F8BB98879A290.idx, it is a binary file.
+.clangd/index/SweepingRun.cpp.479AF4933833ECFC.idx, it is a binary file.
+.clangd/index/SweepingRun.h.6E31A14851FF6E72.idx, it is a binary file.
+.clangd/index/TestData.h.C614C7489B046875.idx, it is a binary file.
+.clangd/index/TestHelperFunctions.h.7C278C00F33D8D25.idx, it is a binary file.
+.clangd/index/Types.h.070AD14874FDE545.idx, it is a binary file.
+.gitignore, code is 13, comment is 0, blank is 0.
+.gitmodules, code is 3, comment is 1, blank is 0.
+.project, code is 79, comment is 0, blank is 0.
+.settings/language.settings.xml, code is 15, comment is 0, blank is 0.
+.settings/org.eclipse.cdt.codan.core.prefs, code is 104, comment is 0, blank is 0.
+.settings/org.eclipse.cdt.core.prefs, code is 165, comment is 0, blank is 0.
+.settings/org.eclipse.cdt.ui.prefs, code is 3, comment is 0, blank is 0.
+.settings/org.eclipse.ltk.core.refactoring.prefs, code is 2, comment is 0, blank is 0.
+.settings/org.eclipse.mylyn.tasks.ui.prefs, code is 3, comment is 1, blank is 0.
+build/.cmake/api/v1/query/client-vscode/query.json, code is 1, comment is 0, blank is 0.
+build/.cmake/api/v1/reply/cache-v2-df533e907b54ad58ee03.json, code is 1851, comment is 0, blank is 0.
+build/.cmake/api/v1/reply/codemodel-v2-bc15a8d85a23f78431d8.json, code is 237, comment is 0, blank is 0.
+build/.cmake/api/v1/reply/index-2021-04-09T19-16-38-0168.json, code is 87, comment is 0, blank is 0.
+build/.cmake/api/v1/reply/target-Code-Debug-ced06ed9d655389eb2e6.json, code is 659, comment is 0, blank is 2.
+build/.cmake/api/v1/reply/target-gmock-Debug-b1e6641224a83985bfc2.json, code is 177, comment is 0, blank is 2.
+build/.cmake/api/v1/reply/target-gmock_main-Debug-3f0c685bc4919d39370a.json, code is 183, comment is 0, blank is 2.
+build/.cmake/api/v1/reply/target-gtest-Debug-ffb94aca6688ac4f92a1.json, code is 153, comment is 0, blank is 2.
+build/.cmake/api/v1/reply/target-gtest_main-Debug-4f9a691ec6f99b6eba23.json, code is 169, comment is 0, blank is 2.
+build/.cmake/api/v1/reply/target-main-Debug-a710ddad56f0ded800ff.json, code is 530, comment is 0, blank is 2.
+build/.cmake/api/v1/reply/target-waveguide_tests-Debug-809d682e35e21792f7ef.json, code is 576, comment is 0, blank is 2.
+build/cmake_install.cmake, code is 48, comment is 0, blank is 9.
+build/CMakeCache.txt, code is 221, comment is 228, blank is 104.
+build/CMakeFiles/3.16.3/CMakeCCompiler.cmake, code is 60, comment is 0, blank is 16.
+build/CMakeFiles/3.16.3/CMakeCXXCompiler.cmake, code is 70, comment is 0, blank is 18.
+build/CMakeFiles/3.16.3/CMakeDetermineCompilerABI_C.bin, it is a binary file.
+build/CMakeFiles/3.16.3/CMakeDetermineCompilerABI_CXX.bin, it is a binary file.
+build/CMakeFiles/3.16.3/CMakeSystem.cmake, code is 10, comment is 0, blank is 5.
+build/CMakeFiles/3.16.3/CompilerIdC/a.out, it is a binary file.
+build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c, code is 507, comment is 50, blank is 114.
+build/CMakeFiles/3.16.3/CompilerIdCXX/a.out, it is a binary file.
+build/CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp, code is 491, comment is 52, blank is 117.
+build/CMakeFiles/cmake.check_cache, code is 1, comment is 0, blank is 0.
+build/CMakeFiles/CMakeDirectoryInformation.cmake, code is 12, comment is 0, blank is 4.
+build/CMakeFiles/CMakeError.log, code is 45, comment is 0, blank is 11.
+build/CMakeFiles/CMakeOutput.log, code is 443, comment is 8, blank is 46.
+build/CMakeFiles/Makefile.cmake, code is 16, comment is 0, blank is 77.
+build/CMakeFiles/Makefile2, code is 269, comment is 0, blank is 106.
+build/CMakeFiles/progress.marks, code is 1, comment is 0, blank is 0.
+build/CMakeFiles/TargetDirectories.txt, code is 49, comment is 0, blank is 0.
+build/CMakeFiles/waveguide_tests.dir/build.make, code is 35, comment is 0, blank is 22.
+build/CMakeFiles/waveguide_tests.dir/cmake_clean.cmake, code is 6, comment is 0, blank is 7.
+build/CMakeFiles/waveguide_tests.dir/CXX.includecache, code is 1, comment is 0, blank is 0.
+build/CMakeFiles/waveguide_tests.dir/depend.internal, code is 10871, comment is 0, blank is 1.
+build/CMakeFiles/waveguide_tests.dir/depend.make, code is 10867, comment is 0, blank is 5.
+build/CMakeFiles/waveguide_tests.dir/DependInfo.cmake, code is 18, comment is 0, blank is 27.
+build/CMakeFiles/waveguide_tests.dir/flags.make, code is 6, comment is 0, blank is 4.
+build/CMakeFiles/waveguide_tests.dir/link.txt, code is 1, comment is 0, blank is 0.
+build/CMakeFiles/waveguide_tests.dir/progress.make, code is 5, comment is 0, blank is 1.
+build/CMakeFiles/waveguide_tests.dir/tests/BoundaryMethodTests.cpp.o, it is a binary file.
+build/CMakeFiles/waveguide_tests.dir/tests/ExactSolutionTests.cpp.o, it is a binary file.
+build/CMakeFiles/waveguide_tests.dir/tests/HardyPolynomialTests.cpp.o, it is a binary file.
+build/CMakeFiles/waveguide_tests.dir/tests/MeshTests.cpp.o, it is a binary file.
+build/Code/cmake_install.cmake, code is 33, comment is 0, blank is 6.
+build/Code/CMakeFiles/CMakeDirectoryInformation.cmake, code is 12, comment is 0, blank is 4.
+build/Code/CMakeFiles/Code.dir/BoundaryCondition/BoundaryCondition.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/BoundaryCondition/DofData.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/BoundaryCondition/HSIEPolynomial.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/BoundaryCondition/HSIESurface.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/BoundaryCondition/JacobianForCell.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/BoundaryCondition/LaguerreFunction.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/BoundaryCondition/PMLMeshTransformation.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/BoundaryCondition/PMLSurface.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/build.make, code is 35, comment is 0, blank is 22.
+build/Code/CMakeFiles/Code.dir/cmake_clean.cmake, code is 6, comment is 0, blank is 44.
+build/Code/CMakeFiles/Code.dir/cmake_clean_target.cmake, code is 2, comment is 0, blank is 1.
+build/Code/CMakeFiles/Code.dir/Core/GlobalObjects.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Core/NumericProblem.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Core/Sector.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Core/SolutionWeight.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/CXX.includecache, code is 1, comment is 0, blank is 0.
+build/Code/CMakeFiles/Code.dir/depend.internal, code is 105470, comment is 0, blank is 1.
+build/Code/CMakeFiles/Code.dir/depend.make, code is 105429, comment is 0, blank is 42.
+build/Code/CMakeFiles/Code.dir/DependInfo.cmake, code is 18, comment is 0, blank is 64.
+build/Code/CMakeFiles/Code.dir/flags.make, code is 6, comment is 0, blank is 4.
+build/Code/CMakeFiles/Code.dir/Helpers/GeometryManager.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Helpers/ModeManager.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Helpers/OutputManager.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Helpers/ParameterReader.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Helpers/Parameters.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Helpers/PointSourceField.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Helpers/PointVal.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Helpers/QuadratureFormulaCircle.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Helpers/ShapeDescription.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Helpers/staticfunctions.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Hierarchy/DofIndexData.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Hierarchy/HierarchicalProblem.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Hierarchy/LevelDofIndexData.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Hierarchy/LocalProblem.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Hierarchy/MPICommunicator.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Hierarchy/NonLocalProblem.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/link.txt, code is 2, comment is 0, blank is 0.
+build/Code/CMakeFiles/Code.dir/MeshGenerators/SquareMeshGenerator.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/ModalComputations/RectangularMode.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/progress.make, code is 42, comment is 0, blank is 1.
+build/Code/CMakeFiles/Code.dir/Runners/ParameterSweep.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Runners/Simulation.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Runners/SingleCoreRun.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Runners/SweepingRun.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Solutions/ExactSolution.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Solutions/ExactSolutionConjugate.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Solutions/ExactSolutionRamped.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/SpaceTransformations/DualProblemTransformationWrapper.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/SpaceTransformations/HomogenousTransformationRectangular.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/SpaceTransformations/InhomogenousTransformationRectangular.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/SpaceTransformations/SpaceTransformation.cpp.o, it is a binary file.
+build/Code/CMakeFiles/progress.marks, code is 1, comment is 0, blank is 0.
+build/Code/CTestTestfile.cmake, code is 6, comment is 0, blank is 0.
+build/Code/libCode.a, it is a binary file.
+build/Code/Makefile, code is 1016, comment is 0, blank is 426.
+build/Comparison 2/HSIE_Dirichlet.vtu, code is 69, comment is 23, blank is 1.
+build/Comparison 2/HSIE_Taper.vtu, code is 69, comment is 23, blank is 1.
+build/Comparison 2/HSIE_Taper_no_zero.vtu, code is 69, comment is 23, blank is 1.
+build/Comparison 2/PML_Dirichlet.vtu, code is 69, comment is 23, blank is 1.
+build/Comparison 2/PML_Taper.vtu, code is 69, comment is 23, blank is 1.
+build/Comparison 2/PML_Taper_no_zero.vtu, code is 69, comment is 23, blank is 1.
+build/Comparison1/HSIE_DIRICHLET.vtu, code is 45, comment is 10, blank is 1.
+build/Comparison1/HSIE_TAPER.vtu, code is 45, comment is 10, blank is 1.
+build/Comparison1/img1.png, it is a binary file.
+build/Comparison1/PML_DIRICHLET.vtu, code is 45, comment is 10, blank is 1.
+build/Comparison1/PML_TAPER.vtu, code is 45, comment is 10, blank is 1.
+build/compile_commands.json, code is 252, comment is 0, blank is 0.
+build/CTestTestfile.cmake, code is 11, comment is 0, blank is 0.
+build/grid_surface0b.vtu, code is 49, comment is 3, blank is 1.
+build/grid_surface1b.vtu, code is 48, comment is 3, blank is 3.
+build/grid_surface2b.vtu, code is 41, comment is 3, blank is 1.
+build/grid_surface3b.vtu, code is 54, comment is 3, blank is 2.
+build/grid_surface4b.vtu, code is 54, comment is 4, blank is 2.
+build/grid_surface5b.vtu, code is 39, comment is 3, blank is 4.
+build/lib/libgmock_maind.a, it is a binary file.
+build/lib/libgmockd.a, it is a binary file.
+build/lib/libgtest_maind.a, it is a binary file.
+build/lib/libgtestd.a, it is a binary file.
+build/Main/cmake_install.cmake, code is 33, comment is 0, blank is 6.
+build/Main/CMakeFiles/CMakeDirectoryInformation.cmake, code is 12, comment is 0, blank is 4.
+build/Main/CMakeFiles/main.dir/build.make, code is 35, comment is 0, blank is 22.
+build/Main/CMakeFiles/main.dir/cmake_clean.cmake, code is 6, comment is 0, blank is 4.
+build/Main/CMakeFiles/main.dir/CXX.includecache, code is 1, comment is 0, blank is 0.
+build/Main/CMakeFiles/main.dir/depend.internal, code is 3357, comment is 0, blank is 1.
+build/Main/CMakeFiles/main.dir/depend.make, code is 3356, comment is 0, blank is 2.
+build/Main/CMakeFiles/main.dir/DependInfo.cmake, code is 18, comment is 0, blank is 24.
+build/Main/CMakeFiles/main.dir/flags.make, code is 6, comment is 0, blank is 4.
+build/Main/CMakeFiles/main.dir/link.txt, code is 1, comment is 0, blank is 0.
+build/Main/CMakeFiles/main.dir/main.cpp.o, it is a binary file.
+build/Main/CMakeFiles/main.dir/progress.make, code is 2, comment is 0, blank is 1.
+build/Main/CMakeFiles/progress.marks, code is 1, comment is 0, blank is 0.
+build/Main/CTestTestfile.cmake, code is 6, comment is 0, blank is 0.
+build/Main/main, it is a binary file.
+build/Main/Makefile, code is 176, comment is 0, blank is 66.
+build/Makefile, code is 304, comment is 0, blank is 110.
+build/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+build/solution_0.vtu, code is 69, comment is 23, blank is 1.
+build/Testing/Temporary/LastTest.log, code is 3, comment is 0, blank is 0.
+build/third_party/googletest/cmake_install.cmake, code is 37, comment is 0, blank is 8.
+build/third_party/googletest/CMakeFiles/CMakeDirectoryInformation.cmake, code is 12, comment is 0, blank is 4.
+build/third_party/googletest/CMakeFiles/progress.marks, code is 1, comment is 0, blank is 0.
+build/third_party/googletest/CTestTestfile.cmake, code is 7, comment is 0, blank is 0.
+build/third_party/googletest/googlemock/cmake_install.cmake, code is 52, comment is 0, blank is 13.
+build/third_party/googletest/googlemock/CMakeFiles/CMakeDirectoryInformation.cmake, code is 12, comment is 0, blank is 4.
+build/third_party/googletest/googlemock/CMakeFiles/gmock.dir/build.make, code is 35, comment is 0, blank is 22.
+build/third_party/googletest/googlemock/CMakeFiles/gmock.dir/cmake_clean.cmake, code is 6, comment is 0, blank is 4.
+build/third_party/googletest/googlemock/CMakeFiles/gmock.dir/cmake_clean_target.cmake, code is 2, comment is 0, blank is 1.
+build/third_party/googletest/googlemock/CMakeFiles/gmock.dir/CXX.includecache, code is 1, comment is 0, blank is 0.
+build/third_party/googletest/googlemock/CMakeFiles/gmock.dir/depend.internal, code is 45, comment is 0, blank is 1.
+build/third_party/googletest/googlemock/CMakeFiles/gmock.dir/depend.make, code is 44, comment is 0, blank is 2.
+build/third_party/googletest/googlemock/CMakeFiles/gmock.dir/DependInfo.cmake, code is 18, comment is 0, blank is 13.
+build/third_party/googletest/googlemock/CMakeFiles/gmock.dir/flags.make, code is 6, comment is 0, blank is 4.
+build/third_party/googletest/googlemock/CMakeFiles/gmock.dir/link.txt, code is 2, comment is 0, blank is 0.
+build/third_party/googletest/googlemock/CMakeFiles/gmock.dir/progress.make, code is 2, comment is 0, blank is 1.
+build/third_party/googletest/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o, it is a binary file.
+build/third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/build.make, code is 35, comment is 0, blank is 22.
+build/third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/cmake_clean.cmake, code is 6, comment is 0, blank is 4.
+build/third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/cmake_clean_target.cmake, code is 2, comment is 0, blank is 1.
+build/third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/CXX.includecache, code is 1, comment is 0, blank is 0.
+build/third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/depend.internal, code is 40, comment is 0, blank is 1.
+build/third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/depend.make, code is 39, comment is 0, blank is 2.
+build/third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/DependInfo.cmake, code is 18, comment is 0, blank is 14.
+build/third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/flags.make, code is 6, comment is 0, blank is 4.
+build/third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/link.txt, code is 2, comment is 0, blank is 0.
+build/third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/progress.make, code is 2, comment is 0, blank is 1.
+build/third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o, it is a binary file.
+build/third_party/googletest/googlemock/CMakeFiles/progress.marks, code is 1, comment is 0, blank is 0.
+build/third_party/googletest/googlemock/CTestTestfile.cmake, code is 7, comment is 0, blank is 0.
+build/third_party/googletest/googlemock/Makefile, code is 209, comment is 0, blank is 79.
+build/third_party/googletest/googletest/cmake_install.cmake, code is 69, comment is 0, blank is 16.
+build/third_party/googletest/googletest/CMakeFiles/CMakeDirectoryInformation.cmake, code is 12, comment is 0, blank is 4.
+build/third_party/googletest/googletest/CMakeFiles/Export/lib/cmake/GTest/GTestTargets-debug.cmake, code is 43, comment is 0, blank is 10.
+build/third_party/googletest/googletest/CMakeFiles/Export/lib/cmake/GTest/GTestTargets.cmake, code is 94, comment is 0, blank is 18.
+build/third_party/googletest/googletest/CMakeFiles/gtest.dir/build.make, code is 35, comment is 0, blank is 22.
+build/third_party/googletest/googletest/CMakeFiles/gtest.dir/cmake_clean.cmake, code is 6, comment is 0, blank is 4.
+build/third_party/googletest/googletest/CMakeFiles/gtest.dir/cmake_clean_target.cmake, code is 2, comment is 0, blank is 1.
+build/third_party/googletest/googletest/CMakeFiles/gtest.dir/CXX.includecache, code is 1, comment is 0, blank is 0.
+build/third_party/googletest/googletest/CMakeFiles/gtest.dir/depend.internal, code is 35, comment is 0, blank is 1.
+build/third_party/googletest/googletest/CMakeFiles/gtest.dir/depend.make, code is 34, comment is 0, blank is 2.
+build/third_party/googletest/googletest/CMakeFiles/gtest.dir/DependInfo.cmake, code is 18, comment is 0, blank is 10.
+build/third_party/googletest/googletest/CMakeFiles/gtest.dir/flags.make, code is 6, comment is 0, blank is 4.
+build/third_party/googletest/googletest/CMakeFiles/gtest.dir/link.txt, code is 2, comment is 0, blank is 0.
+build/third_party/googletest/googletest/CMakeFiles/gtest.dir/progress.make, code is 2, comment is 0, blank is 1.
+build/third_party/googletest/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o, it is a binary file.
+build/third_party/googletest/googletest/CMakeFiles/gtest_main.dir/build.make, code is 35, comment is 0, blank is 22.
+build/third_party/googletest/googletest/CMakeFiles/gtest_main.dir/cmake_clean.cmake, code is 6, comment is 0, blank is 4.
+build/third_party/googletest/googletest/CMakeFiles/gtest_main.dir/cmake_clean_target.cmake, code is 2, comment is 0, blank is 1.
+build/third_party/googletest/googletest/CMakeFiles/gtest_main.dir/CXX.includecache, code is 1, comment is 0, blank is 0.
+build/third_party/googletest/googletest/CMakeFiles/gtest_main.dir/depend.internal, code is 24, comment is 0, blank is 1.
+build/third_party/googletest/googletest/CMakeFiles/gtest_main.dir/depend.make, code is 23, comment is 0, blank is 2.
+build/third_party/googletest/googletest/CMakeFiles/gtest_main.dir/DependInfo.cmake, code is 18, comment is 0, blank is 11.
+build/third_party/googletest/googletest/CMakeFiles/gtest_main.dir/flags.make, code is 6, comment is 0, blank is 4.
+build/third_party/googletest/googletest/CMakeFiles/gtest_main.dir/link.txt, code is 2, comment is 0, blank is 0.
+build/third_party/googletest/googletest/CMakeFiles/gtest_main.dir/progress.make, code is 2, comment is 0, blank is 1.
+build/third_party/googletest/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o, it is a binary file.
+build/third_party/googletest/googletest/CMakeFiles/progress.marks, code is 1, comment is 0, blank is 0.
+build/third_party/googletest/googletest/CTestTestfile.cmake, code is 6, comment is 0, blank is 0.
+build/third_party/googletest/googletest/generated/gmock.pc, code is 9, comment is 1, blank is 1.
+build/third_party/googletest/googletest/generated/gmock_main.pc, code is 9, comment is 1, blank is 1.
+build/third_party/googletest/googletest/generated/gtest.pc, code is 8, comment is 1, blank is 1.
+build/third_party/googletest/googletest/generated/gtest_main.pc, code is 9, comment is 1, blank is 1.
+build/third_party/googletest/googletest/generated/GTestConfig.cmake, code is 27, comment is 0, blank is 6.
+build/third_party/googletest/googletest/generated/GTestConfigVersion.cmake, code is 27, comment is 0, blank is 5.
+build/third_party/googletest/googletest/Makefile, code is 209, comment is 0, blank is 79.
+build/third_party/googletest/Makefile, code is 143, comment is 0, blank is 53.
+build/waveguide_tests, it is a binary file.
+cmake_install.cmake, code is 48, comment is 0, blank is 9.
+CMakeCache.txt, code is 221, comment is 228, blank is 104.
+CMakeFiles/3.16.3/CMakeCCompiler.cmake, code is 60, comment is 0, blank is 16.
+CMakeFiles/3.16.3/CMakeCXXCompiler.cmake, code is 70, comment is 0, blank is 18.
+CMakeFiles/3.16.3/CMakeDetermineCompilerABI_C.bin, it is a binary file.
+CMakeFiles/3.16.3/CMakeDetermineCompilerABI_CXX.bin, it is a binary file.
+CMakeFiles/3.16.3/CMakeSystem.cmake, code is 10, comment is 0, blank is 5.
+CMakeFiles/3.16.3/CompilerIdC/a.out, it is a binary file.
+CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c, code is 507, comment is 50, blank is 114.
+CMakeFiles/3.16.3/CompilerIdCXX/a.out, it is a binary file.
+CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp, code is 491, comment is 52, blank is 117.
+CMakeFiles/cmake.check_cache, code is 1, comment is 0, blank is 0.
+CMakeFiles/CMakeDirectoryInformation.cmake, code is 12, comment is 0, blank is 4.
+CMakeFiles/CMakeError.log, code is 45, comment is 0, blank is 11.
+CMakeFiles/CMakeOutput.log, code is 443, comment is 8, blank is 46.
+CMakeFiles/Makefile.cmake, code is 16, comment is 0, blank is 77.
+CMakeFiles/Makefile2, code is 269, comment is 0, blank is 106.
+CMakeFiles/progress.marks, code is 1, comment is 0, blank is 0.
+CMakeFiles/Progress/43, code is 1, comment is 0, blank is 0.
+CMakeFiles/Progress/44, code is 1, comment is 0, blank is 0.
+CMakeFiles/Progress/45, code is 1, comment is 0, blank is 0.
+CMakeFiles/Progress/46, code is 1, comment is 0, blank is 0.
+CMakeFiles/Progress/47, code is 1, comment is 0, blank is 0.
+CMakeFiles/Progress/48, code is 1, comment is 0, blank is 0.
+CMakeFiles/Progress/49, code is 1, comment is 0, blank is 0.
+CMakeFiles/Progress/50, code is 1, comment is 0, blank is 0.
+CMakeFiles/Progress/count.txt, code is 1, comment is 0, blank is 0.
+CMakeFiles/TargetDirectories.txt, code is 49, comment is 0, blank is 0.
+CMakeFiles/waveguide_tests.dir/build.make, code is 35, comment is 0, blank is 22.
+CMakeFiles/waveguide_tests.dir/cmake_clean.cmake, code is 6, comment is 0, blank is 7.
+CMakeFiles/waveguide_tests.dir/CXX.includecache, code is 1, comment is 0, blank is 0.
+CMakeFiles/waveguide_tests.dir/depend.internal, code is 10868, comment is 0, blank is 1.
+CMakeFiles/waveguide_tests.dir/depend.make, code is 10864, comment is 0, blank is 5.
+CMakeFiles/waveguide_tests.dir/DependInfo.cmake, code is 18, comment is 0, blank is 27.
+CMakeFiles/waveguide_tests.dir/flags.make, code is 6, comment is 0, blank is 4.
+CMakeFiles/waveguide_tests.dir/link.txt, code is 1, comment is 0, blank is 0.
+CMakeFiles/waveguide_tests.dir/progress.make, code is 5, comment is 0, blank is 1.
+CMakeFiles/waveguide_tests.dir/tests/BoundaryMethodTests.cpp.o, it is a binary file.
+CMakeFiles/waveguide_tests.dir/tests/ExactSolutionTests.cpp.o, it is a binary file.
+CMakeFiles/waveguide_tests.dir/tests/HardyPolynomialTests.cpp.o, it is a binary file.
+CMakeFiles/waveguide_tests.dir/tests/MeshTests.cpp.o, it is a binary file.
+CMakeLists.txt, code is 40, comment is 0, blank is 12.
+Code/BoundaryCondition/BoundaryCondition.cpp, code is 72, comment is 0, blank is 6.
+Code/BoundaryCondition/BoundaryCondition.h, code is 41, comment is 0, blank is 5.
+Code/BoundaryCondition/DofData.cpp, code is 1, comment is 3, blank is 1.
+Code/BoundaryCondition/DofData.h, code is 37, comment is 0, blank is 7.
+Code/BoundaryCondition/HSIEPolynomial.cpp, code is 197, comment is 0, blank is 25.
+Code/BoundaryCondition/HSIEPolynomial.h, code is 34, comment is 0, blank is 7.
+Code/BoundaryCondition/HSIESurface.cpp, code is 1162, comment is 16, blank is 98.
+Code/BoundaryCondition/HSIESurface.h, code is 97, comment is 0, blank is 7.
+Code/BoundaryCondition/JacobianForCell.cpp, code is 104, comment is 7, blank is 7.
+Code/BoundaryCondition/JacobianForCell.h, code is 28, comment is 0, blank is 4.
+Code/BoundaryCondition/LaguerreFunction.cpp, code is 30, comment is 3, blank is 5.
+Code/BoundaryCondition/LaguerreFunction.h, code is 11, comment is 4, blank is 4.
+Code/BoundaryCondition/PMLMeshTransformation.cpp, code is 40, comment is 0, blank is 5.
+Code/BoundaryCondition/PMLMeshTransformation.h, code is 15, comment is 0, blank is 3.
+Code/BoundaryCondition/PMLSurface.cpp, code is 602, comment is 4, blank is 53.
+Code/BoundaryCondition/PMLSurface.h, code is 58, comment is 0, blank is 3.
+Code/cmake_install.cmake, code is 33, comment is 0, blank is 6.
+Code/CMakeFiles/CMakeDirectoryInformation.cmake, code is 12, comment is 0, blank is 4.
+Code/CMakeFiles/Code.dir/BoundaryCondition/DofData.cpp.o, it is a binary file.
+Code/CMakeFiles/Code.dir/BoundaryCondition/LaguerreFunction.cpp.o, it is a binary file.
+Code/CMakeFiles/Code.dir/build.make, code is 35, comment is 0, blank is 22.
+Code/CMakeFiles/Code.dir/cmake_clean.cmake, code is 6, comment is 0, blank is 44.
+Code/CMakeFiles/Code.dir/cmake_clean_target.cmake, code is 2, comment is 0, blank is 1.
+Code/CMakeFiles/Code.dir/CXX.includecache, code is 1, comment is 0, blank is 0.
+Code/CMakeFiles/Code.dir/depend.internal, code is 105469, comment is 0, blank is 1.
+Code/CMakeFiles/Code.dir/depend.make, code is 105428, comment is 0, blank is 42.
+Code/CMakeFiles/Code.dir/DependInfo.cmake, code is 18, comment is 0, blank is 64.
+Code/CMakeFiles/Code.dir/flags.make, code is 6, comment is 0, blank is 4.
+Code/CMakeFiles/Code.dir/Helpers/QuadratureFormulaCircle.cpp.o, it is a binary file.
+Code/CMakeFiles/Code.dir/Helpers/ShapeDescription.cpp.o, it is a binary file.
+Code/CMakeFiles/Code.dir/Hierarchy/LevelDofIndexData.cpp.o, it is a binary file.
+Code/CMakeFiles/Code.dir/link.txt, code is 2, comment is 0, blank is 0.
+Code/CMakeFiles/Code.dir/progress.make, code is 42, comment is 0, blank is 1.
+Code/CMakeFiles/progress.marks, code is 1, comment is 0, blank is 0.
+Code/CMakeLists.txt, code is 54, comment is 0, blank is 3.
+Code/Core/GlobalObjects.cpp, code is 13, comment is 4, blank is 5.
+Code/Core/GlobalObjects.h, code is 12, comment is 0, blank is 3.
+Code/Core/NumericProblem.cpp, code is 413, comment is 2, blank is 22.
+Code/Core/NumericProblem.h, code is 102, comment is 17, blank is 6.
+Code/Core/Sector.cpp, code is 397, comment is 0, blank is 54.
+Code/Core/Sector.h, code is 39, comment is 148, blank is 32.
+Code/Core/SolutionWeight.cpp, code is 27, comment is 0, blank is 5.
+Code/Core/SolutionWeight.h, code is 10, comment is 39, blank is 5.
+Code/Core/Types.h, code is 158, comment is 0, blank is 27.
+Code/CTestTestfile.cmake, code is 6, comment is 0, blank is 0.
+Code/Helpers/Enums.h, code is 73, comment is 0, blank is 12.
+Code/Helpers/GeometryManager.cpp, code is 159, comment is 0, blank is 14.
+Code/Helpers/GeometryManager.h, code is 34, comment is 4, blank is 17.
+Code/Helpers/ModeManager.cpp, code is 452, comment is 9, blank is 30.
+Code/Helpers/ModeManager.h, code is 34, comment is 0, blank is 22.
+Code/Helpers/OutputManager.cpp, code is 60, comment is 0, blank is 7.
+Code/Helpers/OutputManager.h, code is 19, comment is 0, blank is 4.
+Code/Helpers/ParameterReader.cpp, code is 113, comment is 0, blank is 5.
+Code/Helpers/ParameterReader.h, code is 13, comment is 47, blank is 6.
+Code/Helpers/Parameters.cpp, code is 50, comment is 3, blank is 7.
+Code/Helpers/Parameters.h, code is 71, comment is 16, blank is 64.
+Code/Helpers/PointSourceField.cpp, code is 94, comment is 8, blank is 19.
+Code/Helpers/PointSourceField.h, code is 23, comment is 0, blank is 4.
+Code/Helpers/PointVal.cpp, code is 23, comment is 6, blank is 8.
+Code/Helpers/PointVal.h, code is 12, comment is 0, blank is 5.
+Code/Helpers/QuadratureFormulaCircle.cpp, code is 23669, comment is 147, blank is 74.
+Code/Helpers/ShapeDescription.cpp, code is 28, comment is 6, blank is 4.
+Code/Helpers/ShapeDescription.h, code is 11, comment is 0, blank is 5.
+Code/Helpers/staticfunctions.cpp, code is 588, comment is 3, blank is 67.
+Code/Helpers/staticfunctions.h, code is 79, comment is 6, blank is 50.
+Code/Hierarchy/DofIndexData.cpp, code is 27, comment is 6, blank is 8.
+Code/Hierarchy/DofIndexData.h, code is 13, comment is 0, blank is 4.
+Code/Hierarchy/HierarchicalProblem.cpp, code is 44, comment is 3, blank is 6.
+Code/Hierarchy/HierarchicalProblem.h, code is 64, comment is 0, blank is 7.
+Code/Hierarchy/LevelDofIndexData.cpp, code is 24, comment is 6, blank is 5.
+Code/Hierarchy/LevelDofIndexData.h, code is 8, comment is 0, blank is 0.
+Code/Hierarchy/LocalProblem.cpp, code is 506, comment is 24, blank is 36.
+Code/Hierarchy/LocalProblem.h, code is 47, comment is 0, blank is 28.
+Code/Hierarchy/MPICommunicator.cpp, code is 89, comment is 2, blank is 6.
+Code/Hierarchy/MPICommunicator.h, code is 13, comment is 0, blank is 2.
+Code/Hierarchy/NonLocalProblem.cpp, code is 977, comment is 48, blank is 98.
+Code/Hierarchy/NonLocalProblem.h, code is 83, comment is 0, blank is 52.
+Code/libCode.a, it is a binary file.
+Code/MainpageDoku.dox, code is 0, comment is 24, blank is 1.
+Code/Makefile, code is 1016, comment is 0, blank is 426.
+Code/MeshGenerators/SquareMeshGenerator.cpp, code is 121, comment is 5, blank is 14.
+Code/MeshGenerators/SquareMeshGenerator.h, code is 22, comment is 36, blank is 11.
+Code/ModalComputations/RectangularMode.cpp, code is 429, comment is 21, blank is 23.
+Code/ModalComputations/RectangularMode.h, code is 74, comment is 1, blank is 5.
+Code/OutputGenerators/Console/CoreLogger.h, code is 11, comment is 12, blank is 5.
+Code/OutputGenerators/Console/GradientTable.cpp, code is 115, comment is 6, blank is 16.
+Code/OutputGenerators/Console/GradientTable.h, code is 28, comment is 7, blank is 15.
+Code/OutputGenerators/Files/FileLogger.cpp, code is 1, comment is 0, blank is 1.
+Code/OutputGenerators/Files/FileLogger.h, code is 11, comment is 6, blank is 5.
+Code/OutputGenerators/Images/GnuplotGenerator.cpp, code is 0, comment is 0, blank is 1.
+Code/OutputGenerators/Images/GnuplotGenerator.h, code is 0, comment is 0, blank is 1.
+Code/OutputGenerators/OutputGenerator.cpp, code is 0, comment is 0, blank is 1.
+Code/OutputGenerators/OutputGenerator.h, code is 0, comment is 0, blank is 1.
+Code/Runners/ParameterSweep.cpp, code is 86, comment is 6, blank is 15.
+Code/Runners/ParameterSweep.h, code is 16, comment is 0, blank is 8.
+Code/Runners/Simulation.cpp, code is 18, comment is 6, blank is 6.
+Code/Runners/Simulation.h, code is 16, comment is 0, blank is 8.
+Code/Runners/SingleCoreRun.cpp, code is 32, comment is 6, blank is 16.
+Code/Runners/SingleCoreRun.h, code is 15, comment is 0, blank is 8.
+Code/Runners/SweepingRun.cpp, code is 37, comment is 6, blank is 13.
+Code/Runners/SweepingRun.h, code is 15, comment is 0, blank is 8.
+Code/Solutions/ExactSolution.cpp, code is 232, comment is 2, blank is 11.
+Code/Solutions/ExactSolution.h, code is 25, comment is 47, blank is 10.
+Code/Solutions/ExactSolutionConjugate.cpp, code is 41, comment is 0, blank is 8.
+Code/Solutions/ExactSolutionConjugate.h, code is 19, comment is 0, blank is 3.
+Code/Solutions/ExactSolutionRamped.cpp, code is 107, comment is 0, blank is 12.
+Code/Solutions/ExactSolutionRamped.h, code is 27, comment is 0, blank is 3.
+Code/SpaceTransformations/DualProblemTransformationWrapper.cpp, code is 114, comment is 7, blank is 35.
+Code/SpaceTransformations/DualProblemTransformationWrapper.h, code is 58, comment is 167, blank is 37.
+Code/SpaceTransformations/HomogenousTransformationRectangular.cpp, code is 287, comment is 1, blank is 38.
+Code/SpaceTransformations/HomogenousTransformationRectangular.h, code is 48, comment is 142, blank is 34.
+Code/SpaceTransformations/InhomogenousTransformationRectangular.cpp, code is 245, comment is 0, blank is 36.
+Code/SpaceTransformations/InhomogenousTransformationRectangular.h, code is 51, comment is 143, blank is 36.
+Code/SpaceTransformations/SpaceTransformation.cpp, code is 85, comment is 0, blank is 12.
+Code/SpaceTransformations/SpaceTransformation.h, code is 60, comment is 149, blank is 42.
+compile_commands.json, code is 252, comment is 0, blank is 0.
+CTestTestfile.cmake, code is 11, comment is 0, blank is 0.
+Documentation/WaveguideSolverDocumentation.pdf, it is a binary file.
+Doxygen/Doxyfile, code is 15, comment is 0, blank is 1.
+Doxygen/kit_logo.png, it is a binary file.
+Doxygen/MainpageDoku.dox, code is 0, comment is 26, blank is 1.
+lib/libgmock_maind.a, it is a binary file.
+lib/libgmockd.a, it is a binary file.
+lib/libgtest_maind.a, it is a binary file.
+lib/libgtestd.a, it is a binary file.
+Main/cmake_install.cmake, code is 33, comment is 0, blank is 6.
+Main/CMakeFiles/CMakeDirectoryInformation.cmake, code is 12, comment is 0, blank is 4.
+Main/CMakeFiles/main.dir/build.make, code is 35, comment is 0, blank is 22.
+Main/CMakeFiles/main.dir/cmake_clean.cmake, code is 6, comment is 0, blank is 4.
+Main/CMakeFiles/main.dir/CXX.includecache, code is 1, comment is 0, blank is 0.
+Main/CMakeFiles/main.dir/depend.internal, code is 3356, comment is 0, blank is 1.
+Main/CMakeFiles/main.dir/depend.make, code is 3355, comment is 0, blank is 2.
+Main/CMakeFiles/main.dir/DependInfo.cmake, code is 18, comment is 0, blank is 24.
+Main/CMakeFiles/main.dir/flags.make, code is 6, comment is 0, blank is 4.
+Main/CMakeFiles/main.dir/link.txt, code is 1, comment is 0, blank is 0.
+Main/CMakeFiles/main.dir/main.cpp.o, it is a binary file.
+Main/CMakeFiles/main.dir/progress.make, code is 2, comment is 0, blank is 1.
+Main/CMakeFiles/progress.marks, code is 1, comment is 0, blank is 0.
+Main/CMakeLists.txt, code is 11, comment is 0, blank is 3.
+Main/CTestTestfile.cmake, code is 6, comment is 0, blank is 0.
+Main/main, it is a binary file.
+Main/main.cpp, code is 88, comment is 0, blank is 11.
+Main/Makefile, code is 176, comment is 0, blank is 66.
+make_documentation.sh, code is 4, comment is 0, blank is 0.
+make_phase_plot.sh, code is 5, comment is 1, blank is 1.
+Makefile, code is 304, comment is 0, blank is 110.
+Modes/Horizontal_mode_1550nm.txt, code is 53826, comment is 0, blank is 0.
+Modes/InterpolateShape.m, code is 22, comment is 10, blank is 0.
+Modes/mode_1550nm.dat, code is 53824, comment is 0, blank is 0.
+Modes/mode_1550nm_old.dat, code is 53824, comment is 0, blank is 0.
+Modes/openfigure.m, code is 85, comment is 53, blank is 5.
+Modes/PWB_Bond_Trajectories/get_sectors.py, code is 6, comment is 2, blank is 2.
+Modes/PWB_Bond_Trajectories/grep, code is 0, comment is 0, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_0_bend_strength_auto_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_0_bend_strength_auto_offset_0.000_no_taper.obj, code is 2512, comment is 1668, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_1_bend_strength_auto_offset_25.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_1_bend_strength_auto_offset_25.000_no_taper.obj, code is 2704, comment is 1796, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_2_bend_strength_auto_offset_50.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_2_bend_strength_auto_offset_50.000_no_taper.obj, code is 3208, comment is 2132, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_40_bend_strength_0.5_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_40_bend_strength_0.5_offset_0.000_no_taper.obj, code is 2464, comment is 1636, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_41_bend_strength_0.953125_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_41_bend_strength_0.953125_offset_0.000_no_taper.obj, code is 2464, comment is 1636, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_42_bend_strength_1.40625_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_42_bend_strength_1.40625_offset_0.000_no_taper.obj, code is 2464, comment is 1636, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_43_bend_strength_1.859375_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_43_bend_strength_1.859375_offset_0.000_no_taper.obj, code is 2464, comment is 1636, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_44_bend_strength_2.3125_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_44_bend_strength_2.3125_offset_0.000_no_taper.obj, code is 2464, comment is 1636, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_45_bend_strength_2.765625_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_45_bend_strength_2.765625_offset_0.000_no_taper.obj, code is 2464, comment is 1636, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_46_bend_strength_3.21875_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_46_bend_strength_3.21875_offset_0.000_no_taper.obj, code is 2476, comment is 1644, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_47_bend_strength_3.671875_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_47_bend_strength_3.671875_offset_0.000_no_taper.obj, code is 2476, comment is 1644, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_48_bend_strength_4.125_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_48_bend_strength_4.125_offset_0.000_no_taper.obj, code is 2476, comment is 1644, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_49_bend_strength_4.578125_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_49_bend_strength_4.578125_offset_0.000_no_taper.obj, code is 2476, comment is 1644, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_50_bend_strength_5.03125_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_50_bend_strength_5.03125_offset_0.000_no_taper.obj, code is 2488, comment is 1652, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_51_bend_strength_5.484375_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_51_bend_strength_5.484375_offset_0.000_no_taper.obj, code is 2488, comment is 1652, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_52_bend_strength_5.9375_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_52_bend_strength_5.9375_offset_0.000_no_taper.obj, code is 2488, comment is 1652, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_53_bend_strength_6.390625_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_53_bend_strength_6.390625_offset_0.000_no_taper.obj, code is 2488, comment is 1652, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_54_bend_strength_6.84375_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_54_bend_strength_6.84375_offset_0.000_no_taper.obj, code is 2500, comment is 1660, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_55_bend_strength_7.296875_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_55_bend_strength_7.296875_offset_0.000_no_taper.obj, code is 2500, comment is 1660, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_56_bend_strength_7.75_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_56_bend_strength_7.75_offset_0.000_no_taper.obj, code is 2500, comment is 1660, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_57_bend_strength_8.203125_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_57_bend_strength_8.203125_offset_0.000_no_taper.obj, code is 2500, comment is 1660, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_58_bend_strength_8.65625_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_58_bend_strength_8.65625_offset_0.000_no_taper.obj, code is 2512, comment is 1668, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_59_bend_strength_9.109375_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_59_bend_strength_9.109375_offset_0.000_no_taper.obj, code is 2512, comment is 1668, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_60_bend_strength_9.5625_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_60_bend_strength_9.5625_offset_0.000_no_taper.obj, code is 2512, comment is 1668, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_61_bend_strength_10.015625_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_61_bend_strength_10.015625_offset_0.000_no_taper.obj, code is 2524, comment is 1676, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_62_bend_strength_10.46875_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_62_bend_strength_10.46875_offset_0.000_no_taper.obj, code is 2524, comment is 1676, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_63_bend_strength_10.921875_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_63_bend_strength_10.921875_offset_0.000_no_taper.obj, code is 2524, comment is 1676, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_64_bend_strength_11.375_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_64_bend_strength_11.375_offset_0.000_no_taper.obj, code is 2536, comment is 1684, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_65_bend_strength_11.828125_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_65_bend_strength_11.828125_offset_0.000_no_taper.obj, code is 2536, comment is 1684, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_66_bend_strength_12.28125_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_66_bend_strength_12.28125_offset_0.000_no_taper.obj, code is 2536, comment is 1684, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_67_bend_strength_12.734375_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_67_bend_strength_12.734375_offset_0.000_no_taper.obj, code is 2548, comment is 1692, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_68_bend_strength_13.1875_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_68_bend_strength_13.1875_offset_0.000_no_taper.obj, code is 2548, comment is 1692, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_69_bend_strength_13.640625_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_69_bend_strength_13.640625_offset_0.000_no_taper.obj, code is 2560, comment is 1700, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_70_bend_strength_14.09375_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_70_bend_strength_14.09375_offset_0.000_no_taper.obj, code is 2560, comment is 1700, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_71_bend_strength_14.546875_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_71_bend_strength_14.546875_offset_0.000_no_taper.obj, code is 2560, comment is 1700, blank is 0.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_72_bend_strength_15.0_offset_0.000_no_taper.hdf5, it is a binary file.
+Modes/PWB_Bond_Trajectories/reference_bond_nr_72_bend_strength_15.0_offset_0.000_no_taper.obj, code is 2572, comment is 1708, blank is 0.
+Modes/PWB_Bond_Trajectories/view_pwb.py, code is 65, comment is 28, blank is 26.
+Modes/Results.ods, it is a binary file.
+Modes/run_all_server.sh, code is 25, comment is 1, blank is 1.
+Modes/test - Kopie.csv, code is 36, comment is 0, blank is 0.
+Modes/test.csv, code is 57, comment is 0, blank is 0.
+Modes/visualize_1550.m, code is 10, comment is 0, blank is 0.
+Modes/xyz file operations/xyz file operations/xyz2grid.m, code is 28, comment is 70, blank is 16.
+Modes/xyz2grid.m, code is 28, comment is 70, blank is 16.
+Parameters/Case/base.prm, code is 11, comment is 0, blank is 0.
+Parameters/Case/parameter_sweep.prm, code is 16, comment is 0, blank is 0.
+Parameters/Case/point_source/cos_cos.prm, code is 11, comment is 0, blank is 0.
+Parameters/Case/point_source/hertz.prm, code is 11, comment is 0, blank is 0.
+Parameters/Case/point_source/modal.prm, code is 11, comment is 0, blank is 0.
+Parameters/Case/point_source/modal_2.prm, code is 13, comment is 0, blank is 0.
+Parameters/Case/straight_waveguide/single_proc_example.prm, code is 18, comment is 0, blank is 0.
+Parameters/Run/1-1-1.prm, code is 9, comment is 0, blank is 0.
+Parameters/Run/3-1-1.prm, code is 6, comment is 0, blank is 0.
+Parameters/Run/3-3-1.prm, code is 6, comment is 0, blank is 0.
+Parameters/Run/3-3-3.prm, code is 6, comment is 0, blank is 0.
+Parameters/Run/4-1-1.prm, code is 9, comment is 0, blank is 0.
+Parameters/Run/base.prm, code is 15, comment is 0, blank is 0.
+Parameters/settings.ini, code is 2, comment is 0, blank is 0.
+Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+powerplot.png, it is a binary file.
+Readme.md, code is 64, comment is 0, blank is 28.
+run_data.dat, code is 8, comment is 0, blank is 0.
+settings.ini, code is 2, comment is 0, blank is 0.
+Skripte/Fehlerentwicklung 24mm straight round, code is 4, comment is 0, blank is 0.
+Skripte/Old1, code is 5, comment is 0, blank is 1.
+Skripte/Old2, code is 5, comment is 0, blank is 1.
+Skripte/petsc_solver.h, code is 267, comment is 608, blank is 113.
+Skripte/Preconditioner_Analyse/cleanfigure.m, code is 316, comment is 313, blank is 115.
+Skripte/Preconditioner_Analyse/data.dat, code is 12, comment is 0, blank is 0.
+Skripte/Preconditioner_Analyse/dev/formatWhitespace.m, code is 57, comment is 20, blank is 10.
+Skripte/Preconditioner_Analyse/figure2dot.m, code is 69, comment is 30, blank is 14.
+Skripte/Preconditioner_Analyse/m2tInputParser.m, code is 143, comment is 27, blank is 10.
+Skripte/Preconditioner_Analyse/matlab2tikz.m, code is 3753, comment is 1767, blank is 593.
+Skripte/Preconditioner_Analyse/output.tex, code is 74, comment is 1, blank is 4.
+Skripte/Preconditioner_Analyse/private/errorUnknownEnvironment.m, code is 4, comment is 1, blank is 0.
+Skripte/Preconditioner_Analyse/private/getEnvironment.m, code is 19, comment is 3, blank is 3.
+Skripte/Preconditioner_Analyse/private/guitypes.m, code is 4, comment is 8, blank is 1.
+Skripte/Preconditioner_Analyse/private/isAxis3D.m, code is 4, comment is 1, blank is 0.
+Skripte/Preconditioner_Analyse/private/isVersionBelow.m, code is 12, comment is 2, blank is 0.
+Skripte/Preconditioner_Analyse/private/m2tstrjoin.m, code is 28, comment is 7, blank is 2.
+Skripte/Preconditioner_Analyse/private/m2tUpdater.m, code is 169, comment is 97, blank is 18.
+Skripte/Preconditioner_Analyse/private/versionArray.m, code is 15, comment is 4, blank is 0.
+Skripte/Preconditioner_Analyse/private/versionString.m, code is 8, comment is 2, blank is 0.
+Skripte/Preconditioner_Analyse/script_steps.gp, code is 10, comment is 0, blank is 0.
+Skripte/Preconditioner_Analyse/script_times.gp, code is 6, comment is 0, blank is 0.
+Skripte/Preconditioner_Analyse/stepplot.pdf, it is a binary file.
+Skripte/Preconditioner_Analyse/steps_plot.tex, code is 61, comment is 1, blank is 3.
+Skripte/Preconditioner_Analyse/sweeping2.fig, it is a binary file.
+Skripte/Preconditioner_Analyse/sweeping_hie.fig, it is a binary file.
+Skripte/Preconditioner_Analyse/SweepingHIE.tex, code is 130, comment is 1, blank is 15.
+Skripte/Preconditioner_Analyse/SweepingPML.tex, code is 228, comment is 1, blank is 15.
+Skripte/Preconditioner_Analyse/timesplot.pdf, it is a binary file.
+Skripte/Results6mumparallel.dat, code is 7, comment is 0, blank is 1.
+solution.dat, code is 100, comment is 0, blank is 0.
+solution2.dat, code is 100, comment is 0, blank is 0.
+Solutions/.marker, code is 0, comment is 0, blank is 0.
+Solutions/run0/main0.log, it is a binary file.
+Solutions/run0/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run0/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run0/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run0/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run0/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run0/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run0/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run0/solution0.vtu, code is 69, comment is 23, blank is 1.
+Solutions/run1/main0.log, it is a binary file.
+Solutions/run1/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run1/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run1/solution0.vtu, code is 69, comment is 23, blank is 1.
+Solutions/run10/main0.log, it is a binary file.
+Solutions/run10/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run10/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run10/solution0.vtu, code is 69, comment is 23, blank is 1.
+Solutions/run11/main0.log, it is a binary file.
+Solutions/run11/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run11/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run11/solution0.vtu, code is 69, comment is 23, blank is 1.
+Solutions/run12/main0.log, it is a binary file.
+Solutions/run12/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run12/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run12/solution0.vtu, code is 69, comment is 23, blank is 1.
+Solutions/run13/main0.log, it is a binary file.
+Solutions/run13/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run14/main0.log, it is a binary file.
+Solutions/run14/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run14/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run14/solution0.vtu, code is 69, comment is 23, blank is 1.
+Solutions/run15/main0.log, it is a binary file.
+Solutions/run15/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run15/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run15/solution0.vtu, code is 69, comment is 23, blank is 1.
+Solutions/run16/main0.log, it is a binary file.
+Solutions/run16/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run16/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run16/solution0.vtu, code is 69, comment is 23, blank is 1.
+Solutions/run17/main0.log, it is a binary file.
+Solutions/run17/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run17/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run17/solution0.vtu, code is 69, comment is 23, blank is 1.
+Solutions/run18/main0.log, it is a binary file.
+Solutions/run18/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run18/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run18/solution0.vtu, code is 69, comment is 23, blank is 1.
+Solutions/run19/main0.log, it is a binary file.
+Solutions/run19/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run19/solution0.vtu, code is 0, comment is 0, blank is 0.
+Solutions/run2/main0.log, it is a binary file.
+Solutions/run2/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run20/main0.log, it is a binary file.
+Solutions/run20/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run20/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run20/solution0.vtu, code is 69, comment is 23, blank is 1.
+Solutions/run21/main0.log, it is a binary file.
+Solutions/run21/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run21/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run21/solution0.vtu, code is 69, comment is 23, blank is 1.
+Solutions/run22/main0.log, it is a binary file.
+Solutions/run22/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run22/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run22/solution0.vtu, code is 69, comment is 23, blank is 1.
+Solutions/run23/main0.log, it is a binary file.
+Solutions/run23/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run23/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run23/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run24/main0.log, it is a binary file.
+Solutions/run24/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run24/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run24/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run25/main0.log, it is a binary file.
+Solutions/run25/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run25/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run25/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run26/main0.log, it is a binary file.
+Solutions/run26/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run26/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run26/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run27/main0.log, it is a binary file.
+Solutions/run27/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run27/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run27/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run28/main0.log, it is a binary file.
+Solutions/run28/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run28/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run28/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run28/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run28/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run28/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run28/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run28/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run29/main0.log, it is a binary file.
+Solutions/run29/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run29/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run29/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run29/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run29/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run29/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run29/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run29/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run3/main0.log, it is a binary file.
+Solutions/run3/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run3/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run3/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run3/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run3/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run3/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run3/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run3/solution0.vtu, code is 69, comment is 23, blank is 1.
+Solutions/run30/main0.log, it is a binary file.
+Solutions/run30/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run30/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run30/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run30/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run30/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run30/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run30/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run30/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run31/main0.log, it is a binary file.
+Solutions/run31/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run31/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run31/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run31/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run31/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run31/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run31/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run31/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run32/main0.log, it is a binary file.
+Solutions/run32/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run32/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run32/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run32/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run32/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run32/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run32/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run32/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run33/main0.log, it is a binary file.
+Solutions/run33/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run33/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run33/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run33/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run33/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run33/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run33/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run33/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run34/main0.log, it is a binary file.
+Solutions/run34/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run34/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run34/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run34/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run34/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run34/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run34/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run34/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run35/main0.log, it is a binary file.
+Solutions/run35/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run35/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run35/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run35/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run35/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run35/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run35/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run35/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run36/main0.log, it is a binary file.
+Solutions/run36/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run36/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run36/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run36/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run36/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run36/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run36/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run36/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run37/main0.log, it is a binary file.
+Solutions/run37/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run37/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run37/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run37/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run37/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run37/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run37/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run37/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run38/main0.log, it is a binary file.
+Solutions/run38/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run38/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run38/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run38/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run38/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run38/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run38/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run38/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run39/main0.log, it is a binary file.
+Solutions/run39/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run39/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run39/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run39/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run39/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run39/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run39/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run39/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run4/main0.log, it is a binary file.
+Solutions/run4/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run4/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run4/solution0.vtu, code is 69, comment is 23, blank is 1.
+Solutions/run40/main0.log, it is a binary file.
+Solutions/run40/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run40/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run40/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run40/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run40/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run40/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run40/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run40/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run41/main0.log, it is a binary file.
+Solutions/run41/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run41/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run41/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run41/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run41/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run41/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run41/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run41/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run42/main0.log, it is a binary file.
+Solutions/run42/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run42/solution0.vtu, code is 0, comment is 0, blank is 0.
+Solutions/run43/main0.log, it is a binary file.
+Solutions/run43/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run43/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run43/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run43/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run43/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run43/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run43/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run43/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run44/main0.log, it is a binary file.
+Solutions/run44/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run44/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run44/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run44/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run44/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run44/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run44/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run44/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run45/main0.log, it is a binary file.
+Solutions/run45/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run45/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run45/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run46/main0.log, it is a binary file.
+Solutions/run46/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run46/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run46/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run47/main0.log, it is a binary file.
+Solutions/run47/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run47/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run47/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run48/main0.log, it is a binary file.
+Solutions/run48/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run48/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run48/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run49/main0.log, it is a binary file.
+Solutions/run49/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run49/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run49/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run5/main0.log, it is a binary file.
+Solutions/run5/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run50/main0.log, code is 0, comment is 0, blank is 0.
+Solutions/run51/main0.log, it is a binary file.
+Solutions/run51/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run51/PML_domain-0-0.vtu, code is 41, comment is 8, blank is 1.
+Solutions/run51/PML_domain-1-0.vtu, code is 41, comment is 8, blank is 1.
+Solutions/run51/PML_domain-2-0.vtu, code is 41, comment is 8, blank is 1.
+Solutions/run51/PML_domain-3-0.vtu, code is 41, comment is 8, blank is 1.
+Solutions/run51/PML_domain-5-0.vtu, code is 41, comment is 8, blank is 1.
+Solutions/run51/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run51/solution0.vtu, code is 81, comment is 29, blank is 1.
+Solutions/run52/main0.log, it is a binary file.
+Solutions/run52/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run52/solution0.vtu, code is 0, comment is 0, blank is 0.
+Solutions/run53/main0.log, it is a binary file.
+Solutions/run53/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run53/solution0.vtu, code is 0, comment is 0, blank is 0.
+Solutions/run54/main0.log, it is a binary file.
+Solutions/run54/main1.log, it is a binary file.
+Solutions/run54/main2.log, it is a binary file.
+Solutions/run54/main3.log, it is a binary file.
+Solutions/run54/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run55/main0.log, it is a binary file.
+Solutions/run55/main1.log, it is a binary file.
+Solutions/run55/main2.log, it is a binary file.
+Solutions/run55/main3.log, it is a binary file.
+Solutions/run55/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run56/main0.log, it is a binary file.
+Solutions/run56/main1.log, it is a binary file.
+Solutions/run56/main2.log, it is a binary file.
+Solutions/run56/main3.log, it is a binary file.
+Solutions/run56/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run57/main0.log, it is a binary file.
+Solutions/run57/main1.log, it is a binary file.
+Solutions/run57/main2.log, it is a binary file.
+Solutions/run57/main3.log, it is a binary file.
+Solutions/run57/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run58/main0.log, it is a binary file.
+Solutions/run58/main1.log, it is a binary file.
+Solutions/run58/main2.log, it is a binary file.
+Solutions/run58/main3.log, it is a binary file.
+Solutions/run58/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run59/main0.log, it is a binary file.
+Solutions/run59/main1.log, it is a binary file.
+Solutions/run59/main2.log, it is a binary file.
+Solutions/run59/main3.log, it is a binary file.
+Solutions/run59/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run6/main0.log, it is a binary file.
+Solutions/run6/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run6/PML_domain-0-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run6/PML_domain-1-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run6/PML_domain-2-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run6/PML_domain-3-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run6/PML_domain-4-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run6/PML_domain-5-0.vtu, code is 41, comment is 9, blank is 1.
+Solutions/run6/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run6/solution0.vtu, code is 69, comment is 23, blank is 1.
+Solutions/run60/main0.log, it is a binary file.
+Solutions/run60/main1.log, it is a binary file.
+Solutions/run60/main2.log, it is a binary file.
+Solutions/run60/main3.log, it is a binary file.
+Solutions/run60/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run61/main0.log, it is a binary file.
+Solutions/run61/main1.log, it is a binary file.
+Solutions/run61/main2.log, it is a binary file.
+Solutions/run61/main3.log, it is a binary file.
+Solutions/run61/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run62/main0.log, it is a binary file.
+Solutions/run62/main1.log, it is a binary file.
+Solutions/run62/main2.log, it is a binary file.
+Solutions/run62/main3.log, it is a binary file.
+Solutions/run62/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run63/main0.log, it is a binary file.
+Solutions/run63/main1.log, it is a binary file.
+Solutions/run63/main2.log, it is a binary file.
+Solutions/run63/main3.log, it is a binary file.
+Solutions/run63/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run64/main0.log, it is a binary file.
+Solutions/run64/main1.log, it is a binary file.
+Solutions/run64/main2.log, it is a binary file.
+Solutions/run64/main3.log, it is a binary file.
+Solutions/run64/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run65/main0.log, it is a binary file.
+Solutions/run65/main1.log, it is a binary file.
+Solutions/run65/main2.log, it is a binary file.
+Solutions/run65/main3.log, it is a binary file.
+Solutions/run65/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run66/main0.log, it is a binary file.
+Solutions/run66/main1.log, it is a binary file.
+Solutions/run66/main2.log, it is a binary file.
+Solutions/run66/main3.log, it is a binary file.
+Solutions/run66/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run67/main0.log, it is a binary file.
+Solutions/run67/main1.log, it is a binary file.
+Solutions/run67/main2.log, it is a binary file.
+Solutions/run67/main3.log, it is a binary file.
+Solutions/run67/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run68/main0.log, it is a binary file.
+Solutions/run68/main1.log, it is a binary file.
+Solutions/run68/main2.log, it is a binary file.
+Solutions/run68/main3.log, it is a binary file.
+Solutions/run68/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run69/main0.log, it is a binary file.
+Solutions/run69/main1.log, it is a binary file.
+Solutions/run69/main2.log, it is a binary file.
+Solutions/run69/main3.log, it is a binary file.
+Solutions/run69/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run7/main0.log, it is a binary file.
+Solutions/run7/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run70/main0.log, it is a binary file.
+Solutions/run70/main1.log, it is a binary file.
+Solutions/run70/main2.log, it is a binary file.
+Solutions/run70/main3.log, it is a binary file.
+Solutions/run70/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run71/main0.log, it is a binary file.
+Solutions/run71/main1.log, it is a binary file.
+Solutions/run71/main2.log, it is a binary file.
+Solutions/run71/main3.log, it is a binary file.
+Solutions/run71/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run72/main0.log, it is a binary file.
+Solutions/run72/main1.log, it is a binary file.
+Solutions/run72/main2.log, it is a binary file.
+Solutions/run72/main3.log, it is a binary file.
+Solutions/run72/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run73/main0.log, it is a binary file.
+Solutions/run73/main1.log, it is a binary file.
+Solutions/run73/main2.log, it is a binary file.
+Solutions/run73/main3.log, it is a binary file.
+Solutions/run73/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run74/main0.log, it is a binary file.
+Solutions/run74/main1.log, it is a binary file.
+Solutions/run74/main2.log, it is a binary file.
+Solutions/run74/main3.log, it is a binary file.
+Solutions/run74/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run75/main0.log, it is a binary file.
+Solutions/run75/main1.log, it is a binary file.
+Solutions/run75/main2.log, it is a binary file.
+Solutions/run75/main3.log, it is a binary file.
+Solutions/run75/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run76/main0.log, it is a binary file.
+Solutions/run76/main1.log, it is a binary file.
+Solutions/run76/main2.log, it is a binary file.
+Solutions/run76/main3.log, it is a binary file.
+Solutions/run76/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run77/main0.log, it is a binary file.
+Solutions/run77/main1.log, it is a binary file.
+Solutions/run77/main2.log, it is a binary file.
+Solutions/run77/main3.log, it is a binary file.
+Solutions/run77/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run78/main0.log, it is a binary file.
+Solutions/run78/main1.log, it is a binary file.
+Solutions/run78/main2.log, it is a binary file.
+Solutions/run78/main3.log, it is a binary file.
+Solutions/run78/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run79/main0.log, it is a binary file.
+Solutions/run79/main1.log, it is a binary file.
+Solutions/run79/main2.log, it is a binary file.
+Solutions/run79/main3.log, it is a binary file.
+Solutions/run79/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run8/main0.log, it is a binary file.
+Solutions/run8/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run80/main0.log, it is a binary file.
+Solutions/run80/main1.log, it is a binary file.
+Solutions/run80/main2.log, it is a binary file.
+Solutions/run80/main3.log, it is a binary file.
+Solutions/run80/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run81/main0.log, it is a binary file.
+Solutions/run81/main1.log, it is a binary file.
+Solutions/run81/main2.log, it is a binary file.
+Solutions/run81/main3.log, it is a binary file.
+Solutions/run81/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run82/main0.log, it is a binary file.
+Solutions/run82/main1.log, it is a binary file.
+Solutions/run82/main2.log, it is a binary file.
+Solutions/run82/main3.log, it is a binary file.
+Solutions/run82/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run9/main0.log, it is a binary file.
+Solutions/run9/Phase_Plot0.dat, code is 50, comment is 0, blank is 0.
+Solutions/run9/run_description.txt, code is 4, comment is 0, blank is 0.
+Solutions/run9/solution0.vtu, code is 69, comment is 23, blank is 1.
+tests/BoundaryMethodTests.cpp, code is 412, comment is 7, blank is 50.
+tests/ExactSolutionTests.cpp, code is 24, comment is 0, blank is 2.
+tests/Fixtures.h, code is 227, comment is 0, blank is 8.
+tests/HardyPolynomialTests.cpp, code is 36, comment is 0, blank is 2.
+tests/LaguerreFunctionTests, code is 0, comment is 0, blank is 0.
+tests/MeshTests.cpp, code is 16, comment is 0, blank is 1.
+tests/TestData.h, code is 14, comment is 0, blank is 3.
+tests/TestHelperFunctions.h, code is 81, comment is 0, blank is 7.
+third_party/googletest/.clang-format, code is 4, comment is 0, blank is 0.
+third_party/googletest/.gitignore, code is 79, comment is 0, blank is 5.
+third_party/googletest/.travis.yml, code is 11, comment is 55, blank is 2.
+third_party/googletest/appveyor.yml, code is 136, comment is 3, blank is 20.
+third_party/googletest/BUILD.bazel, code is 168, comment is 0, blank is 12.
+third_party/googletest/ci/build-linux-bazel.sh, code is 4, comment is 30, blank is 2.
+third_party/googletest/ci/build-platformio.sh, code is 1, comment is 1, blank is 0.
+third_party/googletest/ci/env-linux.sh, code is 4, comment is 34, blank is 3.
+third_party/googletest/ci/env-osx.sh, code is 6, comment is 38, blank is 3.
+third_party/googletest/ci/get-nprocessors.sh, code is 9, comment is 37, blank is 2.
+third_party/googletest/ci/install-linux.sh, code is 14, comment is 31, blank is 4.
+third_party/googletest/ci/install-osx.sh, code is 7, comment is 30, blank is 3.
+third_party/googletest/ci/install-platformio.sh, code is 2, comment is 2, blank is 1.
+third_party/googletest/ci/log-config.sh, code is 13, comment is 32, blank is 6.
+third_party/googletest/ci/travis.sh, code is 21, comment is 3, blank is 5.
+third_party/googletest/cmake_install.cmake, code is 37, comment is 0, blank is 8.
+third_party/googletest/CMakeFiles/CMakeDirectoryInformation.cmake, code is 12, comment is 0, blank is 4.
+third_party/googletest/CMakeFiles/progress.marks, code is 1, comment is 0, blank is 0.
+third_party/googletest/CMakeLists.txt, code is 24, comment is 0, blank is 8.
+third_party/googletest/CONTRIBUTING.md, code is 47, comment is 6, blank is 21.
+third_party/googletest/CTestTestfile.cmake, code is 7, comment is 0, blank is 0.
+third_party/googletest/googlemock/cmake/gmock.pc.in, code is 9, comment is 1, blank is 1.
+third_party/googletest/googlemock/cmake/gmock_main.pc.in, code is 9, comment is 1, blank is 1.
+third_party/googletest/googlemock/cmake_install.cmake, code is 52, comment is 0, blank is 13.
+third_party/googletest/googlemock/CMakeFiles/CMakeDirectoryInformation.cmake, code is 12, comment is 0, blank is 4.
+third_party/googletest/googlemock/CMakeFiles/gmock.dir/build.make, code is 35, comment is 0, blank is 22.
+third_party/googletest/googlemock/CMakeFiles/gmock.dir/cmake_clean.cmake, code is 6, comment is 0, blank is 4.
+third_party/googletest/googlemock/CMakeFiles/gmock.dir/cmake_clean_target.cmake, code is 2, comment is 0, blank is 1.
+third_party/googletest/googlemock/CMakeFiles/gmock.dir/CXX.includecache, code is 1, comment is 0, blank is 0.
+third_party/googletest/googlemock/CMakeFiles/gmock.dir/depend.internal, code is 45, comment is 0, blank is 1.
+third_party/googletest/googlemock/CMakeFiles/gmock.dir/depend.make, code is 44, comment is 0, blank is 2.
+third_party/googletest/googlemock/CMakeFiles/gmock.dir/DependInfo.cmake, code is 18, comment is 0, blank is 13.
+third_party/googletest/googlemock/CMakeFiles/gmock.dir/flags.make, code is 6, comment is 0, blank is 4.
+third_party/googletest/googlemock/CMakeFiles/gmock.dir/link.txt, code is 2, comment is 0, blank is 0.
+third_party/googletest/googlemock/CMakeFiles/gmock.dir/progress.make, code is 2, comment is 0, blank is 1.
+third_party/googletest/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o, it is a binary file.
+third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/build.make, code is 35, comment is 0, blank is 22.
+third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/cmake_clean.cmake, code is 6, comment is 0, blank is 4.
+third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/cmake_clean_target.cmake, code is 2, comment is 0, blank is 1.
+third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/CXX.includecache, code is 1, comment is 0, blank is 0.
+third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/depend.internal, code is 40, comment is 0, blank is 1.
+third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/depend.make, code is 39, comment is 0, blank is 2.
+third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/DependInfo.cmake, code is 18, comment is 0, blank is 14.
+third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/flags.make, code is 6, comment is 0, blank is 4.
+third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/link.txt, code is 2, comment is 0, blank is 0.
+third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/progress.make, code is 2, comment is 0, blank is 1.
+third_party/googletest/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o, it is a binary file.
+third_party/googletest/googlemock/CMakeFiles/progress.marks, code is 1, comment is 0, blank is 0.
+third_party/googletest/googlemock/CMakeLists.txt, code is 182, comment is 0, blank is 44.
+third_party/googletest/googlemock/CONTRIBUTORS, code is 1, comment is 0, blank is 0.
+third_party/googletest/googlemock/CTestTestfile.cmake, code is 7, comment is 0, blank is 0.
+third_party/googletest/googlemock/docs/cheat_sheet.md, code is 221, comment is 3, blank is 57.
+third_party/googletest/googlemock/docs/community_created_documentation.md, code is 6, comment is 2, blank is 3.
+third_party/googletest/googlemock/docs/cook_book.md, code is 1813, comment is 115, blank is 502.
+third_party/googletest/googlemock/docs/for_dummies.md, code is 322, comment is 14, blank is 81.
+third_party/googletest/googlemock/docs/gmock_faq.md, code is 105, comment is 1, blank is 36.
+third_party/googletest/googlemock/docs/pump_manual.md, code is 141, comment is 12, blank is 32.
+third_party/googletest/googlemock/include/gmock/gmock-actions.h, code is 846, comment is 532, blank is 212.
+third_party/googletest/googlemock/include/gmock/gmock-cardinalities.h, code is 51, comment is 79, blank is 32.
+third_party/googletest/googlemock/include/gmock/gmock-function-mocker.h, code is 340, comment is 62, blank is 63.
+third_party/googletest/googlemock/include/gmock/gmock-generated-actions.h, code is 410, comment is 164, blank is 40.
+third_party/googletest/googlemock/include/gmock/gmock-generated-actions.h.pump, code is 135, comment is 161, blank is 60.
+third_party/googletest/googlemock/include/gmock/gmock-matchers.h, code is 3079, comment is 1256, blank is 597.
+third_party/googletest/googlemock/include/gmock/gmock-more-actions.h, code is 74, comment is 71, blank is 24.
+third_party/googletest/googlemock/include/gmock/gmock-more-matchers.h, code is 29, comment is 51, blank is 14.
+third_party/googletest/googlemock/include/gmock/gmock-nice-strict.h, code is 103, comment is 86, blank is 31.
+third_party/googletest/googlemock/include/gmock/gmock-spec-builders.h, code is 1008, comment is 765, blank is 293.
+third_party/googletest/googlemock/include/gmock/gmock.h, code is 20, comment is 68, blank is 13.
+third_party/googletest/googlemock/include/gmock/internal/custom/gmock-generated-actions.h, code is 3, comment is 5, blank is 3.
+third_party/googletest/googlemock/include/gmock/internal/custom/gmock-generated-actions.h.pump, code is 9, comment is 2, blank is 2.
+third_party/googletest/googlemock/include/gmock/internal/custom/gmock-matchers.h, code is 3, comment is 33, blank is 1.
+third_party/googletest/googlemock/include/gmock/internal/custom/gmock-port.h, code is 3, comment is 34, blank is 3.
+third_party/googletest/googlemock/include/gmock/internal/custom/README.md, code is 11, comment is 0, blank is 5.
+third_party/googletest/googlemock/include/gmock/internal/gmock-internal-utils.h, code is 229, comment is 196, blank is 59.
+third_party/googletest/googlemock/include/gmock/internal/gmock-port.h, code is 25, comment is 51, blank is 13.
+third_party/googletest/googlemock/include/gmock/internal/gmock-pp.h, code is 165, comment is 90, blank is 25.
+third_party/googletest/googlemock/LICENSE, code is 25, comment is 0, blank is 3.
+third_party/googletest/googlemock/Makefile, code is 209, comment is 0, blank is 79.
+third_party/googletest/googlemock/README.md, code is 24, comment is 1, blank is 7.
+third_party/googletest/googlemock/scripts/fuse_gmock_files.py, code is 92, comment is 60, blank is 55.
+third_party/googletest/googlemock/scripts/generator/cpp/__init__.py, code is 0, comment is 0, blank is 0.
+third_party/googletest/googlemock/scripts/generator/cpp/ast.py, code is 1255, comment is 218, blank is 269.
+third_party/googletest/googlemock/scripts/generator/cpp/gmock_class.py, code is 139, comment is 46, blank is 42.
+third_party/googletest/googlemock/scripts/generator/cpp/gmock_class_test.py, code is 199, comment is 26, blank is 58.
+third_party/googletest/googlemock/scripts/generator/cpp/keywords.py, code is 22, comment is 20, blank is 14.
+third_party/googletest/googlemock/scripts/generator/cpp/tokenize.py, code is 180, comment is 62, blank is 40.
+third_party/googletest/googlemock/scripts/generator/cpp/utils.py, code is 13, comment is 17, blank is 7.
+third_party/googletest/googlemock/scripts/generator/gmock_gen.py, code is 7, comment is 17, blank is 6.
+third_party/googletest/googlemock/scripts/generator/LICENSE, code is 154, comment is 1, blank is 29.
+third_party/googletest/googlemock/scripts/generator/README, code is 3, comment is 1, blank is 2.
+third_party/googletest/googlemock/scripts/generator/README.cppclean, code is 73, comment is 2, blank is 24.
+third_party/googletest/googlemock/scripts/pump.py, code is 604, comment is 51, blank is 176.
+third_party/googletest/googlemock/scripts/README.md, code is 4, comment is 0, blank is 1.
+third_party/googletest/googlemock/src/gmock-all.cc, code is 6, comment is 37, blank is 3.
+third_party/googletest/googlemock/src/gmock-cardinalities.cc, code is 89, comment is 46, blank is 23.
+third_party/googletest/googlemock/src/gmock-internal-utils.cc, code is 105, comment is 76, blank is 23.
+third_party/googletest/googlemock/src/gmock-matchers.cc, code is 270, comment is 164, blank is 29.
+third_party/googletest/googlemock/src/gmock-spec-builders.cc, code is 553, comment is 230, blank is 121.
+third_party/googletest/googlemock/src/gmock.cc, code is 81, comment is 92, blank is 42.
+third_party/googletest/googlemock/src/gmock_main.cc, code is 26, comment is 42, blank is 6.
+third_party/googletest/googlemock/test/BUILD.bazel, code is 98, comment is 0, blank is 10.
+third_party/googletest/googlemock/test/gmock-actions_test.cc, code is 1099, comment is 265, blank is 272.
+third_party/googletest/googlemock/test/gmock-cardinalities_test.cc, code is 291, comment is 57, blank is 89.
+third_party/googletest/googlemock/test/gmock-function-mocker_nc.cc, code is 9, comment is 1, blank is 6.
+third_party/googletest/googlemock/test/gmock-function-mocker_nc_test.py, code is 21, comment is 9, blank is 13.
+third_party/googletest/googlemock/test/gmock-function-mocker_test.cc, code is 667, comment is 126, blank is 168.
+third_party/googletest/googlemock/test/gmock-generated-actions_test.cc, code is 724, comment is 159, blank is 152.
+third_party/googletest/googlemock/test/gmock-generated-matchers_test.cc, code is 958, comment is 153, blank is 219.
+third_party/googletest/googlemock/test/gmock-internal-utils_test.cc, code is 519, comment is 156, blank is 119.
+third_party/googletest/googlemock/test/gmock-matchers_test.cc, code is 5153, comment is 697, blank is 1162.
+third_party/googletest/googlemock/test/gmock-more-actions_test.cc, code is 507, comment is 102, blank is 116.
+third_party/googletest/googlemock/test/gmock-nice-strict_test.cc, code is 321, comment is 79, blank is 104.
+third_party/googletest/googlemock/test/gmock-port_test.cc, code is 3, comment is 34, blank is 5.
+third_party/googletest/googlemock/test/gmock-pp-string_test.cc, code is 145, comment is 38, blank is 25.
+third_party/googletest/googlemock/test/gmock-pp_test.cc, code is 73, comment is 6, blank is 7.
+third_party/googletest/googlemock/test/gmock-spec-builders_test.cc, code is 1908, comment is 417, blank is 520.
+third_party/googletest/googlemock/test/gmock_all_test.cc, code is 11, comment is 36, blank is 1.
+third_party/googletest/googlemock/test/gmock_ex_test.cc, code is 32, comment is 38, blank is 11.
+third_party/googletest/googlemock/test/gmock_leak_test.py, code is 54, comment is 35, blank is 15.
+third_party/googletest/googlemock/test/gmock_leak_test_.cc, code is 35, comment is 43, blank is 22.
+third_party/googletest/googlemock/test/gmock_link2_test.cc, code is 2, comment is 33, blank is 4.
+third_party/googletest/googlemock/test/gmock_link_test.cc, code is 2, comment is 33, blank is 4.
+third_party/googletest/googlemock/test/gmock_link_test.h, code is 408, comment is 172, blank is 116.
+third_party/googletest/googlemock/test/gmock_output_test.py, code is 61, comment is 41, blank is 52.
+third_party/googletest/googlemock/test/gmock_output_test_.cc, code is 206, comment is 74, blank is 65.
+third_party/googletest/googlemock/test/gmock_output_test_golden.txt, code is 225, comment is 2, blank is 23.
+third_party/googletest/googlemock/test/gmock_stress_test.cc, code is 143, comment is 61, blank is 42.
+third_party/googletest/googlemock/test/gmock_test.cc, code is 99, comment is 37, blank is 48.
+third_party/googletest/googlemock/test/gmock_test_utils.py, code is 29, comment is 39, blank is 26.
+third_party/googletest/googlemock/test/pump_test.py, code is 101, comment is 30, blank is 51.
+third_party/googletest/googletest/cmake/Config.cmake.in, code is 8, comment is 0, blank is 1.
+third_party/googletest/googletest/cmake/gtest.pc.in, code is 8, comment is 1, blank is 1.
+third_party/googletest/googletest/cmake/gtest_main.pc.in, code is 9, comment is 1, blank is 1.
+third_party/googletest/googletest/cmake/internal_utils.cmake, code is 143, comment is 2, blank is 6.
+third_party/googletest/googletest/cmake/libgtest.la.in, code is 15, comment is 0, blank is 6.
+third_party/googletest/googletest/cmake_install.cmake, code is 69, comment is 0, blank is 16.
+third_party/googletest/googletest/CMakeFiles/CMakeDirectoryInformation.cmake, code is 12, comment is 0, blank is 4.
+third_party/googletest/googletest/CMakeFiles/Export/lib/cmake/GTest/GTestTargets-debug.cmake, code is 43, comment is 0, blank is 10.
+third_party/googletest/googletest/CMakeFiles/Export/lib/cmake/GTest/GTestTargets.cmake, code is 94, comment is 0, blank is 18.
+third_party/googletest/googletest/CMakeFiles/gtest.dir/build.make, code is 35, comment is 0, blank is 22.
+third_party/googletest/googletest/CMakeFiles/gtest.dir/cmake_clean.cmake, code is 6, comment is 0, blank is 4.
+third_party/googletest/googletest/CMakeFiles/gtest.dir/cmake_clean_target.cmake, code is 2, comment is 0, blank is 1.
+third_party/googletest/googletest/CMakeFiles/gtest.dir/CXX.includecache, code is 1, comment is 0, blank is 0.
+third_party/googletest/googletest/CMakeFiles/gtest.dir/depend.internal, code is 35, comment is 0, blank is 1.
+third_party/googletest/googletest/CMakeFiles/gtest.dir/depend.make, code is 34, comment is 0, blank is 2.
+third_party/googletest/googletest/CMakeFiles/gtest.dir/DependInfo.cmake, code is 18, comment is 0, blank is 10.
+third_party/googletest/googletest/CMakeFiles/gtest.dir/flags.make, code is 6, comment is 0, blank is 4.
+third_party/googletest/googletest/CMakeFiles/gtest.dir/link.txt, code is 2, comment is 0, blank is 0.
+third_party/googletest/googletest/CMakeFiles/gtest.dir/progress.make, code is 2, comment is 0, blank is 1.
+third_party/googletest/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o, it is a binary file.
+third_party/googletest/googletest/CMakeFiles/gtest_main.dir/build.make, code is 35, comment is 0, blank is 22.
+third_party/googletest/googletest/CMakeFiles/gtest_main.dir/cmake_clean.cmake, code is 6, comment is 0, blank is 4.
+third_party/googletest/googletest/CMakeFiles/gtest_main.dir/cmake_clean_target.cmake, code is 2, comment is 0, blank is 1.
+third_party/googletest/googletest/CMakeFiles/gtest_main.dir/CXX.includecache, code is 1, comment is 0, blank is 0.
+third_party/googletest/googletest/CMakeFiles/gtest_main.dir/depend.internal, code is 24, comment is 0, blank is 1.
+third_party/googletest/googletest/CMakeFiles/gtest_main.dir/depend.make, code is 23, comment is 0, blank is 2.
+third_party/googletest/googletest/CMakeFiles/gtest_main.dir/DependInfo.cmake, code is 18, comment is 0, blank is 11.
+third_party/googletest/googletest/CMakeFiles/gtest_main.dir/flags.make, code is 6, comment is 0, blank is 4.
+third_party/googletest/googletest/CMakeFiles/gtest_main.dir/link.txt, code is 2, comment is 0, blank is 0.
+third_party/googletest/googletest/CMakeFiles/gtest_main.dir/progress.make, code is 2, comment is 0, blank is 1.
+third_party/googletest/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o, it is a binary file.
+third_party/googletest/googletest/CMakeFiles/progress.marks, code is 1, comment is 0, blank is 0.
+third_party/googletest/googletest/CMakeLists.txt, code is 90, comment is 0, blank is 26.
+third_party/googletest/googletest/CONTRIBUTORS, code is 1, comment is 0, blank is 0.
+third_party/googletest/googletest/CTestTestfile.cmake, code is 6, comment is 0, blank is 0.
+third_party/googletest/googletest/docs/advanced.md, code is 1034, comment is 56, blank is 261.
+third_party/googletest/googletest/docs/faq.md, code is 272, comment is 12, blank is 93.
+third_party/googletest/googletest/docs/pkgconfig.md, code is 54, comment is 0, blank is 18.
+third_party/googletest/googletest/docs/primer.md, code is 233, comment is 15, blank is 67.
+third_party/googletest/googletest/docs/samples.md, code is 17, comment is 1, blank is 2.
+third_party/googletest/googletest/generated/gmock.pc, code is 9, comment is 1, blank is 1.
+third_party/googletest/googletest/generated/gmock_main.pc, code is 9, comment is 1, blank is 1.
+third_party/googletest/googletest/generated/gtest.pc, code is 8, comment is 1, blank is 1.
+third_party/googletest/googletest/generated/gtest_main.pc, code is 9, comment is 1, blank is 1.
+third_party/googletest/googletest/generated/GTestConfig.cmake, code is 27, comment is 0, blank is 6.
+third_party/googletest/googletest/generated/GTestConfigVersion.cmake, code is 27, comment is 0, blank is 5.
+third_party/googletest/googletest/include/gtest/gtest-death-test.h, code is 72, comment is 247, blank is 29.
+third_party/googletest/googletest/include/gtest/gtest-matchers.h, code is 414, comment is 256, blank is 107.
+third_party/googletest/googletest/include/gtest/gtest-message.h, code is 64, comment is 135, blank is 28.
+third_party/googletest/googletest/include/gtest/gtest-param-test.h, code is 146, comment is 330, blank is 39.
+third_party/googletest/googletest/include/gtest/gtest-printers.h, code is 534, comment is 297, blank is 99.
+third_party/googletest/googletest/include/gtest/gtest-spi.h, code is 98, comment is 121, blank is 26.
+third_party/googletest/googletest/include/gtest/gtest-test-part.h, code is 76, comment is 83, blank is 36.
+third_party/googletest/googletest/include/gtest/gtest-typed-test.h, code is 153, comment is 146, blank is 47.
+third_party/googletest/googletest/include/gtest/gtest.h, code is 962, comment is 1191, blank is 372.
+third_party/googletest/googletest/include/gtest/gtest_pred_impl.h, code is 216, comment is 100, blank is 45.
+third_party/googletest/googletest/include/gtest/gtest_prod.h, code is 5, comment is 52, blank is 5.
+third_party/googletest/googletest/include/gtest/internal/custom/gtest-port.h, code is 3, comment is 33, blank is 2.
+third_party/googletest/googletest/include/gtest/internal/custom/gtest-printers.h, code is 3, comment is 38, blank is 2.
+third_party/googletest/googletest/include/gtest/internal/custom/gtest.h, code is 3, comment is 33, blank is 2.
+third_party/googletest/googletest/include/gtest/internal/custom/README.md, code is 38, comment is 0, blank is 18.
+third_party/googletest/googletest/include/gtest/internal/gtest-death-test-internal.h, code is 161, comment is 107, blank is 42.
+third_party/googletest/googletest/include/gtest/internal/gtest-filepath.h, code is 53, comment is 129, blank is 35.
+third_party/googletest/googletest/include/gtest/internal/gtest-internal.h, code is 791, comment is 463, blank is 215.
+third_party/googletest/googletest/include/gtest/internal/gtest-param-util.h, code is 597, comment is 231, blank is 124.
+third_party/googletest/googletest/include/gtest/internal/gtest-port-arch.h, code is 72, comment is 39, blank is 3.
+third_party/googletest/googletest/include/gtest/internal/gtest-port.h, code is 1198, comment is 979, blank is 320.
+third_party/googletest/googletest/include/gtest/internal/gtest-string.h, code is 38, comment is 115, blank is 25.
+third_party/googletest/googletest/include/gtest/internal/gtest-type-util.h, code is 99, comment is 69, blank is 28.
+third_party/googletest/googletest/LICENSE, code is 25, comment is 0, blank is 3.
+third_party/googletest/googletest/Makefile, code is 209, comment is 0, blank is 79.
+third_party/googletest/googletest/README.md, code is 85, comment is 3, blank is 28.
+third_party/googletest/googletest/samples/prime_tables.h, code is 57, comment is 47, blank is 23.
+third_party/googletest/googletest/samples/sample1.cc, code is 17, comment is 39, blank is 10.
+third_party/googletest/googletest/samples/sample1.h, code is 5, comment is 32, blank is 5.
+third_party/googletest/googletest/samples/sample10_unittest.cc, code is 60, comment is 60, blank is 20.
+third_party/googletest/googletest/samples/sample1_unittest.cc, code is 36, comment is 97, blank is 19.
+third_party/googletest/googletest/samples/sample2.cc, code is 14, comment is 33, blank is 7.
+third_party/googletest/googletest/samples/sample2.h, code is 22, comment is 44, blank is 16.
+third_party/googletest/googletest/samples/sample2_unittest.cc, code is 30, comment is 65, blank is 13.
+third_party/googletest/googletest/samples/sample3-inl.h, code is 86, comment is 64, blank is 29.
+third_party/googletest/googletest/samples/sample3_unittest.cc, code is 49, comment is 85, blank is 17.
+third_party/googletest/googletest/samples/sample4.cc, code is 15, comment is 33, blank is 6.
+third_party/googletest/googletest/samples/sample4.h, code is 12, comment is 35, blank is 7.
+third_party/googletest/googletest/samples/sample4_unittest.cc, code is 12, comment is 33, blank is 9.
+third_party/googletest/googletest/samples/sample5_unittest.cc, code is 70, comment is 99, blank is 28.
+third_party/googletest/googletest/samples/sample6_unittest.cc, code is 89, comment is 106, blank is 36.
+third_party/googletest/googletest/samples/sample7_unittest.cc, code is 52, comment is 51, blank is 15.
+third_party/googletest/googletest/samples/sample8_unittest.cc, code is 77, comment is 61, blank is 17.
+third_party/googletest/googletest/samples/sample9_unittest.cc, code is 83, comment is 54, blank is 21.
+third_party/googletest/googletest/scripts/common.py, code is 27, comment is 33, blank is 24.
+third_party/googletest/googletest/scripts/fuse_gtest_files.py, code is 99, comment is 60, blank is 59.
+third_party/googletest/googletest/scripts/gen_gtest_pred_impl.py, code is 217, comment is 42, blank is 126.
+third_party/googletest/googletest/scripts/gtest-config.in, code is 41, comment is 0, blank is 6.
+third_party/googletest/googletest/scripts/README.md, code is 4, comment is 0, blank is 1.
+third_party/googletest/googletest/scripts/release_docs.py, code is 57, comment is 44, blank is 28.
+third_party/googletest/googletest/scripts/run_with_path.py, code is 13, comment is 6, blank is 9.
+third_party/googletest/googletest/scripts/test/Makefile, code is 43, comment is 0, blank is 16.
+third_party/googletest/googletest/scripts/upload.py, code is 949, comment is 134, blank is 150.
+third_party/googletest/googletest/scripts/upload_gtest.py, code is 25, comment is 35, blank is 12.
+third_party/googletest/googletest/src/gtest-all.cc, code is 9, comment is 36, blank is 3.
+third_party/googletest/googletest/src/gtest-death-test.cc, code is 1050, comment is 420, blank is 233.
+third_party/googletest/googletest/src/gtest-filepath.cc, code is 232, comment is 118, blank is 34.
+third_party/googletest/googletest/src/gtest-internal-inl.h, code is 589, comment is 450, blank is 215.
+third_party/googletest/googletest/src/gtest-matchers.cc, code is 30, comment is 54, blank is 15.
+third_party/googletest/googletest/src/gtest-port.cc, code is 962, comment is 311, blank is 186.
+third_party/googletest/googletest/src/gtest-printers.cc, code is 283, comment is 130, blank is 43.
+third_party/googletest/googletest/src/gtest-test-part.cc, code is 55, comment is 38, blank is 17.
+third_party/googletest/googletest/src/gtest-typed-test.cc, code is 60, comment is 36, blank is 18.
+third_party/googletest/googletest/src/gtest.cc, code is 4333, comment is 1458, blank is 996.
+third_party/googletest/googletest/src/gtest_main.cc, code is 20, comment is 28, blank is 6.
+third_party/googletest/googletest/test/BUILD.bazel, code is 502, comment is 0, blank is 58.
+third_party/googletest/googletest/test/googletest-break-on-failure-unittest.py, code is 94, comment is 42, blank is 52.
+third_party/googletest/googletest/test/googletest-break-on-failure-unittest_.cc, code is 26, comment is 49, blank is 13.
+third_party/googletest/googletest/test/googletest-catch-exceptions-test.py, code is 116, comment is 44, blank is 65.
+third_party/googletest/googletest/test/googletest-catch-exceptions-test_.cc, code is 187, comment is 42, blank is 69.
+third_party/googletest/googletest/test/googletest-color-test.py, code is 64, comment is 30, blank is 33.
+third_party/googletest/googletest/test/googletest-color-test_.cc, code is 16, comment is 38, blank is 8.
+third_party/googletest/googletest/test/googletest-death-test-test.cc, code is 1002, comment is 289, blank is 270.
+third_party/googletest/googletest/test/googletest-death-test_ex_test.cc, code is 42, comment is 42, blank is 13.
+third_party/googletest/googletest/test/googletest-env-var-test.py, code is 55, comment is 32, blank is 35.
+third_party/googletest/googletest/test/googletest-env-var-test_.cc, code is 74, comment is 34, blank is 25.
+third_party/googletest/googletest/test/googletest-failfast-unittest.py, code is 283, comment is 41, blank is 76.
+third_party/googletest/googletest/test/googletest-failfast-unittest_.cc, code is 73, comment is 43, blank is 52.
+third_party/googletest/googletest/test/googletest-filepath-test.cc, code is 468, comment is 109, blank is 100.
+third_party/googletest/googletest/test/googletest-filter-unittest.py, code is 346, comment is 88, blank is 170.
+third_party/googletest/googletest/test/googletest-filter-unittest_.cc, code is 59, comment is 45, blank is 34.
+third_party/googletest/googletest/test/googletest-json-outfiles-test.py, code is 140, comment is 32, blank is 19.
+third_party/googletest/googletest/test/googletest-json-output-unittest.py, code is 673, comment is 37, blank is 49.
+third_party/googletest/googletest/test/googletest-list-tests-unittest.py, code is 57, comment is 39, blank is 39.
+third_party/googletest/googletest/test/googletest-list-tests-unittest_.cc, code is 73, comment is 46, blank is 40.
+third_party/googletest/googletest/test/googletest-listener-test.cc, code is 414, comment is 50, blank is 61.
+third_party/googletest/googletest/test/googletest-message-test.cc, code is 83, comment is 52, blank is 24.
+third_party/googletest/googletest/test/googletest-options-test.cc, code is 150, comment is 46, blank is 26.
+third_party/googletest/googletest/test/googletest-output-test-golden-lin.txt, code is 60, comment is 0, blank is 6.
+third_party/googletest/googletest/test/googletest-output-test.py, code is 159, comment is 53, blank is 80.
+third_party/googletest/googletest/test/googletest-output-test_.cc, code is 685, comment is 250, blank is 216.
+third_party/googletest/googletest/test/googletest-param-test-invalid-name1-test.py, code is 16, comment is 30, blank is 17.
+third_party/googletest/googletest/test/googletest-param-test-invalid-name1-test_.cc, code is 14, comment is 29, blank is 8.
+third_party/googletest/googletest/test/googletest-param-test-invalid-name2-test.py, code is 16, comment is 30, blank is 16.
+third_party/googletest/googletest/test/googletest-param-test-invalid-name2-test_.cc, code is 18, comment is 29, blank is 9.
+third_party/googletest/googletest/test/googletest-param-test-test.cc, code is 740, comment is 197, blank is 187.
+third_party/googletest/googletest/test/googletest-param-test-test.h, code is 9, comment is 38, blank is 5.
+third_party/googletest/googletest/test/googletest-param-test2-test.cc, code is 11, comment is 43, blank is 7.
+third_party/googletest/googletest/test/googletest-port-test.cc, code is 952, comment is 111, blank is 225.
+third_party/googletest/googletest/test/googletest-printers-test.cc, code is 1225, comment is 319, blank is 293.
+third_party/googletest/googletest/test/googletest-setuptestsuite-test.py, code is 12, comment is 30, blank is 12.
+third_party/googletest/googletest/test/googletest-setuptestsuite-test_.cc, code is 15, comment is 28, blank is 6.
+third_party/googletest/googletest/test/googletest-shuffle-test.py, code is 193, comment is 49, blank is 65.
+third_party/googletest/googletest/test/googletest-shuffle-test_.cc, code is 47, comment is 36, blank is 19.
+third_party/googletest/googletest/test/googletest-test-part-test.cc, code is 149, comment is 48, blank is 34.
+third_party/googletest/googletest/test/googletest-throw-on-failure-test.py, code is 73, comment is 36, blank is 44.
+third_party/googletest/googletest/test/googletest-throw-on-failure-test_.cc, code is 17, comment is 48, blank is 9.
+third_party/googletest/googletest/test/googletest-uninitialized-test.py, code is 20, comment is 31, blank is 16.
+third_party/googletest/googletest/test/googletest-uninitialized-test_.cc, code is 6, comment is 32, blank is 4.
+third_party/googletest/googletest/test/gtest-typed-test2_test.cc, code is 7, comment is 32, blank is 6.
+third_party/googletest/googletest/test/gtest-typed-test_test.cc, code is 258, comment is 115, blank is 98.
+third_party/googletest/googletest/test/gtest-typed-test_test.h, code is 20, comment is 34, blank is 13.
+third_party/googletest/googletest/test/gtest-unittest-api_test.cc, code is 236, comment is 55, blank is 58.
+third_party/googletest/googletest/test/gtest_all_test.cc, code is 12, comment is 33, blank is 1.
+third_party/googletest/googletest/test/gtest_assert_by_exception_test.cc, code is 60, comment is 38, blank is 18.
+third_party/googletest/googletest/test/gtest_environment_test.cc, code is 97, comment is 59, blank is 33.
+third_party/googletest/googletest/test/gtest_help_test.py, code is 75, comment is 31, blank is 37.
+third_party/googletest/googletest/test/gtest_help_test_.cc, code is 7, comment is 33, blank is 5.
+third_party/googletest/googletest/test/gtest_json_test_utils.py, code is 18, comment is 28, blank is 6.
+third_party/googletest/googletest/test/gtest_list_output_unittest.py, code is 45, comment is 30, blank is 20.
+third_party/googletest/googletest/test/gtest_list_output_unittest_.cc, code is 7, comment is 38, blank is 6.
+third_party/googletest/googletest/test/gtest_main_unittest.cc, code is 5, comment is 33, blank is 7.
+third_party/googletest/googletest/test/gtest_no_test_unittest.cc, code is 6, comment is 43, blank is 5.
+third_party/googletest/googletest/test/gtest_pred_impl_unittest.cc, code is 1728, comment is 513, blank is 261.
+third_party/googletest/googletest/test/gtest_premature_exit_test.cc, code is 60, comment is 48, blank is 19.
+third_party/googletest/googletest/test/gtest_prod_test.cc, code is 15, comment is 34, blank is 7.
+third_party/googletest/googletest/test/gtest_repeat_test.cc, code is 133, comment is 54, blank is 48.
+third_party/googletest/googletest/test/gtest_skip_check_output_test.py, code is 14, comment is 31, blank is 10.
+third_party/googletest/googletest/test/gtest_skip_environment_check_output_test.py, code is 10, comment is 31, blank is 9.
+third_party/googletest/googletest/test/gtest_skip_in_environment_setup_test.cc, code is 12, comment is 31, blank is 6.
+third_party/googletest/googletest/test/gtest_skip_test.cc, code is 18, comment is 31, blank is 6.
+third_party/googletest/googletest/test/gtest_sole_header_test.cc, code is 18, comment is 32, blank is 7.
+third_party/googletest/googletest/test/gtest_stress_test.cc, code is 141, comment is 71, blank is 40.
+third_party/googletest/googletest/test/gtest_test_macro_stack_footprint_test.cc, code is 39, comment is 42, blank is 8.
+third_party/googletest/googletest/test/gtest_test_utils.py, code is 132, comment is 79, blank is 69.
+third_party/googletest/googletest/test/gtest_testbridge_test.py, code is 19, comment is 29, blank is 15.
+third_party/googletest/googletest/test/gtest_testbridge_test_.cc, code is 5, comment is 32, blank is 6.
+third_party/googletest/googletest/test/gtest_throw_on_failure_ex_test.cc, code is 34, comment is 42, blank is 14.
+third_party/googletest/googletest/test/gtest_unittest.cc, code is 5050, comment is 1277, blank is 1407.
+third_party/googletest/googletest/test/gtest_xml_outfile1_test_.cc, code is 9, comment is 31, blank is 3.
+third_party/googletest/googletest/test/gtest_xml_outfile2_test_.cc, code is 9, comment is 31, blank is 3.
+third_party/googletest/googletest/test/gtest_xml_outfiles_test.py, code is 59, comment is 33, blank is 19.
+third_party/googletest/googletest/test/gtest_xml_output_unittest.py, code is 262, comment is 38, blank is 45.
+third_party/googletest/googletest/test/gtest_xml_output_unittest_.cc, code is 120, comment is 45, blank is 33.
+third_party/googletest/googletest/test/gtest_xml_test_utils.py, code is 102, comment is 31, blank is 17.
+third_party/googletest/googletest/test/production.cc, code is 2, comment is 30, blank is 3.
+third_party/googletest/googletest/test/production.h, code is 14, comment is 33, blank is 8.
+third_party/googletest/library.json, code is 57, comment is 0, blank is 5.
+third_party/googletest/LICENSE, code is 25, comment is 0, blank is 3.
+third_party/googletest/Makefile, code is 143, comment is 0, blank is 53.
+third_party/googletest/platformio.ini, code is 32, comment is 9, blank is 6.
+third_party/googletest/README.md, code is 57, comment is 17, blank is 25.
+third_party/googletest/WORKSPACE, code is 18, comment is 0, blank is 5.
+Todos.md, code is 6, comment is 0, blank is 1.
+===============================================================================

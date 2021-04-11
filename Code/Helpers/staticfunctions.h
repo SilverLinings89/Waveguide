@@ -40,6 +40,8 @@ bool compareDofBaseData(std::pair<DofNumber, Position> c1, std::pair<DofNumber, 
 
 bool compareDofBaseDataAndOrientation(InterfaceDofData, InterfaceDofData);
 
+bool compareSurfaceCellData(SurfaceCellData c1, SurfaceCellData c2);
+
 bool compareDofDataByGlobalIndex(InterfaceDofData, InterfaceDofData);
 
 bool areDofsClose(const InterfaceDofData &a, const InterfaceDofData &b);

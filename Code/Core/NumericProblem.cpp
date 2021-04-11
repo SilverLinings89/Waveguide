@@ -144,8 +144,7 @@ void NumericProblem::make_constraints() {
   local_constraints_made = true;
 }
 
-void NumericProblem::make_constraints(
-    AffineConstraints<ComplexNumber> *in_constraints, unsigned int shift, IndexSet local_constraints_indices) {
+void NumericProblem::make_constraints(AffineConstraints<ComplexNumber> *in_constraints, unsigned int shift, IndexSet local_constraints_indices) {
   if(!local_constraints_made) {
     make_constraints();
   }
@@ -396,7 +395,7 @@ void NumericProblem::assemble_system(unsigned int shift,
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
       cell_data.prepare_for_current_q_index(q_index);
     }
-    constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs,  cell_data.local_dof_indices,*matrix, *rhs, false);
+    constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, false);
   }
   matrix->compress(dealii::VectorOperation::add);
   // write_matrix_and_rhs_metrics(matrix, rhs);
