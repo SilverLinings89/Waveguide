@@ -3,7 +3,7 @@ subsection Run parameters
   set processes in x         = 1
   set processes in y         = 1
   set processes in z         = 4
-  set cell count x           = 32
-  set cell count y           = 32
-  set cell count z           = 32
+  set cell count x           = 20
+  set cell count y           = 20
+  set cell count z           = 20
 end

@@ -634,20 +634,20 @@ void PMLSurface::fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, con
       face_indices[i * fe_nedelec.dofs_per_cell + j] = surface_cell_data[i].dof_numbers[j] + own_first_dof_index;
     }
   }
-
-  MPI_Sendrecv_replace(face_indices, n_entries, MPI_DOUBLE, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
+  
+  MPI_Sendrecv_replace(face_indices, n_entries, MPI_UNSIGNED, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
 
   std::vector<SurfaceCellData> other_surface_data;
   for(unsigned int i = 0; i < surface_cell_data.size(); i++) {
     SurfaceCellData scd;
     scd.surface_face_center = surface_cell_data[i].surface_face_center;
-    scd.dof_numbers.resize(fe_nedelec.dofs_per_cell);
+    scd.dof_numbers = std::vector<unsigned int>(fe_nedelec.dofs_per_cell);
     for(unsigned int j = 0; j < fe_nedelec.dofs_per_cell; j++) {
-      scd.dof_numbers[j] = face_indices[i * fe_nedelec.dofs_per_cell + j] + other_first_dof_index;
+      scd.dof_numbers[j] = face_indices[i * fe_nedelec.dofs_per_cell + j];
     }
     other_surface_data.push_back(scd);
   }
-
+  
   for(unsigned int i = 0; i < surface_cell_data.size(); i++) {
     std::vector<DofNumber> dof_numbers;
     for(unsigned int j = 0; j < fe_nedelec.dofs_per_cell; j++) {

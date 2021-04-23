@@ -24,6 +24,7 @@
 #include <deal.II/numerics/vector_tools_point_value.h>
 #include <deal.II/matrix_free/matrix_free.h>
 #include <deal.II/matrix_free/matrix_free.templates.h>
+#include <mpi.h>
 #include "../Helpers/PointSourceField.h"
 #include "../Solutions/ExactSolutionRamped.h"
 #include "../Solutions/ExactSolutionConjugate.h"
@@ -356,25 +357,46 @@ void LocalProblem::output_results() {
   std::string filename = GlobalOutputManager.get_numbered_filename("solution", GlobalParams.MPI_Rank, "vtu");
   std::ofstream outputvtu(filename);
   base_problem.local_constraints.close();  
-
+  
   Function<3,ComplexNumber> * esc;
   if(GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE) {
     esc = GlobalParams.source_field;
   } else {
     esc = new ExactSolutionConjugate(true, false);
   }
+  
   dealii::Vector<ComplexNumber> interpolated_exact_solution(output_solution.size());
   VectorTools::project(base_problem.dof_handler, base_problem.local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *esc, interpolated_exact_solution);
+  
   data_out.add_data_vector(interpolated_exact_solution, "Exact_Solution");
-  // compute_error(dealii::VectorTools::NormType::H1_norm, esc, output_solution, &data_out);
-  compute_error(dealii::VectorTools::NormType::L2_norm, esc, output_solution, &data_out);
-  dealii::Vector<ComplexNumber> error_field(output_solution.size());
-  for(unsigned int i = 0; i < error_field.size(); i++) {
-    error_field[i] = conjugate(interpolated_exact_solution[i]) - output_solution[i];
+  
+  // compute_error(dealii::VectorTools::NormType::L2_norm, esc, output_solution, &data_out);
+  
+  // dealii::Vector<ComplexNumber> error_field(output_solution.size());
+  // for(unsigned int i = 0; i < error_field.size(); i++) {
+  //  error_field[i] = conjugate(interpolated_exact_solution[i]) - output_solution[i];
+  // }
+  for( unsigned int i = 0; i < GlobalParams.NumberProcesses; i++) {
+    MPI_Barrier(MPI_COMM_WORLD);
+    if(rank == 0) {
+      std::cout << rank << std::endl;
+    }
+    if(i == rank) {
+      // data_out.add_data_vector(error_field, "error");
+      std::cout << "F" << std::endl;
+      MPI_Barrier(MPI_COMM_WORLD);
+      data_out.build_patches();
+      std::cout << "G" << std::endl;
+      MPI_Barrier(MPI_COMM_WORLD);
+      data_out.write_vtu(outputvtu);
+      std::cout << "F" << std::endl;
+    } else {
+      MPI_Barrier(MPI_COMM_WORLD);
+      MPI_Barrier(MPI_COMM_WORLD);
+      MPI_Barrier(MPI_COMM_WORLD);
+    }
   }
-  data_out.add_data_vector(error_field, "error");
-  data_out.build_patches();
-  data_out.write_vtu(outputvtu);
+  /**
   write_phase_plot();
   if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML) {
     for(unsigned int i = 0; i < 6; i++){
@@ -387,7 +409,7 @@ void LocalProblem::output_results() {
       }
     }
   }
-
+  **/
   print_info("LocalProblem::output_results()", "End");
 }
 

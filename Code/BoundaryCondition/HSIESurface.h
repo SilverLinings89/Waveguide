@@ -99,6 +99,7 @@ public:
   void output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
   void fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int own_first_dof, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
   void fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, const unsigned int own_first_dof_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
+  SurfaceCellData get_surface_cell_data_for_cell_index(const int in_index, const BoundaryId in_bid);
 };
 
 

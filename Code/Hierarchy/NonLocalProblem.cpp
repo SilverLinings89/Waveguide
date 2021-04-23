@@ -413,7 +413,7 @@ void NonLocalProblem::make_constraints() {
     if(is_hsie_surface[i]) get_local_problem()->surfaces[i]->reset_neighbor_couplings(is_hsie_surface);
   }
   constraints.close();
-  // print_diagnosis_data();
+  print_diagnosis_data();
   print_info("NonLocalProblem::make_constraints", "End");
 }
 
@@ -423,28 +423,28 @@ void NonLocalProblem::print_diagnosis_data() {
     std::cout << "Pair 1:" << std::endl;
   }
   MPI_Barrier(MPI_COMM_WORLD);
-  print_dof_details(3410);
-  print_dof_details(5942);
+  print_dof_details(25620);
+  print_dof_details(55820);
   MPI_Barrier(MPI_COMM_WORLD);
   if(rank == 0) {
     std::cout << "Pair 2:" << std::endl;
   }
   MPI_Barrier(MPI_COMM_WORLD);
-  print_dof_details(13178);
-  print_dof_details(9665);
+  print_dof_details(91308);
+  print_dof_details(121508);
   MPI_Barrier(MPI_COMM_WORLD);
   if(rank == 0) {
     std::cout << "Pair 3:" << std::endl;
   }
   MPI_Barrier(MPI_COMM_WORLD);
-  print_dof_details(26356);
-  print_dof_details(16247);
+  print_dof_details(131376);
+  print_dof_details(90027);
   MPI_Barrier(MPI_COMM_WORLD);
   if(rank == 0) {
     std::cout << "Pair 4:" << std::endl;
   }
-  print_dof_details(39534);
-  print_dof_details(36025);
+  print_dof_details(197064);
+  print_dof_details(155715);
   MPI_Barrier(MPI_COMM_WORLD);
   std::cout << "Temp dof data end" << std::endl;
 }
@@ -578,7 +578,7 @@ void NonLocalProblem::reinit() {
   print_info("Nonlocal reinit", "Reinit starting");
   make_constraints();
   
-  // generate_sparsity_pattern();
+  generate_sparsity_pattern();
 
   reinit_rhs();
   u = new ComplexNumber[n_own_dofs];
@@ -591,8 +591,8 @@ void NonLocalProblem::reinit() {
   for(unsigned int i = 0; i < n_procs_in_sweep; i++) {
     n_dofs_by_proc.push_back(index_sets_per_process[i].n_elements());
   }  
-  // matrix->reinit(GlobalMPI.communicators_by_level[local_level], sp, n_dofs_by_proc, n_dofs_by_proc, rank, false);
-  matrix->reinit(MPI_COMM_WORLD, total_number_of_dofs_on_level, total_number_of_dofs_on_level, n_own_dofs, n_own_dofs, get_local_problem()->base_problem.dof_handler.max_couplings_between_dofs(), false,  100);
+  matrix->reinit(GlobalMPI.communicators_by_level[local_level], sp, n_dofs_by_proc, n_dofs_by_proc, rank, true);
+  // matrix->reinit(MPI_COMM_WORLD, total_number_of_dofs_on_level, total_number_of_dofs_on_level, n_own_dofs, n_own_dofs, get_local_problem()->base_problem.dof_handler.max_couplings_between_dofs(), false,  100);
   child->reinit();
   print_info("Nonlocal reinit", "Reinit done");
 }
@@ -627,13 +627,11 @@ void NonLocalProblem::initialize() {
 }
 
 void NonLocalProblem::generate_sparsity_pattern() {
-  
   dealii::DynamicSparsityPattern dsp = {total_number_of_dofs_on_level, total_number_of_dofs_on_level};
   dealii::IndexSet is(total_number_of_dofs_on_level);
   is.add_range(0, total_number_of_dofs_on_level);
   
   get_local_problem()->base_problem.make_sparsity_pattern(&dsp, first_own_index, &constraints);
-  
   for (unsigned int surface = 0; surface < 6; surface++) {
     if(is_hsie_surface[surface] && get_local_problem()->is_hsie_surface[surface]) {
       get_local_problem()->surfaces[surface]->fill_sparsity_pattern(&dsp, surface_first_dofs[surface], &constraints);
@@ -641,7 +639,7 @@ void NonLocalProblem::generate_sparsity_pattern() {
       make_sparsity_pattern_for_surface(surface, & dsp);
     }
   }
-
+  
   sp.copy_from(dsp);
   sp.compress();
 }
@@ -984,30 +982,35 @@ void NonLocalProblem::fill_dsp_over_mpi(BoundaryId surface, dealii::DynamicSpars
       }
     }
   }
-
+  
+  std::pair<bool, unsigned int> partner_data = GlobalMPI.get_neighbor_for_interface(get_direction_for_boundary_id(surface));
+  unsigned int partner_index = partner_data.second;
   // Extract all couplings into a vector
   const unsigned int n_entries = local_dsp.n_nonzero_elements();
-  DofNumber * rows = new DofNumber[n_entries];
-  DofNumber * cols = new DofNumber[n_entries];
+  unsigned long send_temp = n_entries;
+  
+  MPI_Sendrecv_replace(&send_temp, 1, MPI::UNSIGNED_LONG, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
+  const unsigned int exchange =  (n_entries > send_temp) ? n_entries : send_temp;
+  
+  DofNumber * rows = new DofNumber[exchange];
+  DofNumber * cols = new DofNumber[exchange];
   unsigned int counter = 0;
   for(auto it = local_dsp.begin(); it != local_dsp.end(); it++) {
     rows[counter] = it->row();
     cols[counter] = it->column();
     counter ++;
   }
-  // Send the vector via MPI to the partner
-  unsigned long send_temp = n_entries;
-  std::pair<bool, unsigned int> partner_data = GlobalMPI.get_neighbor_for_interface(get_direction_for_boundary_id(surface));
-  unsigned int partner_index = partner_data.second;
-  MPI_Sendrecv_replace(&send_temp, 1, MPI::UNSIGNED_LONG, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
-  if(send_temp != n_entries) {
-    std::cout << "Size missmatch in fill_dsp_over_mpi" << std::endl;
+  for(unsigned int i = counter; i < exchange; i++) {
+    rows[i] = 0;
+    cols[i] = 0;
   }
-  MPI_Sendrecv_replace(rows, n_entries, MPI::UNSIGNED, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
-  MPI_Sendrecv_replace(cols, n_entries, MPI::UNSIGNED, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
+
+  MPI_Sendrecv_replace(rows, exchange, MPI::UNSIGNED, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
+  MPI_Sendrecv_replace(cols, exchange, MPI::UNSIGNED, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
+  
   // In the received vectors, replace the boundary dof ids of the other process with the own.
   for(unsigned int i = 0; i < coupling_dofs[surface].size(); i++) {
-    for(unsigned int j = 0; j < n_entries; j++) {
+    for(unsigned int j = 0; j < send_temp; j++) {
       if(rows[j] == coupling_dofs[surface][i].second) {
         rows[j] = coupling_dofs[surface][i].first;
       }
@@ -1017,7 +1020,7 @@ void NonLocalProblem::fill_dsp_over_mpi(BoundaryId surface, dealii::DynamicSpars
     }
   }
   // Fill the argument dsp with the values received over MPI
-  for(unsigned int i = 0; i < n_entries; i++) {
+  for(unsigned int i = 0; i < send_temp; i++) {
     in_dsp->add(rows[i], cols[i]);
   }
 }
