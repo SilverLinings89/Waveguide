@@ -11,14 +11,9 @@ HierarchicalProblem::~HierarchicalProblem() { }
 
 HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level, SweepingDirection in_direction) :
   sweeping_direction(in_direction),
-  local_level(in_own_level) {
+  level(in_own_level) {
   has_child = in_own_level > 0;
   child = nullptr;
-  n_own_dofs = 0;
-  first_own_index = 0;
-  for (unsigned int i = 0; i < 6; i++) {
-    surface_first_dofs.push_back(0);
-  }
   dofs_process_above = 0;
   dofs_process_below = 0;
   rank = 0;

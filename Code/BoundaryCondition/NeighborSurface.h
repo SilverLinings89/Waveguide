@@ -4,35 +4,26 @@
 #include "./BoundaryCondition.h"
 #include <deal.II/fe/fe_nedelec_sz.h>
 #include <deal.II/lac/affine_constraints.h>
-#include "./PMLMeshTransformation.h"
 
-class PMLSurface : public BoundaryCondition {
-    ComplexNumber sigma_0;
-    unsigned int inner_boundary_id;
-    unsigned int outer_boundary_id;
-    DofHandler3D dof_h_nedelec;
-    dealii::FE_NedelecSZ<3> fe_nedelec;
-    dealii::AffineConstraints<ComplexNumber> constraints;
-    bool constraints_made;
-
+class NeighborSurface : public BoundaryCondition {
+    
   public: 
+    const bool is_primary; // The process with lower rank on the surface is the primary. It "goes first" when equal tasks have to be performed one after the other.
+    const unsigned int global_partner_mpi_rank;
+    const unsigned int partner_mpi_rank_in_level_communicator;
     std::array<std::set<unsigned int>, 6> edge_ids_by_boundary_id;
     std::array<std::set<unsigned int>, 6> face_ids_by_boundary_id;
-    std::pair<double, double> x_range;
-    std::pair<double, double> y_range;
-    std::pair<double, double> z_range;
-    dealii::Triangulation<3> triangulation;
-    
-    PMLSurface(unsigned int in_bid, unsigned int in_level, DofNumber first_own_index);
-    ~PMLSurface();
+
+    NeighborSurface(unsigned int in_bid, unsigned int in_level, DofNumber first_own_index);
+    ~NeighborSurface();
     
     void prepare_id_sets_for_boundaries();
     bool is_point_at_boundary(Position, BoundaryId);
     void identify_corner_cells() override;
+    void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints) override;
     void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
     void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
     void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
-    void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints) override;
     bool is_point_at_boundary(Position2D in_p, BoundaryId in_bid) override;
     bool is_position_at_boundary(Position in_p, BoundaryId in_bid);
     void initialize() override;
@@ -40,20 +31,13 @@ class PMLSurface : public BoundaryCondition {
     void prepare_mesh();
     auto cells_for_boundary_id(unsigned int boundary_id) -> unsigned int;
     void init_fe();
-    auto fraction_of_pml_direction(Position) -> double;
-    auto get_pml_tensor_epsilon(Position) -> dealii::Tensor<2,3,ComplexNumber>;
-    auto get_pml_tensor_mu(Position) -> dealii::Tensor<2,3,ComplexNumber>;
-    auto get_pml_tensor(Position) -> dealii::Tensor<2,3,ComplexNumber>;
-    auto make_inner_constraints() -> void;
-    void copy_constraints(dealii::AffineConstraints<ComplexNumber> *, unsigned int shift);
     auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount override;
     auto get_dof_association() -> std::vector<InterfaceDofData> override;
     auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> override;
     void sort_dofs();
     void compute_coordinate_ranges();
     void set_boundary_ids();
-    void fix_apply_negative_Jacobian_transformation(dealii::Triangulation<3> * in_tria);
-    void output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
     void fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
     void fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
+    void output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
 };

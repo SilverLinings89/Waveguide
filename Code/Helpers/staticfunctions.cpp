@@ -52,7 +52,7 @@ extern Parameters GlobalParams;
 extern GeometryManager Geometry;
 extern OutputManager GlobalOutputManager;
 unsigned int message_count = 0;
-const double FLOATING_PRECISION = 0.00001;
+
 void set_the_st(SpaceTransformation *in_st) { the_st = in_st; }
 
 auto compute_center_of_triangulation(const Mesh *in_mesh) -> Position {

@@ -1,3 +1,4 @@
+#include <deal.II/base/mpi.h>
 #include <mpi.h>
 #include "MPICommunicator.h"
 #include "../Core/NumericProblem.h"
@@ -25,11 +26,11 @@ void MPICommunicator::initialize() {
   communicators_by_level.push_back(MPI_COMM_WORLD);
   while (local_level <= GlobalParams.HSIE_SWEEPING_LEVEL) {
     MPI_Comm new_com;
-    MPI_Comm_split(local, get_index_for_direction_index(local_level),
-        GlobalParams.MPI_Rank, &new_com);
+    MPI_Comm_split(local, get_index_for_direction_index(local_level), GlobalParams.MPI_Rank, &new_com);
     local = new_com;
     local_level++;
     communicators_by_level.push_back(new_com);
+    rank_on_level.push_back(dealii::Utilities::MPI::this_mpi_process(new_com));
   }
   std::reverse(communicators_by_level.begin(), communicators_by_level.end());
 }

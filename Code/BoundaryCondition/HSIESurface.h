@@ -38,7 +38,8 @@ public:
   DofCount n_face_dofs;
   DofCount n_vertex_dofs;
   
-  HSIESurface(HSIEElementOrder in_order, const dealii::Triangulation<2, 2> &in_surf_tria, BoundaryId in_boundary_id, NedelecElementOrder in_inner_order, ComplexNumber k0, double in_additional_coordinate);
+  HSIESurface(unsigned int surface, unsigned int level, DofNumber first_own_index);
+
   ~HSIESurface();  
   void identify_corner_cells() override;
   std::vector<HSIEPolynomial> build_curl_term_q(unsigned int, const dealii::Tensor<1, 2>);
@@ -47,13 +48,10 @@ public:
   std::vector<HSIEPolynomial> build_non_curl_term_nedelec(unsigned int, const double, const double);
   void set_V0(Position);
   auto get_dof_data_for_cell(CellIterator2D, CellIterator2D) -> DofDataVector;
-  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::IndexSet,  std::array<bool, 6> surfaces_hsie,  dealii::AffineConstraints<ComplexNumber> *constraints) override;
-  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::IndexSet, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) override;
-  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, DofNumber shift, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) override;
-  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, DofNumber shift, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) override;
-  void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, dealii::IndexSet, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) override;
-  void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, DofNumber shift, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) override;
-  void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, DofNumber shift, dealii::AffineConstraints<ComplexNumber> *constraints) override;
+  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
+  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
+  void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
+  void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints) override;
   bool is_point_at_boundary(Position2D in_p, BoundaryId in_bid) override;
   auto get_vertices_for_boundary_id(BoundaryId) -> std::vector<unsigned int>;
   auto get_n_vertices_for_boundary_id(BoundaryId) -> unsigned int;
@@ -94,11 +92,9 @@ public:
   void compute_extreme_vertex_coordinates();
   auto vertex_positions_for_ids(std::vector<unsigned int> ids) -> std::vector<Position>;
   auto line_positions_for_ids(std::vector<unsigned int> ids) -> std::vector<Position>;
-  void setup_neighbor_couplings(std::array<bool, 6> is_b_id_truncated) override;
-  void reset_neighbor_couplings(std::array<bool, 6> is_b_id_truncated) override;
   void output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
-  void fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int own_first_dof, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
-  void fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, const unsigned int own_first_dof_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
+  void fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
+  void fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
   SurfaceCellData get_surface_cell_data_for_cell_index(const int in_index, const BoundaryId in_bid);
 };
 

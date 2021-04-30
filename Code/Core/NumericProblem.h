@@ -48,7 +48,6 @@
 
 #include "../Core/Types.h"
 #include "../Solutions/ExactSolution.h"
-#include "../Helpers/GeometryManager.h"
 #include "../Helpers/ModeManager.h"
 #include "../Helpers/ParameterReader.h"
 #include "../Helpers/Parameters.h"

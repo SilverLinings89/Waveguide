@@ -14,7 +14,8 @@ class NonLocalProblem;
 class HierarchicalProblem {
  public:
   const SweepingDirection sweeping_direction;
-  std::vector<DofNumber> surface_first_dofs;
+  const SweepingLevel level;
+  dealii::AffineConstraints<ComplexNumber> constraints;
   std::array<dealii::IndexSet, 6> surface_index_sets;
   std::array<bool, 6> is_hsie_surface;
   std:: vector<bool> is_surface_locked;
@@ -22,13 +23,10 @@ class HierarchicalProblem {
   bool has_child;
   HierarchicalProblem* child;
   dealii:: SparsityPattern sp;
-  const SweepingLevel local_level;
   DofIndexData indices;
   NumericVectorDistributed solution;
   NumericVectorDistributed rhs;
   NumericVectorDistributed rhs_mismatch;
-  DofCount n_own_dofs;
-  DofNumber first_own_index;
   DofCount dofs_process_above;
   DofCount dofs_process_below;
   unsigned int n_procs_in_sweep;
@@ -37,8 +35,9 @@ class HierarchicalProblem {
   dealii::IndexSet current_upper_sweeping_dofs;
   dealii::IndexSet current_lower_sweeping_dofs;
   std::array<std::vector<InterfaceDofData>, 6> surface_dof_associations;
+  dealii::PETScWrappers::MPI::SparseMatrix * matrix;
 
-  HierarchicalProblem(unsigned int in_own_level, SweepingDirection in_direction);
+  HierarchicalProblem(unsigned int level, SweepingDirection direction);
   virtual ~HierarchicalProblem() =0;
 
   virtual DofCount compute_lower_interface_dof_count()=0;
@@ -46,14 +45,11 @@ class HierarchicalProblem {
   virtual void solve()=0;
   virtual void initialize()=0;
   virtual void generate_sparsity_pattern()=0;
-  virtual DofCount compute_own_dofs()=0;
   virtual void initialize_own_dofs() =0;
   virtual void make_constraints() = 0;
   virtual void assemble()=0;
   virtual void initialize_index_sets()=0;
-  virtual LocalProblem* get_local_problem()=0;
-  void constrain_identical_dof_sets(std::vector<unsigned int> *set_one, std::vector<unsigned int> *set_two,
-      dealii::AffineConstraints<ComplexNumber> *affine_constraints);
+  void constrain_identical_dof_sets(std::vector<unsigned int> *set_one, std::vector<unsigned int> *set_two, dealii::AffineConstraints<ComplexNumber> *affine_constraints);
   virtual dealii::Vector<ComplexNumber> get_local_vector_from_global() = 0;
   virtual auto get_center() -> Position const = 0;
   virtual auto reinit() -> void = 0;

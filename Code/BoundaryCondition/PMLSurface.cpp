@@ -15,12 +15,10 @@
 #include "./BoundaryCondition.h"
 #include "PMLMeshTransformation.h"
 
-
-PMLSurface::PMLSurface(unsigned int in_bid, double in_additional_coordinate, dealii::Triangulation<2> & in_surf_tria)
-    :BoundaryCondition(in_bid, in_additional_coordinate, in_surf_tria),
-    fe_nedelec(GlobalParams.Nedelec_element_order)
-{
-    constraints_made = false;   
+PMLSurface::PMLSurface(unsigned int surface, unsigned int in_level, DofNumber in_first_own_index)
+  : BoundaryCondition(surface, in_level, Geometry.surface_extremal_coordinate[surface], in_first_own_index),
+  fe_nedelec(GlobalParams.Nedelec_element_order) {
+     constraints_made = false; 
 }
 
 PMLSurface::~PMLSurface() {}
@@ -73,6 +71,8 @@ void PMLSurface::prepare_mesh() {
       fix_apply_negative_Jacobian_transformation(&temp_tria);
     }
     triangulation = reforge_triangulation(&temp_tria);
+    PMLMeshTransformation::set(x_range, y_range, z_range, additional_coordinate, b_id/2, Geometry.levels[level].is_surface_truncated);
+    GridTools::transform(&(PMLMeshTransformation::transform), triangulation);
 }
 
 unsigned int PMLSurface::cells_for_boundary_id(unsigned int boundary_id) {
@@ -406,39 +406,29 @@ struct CellwiseAssemblyDataPML {
 
 };
 
-void PMLSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, DofNumber shift, dealii::AffineConstraints<ComplexNumber> *constraints) {
+void PMLSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints) {
   auto it = dof_h_nedelec.begin_active();
   auto end = dof_h_nedelec.end();
   std::vector<DofNumber> local_indices(fe_nedelec.n_dofs_per_cell());
   for (; it != end; ++it) {
     it->get_dof_indices(local_indices);
     for(unsigned int i = 0; i < local_indices.size(); i++) {
-      local_indices[i] += shift;
+      local_indices[i] += first_own_dof;
     }
     constraints->add_entries_local_to_global(local_indices, *in_dsp);
   }
 }
 
-void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* , dealii::IndexSet , std::array<bool, 6>, dealii::AffineConstraints<ComplexNumber> *){
+void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* , dealii::AffineConstraints<ComplexNumber> *){
     // NOT IMPLEMENTED
 }
 
-void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* , DofNumber , std::array<bool, 6> , dealii::AffineConstraints<ComplexNumber> *){
-    // NOT IMPLEMENTED
-}
-
-void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, NumericVectorDistributed* rhs, dealii::IndexSet in_is,  std::array<bool, 6> surfaces_hsie,  dealii::AffineConstraints<ComplexNumber> *in_constraints){
-  const unsigned int shift = in_is.nth_index_in_set(0);
-  fill_matrix(matrix, rhs, shift, surfaces_hsie, in_constraints);
-}
-
-void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, NumericVectorDistributed* rhs, DofNumber shift, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints){
-  setup_neighbor_couplings(surfaces_hsie);
+void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints){
   CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_h_nedelec);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
       cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
       for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
-          cell_data.local_dof_indices[i] += shift;
+          cell_data.local_dof_indices[i] += first_own_dof;
       }
       cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
       cell_data.fe_values.reinit(cell_data.cell);
@@ -457,21 +447,14 @@ void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, Numeri
       constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, false);
   }
   matrix->compress(dealii::VectorOperation::add);
-    reset_neighbor_couplings(surfaces_hsie);
 }
 
-void PMLSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, NumericVectorDistributed* rhs, dealii::IndexSet in_is, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *in_constraints){
-    const unsigned int shift = in_is.nth_index_in_set(0);
-    fill_matrix(matrix, rhs, shift, surfaces_hsie, in_constraints);
-}
-
-void PMLSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, NumericVectorDistributed* rhs, DofNumber shift, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints){
-  setup_neighbor_couplings(surfaces_hsie);
+void PMLSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints){
   CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_h_nedelec);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
     cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
     for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
-        cell_data.local_dof_indices[i] += shift;
+        cell_data.local_dof_indices[i] += first_own_dof;
     }
     cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
     cell_data.fe_values.reinit(cell_data.cell);
@@ -489,8 +472,7 @@ void PMLSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, N
     }
     constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, false);
   }
-  // matrix->compress(dealii::VectorOperation::add);
-  reset_neighbor_couplings(surfaces_hsie);
+  matrix->compress(dealii::VectorOperation::add);
 }
 
 void PMLSurface::compute_coordinate_ranges() {
@@ -553,19 +535,6 @@ void PMLSurface::set_boundary_ids() {
   }
 }
 
-void PMLSurface::setup_neighbor_couplings(std::array<bool, 6> in_is_neighbor_truncated) {
-  std::ofstream outfileb("grid_surface" + std::to_string(b_id) + "b.vtu");
-  GridOut go;
-  PMLMeshTransformation::set(x_range, y_range, z_range, additional_coordinate, b_id/2, in_is_neighbor_truncated);
-  GridTools::transform(&(PMLMeshTransformation::transform), triangulation);
-  go.write_vtu(triangulation, outfileb);
-}
-
-void PMLSurface::reset_neighbor_couplings(std::array<bool, 6> in_is_neighbor_truncated) {
-  PMLMeshTransformation::set(x_range, y_range, z_range, additional_coordinate, b_id/2, in_is_neighbor_truncated);
-  GridTools::transform(&(PMLMeshTransformation::undo_transform), triangulation);
-}
-
 Position invert_z(Position in_p) {
   Position ret = in_p;
   ret[2] = -ret[2];
@@ -607,8 +576,8 @@ void PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_data, s
   print_info("PMSurface::output_results()", "End");
 }
 
-void PMLSurface::fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int own_first_dof_index, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
-  unsigned int other_first_dof_index = own_first_dof_index;
+void PMLSurface::fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
+  unsigned int other_first_dof_index = first_own_dof;
   MPI_Sendrecv_replace(&other_first_dof_index, 1, MPI_UNSIGNED, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
   std::vector<SurfaceCellData> surface_cell_data;
   std::vector<DofNumber> cell_dofs(fe_nedelec.dofs_per_cell);
@@ -631,7 +600,7 @@ void PMLSurface::fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, con
 
   for(unsigned int i = 0; i < surface_cell_data.size(); i++) {
     for(unsigned int j = 0; j < fe_nedelec.dofs_per_cell; j++) {
-      face_indices[i * fe_nedelec.dofs_per_cell + j] = surface_cell_data[i].dof_numbers[j] + own_first_dof_index;
+      face_indices[i * fe_nedelec.dofs_per_cell + j] = surface_cell_data[i].dof_numbers[j] + first_own_dof;
     }
   }
   
@@ -658,7 +627,7 @@ void PMLSurface::fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, con
   }
 }
 
-void PMLSurface::fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, const unsigned int own_first_dof_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
+void PMLSurface::fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
   std::vector<unsigned int> dof_numbers(fe_nedelec.dofs_per_cell);
   for(auto it = dof_h_nedelec.begin(); it != dof_h_nedelec.end(); it ++) {
     bool is_at_boundary = false;
@@ -671,7 +640,7 @@ void PMLSurface::fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, 
     if(is_at_boundary) {
       it->get_dof_indices(dof_numbers);
       for(unsigned int i = 0; i <fe_nedelec.dofs_per_cell; i++) {
-        dof_numbers[i] += own_first_dof_index;
+        dof_numbers[i] += first_own_dof;
       }
       constraints->add_entries_local_to_global(dof_numbers, *dsp);
     }

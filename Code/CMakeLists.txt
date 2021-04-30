@@ -35,6 +35,7 @@ ADD_LIBRARY(Code
         BoundaryCondition/PMLMeshTransformation.cpp
         BoundaryCondition/HSIEPolynomial.cpp
         BoundaryCondition/HSIESurface.cpp
+        BoundaryCondition/NeighborSurface.cpp
         BoundaryCondition/LaguerreFunction.cpp
         BoundaryCondition/JacobianForCell.cpp
         Hierarchy/HierarchicalProblem.cpp 

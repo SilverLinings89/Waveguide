@@ -2,10 +2,12 @@
 
 using namespace dealii;
 
-BoundaryCondition::BoundaryCondition(unsigned int in_bid, double in_additional_coordinate, const dealii::Triangulation<2> & in_surf_tria):
-  b_id(in_bid), 
-  additional_coordinate(in_additional_coordinate) {
-    surface_triangulation.copy_triangulation(in_surf_tria);
+BoundaryCondition::BoundaryCondition(unsigned int in_bid, unsigned int in_level, double in_additional_coordinate, DofNumber in_first_own_index):
+  b_id(in_bid),
+  level(in_level),
+  additional_coordinate(in_additional_coordinate),
+  first_own_dof(in_first_own_index) {
+
 }
 
 
@@ -24,7 +26,7 @@ void BoundaryCondition::identify_corner_cells() {
 }
 
 void BoundaryCondition::set_mesh_boundary_ids() {
-    auto it = this->surface_triangulation.begin_active();
+    auto it = surface_triangulation.begin_active();
     std::vector<double> x;
     std::vector<double> y;
     while(it != this->surface_triangulation.end()){

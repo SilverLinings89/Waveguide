@@ -15,20 +15,19 @@
 
 const unsigned int MAX_DOF_NUMBER = INT_MAX;
 
-HSIESurface::HSIESurface(unsigned int in_order, const dealii::Triangulation<2, 2> &in_surface_triangulation,
-    unsigned int in_boundary_id, unsigned int in_inner_order, ComplexNumber in_k0, double in_additional_coordinate)
-    : BoundaryCondition(in_boundary_id, in_additional_coordinate, in_surface_triangulation),
-      order(in_order),
-      dof_h_q(in_surface_triangulation),
-      Inner_Element_Order(in_inner_order),
+HSIESurface::HSIESurface(unsigned int surface, unsigned int in_level, DofNumber in_first_own_index)
+    : BoundaryCondition(surface, in_level, Geometry.surface_extremal_coordinate[surface], in_first_own_index),
+      order(GlobalParams.HSIE_polynomial_degree),
+      dof_h_q(Geometry.surface_meshes[surface]),
+      Inner_Element_Order(GlobalParams.Nedelec_element_order),
       fe_nedelec(Inner_Element_Order),
       fe_q(Inner_Element_Order + 1),
       kappa(2.0 * GlobalParams.Pi / GlobalParams.Lambda) {
-    dof_h_nedelec.initialize(surface_triangulation, fe_nedelec);
-    dof_h_q.initialize(surface_triangulation, fe_q);
+    dof_h_nedelec.initialize(Geometry.surface_meshes[surface], fe_nedelec);
+    dof_h_q.initialize(Geometry.surface_meshes[surface], fe_q);
     set_mesh_boundary_ids();
     dof_counter = 0;
-    k0 = in_k0;
+    k0 = GlobalParams.kappa_0;
 }
 
 HSIESurface::~HSIESurface() {}
@@ -135,17 +134,7 @@ DofDataVector HSIESurface::get_dof_data_for_base_dof_q(unsigned int in_index) {
 }
 
 void HSIESurface::fill_matrix(
-    dealii::PETScWrappers::SparseMatrix *matrix, NumericVectorDistributed* rhs, 
-    unsigned int lowest_index, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
-  IndexSet is;
-  is.set_size(lowest_index + dof_counter);
-  is.add_range(lowest_index, lowest_index + dof_counter);
-  fill_matrix(matrix, rhs, is, surfaces_hsie, constraints);
-}
-
-void HSIESurface::fill_matrix(
-    dealii::PETScWrappers::SparseMatrix *matrix, NumericVectorDistributed* rhs, 
-    dealii::IndexSet global_indices, std::array<bool, 6>, dealii::AffineConstraints<ComplexNumber> *constraints) {
+    dealii::PETScWrappers::SparseMatrix *matrix, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) {
     HSIEPolynomial::computeDandI(order + 2, k0);
     auto it = dof_h_nedelec.begin();
     auto end = dof_h_nedelec.end();
@@ -249,8 +238,7 @@ void HSIESurface::fill_matrix(
       }
       std::vector<unsigned int> local_indices;
       for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-        local_indices.push_back(
-            global_indices.nth_index_in_set(cell_dofs[i].global_index));
+        local_indices.push_back(cell_dofs[i].global_index + first_own_dof);
       }
       Vector<ComplexNumber> cell_rhs(cell_dofs.size());
       cell_rhs = 0;
@@ -271,17 +259,7 @@ auto HSIESurface::build_fad_for_cell(CellIterator2D) -> FaceAngelingData {
 }
 
 void HSIESurface::fill_matrix(
-    dealii::PETScWrappers::SparseMatrix *mass_matrix, dealii::PETScWrappers::SparseMatrix *stiffness_matrix, NumericVectorDistributed * rhs, 
-    unsigned int lowest_index,  std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
-    IndexSet is;
-    is.set_size(lowest_index + dof_counter);
-    is.add_range(lowest_index, lowest_index + dof_counter);
-    fill_matrix(mass_matrix, stiffness_matrix, rhs, is, surfaces_hsie, constraints);
-}
-
-void HSIESurface::fill_matrix(
-    dealii::PETScWrappers::SparseMatrix *mass_matrix, dealii::PETScWrappers::SparseMatrix *stiffness_matrix, NumericVectorDistributed* rhs, 
-    dealii::IndexSet global_indices, std::array<bool, 6>, dealii::AffineConstraints<ComplexNumber> *constraints) {
+    dealii::PETScWrappers::SparseMatrix *mass_matrix, dealii::PETScWrappers::SparseMatrix *stiffness_matrix, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) {
     HSIEPolynomial::computeDandI(order + 2, k0);
     auto it = dof_h_nedelec.begin();
     auto end = dof_h_nedelec.end();
@@ -386,8 +364,7 @@ void HSIESurface::fill_matrix(
       }
       std::vector<unsigned int> local_indices;
       for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-        local_indices.push_back(
-            global_indices.nth_index_in_set(cell_dofs[i].global_index));
+        local_indices.push_back(cell_dofs[i].global_index + first_own_dof);
       }
       Vector<ComplexNumber> cell_rhs(cell_dofs.size());
       cell_rhs = 0;
@@ -399,17 +376,7 @@ void HSIESurface::fill_matrix(
 }
 
 void HSIESurface::fill_matrix(
-    dealii::PETScWrappers::MPI::SparseMatrix *matrix, NumericVectorDistributed* rhs, 
-    unsigned int lowest_index, std::array<bool, 6> surfaces_hsie, dealii::AffineConstraints<ComplexNumber> *constraints) {
-    IndexSet is;
-    is.set_size(lowest_index + dof_counter);
-    is.add_range(lowest_index, lowest_index + dof_counter);
-    fill_matrix(matrix, rhs, is, surfaces_hsie, constraints);
-}
-
-void HSIESurface::fill_matrix(
-    dealii::PETScWrappers::MPI::SparseMatrix *matrix, NumericVectorDistributed* rhs, 
-    dealii::IndexSet global_indices, std::array<bool, 6>, dealii::AffineConstraints<ComplexNumber> *constraints) {
+    dealii::PETScWrappers::MPI::SparseMatrix *matrix, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) {
     HSIEPolynomial::computeDandI(order + 2, k0);
     auto it = dof_h_nedelec.begin();
     auto end = dof_h_nedelec.end();
@@ -507,7 +474,7 @@ void HSIESurface::fill_matrix(
       }
       std::vector<unsigned int> local_indices;
       for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-        local_indices.push_back(global_indices.nth_index_in_set(cell_dofs[i].global_index));
+        local_indices.push_back(cell_dofs[i].global_index + first_own_dof);
       }
       Vector<ComplexNumber> cell_rhs(cell_dofs.size());
       cell_rhs = 0;
@@ -517,7 +484,7 @@ void HSIESurface::fill_matrix(
     }
 }
 
-void HSIESurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *pattern, DofNumber shift, dealii::AffineConstraints<ComplexNumber> *constraints) {
+void HSIESurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *pattern, dealii::AffineConstraints<ComplexNumber> *constraints) {
   auto it = dof_h_nedelec.begin_active();
   auto it2 = dof_h_q.begin_active();
   auto end = dof_h_nedelec.end();
@@ -525,7 +492,7 @@ void HSIESurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *pattern,
     DofDataVector cell_dofs = get_dof_data_for_cell(it, it2);
     std::vector<DofNumber> cell_dof_indices;
     for(DofData item : cell_dofs) {
-      cell_dof_indices.push_back(item.global_index+shift);
+      cell_dof_indices.push_back(item.global_index + first_own_dof);
     }
     constraints->add_entries_local_to_global(cell_dof_indices, *pattern);
     it2++;
@@ -1265,10 +1232,6 @@ std::vector<unsigned int> HSIESurface::get_lines_for_boundary_id(BoundaryId in_b
   return edges;
 }
 
-void HSIESurface::setup_neighbor_couplings(std::array<bool, 6>) { }
-
-void HSIESurface::reset_neighbor_couplings(std::array<bool, 6>) { }
-
 void HSIESurface::output_results(const dealii::Vector<ComplexNumber> & , std::string) { }
 
 SurfaceCellData HSIESurface::get_surface_cell_data_for_cell_index(const int in_index, const BoundaryId in_bid) {
@@ -1291,8 +1254,8 @@ SurfaceCellData HSIESurface::get_surface_cell_data_for_cell_index(const int in_i
   return ret;
 }
 
-void HSIESurface::fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int own_first_dof_index, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
-  unsigned int other_first_dof_index = own_first_dof_index;
+void HSIESurface::fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
+  unsigned int other_first_dof_index = first_own_dof;
   MPI_Sendrecv_replace(&other_first_dof_index, 1, MPI_UNSIGNED, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
   std::vector<InterfaceDofData> surface_dofs_unsorted;
   std::vector<SurfaceCellData> surface_cell_data;
@@ -1320,7 +1283,7 @@ void HSIESurface::fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, co
 
   for(unsigned int i = 0; i < surface_cell_data.size(); i++) {
     for(unsigned int j = 0; j < dofs_per_cell; j++) {
-      face_indices[i * dofs_per_cell + j] = surface_cell_data[i].dof_numbers[j] + own_first_dof_index;
+      face_indices[i * dofs_per_cell + j] = surface_cell_data[i].dof_numbers[j] + first_own_dof;
     }
   }
   
@@ -1351,7 +1314,7 @@ void HSIESurface::fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, co
   }
 }
 
-void HSIESurface::fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, const unsigned int own_first_dof_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
+void HSIESurface::fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
   for(auto it = dof_h_nedelec.begin(); it != dof_h_nedelec.end(); it ++) {
     bool is_at_boundary = false;
     for(unsigned int i = 0; i < 4; i++) {
@@ -1365,7 +1328,7 @@ void HSIESurface::fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid,
       std::vector<unsigned int> dof_numbers(surf_cell_data.dof_numbers.size());
       it->get_dof_indices(dof_numbers);
       for(unsigned int i = 0; i < surf_cell_data.dof_numbers.size(); i++) {
-        dof_numbers[i] += own_first_dof_index;
+        dof_numbers[i] += first_own_dof;
       }
       constraints->add_entries_local_to_global(dof_numbers, *dsp);
     }

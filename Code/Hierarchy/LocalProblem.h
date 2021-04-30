@@ -13,12 +13,8 @@
 class LocalProblem: public HierarchicalProblem {
 public:
   unsigned int solve_counter = 0;
-  NumericProblem base_problem;
-  std::array<std::shared_ptr<BoundaryCondition>,6> surfaces;
   SolverControl sc;
   dealii::PETScWrappers::SparseDirectMUMPS solver;
-  dealii::PETScWrappers::SparseMatrix * matrix;
-  dealii::AffineConstraints<ComplexNumber> constraints;
 
   LocalProblem();
   ~LocalProblem() override;
@@ -33,8 +29,6 @@ public:
 
   void generate_sparsity_pattern() override;
 
-  auto compute_own_dofs() -> DofCount override;
-
   void initialize_own_dofs() override;
 
   void make_constraints() override;
@@ -42,8 +36,6 @@ public:
   void assemble() override;
 
   void initialize_index_sets() override;
-
-  auto get_local_problem() -> LocalProblem* override;
 
   void validate();
 

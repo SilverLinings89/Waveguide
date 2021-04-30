@@ -101,22 +101,6 @@ void RectangularMode::make_boundary_conditions() {
   
   for (unsigned int side = 0; side < 4; side++) {      
     dealii::Triangulation<2, 3> temp_triangulation;
-    const unsigned int component = side / 2;
-    double additional_coorindate = 0;
-    bool found = false;
-    for (auto it : triangulation.active_cell_iterators()) {
-      if (it->at_boundary(side)) {
-        for (auto i = 0; i < 6 && !found; i++) {
-          if (it->face(i)->boundary_id() == side) {
-            found = true;
-            additional_coorindate = it->face(i)->center()[component];
-          }
-        }
-      }
-      if (found) {
-        break;
-      }
-    }
     dealii::Triangulation<2> surf_tria;
     Mesh tria;
     tria.copy_triangulation(triangulation);
@@ -143,7 +127,7 @@ void RectangularMode::make_boundary_conditions() {
     }
     dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation, b_ids);
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surf_tria);
-    surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(10, std::ref(surf_tria), side, 0, GlobalParams.kappa_0, additional_coorindate));
+    surfaces[side] = std::shared_ptr<HSIESurface>(new HSIESurface(side, 0, Geometry.levels[0].surface_first_dof[side]));
     surfaces[side]->initialize();
   }
   n_dofs_total = dof_handler.n_dofs();
@@ -380,7 +364,7 @@ void RectangularMode::assemble_system() {
     constraints.add_entries_local_to_global(cell_dof_indices, dsp);
   }
   for (unsigned int surface = 0; surface < 4; surface++) {
-    surfaces[surface]->fill_sparsity_pattern(&dsp, surface_first_dofs[surface], &constraints);
+    surfaces[surface]->fill_sparsity_pattern(&dsp, &constraints);
   }
   constraints.close();
   sp.copy_from(dsp);
@@ -400,9 +384,8 @@ void RectangularMode::assemble_system() {
     constraints.distribute_local_to_global(cell_data.cell_mass_matrix, cell_data.local_dof_indices, mass_matrix);
     constraints.distribute_local_to_global(cell_data.cell_stiffness_matrix, cell_data.local_dof_indices, stiffness_matrix);
   }
-  std::array<bool, 6> is_hsie = {true, true, true, true, false, false};
   for(unsigned int surf = 0; surf < 4; surf++) {
-    surfaces[surf]->fill_matrix(&mass_matrix, &stiffness_matrix, &rhs, surface_first_dofs[surf], is_hsie, &constraints);
+    surfaces[surf]->fill_matrix(&mass_matrix, &stiffness_matrix, &rhs, &constraints);
   }
   mass_matrix.compress(dealii::VectorOperation::add);
   stiffness_matrix.compress(dealii::VectorOperation::add);

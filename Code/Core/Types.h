@@ -14,6 +14,7 @@
 #include "../BoundaryCondition/DofData.h"
 
 struct RayAngelingData;
+class BounadaryCondition;
 
 using EFieldComponent          = std::complex<double>;
 using EFieldValue              = std::array<EFieldComponent, 3>;
@@ -39,6 +40,13 @@ using MathExpression           = dealii::Differentiation::SD::Expression;
 using Mesh                     = dealii::Triangulation<3>;
 using MaterialTensor           = dealii::Tensor<2,3,ComplexNumber>;
 using FaceAngelingData         = std::array<RayAngelingData, 4>;
+using CubeSurfaceTruncationState = std::array<bool, 6>;
+
+const double FLOATING_PRECISION = 0.00001;
+
+const std::vector<std::vector<unsigned int>>  edge_to_boundary_id = {
+    {4,5,2,3}, {5,4,2,3}, {0,1,4,5}, {0,1,5,4}, {1,0,2,3}, {0,1,2,3}
+};
 
 struct EdgeAngelingData {
   unsigned int edge_index;

@@ -13,15 +13,12 @@
 
 class NonLocalProblem: public HierarchicalProblem {
 private:
-  std::vector<dealii::IndexSet> index_sets_per_process;
   std::array<bool, 6> is_sweeping_hsie_surface;
   DofCount total_number_of_dofs_on_level;
-  dealii::PETScWrappers::MPI::SparseMatrix *matrix;
   dealii::IndexSet upper_interface_dofs;
   dealii::IndexSet lower_interface_dofs;
   dealii::SolverControl sc;
   KSP ksp;
-  dealii::AffineConstraints<ComplexNumber> constraints;
   ComplexNumber * u;
   std::array<std::vector<std::pair<DofNumber, DofNumber>>,6> coupling_dofs;
   ComplexNumber * mpi_cache;
@@ -38,8 +35,6 @@ private:
   ~NonLocalProblem() override;
 
   auto reinit_mpi_cache(DofCount) -> void;
-
-  auto compute_own_dofs() -> DofCount override;
 
   auto initialize_own_dofs() -> void override;
 
@@ -70,8 +65,6 @@ private:
   void generate_sparsity_pattern() override;
 
   void initialize_index_sets() override;
-
-  LocalProblem* get_local_problem() override;
 
   void reinit() override;
 
@@ -133,5 +126,4 @@ private:
 
   auto print_diagnosis_data() -> void;
 
-  auto validate_constraints_range() -> bool;
 };
