@@ -60,8 +60,6 @@ private:
 
   void initialize() override;
 
-  void make_constraints() override;
-
   void generate_sparsity_pattern() override;
 
   void initialize_index_sets() override;
@@ -89,10 +87,6 @@ private:
   bool is_lowest_in_sweeping_direction();
 
   bool is_highest_in_sweeping_direction();
-
-  auto make_constraints_for_local_surface(unsigned int index) -> void;
-  
-  auto make_constraints_for_non_local_surface(unsigned int index) -> void;
 
   void propagate_up();
 

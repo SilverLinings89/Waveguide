@@ -6,6 +6,7 @@
 #include "../Helpers/Parameters.h"
 #include "../Core/Types.h"
 #include "../Helpers/staticfunctions.h"
+#include "../Core/NumericProblem.h"
 
 HierarchicalProblem::~HierarchicalProblem() { }
 
@@ -45,4 +46,33 @@ auto HierarchicalProblem::opposing_site_bid(BoundaryId in_bid) -> BoundaryId {
   else {
     return in_bid - 1;
   }
+}
+
+void HierarchicalProblem::make_constraints() {
+  print_info("HierarchicalProblem::make_constraints", "Start");
+
+  IndexSet total_dofs_global(Geometry.levels[level].n_total_level_dofs);
+  total_dofs_global.add_range(0,Geometry.levels[level].n_total_level_dofs);
+  constraints.reinit(total_dofs_global);
+  
+  // Inner constraints
+  Geometry.inner_domain->make_constraints(&constraints, Geometry.levels[level].inner_first_dof, own_dofs);
+
+  // Surface constraints
+  for(unsigned int i = 0; i < 6; i++) {
+    Geometry.levels[level].surfaces[i]->make_surface_constraints(&constraints);
+  }
+
+  // Edge constraints
+  for(unsigned int i = 0; i < 6; i++) {
+    for(unsigned int j = i+1; j < 6; j++) {
+      if(!are_opposing_sites(i,j)){
+        Geometry.levels[level].surfaces[i]->make_edge_constraints(&constraints, j);
+      }
+    }
+  }
+
+  constraints.close();
+  
+  print_info("HierarchicalProblem::make_constraints", "End");
 }

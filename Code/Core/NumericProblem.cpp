@@ -46,6 +46,28 @@ bool compareConstraintPairs(ConstraintPair v1, ConstraintPair v2) {
   return (v1.left < v2.left);
 }
 
+std::vector<InterfaceDofData> NumericProblem::get_surface_dof_vector_for_edge_and_level(BoundaryId first_bid, BoundaryId second_bid, unsigned int level) {
+  std::vector<InterfaceDofData> ret = get_surface_dof_vector_for_edge(first_bid, second_bid);
+  shift_interface_dof_data(&ret, Geometry.levels[level].inner_first_dof);
+  return ret;
+}
+
+std::vector<InterfaceDofData> NumericProblem::get_surface_dof_vector_for_edge(BoundaryId first_bid, BoundaryId second_bid) {
+  std::vector<InterfaceDofData> ret;
+  std::vector<InterfaceDofData> interface_1 = get_surface_dof_vector_for_boundary_id(first_bid);
+  std::vector<InterfaceDofData> interface_2 = get_surface_dof_vector_for_boundary_id(second_bid);
+
+  for(unsigned int i = 0; i < interface_1.size(); i++) {
+    for(unsigned int j = 0; j < interface_2.size(); j++) {
+      if(interface_1[i].index == interface_2[j].index) {
+        ret.push_back(interface_1[i]);
+      }
+    }
+  }
+
+  return ret;
+}
+
 void NumericProblem::make_grid() {
   print_info("NumericProblem::make_grid", "start");
   Triangulation<3> temp_tria;
@@ -219,6 +241,12 @@ void NumericProblem::SortDofsDownstream() {
   }
   dof_handler.renumber_dofs(new_numbering);
   print_info("NumericProblem::SortDofsDownstream", "End");
+}
+
+std::vector<InterfaceDofData> NumericProblem::get_surface_dof_vector_for_boundary_id_and_level(unsigned int b_id, unsigned int in_level) {
+  std::vector<InterfaceDofData> ret = get_surface_dof_vector_for_boundary_id(b_id);
+  shift_interface_dof_data(&ret, Geometry.levels[in_level].inner_first_dof);
+  return ret;
 }
 
 std::vector<InterfaceDofData> NumericProblem::get_surface_dof_vector_for_boundary_id(

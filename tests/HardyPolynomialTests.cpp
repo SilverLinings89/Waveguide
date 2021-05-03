@@ -30,9 +30,7 @@ TEST(HSIEPolynomialTests, ProductOfDandIShouldBeIdentity) {
   ComplexNumber k0(0.0, 1.0);
   HSIEPolynomial poly(in_a, k0);
   poly.applyD();
-  dealii::FullMatrix<ComplexNumber> product(HSIEPolynomial::D.size(0),
-      HSIEPolynomial::D.size(1));
+  dealii::FullMatrix<ComplexNumber> product(HSIEPolynomial::D.size(0), HSIEPolynomial::D.size(1));
   HSIEPolynomial::D.mmult(product, HSIEPolynomial::I, false);
-  ASSERT_NEAR(product.frobenius_norm(), std::sqrt(HSIEPolynomial::I.size(0)),
-      0.0001);
+  ASSERT_NEAR(product.frobenius_norm(), std::sqrt(HSIEPolynomial::I.size(0)), 0.0001);
 }

@@ -27,6 +27,25 @@ int alert_counter = 0;
 std::string input_file_name;
 SpaceTransformation *the_st;
 
+static void setup_GlobalParams_for_tests(unsigned int n_cells_x, unsigned int n_cells_y, unsigned int n_cells_z, BoundaryConditionType b_type, double size_x, double size_y, double size_z) {
+  GlobalParams.Blocks_in_x_direction = 1;
+  GlobalParams.Blocks_in_y_direction = 1;
+  GlobalParams.Blocks_in_z_direction = 1;
+  GlobalParams.Index_in_x_direction = 0;
+  GlobalParams.Index_in_y_direction = 0;
+  GlobalParams.Index_in_z_direction = 0;
+  GlobalParams.Cells_in_x = n_cells_x;
+  GlobalParams.Cells_in_y = n_cells_y;
+  GlobalParams.Cells_in_z = n_cells_z;
+  GlobalParams.Geometry_Size_X = size_x;
+  GlobalParams.Geometry_Size_Y = size_y;
+  GlobalParams.Geometry_Size_Z = size_z;
+  GlobalParams.HSIE_SWEEPING_LEVEL = 1;
+  GlobalParams.MPI_Rank = 0;
+  GlobalParams.Nedelec_element_order = 0;
+  GlobalParams.BoundaryCondition = b_type;
+}
+
 static unsigned int third_number_in_zero_one_two(unsigned int first, unsigned int second) {
   for(unsigned int i = 0; i < 3; i++) {
     if(first != i && second != i) {

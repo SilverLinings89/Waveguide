@@ -31,8 +31,6 @@ public:
 
   void initialize_own_dofs() override;
 
-  void make_constraints() override;
-
   void assemble() override;
 
   void initialize_index_sets() override;

@@ -771,8 +771,7 @@ unsigned int HSIESurface::register_dof() {
   return this->dof_counter - 1;
 }
 
-ComplexNumber HSIESurface::evaluate_a(
-    std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, Tensor<2,3,double> G) {
+ComplexNumber HSIESurface::evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, Tensor<2,3,double> G) {
   ComplexNumber result(0, 0);
   for(unsigned int i = 0; i < 3; i++) {
     for (unsigned int j = 0; j < 3; j++) {
@@ -1064,7 +1063,7 @@ Position2D get_line_position_for_line_index_in_tria(dealii::Triangulation<2> * i
 std::vector<Position> HSIESurface::vertex_positions_for_ids(std::vector<unsigned int> ids) {
   std::vector<Position> ret(ids.size());
   for(unsigned int vertex_index_in_array = 0; vertex_index_in_array < ids.size(); vertex_index_in_array++) {
-    Position p = undo_transform(get_vertex_position_for_vertex_index_in_tria(&surface_triangulation, ids[vertex_index_in_array]));
+    Position p = undo_transform(get_vertex_position_for_vertex_index_in_tria(&Geometry.surface_meshes[b_id], ids[vertex_index_in_array]));
     ret[vertex_index_in_array] = p;
   }
   return ret;
@@ -1073,7 +1072,7 @@ std::vector<Position> HSIESurface::vertex_positions_for_ids(std::vector<unsigned
 std::vector<Position> HSIESurface::line_positions_for_ids(std::vector<unsigned int> ids) {
   std::vector<Position> ret(ids.size());
   for(unsigned int line_index_in_array = 0; line_index_in_array < ids.size(); line_index_in_array++) {
-    Position p  = undo_transform(get_line_position_for_line_index_in_tria(&surface_triangulation, ids[line_index_in_array]));
+    Position p  = undo_transform(get_line_position_for_line_index_in_tria(&Geometry.surface_meshes[b_id], ids[line_index_in_array]));
     ret[line_index_in_array] = p;  
   }
   return ret;
@@ -1177,7 +1176,7 @@ void HSIESurface::compute_extreme_vertex_coordinates() {
   std::array<double, 3> upper_coordinates = {-100000, -100000, -100000};
   std::array<double, 3> lower_coordinates = {100000, 100000, 100000};
   
-  for(auto it = surface_triangulation.begin(); it != surface_triangulation.end(); it++) {
+  for(auto it = Geometry.surface_meshes[b_id].begin(); it != Geometry.surface_meshes[b_id].end(); it++) {
     for(unsigned int ind = 0; ind < 4; ind++) {
       Position vertex_position = undo_transform(it->vertex(ind));
       for(unsigned int i = 0; i < 3; i++) {
@@ -1212,7 +1211,7 @@ bool HSIESurface::is_point_at_boundary(Position2D in_p, BoundaryId in_bid) {
 
 std::vector<unsigned int> HSIESurface::get_vertices_for_boundary_id(BoundaryId in_boundary_id) {
   std::vector<unsigned int> vertices;
-  for(auto it = surface_triangulation.begin_vertex(); it != surface_triangulation.end_vertex(); it++) {
+  for(auto it = Geometry.surface_meshes[b_id].begin_vertex(); it != Geometry.surface_meshes[b_id].end_vertex(); it++) {
     if(is_point_at_boundary(it->center(), in_boundary_id)) {
       vertices.push_back(it->index());
     }
@@ -1223,7 +1222,7 @@ std::vector<unsigned int> HSIESurface::get_vertices_for_boundary_id(BoundaryId i
 
 std::vector<unsigned int> HSIESurface::get_lines_for_boundary_id(BoundaryId in_boundary_id) {
   std::vector<unsigned int> edges;
-  for(auto it = surface_triangulation.begin_active_face(); it != surface_triangulation.end_face(); it++) {
+  for(auto it = Geometry.surface_meshes[b_id].begin_active_face(); it != Geometry.surface_meshes[b_id].end_face(); it++) {
     if(is_point_at_boundary(it->center(), in_boundary_id)) {
       edges.push_back(it->index());
     }
@@ -1333,4 +1332,18 @@ void HSIESurface::fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid,
       constraints->add_entries_local_to_global(dof_numbers, *dsp);
     }
   }
+}
+
+void HSIESurface::make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints) {
+    std::vector<InterfaceDofData> own_dof_indices = get_dof_association();
+    std::vector<InterfaceDofData> inner_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
+    dealii::AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, inner_dof_indices, Geometry.levels[level].n_total_level_dofs);
+    constraints->merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
+}
+
+void HSIESurface::make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) {
+    std::vector<InterfaceDofData> inner_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_edge_and_level(b_id, other_boundary, level);
+    std::vector<InterfaceDofData> own_dof_indices = get_dof_association_by_boundary_id(other_boundary);
+    dealii::AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(inner_dof_indices, own_dof_indices, Geometry.levels[level].n_total_level_dofs);
+    constraints->merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
 }

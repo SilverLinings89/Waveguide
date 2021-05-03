@@ -46,7 +46,7 @@ class HierarchicalProblem {
   virtual void initialize()=0;
   virtual void generate_sparsity_pattern()=0;
   virtual void initialize_own_dofs() =0;
-  virtual void make_constraints() = 0;
+  void make_constraints();
   virtual void assemble()=0;
   virtual void initialize_index_sets()=0;
   void constrain_identical_dof_sets(std::vector<unsigned int> *set_one, std::vector<unsigned int> *set_two, dealii::AffineConstraints<ComplexNumber> *affine_constraints);

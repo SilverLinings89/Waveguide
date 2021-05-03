@@ -6,6 +6,7 @@
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
 #include "../Core/GlobalObjects.h"
+#include "../Core/NumericProblem.h"
 #include "../Helpers/staticfunctions.h"
 #include <deal.II/dofs/dof_tools.h>
 #include <deal.II/grid/tria.h>
@@ -25,7 +26,7 @@ PMLSurface::~PMLSurface() {}
 
 void PMLSurface::prepare_mesh() {
     Triangulation<3> temp_tria;
-    dealii::GridGenerator::extrude_triangulation(surface_triangulation, GlobalParams.PML_N_Layers, GlobalParams.PML_thickness, temp_tria);
+    dealii::GridGenerator::extrude_triangulation(Geometry.surface_meshes[b_id], GlobalParams.PML_N_Layers, GlobalParams.PML_thickness, temp_tria);
     outer_boundary_id = b_id;
     dealii::Tensor<1, 3> shift_vector;
     for(unsigned int i = 0; i < 3; i++) {
@@ -645,4 +646,18 @@ void PMLSurface::fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, 
       constraints->add_entries_local_to_global(dof_numbers, *dsp);
     }
   }
+}
+
+void PMLSurface::make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints) {
+    std::vector<InterfaceDofData> own_dof_indices = get_dof_association();
+    std::vector<InterfaceDofData> inner_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
+    dealii::AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, inner_dof_indices, Geometry.levels[level].n_total_level_dofs);
+    constraints->merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
+}
+
+void PMLSurface::make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) {
+    std::vector<InterfaceDofData> inner_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_edge_and_level(b_id, other_boundary, level);
+    std::vector<InterfaceDofData> own_dof_indices = get_dof_association_by_boundary_id(other_boundary);
+    dealii::AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(inner_dof_indices, own_dof_indices, Geometry.levels[level].n_total_level_dofs);
+    constraints->merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
 }

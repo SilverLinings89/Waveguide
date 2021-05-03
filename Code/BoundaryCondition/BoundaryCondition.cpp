@@ -1,4 +1,5 @@
 #include "./BoundaryCondition.h"
+#include "../Core/GlobalObjects.h"
 
 using namespace dealii;
 
@@ -12,8 +13,8 @@ BoundaryCondition::BoundaryCondition(unsigned int in_bid, unsigned int in_level,
 
 
 void BoundaryCondition::identify_corner_cells() {
-  auto it = surface_triangulation.begin_active();
-  auto end = surface_triangulation.end();
+  auto it = Geometry.surface_meshes[b_id].begin_active();
+  auto end = Geometry.surface_meshes[b_id].end();
   for(; it != end; ++it) {
     unsigned int outside_edges = 0;
     for(unsigned int i = 0; i< dealii::GeometryInfo<2>::faces_per_cell; ++i) {
@@ -26,10 +27,10 @@ void BoundaryCondition::identify_corner_cells() {
 }
 
 void BoundaryCondition::set_mesh_boundary_ids() {
-    auto it = surface_triangulation.begin_active();
+    auto it = Geometry.surface_meshes[b_id].begin_active();
     std::vector<double> x;
     std::vector<double> y;
-    while(it != this->surface_triangulation.end()){
+    while(it != Geometry.surface_meshes[b_id].end()){
       if(it->at_boundary()) {
         for (unsigned int face = 0; face < GeometryInfo<2>::faces_per_cell; ++face) {
           if (it->face(face)->at_boundary()) {
@@ -46,8 +47,8 @@ void BoundaryCondition::set_mesh_boundary_ids() {
     double y_max = *max_element(y.begin(), y.end());
     double x_min = *min_element(x.begin(), x.end());
     double y_min = *min_element(y.begin(), y.end());
-    it = this->surface_triangulation.begin_active();
-    while(it != this->surface_triangulation.end()){
+    it = Geometry.surface_meshes[b_id].begin_active();
+    while(it != Geometry.surface_meshes[b_id].end()){
     if (it->at_boundary()) {
       for (unsigned int face = 0; face < dealii::GeometryInfo<2>::faces_per_cell;
           ++face) {
@@ -76,5 +77,5 @@ void BoundaryCondition::set_mesh_boundary_ids() {
 }
 
 std::vector<unsigned int> BoundaryCondition::get_boundary_ids() {
-    return (this->surface_triangulation.get_boundary_ids());
+    return (Geometry.surface_meshes[b_id].get_boundary_ids());
 }

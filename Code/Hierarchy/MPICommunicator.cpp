@@ -32,6 +32,9 @@ void MPICommunicator::initialize() {
     communicators_by_level.push_back(new_com);
     rank_on_level.push_back(dealii::Utilities::MPI::this_mpi_process(new_com));
   }
+  communicators_by_level.push_back(MPI_COMM_SELF);
+  rank_on_level.push_back(0);
+  std::reverse(rank_on_level.begin(), rank_on_level.end());
   std::reverse(communicators_by_level.begin(), communicators_by_level.end());
 }
 

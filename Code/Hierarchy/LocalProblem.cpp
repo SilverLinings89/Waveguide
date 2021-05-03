@@ -114,61 +114,6 @@ void LocalProblem::validate() {
   print_info("LocalProblem::validate", "End");
 }
 
-void LocalProblem::make_constraints() {
-  print_info("LocalProblem::make_constraints", "Start");
-  dealii::IndexSet is;
-  is.set_size(Geometry.levels[0].n_local_dofs);
-  is.add_range(0, Geometry.levels[0].n_local_dofs);
-  constraints.reinit(is);
-
-  // couple surface dofs with inner ones.
-  for (unsigned int surface = 0; surface < 6; surface++) {
-    if(Geometry.levels[0].is_surface_truncated[surface]) {
-      std::vector<InterfaceDofData> from_surface = Geometry.levels[0].surfaces[surface]->get_dof_association();
-      std::vector<InterfaceDofData> from_inner_problem = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id(surface);
-      if (from_surface.size() != from_inner_problem.size()) {
-        std::cout << "Warning: Size mismatch in make_constraints for surface "
-            << surface << ": Inner: " << from_inner_problem.size()
-            << " != Surface:" << from_surface.size() << "." << std::endl;
-      }
-      shift_interface_dof_data(&from_surface, Geometry.levels[0].surface_first_dof[surface]);
-      // Dont need to shift the inner dofs because they start at 0.
-      AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(from_surface, from_inner_problem, Geometry.levels[0].n_local_dofs);
-      constraints.merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins, true);
-    }
-  }
-  print_info("LocalProblem::make_constraints", "Constraints after phase 1: " + std::to_string(constraints.n_constraints()), false, LoggingLevel::DEBUG_ALL );
-  
-  for (unsigned int i = 0; i < 6; i++) {
-    for (unsigned int j = i + 1; j < 6; j++) {
-      if(Geometry.levels[0].is_surface_truncated[i] && Geometry.levels[0].is_surface_truncated[j]) {
-        bool opposing = ((i % 2) == 0) && (i + 1 == j);
-        if (!opposing) {
-          std::vector<InterfaceDofData> lower_face_dofs = Geometry.levels[0].surfaces[i]->get_dof_association_by_boundary_id(j);
-          std::vector<InterfaceDofData> upper_face_dofs = Geometry.levels[0].surfaces[j]->get_dof_association_by_boundary_id(i);
-          if (lower_face_dofs.size() != upper_face_dofs.size()) {
-            std::cout << "ERROR: There was a edge dof count error!" << std::endl
-                << "Surface " << i << " offers " << lower_face_dofs.size()
-                << " dofs, " << j << " offers " << upper_face_dofs.size() << "."
-                << std::endl;
-          }
-          shift_interface_dof_data(&lower_face_dofs, Geometry.levels[0].surface_first_dof[i]);
-          shift_interface_dof_data(&upper_face_dofs, Geometry.levels[0].surface_first_dof[j]);
-          AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(lower_face_dofs, upper_face_dofs, Geometry.levels[0].n_local_dofs);
-          constraints.merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins, true);
-        }
-      }
-    }
-  }
-
-  print_info("LocalProblem::make_constraints", "Constraints after phase 2: " + std::to_string(constraints.n_constraints()), false, LoggingLevel::DEBUG_ALL );
-
-  Geometry.inner_domain->make_constraints(&constraints, 0, own_dofs);
-  print_info("LocalProblem::make_constraints", "Constraints after phase 3: " + std::to_string(constraints.n_constraints()), false, LoggingLevel::DEBUG_ALL );
-
-  print_info("LocalProblem::make_constraints", "End");
-}
-
 void LocalProblem::assemble() {
   Geometry.inner_domain->assemble_system(0, &constraints, matrix, &rhs);
   for (unsigned int surface = 0; surface < 6; surface++) {

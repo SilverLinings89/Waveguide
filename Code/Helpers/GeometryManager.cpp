@@ -7,6 +7,7 @@
 #include "../BoundaryCondition/HSIESurface.h"
 #include "../BoundaryCondition/PMLSurface.h"
 #include "../BoundaryCondition/NeighborSurface.h"
+#include "staticfunctions.h"
 
 GeometryManager::GeometryManager() {
   inner_domain = new NumericProblem();
@@ -17,6 +18,7 @@ GeometryManager::~GeometryManager() {
 }
 
 void GeometryManager::initialize() {
+  print_info("GeometryManager::initialize", "Start");
   set_x_range(compute_x_range());
   set_y_range(compute_y_range());
   set_z_range(compute_z_range());
@@ -30,6 +32,10 @@ void GeometryManager::initialize() {
   surface_extremal_coordinate[4] = local_z_range.first;
   surface_extremal_coordinate[5] = local_z_range.second;
   inner_domain->make_grid();
+  initialize_inner_domain();
+  initialize_local_level();
+  initialize_surfaces();
+  print_info("GeometryManager::initialize", "End");
 }
 
 unsigned int GeometryManager::compute_n_dofs_on_level(const unsigned int level) {
@@ -159,10 +165,12 @@ void GeometryManager::initialize_level_3() {
 }
 
 void GeometryManager::perform_initialization(unsigned int in_level) {
+  print_info("GeometryManager::perform_initialization", "Start level " + std::to_string(in_level));
   unsigned int count = compute_n_dofs_on_level(in_level);
+  std::cout << "Count: " << count << std::endl;
   levels[in_level].dof_distribution = dealii::Utilities::MPI::create_ascending_partitioning(GlobalMPI.communicators_by_level[in_level], count);
   levels[in_level].inner_first_dof = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].nth_index_in_set(0);
-  levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution[levels[in_level].dof_distribution.size()-1].nth_index_in_set(levels[in_level].dof_distribution[levels[in_level].dof_distribution.size()-1].n_elements()-1);
+  levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution.back().nth_index_in_set(levels[in_level].dof_distribution.back().n_elements()-1);
   
   unsigned int first_dof = levels[in_level].inner_first_dof + local_inner_dofs;
 
@@ -179,6 +187,7 @@ void GeometryManager::perform_initialization(unsigned int in_level) {
     levels[in_level].surfaces[surf]->initialize();
     first_dof += levels[0].surfaces[surf]->dof_counter;
   }
+  print_info("GeometryManager::perform_initialization", "End level " + std::to_string(in_level));
 }
 
 dealii::Tensor<2,3> GeometryManager::get_epsilon_tensor(const Position & in_p) {
