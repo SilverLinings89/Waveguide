@@ -418,6 +418,8 @@ void NonLocalProblem::apply_sweep(Vec x_in, Vec x_out) {
 
 void NonLocalProblem::reinit() {
   print_info("Nonlocal reinit", "Reinit starting");
+  child->reinit();
+  
   make_constraints();
   
   generate_sparsity_pattern();
@@ -435,7 +437,6 @@ void NonLocalProblem::reinit() {
   }  
   matrix->reinit(GlobalMPI.communicators_by_level[level], sp, n_dofs_by_proc, n_dofs_by_proc, rank, true);
   // matrix->reinit(MPI_COMM_WORLD, total_number_of_dofs_on_level, total_number_of_dofs_on_level, Geometry.levels[level].n_local_dofs, Geometry.levels[level].n_local_dofs, Geometry.inner_domain->dof_handler.max_couplings_between_dofs(), false,  100);
-  child->reinit();
   print_info("Nonlocal reinit", "Reinit done");
 }
 

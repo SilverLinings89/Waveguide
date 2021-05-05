@@ -1342,7 +1342,7 @@ void HSIESurface::make_surface_constraints(dealii::AffineConstraints<ComplexNumb
 }
 
 void HSIESurface::make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) {
-    std::vector<InterfaceDofData> inner_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_edge_and_level(b_id, other_boundary, level);
+    std::vector<InterfaceDofData> inner_dof_indices = Geometry.levels[level].surfaces[other_boundary]->get_dof_association_by_boundary_id(b_id);
     std::vector<InterfaceDofData> own_dof_indices = get_dof_association_by_boundary_id(other_boundary);
     dealii::AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(inner_dof_indices, own_dof_indices, Geometry.levels[level].n_total_level_dofs);
     constraints->merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);

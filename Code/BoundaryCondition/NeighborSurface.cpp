@@ -89,11 +89,43 @@ unsigned int NeighborSurface::get_dof_count_by_boundary_id(BoundaryId in_boundar
 }
 
 std::vector<InterfaceDofData> NeighborSurface::get_dof_association() {
-    return Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
+    std::vector<InterfaceDofData> own_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
+    const unsigned int n_dofs = own_dof_indices.size();
+    unsigned int * dof_indices = new unsigned int[n_dofs];
+    for(unsigned int i = 0; i < n_dofs; i++) {
+        dof_indices[i] = own_dof_indices[i].index;
+    }
+    MPI_Sendrecv_replace(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
+    std::vector<InterfaceDofData> other_dof_indices;
+    for(unsigned int i = 0; i < n_dofs; i++) {
+        InterfaceDofData temp = own_dof_indices[i];
+        temp.index = dof_indices[i];
+        other_dof_indices.push_back(temp);
+    }
+    return other_dof_indices;
 }
 
 std::vector<InterfaceDofData> NeighborSurface::get_dof_association_by_boundary_id(BoundaryId in_boundary_id) {
-    return Geometry.inner_domain->get_surface_dof_vector_for_edge_and_level(b_id, in_boundary_id, level);
+    std::vector<InterfaceDofData> own_dof_indices;
+    if(Geometry.levels[level].is_surface_truncated[in_boundary_id]) {
+        own_dof_indices = Geometry.levels[level].surfaces[in_boundary_id]->get_dof_association_by_boundary_id(b_id);
+    } else {
+        own_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_edge_and_level(b_id, in_boundary_id, level);
+    }
+    const unsigned int n_dofs = own_dof_indices.size();
+    std::cout << "Neighbor Surface dof count " << own_dof_indices.size() << "." << std::endl;
+    unsigned int * dof_indices = new unsigned int[n_dofs];
+    for(unsigned int i = 0; i < n_dofs; i++) {
+        dof_indices[i] = own_dof_indices[i].index;
+    }
+    MPI_Sendrecv_replace(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
+    std::vector<InterfaceDofData> other_dof_indices;
+    for(unsigned int i = 0; i < n_dofs; i++) {
+        InterfaceDofData temp = own_dof_indices[i];
+        temp.index = dof_indices[i];
+        other_dof_indices.push_back(temp);
+    }
+    return other_dof_indices;
 }
 
 void NeighborSurface::sort_dofs() {
@@ -121,13 +153,13 @@ void NeighborSurface::output_results(const dealii::Vector<ComplexNumber> & , std
 }
 
 void NeighborSurface::make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints) {
-    std::vector<InterfaceDofData> own_dof_indices = get_dof_association();
+    std::vector<InterfaceDofData> own_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
     const unsigned int n_dofs = own_dof_indices.size();
     unsigned int * dof_indices = new unsigned int[n_dofs];
     for(unsigned int i = 0; i < n_dofs; i++) {
         dof_indices[i] = own_dof_indices[i].index;
     }
-    MPI_Sendrecv_replace(dof_indices, n_dofs, MPI_DOUBLE, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
+    MPI_Sendrecv_replace(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
     std::vector<InterfaceDofData> other_dof_indices;
     for(unsigned int i = 0; i < n_dofs; i++) {
         InterfaceDofData temp = own_dof_indices[i];
@@ -146,11 +178,12 @@ void NeighborSurface::make_edge_constraints(dealii::AffineConstraints<ComplexNum
         own_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_edge_and_level(b_id, other_boundary, level);
     }
     const unsigned int n_dofs = own_dof_indices.size();
+    std::cout << "Neighbor Surface dof count " << own_dof_indices.size() << "." << std::endl;
     unsigned int * dof_indices = new unsigned int[n_dofs];
     for(unsigned int i = 0; i < n_dofs; i++) {
         dof_indices[i] = own_dof_indices[i].index;
     }
-    MPI_Sendrecv_replace(dof_indices, n_dofs, MPI_DOUBLE, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
+    MPI_Sendrecv_replace(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
     std::vector<InterfaceDofData> other_dof_indices;
     for(unsigned int i = 0; i < n_dofs; i++) {
         InterfaceDofData temp = own_dof_indices[i];

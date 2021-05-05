@@ -14,6 +14,8 @@ class PMLSurface : public BoundaryCondition {
     dealii::FE_NedelecSZ<3> fe_nedelec;
     dealii::AffineConstraints<ComplexNumber> constraints;
     bool constraints_made;
+    PMLMeshTransformation transformation;
+    bool mesh_is_transformed;
 
   public: 
     std::array<std::set<unsigned int>, 6> edge_ids_by_boundary_id;

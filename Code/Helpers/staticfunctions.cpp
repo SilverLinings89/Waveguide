@@ -540,8 +540,6 @@ std::vector<DofCouplingInformation> get_coupling_information(std::vector<Interfa
   std::sort(dofs_interface_1.begin(), dofs_interface_1.end(), compareDofBaseDataAndOrientation);
   std::sort(dofs_interface_2.begin(), dofs_interface_2.end(), compareDofBaseDataAndOrientation);
 
-  std::vector<InterfaceDofData> group_a;
-  std::vector<InterfaceDofData> group_b;
   const unsigned int n_total_dofs = dofs_interface_1.size();
   for (unsigned int index = 0; index < n_total_dofs; index++) {
     DofCouplingInformation item = get_coupling_for_single_pair(dofs_interface_1[index], dofs_interface_2[index]);

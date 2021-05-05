@@ -20,6 +20,7 @@ PMLSurface::PMLSurface(unsigned int surface, unsigned int in_level, DofNumber in
   : BoundaryCondition(surface, in_level, Geometry.surface_extremal_coordinate[surface], in_first_own_index),
   fe_nedelec(GlobalParams.Nedelec_element_order) {
      constraints_made = false; 
+     mesh_is_transformed = false;
 }
 
 PMLSurface::~PMLSurface() {}
@@ -72,8 +73,10 @@ void PMLSurface::prepare_mesh() {
       fix_apply_negative_Jacobian_transformation(&temp_tria);
     }
     triangulation = reforge_triangulation(&temp_tria);
-    PMLMeshTransformation::set(x_range, y_range, z_range, additional_coordinate, b_id/2, Geometry.levels[level].is_surface_truncated);
-    GridTools::transform(&(PMLMeshTransformation::transform), triangulation);
+    compute_coordinate_ranges();
+    transformation = PMLMeshTransformation(x_range, y_range, z_range, additional_coordinate, b_id/2, Geometry.levels[level].is_surface_truncated);
+    GridTools::transform(transformation, triangulation);
+    mesh_is_transformed = true;
 }
 
 unsigned int PMLSurface::cells_for_boundary_id(unsigned int boundary_id) {
@@ -91,36 +94,39 @@ void PMLSurface::init_fe() {
     dof_h_nedelec.distribute_dofs(fe_nedelec);
     dof_counter = dof_h_nedelec.n_dofs();
     sort_dofs();
-    compute_coordinate_ranges();
     set_boundary_ids();
 }
 
 bool PMLSurface::is_position_at_boundary(Position in_p, BoundaryId in_bid) {
-  bool is_at_x_interface = std::abs(in_p[0] - x_range.first) < 0.00001 || std::abs(in_p[0] - x_range.second) < 0.00001;
-  bool is_at_y_interface = std::abs(in_p[1] - y_range.first) < 0.00001 || std::abs(in_p[1] - y_range.second) < 0.00001;
-  bool is_at_z_interface = std::abs(in_p[2] - z_range.first) < 0.00001 || std::abs(in_p[2] - z_range.second) < 0.00001;
+  Position p = in_p;
+  if(mesh_is_transformed) {
+    p = transformation.undo_transform(in_p);
+  }
+  bool is_at_x_interface = std::abs(p[0] - x_range.first) < FLOATING_PRECISION || std::abs(p[0] - x_range.second) < FLOATING_PRECISION;
+  bool is_at_y_interface = std::abs(p[1] - y_range.first) < FLOATING_PRECISION || std::abs(p[1] - y_range.second) < FLOATING_PRECISION;
+  bool is_at_z_interface = std::abs(p[2] - z_range.first) < FLOATING_PRECISION || std::abs(p[2] - z_range.second) < FLOATING_PRECISION;
   if(!is_at_x_interface && !is_at_y_interface && !is_at_z_interface) {
     return false; // Position is at none of the interfaces
   }
   switch (in_bid)
   {
   case 0:
-    if(in_p[0] == x_range.first) return true;
+    if(p[0] == x_range.first) return true;
     break;
   case 1:
-    if(in_p[0] == x_range.second) return true;
+    if(p[0] == x_range.second) return true;
     break;
   case 2:
-    if(in_p[1] == y_range.first) return true;
+    if(p[1] == y_range.first) return true;
     break;
   case 3:
-    if(in_p[1] == y_range.second) return true;
+    if(p[1] == y_range.second) return true;
     break;
   case 4:
-    if(in_p[2] == z_range.first) return true;
+    if(p[2] == z_range.first) return true;
     break;
   case 5:
-    if(in_p[2] == z_range.second) return true;
+    if(p[2] == z_range.second) return true;
     break;
   default:
     break;
@@ -139,8 +145,8 @@ void PMLSurface::identify_corner_cells() {
 void PMLSurface::initialize() {
   prepare_mesh();
   init_fe();
-  make_inner_constraints();
   prepare_id_sets_for_boundaries();
+  make_inner_constraints();
 }
 
 void PMLSurface::sort_dofs() {
@@ -281,6 +287,8 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(uns
   }
   ret.shrink_to_fit();
   std::sort(ret.begin(), ret.end(), compareDofBaseDataAndOrientation);
+  std::cout << "Surface first dof: " << Geometry.levels[level].surface_first_dof[b_id] << std::endl;
+  shift_interface_dof_data(&ret, Geometry.levels[level].surface_first_dof[b_id]);
   return ret;
 }
 
@@ -656,8 +664,9 @@ void PMLSurface::make_surface_constraints(dealii::AffineConstraints<ComplexNumbe
 }
 
 void PMLSurface::make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) {
-    std::vector<InterfaceDofData> inner_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_edge_and_level(b_id, other_boundary, level);
+    std::vector<InterfaceDofData> inner_dof_indices = Geometry.levels[level].surfaces[other_boundary]->get_dof_association_by_boundary_id(b_id);
     std::vector<InterfaceDofData> own_dof_indices = get_dof_association_by_boundary_id(other_boundary);
+    std::cout << "In make edge constraints: length from surface: " << inner_dof_indices.size() << " other length: " << own_dof_indices.size()<<std::endl;
     dealii::AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(inner_dof_indices, own_dof_indices, Geometry.levels[level].n_total_level_dofs);
     constraints->merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
 }

@@ -109,6 +109,28 @@ void GeometryManager::initialize_surfaces() {
   if(GlobalParams.Blocks_in_x_direction != 1) {
     initialize_level_3();
   }
+  validate_surface_first_dof();
+}
+
+void GeometryManager::validate_surface_first_dof() {
+  for(unsigned int i = 0; i < 6; i++) {
+    if(levels[0].surface_first_dof[i] == 0) std::cout << "Level 0, Surface "<< i << " Error. Surface first dof has wrong value." << std::endl;
+  }
+  if(GlobalParams.Blocks_in_z_direction != 1) {
+    for(unsigned int i = 0; i < 6; i++) {
+      if(levels[1].surface_first_dof[i] == 0) std::cout << "Level 1, Surface "<< i << " Error. Surface first dof has wrong value." << std::endl;
+    }
+  }
+  if(GlobalParams.Blocks_in_y_direction != 1) {
+    for(unsigned int i = 0; i < 6; i++) {
+      if(levels[2].surface_first_dof[i] == 0) std::cout << "Level 2, Surface "<< i << " Error. Surface first dof has wrong value." << std::endl;
+    }
+  }
+  if(GlobalParams.Blocks_in_x_direction != 1) {
+    for(unsigned int i = 0; i < 6; i++) {
+      if(levels[3].surface_first_dof[i] == 0) std::cout << "Level 3, Surface "<< i << " Error. Surface first dof has wrong value." << std::endl;
+    }
+  }
 }
 
 void GeometryManager::initialize_local_level() {
@@ -138,7 +160,7 @@ void GeometryManager::initialize_level_1() {
   levels[1].is_surface_truncated[4] = GlobalParams.Index_in_z_direction == 0;
   levels[1].is_surface_truncated[5] = GlobalParams.Index_in_z_direction == (GlobalParams.Blocks_in_z_direction - 1);
   perform_initialization(1);
-  levels[1].n_local_dofs = compute_n_dofs_on_level(1);
+  
 }
 
 void GeometryManager::initialize_level_2() {
@@ -150,7 +172,6 @@ void GeometryManager::initialize_level_2() {
   levels[2].is_surface_truncated[4] = GlobalParams.Index_in_z_direction == 0;
   levels[2].is_surface_truncated[5] = GlobalParams.Index_in_z_direction == (GlobalParams.Blocks_in_z_direction - 1);
   perform_initialization(2);
-  levels[2].n_local_dofs = compute_n_dofs_on_level(2);
 }
 
 void GeometryManager::initialize_level_3() {
@@ -161,13 +182,13 @@ void GeometryManager::initialize_level_3() {
   levels[3].is_surface_truncated[4] = GlobalParams.Index_in_z_direction == 0;
   levels[3].is_surface_truncated[5] = GlobalParams.Index_in_z_direction == (GlobalParams.Blocks_in_z_direction - 1);
   perform_initialization(3);
-  levels[3].n_local_dofs = compute_n_dofs_on_level(3);
 }
 
 void GeometryManager::perform_initialization(unsigned int in_level) {
   print_info("GeometryManager::perform_initialization", "Start level " + std::to_string(in_level));
   unsigned int count = compute_n_dofs_on_level(in_level);
   std::cout << "Count: " << count << std::endl;
+  std::cout << "Rank on level " << in_level <<": " <<  GlobalMPI.rank_on_level[in_level] << std::endl;
   levels[in_level].dof_distribution = dealii::Utilities::MPI::create_ascending_partitioning(GlobalMPI.communicators_by_level[in_level], count);
   levels[in_level].inner_first_dof = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].nth_index_in_set(0);
   levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution.back().nth_index_in_set(levels[in_level].dof_distribution.back().n_elements()-1);
@@ -175,6 +196,7 @@ void GeometryManager::perform_initialization(unsigned int in_level) {
   unsigned int first_dof = levels[in_level].inner_first_dof + local_inner_dofs;
 
   for(unsigned int surf = 0; surf < 6; surf++) {
+    levels[in_level].surface_first_dof[surf] = first_dof;
     if(levels[in_level].is_surface_truncated[surf]) {
       if(GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE) {
         levels[in_level].surfaces[surf] = std::make_shared<HSIESurface>(surf, in_level, first_dof);
@@ -185,8 +207,9 @@ void GeometryManager::perform_initialization(unsigned int in_level) {
       levels[in_level].surfaces[surf] = std::make_shared<NeighborSurface>(surf, in_level, first_dof);
     }
     levels[in_level].surfaces[surf]->initialize();
-    first_dof += levels[0].surfaces[surf]->dof_counter;
+    first_dof += levels[in_level].surfaces[surf]->dof_counter;
   }
+  levels[in_level].n_local_dofs = compute_n_dofs_on_level(in_level);
   print_info("GeometryManager::perform_initialization", "End level " + std::to_string(in_level));
 }
 

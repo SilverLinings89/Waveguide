@@ -82,4 +82,5 @@ class GeometryManager {
   void set_mesh_boundary_ids(unsigned int surface);
   auto get_boundary_for_direction(Direction) -> BoundaryId;
   auto get_direction_for_boundary_id(BoundaryId) -> Direction;
+  void validate_surface_first_dof();
 };
