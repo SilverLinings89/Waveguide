@@ -55,18 +55,15 @@ void HierarchicalProblem::make_constraints() {
   total_dofs_global.add_range(0,Geometry.levels[level].n_total_level_dofs);
   constraints.reinit(total_dofs_global);
   
-  std::cout << "Stage 1" << std::endl;
   // Inner constraints
   Geometry.inner_domain->make_constraints(&constraints, Geometry.levels[level].inner_first_dof, own_dofs);
 
-  std::cout << "Stage 2" << std::endl;
   // Surface constraints
   for(unsigned int i = 0; i < 6; i++) {
     Geometry.levels[level].surfaces[i]->make_surface_constraints(&constraints);
   }
 
   // Edge constraints
-  std::cout << "Stage 3" << std::endl;
   Geometry.levels[level].surfaces[4]->make_edge_constraints(&constraints, 0);
   Geometry.levels[level].surfaces[4]->make_edge_constraints(&constraints, 1);
   Geometry.levels[level].surfaces[4]->make_edge_constraints(&constraints, 2);
@@ -80,7 +77,6 @@ void HierarchicalProblem::make_constraints() {
   Geometry.levels[level].surfaces[5]->make_edge_constraints(&constraints, 2);
   Geometry.levels[level].surfaces[5]->make_edge_constraints(&constraints, 3);
 
-  std::cout << "Stage 4" << std::endl;
   constraints.close();
   
   print_info("HierarchicalProblem::make_constraints", "End");

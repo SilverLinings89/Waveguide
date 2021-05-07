@@ -37,7 +37,6 @@ class NeighborSurface : public BoundaryCondition {
     void sort_dofs();
     void compute_coordinate_ranges();
     void set_boundary_ids();
-    void fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
     void fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
     void output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
     void make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints) override;

@@ -21,7 +21,7 @@ NeighborSurface::NeighborSurface(unsigned int in_surface, unsigned int in_level,
     is_primary(in_surface > 2),
     global_partner_mpi_rank(Geometry.get_global_neighbor_for_interface(Geometry.get_direction_for_boundary_id(in_surface)).second),
     partner_mpi_rank_in_level_communicator(Geometry.get_level_neighbor_for_interface(Geometry.get_direction_for_boundary_id(in_surface), in_level).second) {
-      
+    dof_counter = 0;
 }
 
 NeighborSurface::~NeighborSurface() {
@@ -113,7 +113,6 @@ std::vector<InterfaceDofData> NeighborSurface::get_dof_association_by_boundary_i
         own_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_edge_and_level(b_id, in_boundary_id, level);
     }
     const unsigned int n_dofs = own_dof_indices.size();
-    std::cout << "Neighbor Surface dof count " << own_dof_indices.size() << "." << std::endl;
     unsigned int * dof_indices = new unsigned int[n_dofs];
     for(unsigned int i = 0; i < n_dofs; i++) {
         dof_indices[i] = own_dof_indices[i].index;
@@ -137,10 +136,6 @@ void NeighborSurface::compute_coordinate_ranges() {
 }
 
 void NeighborSurface::set_boundary_ids() {
-
-}
-
-void NeighborSurface::fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
 
 }
 
@@ -178,7 +173,6 @@ void NeighborSurface::make_edge_constraints(dealii::AffineConstraints<ComplexNum
         own_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_edge_and_level(b_id, other_boundary, level);
     }
     const unsigned int n_dofs = own_dof_indices.size();
-    std::cout << "Neighbor Surface dof count " << own_dof_indices.size() << "." << std::endl;
     unsigned int * dof_indices = new unsigned int[n_dofs];
     for(unsigned int i = 0; i < n_dofs; i++) {
         dof_indices[i] = own_dof_indices[i].index;

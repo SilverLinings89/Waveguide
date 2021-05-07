@@ -1253,66 +1253,6 @@ SurfaceCellData HSIESurface::get_surface_cell_data_for_cell_index(const int in_i
   return ret;
 }
 
-void HSIESurface::fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
-  unsigned int other_first_dof_index = first_own_dof;
-  MPI_Sendrecv_replace(&other_first_dof_index, 1, MPI_UNSIGNED, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
-  std::vector<InterfaceDofData> surface_dofs_unsorted;
-  std::vector<SurfaceCellData> surface_cell_data;
-  
-  std::vector<DofNumber> cell_dofs(fe_nedelec.dofs_per_cell);
-  for(auto cell = dof_h_nedelec.begin(); cell != dof_h_nedelec.end(); cell++) {
-    for(unsigned int face_index = 0; face_index < 4; face_index++) {
-      if(is_point_at_boundary(cell->face(face_index)->center(), in_bid)) {
-        surface_cell_data.push_back(get_surface_cell_data_for_cell_index(cell->index(), in_bid));
-      }
-    }
-  }
-  
-  std::sort(surface_cell_data.begin(), surface_cell_data.end(), compareSurfaceCellData);
-
-  const unsigned int dofs_per_cell = surface_cell_data[0].dof_numbers.size();
-  for(unsigned int i = 0; i < surface_cell_data.size(); i++) {
-    if(surface_cell_data[i].dof_numbers.size() != dofs_per_cell) {
-      std::cout << "ERROR IN DOF TO DOF COUPLING. CRITICAL." << std::endl;
-    }
-  }
-
-  const unsigned int n_entries = surface_cell_data.size() * dofs_per_cell;
-  unsigned int * face_indices = new unsigned int [n_entries];
-
-  for(unsigned int i = 0; i < surface_cell_data.size(); i++) {
-    for(unsigned int j = 0; j < dofs_per_cell; j++) {
-      face_indices[i * dofs_per_cell + j] = surface_cell_data[i].dof_numbers[j] + first_own_dof;
-    }
-  }
-  
-  unsigned int dpc = dofs_per_cell;
-  MPI_Sendrecv_replace(&dpc, 1, MPI_UNSIGNED, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
-  if(dpc != n_entries) std::cout << "CELL SIZE MISMATCH ACROSS PROCESSES." << std::endl;
-
-  MPI_Sendrecv_replace(face_indices, n_entries, MPI_DOUBLE, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
-
-  std::vector<SurfaceCellData> other_surface_data;
-  for(unsigned int i = 0; i < surface_cell_data.size(); i++) {
-    SurfaceCellData scd;
-    scd.surface_face_center = surface_cell_data[i].surface_face_center;
-    scd.dof_numbers.resize(dofs_per_cell);
-    for(unsigned int j = 0; j < dofs_per_cell; j++) {
-      scd.dof_numbers[j] = face_indices[i * dofs_per_cell + j] + other_first_dof_index;
-    }
-    other_surface_data.push_back(scd);
-  }
-
-  for(unsigned int i = 0; i < surface_cell_data.size(); i++) {
-    std::vector<DofNumber> dof_numbers;
-    for(unsigned int j = 0; j < dofs_per_cell; j++) {
-      dof_numbers.push_back(surface_cell_data[i].dof_numbers[j]);
-      dof_numbers.push_back(other_surface_data[i].dof_numbers[j]);
-    }
-    constraints->add_entries_local_to_global(dof_numbers, *dsp);
-  }
-}
-
 void HSIESurface::fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
   for(auto it = dof_h_nedelec.begin(); it != dof_h_nedelec.end(); it ++) {
     bool is_at_boundary = false;

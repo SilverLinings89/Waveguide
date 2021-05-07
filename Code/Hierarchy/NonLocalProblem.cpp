@@ -165,7 +165,6 @@ Direction get_direction_for_boundary_id(BoundaryId bid) {
   }
 }
 
-
 void remove_double_entries_from_vector(std::vector<DofNumber> * in_vector) {
   std::sort(in_vector->begin(), in_vector->end());
   std::vector<unsigned int> alternative;
@@ -187,7 +186,7 @@ void NonLocalProblem::make_sparsity_pattern_for_surface(unsigned int surface, Dy
     for(unsigned int surf = 0; surf < 6; surf++) {
       if(surf != surface && (!are_opposing_sites(surface, surf))) {
         std::pair<bool, unsigned int> partner_data = GlobalMPI.get_neighbor_for_interface(get_direction_for_boundary_id(surface));
-        Geometry.levels[level].surfaces[surf]->fill_sparsity_pattern_for_neighbor(surface, partner_data.second, &constraints, dsp);
+        // Geometry.levels[level].surfaces[surf]->fill_sparsity_pattern_for_neighbor(surface, partner_data.second, &constraints, dsp);
       }
     }
   }
@@ -436,7 +435,7 @@ void NonLocalProblem::reinit() {
     n_dofs_by_proc.push_back(Geometry.levels[level].dof_distribution[i].n_elements());
   }  
   matrix->reinit(GlobalMPI.communicators_by_level[level], sp, n_dofs_by_proc, n_dofs_by_proc, rank, true);
-  // matrix->reinit(MPI_COMM_WORLD, total_number_of_dofs_on_level, total_number_of_dofs_on_level, Geometry.levels[level].n_local_dofs, Geometry.levels[level].n_local_dofs, Geometry.inner_domain->dof_handler.max_couplings_between_dofs(), false,  100);
+  // matrix->reinit(MPI_COMM_WORLD, Geometry.levels[level].n_total_level_dofs, Geometry.levels[level].n_total_level_dofs, Geometry.levels[level].n_local_dofs, Geometry.levels[level].n_local_dofs, Geometry.inner_domain->dof_handler.max_couplings_between_dofs(), false,  100);
   print_info("Nonlocal reinit", "Reinit done");
 }
 
@@ -454,9 +453,9 @@ void NonLocalProblem::initialize() {
 }
 
 void NonLocalProblem::generate_sparsity_pattern() {
-  dealii::DynamicSparsityPattern dsp = {total_number_of_dofs_on_level, total_number_of_dofs_on_level};
-  dealii::IndexSet is(total_number_of_dofs_on_level);
-  is.add_range(0, total_number_of_dofs_on_level);
+  dealii::DynamicSparsityPattern dsp = {Geometry.levels[level].n_total_level_dofs, Geometry.levels[level].n_total_level_dofs};
+  dealii::IndexSet is(Geometry.levels[level].n_total_level_dofs);
+  is.add_range(0, Geometry.levels[level].n_total_level_dofs);
   
   Geometry.inner_domain->make_sparsity_pattern(&dsp, Geometry.levels[level].inner_first_dof, &constraints);
   for (unsigned int surface = 0; surface < 6; surface++) {
@@ -480,10 +479,14 @@ void NonLocalProblem::initialize_index_sets() {
 
   locally_owned_dofs_index_array = new PetscInt[own_dofs.n_elements()];
   get_petsc_index_array_from_index_set(locally_owned_dofs_index_array, own_dofs);
+  initialize_own_dofs();
 }
 
 void NonLocalProblem::initialize_own_dofs() {
-  
+  own_dofs = IndexSet(Geometry.levels[level].n_total_level_dofs);
+  unsigned int first_dof = Geometry.levels[level].inner_first_dof;
+  unsigned int last_dof = Geometry.levels[level].surface_first_dof[5] + Geometry.levels[level].surfaces[5]->dof_counter;
+  own_dofs.add_range(first_dof, last_dof);
 }
 
 DofCount NonLocalProblem::compute_interface_dofs(BoundaryId interface_id) {
@@ -761,7 +764,7 @@ void NonLocalProblem::output_results() {
 
 void NonLocalProblem::fill_dsp_over_mpi(BoundaryId surface, dealii::DynamicSparsityPattern * in_dsp) {
   // fill a local dsp object
-  dealii::DynamicSparsityPattern local_dsp(total_number_of_dofs_on_level, total_number_of_dofs_on_level);
+  dealii::DynamicSparsityPattern local_dsp(Geometry.levels[level].n_total_level_dofs, Geometry.levels[level].n_total_level_dofs);
   std::vector<DofNumber> dof_indices(Geometry.inner_domain->fe.dofs_per_cell);
   for(auto it = Geometry.inner_domain->dof_handler.begin(); it != Geometry.inner_domain->dof_handler.end(); it++) {
     if(it->at_boundary(surface)) {

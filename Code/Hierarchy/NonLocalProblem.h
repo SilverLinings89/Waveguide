@@ -14,7 +14,6 @@
 class NonLocalProblem: public HierarchicalProblem {
 private:
   std::array<bool, 6> is_sweeping_hsie_surface;
-  DofCount total_number_of_dofs_on_level;
   dealii::IndexSet upper_interface_dofs;
   dealii::IndexSet lower_interface_dofs;
   dealii::SolverControl sc;

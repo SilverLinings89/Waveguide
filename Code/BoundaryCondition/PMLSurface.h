@@ -56,7 +56,6 @@ class PMLSurface : public BoundaryCondition {
     void set_boundary_ids();
     void fix_apply_negative_Jacobian_transformation(dealii::Triangulation<3> * in_tria);
     void output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
-    void fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
     void fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
     void make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints) override;
     void make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) override;

@@ -287,7 +287,6 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(uns
   }
   ret.shrink_to_fit();
   std::sort(ret.begin(), ret.end(), compareDofBaseDataAndOrientation);
-  std::cout << "Surface first dof: " << Geometry.levels[level].surface_first_dof[b_id] << std::endl;
   shift_interface_dof_data(&ret, Geometry.levels[level].surface_first_dof[b_id]);
   return ret;
 }
@@ -585,57 +584,6 @@ void PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_data, s
   print_info("PMSurface::output_results()", "End");
 }
 
-void PMLSurface::fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
-  unsigned int other_first_dof_index = first_own_dof;
-  MPI_Sendrecv_replace(&other_first_dof_index, 1, MPI_UNSIGNED, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
-  std::vector<SurfaceCellData> surface_cell_data;
-  std::vector<DofNumber> cell_dofs(fe_nedelec.dofs_per_cell);
-  for(auto cell = dof_h_nedelec.begin(); cell != dof_h_nedelec.end(); cell++) {
-    for(unsigned int face_index = 0; face_index < 6; face_index++) {
-      if(is_position_at_boundary(cell->face(face_index)->center(), in_bid)) {
-        cell->get_dof_indices(cell_dofs);
-        SurfaceCellData new_cell_data;
-        new_cell_data.surface_face_center = cell->face(face_index)->center();
-        new_cell_data.dof_numbers = cell_dofs;
-        surface_cell_data.push_back(new_cell_data);
-      }
-    }
-  }
-  
-  std::sort(surface_cell_data.begin(), surface_cell_data.end(), compareSurfaceCellData);
-
-  const unsigned int n_entries = surface_cell_data.size() * fe_nedelec.dofs_per_cell;
-  unsigned int * face_indices = new unsigned int [n_entries];
-
-  for(unsigned int i = 0; i < surface_cell_data.size(); i++) {
-    for(unsigned int j = 0; j < fe_nedelec.dofs_per_cell; j++) {
-      face_indices[i * fe_nedelec.dofs_per_cell + j] = surface_cell_data[i].dof_numbers[j] + first_own_dof;
-    }
-  }
-  
-  MPI_Sendrecv_replace(face_indices, n_entries, MPI_UNSIGNED, partner_index, 0, partner_index, 0, MPI_COMM_WORLD, 0 );
-
-  std::vector<SurfaceCellData> other_surface_data;
-  for(unsigned int i = 0; i < surface_cell_data.size(); i++) {
-    SurfaceCellData scd;
-    scd.surface_face_center = surface_cell_data[i].surface_face_center;
-    scd.dof_numbers = std::vector<unsigned int>(fe_nedelec.dofs_per_cell);
-    for(unsigned int j = 0; j < fe_nedelec.dofs_per_cell; j++) {
-      scd.dof_numbers[j] = face_indices[i * fe_nedelec.dofs_per_cell + j];
-    }
-    other_surface_data.push_back(scd);
-  }
-  
-  for(unsigned int i = 0; i < surface_cell_data.size(); i++) {
-    std::vector<DofNumber> dof_numbers;
-    for(unsigned int j = 0; j < fe_nedelec.dofs_per_cell; j++) {
-      dof_numbers.push_back(surface_cell_data[i].dof_numbers[j]);
-      dof_numbers.push_back(other_surface_data[i].dof_numbers[j]);
-    }
-    constraints->add_entries_local_to_global(dof_numbers, *dsp);
-  }
-}
-
 void PMLSurface::fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
   std::vector<unsigned int> dof_numbers(fe_nedelec.dofs_per_cell);
   for(auto it = dof_h_nedelec.begin(); it != dof_h_nedelec.end(); it ++) {
@@ -664,9 +612,8 @@ void PMLSurface::make_surface_constraints(dealii::AffineConstraints<ComplexNumbe
 }
 
 void PMLSurface::make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) {
-    std::vector<InterfaceDofData> inner_dof_indices = Geometry.levels[level].surfaces[other_boundary]->get_dof_association_by_boundary_id(b_id);
+    std::vector<InterfaceDofData> other_boundary_id = Geometry.levels[level].surfaces[other_boundary]->get_dof_association_by_boundary_id(b_id);
     std::vector<InterfaceDofData> own_dof_indices = get_dof_association_by_boundary_id(other_boundary);
-    std::cout << "In make edge constraints: length from surface: " << inner_dof_indices.size() << " other length: " << own_dof_indices.size()<<std::endl;
-    dealii::AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(inner_dof_indices, own_dof_indices, Geometry.levels[level].n_total_level_dofs);
+    dealii::AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(other_boundary_id, own_dof_indices, Geometry.levels[level].n_total_level_dofs);
     constraints->merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
 }

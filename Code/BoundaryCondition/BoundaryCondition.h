@@ -34,7 +34,6 @@ public:
   virtual auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> = 0;
   void compute_extreme_vertex_coordinates();
   virtual void output_results(const dealii::Vector<ComplexNumber> & , std::string) = 0;
-  virtual void fill_sparsity_pattern_for_neighbor(const BoundaryId in_bid, const unsigned int partner_index, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) = 0;
   virtual void fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) = 0;
 
   virtual void make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints) = 0;

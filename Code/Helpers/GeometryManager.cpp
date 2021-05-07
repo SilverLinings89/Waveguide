@@ -191,7 +191,7 @@ void GeometryManager::perform_initialization(unsigned int in_level) {
   std::cout << "Rank on level " << in_level <<": " <<  GlobalMPI.rank_on_level[in_level] << std::endl;
   levels[in_level].dof_distribution = dealii::Utilities::MPI::create_ascending_partitioning(GlobalMPI.communicators_by_level[in_level], count);
   levels[in_level].inner_first_dof = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].nth_index_in_set(0);
-  levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution.back().nth_index_in_set(levels[in_level].dof_distribution.back().n_elements()-1);
+  levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution[0].size();
   
   unsigned int first_dof = levels[in_level].inner_first_dof + local_inner_dofs;
 
@@ -210,6 +210,11 @@ void GeometryManager::perform_initialization(unsigned int in_level) {
     first_dof += levels[in_level].surfaces[surf]->dof_counter;
   }
   levels[in_level].n_local_dofs = compute_n_dofs_on_level(in_level);
+  if(GlobalParams.MPI_Rank == 3) {
+    for(unsigned int i = 0; i < 6; i++) {
+      std::cout << "Surface " << i << ": " << levels[in_level].surface_first_dof[i] << std::endl;
+    } 
+  }
   print_info("GeometryManager::perform_initialization", "End level " + std::to_string(in_level));
 }
 
