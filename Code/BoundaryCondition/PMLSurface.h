@@ -59,4 +59,6 @@ class PMLSurface : public BoundaryCondition {
     void fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
     void make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints) override;
     void make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) override;
+    auto get_surface_cell_data(BoundaryId in_bid) -> std::vector<SurfaceCellData> override;
+    auto get_inner_surface_cell_data() -> std::vector<SurfaceCellData> override;
 };

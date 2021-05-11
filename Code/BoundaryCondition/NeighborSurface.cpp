@@ -187,3 +187,43 @@ void NeighborSurface::make_edge_constraints(dealii::AffineConstraints<ComplexNum
     dealii::AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, other_dof_indices, Geometry.levels[level].n_total_level_dofs);
     constraints->merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
 }
+
+std::vector<SurfaceCellData> NeighborSurface::get_surface_cell_data(BoundaryId in_bid) {
+    std::vector<SurfaceCellData> ret;
+    std::vector<SurfaceCellData> own;
+    if(Geometry.levels[level].is_surface_truncated[in_bid]) {
+        own = Geometry.levels[level].surfaces[in_bid]->get_surface_cell_data(b_id);
+    } else {
+        own = Geometry.inner_domain->get_edge_cell_data(b_id, in_bid, level);
+    }
+    std::vector<unsigned int> dof_indices = dof_indices_from_surface_cell_data(own);
+    unsigned int * array = new unsigned int[dof_indices.size()];
+    for(unsigned int i = 0; i < dof_indices.size(); i++) {
+        array[i] = dof_indices[i];
+    }
+    MPI_Sendrecv_replace(array, dof_indices.size(), MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
+    const unsigned int n_dofs_per_cell = own[0].dof_numbers.size();
+    for(unsigned int i = 0; i < own.size(); i++) {
+        SurfaceCellData new_cell;
+        new_cell.surface_face_center = own[i].surface_face_center;
+        for(unsigned int j = 0; j < n_dofs_per_cell; j++) {
+            new_cell.dof_numbers.push_back(array[i*n_dofs_per_cell + j]);
+        }
+        ret.push_back(new_cell);
+    }
+    return ret;
+}
+
+std::vector<SurfaceCellData> NeighborSurface::get_inner_surface_cell_data() {
+    std::vector<SurfaceCellData> ret = Geometry.inner_domain->get_surface_cell_data_for_boundary_id_and_level(b_id, level);
+    std::vector<unsigned int> indices = dof_indices_from_surface_cell_data(ret);
+    unsigned int * dof_indices = new unsigned int[indices.size()];
+    MPI_Sendrecv_replace(dof_indices, indices.size(), MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
+    const unsigned int n_dofs_per_cell = ret[0].dof_numbers.size();
+    for(unsigned int i = 0; i < ret.size(); i++) {
+        for(unsigned int j = 0; j < n_dofs_per_cell; j++) {
+            ret[i].dof_numbers[j] = dof_indices[i*n_dofs_per_cell + j];
+        }
+    }
+    return ret;
+}

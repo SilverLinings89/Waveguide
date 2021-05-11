@@ -1287,3 +1287,27 @@ void HSIESurface::make_edge_constraints(dealii::AffineConstraints<ComplexNumber>
     dealii::AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(inner_dof_indices, own_dof_indices, Geometry.levels[level].n_total_level_dofs);
     constraints->merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
 }
+
+std::vector<SurfaceCellData> HSIESurface::get_surface_cell_data(BoundaryId in_bid) {
+    std::vector<SurfaceCellData> ret;
+    return ret;
+}
+
+std::vector<SurfaceCellData> HSIESurface::get_inner_surface_cell_data() {
+  std::vector<SurfaceCellData> ret;
+  auto nedelec = dof_h_nedelec.begin();
+  auto q = dof_h_q.begin();
+  auto end = dof_h_nedelec.end();
+  for(; nedelec != end; nedelec++) {
+    DofDataVector cell_vals = get_dof_data_for_cell(nedelec, q);
+    SurfaceCellData new_surf_cell;
+    new_surf_cell.surface_face_center = undo_transform(nedelec->center());
+    for(unsigned int i = 0; i < cell_vals.size(); i++) {
+      new_surf_cell.dof_numbers.push_back(cell_vals[i].global_index + first_own_dof);
+    }
+    ret.push_back(new_surf_cell);
+    q++;
+  }
+  std::sort(ret.begin(), ret.end(), compareSurfaceCellData);
+  return ret;
+}

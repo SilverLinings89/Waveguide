@@ -97,6 +97,8 @@ public:
   SurfaceCellData get_surface_cell_data_for_cell_index(const int in_index, const BoundaryId in_bid);
   void make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints) override;
   void make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) override;
+  auto get_surface_cell_data(BoundaryId in_bid) -> std::vector<SurfaceCellData> override;
+  auto get_inner_surface_cell_data() -> std::vector<SurfaceCellData> override;
 };
 
 

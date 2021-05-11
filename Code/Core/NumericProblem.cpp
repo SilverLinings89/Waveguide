@@ -462,3 +462,45 @@ void NumericProblem::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixB
   print_info("NumericProblem::write_matrix_and_rhs", "RHS L_2 norm:  " + std::to_string(rhs->l2_norm()), false, LoggingLevel::PRODUCTION_ALL);
   print_info("NumericProblem::write_matrix_and_rhs_metrics", "End");
 }
+
+std::vector<SurfaceCellData> NumericProblem::get_edge_cell_data(BoundaryId first_b_id, BoundaryId second_b_id, unsigned int level) {
+  std::vector<SurfaceCellData> ret;
+  for(auto cell = dof_handler.begin(); cell != dof_handler.end(); cell++) {
+    if(cell->at_boundary(first_b_id) && cell->at_boundary(second_b_id)) {
+      SurfaceCellData cd;
+      for(unsigned int i = 0; i < 6; i++) {
+        if(cell->face(i)->boundary_id() == first_b_id) {
+          cd.surface_face_center = cell->face(i)->center();
+        }
+      }
+      cd.dof_numbers.resize(fe.dofs_per_cell);
+      std::vector<DofNumber> dof_indices(cd.dof_numbers);
+      for(unsigned int i = 0; i < fe.dofs_per_cell; i++) {
+        cd.dof_numbers[i] += Geometry.levels[level].inner_first_dof;
+      }
+    }
+  }
+  std::sort(ret.begin(), ret.end(), compareSurfaceCellData);
+  return ret;
+}
+
+std::vector<SurfaceCellData> NumericProblem::get_surface_cell_data_for_boundary_id_and_level(BoundaryId b_id, unsigned int level) {
+  std::vector<SurfaceCellData> ret;
+  for(auto cell : dof_handler) {
+    if(cell.at_boundary(b_id)) {
+      SurfaceCellData cd;
+      for(unsigned int i = 0; i < 6; i++) {
+        if(cell.face(i)->boundary_id() == b_id) {
+          cd.surface_face_center = cell.face(i)->center();
+        }
+      }
+      cd.dof_numbers.resize(fe.dofs_per_cell);
+      std::vector<DofNumber> dof_indices(cd.dof_numbers);
+      for(unsigned int i = 0; i < fe.dofs_per_cell; i++) {
+        cd.dof_numbers[i] += Geometry.levels[level].inner_first_dof;
+      }
+    }
+  }
+  std::sort(ret.begin(), ret.end(), compareSurfaceCellData);
+  return ret;
+}

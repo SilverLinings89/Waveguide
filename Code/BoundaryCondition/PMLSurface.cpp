@@ -617,3 +617,31 @@ void PMLSurface::make_edge_constraints(dealii::AffineConstraints<ComplexNumber> 
     dealii::AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(other_boundary_id, own_dof_indices, Geometry.levels[level].n_total_level_dofs);
     constraints->merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
 }
+
+std::vector<SurfaceCellData> PMLSurface::get_surface_cell_data(BoundaryId in_bid) {
+  std::vector<SurfaceCellData> ret;
+  std::vector<unsigned int> dof_indices(fe_nedelec.dofs_per_cell);
+  for(auto it = dof_h_nedelec.begin(); it != dof_h_nedelec.end(); it++) {
+    if(it->at_boundary(in_bid)) {
+      SurfaceCellData new_cell;
+      it->get_dof_indices(dof_indices);
+      for(unsigned int i = 0; i < 6; i++) {
+        if(it->face(i)->at_boundary()) {
+          new_cell.surface_face_center = it->face(i)->center();
+        }
+      }
+      for(unsigned int i = 0; i < fe_nedelec.dofs_per_cell; i++) {
+        new_cell.dof_numbers.push_back(dof_indices[i] + first_own_dof);
+      }
+      ret.push_back(new_cell);
+    }
+  }
+  std::sort(ret.begin(), ret.end(), compareSurfaceCellData);
+  return ret;
+}
+
+std::vector<SurfaceCellData> PMLSurface::get_inner_surface_cell_data() {
+  std::vector<SurfaceCellData> ret;
+  
+  return ret;
+}

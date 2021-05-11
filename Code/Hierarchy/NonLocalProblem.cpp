@@ -264,30 +264,29 @@ void NonLocalProblem::print_diagnosis_data() {
     std::cout << "Pair 1:" << std::endl;
   }
   MPI_Barrier(MPI_COMM_WORLD);
-  print_dof_details(25620);
-  print_dof_details(55820);
+  print_dof_details(35974);
+  print_dof_details(55718);
   MPI_Barrier(MPI_COMM_WORLD);
   if(rank == 0) {
     std::cout << "Pair 2:" << std::endl;
   }
   MPI_Barrier(MPI_COMM_WORLD);
-  print_dof_details(91308);
-  print_dof_details(121508);
+  print_dof_details(111469);
+  print_dof_details(131213);
   MPI_Barrier(MPI_COMM_WORLD);
   if(rank == 0) {
     std::cout << "Pair 3:" << std::endl;
   }
   MPI_Barrier(MPI_COMM_WORLD);
-  print_dof_details(131376);
-  print_dof_details(90027);
+  print_dof_details(167644);
+  print_dof_details(110986);
   MPI_Barrier(MPI_COMM_WORLD);
   if(rank == 0) {
     std::cout << "Pair 4:" << std::endl;
   }
-  print_dof_details(197064);
-  print_dof_details(155715);
+  print_dof_details(233332);
+  print_dof_details(176674);
   MPI_Barrier(MPI_COMM_WORLD);
-  std::cout << "Temp dof data end" << std::endl;
 }
 
 void NonLocalProblem::assemble() {
@@ -420,6 +419,7 @@ void NonLocalProblem::reinit() {
   child->reinit();
   
   make_constraints();
+  print_diagnosis_data();
   
   generate_sparsity_pattern();
 
@@ -461,8 +461,6 @@ void NonLocalProblem::generate_sparsity_pattern() {
   for (unsigned int surface = 0; surface < 6; surface++) {
     if(Geometry.levels[level].is_surface_truncated[surface]) {
       Geometry.levels[level].surfaces[surface]->fill_sparsity_pattern(&dsp, &constraints);
-    } else {
-      make_sparsity_pattern_for_surface(surface, & dsp);
     }
   }
   

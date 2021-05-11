@@ -111,17 +111,17 @@ class NumericProblem {
   void solution_evaluation(Position position, double *solution) const;
   void adjoint_solution_evaluation(Position position, double *solution) const;
   void SortDofsDownstream();
-  void make_constraints(dealii::AffineConstraints<ComplexNumber>*,
-      unsigned int shift, IndexSet local_constraints_indices);
+  void make_constraints(dealii::AffineConstraints<ComplexNumber>*, unsigned int shift, IndexSet local_constraints_indices);
   void make_constraints();
   std::vector<InterfaceDofData> get_surface_dof_vector_for_boundary_id(BoundaryId b_id);
   std::vector<InterfaceDofData> get_surface_dof_vector_for_boundary_id_and_level(BoundaryId b_id, unsigned int level);
   std::vector<InterfaceDofData> get_surface_dof_vector_for_edge(BoundaryId first_bid, BoundaryId second_bid);
   std::vector<InterfaceDofData> get_surface_dof_vector_for_edge_and_level(BoundaryId first_bid, BoundaryId second_bid, unsigned int level);
+  std::vector<SurfaceCellData> get_surface_cell_data_for_boundary_id_and_level(BoundaryId b_id, unsigned int level);
   std::vector<unsigned int> dofs_for_cell_around_point(Position &in_p);
-  void make_sparsity_pattern(dealii::DynamicSparsityPattern *in_pattern,
-      unsigned int shift, dealii::AffineConstraints<ComplexNumber> *constraints);
+  void make_sparsity_pattern(dealii::DynamicSparsityPattern *in_pattern, unsigned int shift, dealii::AffineConstraints<ComplexNumber> *constraints);
   void write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs);
   auto get_central_cells(double point_source_radius) -> std::set<std::string>;
   auto get_outer_constrained_faces() -> std::set<unsigned int>;
+  std::vector<SurfaceCellData> get_edge_cell_data(BoundaryId first_b_id, BoundaryId second_b_id, unsigned int level);
 };
