@@ -44,7 +44,6 @@ class HierarchicalProblem {
   virtual DofCount compute_upper_interface_dof_count()=0;
   virtual void solve()=0;
   virtual void initialize()=0;
-  virtual void generate_sparsity_pattern()=0;
   virtual void initialize_own_dofs() =0;
   void make_constraints();
   virtual void assemble()=0;
@@ -60,6 +59,7 @@ class HierarchicalProblem {
   virtual void update_mismatch_vector(BoundaryId) = 0;
   virtual void reinit_rhs() = 0;
   virtual DofOwner get_dof_owner(unsigned int) = 0;
+  void make_sparsity_pattern();
 };
 
 typedef struct {

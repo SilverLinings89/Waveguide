@@ -97,17 +97,6 @@ void LocalProblem::initialize() {
   print_info("LocalProblem::initialize", "End");
 }
 
-void LocalProblem::generate_sparsity_pattern() {
-  dealii::DynamicSparsityPattern dsp = { Geometry.levels[0].n_local_dofs };
-  Geometry.inner_domain->make_sparsity_pattern(&dsp, 0, &constraints);
-  for (unsigned int surface = 0; surface < 6; surface++) {
-    if(Geometry.levels[0].is_surface_truncated[surface]) {
-      Geometry.levels[0].surfaces[surface]->fill_sparsity_pattern(&dsp, &constraints);
-    }
-  }
-  sp.copy_from(dsp);
-}
-
 void LocalProblem::validate() {
   print_info("LocalProblem::validate", "Start");
   print_info("LocalProblem::validate", "Matrix size: (" + std::to_string(matrix->m()) + " x "  + std::to_string(matrix->n()) + ") and l1-norm " + std::to_string(matrix->l1_norm()), false, LoggingLevel::PRODUCTION_ONE);
@@ -136,7 +125,7 @@ void LocalProblem::reinit() {
   solution.reinit(MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs, false);
   make_constraints();
   constraints.close();
-  generate_sparsity_pattern();
+  make_sparsity_pattern();
   std::vector<unsigned int> lines_per_proc;
   lines_per_proc.push_back(sp.n_cols());
   matrix->reinit(MPI_COMM_SELF, sp, lines_per_proc, lines_per_proc, 0);

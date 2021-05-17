@@ -514,6 +514,7 @@ std::vector<DofCouplingInformation> get_coupling_information_for_group(const std
     coupling.first_dof = dofs_interface_1[i].index;
     coupling.second_dof = dofs_interface_2[i].index;
     coupling.coupling_value = 1.0;
+    ret.push_back(coupling);
   }
   // This should work. I should check this at some later point.
   return ret;

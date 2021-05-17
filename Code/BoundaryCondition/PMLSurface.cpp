@@ -21,59 +21,45 @@ PMLSurface::PMLSurface(unsigned int surface, unsigned int in_level, DofNumber in
   fe_nedelec(GlobalParams.Nedelec_element_order) {
      constraints_made = false; 
      mesh_is_transformed = false;
+     outer_boundary_id = surface;
+     if(surface % 2 == 0) {
+       inner_boundary_id = surface + 1;
+     } else {
+       inner_boundary_id = surface - 1;
+     }
 }
 
 PMLSurface::~PMLSurface() {}
 
 void PMLSurface::prepare_mesh() {
-    Triangulation<3> temp_tria;
-    dealii::GridGenerator::extrude_triangulation(Geometry.surface_meshes[b_id], GlobalParams.PML_N_Layers, GlobalParams.PML_thickness, temp_tria);
-    outer_boundary_id = b_id;
-    dealii::Tensor<1, 3> shift_vector;
-    for(unsigned int i = 0; i < 3; i++) {
-        shift_vector[i] = 0;
-    }
+    Triangulation<3> tria;
+    std::vector<unsigned int> repetitions;
+    repetitions.push_back(GlobalParams.Cells_in_x);
+    repetitions.push_back(GlobalParams.Cells_in_y);
+    repetitions.push_back(GlobalParams.Cells_in_z);
+    repetitions[b_id / 2] = GlobalParams.PML_N_Layers - 1;
+    Position lower_ranges;
+    lower_ranges[0] = Geometry.local_x_range.first;
+    lower_ranges[1] = Geometry.local_y_range.first;
+    lower_ranges[2] = Geometry.local_z_range.first;
+    Position higher_ranges;
+    higher_ranges[0] = Geometry.local_x_range.second;
+    higher_ranges[1] = Geometry.local_y_range.second;
+    higher_ranges[2] = Geometry.local_z_range.second;
+
     if(b_id % 2 == 0) {
-      inner_boundary_id = b_id + 1;
+      lower_ranges[b_id / 2] = additional_coordinate - GlobalParams.PML_thickness;
+      higher_ranges[b_id / 2] = additional_coordinate;
     } else {
-      inner_boundary_id = b_id - 1;
+      lower_ranges[b_id / 2] = additional_coordinate;
+      higher_ranges[b_id / 2] = additional_coordinate + GlobalParams.PML_thickness;
     }
-    switch (b_id)
-    {
-    case 0:
-      dealii::GridTools::transform(Transform_5_to_0, temp_tria);
-      shift_vector[0] = additional_coordinate - GlobalParams.PML_thickness;
-      break;
-    case 1:
-      dealii::GridTools::transform(Transform_5_to_1, temp_tria);
-      shift_vector[0] = additional_coordinate;
-      break;
-    case 2:
-      dealii::GridTools::transform(Transform_5_to_2, temp_tria);
-      shift_vector[1] = additional_coordinate - GlobalParams.PML_thickness;
-      break;
-    case 3:
-      dealii::GridTools::transform(Transform_5_to_3, temp_tria);
-      shift_vector[1] = additional_coordinate;
-      break;
-    case 4:
-      dealii::GridTools::transform(Transform_5_to_4, temp_tria);
-      shift_vector[2] = additional_coordinate - GlobalParams.PML_thickness;
-      break;
-    case 5:
-      // dont need to transform the mesh. transformation in this case is identity.
-      shift_vector[2] = additional_coordinate;
-      break;
     
-    default:
-      break;
-    }
-    dealii::GridTools::shift(shift_vector, temp_tria);
-    if(b_id % 2 == 0) {
-      fix_apply_negative_Jacobian_transformation(&temp_tria);
-    }
-    triangulation = reforge_triangulation(&temp_tria);
+    dealii::GridGenerator::subdivided_hyper_rectangle(tria, repetitions, lower_ranges , higher_ranges ,true);
+    triangulation = reforge_triangulation(&tria);
+    
     compute_coordinate_ranges();
+    
     transformation = PMLMeshTransformation(x_range, y_range, z_range, additional_coordinate, b_id/2, Geometry.levels[level].is_surface_truncated);
     GridTools::transform(transformation, triangulation);
     mesh_is_transformed = true;
@@ -94,7 +80,6 @@ void PMLSurface::init_fe() {
     dof_h_nedelec.distribute_dofs(fe_nedelec);
     dof_counter = dof_h_nedelec.n_dofs();
     sort_dofs();
-    set_boundary_ids();
 }
 
 bool PMLSurface::is_position_at_boundary(Position in_p, BoundaryId in_bid) {
@@ -102,34 +87,26 @@ bool PMLSurface::is_position_at_boundary(Position in_p, BoundaryId in_bid) {
   if(mesh_is_transformed) {
     p = transformation.undo_transform(in_p);
   }
-  bool is_at_x_interface = std::abs(p[0] - x_range.first) < FLOATING_PRECISION || std::abs(p[0] - x_range.second) < FLOATING_PRECISION;
-  bool is_at_y_interface = std::abs(p[1] - y_range.first) < FLOATING_PRECISION || std::abs(p[1] - y_range.second) < FLOATING_PRECISION;
-  bool is_at_z_interface = std::abs(p[2] - z_range.first) < FLOATING_PRECISION || std::abs(p[2] - z_range.second) < FLOATING_PRECISION;
-  if(!is_at_x_interface && !is_at_y_interface && !is_at_z_interface) {
-    return false; // Position is at none of the interfaces
-  }
   switch (in_bid)
   {
-  case 0:
-    if(p[0] == x_range.first) return true;
-    break;
-  case 1:
-    if(p[0] == x_range.second) return true;
-    break;
-  case 2:
-    if(p[1] == y_range.first) return true;
-    break;
-  case 3:
-    if(p[1] == y_range.second) return true;
-    break;
-  case 4:
-    if(p[2] == z_range.first) return true;
-    break;
-  case 5:
-    if(p[2] == z_range.second) return true;
-    break;
-  default:
-    break;
+    case 0:
+      if(p[0] == x_range.first) return true;
+      break;
+    case 1:
+      if(p[0] == x_range.second) return true;
+      break;
+    case 2:
+      if(p[1] == y_range.first) return true;
+      break;
+    case 3:
+      if(p[1] == y_range.second) return true;
+      break;
+    case 4:
+      if(p[2] == z_range.first) return true;
+      break;
+    case 5:
+      if(p[2] == z_range.second) return true;
+      break;
   }
   return false;
 }
@@ -142,11 +119,65 @@ void PMLSurface::identify_corner_cells() {
   
 }
 
+void PMLSurface::validate_meshes() {
+  std::array<unsigned int, 6> cells_per_surface;
+  std::array<unsigned int, 6> dofs_per_surface;
+  for(unsigned int i = 0; i < 6; i++) {
+    cells_per_surface[i] = cells_for_boundary_id(i);
+    dofs_per_surface[i] = get_dof_association_by_boundary_id(i).size();
+  }
+  unsigned int inner_count = cells_per_surface[b_id];
+  unsigned int other_count = 0;
+  if(b_id == 0 || b_id == 1) {
+    other_count = cells_per_surface[2];
+  } else {
+    other_count = cells_per_surface[0];
+  }
+  bool correct = true;
+  for(unsigned int i = 0; i < 6; i++) {
+    if(i == b_id || are_opposing_sites(b_id , i)) {
+      if(cells_per_surface[i] != inner_count) {
+        correct = false;
+      }
+    } else {
+      if(cells_per_surface[i] != other_count) {
+        correct = false;
+      }
+    }
+  }
+
+  inner_count = dofs_per_surface[b_id];
+  other_count = 0;
+  if(b_id == 0 || b_id == 1) {
+    other_count = dofs_per_surface[2];
+  } else {
+    other_count = dofs_per_surface[0];
+  }
+  for(unsigned int i = 0; i < 6; i++) {
+    if(i == b_id || are_opposing_sites(b_id , i)) {
+      if(dofs_per_surface[i] != inner_count) {
+        correct = false;
+      }
+    } else {
+      if(dofs_per_surface[i] != other_count) {
+        correct = false;
+      }
+    }
+  }
+  if(!correct) {
+    std::cout << "The validation of surface " << b_id << " failed." << std::endl;
+    for(unsigned int i = 0; i < 6; i++) {
+      std::cout << "surf " << i << ": " << cells_per_surface[i] << " and " << dofs_per_surface[i] << std::endl;
+    }
+  }
+}
+
 void PMLSurface::initialize() {
   prepare_mesh();
   init_fe();
   prepare_id_sets_for_boundaries();
   make_inner_constraints();
+  validate_meshes();
 }
 
 void PMLSurface::sort_dofs() {
@@ -230,56 +261,55 @@ void PMLSurface::prepare_id_sets_for_boundaries(){
 
 std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(unsigned int in_bid) {
   std::vector<InterfaceDofData> ret;
-  for(auto it = dof_h_nedelec.begin(); it != dof_h_nedelec.end(); it++) {
-    it->clear_user_flag();
-    for(auto face = 0; face < 6; face++) {
-      it->face(face)->clear_user_flag();
-      for(unsigned int line = 0; line < 4; line++) {
-        it->face(face)->line(line)->clear_user_flag();
-      }
-    }
-  }
-  dealii::Vector<ComplexNumber> base_vector(dof_counter);
-  for(auto it = dof_h_nedelec.begin(); it != dof_h_nedelec.end(); it++) {
-    if(it->at_boundary()) {
-      for(unsigned int face = 0; face < 6; face++) {
-        if(face_ids_by_boundary_id[in_bid].contains(it->face_index(face)) && !it->face(face)->user_flag_set()) {
-          std::vector<unsigned int> face_dof_indices(fe_nedelec.n_dofs_per_face());
-          it->face(face)->get_dof_indices(face_dof_indices);
-          for(unsigned int line = 0; line < 4; line ++) {
-            std::vector<DofNumber> line_dofs(fe_nedelec.n_dofs_per_line());
-            it->face(face)->line(line)->get_dof_indices(line_dofs);
-            for(unsigned int i = 0; i < fe_nedelec.n_dofs_per_line(); i++) {
-              for(unsigned int j = 0; j < face_dof_indices.size(); j++) {
-                if(face_dof_indices[j] == line_dofs[i]) {
-                  face_dof_indices.erase(face_dof_indices.begin() + j);
-                }
-              }
+  std::vector<types::global_dof_index> local_line_dofs(fe_nedelec.dofs_per_line);
+  std::set<DofNumber> line_set;
+  std::vector<DofNumber> local_face_dofs(fe_nedelec.dofs_per_face);
+  std::set<DofNumber> face_set;
+  triangulation.clear_user_flags();
+  for (auto cell : dof_h_nedelec.active_cell_iterators()) {
+    if (cell->at_boundary(in_bid)) {
+      bool found_one = false;
+      for (unsigned int face = 0; face < 6; face++) {
+        if (cell->face(face)->boundary_id() == in_bid && found_one) {
+          print_info("PMLSurface::get_dof_association_by_boundary_id", "There was an error!", false, LoggingLevel::PRODUCTION_ALL);
+        }
+        if (cell->face(face)->boundary_id() == in_bid) {
+          found_one = true;
+          std::vector<DofNumber> face_dofs_indices(fe_nedelec.dofs_per_face);
+          cell->face(face)->get_dof_indices(face_dofs_indices);
+          face_set.clear();
+          face_set.insert(face_dofs_indices.begin(), face_dofs_indices.end());
+          std::vector<InterfaceDofData> cell_dofs_and_orientations_and_points;
+          for (unsigned int i = 0; i < dealii::GeometryInfo<3>::lines_per_face; i++) {
+            std::vector<DofNumber> line_dofs(fe_nedelec.dofs_per_line);
+            cell->face(face)->line(i)->get_dof_indices(line_dofs);
+            line_set.clear();
+            line_set.insert(line_dofs.begin(), line_dofs.end());
+            for(auto erase_it: line_set) {
+              face_set.erase(erase_it);
             }
-            if(!it->face(face)->line(line)->user_flag_set()) {
-              if(edge_ids_by_boundary_id[in_bid].contains(it->face(face)->line_index(line))) {
-                for(unsigned int i = 0; i < fe_nedelec.n_dofs_per_line(); i++) {
-                  InterfaceDofData entry;
-                  entry.index = line_dofs[i];
-                  entry.base_point = it->face(face)->line(line)->center();
-                  entry.order = i;
-                  ret.push_back(entry);
-                }
+            if(!cell->face(face)->line(i)->user_flag_set()) {
+              for (unsigned int j = 0; j < fe_nedelec.dofs_per_line; j++) {
+                InterfaceDofData new_item;
+                new_item.index = line_dofs[j] + first_own_dof;
+                new_item.base_point = cell->face(face)->line(i)->center();
+                new_item.order = j;
+                cell_dofs_and_orientations_and_points.push_back(new_item);
               }
-              it->face(face)->line(line)->set_user_flag();
+              cell->face(face)->line(i)->set_user_flag();
             }
           }
-          if(GlobalParams.Nedelec_element_order > 0) {
-            if(face_ids_by_boundary_id[in_bid].contains(it->face_index(face)) && face_dof_indices.size() > 0) {
-              for(unsigned int f = 0; f < face_dof_indices.size(); f++) {
-                InterfaceDofData entry;
-                entry.index = face_dof_indices[f];
-                entry.base_point = it->face(face)->center();
-                entry.order = f;
-                ret.push_back(entry);
-              }
-              it->face(face)->set_user_flag();
-            }
+          unsigned int index = 0;
+          for (auto item: face_set) {
+            InterfaceDofData new_item;
+            new_item.index = item + first_own_dof;
+            new_item.base_point = cell->face(face)->center();
+            new_item.order = 0;
+            cell_dofs_and_orientations_and_points.push_back(new_item);
+            index++;
+          }
+          for (auto item: cell_dofs_and_orientations_and_points) {
+            ret.push_back(item);
           }
         }
       }
@@ -287,7 +317,6 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(uns
   }
   ret.shrink_to_fit();
   std::sort(ret.begin(), ret.end(), compareDofBaseDataAndOrientation);
-  shift_interface_dof_data(&ret, Geometry.levels[level].surface_first_dof[b_id]);
   return ret;
 }
 
@@ -414,19 +443,6 @@ struct CellwiseAssemblyDataPML {
 
 };
 
-void PMLSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints) {
-  auto it = dof_h_nedelec.begin_active();
-  auto end = dof_h_nedelec.end();
-  std::vector<DofNumber> local_indices(fe_nedelec.n_dofs_per_cell());
-  for (; it != end; ++it) {
-    it->get_dof_indices(local_indices);
-    for(unsigned int i = 0; i < local_indices.size(); i++) {
-      local_indices[i] += first_own_dof;
-    }
-    constraints->add_entries_local_to_global(local_indices, *in_dsp);
-  }
-}
-
 void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* , dealii::AffineConstraints<ComplexNumber> *){
     // NOT IMPLEMENTED
 }
@@ -520,23 +536,10 @@ void PMLSurface::set_boundary_ids() {
     for(unsigned int face = 0; face < 6; face ++) {
       if(it->face(face)->at_boundary()) {
         Position p = it->face(face)->center();
-        if(std::abs(p[0] - x_range.first) < 0.001) {
-          it->face(face)->set_all_boundary_ids(0);
-        }
-        if(std::abs(p[0] - x_range.second) < 0.001) {
-          it->face(face)->set_all_boundary_ids(1);
-        }
-        if(std::abs(p[1] - y_range.first) < 0.001) {
-          it->face(face)->set_all_boundary_ids(2);
-        }
-        if(std::abs(p[1] - y_range.second) < 0.001) {
-          it->face(face)->set_all_boundary_ids(3);
-        }
-        if(std::abs(p[2] - z_range.first) < 0.001) {
-          it->face(face)->set_all_boundary_ids(4);
-        }
-        if(std::abs(p[2] - z_range.second) < 0.001) {
-          it->face(face)->set_all_boundary_ids(5);
+        for(unsigned int i = 0; i < 6; i++) {
+          if(is_position_at_boundary(p, i)) {
+            it->face(face)->set_all_boundary_ids(i);
+          }
         }
       }
     }   
@@ -584,26 +587,6 @@ void PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_data, s
   print_info("PMSurface::output_results()", "End");
 }
 
-void PMLSurface::fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
-  std::vector<unsigned int> dof_numbers(fe_nedelec.dofs_per_cell);
-  for(auto it = dof_h_nedelec.begin(); it != dof_h_nedelec.end(); it ++) {
-    bool is_at_boundary = false;
-    for(unsigned int i = 0; i < dealii::GeometryInfo<3>::faces_per_cell; i++) {
-      if(is_position_at_boundary(it->face(i)->center(), in_bid)) {
-        is_at_boundary = true;
-        break;
-      }
-    }
-    if(is_at_boundary) {
-      it->get_dof_indices(dof_numbers);
-      for(unsigned int i = 0; i <fe_nedelec.dofs_per_cell; i++) {
-        dof_numbers[i] += first_own_dof;
-      }
-      constraints->add_entries_local_to_global(dof_numbers, *dsp);
-    }
-  }
-}
-
 void PMLSurface::make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints) {
     std::vector<InterfaceDofData> own_dof_indices = get_dof_association();
     std::vector<InterfaceDofData> inner_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
@@ -626,7 +609,7 @@ std::vector<SurfaceCellData> PMLSurface::get_surface_cell_data(BoundaryId in_bid
       SurfaceCellData new_cell;
       it->get_dof_indices(dof_indices);
       for(unsigned int i = 0; i < 6; i++) {
-        if(it->face(i)->at_boundary()) {
+        if(is_position_at_boundary(it->face(i)->center(), in_bid)) {
           new_cell.surface_face_center = it->face(i)->center();
         }
       }
@@ -637,11 +620,16 @@ std::vector<SurfaceCellData> PMLSurface::get_surface_cell_data(BoundaryId in_bid
     }
   }
   std::sort(ret.begin(), ret.end(), compareSurfaceCellData);
+  for(unsigned int i = 0; i < ret.size(); i++) {
+    for(unsigned int j = 1; j < ret[i].dof_numbers.size(); j++) {
+      if(ret[i].dof_numbers[j] == ret[i].dof_numbers[j-1]) {
+        std::cout << "Error in PMLSurface::get_surface_cell_data" << std::endl;
+      }
+    }
+  }
   return ret;
 }
 
 std::vector<SurfaceCellData> PMLSurface::get_inner_surface_cell_data() {
-  std::vector<SurfaceCellData> ret;
-  
-  return ret;
+  return get_surface_cell_data(inner_boundary_id);
 }

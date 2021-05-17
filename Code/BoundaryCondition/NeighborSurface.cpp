@@ -52,16 +52,12 @@ void NeighborSurface::identify_corner_cells() {
 
 }
 
-void NeighborSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints) {
-
+bool NeighborSurface::is_point_at_boundary(Position2D, BoundaryId) {
+    return false;
 }
 
-bool NeighborSurface::is_point_at_boundary(Position2D in_p, BoundaryId in_bid) {
-
-}
-
-bool NeighborSurface::is_position_at_boundary(Position in_p, BoundaryId in_bid) {
-
+bool NeighborSurface::is_position_at_boundary(Position, BoundaryId) {
+    return false;
 }
 
 void NeighborSurface::initialize() {
@@ -76,7 +72,7 @@ void NeighborSurface::prepare_mesh(){
 
 }
 
-unsigned int NeighborSurface::cells_for_boundary_id(unsigned int boundary_id) {
+unsigned int NeighborSurface::cells_for_boundary_id(unsigned int) {
     return 0;
 }
 
@@ -84,7 +80,7 @@ void NeighborSurface::init_fe(){
 
 }
 
-unsigned int NeighborSurface::get_dof_count_by_boundary_id(BoundaryId in_boundary_id) {
+unsigned int NeighborSurface::get_dof_count_by_boundary_id(BoundaryId) {
     return 0;
 }
 
@@ -139,10 +135,6 @@ void NeighborSurface::set_boundary_ids() {
 
 }
 
-void NeighborSurface::fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) {
-
-}
-
 void NeighborSurface::output_results(const dealii::Vector<ComplexNumber> & , std::string) {
 
 }
@@ -194,7 +186,7 @@ std::vector<SurfaceCellData> NeighborSurface::get_surface_cell_data(BoundaryId i
     if(Geometry.levels[level].is_surface_truncated[in_bid]) {
         own = Geometry.levels[level].surfaces[in_bid]->get_surface_cell_data(b_id);
     } else {
-        own = Geometry.inner_domain->get_edge_cell_data(b_id, in_bid, level);
+        return own;
     }
     std::vector<unsigned int> dof_indices = dof_indices_from_surface_cell_data(own);
     unsigned int * array = new unsigned int[dof_indices.size()];
@@ -217,7 +209,11 @@ std::vector<SurfaceCellData> NeighborSurface::get_surface_cell_data(BoundaryId i
 std::vector<SurfaceCellData> NeighborSurface::get_inner_surface_cell_data() {
     std::vector<SurfaceCellData> ret = Geometry.inner_domain->get_surface_cell_data_for_boundary_id_and_level(b_id, level);
     std::vector<unsigned int> indices = dof_indices_from_surface_cell_data(ret);
+    std::cout << "In get_inner_surface_cell_data: " << ret.size() << " and " << indices.size() << std::endl;
     unsigned int * dof_indices = new unsigned int[indices.size()];
+    for(unsigned int i = 0; i < indices.size(); i++) {
+        dof_indices[i] = indices[i];
+    }
     MPI_Sendrecv_replace(dof_indices, indices.size(), MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
     const unsigned int n_dofs_per_cell = ret[0].dof_numbers.size();
     for(unsigned int i = 0; i < ret.size(); i++) {

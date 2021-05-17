@@ -93,13 +93,11 @@ void GeometryManager::initialize_inner_domain() {
     }
     dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation, b_ids);
     dealii::GridGenerator::flatten_triangulation(temp_triangulation, surface_meshes[side]);
-    set_mesh_boundary_ids(side);
   }
 }
 
 void GeometryManager::initialize_surfaces() {
   local_inner_dofs = inner_domain->n_dofs;
-  initialize_local_level();
   if(GlobalParams.Blocks_in_z_direction != 1) {
     initialize_level_1();
   }
@@ -138,7 +136,7 @@ void GeometryManager::initialize_local_level() {
     levels[0].is_surface_truncated[i] = true;
   }
   levels[0].inner_first_dof = 0;
-  unsigned int counter = local_inner_dofs;
+  unsigned int counter = inner_domain->n_dofs;
   for(unsigned int i = 0; i < 6; i++) {
     levels[0].surface_first_dof[i] = counter;
     if(GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE) {
@@ -160,7 +158,6 @@ void GeometryManager::initialize_level_1() {
   levels[1].is_surface_truncated[4] = GlobalParams.Index_in_z_direction == 0;
   levels[1].is_surface_truncated[5] = GlobalParams.Index_in_z_direction == (GlobalParams.Blocks_in_z_direction - 1);
   perform_initialization(1);
-  
 }
 
 void GeometryManager::initialize_level_2() {
@@ -187,12 +184,9 @@ void GeometryManager::initialize_level_3() {
 void GeometryManager::perform_initialization(unsigned int in_level) {
   print_info("GeometryManager::perform_initialization", "Start level " + std::to_string(in_level));
   unsigned int count = compute_n_dofs_on_level(in_level);
-  std::cout << "Count: " << count << std::endl;
-  std::cout << "Rank on level " << in_level <<": " <<  GlobalMPI.rank_on_level[in_level] << std::endl;
   levels[in_level].dof_distribution = dealii::Utilities::MPI::create_ascending_partitioning(GlobalMPI.communicators_by_level[in_level], count);
   levels[in_level].inner_first_dof = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].nth_index_in_set(0);
   levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution[0].size();
-  
   unsigned int first_dof = levels[in_level].inner_first_dof + local_inner_dofs;
 
   for(unsigned int surf = 0; surf < 6; surf++) {
@@ -210,11 +204,6 @@ void GeometryManager::perform_initialization(unsigned int in_level) {
     first_dof += levels[in_level].surfaces[surf]->dof_counter;
   }
   levels[in_level].n_local_dofs = compute_n_dofs_on_level(in_level);
-  if(GlobalParams.MPI_Rank == 3) {
-    for(unsigned int i = 0; i < 6; i++) {
-      std::cout << "Surface " << i << ": " << levels[in_level].surface_first_dof[i] << std::endl;
-    } 
-  }
   print_info("GeometryManager::perform_initialization", "End level " + std::to_string(in_level));
 }
 
@@ -247,29 +236,22 @@ double GeometryManager::eps_kappa_2(Position in_p) {
 
 void GeometryManager::set_x_range(std::pair<double, double> in_range) {
   this->local_x_range = in_range;
-  std::pair<double, double> global_range(-GlobalParams.Geometry_Size_X / 2.0, GlobalParams.Geometry_Size_X / 2.0);
-  this->global_x_range = global_range;
-  return;
+  global_x_range = std::pair<double, double>(-GlobalParams.Geometry_Size_X / 2.0, GlobalParams.Geometry_Size_X / 2.0);
 }
 
 void GeometryManager::set_y_range(std::pair<double, double> in_range) {
   this->local_y_range = in_range;
-  std::pair<double, double> global_range(-GlobalParams.Geometry_Size_Y / 2.0, GlobalParams.Geometry_Size_Y / 2.0);
-  this->global_y_range = global_range;
-  return;
+  global_y_range = std::pair<double, double> (-GlobalParams.Geometry_Size_Y / 2.0, GlobalParams.Geometry_Size_Y / 2.0);
 }
 
 void GeometryManager::set_z_range(std::pair<double, double> in_range) {
   this->local_z_range = in_range;
-  std::pair<double, double> global_range(0.0, GlobalParams.Geometry_Size_Z);
-  this->global_z_range = global_range;
-  return;
+  global_z_range = std::pair<double, double>(0.0, GlobalParams.Geometry_Size_Z);
 }
 
 std::pair<double, double> GeometryManager::compute_x_range() {
   if (GlobalParams.Blocks_in_x_direction == 1) {
-    return std::pair<double, double>(-GlobalParams.Geometry_Size_X / 2.0,
-        GlobalParams.Geometry_Size_X / 2.0);
+    return std::pair<double, double>(-GlobalParams.Geometry_Size_X / 2.0, GlobalParams.Geometry_Size_X / 2.0);
   } else {
     double length = GlobalParams.Geometry_Size_X / ((double) GlobalParams.Blocks_in_x_direction);
     int block_index = GlobalParams.MPI_Rank % GlobalParams.Blocks_in_x_direction;
@@ -356,7 +338,6 @@ std::pair<bool, unsigned int> GeometryManager::get_global_neighbor_for_interface
 
 std::pair<bool, unsigned int> GeometryManager::get_level_neighbor_for_interface(Direction in_direction, unsigned int level) {
   std::pair<bool, unsigned int> ret(true, 0);
-  const unsigned int difference = GlobalParams.HSIE_SWEEPING_LEVEL - level;
   if(level == 0) {
     return get_global_neighbor_for_interface(in_direction);
   }
@@ -433,51 +414,6 @@ std::pair<bool, unsigned int> GeometryManager::get_level_neighbor_for_interface(
 
 bool GeometryManager::math_coordinate_in_waveguide(Position in_position) const {
   return (std::abs(in_position[0]) < (GlobalParams.Width_of_waveguide  / 2.0)) && (std::abs(in_position[1]) < (GlobalParams.Height_of_waveguide / 2.0));
-}
-
-void GeometryManager::set_mesh_boundary_ids(unsigned int surface) {
-    auto it = surface_meshes[surface].begin_active();
-    std::vector<double> x;
-    std::vector<double> y;
-    while(it != this->surface_meshes[surface].end()){
-      if(it->at_boundary()) {
-        for (unsigned int face = 0; face < GeometryInfo<2>::faces_per_cell; ++face) {
-          if (it->face(face)->at_boundary()) {
-            dealii::Point<2, double> c;
-            c = it->face(face)->center();
-            x.push_back(c[0]);
-            y.push_back(c[1]);
-          }
-        }
-      }
-      ++it;
-    }
-    double x_max = *max_element(x.begin(), x.end());
-    double y_max = *max_element(y.begin(), y.end());
-    double x_min = *min_element(x.begin(), x.end());
-    double y_min = *min_element(y.begin(), y.end());
-    it = this->surface_meshes[surface].begin_active();
-    while(it != this->surface_meshes[surface].end()){
-    if (it->at_boundary()) {
-      for (unsigned int face = 0; face < dealii::GeometryInfo<2>::faces_per_cell; ++face) {
-        Point<2, double> center;
-        center = it->face(face)->center();
-        if (std::abs(center[0] - x_min) < FLOATING_PRECISION) {
-          it->face(face)->set_all_boundary_ids(edge_to_boundary_id[surface][0]);
-        }
-        if (std::abs(center[0] - x_max) < FLOATING_PRECISION) {
-          it->face(face)->set_all_boundary_ids(edge_to_boundary_id[surface][1]);
-        }
-        if (std::abs(center[1] - y_min) < FLOATING_PRECISION) {
-          it->face(face)->set_all_boundary_ids(edge_to_boundary_id[surface][2]);
-        }
-        if (std::abs(center[1] - y_max) < FLOATING_PRECISION) {
-          it->face(face)->set_all_boundary_ids(edge_to_boundary_id[surface][3]);
-        }
-        }
-    }
-    ++it;
-  }
 }
 
 BoundaryId GeometryManager::get_boundary_for_direction(Direction in_direction) {

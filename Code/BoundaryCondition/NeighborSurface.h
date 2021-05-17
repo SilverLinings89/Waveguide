@@ -20,7 +20,6 @@ class NeighborSurface : public BoundaryCondition {
     void prepare_id_sets_for_boundaries();
     bool is_point_at_boundary(Position, BoundaryId);
     void identify_corner_cells() override;
-    void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints) override;
     void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
     void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
     void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
@@ -37,7 +36,6 @@ class NeighborSurface : public BoundaryCondition {
     void sort_dofs();
     void compute_coordinate_ranges();
     void set_boundary_ids();
-    void fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
     void output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
     void make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints) override;
     void make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) override;

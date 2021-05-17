@@ -416,17 +416,12 @@ void NumericProblem::assemble_system(unsigned int shift,
     cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
     cell_data.fe_values.reinit(cell_data.cell);
     cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
-    std::vector<types::global_dof_index> input_dofs(fe.dofs_per_line);
-    IndexSet input_dofs_local_set(fe.dofs_per_cell);
-    std::vector<Position> input_dof_centers(fe.dofs_per_cell);
-    std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
       cell_data.prepare_for_current_q_index(q_index);
     }
     constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, false);
   }
   matrix->compress(dealii::VectorOperation::add);
-  // write_matrix_and_rhs_metrics(matrix, rhs);
 }
 
 void NumericProblem::assemble_system(unsigned int shift,
@@ -443,17 +438,12 @@ void NumericProblem::assemble_system(unsigned int shift,
     cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
     cell_data.fe_values.reinit(cell_data.cell);
     cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
-    std::vector<types::global_dof_index> input_dofs(fe.dofs_per_line);
-    IndexSet input_dofs_local_set(fe.dofs_per_cell);
-    std::vector<Position> input_dof_centers(fe.dofs_per_cell);
-    std::vector<Tensor<1, 3, double>> input_dof_dirs(fe.dofs_per_cell);
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
       cell_data.prepare_for_current_q_index(q_index);
     }
     constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, false);
   }
   matrix->compress(dealii::VectorOperation::add);
-  // write_matrix_and_rhs_metrics(matrix, rhs);
 }
 
 void NumericProblem::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs) {
@@ -494,11 +484,12 @@ std::vector<SurfaceCellData> NumericProblem::get_surface_cell_data_for_boundary_
           cd.surface_face_center = cell.face(i)->center();
         }
       }
-      cd.dof_numbers.resize(fe.dofs_per_cell);
-      std::vector<DofNumber> dof_indices(cd.dof_numbers);
+      std::vector<DofNumber> dof_indices(fe.dofs_per_cell);
+      cell.get_dof_indices(dof_indices);
       for(unsigned int i = 0; i < fe.dofs_per_cell; i++) {
-        cd.dof_numbers[i] += Geometry.levels[level].inner_first_dof;
+        cd.dof_numbers.push_back(dof_indices[i] + Geometry.levels[level].inner_first_dof);
       }
+      ret.push_back(cd);
     }
   }
   std::sort(ret.begin(), ret.end(), compareSurfaceCellData);

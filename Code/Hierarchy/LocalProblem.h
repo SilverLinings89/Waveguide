@@ -27,8 +27,6 @@ public:
 
   void initialize() override;
 
-  void generate_sparsity_pattern() override;
-
   void initialize_own_dofs() override;
 
   void assemble() override;

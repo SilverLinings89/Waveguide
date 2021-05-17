@@ -59,8 +59,6 @@ private:
 
   void initialize() override;
 
-  void generate_sparsity_pattern() override;
-
   void initialize_index_sets() override;
 
   void reinit() override;
@@ -94,10 +92,6 @@ private:
   void output_results() override;
 
   void update_mismatch_vector(BoundaryId) override;
-
-  auto make_sparsity_pattern_for_surface(unsigned int, DynamicSparsityPattern *) -> void;
-
-  void fill_dsp_over_mpi(BoundaryId surface, dealii::DynamicSparsityPattern * in_dsp);
 
   auto UpperBlockProductAfterH() -> std::vector<ComplexNumber>;
 

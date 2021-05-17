@@ -51,7 +51,6 @@ public:
   void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
   void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
   void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
-  void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints) override;
   bool is_point_at_boundary(Position2D in_p, BoundaryId in_bid) override;
   auto get_vertices_for_boundary_id(BoundaryId) -> std::vector<unsigned int>;
   auto get_n_vertices_for_boundary_id(BoundaryId) -> unsigned int;
@@ -93,7 +92,6 @@ public:
   auto vertex_positions_for_ids(std::vector<unsigned int> ids) -> std::vector<Position>;
   auto line_positions_for_ids(std::vector<unsigned int> ids) -> std::vector<Position>;
   void output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
-  void fill_sparsity_pattern_for_boundary_id(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp) override;
   SurfaceCellData get_surface_cell_data_for_cell_index(const int in_index, const BoundaryId in_bid);
   void make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints) override;
   void make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) override;
