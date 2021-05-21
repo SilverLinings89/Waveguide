@@ -455,6 +455,7 @@ void NumericProblem::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixB
 
 std::vector<SurfaceCellData> NumericProblem::get_edge_cell_data(BoundaryId first_b_id, BoundaryId second_b_id, unsigned int level) {
   std::vector<SurfaceCellData> ret;
+  std::vector<DofNumber> dof_indices(fe.dofs_per_cell);
   for(auto cell = dof_handler.begin(); cell != dof_handler.end(); cell++) {
     if(cell->at_boundary(first_b_id) && cell->at_boundary(second_b_id)) {
       SurfaceCellData cd;
@@ -463,10 +464,9 @@ std::vector<SurfaceCellData> NumericProblem::get_edge_cell_data(BoundaryId first
           cd.surface_face_center = cell->face(i)->center();
         }
       }
-      cd.dof_numbers.resize(fe.dofs_per_cell);
-      std::vector<DofNumber> dof_indices(cd.dof_numbers);
+      cell->get_dof_indices(dof_indices);
       for(unsigned int i = 0; i < fe.dofs_per_cell; i++) {
-        cd.dof_numbers[i] += Geometry.levels[level].inner_first_dof;
+        cd.dof_numbers.push_back(dof_indices[i] += Geometry.levels[level].inner_first_dof);
       }
       ret.push_back(cd);
     }

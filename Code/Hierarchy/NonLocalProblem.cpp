@@ -213,20 +213,22 @@ void NonLocalProblem::print_diagnosis_data() {
 }
 
 void NonLocalProblem::assemble() {
-  print_info("NonLocalProblem::assemble", "Assemble child.");
-  child->assemble();
   print_info("NonLocalProblem::assemble", "Begin assembly");
   Geometry.inner_domain->assemble_system(Geometry.levels[level].inner_first_dof, &constraints, matrix, &rhs);
   print_info("NonLocalProblem::assemble", "Inner assembly done. Assembling boundary method contributions.");
   for(unsigned int i = 0; i< 6; i++) {
-    if(Geometry.levels[level].is_surface_truncated[i]) {
+      Timer timer;
+      timer.start();
       Geometry.levels[level].surfaces[i]->fill_matrix(matrix, &rhs, &constraints);
-    }
+      timer.stop();
+      std::cout << "On rank " << rank << " for b_id " << i << " CPU: " << timer.cpu_time() << " and wall: " << timer.wall_time() << std::endl;
   }
   MPI_Barrier(MPI_COMM_WORLD);
   print_info("NonLocalProblem::assemble", "Compress matrix.");
   matrix->compress(dealii::VectorOperation::add);
   MPI_Barrier(MPI_COMM_WORLD);
+  print_info("NonLocalProblem::assemble", "Assemble child.");
+  child->assemble();
   print_info("NonLocalProblem::assemble", "Compress vectors.");
   rhs.compress(dealii::VectorOperation::add);
   MPI_Barrier(MPI_COMM_WORLD);

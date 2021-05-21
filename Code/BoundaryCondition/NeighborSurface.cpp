@@ -29,15 +29,16 @@ NeighborSurface::~NeighborSurface() {
 
 }
 
-void NeighborSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed*, dealii::AffineConstraints<ComplexNumber> *) {
-    // Nothing to do here, work happens on neighbor process.
+void NeighborSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, NumericVectorDistributed*, dealii::AffineConstraints<ComplexNumber> *) {
+    matrix->compress(dealii::VectorOperation::add); // <-- this operation is collective and therefore required.
 }
 
 void NeighborSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix *, NumericVectorDistributed *, dealii::AffineConstraints<ComplexNumber> *) {
     // Nothing to do here, work happens on neighbor process.
 }
 
-void NeighborSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed *, dealii::AffineConstraints<ComplexNumber> *) {
+void NeighborSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, NumericVectorDistributed *, dealii::AffineConstraints<ComplexNumber> *) {
+     matrix->compress(dealii::VectorOperation::add); // <-- this operation is collective and therefore required.
     // Nothing to do here, work happens on neighbor process.
 }
 
@@ -210,11 +211,8 @@ std::vector<SurfaceCellData> NeighborSurface::get_corner_surface_cell_data(Bound
 
 void NeighborSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern * in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constraints) {
     BoundaryCondition::fill_sparsity_pattern(in_dsp, in_constraints);
-    std::cout << "Stage 1 " << std::endl;
     fill_sparsity_pattern_for_edge(in_dsp, in_constraints);
-    std::cout << "Stage 2 " << std::endl;
     fill_sparsity_pattern_for_corners(in_dsp, in_constraints);
-    std::cout << "Stage 3 " << std::endl;
 }
 
 void NeighborSurface::fill_sparsity_pattern_for_edge(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constraints) {
