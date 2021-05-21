@@ -41,12 +41,15 @@ public:
   // Generate the sparsity pattern
   virtual auto get_surface_cell_data(BoundaryId in_bid) -> std::vector<SurfaceCellData> = 0;
   virtual auto get_inner_surface_cell_data() -> std::vector<SurfaceCellData> = 0;
-  void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints);
+  virtual auto get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) -> std::vector<SurfaceCellData> = 0;
+  virtual void fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constriants) = 0;
+  virtual void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints);
   void fill_sparsity_pattern_for_inner_surface(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints);
   void fill_sparsity_pattern_with_surface_data_vectors(std::vector<SurfaceCellData> first_data_vector, std::vector<SurfaceCellData> second_data_vector, dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints);
   void make_edge_sparsity_pattern(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * constraints, dealii::DynamicSparsityPattern * dsp);
   auto dof_indices_from_surface_cell_data(std::vector<SurfaceCellData> in_data) -> std::vector<unsigned int>;
 
+  
   // Fill the system matrix
   virtual void fill_matrix(dealii::PETScWrappers::SparseMatrix*,      NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) = 0;
   virtual void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) = 0;

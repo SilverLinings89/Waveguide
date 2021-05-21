@@ -121,16 +121,12 @@ void BoundaryCondition::fill_sparsity_pattern_for_inner_surface(dealii::DynamicS
 }
 
 void BoundaryCondition::fill_sparsity_pattern(dealii::DynamicSparsityPattern * in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constraints) {
+  fill_internal_sparsity_pattern(in_dsp, in_constraints);
   fill_sparsity_pattern_for_inner_surface(in_dsp, in_constraints);
-  if(b_id == 4 || b_id == 5) {
-    make_edge_sparsity_pattern(2, in_constraints, in_dsp);
-    make_edge_sparsity_pattern(0, in_constraints, in_dsp);
-    make_edge_sparsity_pattern(1, in_constraints, in_dsp);
-    make_edge_sparsity_pattern(3, in_constraints, in_dsp);
-  }
-  if(b_id == 2 || b_id == 3) {
-    make_edge_sparsity_pattern(0, in_constraints, in_dsp);
-    make_edge_sparsity_pattern(1, in_constraints, in_dsp);
+  for(unsigned int i = 0; i < 6; i++) {
+    if(!are_opposing_sites(i, b_id) && (i != b_id)) {
+      make_edge_sparsity_pattern(i, in_constraints, in_dsp);
+    }    
   }
 }
 

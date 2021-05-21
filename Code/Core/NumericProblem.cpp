@@ -468,6 +468,7 @@ std::vector<SurfaceCellData> NumericProblem::get_edge_cell_data(BoundaryId first
       for(unsigned int i = 0; i < fe.dofs_per_cell; i++) {
         cd.dof_numbers[i] += Geometry.levels[level].inner_first_dof;
       }
+      ret.push_back(cd);
     }
   }
   std::sort(ret.begin(), ret.end(), compareSurfaceCellData);

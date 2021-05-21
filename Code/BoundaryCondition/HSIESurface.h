@@ -97,6 +97,8 @@ public:
   void make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) override;
   auto get_surface_cell_data(BoundaryId in_bid) -> std::vector<SurfaceCellData> override;
   auto get_inner_surface_cell_data() -> std::vector<SurfaceCellData> override;
+  void fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constriants) override;
+  auto get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) -> std::vector<SurfaceCellData> override;
 };
 
 

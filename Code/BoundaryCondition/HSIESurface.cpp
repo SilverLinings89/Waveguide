@@ -1296,3 +1296,12 @@ std::vector<SurfaceCellData> HSIESurface::get_inner_surface_cell_data() {
   std::sort(ret.begin(), ret.end(), compareSurfaceCellData);
   return ret;
 }
+
+void HSIESurface::fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constriants) {
+
+}
+
+std::vector<SurfaceCellData> HSIESurface::get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) {
+    std::vector<SurfaceCellData> ret;
+    return ret;
+}

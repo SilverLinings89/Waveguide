@@ -213,6 +213,8 @@ void NonLocalProblem::print_diagnosis_data() {
 }
 
 void NonLocalProblem::assemble() {
+  print_info("NonLocalProblem::assemble", "Assemble child.");
+  child->assemble();
   print_info("NonLocalProblem::assemble", "Begin assembly");
   Geometry.inner_domain->assemble_system(Geometry.levels[level].inner_first_dof, &constraints, matrix, &rhs);
   print_info("NonLocalProblem::assemble", "Inner assembly done. Assembling boundary method contributions.");
@@ -230,8 +232,6 @@ void NonLocalProblem::assemble() {
   MPI_Barrier(MPI_COMM_WORLD);
   solution.compress(dealii::VectorOperation::add);
   MPI_Barrier(MPI_COMM_WORLD);
-  print_info("NonLocalProblem::assemble", "Assemble child.");
-  child->assemble();
   print_info("NonLocalProblem::assemble", "End assembly.");
 }
 
@@ -342,7 +342,7 @@ void NonLocalProblem::reinit() {
   child->reinit();
   
   make_constraints();
-  print_diagnosis_data();
+  // print_diagnosis_data();
   
   make_sparsity_pattern();
 

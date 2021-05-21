@@ -3,6 +3,7 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_out.h>
 #include <deal.II/grid/grid_tools.h>
+#include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
 #include "../Core/GlobalObjects.h"
@@ -632,4 +633,42 @@ std::vector<SurfaceCellData> PMLSurface::get_surface_cell_data(BoundaryId in_bid
 
 std::vector<SurfaceCellData> PMLSurface::get_inner_surface_cell_data() {
   return get_surface_cell_data(inner_boundary_id);
+}
+
+void PMLSurface::fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constraints) {
+  std::vector<unsigned int> cell_dofs(fe_nedelec.dofs_per_cell);
+  for(auto it: dof_h_nedelec) {
+    it.get_dof_indices(cell_dofs);
+    for(unsigned int i = 0; i < fe_nedelec.dofs_per_cell; i++) {
+      cell_dofs[i] += first_own_dof;
+    }
+    in_constraints->add_entries_local_to_global(cell_dofs, *in_dsp);
+  }
+}
+
+std::vector<SurfaceCellData> PMLSurface::get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) {
+    std::vector<SurfaceCellData> ret;
+    std::vector<unsigned int> dof_indices(fe_nedelec.dofs_per_cell);
+    for(auto it : dof_h_nedelec) {
+      if(it.at_boundary(main_boundary) && it.at_boundary(secondary_boundary)) {
+        SurfaceCellData scd;
+        bool found_center = false;
+        for(unsigned int i = 0; i < 6; i++) {
+          for(unsigned int j = 0; j < 4; j++) {
+            Position p = it.face(i)->line(j)->center();
+            if(is_position_at_boundary(p, main_boundary) && is_position_at_boundary(p, secondary_boundary)) {
+              scd.surface_face_center = p;
+              found_center = true;
+            }
+          }
+        }
+        it.get_dof_indices(dof_indices);
+        for(unsigned int i = 0; i < fe_nedelec.dofs_per_cell; i++) {
+          scd.dof_numbers.push_back(dof_indices[i] + first_own_dof);
+        }
+        ret.push_back(scd);
+      }
+    }
+    std::sort(ret.begin(), ret.end(), compareSurfaceCellData);
+    return ret;
 }

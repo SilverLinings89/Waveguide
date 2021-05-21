@@ -23,6 +23,7 @@ class NeighborSurface : public BoundaryCondition {
     void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
     void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
     void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
+    void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constriants) override;
     bool is_point_at_boundary(Position2D in_p, BoundaryId in_bid) override;
     bool is_position_at_boundary(Position in_p, BoundaryId in_bid);
     void initialize() override;
@@ -40,5 +41,13 @@ class NeighborSurface : public BoundaryCondition {
     void make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints) override;
     void make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) override;
     auto get_surface_cell_data(BoundaryId in_bid) -> std::vector<SurfaceCellData> override;
+    auto get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) -> std::vector<SurfaceCellData> override;
     auto get_inner_surface_cell_data() -> std::vector<SurfaceCellData> override;
+    void fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constriants) override;
+    void fill_sparsity_pattern_for_edge( dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constriants);
+    void fill_sparsity_pattern_for_edge_and_neighbor(BoundaryId neighbor, dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constriants);
+    void fill_sparsity_pattern_for_corner(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints, BoundaryId in_b_id_one, BoundaryId in_b_id_two);
+    void fill_sparsity_pattern_for_corners(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints);
+    auto get_corner_boundary_id_set() -> std::array<std::pair<BoundaryId, BoundaryId>, 4>;
+    auto mpi_send_recv_surf_cell_data(std::vector<SurfaceCellData>) -> std::vector<SurfaceCellData>;
 };

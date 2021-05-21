@@ -12,6 +12,7 @@
 #include <deal.II/grid/tria.h>
 #include <deal.II/lac/affine_constraints.h>
 #include <mpi.h>
+#include <cstdlib>
 #include <string>
 #include "./BoundaryCondition.h"
 #include "PMLMeshTransformation.h"
@@ -45,6 +46,7 @@ void NeighborSurface::prepare_id_sets_for_boundaries() {
 }
 
 bool NeighborSurface::is_point_at_boundary(Position, BoundaryId) {
+    // Whs
     return false;
 }
 
@@ -57,6 +59,7 @@ bool NeighborSurface::is_point_at_boundary(Position2D, BoundaryId) {
 }
 
 bool NeighborSurface::is_position_at_boundary(Position, BoundaryId) {
+    // Why
     return false;
 }
 
@@ -162,6 +165,7 @@ void NeighborSurface::make_edge_constraints(dealii::AffineConstraints<ComplexNum
     if(Geometry.levels[level].is_surface_truncated[other_boundary]) {
         own_dof_indices = Geometry.levels[level].surfaces[other_boundary]->get_dof_association_by_boundary_id(b_id);
     } else {
+        std::cout << "Reached the internal edge higher level functionality in make_edge_constraints" << std::endl;
         own_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_edge_and_level(b_id, other_boundary, level);
     }
     const unsigned int n_dofs = own_dof_indices.size();
@@ -181,45 +185,153 @@ void NeighborSurface::make_edge_constraints(dealii::AffineConstraints<ComplexNum
 }
 
 std::vector<SurfaceCellData> NeighborSurface::get_surface_cell_data(BoundaryId in_bid) {
-    std::vector<SurfaceCellData> ret;
-    std::vector<SurfaceCellData> own;
+    std::vector<SurfaceCellData> data;
     if(Geometry.levels[level].is_surface_truncated[in_bid]) {
-        own = Geometry.levels[level].surfaces[in_bid]->get_surface_cell_data(b_id);
+        data = Geometry.levels[level].surfaces[in_bid]->get_surface_cell_data(b_id);
     } else {
-        return own;
+        return data;
     }
-    std::vector<unsigned int> dof_indices = dof_indices_from_surface_cell_data(own);
-    unsigned int * array = new unsigned int[dof_indices.size()];
-    for(unsigned int i = 0; i < dof_indices.size(); i++) {
-        array[i] = dof_indices[i];
-    }
-    MPI_Sendrecv_replace(array, dof_indices.size(), MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
-    const unsigned int n_dofs_per_cell = own[0].dof_numbers.size();
-    for(unsigned int i = 0; i < own.size(); i++) {
-        SurfaceCellData new_cell;
-        new_cell.surface_face_center = own[i].surface_face_center;
-        for(unsigned int j = 0; j < n_dofs_per_cell; j++) {
-            new_cell.dof_numbers.push_back(array[i*n_dofs_per_cell + j]);
-        }
-        ret.push_back(new_cell);
-    }
-    return ret;
+    return mpi_send_recv_surf_cell_data(data);
 }
 
 std::vector<SurfaceCellData> NeighborSurface::get_inner_surface_cell_data() {
-    std::vector<SurfaceCellData> ret = Geometry.inner_domain->get_surface_cell_data_for_boundary_id_and_level(b_id, level);
-    std::vector<unsigned int> indices = dof_indices_from_surface_cell_data(ret);
-    std::cout << "In get_inner_surface_cell_data: " << ret.size() << " and " << indices.size() << std::endl;
-    unsigned int * dof_indices = new unsigned int[indices.size()];
-    for(unsigned int i = 0; i < indices.size(); i++) {
-        dof_indices[i] = indices[i];
-    }
-    MPI_Sendrecv_replace(dof_indices, indices.size(), MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
-    const unsigned int n_dofs_per_cell = ret[0].dof_numbers.size();
-    for(unsigned int i = 0; i < ret.size(); i++) {
-        for(unsigned int j = 0; j < n_dofs_per_cell; j++) {
-            ret[i].dof_numbers[j] = dof_indices[i*n_dofs_per_cell + j];
+    std::vector<SurfaceCellData> data = Geometry.inner_domain->get_surface_cell_data_for_boundary_id_and_level(b_id, level);
+    return mpi_send_recv_surf_cell_data(data);
+}
+
+void NeighborSurface::fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *, dealii::AffineConstraints<ComplexNumber> *) {
+    // Only the other boundary methods do something here, because this one has no "own" dofs.
+}
+
+std::vector<SurfaceCellData> NeighborSurface::get_corner_surface_cell_data(BoundaryId b_id_one, BoundaryId b_id_two) {
+    std::vector<SurfaceCellData> data = Geometry.levels[level].surfaces[b_id_two]->get_corner_surface_cell_data(b_id_one, b_id);
+    return mpi_send_recv_surf_cell_data(data);
+}
+
+void NeighborSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern * in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constraints) {
+    BoundaryCondition::fill_sparsity_pattern(in_dsp, in_constraints);
+    std::cout << "Stage 1 " << std::endl;
+    fill_sparsity_pattern_for_edge(in_dsp, in_constraints);
+    std::cout << "Stage 2 " << std::endl;
+    fill_sparsity_pattern_for_corners(in_dsp, in_constraints);
+    std::cout << "Stage 3 " << std::endl;
+}
+
+void NeighborSurface::fill_sparsity_pattern_for_edge(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constraints) {
+    for(unsigned int i = 0; i < 6; i++) {
+        if(!(b_id == i || are_opposing_sites(i, b_id))) {
+            std::cout << "Reached for " << i << " on " << b_id << std::endl;
+            fill_sparsity_pattern_for_edge_and_neighbor(i, in_dsp, in_constraints);
         }
+    }
+}
+
+void NeighborSurface::fill_sparsity_pattern_for_edge_and_neighbor(BoundaryId edge_bid, dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constraints) {
+    BoundaryId edge_bid_opponent = 6;
+    for(unsigned int i = 0; i < 6; i++) {
+        if(are_opposing_sites(i, edge_bid)) {
+            edge_bid_opponent = i;
+        }
+    }
+    
+    std::vector<SurfaceCellData> from_self = Geometry.inner_domain->get_edge_cell_data(b_id, edge_bid, level);
+    std::vector<SurfaceCellData> from_other =  mpi_send_recv_surf_cell_data(from_self);
+    from_self = Geometry.levels[level].surfaces[edge_bid]->get_corner_surface_cell_data(edge_bid_opponent, b_id);
+    fill_sparsity_pattern_with_surface_data_vectors(from_self, from_other, in_dsp, in_constraints);
+
+    from_self = Geometry.levels[level].surfaces[edge_bid]->get_corner_surface_cell_data(edge_bid_opponent, b_id);
+    from_other = mpi_send_recv_surf_cell_data(from_self);
+    from_self = Geometry.inner_domain->get_edge_cell_data(b_id, edge_bid, level);
+    fill_sparsity_pattern_with_surface_data_vectors(from_self, from_other, in_dsp, in_constraints);
+
+}
+
+void NeighborSurface::fill_sparsity_pattern_for_corner(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints, BoundaryId in_b_id_one, BoundaryId in_b_id_two) {
+  std::vector<SurfaceCellData> from_self = Geometry.levels[level].surfaces[in_b_id_one]->get_corner_surface_cell_data(in_b_id_two, b_id);
+  std::vector<SurfaceCellData> from_other = mpi_send_recv_surf_cell_data(from_self);
+  from_self = Geometry.levels[level].surfaces[in_b_id_two]->get_corner_surface_cell_data(in_b_id_one, b_id);
+  fill_sparsity_pattern_with_surface_data_vectors(from_self, from_other, in_dsp, constraints);
+}
+
+void NeighborSurface::fill_sparsity_pattern_for_corners(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints) {
+    std::array<std::pair<BoundaryId, BoundaryId>, 4> corners = get_corner_boundary_id_set();
+    for(unsigned int i = 0; i < 4; i++) {
+        fill_sparsity_pattern_for_corner(in_dsp, constraints, corners[i].first, corners[i].second);
+        fill_sparsity_pattern_for_corner(in_dsp, constraints, corners[i].second, corners[i].first);
+    }
+}
+
+std::array<std::pair<BoundaryId, BoundaryId>, 4> NeighborSurface::get_corner_boundary_id_set() {
+  std::array<std::pair<BoundaryId, BoundaryId>, 4> corners;
+  if(b_id == 0 || b_id == 1) {
+      corners[0] = std::pair<BoundaryId, BoundaryId>(2,4);
+      corners[1] = std::pair<BoundaryId, BoundaryId>(3,4);
+      corners[2] = std::pair<BoundaryId, BoundaryId>(2,5);
+      corners[3] = std::pair<BoundaryId, BoundaryId>(3,5);
+  }
+  if(b_id == 2 || b_id == 3) {
+      corners[0] = std::pair<BoundaryId, BoundaryId>(0,4);
+      corners[1] = std::pair<BoundaryId, BoundaryId>(1,4);
+      corners[2] = std::pair<BoundaryId, BoundaryId>(0,5);
+      corners[3] = std::pair<BoundaryId, BoundaryId>(1,5);
+  }
+  if(b_id == 4 || b_id == 5) {
+      corners[0] = std::pair<BoundaryId, BoundaryId>(0,2);
+      corners[1] = std::pair<BoundaryId, BoundaryId>(1,2);
+      corners[2] = std::pair<BoundaryId, BoundaryId>(0,3);
+      corners[3] = std::pair<BoundaryId, BoundaryId>(1,3);
+  }
+  return corners;
+}
+
+std::vector<SurfaceCellData> NeighborSurface::mpi_send_recv_surf_cell_data(std::vector<SurfaceCellData> in_data) {
+    std::vector<SurfaceCellData> ret = in_data;
+    if(in_data.size() > 0) {
+        unsigned int * meta_data = new unsigned int[2];
+        meta_data[0] = in_data.size();  // N cells
+        meta_data[1] = in_data[0].dof_numbers.size(); // N dofs per cell
+        MPI_Sendrecv_replace(meta_data, 2, MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
+        if(meta_data[0] != in_data.size()) {
+            // Incompatible numbers of cells. Cannot couple.
+            std::cout << "Incompatible cell counts in mpi_send_recv_surf_cell_data" << std::endl;
+            exit(0);
+        }
+        std::vector<unsigned int> indices = dof_indices_from_surface_cell_data(ret);
+        if(meta_data[1] != in_data[0].dof_numbers.size()) {
+            unsigned int com_buffer_size = (in_data[0].dof_numbers.size() > meta_data[1])?in_data[0].dof_numbers.size(): meta_data[1];
+            unsigned int * dof_indices = new unsigned int[com_buffer_size];
+            for(unsigned int i = 0; i < indices.size(); i++) {
+                dof_indices[i] = indices[i];
+            }
+            for(unsigned int i = indices.size(); i < com_buffer_size; i++) {
+                dof_indices[i] = 0;
+            }
+            MPI_Sendrecv_replace(dof_indices, com_buffer_size, MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
+            for(unsigned int i = 0; i < ret.size(); i++) {
+                ret[i].dof_numbers.clear();
+                for(unsigned int j = 0; j < meta_data[1]; j++) {
+                    ret[i].dof_numbers.push_back(dof_indices[i * meta_data[1] + j]);
+                }
+            }
+            delete [] dof_indices;
+            return ret;
+        } else {
+            unsigned int * dof_indices = new unsigned int[indices.size()];
+            for(unsigned int i = 0; i < indices.size(); i++) {
+                dof_indices[i] = indices[i];
+            }
+            MPI_Sendrecv_replace(dof_indices, indices.size(), MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
+            const unsigned int n_dofs_per_cell = ret[0].dof_numbers.size();
+            for(unsigned int i = 0; i < ret.size(); i++) {
+                for(unsigned int j = 0; j < n_dofs_per_cell; j++) {
+                    ret[i].dof_numbers[j] = dof_indices[i*n_dofs_per_cell + j];
+                }
+            }
+            delete [] dof_indices;
+            return ret;
+        }
+    } else {
+        std::cout << "No data provided in mpi_send_recv_surf_cell_data" << std::endl;
     }
     return ret;
 }

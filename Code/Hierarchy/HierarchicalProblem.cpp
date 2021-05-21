@@ -85,10 +85,8 @@ void HierarchicalProblem::make_sparsity_pattern() {
   is.add_range(0, Geometry.levels[level].n_total_level_dofs);
   
   Geometry.inner_domain->make_sparsity_pattern(&dsp, Geometry.levels[level].inner_first_dof, &constraints);
-  std::cout << "Rank " << rank  << " after inner: " << dsp.n_nonzero_elements() << std::endl; 
   for (unsigned int surface = 0; surface < 6; surface++) {
     Geometry.levels[level].surfaces[surface]->fill_sparsity_pattern(&dsp, &constraints);
-    std::cout << "Rank " << rank  << " after surface " << surface << ": " << dsp.n_nonzero_elements() << std::endl;
   }
   
   sp.copy_from(dsp);
