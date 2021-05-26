@@ -6,7 +6,7 @@
  */
 
 #include "DofIndexData.h"
-#include "../Core/GlobalObjects.h"
+#include "../GlobalObjects/GlobalObjects.h"
 #include "LevelDofIndexData.h"
 
 DofIndexData::DofIndexData() {

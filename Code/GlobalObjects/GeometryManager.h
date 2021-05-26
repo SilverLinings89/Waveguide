@@ -5,7 +5,7 @@
 #include "../BoundaryCondition/BoundaryCondition.h"
 #include <memory>
 #include <utility>
-#include "Enums.h"
+#include "../Core/Enums.h"
 
 class InnerDomain;
 

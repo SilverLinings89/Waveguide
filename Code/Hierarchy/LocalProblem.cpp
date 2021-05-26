@@ -138,7 +138,6 @@ void LocalProblem::initialize_own_dofs() {
 }
 
 void LocalProblem::solve() {
-  std::cout << "Matrix l2 norm: " << matrix->linfty_norm() << std::endl;
   print_info("LocalProblem::solve", "Start");
   print_info("LocalProblem::solve", "Solution norm before: " + std::to_string(solution.l2_norm()), false, LoggingLevel::DEBUG_ONE);
   print_info("LocalProblem::solve", "RHS norm before: " + std::to_string(rhs.l2_norm()), false, LoggingLevel::DEBUG_ONE);
@@ -286,7 +285,6 @@ void LocalProblem::update_mismatch_vector(BoundaryId in_bid) {
   }
   solution.compress(VectorOperation::insert);
   matrix->vmult(rhs_mismatch, solution);
-  std::cout << "RHS Mismatch local for bid " << in_bid << " is " << rhs_mismatch.l2_norm() << " for input norm " << solution.l2_norm() << std::endl; 
 }
 
 void LocalProblem::compute_solver_factorization() {

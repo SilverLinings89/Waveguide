@@ -13,7 +13,7 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/lac/vector.h>
 #include "../Core/Sector.h"
-#include "../Core/GlobalObjects.h"
+#include "../GlobalObjects/GlobalObjects.h"
 #include "../Helpers/QuadratureFormulaCircle.cpp"
 #include "../Helpers/staticfunctions.h"
 #include "SpaceTransformation.h"

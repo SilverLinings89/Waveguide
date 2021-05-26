@@ -28,7 +28,7 @@
 #include "../Helpers/staticfunctions.h"
 #include "../MeshGenerators/SquareMeshGenerator.h"
 #include "SolutionWeight.h"
-#include "./GlobalObjects.h"
+#include "../GlobalObjects/GlobalObjects.h"
 #include "../SpaceTransformations/HomogenousTransformationRectangular.h"
 #include "../Helpers/PointSourceField.h"
 #include "../Solutions/ExactSolutionRamped.h"

@@ -48,17 +48,17 @@
 
 #include "../Core/Types.h"
 #include "../Solutions/ExactSolution.h"
-#include "../Helpers/ModeManager.h"
+#include "../GlobalObjects/ModeManager.h"
 #include "../Helpers/ParameterReader.h"
 #include "../Helpers/Parameters.h"
 #include "../Helpers/staticfunctions.h"
 #include "./Sector.h"
 #include "../MeshGenerators/SquareMeshGenerator.h"
 #include "../SpaceTransformations/HomogenousTransformationRectangular.h"
-#include "../Helpers/Enums.h"
+#include "../Core/Enums.h"
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/table_handler.h>
-#include "GlobalObjects.h"
+#include "../GlobalObjects/GlobalObjects.h"
 
 /**
  * \class InnerDomain

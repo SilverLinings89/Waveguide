@@ -4,7 +4,7 @@
 #include <string>
 #include "ShapeDescription.h"
 #include "../Core/Types.h"
-#include "Enums.h"
+#include "../Core/Enums.h"
 
 /**
  * \class Parameters

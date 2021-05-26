@@ -2,9 +2,9 @@
 
 #include "../Code/Core/Types.h"
 #include "../Code/Helpers/Parameters.h"
-#include "../Code/Helpers/GeometryManager.h"
+#include "../Code/GlobalObjects/GeometryManager.h"
 #include "../Code/Hierarchy/MPICommunicator.h"
-#include "../Code/Helpers/ModeManager.h"
+#include "../Code/GlobalObjects/ModeManager.h"
 #include "../Code/SpaceTransformations/SpaceTransformation.h"
 #include "../Code/BoundaryCondition/HSIEPolynomial.h"
 #include <fstream>

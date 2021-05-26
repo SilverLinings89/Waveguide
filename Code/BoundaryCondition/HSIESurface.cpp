@@ -1040,7 +1040,7 @@ Position2D get_line_position_for_line_index_in_tria(dealii::Triangulation<2> * i
       }
     }
   }
-  std::cout << "There was an error locating a vertex by id." << std::endl;
+  std::cout << "There was an error locating a line by id." << std::endl;
   return Position2D();
 }
 

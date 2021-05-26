@@ -13,7 +13,7 @@
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/mpi.h>
 #include "../Helpers/staticfunctions.h"
-#include "../Core/GlobalObjects.h"
+#include "../GlobalObjects/GlobalObjects.h"
 #include "../ModalComputations/RectangularMode.h"
 
 Simulation::Simulation() {

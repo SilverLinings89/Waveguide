@@ -140,7 +140,6 @@ void RectangularMode::make_boundary_conditions() {
   periodic_constraints.reinit(is);
   ComplexNumber factor = std::exp(layer_thickness / (lambda/std::sqrt(GlobalParams.Epsilon_R_in_waveguide)) * 2*GlobalParams.Pi * ComplexNumber(0.0,1.0)); 
   DoFTools::make_periodicity_constraints(dof_handler, 4, 5, 2, periodic_constraints, dealii::ComponentMask() ,factor);
-  std::cout << "N Constraints: " << periodic_constraints.n_constraints() << std::endl;
   surface_first_dofs.clear();
   DofCount dc = dof_handler.n_dofs();
   surface_first_dofs.push_back(dc);

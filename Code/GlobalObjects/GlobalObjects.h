@@ -1,10 +1,10 @@
 #pragma once
 
 #include "../Helpers/Parameters.h"
-#include "../Helpers/GeometryManager.h"
+#include "../GlobalObjects/GeometryManager.h"
 #include "../Hierarchy/MPICommunicator.h"
-#include "../Helpers/ModeManager.h"
-#include "../Helpers/OutputManager.h"
+#include "../GlobalObjects/ModeManager.h"
+#include "../GlobalObjects/OutputManager.h"
 
 extern Parameters GlobalParams;
 extern GeometryManager Geometry;

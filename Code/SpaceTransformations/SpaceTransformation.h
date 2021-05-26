@@ -6,8 +6,8 @@
 #include <deal.II/lac/vector.h>
 #include <math.h>
 #include <vector>
-#include "../Helpers/Enums.h"
-#include "../Core/GlobalObjects.h"
+#include "../Core/Enums.h"
+#include "../GlobalObjects/GlobalObjects.h"
 
 using namespace dealii;
 

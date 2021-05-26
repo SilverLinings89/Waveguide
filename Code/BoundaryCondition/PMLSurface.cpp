@@ -6,7 +6,7 @@
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
-#include "../Core/GlobalObjects.h"
+#include "../GlobalObjects/GlobalObjects.h"
 #include "../Core/InnerDomain.h"
 #include "../Helpers/staticfunctions.h"
 #include <deal.II/dofs/dof_tools.h>
@@ -641,13 +641,11 @@ std::vector<SurfaceCellData> PMLSurface::get_corner_surface_cell_data(BoundaryId
     for(auto it : dof_h_nedelec) {
       if(it.at_boundary(main_boundary) && it.at_boundary(secondary_boundary)) {
         SurfaceCellData scd;
-        bool found_center = false;
         for(unsigned int i = 0; i < 6; i++) {
           for(unsigned int j = 0; j < 4; j++) {
             Position p = it.face(i)->line(j)->center();
             if(is_position_at_boundary(p, main_boundary) && is_position_at_boundary(p, secondary_boundary)) {
               scd.surface_face_center = p;
-              found_center = true;
             }
           }
         }

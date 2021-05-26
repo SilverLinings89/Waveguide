@@ -4,15 +4,11 @@ ADD_LIBRARY(Code
         Core/Sector.cpp
         Core/SolutionWeight.cpp
         Core/InnerDomain.cpp
-        Core/GlobalObjects.cpp
         Core/Types.h
         Runners/Simulation.cpp
         Runners/ParameterSweep.cpp
         Runners/SingleCoreRun.cpp
         Runners/SweepingRun.cpp
-        Helpers/GeometryManager.cpp
-        Helpers/OutputManager.cpp
-        Helpers/ModeManager.cpp
         Helpers/ParameterReader.cpp
         Helpers/PointSourceField.cpp
         Helpers/Parameters.cpp
@@ -38,20 +34,18 @@ ADD_LIBRARY(Code
         BoundaryCondition/NeighborSurface.cpp
         BoundaryCondition/LaguerreFunction.cpp
         BoundaryCondition/JacobianForCell.cpp
-        Hierarchy/HierarchicalProblem.cpp 
-        Hierarchy/HierarchicalProblem.h 
-        Hierarchy/NonLocalProblem.cpp 
-        Hierarchy/NonLocalProblem.h 
-        Hierarchy/LocalProblem.cpp 
-        Hierarchy/LocalProblem.h
+        Hierarchy/HierarchicalProblem.cpp  
+        Hierarchy/NonLocalProblem.cpp  
+        Hierarchy/LocalProblem.cpp
         Hierarchy/MPICommunicator.cpp
-        Hierarchy/MPICommunicator.h
-        Hierarchy/DofIndexData.h
         Hierarchy/DofIndexData.cpp
-        Hierarchy/LevelDofIndexData.h
         Hierarchy/LevelDofIndexData.cpp
-        ModalComputations/RectangularMode.h
         ModalComputations/RectangularMode.cpp
+        GlobalObjects/GeometryManager.cpp
+        GlobalObjects/TimerManager.cpp
+        GlobalObjects/GlobalObjects.cpp
+        GlobalObjects/ModeManager.cpp
+        GlobalObjects/OutputManager.cpp
         )
 
 DEAL_II_SETUP_TARGET(Code)

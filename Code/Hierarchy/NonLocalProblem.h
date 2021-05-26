@@ -9,7 +9,7 @@
 #include <deal.II/lac/solver_control.h>
 #include <deal.II/lac/la_parallel_vector.h>
 #include <deal.II/lac/petsc_sparse_matrix.h>
-#include "../Helpers/Enums.h"
+#include "../Core/Enums.h"
 
 class NonLocalProblem: public HierarchicalProblem {
 private:

@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 #include "../Helpers/PointVal.h"
-#include "../Core/GlobalObjects.h"
+#include "../GlobalObjects/GlobalObjects.h"
 
 /**
  * \class ExactSolution

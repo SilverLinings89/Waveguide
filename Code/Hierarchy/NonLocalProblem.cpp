@@ -1,5 +1,5 @@
 #include "NonLocalProblem.h"
-#include "../Helpers/GeometryManager.h"
+#include "../GlobalObjects/GeometryManager.h"
 #include "../Helpers/staticfunctions.h"
 #include "HierarchicalProblem.h"
 #include "LocalProblem.h"
@@ -182,34 +182,7 @@ void remove_double_entries_from_vector(std::vector<DofNumber> * in_vector) {
 }
 
 void NonLocalProblem::print_diagnosis_data() {
-  if(rank == 0) {
-    std::cout << "Temp dof data:" << std::endl;
-    std::cout << "Pair 1:" << std::endl;
-  }
-  MPI_Barrier(MPI_COMM_WORLD);
-  print_dof_details(25620);
-  print_dof_details(76335);
-  MPI_Barrier(MPI_COMM_WORLD);
-  if(rank == 0) {
-    std::cout << "Pair 2:" << std::endl;
-  }
-  MPI_Barrier(MPI_COMM_WORLD);
-  print_dof_details(101115);
-  print_dof_details(142023);
-  MPI_Barrier(MPI_COMM_WORLD);
-  if(rank == 0) {
-    std::cout << "Pair 3:" << std::endl;
-  }
-  MPI_Barrier(MPI_COMM_WORLD);
-  print_dof_details(206871);
-  print_dof_details(165522);
-  MPI_Barrier(MPI_COMM_WORLD);
-  if(rank == 0) {
-    std::cout << "Pair 4:" << std::endl;
-  }
-  print_dof_details(141183);
-  print_dof_details(99834);
-  MPI_Barrier(MPI_COMM_WORLD);
+  
 }
 
 void NonLocalProblem::assemble() {
@@ -221,19 +194,18 @@ void NonLocalProblem::assemble() {
       timer.start();
       Geometry.levels[level].surfaces[i]->fill_matrix(matrix, &rhs, &constraints);
       timer.stop();
-      std::cout << "On rank " << rank << " for b_id " << i << " CPU: " << timer.cpu_time() << " and wall: " << timer.wall_time() << std::endl;
   }
-  MPI_Barrier(MPI_COMM_WORLD);
+  // MPI_Barrier(MPI_COMM_WORLD);
   print_info("NonLocalProblem::assemble", "Compress matrix.");
   matrix->compress(dealii::VectorOperation::add);
-  MPI_Barrier(MPI_COMM_WORLD);
+  // MPI_Barrier(MPI_COMM_WORLD);
   print_info("NonLocalProblem::assemble", "Assemble child.");
   child->assemble();
   print_info("NonLocalProblem::assemble", "Compress vectors.");
   rhs.compress(dealii::VectorOperation::add);
-  MPI_Barrier(MPI_COMM_WORLD);
+  // MPI_Barrier(MPI_COMM_WORLD);
   solution.compress(dealii::VectorOperation::add);
-  MPI_Barrier(MPI_COMM_WORLD);
+  // MPI_Barrier(MPI_COMM_WORLD);
   print_info("NonLocalProblem::assemble", "End assembly.");
 }
 
@@ -312,12 +284,10 @@ void NonLocalProblem::apply_sweep(Vec x_in, Vec x_out) {
     }
   }
   
-  std::cout << "In center for " << rank << std::endl;
   setChildRhsComponentsFromU(); // sets rhs in child.
   child->solve(); // applies H^{-1} or S^{-1}.
   propagate_up(); // updates u.
-  std::cout << "After center for " << rank << std::endl;
-
+  
   if(is_lowest_in_sweeping_direction()) {
     std::vector<ComplexNumber> rhs_values = LowerBlockProduct();
     send_local_upper_dofs(rhs_values);
@@ -570,9 +540,7 @@ void NonLocalProblem::receive_local_lower_dofs_and_H() {
     child->rhs[dof] = mpi_cache[i];
   }
   child->rhs.compress(VectorOperation::insert);
-  std::cout << "After receiving rhs has norm " << child->rhs.l2_norm() << std::endl;
   child->solve();
-  std::cout << "After solve rhs has norm " << child->solution.l2_norm() << std::endl;
   for(unsigned int i = 0; i < count; i++) {
     u[i] -= (ComplexNumber)child->solution(Geometry.levels[level-1].inner_first_dof + i);
   }
@@ -668,7 +636,7 @@ std::vector<ComplexNumber> NonLocalProblem::UpperBlockProductAfterH() {
   for(unsigned int i = 0; i < is.n_elements(); i++) {
     ret[i] = child->rhs_mismatch[is.nth_index_in_set(i) - Geometry.levels[level].inner_first_dof];
   }
-  std::cout << "In rank " << rank << " Upper Block Product Norm is " << l2_norm_of_vector(ret) << std::endl;
+  
   return ret;
 }
 
@@ -679,7 +647,7 @@ std::vector<ComplexNumber> NonLocalProblem::LowerBlockProduct() {
   for(unsigned int i = 0; i < upper_interface_dofs.n_elements(); i++) {
     ret[i] = child->rhs_mismatch[upper_interface_dofs.nth_index_in_set(i) - Geometry.levels[level].inner_first_dof + Geometry.levels[level-1].inner_first_dof];
   }
-  std::cout << "In rank " << rank << " Lower Block Product Norm is " << l2_norm_of_vector(ret) << " and rhs_mismatch norm " << child->rhs_mismatch.l2_norm() << std::endl;
+  
   return ret;
 }
 
@@ -693,7 +661,7 @@ void NonLocalProblem::setSolutionFromVector(Vec x_in) {
 }
 
 void NonLocalProblem::setChildSolutionComponentsFromU() {
-  std::cout << "Before setting child solution in rank " << rank << ":" << child->solution.l2_norm() << std::endl;
+  
   for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
     child->solution[Geometry.levels[level-1].inner_first_dof + i] = u[i];
   }
@@ -719,11 +687,11 @@ void NonLocalProblem::setChildSolutionComponentsFromU() {
     }
   }
   child->solution.compress(VectorOperation::insert);
-  std::cout << "After setting child solution in rank " << rank << ":" << child->solution.l2_norm() << std::endl;
+  
 }
 
 void NonLocalProblem::setChildRhsComponentsFromU() {
-  std::cout << "Before setting child rhs in rank " << rank << ":" << child->rhs.l2_norm() << std::endl;
+  
   for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
     child->rhs[Geometry.levels[level-1].inner_first_dof + i] = u[i];
   }
@@ -741,7 +709,7 @@ void NonLocalProblem::setChildRhsComponentsFromU() {
     }
   }
   child->rhs.compress(VectorOperation::insert);
-  std::cout << "After setting child rhs in rank " << rank << ":" << child->rhs.l2_norm() << std::endl;
+  
 }
 
 DofOwner NonLocalProblem::get_dof_owner(unsigned int dof) {

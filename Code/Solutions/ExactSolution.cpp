@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "../Core/InnerDomain.h"
-#include "../Core/GlobalObjects.h"
+#include "../GlobalObjects/GlobalObjects.h"
 #include "../Core/Types.h"
 #include "../Helpers/PointVal.h"
 

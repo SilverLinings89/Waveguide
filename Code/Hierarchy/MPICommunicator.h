@@ -2,7 +2,7 @@
 
 #include <mpi.h>
 #include <vector>
-#include "../Helpers/Enums.h"
+#include "../Core/Enums.h"
 
 class MPICommunicator {
 public:

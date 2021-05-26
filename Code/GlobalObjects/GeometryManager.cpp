@@ -1,13 +1,13 @@
 #include <deal.II/base/mpi.h>
 #include <deal.II/grid/tria.h>
-#include "../Core/GlobalObjects.h"
-#include "Enums.h"
+#include "GlobalObjects.h"
+#include "../Core/Enums.h"
 #include "GeometryManager.h"
 #include "../Core/InnerDomain.h"
 #include "../BoundaryCondition/HSIESurface.h"
 #include "../BoundaryCondition/PMLSurface.h"
 #include "../BoundaryCondition/NeighborSurface.h"
-#include "staticfunctions.h"
+#include "../Helpers/staticfunctions.h"
 
 GeometryManager::GeometryManager() {
   inner_domain = new InnerDomain();

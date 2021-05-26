@@ -5,7 +5,7 @@
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
-#include "../Core/GlobalObjects.h"
+#include "../GlobalObjects/GlobalObjects.h"
 #include "../Helpers/staticfunctions.h"
 #include "../Core/InnerDomain.h"
 #include <deal.II/dofs/dof_tools.h>

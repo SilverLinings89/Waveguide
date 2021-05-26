@@ -14,9 +14,9 @@
 #include <deal.II/distributed/tria.h>
 #include <deal.II/base/iterator_range.h>
 #include <deal.II/dofs/dof_handler.h>
-#include "GeometryManager.h"
+#include "../GlobalObjects/GeometryManager.h"
 #include "ParameterReader.h"
-#include "OutputManager.h"
+#include "../GlobalObjects/OutputManager.h"
 #include "Parameters.h"
 #include "ShapeDescription.h"
 

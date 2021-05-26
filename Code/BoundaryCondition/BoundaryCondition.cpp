@@ -1,5 +1,5 @@
 #include "./BoundaryCondition.h"
-#include "../Core/GlobalObjects.h"
+#include "../GlobalObjects/GlobalObjects.h"
 #include "../Helpers/staticfunctions.h"
 #include "../Core/InnerDomain.h"
 #include <algorithm>

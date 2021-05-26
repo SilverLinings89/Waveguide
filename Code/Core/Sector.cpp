@@ -2,7 +2,7 @@
 #define SectorFlagCPP
 
 #include "Sector.h"
-#include "./GlobalObjects.h"
+#include "../GlobalObjects/GlobalObjects.h"
 #include <deal.II/base/tensor.h>
 #include "../Helpers/staticfunctions.h"
 

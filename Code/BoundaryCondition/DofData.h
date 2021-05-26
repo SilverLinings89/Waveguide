@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Helpers/Enums.h"
+#include "../Core/Enums.h"
 #include <string>
 
 struct DofData {

@@ -1,5 +1,5 @@
 #include "./OutputManager.h"
-#include "../Core/GlobalObjects.h"
+#include "../GlobalObjects/GlobalObjects.h"
 #include <iostream>
 #include <fstream>
 
@@ -34,7 +34,9 @@ void OutputManager::initialize() {
     }
     out << "../Solutions/run" << i;
     output_folder_path = out.str();
-    std::cout << "Solution path: " << output_folder_path << std::endl;
+    if(GlobalParams.MPI_Rank == 0) {
+        std::cout << "Solution path: " << output_folder_path << std::endl;
+    }
     mkdir(output_folder_path.c_str(), ACCESSPERMS);
     log_stream.open(output_folder_path + "/main" + std::to_string(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) + ".log", std::ios::binary);
     write_run_description();
