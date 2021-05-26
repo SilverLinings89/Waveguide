@@ -3,7 +3,7 @@
 #include "../Helpers/staticfunctions.h"
 #include "HierarchicalProblem.h"
 #include "LocalProblem.h"
-#include "../Core/NumericProblem.h"
+#include "../Core/InnerDomain.h"
 #include <deal.II/base/index_set.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/petsc_solver.h>

@@ -3,14 +3,14 @@
 #include "../Core/GlobalObjects.h"
 #include "Enums.h"
 #include "GeometryManager.h"
-#include "../Core/NumericProblem.h"
+#include "../Core/InnerDomain.h"
 #include "../BoundaryCondition/HSIESurface.h"
 #include "../BoundaryCondition/PMLSurface.h"
 #include "../BoundaryCondition/NeighborSurface.h"
 #include "staticfunctions.h"
 
 GeometryManager::GeometryManager() {
-  inner_domain = new NumericProblem();
+  inner_domain = new InnerDomain();
 }
 
 GeometryManager::~GeometryManager() {

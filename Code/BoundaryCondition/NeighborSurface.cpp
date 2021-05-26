@@ -7,7 +7,7 @@
 #include <deal.II/numerics/vector_tools.h>
 #include "../Core/GlobalObjects.h"
 #include "../Helpers/staticfunctions.h"
-#include "../Core/NumericProblem.h"
+#include "../Core/InnerDomain.h"
 #include <deal.II/dofs/dof_tools.h>
 #include <deal.II/grid/tria.h>
 #include <deal.II/lac/affine_constraints.h>

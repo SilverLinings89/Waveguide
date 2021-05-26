@@ -979,14 +979,14 @@
                     "comment": 0
                 },
                 {
-                    "filename": ".clangd/index/NumericProblem.cpp.135FF9B5688EEBAA.idx",
+                    "filename": ".clangd/index/InnerDomain.cpp.135FF9B5688EEBAA.idx",
                     "isbinaryfile": true,
                     "blank": 0,
                     "code": 0,
                     "comment": 0
                 },
                 {
-                    "filename": ".clangd/index/NumericProblem.h.58DACBD9396E75CD.idx",
+                    "filename": ".clangd/index/InnerDomain.h.58DACBD9396E75CD.idx",
                     "isbinaryfile": true,
                     "blank": 0,
                     "code": 0,
@@ -1686,7 +1686,7 @@
                     "comment": 0
                 },
                 {
-                    "filename": "build/Code/CMakeFiles/Code.dir/Core/NumericProblem.cpp.o",
+                    "filename": "build/Code/CMakeFiles/Code.dir/Core/InnerDomain.cpp.o",
                     "isbinaryfile": true,
                     "blank": 0,
                     "code": 0,
@@ -3145,13 +3145,13 @@
                     "blank": 22,
                     "code": 413,
                     "comment": 2,
-                    "filename": "Code/Core/NumericProblem.cpp"
+                    "filename": "Code/Core/InnerDomain.cpp"
                 },
                 {
                     "blank": 6,
                     "code": 102,
                     "comment": 17,
-                    "filename": "Code/Core/NumericProblem.h"
+                    "filename": "Code/Core/InnerDomain.h"
                 },
                 {
                     "blank": 54,

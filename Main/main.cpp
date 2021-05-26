@@ -6,7 +6,7 @@
 #include <string>
 #include <sstream>
 
-#include "../Code/Core/NumericProblem.h"
+#include "../Code/Core/InnerDomain.h"
 #include "../Code/Helpers/Parameters.h"
 #include "../Code/Helpers/ParameterReader.h"
 #include "../Code/Helpers/staticfunctions.h"

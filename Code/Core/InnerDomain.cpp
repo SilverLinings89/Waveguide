@@ -1,4 +1,4 @@
-#include "NumericProblem.h"
+#include "InnerDomain.h"
 
 #include <functional>
 #include <deal.II/base/geometry_info.h>
@@ -34,7 +34,7 @@
 #include "../Solutions/ExactSolutionRamped.h"
 #include "../Solutions/ExactSolutionConjugate.h"
 
-NumericProblem::NumericProblem()
+InnerDomain::InnerDomain()
     :
       mesh_generator{},
       space_transformation{0},
@@ -45,19 +45,19 @@ NumericProblem::NumericProblem()
   local_constraints_made = false;
 }
 
-NumericProblem::~NumericProblem() {}
+InnerDomain::~InnerDomain() {}
 
 bool compareConstraintPairs(ConstraintPair v1, ConstraintPair v2) {
   return (v1.left < v2.left);
 }
 
-std::vector<InterfaceDofData> NumericProblem::get_surface_dof_vector_for_edge_and_level(BoundaryId first_bid, BoundaryId second_bid, unsigned int level) {
+std::vector<InterfaceDofData> InnerDomain::get_surface_dof_vector_for_edge_and_level(BoundaryId first_bid, BoundaryId second_bid, unsigned int level) {
   std::vector<InterfaceDofData> ret = get_surface_dof_vector_for_edge(first_bid, second_bid);
   shift_interface_dof_data(&ret, Geometry.levels[level].inner_first_dof);
   return ret;
 }
 
-std::vector<InterfaceDofData> NumericProblem::get_surface_dof_vector_for_edge(BoundaryId first_bid, BoundaryId second_bid) {
+std::vector<InterfaceDofData> InnerDomain::get_surface_dof_vector_for_edge(BoundaryId first_bid, BoundaryId second_bid) {
   std::vector<InterfaceDofData> ret;
   std::vector<InterfaceDofData> interface_1 = get_surface_dof_vector_for_boundary_id(first_bid);
   std::vector<InterfaceDofData> interface_2 = get_surface_dof_vector_for_boundary_id(second_bid);
@@ -73,8 +73,8 @@ std::vector<InterfaceDofData> NumericProblem::get_surface_dof_vector_for_edge(Bo
   return ret;
 }
 
-void NumericProblem::make_grid() {
-  print_info("NumericProblem::make_grid", "start");
+void InnerDomain::make_grid() {
+  print_info("InnerDomain::make_grid", "start");
   Triangulation<3> temp_tria;
   std::vector<unsigned int> repetitions;
   repetitions.push_back(GlobalParams.Cells_in_x);
@@ -82,7 +82,7 @@ void NumericProblem::make_grid() {
   repetitions.push_back(GlobalParams.Cells_in_z);
   std::string m = "Cells: " + std::to_string(GlobalParams.Cells_in_x) + " x " + std::to_string(GlobalParams.Cells_in_y) + " x " + std::to_string(GlobalParams.Cells_in_z) + "\nGeometry: [" + std::to_string(Geometry.local_x_range.first) + "," + std::to_string(Geometry.local_x_range.second);
   m += "] x [" + std::to_string(Geometry.local_y_range.first) + "," + std::to_string(Geometry.local_y_range.second) + "] x [" + std::to_string(Geometry.local_z_range.first) + "," + std::to_string(Geometry.local_z_range.second) + "]\n";
-  print_info("NumericProblem::make_grid", m, false, LoggingLevel::PRODUCTION_ALL);
+  print_info("InnerDomain::make_grid", m, false, LoggingLevel::PRODUCTION_ALL);
   Position lower(Geometry.local_x_range.first, Geometry.local_y_range.first,
       Geometry.local_z_range.first);
   Position upper(Geometry.local_x_range.second, Geometry.local_y_range.second,
@@ -93,8 +93,8 @@ void NumericProblem::make_grid() {
   dof_handler.distribute_dofs(fe);
   SortDofsDownstream();
   n_dofs = dof_handler.n_dofs();
-  print_info("NumericProblem::make_grid", "Mesh Preparation finished. System has " + std::to_string(n_dofs) + " degrees of freedom.", false, LoggingLevel::PRODUCTION_ONE);
-  print_info("NumericProblem::make_grid", "end");
+  print_info("InnerDomain::make_grid", "Mesh Preparation finished. System has " + std::to_string(n_dofs) + " degrees of freedom.", false, LoggingLevel::PRODUCTION_ONE);
+  print_info("InnerDomain::make_grid", "end");
 }
 
 bool compareIndexCenterPairs(std::pair<int, double> c1,
@@ -102,10 +102,10 @@ bool compareIndexCenterPairs(std::pair<int, double> c1,
   return c1.second < c2.second;
 }
 
-std::vector<unsigned int> NumericProblem::dofs_for_cell_around_point(
+std::vector<unsigned int> InnerDomain::dofs_for_cell_around_point(
     Position &in_p) {
   std::vector<unsigned int> ret(fe.dofs_per_cell);
-  print_info("NumericProblem::dofs_for_cell_around_point", "Dofs per cell: " + std::to_string(fe.dofs_per_cell), false, LoggingLevel::PRODUCTION_ONE);
+  print_info("InnerDomain::dofs_for_cell_around_point", "Dofs per cell: " + std::to_string(fe.dofs_per_cell), false, LoggingLevel::PRODUCTION_ONE);
   auto cell = dof_handler.begin_active();
   auto endc = dof_handler.end();
   for (; cell != endc; ++cell) {
@@ -117,7 +117,7 @@ std::vector<unsigned int> NumericProblem::dofs_for_cell_around_point(
   return ret;
 }
 
-void NumericProblem::make_sparsity_pattern( dealii::DynamicSparsityPattern *in_pattern, unsigned int shift, dealii::AffineConstraints<ComplexNumber> *in_constraints) {
+void InnerDomain::make_sparsity_pattern( dealii::DynamicSparsityPattern *in_pattern, unsigned int shift, dealii::AffineConstraints<ComplexNumber> *in_constraints) {
   auto end = dof_handler.end();
   std::vector<DofNumber> cell_dof_indices(fe.dofs_per_cell);
   for(auto cell = dof_handler.begin_active(); cell != end; cell++) {
@@ -129,7 +129,7 @@ void NumericProblem::make_sparsity_pattern( dealii::DynamicSparsityPattern *in_p
   }
 }
 
-auto NumericProblem::get_central_cells(double radius) -> std::set<std::string> {
+auto InnerDomain::get_central_cells(double radius) -> std::set<std::string> {
   std::set<std::string> ret;
   for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
     if( std::abs(it->center()[0]) < radius &&  std::abs(it->center()[1]) < radius && std::abs(it->center()[2]) < radius  ) {
@@ -139,7 +139,7 @@ auto NumericProblem::get_central_cells(double radius) -> std::set<std::string> {
   return ret;
 }
 
-auto NumericProblem::get_outer_constrained_faces() -> std::set<unsigned int> {
+auto InnerDomain::get_outer_constrained_faces() -> std::set<unsigned int> {
   std::set<unsigned int> constrained_faces;
   for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
     if(constrained_cells.contains(it->id().to_string())) {
@@ -155,7 +155,7 @@ auto NumericProblem::get_outer_constrained_faces() -> std::set<unsigned int> {
   return constrained_faces;
 }
 
-void NumericProblem::make_constraints() {
+void InnerDomain::make_constraints() {
   local_dof_indices.set_size(n_dofs);
   local_dof_indices.add_range(0, n_dofs);
   local_constraints.reinit(local_dof_indices);
@@ -171,7 +171,7 @@ void NumericProblem::make_constraints() {
   local_constraints_made = true;
 }
 
-void NumericProblem::make_constraints(AffineConstraints<ComplexNumber> *in_constraints, unsigned int shift, IndexSet local_constraints_indices) {
+void InnerDomain::make_constraints(AffineConstraints<ComplexNumber> *in_constraints, unsigned int shift, IndexSet local_constraints_indices) {
   if(!local_constraints_made) {
     make_constraints();
   }
@@ -190,8 +190,8 @@ void NumericProblem::make_constraints(AffineConstraints<ComplexNumber> *in_const
   in_constraints->merge(temp, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
 }
 
-void NumericProblem::SortDofsDownstream() {
-  print_info("NumericProblem::SortDofsDownstream", "Start");
+void InnerDomain::SortDofsDownstream() {
+  print_info("InnerDomain::SortDofsDownstream", "Start");
   triangulation.clear_user_flags();
   std::vector<std::pair<DofNumber, Position>> current;
   std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
@@ -245,16 +245,16 @@ void NumericProblem::SortDofsDownstream() {
     new_numbering[current[i].first] = i;
   }
   dof_handler.renumber_dofs(new_numbering);
-  print_info("NumericProblem::SortDofsDownstream", "End");
+  print_info("InnerDomain::SortDofsDownstream", "End");
 }
 
-std::vector<InterfaceDofData> NumericProblem::get_surface_dof_vector_for_boundary_id_and_level(unsigned int b_id, unsigned int in_level) {
+std::vector<InterfaceDofData> InnerDomain::get_surface_dof_vector_for_boundary_id_and_level(unsigned int b_id, unsigned int in_level) {
   std::vector<InterfaceDofData> ret = get_surface_dof_vector_for_boundary_id(b_id);
   shift_interface_dof_data(&ret, Geometry.levels[in_level].inner_first_dof);
   return ret;
 }
 
-std::vector<InterfaceDofData> NumericProblem::get_surface_dof_vector_for_boundary_id(
+std::vector<InterfaceDofData> InnerDomain::get_surface_dof_vector_for_boundary_id(
     unsigned int b_id) {
   std::vector<InterfaceDofData> ret;
   std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
@@ -267,7 +267,7 @@ std::vector<InterfaceDofData> NumericProblem::get_surface_dof_vector_for_boundar
       bool found_one = false;
       for (unsigned int face = 0; face < 6; face++) {
         if (cell->face(face)->boundary_id() == b_id && found_one) {
-          print_info("NumericProblem::get_surface_dof_vector_for_boundary_id", "There was an error!", false, LoggingLevel::PRODUCTION_ALL);
+          print_info("InnerDomain::get_surface_dof_vector_for_boundary_id", "There was an error!", false, LoggingLevel::PRODUCTION_ALL);
         }
         if (cell->face(face)->boundary_id() == b_id) {
           found_one = true;
@@ -407,7 +407,7 @@ struct CellwiseAssemblyDataNP {
 
 };
 
-void NumericProblem::assemble_system(unsigned int shift,
+void InnerDomain::assemble_system(unsigned int shift,
     dealii::AffineConstraints<ComplexNumber> * constraints,
     dealii::PETScWrappers::SparseMatrix *matrix,
     NumericVectorDistributed *rhs) {
@@ -429,7 +429,7 @@ void NumericProblem::assemble_system(unsigned int shift,
   matrix->compress(dealii::VectorOperation::add);
 }
 
-void NumericProblem::assemble_system(unsigned int shift,
+void InnerDomain::assemble_system(unsigned int shift,
     dealii::AffineConstraints<ComplexNumber> * constraints,
     dealii::PETScWrappers::MPI::SparseMatrix * matrix,
     NumericVectorDistributed *rhs) {
@@ -451,14 +451,14 @@ void NumericProblem::assemble_system(unsigned int shift,
   matrix->compress(dealii::VectorOperation::add);
 }
 
-void NumericProblem::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs) {
-  print_info("NumericProblem::write_matrix_and_rhs_metrics", "Start", LoggingLevel::DEBUG_ALL);
-  print_info("NumericProblem::write_matrix_and_rhs", "System Matrix l_1 norm: " + std::to_string(matrix->l1_norm()), false, LoggingLevel::PRODUCTION_ALL);
-  print_info("NumericProblem::write_matrix_and_rhs", "RHS L_2 norm:  " + std::to_string(rhs->l2_norm()), false, LoggingLevel::PRODUCTION_ALL);
-  print_info("NumericProblem::write_matrix_and_rhs_metrics", "End");
+void InnerDomain::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs) {
+  print_info("InnerDomain::write_matrix_and_rhs_metrics", "Start", LoggingLevel::DEBUG_ALL);
+  print_info("InnerDomain::write_matrix_and_rhs", "System Matrix l_1 norm: " + std::to_string(matrix->l1_norm()), false, LoggingLevel::PRODUCTION_ALL);
+  print_info("InnerDomain::write_matrix_and_rhs", "RHS L_2 norm:  " + std::to_string(rhs->l2_norm()), false, LoggingLevel::PRODUCTION_ALL);
+  print_info("InnerDomain::write_matrix_and_rhs_metrics", "End");
 }
 
-std::vector<SurfaceCellData> NumericProblem::get_edge_cell_data(BoundaryId first_b_id, BoundaryId second_b_id, unsigned int level) {
+std::vector<SurfaceCellData> InnerDomain::get_edge_cell_data(BoundaryId first_b_id, BoundaryId second_b_id, unsigned int level) {
   std::vector<SurfaceCellData> ret;
   std::vector<DofNumber> dof_indices(fe.dofs_per_cell);
   for(auto cell = dof_handler.begin(); cell != dof_handler.end(); cell++) {
@@ -480,7 +480,7 @@ std::vector<SurfaceCellData> NumericProblem::get_edge_cell_data(BoundaryId first
   return ret;
 }
 
-std::vector<SurfaceCellData> NumericProblem::get_surface_cell_data_for_boundary_id_and_level(BoundaryId b_id, unsigned int level) {
+std::vector<SurfaceCellData> InnerDomain::get_surface_cell_data_for_boundary_id_and_level(BoundaryId b_id, unsigned int level) {
   std::vector<SurfaceCellData> ret;
   for(auto cell : dof_handler) {
     if(cell.at_boundary(b_id)) {
@@ -502,8 +502,8 @@ std::vector<SurfaceCellData> NumericProblem::get_surface_cell_data_for_boundary_
   return ret;
 }
 
-void NumericProblem::output_results(std::string in_filename, NumericVectorLocal in_solution) {
-  print_info("NumericProblem::output_results()", "Start");
+void InnerDomain::output_results(std::string in_filename, NumericVectorLocal in_solution) {
+  print_info("InnerDomain::output_results()", "Start");
   dealii::DataOut<3> data_out;
   data_out.attach_dof_handler(Geometry.inner_domain->dof_handler);
   data_out.add_data_vector(in_solution, "Solution");
@@ -533,5 +533,5 @@ void NumericProblem::output_results(std::string in_filename, NumericVectorLocal 
   data_out.write_vtu(outputvtu);
   
   // write_phase_plot();
-  print_info("NumericProblem::output_results()", "End");
+  print_info("InnerDomain::output_results()", "End");
 }

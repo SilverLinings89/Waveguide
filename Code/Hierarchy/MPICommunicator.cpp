@@ -1,7 +1,7 @@
 #include <deal.II/base/mpi.h>
 #include <mpi.h>
 #include "MPICommunicator.h"
-#include "../Core/NumericProblem.h"
+#include "../Core/InnerDomain.h"
 
 inline unsigned int get_index_for_direction_index(int in_direction) {
   if (in_direction == 1) {

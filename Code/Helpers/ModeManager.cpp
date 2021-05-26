@@ -15,7 +15,7 @@
 #include <vector>
 
 #include <deal.II/base/logstream.h>
-#include "../Core/NumericProblem.h"
+#include "../Core/InnerDomain.h"
 #include "ModeManager.h"
 
 ModeManager::ModeManager() {

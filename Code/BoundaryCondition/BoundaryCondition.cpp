@@ -1,7 +1,7 @@
 #include "./BoundaryCondition.h"
 #include "../Core/GlobalObjects.h"
 #include "../Helpers/staticfunctions.h"
-#include "../Core/NumericProblem.h"
+#include "../Core/InnerDomain.h"
 #include <algorithm>
 
 using namespace dealii;

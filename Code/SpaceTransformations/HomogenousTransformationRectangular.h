@@ -9,7 +9,7 @@
 #include "../Core/Sector.h"
 #include "./SpaceTransformation.h"
 
-class NumericProblem;
+class InnerDomain;
 
 /**
  * \class HomogenousTransformationRectangular
@@ -220,5 +220,5 @@ class HomogenousTransformationRectangular : public SpaceTransformation {
   void Print() const;
 
   ComplexNumber evaluate_for_z_with_sum(double, double,
-                                               NumericProblem *);
+                                               InnerDomain *);
 };

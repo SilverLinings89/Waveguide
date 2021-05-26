@@ -61,7 +61,7 @@
 #include "GlobalObjects.h"
 
 /**
- * \class NumericProblem
+ * \class InnerDomain
  * \brief This class encapsulates all important mechanism for solving a FEM
  * problem. In earlier versions this also included space transformation and
  * computation of materials. Now it only includes FEM essentials and solving the
@@ -77,7 +77,7 @@
  * \author Pascal Kraft
  * \date 03.07.2016
  */
-class NumericProblem {
+class InnerDomain {
  public:
   SquareMeshGenerator mesh_generator;
   HomogenousTransformationRectangular space_transformation;
@@ -92,8 +92,8 @@ class NumericProblem {
   std::set<std::string> constrained_cells;
   std::set<unsigned int> outer_constrained_faces;
 
-  NumericProblem();
-  ~NumericProblem();
+  InnerDomain();
+  ~InnerDomain();
   double evaluate_for_z(double);
   void evaluate();
   void store();

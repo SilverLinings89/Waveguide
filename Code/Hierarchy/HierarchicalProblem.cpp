@@ -2,7 +2,7 @@
 #include "../Helpers/Parameters.h"
 #include "../Core/Types.h"
 #include "../Helpers/staticfunctions.h"
-#include "../Core/NumericProblem.h"
+#include "../Core/InnerDomain.h"
 
 HierarchicalProblem::~HierarchicalProblem() { }
 

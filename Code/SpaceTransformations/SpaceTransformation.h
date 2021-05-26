@@ -11,7 +11,7 @@
 
 using namespace dealii;
 
-class NumericProblem;
+class InnerDomain;
 template <unsigned int Dofs_Per_Sector>
 class Sector;
 

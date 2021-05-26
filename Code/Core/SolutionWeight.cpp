@@ -3,7 +3,7 @@
 
 #include "SolutionWeight.h"
 #include "./GlobalObjects.h"
-#include "NumericProblem.h"
+#include "InnerDomain.h"
 
 template <int dim>
 double SolutionWeight<dim>::value(const Point<dim> &p,

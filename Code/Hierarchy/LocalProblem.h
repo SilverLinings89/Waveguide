@@ -2,7 +2,7 @@
 
 #include <deal.II/lac/petsc_sparse_matrix.h>
 #include "HierarchicalProblem.h"
-#include "../Core/NumericProblem.h"
+#include "../Core/InnerDomain.h"
 #include "../BoundaryCondition/BoundaryCondition.h"
 #include "../BoundaryCondition/HSIESurface.h"
 #include "../BoundaryCondition/PMLSurface.h"

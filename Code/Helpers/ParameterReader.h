@@ -1,7 +1,7 @@
 #pragma once
 
 #include <deal.II/base/parameter_handler.h>
-#include "../Core/NumericProblem.h"
+#include "../Core/InnerDomain.h"
 
 using namespace dealii;
 

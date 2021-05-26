@@ -4,7 +4,7 @@
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/petsc_sparse_matrix.h>
-#include "../Core/NumericProblem.h"
+#include "../Core/InnerDomain.h"
 #include "DofData.h"
 #include "HSIEPolynomial.h"
 #include "../Helpers/staticfunctions.h"

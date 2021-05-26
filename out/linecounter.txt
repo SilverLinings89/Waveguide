@@ -161,8 +161,8 @@ total blank lines : 23441
 .clangd/index/MPICommunicator.h.0F45584E04D9180F.idx, it is a binary file.
 .clangd/index/NonLocalProblem.cpp.EDC0A51433C98BB5.idx, it is a binary file.
 .clangd/index/NonLocalProblem.h.B22D26E29EA3ECB4.idx, it is a binary file.
-.clangd/index/NumericProblem.cpp.135FF9B5688EEBAA.idx, it is a binary file.
-.clangd/index/NumericProblem.h.58DACBD9396E75CD.idx, it is a binary file.
+.clangd/index/InnerDomain.cpp.135FF9B5688EEBAA.idx, it is a binary file.
+.clangd/index/InnerDomain.h.58DACBD9396E75CD.idx, it is a binary file.
 .clangd/index/OutputManager.cpp.AEE82605A100641E.idx, it is a binary file.
 .clangd/index/OutputManager.h.B6A77EA357C4396F.idx, it is a binary file.
 .clangd/index/ParameterReader.cpp.697DC5D53224E655.idx, it is a binary file.
@@ -269,7 +269,7 @@ build/Code/CMakeFiles/Code.dir/build.make, code is 35, comment is 0, blank is 22
 build/Code/CMakeFiles/Code.dir/cmake_clean.cmake, code is 6, comment is 0, blank is 44.
 build/Code/CMakeFiles/Code.dir/cmake_clean_target.cmake, code is 2, comment is 0, blank is 1.
 build/Code/CMakeFiles/Code.dir/Core/GlobalObjects.cpp.o, it is a binary file.
-build/Code/CMakeFiles/Code.dir/Core/NumericProblem.cpp.o, it is a binary file.
+build/Code/CMakeFiles/Code.dir/Core/InnerDomain.cpp.o, it is a binary file.
 build/Code/CMakeFiles/Code.dir/Core/Sector.cpp.o, it is a binary file.
 build/Code/CMakeFiles/Code.dir/Core/SolutionWeight.cpp.o, it is a binary file.
 build/Code/CMakeFiles/Code.dir/CXX.includecache, code is 1, comment is 0, blank is 0.
@@ -502,8 +502,8 @@ Code/CMakeFiles/progress.marks, code is 1, comment is 0, blank is 0.
 Code/CMakeLists.txt, code is 54, comment is 0, blank is 3.
 Code/Core/GlobalObjects.cpp, code is 13, comment is 4, blank is 5.
 Code/Core/GlobalObjects.h, code is 12, comment is 0, blank is 3.
-Code/Core/NumericProblem.cpp, code is 413, comment is 2, blank is 22.
-Code/Core/NumericProblem.h, code is 102, comment is 17, blank is 6.
+Code/Core/InnerDomain.cpp, code is 413, comment is 2, blank is 22.
+Code/Core/InnerDomain.h, code is 102, comment is 17, blank is 6.
 Code/Core/Sector.cpp, code is 397, comment is 0, blank is 54.
 Code/Core/Sector.h, code is 39, comment is 148, blank is 32.
 Code/Core/SolutionWeight.cpp, code is 27, comment is 0, blank is 5.

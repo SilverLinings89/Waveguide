@@ -7,7 +7,7 @@
 #include <utility>
 #include "Enums.h"
 
-class NumericProblem;
+class InnerDomain;
 
 struct LevelGeometry {
   CubeSurfaceTruncationState is_surface_truncated;
@@ -44,7 +44,7 @@ class GeometryManager {
 
   std::array<LevelGeometry,4> levels;
 
-  NumericProblem * inner_domain;
+  InnerDomain * inner_domain;
 
   GeometryManager();
 
