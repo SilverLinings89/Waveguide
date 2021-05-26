@@ -12,6 +12,10 @@
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/solver.h>
 #include <deal.II/lac/vector_operation.h>
+#include <deal.II/numerics/vector_tools_project.h>
+#include <deal.II/numerics/vector_tools_project.templates.h>
+#include <deal.II/numerics/vector_tools_integrate_difference.h>
+#include <deal.II/numerics/vector_tools_interpolate.h>
 #include <deal.II/numerics/data_out_dof_data.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <algorithm>
@@ -28,6 +32,7 @@
 #include "../SpaceTransformations/HomogenousTransformationRectangular.h"
 #include "../Helpers/PointSourceField.h"
 #include "../Solutions/ExactSolutionRamped.h"
+#include "../Solutions/ExactSolutionConjugate.h"
 
 NumericProblem::NumericProblem()
     :
@@ -495,4 +500,38 @@ std::vector<SurfaceCellData> NumericProblem::get_surface_cell_data_for_boundary_
   }
   std::sort(ret.begin(), ret.end(), compareSurfaceCellData);
   return ret;
+}
+
+void NumericProblem::output_results(std::string in_filename, NumericVectorLocal in_solution) {
+  print_info("NumericProblem::output_results()", "Start");
+  dealii::DataOut<3> data_out;
+  data_out.attach_dof_handler(Geometry.inner_domain->dof_handler);
+  data_out.add_data_vector(in_solution, "Solution");
+  std::string filename = GlobalOutputManager.get_numbered_filename(in_filename, GlobalParams.MPI_Rank, "vtu");
+  std::ofstream outputvtu(filename);
+  local_constraints.close();  
+  
+  Function<3,ComplexNumber> * esc;
+  if(GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE) {
+    esc = GlobalParams.source_field;
+  } else {
+    esc = new ExactSolutionConjugate(true, false);
+  }
+  
+  dealii::Vector<ComplexNumber> interpolated_exact_solution(in_solution.size());
+  VectorTools::project(dof_handler, local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *esc, interpolated_exact_solution);
+  
+  data_out.add_data_vector(interpolated_exact_solution, "Exact_Solution");
+  
+  // compute_error(dealii::VectorTools::NormType::L2_norm, esc, output_solution, &data_out);
+  
+  // dealii::Vector<ComplexNumber> error_field(output_solution.size());
+  // for(unsigned int i = 0; i < error_field.size(); i++) {
+  //  error_field[i] = conjugate(interpolated_exact_solution[i]) - output_solution[i];
+  // }
+  data_out.build_patches();
+  data_out.write_vtu(outputvtu);
+  
+  // write_phase_plot();
+  print_info("NumericProblem::output_results()", "End");
 }

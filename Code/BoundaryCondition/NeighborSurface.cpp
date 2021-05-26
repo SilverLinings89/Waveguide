@@ -166,7 +166,6 @@ void NeighborSurface::make_edge_constraints(dealii::AffineConstraints<ComplexNum
     if(Geometry.levels[level].is_surface_truncated[other_boundary]) {
         own_dof_indices = Geometry.levels[level].surfaces[other_boundary]->get_dof_association_by_boundary_id(b_id);
     } else {
-        std::cout << "Reached the internal edge higher level functionality in make_edge_constraints" << std::endl;
         own_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_edge_and_level(b_id, other_boundary, level);
     }
     const unsigned int n_dofs = own_dof_indices.size();
@@ -218,7 +217,6 @@ void NeighborSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern * in_
 void NeighborSurface::fill_sparsity_pattern_for_edge(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constraints) {
     for(unsigned int i = 0; i < 6; i++) {
         if(!(b_id == i || are_opposing_sites(i, b_id))) {
-            std::cout << "Reached for " << i << " on " << b_id << std::endl;
             fill_sparsity_pattern_for_edge_and_neighbor(i, in_dsp, in_constraints);
         }
     }

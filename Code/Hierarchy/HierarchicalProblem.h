@@ -55,7 +55,7 @@ class HierarchicalProblem {
   auto opposing_site_bid(BoundaryId) -> BoundaryId;
 
   virtual void compute_solver_factorization() = 0;
-  virtual void output_results() = 0;
+  void output_results();
   virtual void update_mismatch_vector(BoundaryId) = 0;
   virtual void reinit_rhs() = 0;
   virtual DofOwner get_dof_owner(unsigned int) = 0;

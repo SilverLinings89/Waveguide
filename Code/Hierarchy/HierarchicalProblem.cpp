@@ -53,12 +53,10 @@ void HierarchicalProblem::make_constraints() {
   
   // Inner constraints
   Geometry.inner_domain->make_constraints(&constraints, Geometry.levels[level].inner_first_dof, own_dofs);
-
   // Surface constraints
   for(unsigned int i = 0; i < 6; i++) {
     Geometry.levels[level].surfaces[i]->make_surface_constraints(&constraints);
   }
-
   // Edge constraints
   Geometry.levels[level].surfaces[4]->make_edge_constraints(&constraints, 0);
   Geometry.levels[level].surfaces[4]->make_edge_constraints(&constraints, 1);
@@ -92,4 +90,30 @@ void HierarchicalProblem::make_sparsity_pattern() {
   sp.copy_from(dsp);
   sp.compress();
   print_info("HierarchicalProblem::make_sparsity_patter", "End on level "  + std::to_string(level));
+}
+
+void HierarchicalProblem::output_results() {
+  print_info("Hierarchical::output_results()", "Start");
+
+  NumericVectorLocal in_solution(Geometry.inner_domain->n_dofs);
+  for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
+    in_solution[i] = solution[Geometry.levels[level].inner_first_dof + i];
+  }
+  Geometry.inner_domain->output_results("solution_inner_domain_level" + std::to_string(level) , in_solution);
+
+  if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML) {
+    for(unsigned int i = 0; i < 6; i++){
+      if(Geometry.levels[level].is_surface_truncated[i]){
+        dealii::Vector<ComplexNumber> ds (Geometry.levels[level].surfaces[i]->dof_counter);
+        for(unsigned int index = 0; index < Geometry.levels[level].surfaces[i]->dof_counter; index++) {
+          ds[index] = solution(index + Geometry.levels[level].surface_first_dof[i]);
+        }
+        Geometry.levels[level].surfaces[i]->output_results(ds, "PML_domain_level_" + std::to_string(level));
+      }
+    }
+  }
+
+  child->output_results();
+
+  print_info("Hierarchical::output_results()", "End");
 }

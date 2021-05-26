@@ -40,7 +40,7 @@ void SingleCoreRun::run() {
 
   print_info("SingleCoreRun::run", "Assembling completed", false, LoggingLevel::PRODUCTION_ONE);
   
-  mainProblem->compute_solver_factorization();
+  // mainProblem->compute_solver_factorization();
   
   mainProblem->solve();
   

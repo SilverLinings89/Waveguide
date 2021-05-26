@@ -46,7 +46,7 @@ LocalProblem::LocalProblem() :
     matrix = new dealii::PETScWrappers::MPI::SparseMatrix();
     for(unsigned int i = 0; i < 6; i++) Geometry.levels[0].is_surface_truncated[i] = true;
     if((GlobalParams.prescribe_0_on_input_side || (!GlobalParams.use_tapered_input_signal)) && GlobalParams.Index_in_z_direction == 0) {
-      Geometry.levels[0].is_surface_truncated[4] = false;
+      // Geometry.levels[0].is_surface_truncated[4] = false;
     }
 }
 
@@ -123,6 +123,7 @@ void LocalProblem::reinit() {
   reinit_rhs();
   rhs = dealii::PETScWrappers::MPI::Vector(own_dofs, MPI_COMM_SELF);
   solution.reinit(MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs, false);
+  solution = 0;
   make_constraints();
   constraints.close();
   make_sparsity_pattern();
@@ -137,15 +138,16 @@ void LocalProblem::initialize_own_dofs() {
 }
 
 void LocalProblem::solve() {
-  // print_info("LocalProblem::solve", "Start");
-  // print_info("LocalProblem::solve", "Norm before: " + std::to_string(solution.l2_norm()), false, LoggingLevel::DEBUG_ONE);
-  // constraints.set_zero(solution);
+  std::cout << "Matrix l2 norm: " << matrix->linfty_norm() << std::endl;
+  print_info("LocalProblem::solve", "Start");
+  print_info("LocalProblem::solve", "Solution norm before: " + std::to_string(solution.l2_norm()), false, LoggingLevel::DEBUG_ONE);
+  print_info("LocalProblem::solve", "RHS norm before: " + std::to_string(rhs.l2_norm()), false, LoggingLevel::DEBUG_ONE);
   Timer timer1;
   timer1.start ();
   // dealii::PETScWrappers::MPI::Vector temp_rhs = *rhs;
-  constraints.set_zero(solution);
-  solver.solve(*matrix, solution, rhs);
+  solution = 0;
   constraints.distribute(solution);
+  solver.solve(*matrix, solution, rhs);
   timer1.stop();
   // print_info("LocalProblem::solve", "Elapsed CPU time: " + std::to_string(timer1.cpu_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
   // print_info("LocalProblem::solve", "Elapsed walltime: " + std::to_string(timer1.wall_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
@@ -157,7 +159,9 @@ void LocalProblem::solve() {
   // PetscViewerPushFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)),PETSC_VIEWER_ASCII_INFO);
   // MatView(fact,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
   // PetscViewerPopFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
-  // print_info("LocalProblem::solve", "End");
+  print_info("LocalProblem::solve", "Solution norm after: " + std::to_string(solution.l2_norm()), false, LoggingLevel::DEBUG_ONE);
+  print_info("LocalProblem::solve", "RHS norm after: " + std::to_string(rhs.l2_norm()), false, LoggingLevel::DEBUG_ONE);
+  print_info("LocalProblem::solve", "End");
 }
 
 void LocalProblem::initialize_index_sets() {
@@ -183,71 +187,6 @@ dealii::Vector<ComplexNumber> LocalProblem::get_local_vector_from_global() {
   }
   print_info("LocalProblem::get_local_vector_from_global", "End");
   return ret;
-}
-
-void LocalProblem::output_results() {
-  print_info("LocalProblem::output_results()", "Start");
-  dealii::DataOut<3> data_out;
-  dealii::Vector<ComplexNumber> output_solution = get_local_vector_from_global();
-  data_out.attach_dof_handler(Geometry.inner_domain->dof_handler);
-  data_out.add_data_vector(output_solution, "Solution");
-  std::string filename = GlobalOutputManager.get_numbered_filename("solution", GlobalParams.MPI_Rank, "vtu");
-  std::ofstream outputvtu(filename);
-  Geometry.inner_domain->local_constraints.close();  
-  
-  Function<3,ComplexNumber> * esc;
-  if(GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE) {
-    esc = GlobalParams.source_field;
-  } else {
-    esc = new ExactSolutionConjugate(true, false);
-  }
-  
-  dealii::Vector<ComplexNumber> interpolated_exact_solution(output_solution.size());
-  VectorTools::project(Geometry.inner_domain->dof_handler, Geometry.inner_domain->local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *esc, interpolated_exact_solution);
-  
-  data_out.add_data_vector(interpolated_exact_solution, "Exact_Solution");
-  
-  // compute_error(dealii::VectorTools::NormType::L2_norm, esc, output_solution, &data_out);
-  
-  // dealii::Vector<ComplexNumber> error_field(output_solution.size());
-  // for(unsigned int i = 0; i < error_field.size(); i++) {
-  //  error_field[i] = conjugate(interpolated_exact_solution[i]) - output_solution[i];
-  // }
-  for( unsigned int i = 0; i < GlobalParams.NumberProcesses; i++) {
-    MPI_Barrier(MPI_COMM_WORLD);
-    if(rank == 0) {
-      std::cout << rank << std::endl;
-    }
-    if(i == rank) {
-      // data_out.add_data_vector(error_field, "error");
-      std::cout << "F" << std::endl;
-      MPI_Barrier(MPI_COMM_WORLD);
-      data_out.build_patches();
-      std::cout << "G" << std::endl;
-      MPI_Barrier(MPI_COMM_WORLD);
-      data_out.write_vtu(outputvtu);
-      std::cout << "F" << std::endl;
-    } else {
-      MPI_Barrier(MPI_COMM_WORLD);
-      MPI_Barrier(MPI_COMM_WORLD);
-      MPI_Barrier(MPI_COMM_WORLD);
-    }
-  }
-  /**
-  write_phase_plot();
-  if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML) {
-    for(unsigned int i = 0; i < 6; i++){
-      if(Geometry.levels[0].is_surface_truncated[i]){
-        dealii::Vector<ComplexNumber> ds (surfaces[i]->dof_counter);
-        for(unsigned int index = 0; index < Geometry.levels[0].surfaces[i]->dof_counter; index++) {
-          ds[index] = solution(index + Geometry.levels[0].surface_first_dof[i]);
-        }
-        Geometry.levels[0].surfaces[i]->output_results(ds, "PML_domain");
-      }
-    }
-  }
-  **/
-  print_info("LocalProblem::output_results()", "End");
 }
 
 auto LocalProblem::write_phase_plot() -> void {
@@ -347,7 +286,7 @@ void LocalProblem::update_mismatch_vector(BoundaryId in_bid) {
   }
   solution.compress(VectorOperation::insert);
   matrix->vmult(rhs_mismatch, solution);
-  std::cout << "RHS Mismatch on is " << rhs_mismatch.l2_norm() << " for input norm " << solution.l2_norm() << std::endl; 
+  std::cout << "RHS Mismatch local for bid " << in_bid << " is " << rhs_mismatch.l2_norm() << " for input norm " << solution.l2_norm() << std::endl; 
 }
 
 void LocalProblem::compute_solver_factorization() {
@@ -356,6 +295,7 @@ void LocalProblem::compute_solver_factorization() {
   timer1.start();
   solve();
   timer1.stop();
+  solution = 0;
   // print_info("LocalProblem::compute_solver_factorization", "Walltime: " + std::to_string(timer1.wall_time()) , true, LoggingLevel::PRODUCTION_ONE);
 }
 

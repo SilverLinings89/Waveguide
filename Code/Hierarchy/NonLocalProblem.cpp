@@ -312,10 +312,12 @@ void NonLocalProblem::apply_sweep(Vec x_in, Vec x_out) {
     }
   }
   
+  std::cout << "In center for " << rank << std::endl;
   setChildRhsComponentsFromU(); // sets rhs in child.
   child->solve(); // applies H^{-1} or S^{-1}.
   propagate_up(); // updates u.
-  
+  std::cout << "After center for " << rank << std::endl;
+
   if(is_lowest_in_sweeping_direction()) {
     std::vector<ComplexNumber> rhs_values = LowerBlockProduct();
     send_local_upper_dofs(rhs_values);
@@ -380,9 +382,9 @@ void NonLocalProblem::initialize_index_sets() {
   lower_interface_dofs = compute_interface_dof_set(lower_sweeping_interface_id);
   upper_interface_dofs = compute_interface_dof_set(upper_sweeping_interface_id);
 
+  initialize_own_dofs();
   locally_owned_dofs_index_array = new PetscInt[own_dofs.n_elements()];
   get_petsc_index_array_from_index_set(locally_owned_dofs_index_array, own_dofs);
-  initialize_own_dofs();
 }
 
 void NonLocalProblem::initialize_own_dofs() {
@@ -656,15 +658,6 @@ void NonLocalProblem::compute_solver_factorization() {
   // child->output_results();
 }
 
-void NonLocalProblem::output_results() {
-  /**
-  for(unsigned int dof = 0; dof < Geometry.inner_domain->n_dofs; dof++) {
-    get_local_problem()->solution[dof] = solution[Geometry.levels[level].inner_first_dof + dof];
-  }
-  get_local_problem()->output_results();
-  **/ 
-}
-
 std::vector<ComplexNumber> NonLocalProblem::UpperBlockProductAfterH() {
   IndexSet is = lower_interface_dofs;
   setChildRhsComponentsFromU();
@@ -700,6 +693,7 @@ void NonLocalProblem::setSolutionFromVector(Vec x_in) {
 }
 
 void NonLocalProblem::setChildSolutionComponentsFromU() {
+  std::cout << "Before setting child solution in rank " << rank << ":" << child->solution.l2_norm() << std::endl;
   for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
     child->solution[Geometry.levels[level-1].inner_first_dof + i] = u[i];
   }
@@ -710,7 +704,7 @@ void NonLocalProblem::setChildSolutionComponentsFromU() {
       }
     } else {
       if(Geometry.levels[level-1].is_surface_truncated[surface]) {
-        std::vector<InterfaceDofData> vec = Geometry.levels[level].surfaces[surface]->get_dof_association();
+        std::vector<InterfaceDofData> vec = Geometry.levels[level-1].surfaces[surface]->get_dof_association();
         std::sort(vec.begin(), vec.end(), compareDofDataByGlobalIndex);
         unsigned int index = 0;
         for(unsigned int i = 0; i < Geometry.levels[level].surfaces[surface]->dof_counter; i++) {
@@ -725,9 +719,11 @@ void NonLocalProblem::setChildSolutionComponentsFromU() {
     }
   }
   child->solution.compress(VectorOperation::insert);
+  std::cout << "After setting child solution in rank " << rank << ":" << child->solution.l2_norm() << std::endl;
 }
 
 void NonLocalProblem::setChildRhsComponentsFromU() {
+  std::cout << "Before setting child rhs in rank " << rank << ":" << child->rhs.l2_norm() << std::endl;
   for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
     child->rhs[Geometry.levels[level-1].inner_first_dof + i] = u[i];
   }
@@ -745,6 +741,7 @@ void NonLocalProblem::setChildRhsComponentsFromU() {
     }
   }
   child->rhs.compress(VectorOperation::insert);
+  std::cout << "After setting child rhs in rank " << rank << ":" << child->rhs.l2_norm() << std::endl;
 }
 
 DofOwner NonLocalProblem::get_dof_owner(unsigned int dof) {

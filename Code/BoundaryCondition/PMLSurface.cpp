@@ -20,7 +20,6 @@
 PMLSurface::PMLSurface(unsigned int surface, unsigned int in_level, DofNumber in_first_own_index)
   : BoundaryCondition(surface, in_level, Geometry.surface_extremal_coordinate[surface], in_first_own_index),
   fe_nedelec(GlobalParams.Nedelec_element_order) {
-     constraints_made = false; 
      mesh_is_transformed = false;
      outer_boundary_id = surface;
      if(surface % 2 == 0) {
@@ -177,7 +176,6 @@ void PMLSurface::initialize() {
   prepare_mesh();
   init_fe();
   prepare_id_sets_for_boundaries();
-  make_inner_constraints();
   validate_meshes();
 }
 
@@ -362,20 +360,6 @@ dealii::Tensor<2,3,ComplexNumber> PMLSurface::get_pml_tensor(Position in_p) {
       }
   }
   return ret;
-}
-
-void PMLSurface::make_inner_constraints() {
-    IndexSet is(dof_counter);
-    is.add_range(0, dof_counter);
-    constraints.reinit(is);
-    dealii::DoFTools::make_zero_boundary_constraints(dof_h_nedelec, outer_boundary_id, constraints);
-    constraints_made = true;
-}
-
-void PMLSurface::copy_constraints(dealii::AffineConstraints<ComplexNumber> * in_constraints, unsigned int shift) {
-    constraints.shift(shift);
-    in_constraints->merge(constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins, true);
-    constraints.shift(-shift);
 }
 
 struct CellwiseAssemblyDataPML {
@@ -588,11 +572,16 @@ void PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_data, s
   print_info("PMSurface::output_results()", "End");
 }
 
-void PMLSurface::make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints) {
+void PMLSurface::make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * in_constraints) {
     std::vector<InterfaceDofData> own_dof_indices = get_dof_association();
     std::vector<InterfaceDofData> inner_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
     dealii::AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, inner_dof_indices, Geometry.levels[level].n_total_level_dofs);
-    constraints->merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
+    std::vector<InterfaceDofData> outer_dofs = get_dof_association_by_boundary_id(outer_boundary_id);
+    for(unsigned int i = 0; i < outer_dofs.size(); i++) {
+      new_constraints.add_line(outer_dofs[i].index);
+      new_constraints.set_inhomogeneity(outer_dofs[i].index, ComplexNumber(0,0));
+    }
+    in_constraints->merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
 }
 
 void PMLSurface::make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) {
