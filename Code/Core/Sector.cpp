@@ -1,6 +1,3 @@
-#ifndef SectorFlagCPP
-#define SectorFlagCPP
-
 #include "Sector.h"
 #include "../GlobalObjects/GlobalObjects.h"
 #include <deal.II/base/tensor.h>
@@ -447,5 +444,3 @@ void Sector<Dofs_Per_Sector>::setNActiveCells(
 template class Sector<2>;
 
 template class Sector<3>;
-
-#endif

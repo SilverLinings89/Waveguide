@@ -187,6 +187,7 @@ void NonLocalProblem::print_diagnosis_data() {
 
 void NonLocalProblem::assemble() {
   print_info("NonLocalProblem::assemble", "Begin assembly");
+  GlobalTimerManager.switch_context("assemble", level);
   Geometry.inner_domain->assemble_system(Geometry.levels[level].inner_first_dof, &constraints, matrix, &rhs);
   print_info("NonLocalProblem::assemble", "Inner assembly done. Assembling boundary method contributions.");
   for(unsigned int i = 0; i< 6; i++) {
@@ -215,7 +216,7 @@ dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
 }
 
 void NonLocalProblem::solve() {
-  
+  GlobalTimerManager.switch_context("solve", level);
   constraints.set_zero(solution);
   
   KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc),nullptr);
@@ -333,6 +334,7 @@ void NonLocalProblem::reinit() {
 }
 
 void NonLocalProblem::initialize() {
+  GlobalTimerManager.switch_context("initialize", level);
   child->initialize();
   n_procs_in_sweep = dealii::Utilities::MPI::n_mpi_processes(GlobalMPI.communicators_by_level[level]);
   rank = dealii::Utilities::MPI::this_mpi_process(GlobalMPI.communicators_by_level[level]);

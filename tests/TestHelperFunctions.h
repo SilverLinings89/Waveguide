@@ -14,6 +14,7 @@ GeometryManager Geometry;
 MPICommunicator GlobalMPI;
 ModeManager GlobalModeManager;
 OutputManager GlobalOutputManager;
+TimerManager GlobalTimerManager;
 std::string solutionpath = "";
 std::ofstream log_stream;
 std::string constraints_filename = "constraints.log";

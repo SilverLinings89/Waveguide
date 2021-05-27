@@ -45,7 +45,7 @@ void SingleCoreRun::run() {
   mainProblem->solve();
   
   mainProblem->output_results();
-  
+  GlobalTimerManager.write_output();
   print_info("SingleCoreRun::run", "End", false, LoggingLevel::PRODUCTION_ONE);
 }
 

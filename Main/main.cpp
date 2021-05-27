@@ -14,6 +14,7 @@
 #include "../Code/Core/Sector.h"
 #include "../Code/Helpers/PointVal.h"
 #include "../Code/GlobalObjects/OutputManager.h"
+#include "../Code/GlobalObjects/TimerManager.h"
 #include "../Code/Solutions/ExactSolution.h"
 #include "../Code/Core/SolutionWeight.h"
 #include "../Code/OutputGenerators/Console/GradientTable.h"
@@ -44,6 +45,7 @@ GeometryManager Geometry;
 MPICommunicator GlobalMPI;
 ModeManager GlobalModeManager;
 OutputManager GlobalOutputManager;
+TimerManager GlobalTimerManager;
 
 int main(int argc, char *argv[]) {
   std::string run_file = "../Parameters/Run/base.prm";

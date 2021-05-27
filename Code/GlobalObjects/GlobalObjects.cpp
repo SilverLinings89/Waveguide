@@ -19,4 +19,6 @@ void initialize_global_variables(const std::string run_file, const std::string c
   GlobalModeManager.load();
 
   GlobalOutputManager.initialize();
+
+  GlobalTimerManager.initialize();
 }

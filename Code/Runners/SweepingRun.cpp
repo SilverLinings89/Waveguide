@@ -46,7 +46,7 @@ void SweepingRun::run() {
     mainProblem->compute_solver_factorization();
 
     mainProblem->solve();
-
+    GlobalTimerManager.write_output();
     mainProblem->output_results();
     print_info("Simulation::run", "End", true, LoggingLevel::PRODUCTION_ONE);
 }

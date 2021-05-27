@@ -81,6 +81,7 @@ dealii::IndexSet LocalProblem::compute_interface_dof_set(BoundaryId interface_id
 
 void LocalProblem::initialize() {
   print_info("LocalProblem::initialize", "Start");
+  GlobalTimerManager.switch_context("initialize", level);
   initialize_own_dofs();
   print_info("LocalProblem::initialize", "Number of local dofs: " + std::to_string(Geometry.levels[0].n_local_dofs) , false, LoggingLevel::DEBUG_ALL);
   for(unsigned int i = 0; i < 6; i++) {
@@ -105,6 +106,7 @@ void LocalProblem::validate() {
 
 void LocalProblem::assemble() {
   Geometry.inner_domain->assemble_system(0, &constraints, matrix, &rhs);
+  GlobalTimerManager.switch_context("assemble", level);
   for (unsigned int surface = 0; surface < 6; surface++) {
     if(Geometry.levels[0].is_surface_truncated[surface]) {
       Geometry.levels[0].surfaces[surface]->fill_matrix(matrix, &rhs, &constraints);
@@ -138,6 +140,7 @@ void LocalProblem::initialize_own_dofs() {
 }
 
 void LocalProblem::solve() {
+  GlobalTimerManager.switch_context("solve", level);
   print_info("LocalProblem::solve", "Start");
   print_info("LocalProblem::solve", "Solution norm before: " + std::to_string(solution.l2_norm()), false, LoggingLevel::DEBUG_ONE);
   print_info("LocalProblem::solve", "RHS norm before: " + std::to_string(rhs.l2_norm()), false, LoggingLevel::DEBUG_ONE);
