@@ -80,8 +80,8 @@ void InnerDomain::make_grid() {
   repetitions.push_back(GlobalParams.Cells_in_x);
   repetitions.push_back(GlobalParams.Cells_in_y);
   repetitions.push_back(GlobalParams.Cells_in_z);
-  std::string m = "Cells: " + std::to_string(GlobalParams.Cells_in_x) + " x " + std::to_string(GlobalParams.Cells_in_y) + " x " + std::to_string(GlobalParams.Cells_in_z) + "\nGeometry: [" + std::to_string(Geometry.local_x_range.first) + "," + std::to_string(Geometry.local_x_range.second);
-  m += "] x [" + std::to_string(Geometry.local_y_range.first) + "," + std::to_string(Geometry.local_y_range.second) + "] x [" + std::to_string(Geometry.local_z_range.first) + "," + std::to_string(Geometry.local_z_range.second) + "]\n";
+  std::string m = "Cells: " + std::to_string(GlobalParams.Cells_in_x) + " x " + std::to_string(GlobalParams.Cells_in_y) + " x " + std::to_string(GlobalParams.Cells_in_z) + " Geometry: [" + std::to_string(Geometry.local_x_range.first) + "," + std::to_string(Geometry.local_x_range.second);
+  m += "] x [" + std::to_string(Geometry.local_y_range.first) + "," + std::to_string(Geometry.local_y_range.second) + "] x [" + std::to_string(Geometry.local_z_range.first) + "," + std::to_string(Geometry.local_z_range.second) + "]";
   print_info("InnerDomain::make_grid", m, false, LoggingLevel::PRODUCTION_ALL);
   Position lower(Geometry.local_x_range.first, Geometry.local_y_range.first,
       Geometry.local_z_range.first);

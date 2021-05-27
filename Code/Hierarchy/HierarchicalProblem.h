@@ -27,6 +27,7 @@ class HierarchicalProblem {
   NumericVectorDistributed solution;
   NumericVectorDistributed rhs;
   NumericVectorDistributed rhs_mismatch;
+  NumericVectorDistributed final_rhs_mismatch;
   DofCount dofs_process_above;
   DofCount dofs_process_below;
   unsigned int n_procs_in_sweep;
@@ -53,6 +54,7 @@ class HierarchicalProblem {
   virtual auto get_center() -> Position const = 0;
   virtual auto reinit() -> void = 0;
   auto opposing_site_bid(BoundaryId) -> BoundaryId;
+  void compute_final_rhs_mismatch();
 
   virtual void compute_solver_factorization() = 0;
   void output_results();

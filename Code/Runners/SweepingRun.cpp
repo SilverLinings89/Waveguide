@@ -48,6 +48,7 @@ void SweepingRun::run() {
     mainProblem->solve();
     GlobalTimerManager.write_output();
     mainProblem->output_results();
+    MPI_Barrier(MPI_COMM_WORLD);
     print_info("Simulation::run", "End", true, LoggingLevel::PRODUCTION_ONE);
 }
 

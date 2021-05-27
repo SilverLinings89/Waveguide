@@ -5,12 +5,14 @@
 #include "LocalProblem.h"
 #include "../Core/InnerDomain.h"
 #include <deal.II/base/index_set.h>
+#include <deal.II/base/mpi.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/petsc_solver.h>
 #include <deal.II/lac/solver_gmres.h>
 #include <deal.II/lac/sparsity_pattern.h>
 #include <deal.II/lac/petsc_precondition.h>
 #include <mpi.h>
+#include <petscksp.h>
 #include <petscsystypes.h>
 
 #include <algorithm>
@@ -18,6 +20,14 @@
 #include <ratio>
 #include <string>
 #include <vector>
+
+static PetscErrorCode MonitorError(KSP ksp, PetscInt its, PetscReal rnorm, void *ctx)
+{
+  if (dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0) {
+    std::cout << "Residual in step " << std::to_string(its) << "  : " << std::to_string(rnorm) << std::endl;
+  }
+  return(0);
+}
 
 double l2_norm_of_vector(std::vector<ComplexNumber> input) {
   double norm = 0;
@@ -221,6 +231,7 @@ void NonLocalProblem::solve() {
   
   KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc),nullptr);
   KSPSetTolerances(ksp, 0.000001, 1.0, 1000, 30);
+  KSPMonitorSet(ksp, MonitorError, nullptr, nullptr);
   KSPSetUp(ksp);
   PetscErrorCode ierr = KSPSolve(ksp, rhs, solution);
   
@@ -248,7 +259,6 @@ void NonLocalProblem::propagate_up(){
 }
 
 void NonLocalProblem::apply_sweep(Vec x_in, Vec x_out) {
-  print_info("NonLocalProblem::apply_sweep", "Start");
   MPI_Barrier(MPI_COMM_WORLD);
   /**
    * Algorithm for 4 procs:
@@ -309,7 +319,6 @@ void NonLocalProblem::apply_sweep(Vec x_in, Vec x_out) {
   VecAssemblyEnd(x_out);
   MPI_Barrier(MPI_COMM_WORLD);
   delete[] values;
-  print_info("NonLocalProblem::apply_sweep", "End");
 }
 
 void NonLocalProblem::reinit() {
@@ -328,6 +337,7 @@ void NonLocalProblem::reinit() {
   }
   solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   rhs_mismatch.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  final_rhs_mismatch.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   matrix->reinit(Geometry.levels[level].dof_distribution[rank], Geometry.levels[level].dof_distribution[rank], sp, GlobalMPI.communicators_by_level[level]);
   // matrix->reinit(MPI_COMM_WORLD, Geometry.levels[level].n_total_level_dofs, Geometry.levels[level].n_total_level_dofs, Geometry.levels[level].n_local_dofs, Geometry.levels[level].n_local_dofs, Geometry.inner_domain->dof_handler.max_couplings_between_dofs(), false,  100);
   print_info("Nonlocal reinit", "Reinit done");

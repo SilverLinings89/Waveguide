@@ -1,4 +1,5 @@
 #include "HierarchicalProblem.h"
+#include <string>
 #include "../Helpers/Parameters.h"
 #include "../Core/Types.h"
 #include "../Helpers/staticfunctions.h"
@@ -93,8 +94,8 @@ void HierarchicalProblem::make_sparsity_pattern() {
 }
 
 void HierarchicalProblem::output_results() {
-  print_info("Hierarchical::output_results()", "Start");
-
+  print_info("Hierarchical::output_results()", "Start on level " + std::to_string(level));
+  compute_final_rhs_mismatch();
   NumericVectorLocal in_solution(Geometry.inner_domain->n_dofs);
   for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
     in_solution[i] = solution[Geometry.levels[level].inner_first_dof + i];
@@ -113,7 +114,31 @@ void HierarchicalProblem::output_results() {
     }
   }
 
-  child->output_results();
+  for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
+    in_solution[i] = final_rhs_mismatch[Geometry.levels[level].inner_first_dof + i];
+  }
+  Geometry.inner_domain->output_results("rhs_mismatch" + std::to_string(level) , in_solution);
 
-  print_info("Hierarchical::output_results()", "End");
+  if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML) {
+    for(unsigned int i = 0; i < 6; i++){
+      if(Geometry.levels[level].is_surface_truncated[i]){
+        dealii::Vector<ComplexNumber> ds (Geometry.levels[level].surfaces[i]->dof_counter);
+        for(unsigned int index = 0; index < Geometry.levels[level].surfaces[i]->dof_counter; index++) {
+          ds[index] = final_rhs_mismatch(index + Geometry.levels[level].surface_first_dof[i]);
+        }
+        Geometry.levels[level].surfaces[i]->output_results(ds, "PML_domain_rhs_mismatch" + std::to_string(level));
+      }
+    }
+  }
+
+  if(level != 0) {
+    child->output_results();
+  }
+
+  print_info("Hierarchical::output_results()", "End on level " + std::to_string(level));
+}
+
+void HierarchicalProblem::compute_final_rhs_mismatch() {
+  matrix->vmult(final_rhs_mismatch, solution);
+  final_rhs_mismatch -= rhs;
 }

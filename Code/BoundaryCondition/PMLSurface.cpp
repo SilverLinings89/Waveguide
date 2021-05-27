@@ -561,7 +561,6 @@ void PMLSurface::fix_apply_negative_Jacobian_transformation(dealii::Triangulatio
 }
 
 void PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_data, std::string in_filename) {
-  print_info("PMSurface::output_results()", "Start");
   dealii::DataOut<3> data_out;
   data_out.attach_dof_handler(dof_h_nedelec);
   data_out.add_data_vector(in_data, "Solution");
@@ -569,7 +568,6 @@ void PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_data, s
   std::ofstream outputvtu(filename);
   data_out.build_patches();
   data_out.write_vtu(outputvtu);
-  print_info("PMSurface::output_results()", "End");
 }
 
 void PMLSurface::make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * in_constraints) {

@@ -125,6 +125,7 @@ void LocalProblem::reinit() {
   reinit_rhs();
   rhs = dealii::PETScWrappers::MPI::Vector(own_dofs, MPI_COMM_SELF);
   solution.reinit(MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs, false);
+  final_rhs_mismatch.reinit(MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs, false);
   solution = 0;
   make_constraints();
   constraints.close();
@@ -141,9 +142,6 @@ void LocalProblem::initialize_own_dofs() {
 
 void LocalProblem::solve() {
   GlobalTimerManager.switch_context("solve", level);
-  print_info("LocalProblem::solve", "Start");
-  print_info("LocalProblem::solve", "Solution norm before: " + std::to_string(solution.l2_norm()), false, LoggingLevel::DEBUG_ONE);
-  print_info("LocalProblem::solve", "RHS norm before: " + std::to_string(rhs.l2_norm()), false, LoggingLevel::DEBUG_ONE);
   Timer timer1;
   timer1.start ();
   // dealii::PETScWrappers::MPI::Vector temp_rhs = *rhs;
@@ -161,9 +159,6 @@ void LocalProblem::solve() {
   // PetscViewerPushFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)),PETSC_VIEWER_ASCII_INFO);
   // MatView(fact,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
   // PetscViewerPopFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
-  print_info("LocalProblem::solve", "Solution norm after: " + std::to_string(solution.l2_norm()), false, LoggingLevel::DEBUG_ONE);
-  print_info("LocalProblem::solve", "RHS norm after: " + std::to_string(rhs.l2_norm()), false, LoggingLevel::DEBUG_ONE);
-  print_info("LocalProblem::solve", "End");
 }
 
 void LocalProblem::initialize_index_sets() {
