@@ -71,7 +71,7 @@ private:
 
   NumericVectorLocal extract_local_upper_dofs();
 
-  NumericVectorLocal extract_local_lower_dofs();
+  std::vector<ComplexNumber> extract_local_lower_dofs();
 
   void send_local_lower_dofs(std::vector<ComplexNumber>);
 

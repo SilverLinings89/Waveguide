@@ -59,7 +59,17 @@ void HierarchicalProblem::make_constraints() {
     Geometry.levels[level].surfaces[i]->make_surface_constraints(&constraints);
   }
   // Edge constraints
-  Geometry.levels[level].surfaces[4]->make_edge_constraints(&constraints, 0);
+
+  for(unsigned int i = 0; i< 6; i++) {
+    for(unsigned int j = i+1; j < 6; j++) {
+      if(!are_opposing_sites(i, j)) {
+        if((!Geometry.levels[level].surface_type[i] == SurfaceType::OPEN_SURFACE) && (!Geometry.levels[level].surface_type[j] == SurfaceType::OPEN_SURFACE)) {
+          Geometry.levels[level].surfaces[i]->make_edge_constraints(&constraints, j);
+        }
+      }
+    }
+  }
+  /**
   Geometry.levels[level].surfaces[4]->make_edge_constraints(&constraints, 1);
   Geometry.levels[level].surfaces[4]->make_edge_constraints(&constraints, 2);
   Geometry.levels[level].surfaces[4]->make_edge_constraints(&constraints, 3);
@@ -71,7 +81,7 @@ void HierarchicalProblem::make_constraints() {
   Geometry.levels[level].surfaces[5]->make_edge_constraints(&constraints, 1);
   Geometry.levels[level].surfaces[5]->make_edge_constraints(&constraints, 2);
   Geometry.levels[level].surfaces[5]->make_edge_constraints(&constraints, 3);
-
+  **/
   constraints.close();
   
   print_info("HierarchicalProblem::make_constraints", "End");

@@ -91,6 +91,7 @@ class InnerDomain {
   dealii::IndexSet local_dof_indices;
   std::set<std::string> constrained_cells;
   std::set<unsigned int> outer_constrained_faces;
+  
 
   InnerDomain();
   ~InnerDomain();

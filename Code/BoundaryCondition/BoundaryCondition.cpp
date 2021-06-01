@@ -131,7 +131,9 @@ void BoundaryCondition::fill_sparsity_pattern(dealii::DynamicSparsityPattern * i
 }
 
 void BoundaryCondition::make_edge_sparsity_pattern(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * in_constraints, dealii::DynamicSparsityPattern * in_dsp) {
-  std::vector<SurfaceCellData> own_vector = get_surface_cell_data(in_bid);
-  std::vector<SurfaceCellData> other_vector = Geometry.levels[level].surfaces[in_bid]->get_surface_cell_data(b_id);
-  fill_sparsity_pattern_with_surface_data_vectors(own_vector, other_vector, in_dsp, in_constraints);
+  if(Geometry.levels[level].surface_type[b_id] != SurfaceType::OPEN_SURFACE && Geometry.levels[level].surface_type[in_bid] != SurfaceType::OPEN_SURFACE) {
+    std::vector<SurfaceCellData> own_vector = get_surface_cell_data(in_bid);
+    std::vector<SurfaceCellData> other_vector = Geometry.levels[level].surfaces[in_bid]->get_surface_cell_data(b_id);
+    fill_sparsity_pattern_with_surface_data_vectors(own_vector, other_vector, in_dsp, in_constraints);
+  }
 }

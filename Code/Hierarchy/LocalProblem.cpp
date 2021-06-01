@@ -275,8 +275,10 @@ auto LocalProblem::compare_to_exact_solution() -> void {
 void LocalProblem::update_mismatch_vector(BoundaryId in_bid) {
   rhs_mismatch.reinit( MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs);
   for(unsigned int i = 0; i < Geometry.levels[0].surfaces[in_bid]->dof_counter; i++) {
-    solution[Geometry.levels[0].surface_first_dof[in_bid] + i] = 0;
+    const unsigned int index = Geometry.levels[0].surface_first_dof[in_bid] + i;
+    solution[index] = 0;
   }
+  
   std::vector<InterfaceDofData> current = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id(in_bid);
   for(unsigned int i = 0; i < current.size(); i++) {
     solution[current[i].index] = 0;

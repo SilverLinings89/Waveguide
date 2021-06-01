@@ -4,6 +4,7 @@
 #include "../Core/Enums.h"
 #include "GeometryManager.h"
 #include "../Core/InnerDomain.h"
+#include "../BoundaryCondition/EmptySurface.h"
 #include "../BoundaryCondition/HSIESurface.h"
 #include "../BoundaryCondition/PMLSurface.h"
 #include "../BoundaryCondition/NeighborSurface.h"
@@ -139,10 +140,16 @@ void GeometryManager::initialize_local_level() {
   unsigned int counter = inner_domain->n_dofs;
   for(unsigned int i = 0; i < 6; i++) {
     levels[0].surface_first_dof[i] = counter;
-    if(GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE) {
-      levels[0].surfaces[i] = std::shared_ptr<BoundaryCondition>(new HSIESurface(i, 0, counter));
-    } else {
-      levels[0].surfaces[i] = std::shared_ptr<BoundaryCondition>(new PMLSurface(i, 0, counter));
+    if(i == 4 && GlobalParams.NumberProcesses > 1 && GlobalParams.Index_in_z_direction != 0) {
+      levels[0].surfaces[i] = std::shared_ptr<BoundaryCondition>(new EmptySurface(i,0,counter));
+      levels[0].surface_type[i] = SurfaceType::OPEN_SURFACE;
+    } else  {
+      levels[0].surface_type[i] = SurfaceType::ABC_SURFACE;
+      if(GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE) {
+        levels[0].surfaces[i] = std::shared_ptr<BoundaryCondition>(new HSIESurface(i, 0, counter));
+      } else {
+        levels[0].surfaces[i] = std::shared_ptr<BoundaryCondition>(new PMLSurface(i, 0, counter));
+      }
     }
     levels[0].surfaces[i]->initialize();
     counter += levels[0].surfaces[i]->dof_counter;
@@ -192,12 +199,14 @@ void GeometryManager::perform_initialization(unsigned int in_level) {
   for(unsigned int surf = 0; surf < 6; surf++) {
     levels[in_level].surface_first_dof[surf] = first_dof;
     if(levels[in_level].is_surface_truncated[surf]) {
+      levels[in_level].surface_type[surf] = SurfaceType::ABC_SURFACE;
       if(GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE) {
         levels[in_level].surfaces[surf] = std::make_shared<HSIESurface>(surf, in_level, first_dof);
       } else {
         levels[in_level].surfaces[surf] = std::make_shared<PMLSurface>(surf, in_level, first_dof);
       }
     } else {
+      levels[in_level].surface_type[surf] = SurfaceType::NEIGHBOR_SURFACE;
       levels[in_level].surfaces[surf] = std::make_shared<NeighborSurface>(surf, in_level, first_dof);
     }
     levels[in_level].surfaces[surf]->initialize();

@@ -12,6 +12,7 @@
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/solver.h>
 #include <deal.II/lac/vector_operation.h>
+#include <deal.II/numerics/vector_tools_boundary.h>
 #include <deal.II/numerics/vector_tools_project.h>
 #include <deal.II/numerics/vector_tools_project.templates.h>
 #include <deal.II/numerics/vector_tools_integrate_difference.h>
@@ -334,7 +335,11 @@ struct CellwiseAssemblyDataNP {
   DofHandler3D::active_cell_iterator cell;
   DofHandler3D::active_cell_iterator end_cell;
   ExactSolutionRamped exact_solution_ramped;
+  bool has_input_interface = false;
   const FEValuesExtractors::Vector fe_field;
+  Vector<ComplexNumber> incoming_wave_field;
+  IndexSet constrained_dofs;
+
   CellwiseAssemblyDataNP(dealii::FE_NedelecSZ<3> * fe, DofHandler3D * dof_handler):
   quadrature_formula(GlobalParams.Nedelec_element_order + 2),
   fe_values(*fe, quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points),
@@ -348,7 +353,8 @@ struct CellwiseAssemblyDataNP {
   local_dof_indices(dofs_per_cell),
   fe_field(0),
   exact_solution_ramped(true, false)
-  {    
+  { 
+    has_input_interface = GlobalParams.Index_in_z_direction == 0;
     cell_rhs = 0;
     for (unsigned int i = 0; i < 3; i++) {
       for (unsigned int j = 0; j < 3; j++) {
@@ -361,6 +367,23 @@ struct CellwiseAssemblyDataNP {
     }
     cell = dof_handler->begin_active();
     end_cell = dof_handler->end();
+    if(has_input_interface) {
+      ExactSolution es(true, false);
+      IndexSet owned_dofs(dof_handler->n_dofs());
+      owned_dofs.add_range(0, dof_handler->n_dofs());
+      AffineConstraints<ComplexNumber> constraints_local(owned_dofs);
+      VectorTools::project_boundary_values_curl_conforming_l2(*dof_handler, 0, es, 4, constraints_local);
+      incoming_wave_field.reinit(owned_dofs.size());
+      constrained_dofs.set_size(dof_handler->n_dofs());
+      for(unsigned int i = 0; i < owned_dofs.size(); i++) {
+        if(constraints_local.is_constrained(i)) {
+          incoming_wave_field[i] = constraints_local.get_inhomogeneity(i);
+          constrained_dofs.add_index(i);
+        } else {
+          incoming_wave_field[i] = 0;
+        }
+      }
+    }
   };
 
   void prepare_for_current_q_index(unsigned int q_index) {
@@ -371,13 +394,15 @@ struct CellwiseAssemblyDataNP {
     } else {
       epsilon = transformation * eps_out;
     }
-
+    std::vector<unsigned int> dof_indices(dofs_per_cell);
+    cell->get_dof_indices(dof_indices);
     const double JxW = fe_values.JxW(q_index);
     for (unsigned int i = 0; i < dofs_per_cell; i++) {
       Tensor<1, 3, ComplexNumber> I_Curl;
       Tensor<1, 3, ComplexNumber> I_Val;
       I_Curl = fe_values[fe_field].curl(i, q_index);
       I_Val = fe_values[fe_field].value(i, q_index);
+      /**
       if(GlobalParams.use_tapered_input_signal) {
         Tensor<1,3,ComplexNumber> Ex_Curl = exact_solution_ramped.curl(quadrature_points[q_index]);
         Tensor<1,3,ComplexNumber> Ex_Val;
@@ -385,6 +410,20 @@ struct CellwiseAssemblyDataNP {
           Ex_Val[comp] = exact_solution_ramped.value(quadrature_points[q_index], comp);
         }
         cell_rhs[i] -= I_Curl *  Conjugate_Vector(Ex_Curl) * JxW - (eps_kappa_2 * (I_Val * Conjugate_Vector(Ex_Val)) * JxW);
+      }
+      **/
+      if(cell->at_boundary(4) && has_input_interface) {
+        if(!constrained_dofs.is_element(dof_indices[i])) {
+          for(unsigned int j = 0; j < dofs_per_cell; j++) {
+            if(constrained_dofs.is_element(dof_indices[j])) {
+              Tensor<1, 3, ComplexNumber> J_Curl;
+              Tensor<1, 3, ComplexNumber> J_Val;
+              J_Curl = fe_values[fe_field].curl(j, q_index);
+              J_Val = fe_values[fe_field].value(j, q_index);
+              cell_rhs[i] += incoming_wave_field[dof_indices[j]] * (I_Curl * Conjugate_Vector(J_Curl) * JxW - (eps_kappa_2 * ( I_Val * Conjugate_Vector(J_Val)) * JxW));
+            }
+          }
+        }
       }
       for (unsigned int j = 0; j < dofs_per_cell; j++) {
         Tensor<1, 3, ComplexNumber> J_Curl;
