@@ -13,13 +13,12 @@
 
 class NonLocalProblem: public HierarchicalProblem {
 private:
-  std::array<bool, 6> is_sweeping_hsie_surface;
+
   dealii::IndexSet upper_interface_dofs;
   dealii::IndexSet lower_interface_dofs;
   dealii::SolverControl sc;
   KSP ksp;
-  ComplexNumber * u;
-  std::array<std::vector<std::pair<DofNumber, DofNumber>>,6> coupling_dofs;
+  NumericVectorLocal u;
   ComplexNumber * mpi_cache;
   bool is_mpi_cache_ready;
   PC pc;
@@ -75,7 +74,9 @@ private:
 
   void send_local_lower_dofs(std::vector<ComplexNumber>);
 
-  void receive_local_lower_dofs_and_H();
+  void apply_H_to_u(std::vector<ComplexNumber> u);
+
+  std::vector<ComplexNumber> receive_local_lower_dofs();
 
   void send_local_upper_dofs(std::vector<ComplexNumber>);
 
@@ -89,7 +90,7 @@ private:
 
   void compute_solver_factorization() override;
 
-  void update_mismatch_vector(BoundaryId) override;
+  void update_mismatch_vector(BoundaryId, bool zero_interface) override;
 
   auto UpperBlockProductAfterH() -> std::vector<ComplexNumber>;
 
@@ -111,4 +112,41 @@ private:
 
   auto print_diagnosis_data() -> void;
 
+  // New functions.
+
+  auto reinit_u_vector(NumericVectorLocal * u) -> void;
+
+  auto u_from_x_in(Vec x_in) -> NumericVectorLocal;
+
+  auto S_inv(const NumericVectorLocal & u) -> NumericVectorLocal;
+
+  auto lower_trace(const NumericVectorLocal & u) -> DofFieldTrace;
+
+  auto upper_trace(const NumericVectorLocal & u) -> DofFieldTrace;
+
+  auto send_down(DofFieldTrace trace_values) -> void;
+
+  auto send_up(DofFieldTrace trace_values) -> void;
+
+  auto receive_from_above() -> DofFieldTrace;
+
+  auto receive_from_below() -> DofFieldTrace;
+
+  auto vmult(NumericVectorLocal u) -> NumericVectorLocal;
+
+  auto trace_to_field(DofFieldTrace trace, bool from_lower_interface) -> NumericVectorLocal;
+
+  auto subtract_fields(NumericVectorLocal &a, const NumericVectorLocal &b) -> void;
+
+  auto set_x_out_from_u(Vec * x_out) -> void;
+
+  auto set_child_solution_from_u(const NumericVectorLocal & u) -> void;
+
+  auto set_child_rhs_from_u(const NumericVectorLocal & u, bool add_onto_child_rhs) -> void;
+
+  auto set_u_from_child_solution(NumericVectorLocal * u)-> void;
+
+  auto zero_upper_interface_dofs(NumericVectorLocal * u)-> void;
+
+  void update_u_from_upper_trace(DofFieldTrace trace);
 };

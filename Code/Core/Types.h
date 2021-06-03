@@ -41,6 +41,7 @@ using Mesh                     = dealii::Triangulation<3>;
 using MaterialTensor           = dealii::Tensor<2,3,ComplexNumber>;
 using FaceAngelingData         = std::array<RayAngelingData, 4>;
 using CubeSurfaceTruncationState = std::array<bool, 6>;
+using DofFieldTrace            = std::vector<ComplexNumber>;
 
 const double FLOATING_PRECISION = 0.00001;
 

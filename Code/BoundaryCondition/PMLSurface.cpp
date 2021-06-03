@@ -176,7 +176,7 @@ void PMLSurface::initialize() {
   prepare_mesh();
   init_fe();
   prepare_id_sets_for_boundaries();
-  validate_meshes();
+  // validate_meshes();
 }
 
 void PMLSurface::sort_dofs() {

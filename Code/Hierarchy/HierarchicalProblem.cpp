@@ -152,3 +152,8 @@ void HierarchicalProblem::compute_final_rhs_mismatch() {
   matrix->vmult(final_rhs_mismatch, solution);
   final_rhs_mismatch -= rhs;
 }
+
+void HierarchicalProblem::execute_vmult() {
+  matrix->vmult(temp_solution, solution);
+  solution = temp_solution;
+}

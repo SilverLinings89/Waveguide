@@ -11,7 +11,7 @@ void ParameterReader::declare_parameters() {
         run_prm.declare_entry("perform optimization", "false", Patterns::Bool(), "If true, the code will perform shape optimization.");
         run_prm.declare_entry("solver precision" , "1e-6", Patterns::Double(), "Absolute precision for solver convergence.");
         run_prm.declare_entry("GMRES restart after" , "30", Patterns::Integer(), "Number of steps until GMRES restarts.");
-        run_prm.declare_entry("GMRES maximum steps" , "100", Patterns::Integer(), "Number of maximum GMRES steps until failure.");
+        run_prm.declare_entry("GMRES maximum steps" , "30", Patterns::Integer(), "Number of maximum GMRES steps until failure.");
         run_prm.declare_entry("kappa angle" , "1.0", Patterns::Double(), "Phase of the complex value kappa with norm 1 that is used in HSIEs.");
         run_prm.declare_entry("processes in x" , "1", Patterns::Integer(), "Number of processes in x-direction.");
         run_prm.declare_entry("processes in y" , "1", Patterns::Integer(), "Number of processes in y-direction.");

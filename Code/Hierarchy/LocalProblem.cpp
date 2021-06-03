@@ -125,8 +125,10 @@ void LocalProblem::reinit() {
   reinit_rhs();
   rhs = dealii::PETScWrappers::MPI::Vector(own_dofs, MPI_COMM_SELF);
   solution.reinit(MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs, false);
+  temp_solution.reinit(MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs, false);
   final_rhs_mismatch.reinit(MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs, false);
   solution = 0;
+  temp_solution = 0;
   make_constraints();
   constraints.close();
   make_sparsity_pattern();
@@ -272,19 +274,23 @@ auto LocalProblem::compare_to_exact_solution() -> void {
   myfile.close();
 }
 
-void LocalProblem::update_mismatch_vector(BoundaryId in_bid) {
+void LocalProblem::update_mismatch_vector(BoundaryId in_bid, bool zero_interface) {
+  temp_solution = solution;
   rhs_mismatch.reinit( MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs);
   for(unsigned int i = 0; i < Geometry.levels[0].surfaces[in_bid]->dof_counter; i++) {
     const unsigned int index = Geometry.levels[0].surface_first_dof[in_bid] + i;
-    solution[index] = 0;
+    temp_solution[index] = 0;
   }
   
-  std::vector<InterfaceDofData> current = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id(in_bid);
-  for(unsigned int i = 0; i < current.size(); i++) {
-    solution[current[i].index] = 0;
+  if(zero_interface) {
+    std::vector<InterfaceDofData> current = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id(in_bid);
+    for(unsigned int i = 0; i < current.size(); i++) {
+      temp_solution[current[i].index] = 0;
+    }
   }
-  solution.compress(VectorOperation::insert);
-  matrix->vmult(rhs_mismatch, solution);
+
+  temp_solution.compress(VectorOperation::insert);
+  matrix->vmult(rhs_mismatch, temp_solution);
 }
 
 void LocalProblem::compute_solver_factorization() {
