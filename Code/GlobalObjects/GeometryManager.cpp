@@ -140,6 +140,7 @@ void GeometryManager::initialize_local_level() {
   unsigned int counter = inner_domain->n_dofs;
   for(unsigned int i = 0; i < 6; i++) {
     levels[0].surface_first_dof[i] = counter;
+    
     if(i == 4 && GlobalParams.NumberProcesses > 1 && GlobalParams.Index_in_z_direction != 0) {
       levels[0].surfaces[i] = std::shared_ptr<BoundaryCondition>(new EmptySurface(i,0,counter));
       levels[0].surface_type[i] = SurfaceType::OPEN_SURFACE;

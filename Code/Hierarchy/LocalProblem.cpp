@@ -148,19 +148,11 @@ void LocalProblem::solve() {
   timer1.start ();
   // dealii::PETScWrappers::MPI::Vector temp_rhs = *rhs;
   solution = 0;
-  constraints.distribute(solution);
+  // constraints.set_zero(solution);
   solver.solve(*matrix, solution, rhs);
   timer1.stop();
-  // print_info("LocalProblem::solve", "Elapsed CPU time: " + std::to_string(timer1.cpu_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
-  // print_info("LocalProblem::solve", "Elapsed walltime: " + std::to_string(timer1.wall_time()) + " seconds.", false, LoggingLevel::DEBUG_ONE);
-  // print_info("LocalProblem::solve", "Norm after: " + std::to_string(solution.l2_norm()) + " seconds.", false, LoggingLevel::DEBUG_ALL);
-  // constraints.distribute(solution);
-  // Mat fact;
-  // KSPGetPC(solver.solver_data->ksp,&solver.solver_data->pc);
-  // PCFactorGetMatrix(solver.solver_data->pc,&fact);
-  // PetscViewerPushFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)),PETSC_VIEWER_ASCII_INFO);
-  // MatView(fact,PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
-  // PetscViewerPopFormat(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)fact)));
+
+  solve_counter ++;
 }
 
 void LocalProblem::initialize_index_sets() {
@@ -272,25 +264,6 @@ auto LocalProblem::compare_to_exact_solution() -> void {
     myfile << std::endl;
   }
   myfile.close();
-}
-
-void LocalProblem::update_mismatch_vector(BoundaryId in_bid, bool zero_interface) {
-  temp_solution = solution;
-  rhs_mismatch.reinit( MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs);
-  for(unsigned int i = 0; i < Geometry.levels[0].surfaces[in_bid]->dof_counter; i++) {
-    const unsigned int index = Geometry.levels[0].surface_first_dof[in_bid] + i;
-    temp_solution[index] = 0;
-  }
-  
-  if(zero_interface) {
-    std::vector<InterfaceDofData> current = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id(in_bid);
-    for(unsigned int i = 0; i < current.size(); i++) {
-      temp_solution[current[i].index] = 0;
-    }
-  }
-
-  temp_solution.compress(VectorOperation::insert);
-  matrix->vmult(rhs_mismatch, temp_solution);
 }
 
 void LocalProblem::compute_solver_factorization() {

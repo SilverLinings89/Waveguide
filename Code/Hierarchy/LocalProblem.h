@@ -36,7 +36,7 @@ public:
   void validate();
 
   dealii::Vector<ComplexNumber> get_local_vector_from_global() override;
-
+  
   auto get_center() -> Position const override;
 
   auto reinit() -> void override;
@@ -49,9 +49,7 @@ public:
 
   void compute_solver_factorization() override;
 
-  void update_mismatch_vector(BoundaryId interface, bool zero_interface) override;
-
-  double compute_L2_error();
+   double compute_L2_error();
 
   double compute_error(dealii::VectorTools::NormType, Function<3,ComplexNumber> *, dealii::Vector<ComplexNumber> & , dealii::DataOut<3> *);
 

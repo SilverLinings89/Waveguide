@@ -25,8 +25,8 @@ public:
   dealii::Tensor<2, 3, MathExpression> J;
 
   std::pair<Position2D,double> split_into_triangulation_and_external_part(const Position in_point);
-  static bool is_line_in_x_direction(dealii::internal::DoFHandlerImplementation::Iterators<dealii::DoFHandler<2, 2>, false>::line_iterator line);
-  static bool is_line_in_y_direction(dealii::internal::DoFHandlerImplementation::Iterators<dealii::DoFHandler<2, 2>, false>::line_iterator line);
+  static bool is_line_in_x_direction(dealii::internal::DoFHandlerImplementation::Iterators<2, 2, false>::line_iterator line);
+  static bool is_line_in_y_direction(dealii::internal::DoFHandlerImplementation::Iterators<2, 2, false>::line_iterator line);
   dealii::Tensor<2,3,double> get_J_hat_for_position(const Position2D &) const;  
   auto transform_to_3D_space(Position2D) -> Position;
 };

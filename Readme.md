@@ -1,5 +1,12 @@
 # The 3D Maxwell Project
 
+## Setup
+
+Need Petsc with complex double as numbers. Also Mumps.
+
+Have to delete the content of the function project_matrix_free in vector_tools_project.templates.h in DealInstall/include/dealii/numerics/
+
+
 ## Introduction
 
 This code was developed by Pascal Kraft in an effort to generate a fast code to compute optimal shapes of 3D-waveguides based on a solution of the full Maxwell-Problem without simplifications based on non-physical assumptions. 

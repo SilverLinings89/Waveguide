@@ -63,38 +63,14 @@ private:
   void reinit() override;
 
   NumericVectorLocal get_local_vector_from_global() override;
-
+  
   auto get_center() -> Position const override;
-
-  void H_inverse();
-
-  NumericVectorLocal extract_local_upper_dofs();
-
-  std::vector<ComplexNumber> extract_local_lower_dofs();
-
-  void send_local_lower_dofs(std::vector<ComplexNumber>);
-
-  void apply_H_to_u(std::vector<ComplexNumber> u);
-
-  std::vector<ComplexNumber> receive_local_lower_dofs();
-
-  void send_local_upper_dofs(std::vector<ComplexNumber>);
-
-  void receive_local_upper_dofs();
 
   bool is_lowest_in_sweeping_direction();
 
   bool is_highest_in_sweeping_direction();
 
-  void propagate_up();
-
   void compute_solver_factorization() override;
-
-  void update_mismatch_vector(BoundaryId, bool zero_interface) override;
-
-  auto UpperBlockProductAfterH() -> std::vector<ComplexNumber>;
-
-  auto LowerBlockProduct() -> std::vector<ComplexNumber>;
 
   void setSolutionFromVector(Vec x_in);
 
@@ -118,11 +94,11 @@ private:
 
   auto u_from_x_in(Vec x_in) -> NumericVectorLocal;
 
-  auto S_inv(const NumericVectorLocal & u) -> NumericVectorLocal;
+  auto S_inv(NumericVectorLocal u) -> NumericVectorLocal;
 
-  auto lower_trace(const NumericVectorLocal & u) -> DofFieldTrace;
+  auto lower_trace(NumericVectorLocal u) -> DofFieldTrace;
 
-  auto upper_trace(const NumericVectorLocal & u) -> DofFieldTrace;
+  auto upper_trace(NumericVectorLocal u) -> DofFieldTrace;
 
   auto send_down(DofFieldTrace trace_values) -> void;
 
@@ -134,19 +110,25 @@ private:
 
   auto vmult(NumericVectorLocal u) -> NumericVectorLocal;
 
-  auto trace_to_field(DofFieldTrace trace, bool from_lower_interface) -> NumericVectorLocal;
+  auto trace_to_field(DofFieldTrace trace, BoundaryId b_id) -> NumericVectorLocal;
 
-  auto subtract_fields(NumericVectorLocal &a, const NumericVectorLocal &b) -> void;
+  auto subtract_fields(NumericVectorLocal a, NumericVectorLocal b) -> NumericVectorLocal;
 
-  auto set_x_out_from_u(Vec * x_out) -> void;
+  auto set_x_out_from_u(Vec * x_out, NumericVectorLocal u_in) -> void;
 
-  auto set_child_solution_from_u(const NumericVectorLocal & u) -> void;
+  auto set_child_solution_from_u(NumericVectorLocal u) -> void;
 
-  auto set_child_rhs_from_u(const NumericVectorLocal & u, bool add_onto_child_rhs) -> void;
+  auto set_child_rhs_from_u(NumericVectorLocal u, bool add_onto_child_rhs) -> void;
 
   auto set_u_from_child_solution(NumericVectorLocal * u)-> void;
 
-  auto zero_upper_interface_dofs(NumericVectorLocal * u)-> void;
+  auto zero_upper_interface_dofs(NumericVectorLocal u)-> NumericVectorLocal;
 
-  void update_u_from_upper_trace(DofFieldTrace trace);
+  auto zero_lower_interface_dofs(NumericVectorLocal u)-> NumericVectorLocal;
+
+  void update_u_from_trace(NumericVectorLocal * in_u, DofFieldTrace trace, bool from_lower);
+
+  void receive_local_lower_dofs_and_H();
+
+  auto compute_interface_norm_for_u(NumericVectorLocal u, BoundaryId) -> double;
 };

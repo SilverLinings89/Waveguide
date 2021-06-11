@@ -154,6 +154,8 @@ void HierarchicalProblem::compute_final_rhs_mismatch() {
 }
 
 void HierarchicalProblem::execute_vmult() {
+  // constraints.set_zero(solution);
   matrix->vmult(temp_solution, solution);
   solution = temp_solution;
+  // constraints.distribute(solution);
 }

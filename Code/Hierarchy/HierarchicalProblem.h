@@ -59,7 +59,6 @@ class HierarchicalProblem {
 
   virtual void compute_solver_factorization() = 0;
   void output_results();
-  virtual void update_mismatch_vector(BoundaryId, bool) = 0;
   virtual void reinit_rhs() = 0;
   virtual DofOwner get_dof_owner(unsigned int) = 0;
   void make_sparsity_pattern();
