@@ -70,7 +70,14 @@ void EmptySurface::output_results(const dealii::Vector<ComplexNumber> & , std::s
 
 }
 
-void EmptySurface::make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * ) { }
+void EmptySurface::make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints ) {
+    std::vector<InterfaceDofData> surf_constraints = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
+    for(unsigned int i = 0; i < surf_constraints.size(); i++) {
+        const unsigned index = surf_constraints[i].index; 
+        constraints->add_line(index);
+        constraints->set_inhomogeneity(index, ComplexNumber(0,0));
+    }
+ }
 
 void EmptySurface::make_edge_constraints(dealii::AffineConstraints<ComplexNumber> *, BoundaryId) { }
 

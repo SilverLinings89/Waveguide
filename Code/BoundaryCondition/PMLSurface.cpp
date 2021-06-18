@@ -634,26 +634,26 @@ void PMLSurface::fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *
 }
 
 std::vector<SurfaceCellData> PMLSurface::get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) {
-    std::vector<SurfaceCellData> ret;
-    std::vector<unsigned int> dof_indices(fe_nedelec.dofs_per_cell);
-    for(auto it : dof_h_nedelec) {
-      if(it.at_boundary(main_boundary) && it.at_boundary(secondary_boundary)) {
-        SurfaceCellData scd;
-        for(unsigned int i = 0; i < 6; i++) {
-          for(unsigned int j = 0; j < 4; j++) {
-            Position p = it.face(i)->line(j)->center();
-            if(is_position_at_boundary(p, main_boundary) && is_position_at_boundary(p, secondary_boundary)) {
-              scd.surface_face_center = p;
-            }
+  std::vector<SurfaceCellData> ret;
+  std::vector<unsigned int> dof_indices(fe_nedelec.dofs_per_cell);
+  for(auto it : dof_h_nedelec) {
+    if(it.at_boundary(main_boundary) && it.at_boundary(secondary_boundary)) {
+      SurfaceCellData scd;
+      for(unsigned int i = 0; i < 6; i++) {
+        for(unsigned int j = 0; j < 4; j++) {
+          Position p = it.face(i)->line(j)->center();
+          if(is_position_at_boundary(p, main_boundary) && is_position_at_boundary(p, secondary_boundary)) {
+            scd.surface_face_center = p;
           }
         }
-        it.get_dof_indices(dof_indices);
-        for(unsigned int i = 0; i < fe_nedelec.dofs_per_cell; i++) {
-          scd.dof_numbers.push_back(dof_indices[i] + first_own_dof);
-        }
-        ret.push_back(scd);
       }
+      it.get_dof_indices(dof_indices);
+      for(unsigned int i = 0; i < fe_nedelec.dofs_per_cell; i++) {
+        scd.dof_numbers.push_back(dof_indices[i] + first_own_dof);
+      }
+      ret.push_back(scd);
     }
-    std::sort(ret.begin(), ret.end(), compareSurfaceCellData);
-    return ret;
+  }
+  std::sort(ret.begin(), ret.end(), compareSurfaceCellData);
+  return ret;
 }

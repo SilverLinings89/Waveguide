@@ -17,6 +17,8 @@ private:
   dealii::IndexSet upper_interface_dofs;
   dealii::IndexSet lower_interface_dofs;
   dealii::SolverControl sc;
+  unsigned int n_blocks_in_sweep;
+  unsigned int index_in_sweep;
   KSP ksp;
   NumericVectorLocal u;
   ComplexNumber * mpi_cache;

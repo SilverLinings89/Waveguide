@@ -507,27 +507,19 @@ DofCouplingInformation get_coupling_for_single_pair(const InterfaceDofData &dof_
   return ret;
 }
 
-std::vector<DofCouplingInformation> get_coupling_information_for_group(const std::vector<InterfaceDofData> dofs_interface_1, const std::vector<InterfaceDofData> dofs_interface_2) {
-  std::vector<DofCouplingInformation> ret;
-  for(unsigned int i = 0; i < dofs_interface_1.size(); i++) {
-    DofCouplingInformation coupling; 
-    coupling.first_dof = dofs_interface_1[i].index;
-    coupling.second_dof = dofs_interface_2[i].index;
-    coupling.coupling_value = 1.0;
-    ret.push_back(coupling);
-  }
-  // This should work. I should check this at some later point.
-  return ret;
-}
-
 dealii::AffineConstraints<ComplexNumber> get_affine_constraints_for_InterfaceData(std::vector<InterfaceDofData> &dofs_interface_1, std::vector<InterfaceDofData> &dofs_interface_2, const unsigned int max_dof) {
   dealii::IndexSet is(max_dof);
   is.add_range(0,max_dof);
   dealii::AffineConstraints<ComplexNumber> ret(is);
   std::vector<DofCouplingInformation> coupling_data = get_coupling_information(dofs_interface_1, dofs_interface_2);
   for(unsigned int i = 0; i < coupling_data.size(); i++) {
-    ret.add_line(coupling_data[i].first_dof);
-    ret.add_entry(coupling_data[i].first_dof, coupling_data[i].second_dof, coupling_data[i].coupling_value);
+    if(coupling_data[i].first_dof < coupling_data[i].second_dof) {
+      ret.add_line(coupling_data[i].first_dof);
+      ret.add_entry(coupling_data[i].first_dof, coupling_data[i].second_dof, coupling_data[i].coupling_value);
+    } else {
+      ret.add_line(coupling_data[i].second_dof);
+      ret.add_entry(coupling_data[i].second_dof, coupling_data[i].first_dof, coupling_data[i].coupling_value);
+    }
   }
   return ret;
 }

@@ -238,7 +238,7 @@ void HSIESurface::fill_matrix(
       }
       std::vector<unsigned int> local_indices;
       for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-        local_indices.push_back(cell_dofs[i].global_index + first_own_dof);
+        local_indices.push_back(cell_dofs[i].global_index);
       }
       Vector<ComplexNumber> cell_rhs(cell_dofs.size());
       cell_rhs = 0;
@@ -364,7 +364,7 @@ void HSIESurface::fill_matrix(
       }
       std::vector<unsigned int> local_indices;
       for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-        local_indices.push_back(cell_dofs[i].global_index + first_own_dof);
+        local_indices.push_back(cell_dofs[i].global_index);
       }
       Vector<ComplexNumber> cell_rhs(cell_dofs.size());
       cell_rhs = 0;
@@ -474,7 +474,7 @@ void HSIESurface::fill_matrix(
       }
       std::vector<unsigned int> local_indices;
       for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-        local_indices.push_back(cell_dofs[i].global_index + first_own_dof);
+        local_indices.push_back(cell_dofs[i].global_index);
       }
       Vector<ComplexNumber> cell_rhs(cell_dofs.size());
       cell_rhs = 0;
@@ -491,9 +491,9 @@ DofCountsStruct HSIESurface::compute_n_edge_dofs() {
   endc = dof_h_nedelec.end();
   DofCountsStruct ret;
   cell2 = dof_h_q.begin_active();
+  Geometry.surface_meshes[b_id].clear_user_flags();
   for (cell = dof_h_nedelec.begin_active(); cell != endc; cell++) {
-    for (unsigned int edge = 0; edge < GeometryInfo<2>::lines_per_cell;
-         edge++) {
+    for (unsigned int edge = 0; edge < GeometryInfo<2>::lines_per_cell; edge++) {
       if (!cell->line(edge)->user_flag_set()) {
         update_dof_counts_for_edge(cell, edge, ret);
         register_new_edge_dofs(cell, cell2, edge);
@@ -751,8 +751,8 @@ void HSIESurface::register_single_dof( unsigned int in_id, const int in_hsie_ord
 }
 
 unsigned int HSIESurface::register_dof() {
-  this->dof_counter++;
-  return this->dof_counter - 1;
+  dof_counter++;
+  return dof_counter - 1 + first_own_dof;
 }
 
 ComplexNumber HSIESurface::evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, Tensor<2,3,double> G) {
@@ -923,7 +923,9 @@ bool is_oriented_positively(Position in_p) {
 
 std::vector<InterfaceDofData> HSIESurface::get_dof_association() {
   std::sort(surface_dofs.begin(), surface_dofs.end(), compareDofBaseDataAndOrientation);
-  return surface_dofs;
+  std::vector<InterfaceDofData> ret;
+  copy(surface_dofs.begin(), surface_dofs.end(), back_inserter(ret));
+  return ret;
 }
 
 void HSIESurface::identify_corner_cells() {
@@ -1103,8 +1105,6 @@ std::vector<InterfaceDofData> HSIESurface::get_dof_association_by_boundary_id(Bo
     }
   }
   
-  surface_dofs_unsorted.shrink_to_fit();
-  
   // Sort the vectors.
   std::sort(surface_dofs_unsorted.begin(), surface_dofs_unsorted.end(), compareDofBaseDataAndOrientation);
   
@@ -1114,7 +1114,7 @@ std::vector<InterfaceDofData> HSIESurface::get_dof_association_by_boundary_id(Bo
 unsigned int HSIESurface::get_dof_count_by_boundary_id(BoundaryId in_boundary_id) {
   unsigned int ret = 0;
   if (in_boundary_id == this->b_id) {
-    return this->dof_counter;
+    return dof_counter;
   } else {
     auto it = dof_h_nedelec.begin_active();
     auto it2 = dof_h_q.begin_active();
@@ -1124,19 +1124,18 @@ unsigned int HSIESurface::get_dof_count_by_boundary_id(BoundaryId in_boundary_id
       if (it->at_boundary()) {
         for (unsigned int edge = 0; edge < 4; edge++) {
           if (it->face(edge)->boundary_id() == in_boundary_id) {
-            ret += this->compute_dofs_per_edge(true);
+            ret += compute_dofs_per_edge(true);
             const unsigned int first_index = it2->face(edge)->vertex_index(0);
             const unsigned int second_index = it2->face(edge)->vertex_index(1);
             auto search = find(vertex_indices.begin(), vertex_indices.end(),
                 first_index);
             if (search != vertex_indices.end()) {
-              ret += this->compute_dofs_per_vertex();
+              ret += compute_dofs_per_vertex();
               vertex_indices.push_back(first_index);
             }
-            search = find(vertex_indices.begin(), vertex_indices.end(),
-                second_index);
+            search = find(vertex_indices.begin(), vertex_indices.end(), second_index);
             if (search != vertex_indices.end()) {
-              ret += this->compute_dofs_per_vertex();
+              ret += compute_dofs_per_vertex();
               vertex_indices.push_back(second_index);
             }
           }
@@ -1268,7 +1267,7 @@ std::vector<SurfaceCellData> HSIESurface::get_surface_cell_data(BoundaryId in_bi
     if(at_boundary) {
       DofDataVector cell_vals = get_dof_data_for_cell(nedelec, q);
       for(unsigned int i = 0; i < cell_vals.size(); i++) {
-        new_surf_cell.dof_numbers.push_back(cell_vals[i].global_index + first_own_dof);
+        new_surf_cell.dof_numbers.push_back(cell_vals[i].global_index);
       }
       ret.push_back(new_surf_cell);
     }    
@@ -1288,7 +1287,7 @@ std::vector<SurfaceCellData> HSIESurface::get_inner_surface_cell_data() {
     SurfaceCellData new_surf_cell;
     new_surf_cell.surface_face_center = undo_transform(nedelec->center());
     for(unsigned int i = 0; i < cell_vals.size(); i++) {
-      new_surf_cell.dof_numbers.push_back(cell_vals[i].global_index + first_own_dof);
+      new_surf_cell.dof_numbers.push_back(cell_vals[i].global_index);
     }
     ret.push_back(new_surf_cell);
     q++;
@@ -1302,6 +1301,49 @@ void HSIESurface::fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern 
 }
 
 std::vector<SurfaceCellData> HSIESurface::get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) {
-    std::vector<SurfaceCellData> ret;
-    return ret;
+  std::cout << "In b_id: " << b_id << " got called for the pair (" <<main_boundary << "," << secondary_boundary << ")" << std::endl;
+  std::vector<SurfaceCellData> ret;
+  auto cell_nedelec = dof_h_nedelec.begin();
+  bool first = false;
+  bool second = false;
+
+  for(auto cell_q = dof_h_q.begin(); cell_q != dof_h_q.end(); cell_q++ ) {
+    Position face_center;
+    first = (main_boundary == b_id);
+    if(!first) {
+      for(unsigned int i = 0; i < 4; i++) {
+        if(is_point_at_boundary(cell_q->face(i)->center(), main_boundary)) {
+          first = true;
+          face_center = undo_transform(cell_q->face(i)->center());
+        }
+      }
+    }
+    second = (secondary_boundary == b_id);
+    if(!second) {
+      for(unsigned int i = 0; i < 4; i++) {
+        if(is_point_at_boundary(cell_q->face(i)->center(), secondary_boundary)) {
+          second = true;
+        }
+      }
+    }
+    if( first && second ) {
+      SurfaceCellData dof;
+      for(unsigned int i = 0; i < 4; i++) {
+        if(is_point_at_boundary(cell_q->face(i)->center(), main_boundary)) {
+          dof.surface_face_center = undo_transform(cell_q->face(i)->center());
+        }
+      }
+      
+      DofDataVector dofs = get_dof_data_for_cell(cell_nedelec, cell_q);
+
+      for(unsigned int i = 0; i < dofs.size(); i++) {
+        dof.dof_numbers.push_back(dofs[i].global_index);
+      }
+
+      ret.push_back(dof);
+    }
+    cell_nedelec++;
+  }
+  std::cout << "Found " << ret.size() << std::endl;
+  return ret;
 }

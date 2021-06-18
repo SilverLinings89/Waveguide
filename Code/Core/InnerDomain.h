@@ -126,4 +126,5 @@ class InnerDomain {
   auto get_outer_constrained_faces() -> std::set<unsigned int>;
   std::vector<SurfaceCellData> get_edge_cell_data(BoundaryId first_b_id, BoundaryId second_b_id, unsigned int level);
   void output_results(std::string in_filename, NumericVectorLocal in_solution);
+  void fill_rhs_vector(NumericVectorDistributed in_vec, unsigned int level);
 };

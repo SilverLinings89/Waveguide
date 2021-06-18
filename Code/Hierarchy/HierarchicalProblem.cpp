@@ -58,6 +58,7 @@ void HierarchicalProblem::make_constraints() {
   for(unsigned int i = 0; i < 6; i++) {
     Geometry.levels[level].surfaces[i]->make_surface_constraints(&constraints);
   }
+
   // Edge constraints
 
   for(unsigned int i = 0; i< 6; i++) {
@@ -69,19 +70,7 @@ void HierarchicalProblem::make_constraints() {
       }
     }
   }
-  /**
-  Geometry.levels[level].surfaces[4]->make_edge_constraints(&constraints, 1);
-  Geometry.levels[level].surfaces[4]->make_edge_constraints(&constraints, 2);
-  Geometry.levels[level].surfaces[4]->make_edge_constraints(&constraints, 3);
-  Geometry.levels[level].surfaces[2]->make_edge_constraints(&constraints, 0);
-  Geometry.levels[level].surfaces[2]->make_edge_constraints(&constraints, 1);
-  Geometry.levels[level].surfaces[3]->make_edge_constraints(&constraints, 0);
-  Geometry.levels[level].surfaces[3]->make_edge_constraints(&constraints, 1);
-  Geometry.levels[level].surfaces[5]->make_edge_constraints(&constraints, 0);
-  Geometry.levels[level].surfaces[5]->make_edge_constraints(&constraints, 1);
-  Geometry.levels[level].surfaces[5]->make_edge_constraints(&constraints, 2);
-  Geometry.levels[level].surfaces[5]->make_edge_constraints(&constraints, 3);
-  **/
+
   constraints.close();
   
   print_info("HierarchicalProblem::make_constraints", "End");
@@ -95,6 +84,7 @@ void HierarchicalProblem::make_sparsity_pattern() {
   
   Geometry.inner_domain->make_sparsity_pattern(&dsp, Geometry.levels[level].inner_first_dof, &constraints);
   for (unsigned int surface = 0; surface < 6; surface++) {
+    std::cout << "On proc " << GlobalParams.MPI_Rank << " surf" << surface << std::endl;
     Geometry.levels[level].surfaces[surface]->fill_sparsity_pattern(&dsp, &constraints);
   }
   

@@ -402,17 +402,7 @@ struct CellwiseAssemblyDataNP {
       Tensor<1, 3, ComplexNumber> I_Val;
       I_Curl = fe_values[fe_field].curl(i, q_index);
       I_Val = fe_values[fe_field].value(i, q_index);
-      /**
-      if(GlobalParams.use_tapered_input_signal) {
-        Tensor<1,3,ComplexNumber> Ex_Curl = exact_solution_ramped.curl(quadrature_points[q_index]);
-        Tensor<1,3,ComplexNumber> Ex_Val;
-        for(unsigned int comp = 0; comp < 3; comp++) {
-          Ex_Val[comp] = exact_solution_ramped.value(quadrature_points[q_index], comp);
-        }
-        cell_rhs[i] -= I_Curl *  Conjugate_Vector(Ex_Curl) * JxW - (eps_kappa_2 * (I_Val * Conjugate_Vector(Ex_Val)) * JxW);
-      }
-      **/
-      if(cell->at_boundary(4) && has_input_interface) {
+/*       if(cell->at_boundary(4) && has_input_interface) {
         if(!constrained_dofs.is_element(dof_indices[i])) {
           for(unsigned int j = 0; j < dofs_per_cell; j++) {
             if(constrained_dofs.is_element(dof_indices[j])) {
@@ -424,7 +414,7 @@ struct CellwiseAssemblyDataNP {
             }
           }
         }
-      }
+      } */
       for (unsigned int j = 0; j < dofs_per_cell; j++) {
         Tensor<1, 3, ComplexNumber> J_Curl;
         Tensor<1, 3, ComplexNumber> J_Val;
@@ -466,6 +456,7 @@ void InnerDomain::assemble_system(unsigned int shift,
     constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, false);
   }
   matrix->compress(dealii::VectorOperation::add);
+  rhs->compress(dealii::VectorOperation::add);
 }
 
 void InnerDomain::assemble_system(unsigned int shift,
@@ -488,6 +479,7 @@ void InnerDomain::assemble_system(unsigned int shift,
     constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, false);
   }
   matrix->compress(dealii::VectorOperation::add);
+  rhs->compress(dealii::VectorOperation::add);
 }
 
 void InnerDomain::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs) {
@@ -551,11 +543,7 @@ void InnerDomain::output_results(std::string in_filename, NumericVectorLocal in_
   local_constraints.close();  
   
   Function<3,ComplexNumber> * esc;
-  if(GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE) {
-    esc = GlobalParams.source_field;
-  } else {
-    esc = new ExactSolutionConjugate(true, false);
-  }
+  esc = GlobalParams.source_field;
   
   dealii::Vector<ComplexNumber> interpolated_exact_solution(in_solution.size());
   VectorTools::project(dof_handler, local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *esc, interpolated_exact_solution);
