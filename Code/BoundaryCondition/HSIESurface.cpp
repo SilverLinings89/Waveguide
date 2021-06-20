@@ -482,6 +482,7 @@ void HSIESurface::fill_matrix(
       it2++;
       cell_counter++;
     }
+    matrix->compress(dealii::VectorOperation::add);
 }
 
 DofCountsStruct HSIESurface::compute_n_edge_dofs() {
@@ -1185,8 +1186,7 @@ bool HSIESurface::is_point_at_boundary(Position2D in_p, BoundaryId in_bid) {
   if(!boundary_coordinates_computed) {
     compute_extreme_vertex_coordinates();
   }
-  if(are_opposing_sites(in_bid, b_id)) return false;
-  if(in_bid == b_id) return true;
+  if(are_opposing_sites(in_bid, b_id) || in_bid == b_id) return true;
   Position full_position = undo_transform(in_p);
   unsigned int component = in_bid / 2;
   return full_position[component] == boundary_vertex_coordinates[in_bid];
@@ -1301,7 +1301,6 @@ void HSIESurface::fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern 
 }
 
 std::vector<SurfaceCellData> HSIESurface::get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) {
-  std::cout << "In b_id: " << b_id << " got called for the pair (" <<main_boundary << "," << secondary_boundary << ")" << std::endl;
   std::vector<SurfaceCellData> ret;
   auto cell_nedelec = dof_h_nedelec.begin();
   bool first = false;
@@ -1344,6 +1343,6 @@ std::vector<SurfaceCellData> HSIESurface::get_corner_surface_cell_data(BoundaryI
     }
     cell_nedelec++;
   }
-  std::cout << "Found " << ret.size() << std::endl;
+  
   return ret;
 }

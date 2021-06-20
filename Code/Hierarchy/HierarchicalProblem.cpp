@@ -84,7 +84,6 @@ void HierarchicalProblem::make_sparsity_pattern() {
   
   Geometry.inner_domain->make_sparsity_pattern(&dsp, Geometry.levels[level].inner_first_dof, &constraints);
   for (unsigned int surface = 0; surface < 6; surface++) {
-    std::cout << "On proc " << GlobalParams.MPI_Rank << " surf" << surface << std::endl;
     Geometry.levels[level].surfaces[surface]->fill_sparsity_pattern(&dsp, &constraints);
   }
   

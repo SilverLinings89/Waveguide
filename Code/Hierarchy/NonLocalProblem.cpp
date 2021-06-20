@@ -236,17 +236,18 @@ void NonLocalProblem::assemble() {
       Geometry.levels[level].surfaces[i]->fill_matrix(matrix, &rhs, &constraints);
       timer.stop();
   }
-  // MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD);
   print_info("NonLocalProblem::assemble", "Compress matrix.");
   matrix->compress(dealii::VectorOperation::add);
-  // MPI_Barrier(MPI_COMM_WORLD);
+  print_info("NonLocalProblem::assemble", "Compress matrix done.");
+  MPI_Barrier(MPI_COMM_WORLD);
   print_info("NonLocalProblem::assemble", "Assemble child.");
   child->assemble();
   print_info("NonLocalProblem::assemble", "Compress vectors.");
   rhs.compress(dealii::VectorOperation::add);
-  // MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD);
   solution.compress(dealii::VectorOperation::add);
-  // MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD);
   print_info("NonLocalProblem::assemble", "End assembly.");
 }
 

@@ -59,3 +59,11 @@ Removed some old logging from the constraint generation. Added some new output i
 Corner cell dof vector computation is not implemented. Fixing. The function is now implemented. Extended the function to also work when one of the boundary Ids is the b_id value of the surface object.
 
 I had to reload the repo because git broke it again. Cloned from the repo and saved local changes.
+
+# Sunday, 20th of june
+
+Default run task still works. Assembly still works for PML. DSP for HSIE not working. Changed is_point_at_boundary in HSIESurface to return true if bounday id is either inner or outer, previously it was true for inner, false for outer. This led to the empty arrays. Assembly runs completely. There was an error attempting to compress datastructures. Adding back the MPI Barriers in the assemble function to block race conditions. The matrix->compress operation only terminates for Process 0 and 3, not for 1 and 2.
+
+The issue occurs in the function fill_matrix most likely of the hsie_surface. Added output to make sure that's it. All start their calls (call for surface 5 starts). The error was the missing line "matrix->compress(dealii::VectorOperation::add);" at the end of fill matrix for HSIE surfaces. Running ... Worked. Assembly runs through now. Solve worked, too. Detail: The application no longer crashes in the output. That means the crashes (which were irrelevant so far) occured in the PML output or something related to the output of the solution on the  boundaries.
+
+The solution with HSIE BC is now 0. Rerunning with PML to check if thats the case for PML, too.

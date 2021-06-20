@@ -231,17 +231,12 @@ void NeighborSurface::fill_sparsity_pattern_for_edge_and_neighbor(BoundaryId edg
     }
     
     std::vector<SurfaceCellData> from_self = Geometry.inner_domain->get_edge_cell_data(b_id, edge_bid, level);
-    std::cout << "Fill for edge and neigbor: " << b_id << " " << edge_bid << " from self: " << from_self.size() << std::endl;
     std::vector<SurfaceCellData> from_other =  mpi_send_recv_surf_cell_data(from_self);
-    std::cout << "Fill for edge and neigbor: " << b_id << " " << edge_bid << " from other: " << from_other.size() << std::endl;
     from_self = Geometry.levels[level].surfaces[edge_bid]->get_corner_surface_cell_data(edge_bid_opponent, b_id);
-    std::cout << "Fill for edge and neigbor: " << b_id << " " << edge_bid << " from self2: " << from_self.size() << std::endl;
     fill_sparsity_pattern_with_surface_data_vectors(from_self, from_other, in_dsp, in_constraints);
 
     from_self = Geometry.levels[level].surfaces[edge_bid]->get_corner_surface_cell_data(edge_bid_opponent, b_id);
-    std::cout << "Fill for edge and neigbor corner: " << b_id << " " << edge_bid << " from self: " << from_self.size() << std::endl;
     from_other = mpi_send_recv_surf_cell_data(from_self);
-    std::cout << "Fill for edge and neigbor corner: " << b_id << " " << edge_bid << " from self: " << from_other.size() << std::endl;
     from_self = Geometry.inner_domain->get_edge_cell_data(b_id, edge_bid, level);
     fill_sparsity_pattern_with_surface_data_vectors(from_self, from_other, in_dsp, in_constraints);
 
@@ -249,9 +244,7 @@ void NeighborSurface::fill_sparsity_pattern_for_edge_and_neighbor(BoundaryId edg
 
 void NeighborSurface::fill_sparsity_pattern_for_corner(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints, BoundaryId in_b_id_one, BoundaryId in_b_id_two) {
   std::vector<SurfaceCellData> from_self = Geometry.levels[level].surfaces[in_b_id_one]->get_corner_surface_cell_data(in_b_id_two, b_id);
-  std::cout << "Fill for corner: " << b_id << " " << in_b_id_one << " " << in_b_id_two << " from self: " << from_self.size();
   std::vector<SurfaceCellData> from_other = mpi_send_recv_surf_cell_data(from_self);
-  std::cout << "Fill for corner: " << b_id << " " << in_b_id_one << " " << in_b_id_two << " from other: " << from_other.size();
   from_self = Geometry.levels[level].surfaces[in_b_id_two]->get_corner_surface_cell_data(in_b_id_one, b_id);
   fill_sparsity_pattern_with_surface_data_vectors(from_self, from_other, in_dsp, constraints);
 }
@@ -295,7 +288,6 @@ std::vector<SurfaceCellData> NeighborSurface::mpi_send_recv_surf_cell_data(std::
         meta_data[1] = in_data[0].dof_numbers.size(); // N dofs per cell
         MPI_Sendrecv_replace(meta_data, 2, MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
         if(meta_data[0] != in_data.size()) {
-            // Incompatible numbers of cells. Cannot couple.
             std::cout << "Incompatible cell counts in mpi_send_recv_surf_cell_data" << std::endl;
             exit(0);
         }
