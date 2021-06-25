@@ -66,4 +66,10 @@ Default run task still works. Assembly still works for PML. DSP for HSIE not wor
 
 The issue occurs in the function fill_matrix most likely of the hsie_surface. Added output to make sure that's it. All start their calls (call for surface 5 starts). The error was the missing line "matrix->compress(dealii::VectorOperation::add);" at the end of fill matrix for HSIE surfaces. Running ... Worked. Assembly runs through now. Solve worked, too. Detail: The application no longer crashes in the output. That means the crashes (which were irrelevant so far) occured in the PML output or something related to the output of the solution on the  boundaries.
 
-The solution with HSIE BC is now 0. Rerunning with PML to check if thats the case for PML, too.
+The solution with HSIE BC is now 0. Rerunning with PML to check if thats the case for PML, too. It is ,because I deactivated th preparation of the rhs. Implementing new version to compute rhs with correct norm. The steps for this are as follows: Project the exact solution to the domain boundary (b_id=4 and index_in_z_direction=0) >> vmult the resulting vector with the system matrix >> project 0 to the incoming interface (b_id=4 and index_in_z_direction=0). The resulting vector represents the incoming field for a jump coupling.
+
+The function has been implemented with the name compute_rhs_representation_of_incoming_wave(). It updated the vector rhs of a Hierarchical Problem type. It should work on Local and NonLocal Problems. The implementation now runs. There were some difficulties about vector compression but they are fixed. 
+
+# Monday, 21th of june
+
+Implementing vmult on Inner domain and precomputation of the local matrix. This is a matrix unaware of boundary conditions which is computet entirely locally. There might be work required later on to compute this precisely for higher order sweeping because then the input interface is distributed to multiple cores.

@@ -24,3 +24,10 @@ TEST(ExactSolutionRampedTests, RampingTestsC1) {
     ASSERT_EQ(sol.get_ramping_factor_for_position(p),0);
     ASSERT_EQ(sol.get_ramping_factor_derivative_for_position(p),0);
 }
+
+TEST(ExactSolutionTests, PhaseTest) {
+    ExactSolution es = {true,false};
+    Position p = {0,0,0};
+    ASSERT_NEAR(es.value(p,0).imag(), 0.0, 0.001);
+    ASSERT_NEAR(es.value(p,0).real(), 1.0, 0.001); 
+}

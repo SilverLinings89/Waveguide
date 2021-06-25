@@ -168,7 +168,7 @@ void NonLocalProblem::init_solver_and_preconditioner() {
 }
 
 void NonLocalProblem::reinit_rhs() {
-  rhs = dealii::PETScWrappers::MPI::Vector(own_dofs, GlobalMPI.communicators_by_level[level]);
+  rhs.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
 }
 
 NonLocalProblem::~NonLocalProblem() {
@@ -244,7 +244,7 @@ void NonLocalProblem::assemble() {
   print_info("NonLocalProblem::assemble", "Assemble child.");
   child->assemble();
   print_info("NonLocalProblem::assemble", "Compress vectors.");
-  rhs.compress(dealii::VectorOperation::add);
+  compute_rhs_representation_of_incoming_wave();
   MPI_Barrier(MPI_COMM_WORLD);
   solution.compress(dealii::VectorOperation::add);
   MPI_Barrier(MPI_COMM_WORLD);

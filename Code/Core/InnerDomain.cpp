@@ -562,3 +562,38 @@ void InnerDomain::output_results(std::string in_filename, NumericVectorLocal in_
   // write_phase_plot();
   print_info("InnerDomain::output_results()", "End");
 }
+
+void InnerDomain::prepare_inner_matrix() {
+  IndexSet local_dofs(dof_handler.n_dofs());
+  local_dofs.add_range(0, dof_handler.n_dofs());
+  AffineConstraints<ComplexNumber> constraints(local_dofs);
+  dealii::DynamicSparsityPattern dsp;
+  dsp.reinit(dof_handler.n_dofs(), dof_handler.n_dofs(), local_dofs);
+  DoFTools::make_sparsity_pattern(dof_handler,dsp, constraints);
+  sp.copy_from(dsp);
+  sp.compress();
+  local_matrix.reinit(sp);
+  CellwiseAssemblyDataNP cell_data(&fe, &dof_handler);
+  for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
+    cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
+    cell_data.cell_matrix = 0;
+    cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
+    cell_data.fe_values.reinit(cell_data.cell);
+    cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
+    for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
+      cell_data.prepare_for_current_q_index(q_index);
+    }
+    constraints.distribute_local_to_global(cell_data.cell_matrix, cell_data.local_dof_indices, local_matrix);
+  }
+  local_matrix.compress(dealii::VectorOperation::add);
+  is_local_matrix_prepared = true;
+}
+
+NumericVectorLocal InnerDomain::vmult(const NumericVectorLocal a) {
+  if(!is_local_matrix_prepared) {
+    prepare_inner_matrix();
+  }
+  NumericVectorLocal ret(dof_handler.n_dofs());
+  local_matrix.vmult(ret, a);
+  return ret;
+}

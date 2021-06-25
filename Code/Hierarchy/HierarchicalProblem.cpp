@@ -148,3 +148,36 @@ void HierarchicalProblem::execute_vmult() {
   solution = temp_solution;
   // constraints.distribute(solution);
 }
+
+void HierarchicalProblem::compute_rhs_representation_of_incoming_wave() {
+  reinit_rhs();
+  NumericVectorLocal temp(Geometry.inner_domain->dof_handler.n_dofs());
+  if(GlobalParams.Index_in_z_direction == 0) {
+    // there can be an incoming signal here
+    IndexSet owned_dofs(Geometry.inner_domain->dof_handler.n_dofs());
+    owned_dofs.add_range(0, Geometry.inner_domain->dof_handler.n_dofs());
+    AffineConstraints<ComplexNumber> constraints_local(owned_dofs);
+    VectorTools::project_boundary_values_curl_conforming_l2(Geometry.inner_domain->dof_handler, 0, *GlobalParams.source_field , 4, constraints_local);
+    for(unsigned int i =0; i < Geometry.inner_domain->dof_handler.n_dofs(); i++) {
+      if(constraints_local.is_inhomogeneously_constrained(i)) {
+        temp[i] = constraints_local.get_inhomogeneity(i);
+      }
+    }
+    NumericVectorLocal vmult_result = Geometry.inner_domain->vmult(temp);
+    for(unsigned int i =0; i < Geometry.inner_domain->dof_handler.n_dofs(); i++) {
+      if(constraints_local.is_inhomogeneously_constrained(i)) {
+        vmult_result[i] = ComplexNumber(0,0);
+      }
+    }
+    std::vector<unsigned int> indices;
+    for(unsigned int i =0; i < Geometry.inner_domain->dof_handler.n_dofs(); i++) {
+      indices.push_back(i + Geometry.levels[level].inner_first_dof);
+    }
+    rhs.add(indices,vmult_result);
+    rhs.compress(VectorOperation::add);
+  } else {
+    // there cannot be an incoming signal here
+    rhs.compress(VectorOperation::add);
+    rhs.l2_norm();
+  }
+}

@@ -63,6 +63,7 @@ class HierarchicalProblem {
   virtual DofOwner get_dof_owner(unsigned int) = 0;
   void make_sparsity_pattern();
   void execute_vmult();
+  void compute_rhs_representation_of_incoming_wave();
 };
 
 typedef struct {
