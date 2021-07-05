@@ -48,9 +48,10 @@ public:
   std::vector<HSIEPolynomial> build_non_curl_term_nedelec(unsigned int, const double, const double);
   void set_V0(Position);
   auto get_dof_data_for_cell(CellIterator2D, CellIterator2D) -> DofDataVector;
-  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
-  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
-  void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
+  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;
+  void fill_matrix(dealii::SparseMatrix<ComplexNumber>*,  Constraints *constraints) override;
+  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;
+  void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;
   bool is_point_at_boundary(Position2D in_p, BoundaryId in_bid) override;
   auto get_vertices_for_boundary_id(BoundaryId) -> std::vector<unsigned int>;
   auto get_n_vertices_for_boundary_id(BoundaryId) -> unsigned int;
@@ -93,11 +94,11 @@ public:
   auto line_positions_for_ids(std::vector<unsigned int> ids) -> std::vector<Position>;
   void output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
   SurfaceCellData get_surface_cell_data_for_cell_index(const int in_index, const BoundaryId in_bid);
-  void make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints) override;
-  void make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) override;
+  void make_surface_constraints(Constraints * constraints) override;
+  void make_edge_constraints(Constraints * constraints, BoundaryId other_boundary) override;
   auto get_surface_cell_data(BoundaryId in_bid) -> std::vector<SurfaceCellData> override;
   auto get_inner_surface_cell_data() -> std::vector<SurfaceCellData> override;
-  void fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constriants) override;
+  void fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constriants) override;
   auto get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) -> std::vector<SurfaceCellData> override;
 };
 

@@ -40,15 +40,12 @@ void SweepingRun::run() {
     if(GlobalParams.Point_Source_Type == 0) {
         rmProblem->run();
     }
-  
     mainProblem->assemble();
-
+    
     mainProblem->compute_solver_factorization();
-
     mainProblem->solve();
     GlobalTimerManager.write_output();
     mainProblem->output_results();
-    MPI_Barrier(MPI_COMM_WORLD);
     print_info("Simulation::run", "End", true, LoggingLevel::PRODUCTION_ONE);
 }
 

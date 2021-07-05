@@ -15,7 +15,7 @@ class HierarchicalProblem {
  public:
   const SweepingDirection sweeping_direction;
   const SweepingLevel level;
-  dealii::AffineConstraints<ComplexNumber> constraints;
+  Constraints constraints;
   std::array<dealii::IndexSet, 6> surface_index_sets;
   std::array<bool, 6> is_hsie_surface;
   std:: vector<bool> is_surface_locked;
@@ -50,7 +50,7 @@ class HierarchicalProblem {
   void make_constraints();
   virtual void assemble()=0;
   virtual void initialize_index_sets()=0;
-  void constrain_identical_dof_sets(std::vector<unsigned int> *set_one, std::vector<unsigned int> *set_two, dealii::AffineConstraints<ComplexNumber> *affine_constraints);
+  void constrain_identical_dof_sets(std::vector<unsigned int> *set_one, std::vector<unsigned int> *set_two, Constraints *affine_constraints);
   virtual dealii::Vector<ComplexNumber> get_local_vector_from_global() = 0;
   virtual auto get_center() -> Position const = 0;
   virtual auto reinit() -> void = 0;

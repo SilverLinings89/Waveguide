@@ -23,7 +23,7 @@ HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level, SweepingDire
 
 void HierarchicalProblem::constrain_identical_dof_sets(
     std::vector<unsigned int> *set_one, std::vector<unsigned int> *set_two,
-    dealii::AffineConstraints<ComplexNumber> *affine_constraints) {
+    Constraints *affine_constraints) {
   const unsigned int n_entries = set_one->size();
   if (n_entries != set_two->size()) {
     print_info("HierarchicalProblem::constrain_identical_dof_sets", "There was an error in constrain_identical_dof_sets. No changes made.", false, LoggingLevel::PRODUCTION_ALL);
@@ -164,13 +164,13 @@ void HierarchicalProblem::compute_rhs_representation_of_incoming_wave() {
       }
     }
     NumericVectorLocal vmult_result = Geometry.inner_domain->vmult(temp);
-    for(unsigned int i =0; i < Geometry.inner_domain->dof_handler.n_dofs(); i++) {
+    for(unsigned int i = 0; i < Geometry.inner_domain->dof_handler.n_dofs(); i++) {
       if(constraints_local.is_inhomogeneously_constrained(i)) {
         vmult_result[i] = ComplexNumber(0,0);
       }
     }
     std::vector<unsigned int> indices;
-    for(unsigned int i =0; i < Geometry.inner_domain->dof_handler.n_dofs(); i++) {
+    for(unsigned int i = 0; i < Geometry.inner_domain->dof_handler.n_dofs(); i++) {
       indices.push_back(i + Geometry.levels[level].inner_first_dof);
     }
     rhs.add(indices,vmult_result);
@@ -178,6 +178,5 @@ void HierarchicalProblem::compute_rhs_representation_of_incoming_wave() {
   } else {
     // there cannot be an incoming signal here
     rhs.compress(VectorOperation::add);
-    rhs.l2_norm();
   }
 }

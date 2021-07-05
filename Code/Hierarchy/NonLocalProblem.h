@@ -28,6 +28,7 @@ private:
   PetscInt* locally_owned_dofs_index_array;
   unsigned int lower_sweeping_interface_id;
   unsigned int upper_sweeping_interface_id;
+  LocalMatrixPart local;
   
  public:
   NonLocalProblem(unsigned int);
@@ -51,6 +52,8 @@ private:
   auto compute_upper_interface_id() -> BoundaryId;
 
   void assemble() override;
+
+  void assemble_local_system();
 
   void solve() override;
 

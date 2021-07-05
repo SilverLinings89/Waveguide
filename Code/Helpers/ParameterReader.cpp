@@ -12,6 +12,7 @@ void ParameterReader::declare_parameters() {
         run_prm.declare_entry("solver precision" , "1e-6", Patterns::Double(), "Absolute precision for solver convergence.");
         run_prm.declare_entry("GMRES restart after" , "30", Patterns::Integer(), "Number of steps until GMRES restarts.");
         run_prm.declare_entry("GMRES maximum steps" , "30", Patterns::Integer(), "Number of maximum GMRES steps until failure.");
+        run_prm.declare_entry("solve directly", "false", Patterns::Bool(), "If this is set to true, GMRES will be replaced by a direct solver.");
         run_prm.declare_entry("kappa angle" , "1.0", Patterns::Double(), "Phase of the complex value kappa with norm 1 that is used in HSIEs.");
         run_prm.declare_entry("processes in x" , "1", Patterns::Integer(), "Number of processes in x-direction.");
         run_prm.declare_entry("processes in y" , "1", Patterns::Integer(), "Number of processes in y-direction.");
@@ -20,6 +21,7 @@ void ParameterReader::declare_parameters() {
         run_prm.declare_entry("cell count x" , "20", Patterns::Integer(), "Number of cells a single process has in x-direction.");
         run_prm.declare_entry("cell count y" , "20", Patterns::Integer(), "Number of cells a single process has in y-direction.");
         run_prm.declare_entry("cell count z" , "20", Patterns::Integer(), "Number of cells a single process has in z-direction.");
+        run_prm.declare_entry("Logging Level", "Production One", Patterns::Selection("Production One|Production All|Debug One|Debug All"), "Specifies which messages should be printed and by whom.");
     }
     run_prm.leave_subsection();
 
@@ -68,6 +70,7 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.Solver_Precision = run_prm.get_double("solver precision");
         ret.GMRES_Steps_before_restart = run_prm.get_integer("GMRES restart after");
         ret.GMRES_max_steps = run_prm.get_integer("GMRES maximum steps");
+        ret.solve_directly = run_prm.get_bool("solve directly");
         ret.Blocks_in_x_direction = run_prm.get_integer("processes in x");
         ret.Blocks_in_y_direction = run_prm.get_integer("processes in y");
         ret.Blocks_in_z_direction = run_prm.get_integer("processes in z");
@@ -75,6 +78,11 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.Cells_in_x = run_prm.get_integer("cell count x");
         ret.Cells_in_y = run_prm.get_integer("cell count y");
         ret.Cells_in_z = run_prm.get_integer("cell count z");
+        std::string logging = run_prm.get("Logging Level");
+        if(logging == "Debug One") ret.Logging_Level = LoggingLevel::DEBUG_ONE;
+        if(logging == "Debug All") ret.Logging_Level = LoggingLevel::DEBUG_ALL;
+        if(logging == "Production One") ret.Logging_Level = LoggingLevel::PRODUCTION_ONE;
+        if(logging == "Production All") ret.Logging_Level = LoggingLevel::PRODUCTION_ALL;
     }
     case_prm.parse_input(case_file_stream);
     case_prm.enter_subsection("Case parameters");

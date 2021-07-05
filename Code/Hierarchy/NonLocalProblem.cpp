@@ -239,16 +239,75 @@ void NonLocalProblem::assemble() {
   MPI_Barrier(MPI_COMM_WORLD);
   print_info("NonLocalProblem::assemble", "Compress matrix.");
   matrix->compress(dealii::VectorOperation::add);
-  print_info("NonLocalProblem::assemble", "Compress matrix done.");
   MPI_Barrier(MPI_COMM_WORLD);
   print_info("NonLocalProblem::assemble", "Assemble child.");
   child->assemble();
-  print_info("NonLocalProblem::assemble", "Compress vectors.");
+  print_info("NonLocalProblem::assemble", "Assemble rhs.");
   compute_rhs_representation_of_incoming_wave();
   MPI_Barrier(MPI_COMM_WORLD);
+  print_info("NonLocalProblem::assemble", "Compress vectors.");
   solution.compress(dealii::VectorOperation::add);
   MPI_Barrier(MPI_COMM_WORLD);
+  print_info("NonLocalProblem::assemble", "Assemble local system for vmult.");
+  assemble_local_system();
+  MPI_Barrier(MPI_COMM_WORLD);
   print_info("NonLocalProblem::assemble", "End assembly.");
+}
+
+void NonLocalProblem::assemble_local_system() {
+  local.n_dofs = Geometry.levels[level].n_local_dofs;
+  local.local_dofs = dealii::IndexSet(local.n_dofs);
+  local.local_dofs.add_range(0, local.n_dofs);
+  local.constraints = Constraints(local.local_dofs);
+  local.lower_sweeping_dofs.set_size(local.n_dofs);
+  local.upper_sweeping_dofs.set_size(local.n_dofs);
+  for(unsigned int i = 0; i < lower_interface_dofs.n_elements(); i++) {
+    local.lower_sweeping_dofs.add_index(lower_interface_dofs.nth_index_in_set(i));
+  }
+  for(unsigned int i = 0; i < upper_interface_dofs.n_elements(); i++) {
+    local.upper_sweeping_dofs.add_index(upper_interface_dofs.nth_index_in_set(i));
+  }
+  local.constraints.reinit(local.local_dofs);
+  // fill constraints here
+  for(unsigned int dof = Geometry.levels[level].inner_first_dof; dof < Geometry.levels[level].inner_first_dof + Geometry.levels[level].n_local_dofs; dof++) {
+    if(constraints.is_constrained(dof)) {
+      local.constraints.add_line(dof - Geometry.levels[level].inner_first_dof);
+      if(constraints.is_inhomogeneously_constrained(dof)) {
+        local.constraints.set_inhomogeneity(dof - Geometry.levels[level].inner_first_dof, constraints.get_inhomogeneity(dof));
+      }
+      for(auto it : *constraints.get_constraint_entries(dof)) {
+        if(it.first >= Geometry.levels[level].inner_first_dof && it.first <  Geometry.levels[level].inner_first_dof + Geometry.levels[level].n_local_dofs) {
+          for(auto it : *constraints.get_constraint_entries(dof)) {
+            if(it.first >= Geometry.levels[level].inner_first_dof && it.first <  Geometry.levels[level].inner_first_dof + Geometry.levels[level].n_local_dofs) {
+              local.constraints.add_entry(dof - Geometry.levels[level].inner_first_dof, it.first - Geometry.levels[level].inner_first_dof, it.second);
+            }
+          }
+        }
+      }
+    }
+  }
+  local.constraints.close();
+
+  dealii::DynamicSparsityPattern dsp(local.local_dofs);
+  // fill dsp here
+  for(unsigned int dof = Geometry.levels[level].inner_first_dof; dof < Geometry.levels[level].inner_first_dof + Geometry.levels[level].n_local_dofs; dof++) {
+    for(dealii::SparsityPattern::iterator it = sp.begin(dof); it < sp.end(dof); it++) {
+      if(it->column() >= Geometry.levels[level].inner_first_dof && it->column() < Geometry.levels[level].inner_first_dof + Geometry.levels[level].n_local_dofs) {
+        dsp.add(it->row() - Geometry.levels[level].inner_first_dof, it->column() - Geometry.levels[level].inner_first_dof);
+      }
+    }
+  }
+
+  local.sp.copy_from(dsp);
+  local.matrix.reinit(local.sp);
+
+  // fill matrix here
+  Geometry.inner_domain->assemble_system(&local.constraints, &local.matrix);
+  for(unsigned int surf = 0; surf < 6; surf++) {
+    if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
+      Geometry.levels[level].surfaces[surf]->fill_matrix(&local.matrix, &local.constraints);
+    }
+  }
 }
 
 dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
@@ -257,23 +316,23 @@ dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
 }
 
 void NonLocalProblem::solve() {
-  GlobalTimerManager.switch_context("solve", level);
-  constraints.set_zero(solution);
-  std::cout << "Norm before solving: " << rhs.l2_norm() << std::endl;
-  KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc),nullptr);
-  KSPSetTolerances(ksp, 0.000001, 1.0, 1000, GlobalParams.GMRES_max_steps);
-  KSPMonitorSet(ksp, MonitorError, nullptr, nullptr);
-  KSPSetUp(ksp);
-  // PetscErrorCode ierr = KSPSolve(ksp, rhs, solution);
-  
-  constraints.distribute(solution);
-  
-  SolverControl sc;
-  dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, MPI_COMM_WORLD);
-  constraints.set_zero(solution);
-  solver1.solve(*matrix, solution, rhs);
-  constraints.distribute(solution);
-
+  if(!GlobalParams.solve_directly) {
+    GlobalTimerManager.switch_context("solve", level);
+    constraints.set_zero(solution);
+    std::cout << "Norm before solving: " << rhs.l2_norm() << std::endl;
+    KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc),nullptr);
+    KSPSetTolerances(ksp, 0.000001, 1.0, 1000, GlobalParams.GMRES_max_steps);
+    KSPMonitorSet(ksp, MonitorError, nullptr, nullptr);
+    KSPSetUp(ksp);
+    PetscErrorCode ierr = KSPSolve(ksp, rhs, solution);
+    constraints.distribute(solution);
+  } else {
+    SolverControl sc;
+    dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, MPI_COMM_WORLD);
+    constraints.set_zero(solution);
+    solver1.solve(*matrix, solution, rhs);
+    constraints.distribute(solution);
+  }
   // if(ierr != 0) {
   //   std::cout << "Error code from Petsc: " << std::to_string(ierr) << std::endl;
   //   throw new ExcPETScError(ierr);
@@ -283,50 +342,64 @@ void NonLocalProblem::solve() {
 void NonLocalProblem::apply_sweep(Vec b, Vec u) {
   // Line 1
   NumericVectorLocal local_solution = u_from_x_in(b);
+  zero_lower_interface_dofs(local_solution);
   NumericVectorLocal temp_vector;
   NumericVectorLocal zero;
   reinit_u_vector(&zero);
   // Lines 2 - 5
-  std::cout << "In process " << GlobalParams.MPI_Rank << " local solution at beginning: " << local_solution.l2_norm() << std::endl;
-  for(unsigned int i = n_blocks_in_sweep-1; i > 0; i--) {
-    if(index_in_sweep == i || index_in_sweep == i - 1) {
-      if(index_in_sweep == i) {
-        std::cout << "In process " << GlobalParams.MPI_Rank << " local solution step 1: " << local_solution.l2_norm() << std::endl;
-        temp_vector = S_inv(local_solution);
-        std::cout << "In process " << GlobalParams.MPI_Rank << " local solution step 2: " << local_solution.l2_norm() << std::endl;
-        temp_vector = vmult(temp_vector);
-        std::cout << "In process " << GlobalParams.MPI_Rank << " temp vector step 3: " << temp_vector.l2_norm() << std::endl;
-      } else {
-        temp_vector = vmult(zero);
-        std::cout << "In process " << GlobalParams.MPI_Rank << " temp vector step 4: " << temp_vector.l2_norm() << std::endl;
-        local_solution = subtract_fields(local_solution, temp_vector);
-        std::cout << "In process " << GlobalParams.MPI_Rank << " local solution step 5: " << local_solution.l2_norm() << std::endl;
-      }
-    } else {
-      vmult(zero);
+  if(is_highest_in_sweeping_direction()) {
+    temp_vector = S_inv(local_solution);
+    zero_lower_interface_dofs(temp_vector);
+    temp_vector = vmult(temp_vector);
+    DofFieldTrace trace = lower_trace(temp_vector);
+    send_down(trace);
+  } else {
+    DofFieldTrace trace = receive_from_above();
+    temp_vector = trace_to_field(trace, upper_sweeping_interface_id);
+    local_solution = subtract_fields(local_solution, temp_vector);
+    if(!is_lowest_in_sweeping_direction()) {
+      temp_vector = S_inv(local_solution);
+      zero_lower_interface_dofs(temp_vector);
+      temp_vector = vmult(temp_vector);
+      DofFieldTrace trace = lower_trace(temp_vector);
+      send_down(trace);
+    }
+  }
+  
+  local_solution = S_inv(local_solution);
+  zero_lower_interface_dofs(temp_vector);
+  
+  if(is_lowest_in_sweeping_direction()) {
+    DofFieldTrace trace = upper_trace(local_solution);
+    send_up(trace);
+  } else {
+    DofFieldTrace trace = receive_from_below();
+    temp_vector = trace_to_field(trace, lower_sweeping_interface_id);
+    temp_vector = vmult(temp_vector);
+    // zero_lower_interface_dofs(temp_vector);
+    temp_vector = S_inv(temp_vector);
+    zero_lower_interface_dofs(temp_vector);
+    local_solution = subtract_fields(local_solution, temp_vector);
+    if(!is_highest_in_sweeping_direction()) {
+      DofFieldTrace trace = upper_trace(local_solution);
+      send_up(trace);
+    }
+  }
+  
+  if(is_lowest_in_sweeping_direction()) {
+    DofFieldTrace trace = upper_trace(local_solution);
+    send_up(trace);
+  } else {
+    DofFieldTrace trace = receive_from_below();
+    for(unsigned int i = 0; i < trace.size(); i++) {
+      local_solution[lower_interface_dofs.nth_index_in_set(i)] = trace[i];
+    }
+    if(!is_highest_in_sweeping_direction()) {
+      DofFieldTrace trace = upper_trace(local_solution);
+      send_up(trace);
     }
   }
 
-  // Lines 6 - 9
-  local_solution = S_inv(local_solution);
-  std::cout << "In process " << GlobalParams.MPI_Rank << " local solution in middle: " << local_solution.l2_norm() << std::endl;
-  
-  for(unsigned int i = 0; i < n_blocks_in_sweep-1; i++) {
-    if(index_in_sweep == i || index_in_sweep == i + 1) {
-      if(index_in_sweep == i) {
-        vmult(local_solution);
-      } else {
-        temp_vector = vmult(zero);
-        std::cout << "In process " << GlobalParams.MPI_Rank << " temp vector step 6: " << temp_vector.l2_norm() << std::endl;
-        temp_vector = S_inv(temp_vector);
-        std::cout << "In process " << GlobalParams.MPI_Rank << " temp vector step 7: " << temp_vector.l2_norm() << std::endl;
-        local_solution = subtract_fields(local_solution, temp_vector);
-      }
-    } else {
-      vmult(zero);
-    }
-  }
-  std::cout << "In process " << GlobalParams.MPI_Rank << " local solution at the end: " << local_solution.l2_norm() << std::endl;
   set_x_out_from_u(&u, local_solution);
 }
 
@@ -394,7 +467,7 @@ DofFieldTrace NonLocalProblem::lower_trace(NumericVectorLocal u) {
       max_norm = std::abs(u[index]);
     }
   }
-  std::cout << "In lower trace - max norm: " << max_norm << std::endl;
+  //std::cout << "In lower trace - max norm: " << max_norm << std::endl;
   return ret;
 }
 
@@ -408,7 +481,7 @@ DofFieldTrace NonLocalProblem::upper_trace(NumericVectorLocal u) {
       max_norm = std::abs(u[index]);
     }
   }
-  std::cout << "In upper trace - max norm: " << max_norm << std::endl;
+  // std::cout << "In upper trace - max norm: " << max_norm << std::endl;
   return ret;
 }
 
@@ -424,7 +497,7 @@ void NonLocalProblem::send_down(DofFieldTrace trace_values) {
 
 void NonLocalProblem::send_up(DofFieldTrace trace_values) {
   reinit_mpi_cache(trace_values.size());
-  std::cout << "Send up on process " << GlobalParams.MPI_Rank << ": " << l2_norm(trace_values) << std::endl;
+  // std::cout << "Send up on process " << GlobalParams.MPI_Rank << ": " << l2_norm(trace_values) << std::endl;
   Direction communication_direction = get_upper_boundary_id_for_sweeping_direction(sweeping_direction);
   std::pair<bool, unsigned int> neighbour_data = GlobalMPI.get_neighbor_for_interface(communication_direction);
   for(unsigned int i = 0; i < trace_values.size(); i++) {
@@ -462,27 +535,7 @@ DofFieldTrace NonLocalProblem::receive_from_below() {
 NumericVectorLocal NonLocalProblem::vmult(NumericVectorLocal in_u) {
   NumericVectorLocal ret;
   reinit_u_vector(&ret);
-  
-  for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
-    rhs_mismatch[own_dofs.nth_index_in_set(i)] = in_u[i];
-  }
-
-  for(unsigned int i = 0; i < lower_interface_dofs.n_elements(); i++) {
-    rhs_mismatch[lower_interface_dofs.nth_index_in_set(i) + Geometry.levels[level].inner_first_dof] = ComplexNumber(0,0);
-  }
-
-  rhs_mismatch.compress(VectorOperation::insert);
-
-  constraints.set_zero(rhs_mismatch);
-
-  matrix->vmult(final_rhs_mismatch, rhs_mismatch);
-
-  constraints.distribute(final_rhs_mismatch);
-
-  for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
-    ret[i] = final_rhs_mismatch[own_dofs.nth_index_in_set(i)];
-  }
-  
+  local.matrix.vmult(ret, in_u);
   return ret;
 }
 

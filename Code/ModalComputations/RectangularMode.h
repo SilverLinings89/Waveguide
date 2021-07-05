@@ -55,7 +55,7 @@ class RectangularMode {
   std:: vector<DofNumber> surface_first_dofs;
   std::array<std::shared_ptr<HSIESurface>,4> surfaces;
   dealii::FE_NedelecSZ<3> fe;
-  dealii::AffineConstraints<ComplexNumber> constraints, periodic_constraints;
+  Constraints constraints, periodic_constraints;
   Triangulation<3> triangulation;
   DoFHandler<3> dof_handler;
   SparsityPattern sp;

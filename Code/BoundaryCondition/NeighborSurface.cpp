@@ -29,15 +29,19 @@ NeighborSurface::~NeighborSurface() {
 
 }
 
-void NeighborSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, NumericVectorDistributed*, dealii::AffineConstraints<ComplexNumber> *) {
+void NeighborSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, NumericVectorDistributed*, Constraints *) {
     matrix->compress(dealii::VectorOperation::add); // <-- this operation is collective and therefore required.
 }
 
-void NeighborSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix *, NumericVectorDistributed *, dealii::AffineConstraints<ComplexNumber> *) {
+void NeighborSurface::fill_matrix(dealii::SparseMatrix<ComplexNumber> * matrix, Constraints *) {
+    matrix->compress(dealii::VectorOperation::add); // <-- this operation is collective and therefore required.
+}
+
+void NeighborSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix *, NumericVectorDistributed *, Constraints *) {
     // Nothing to do here, work happens on neighbor process.
 }
 
-void NeighborSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, NumericVectorDistributed *, dealii::AffineConstraints<ComplexNumber> *) {
+void NeighborSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, NumericVectorDistributed *, Constraints *) {
      matrix->compress(dealii::VectorOperation::add); // <-- this operation is collective and therefore required.
     // Nothing to do here, work happens on neighbor process.
 }
@@ -143,7 +147,7 @@ void NeighborSurface::output_results(const dealii::Vector<ComplexNumber> & , std
 
 }
 
-void NeighborSurface::make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints) {
+void NeighborSurface::make_surface_constraints(Constraints * constraints) {
     std::vector<InterfaceDofData> own_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
     const unsigned int n_dofs = own_dof_indices.size();
     unsigned int * dof_indices = new unsigned int[n_dofs];
@@ -157,11 +161,11 @@ void NeighborSurface::make_surface_constraints(dealii::AffineConstraints<Complex
         temp.index = dof_indices[i];
         other_dof_indices.push_back(temp);
     }
-    dealii::AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, other_dof_indices, Geometry.levels[level].n_total_level_dofs);
-    constraints->merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
+    Constraints new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, other_dof_indices, Geometry.levels[level].n_total_level_dofs);
+    constraints->merge(new_constraints, Constraints::MergeConflictBehavior::right_object_wins, true);
 }
 
-void NeighborSurface::make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) {
+void NeighborSurface::make_edge_constraints(Constraints * constraints, BoundaryId other_boundary) {
     std::vector<InterfaceDofData> own_dof_indices;
     if(Geometry.levels[level].is_surface_truncated[other_boundary]) {
         own_dof_indices = Geometry.levels[level].surfaces[other_boundary]->get_dof_association_by_boundary_id(b_id);
@@ -180,8 +184,8 @@ void NeighborSurface::make_edge_constraints(dealii::AffineConstraints<ComplexNum
         temp.index = dof_indices[i];
         other_dof_indices.push_back(temp);
     }
-    dealii::AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, other_dof_indices, Geometry.levels[level].n_total_level_dofs);
-    constraints->merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
+    Constraints new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, other_dof_indices, Geometry.levels[level].n_total_level_dofs);
+    constraints->merge(new_constraints, Constraints::MergeConflictBehavior::right_object_wins, true);
 }
 
 std::vector<SurfaceCellData> NeighborSurface::get_surface_cell_data(BoundaryId in_bid) {
@@ -199,7 +203,7 @@ std::vector<SurfaceCellData> NeighborSurface::get_inner_surface_cell_data() {
     return mpi_send_recv_surf_cell_data(data);
 }
 
-void NeighborSurface::fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *, dealii::AffineConstraints<ComplexNumber> *) {
+void NeighborSurface::fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *, Constraints *) {
     // Only the other boundary methods do something here, because this one has no "own" dofs.
 }
 
@@ -208,13 +212,13 @@ std::vector<SurfaceCellData> NeighborSurface::get_corner_surface_cell_data(Bound
     return mpi_send_recv_surf_cell_data(data);
 }
 
-void NeighborSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern * in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constraints) {
+void NeighborSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern * in_dsp, Constraints * in_constraints) {
     BoundaryCondition::fill_sparsity_pattern(in_dsp, in_constraints);
     fill_sparsity_pattern_for_edge(in_dsp, in_constraints);
     fill_sparsity_pattern_for_corners(in_dsp, in_constraints);
 }
 
-void NeighborSurface::fill_sparsity_pattern_for_edge(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constraints) {
+void NeighborSurface::fill_sparsity_pattern_for_edge(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constraints) {
     for(unsigned int i = 0; i < 6; i++) {
         if(!(b_id == i || are_opposing_sites(i, b_id))) {
             fill_sparsity_pattern_for_edge_and_neighbor(i, in_dsp, in_constraints);
@@ -222,7 +226,7 @@ void NeighborSurface::fill_sparsity_pattern_for_edge(dealii::DynamicSparsityPatt
     }
 }
 
-void NeighborSurface::fill_sparsity_pattern_for_edge_and_neighbor(BoundaryId edge_bid, dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constraints) {
+void NeighborSurface::fill_sparsity_pattern_for_edge_and_neighbor(BoundaryId edge_bid, dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constraints) {
     BoundaryId edge_bid_opponent = 6;
     for(unsigned int i = 0; i < 6; i++) {
         if(are_opposing_sites(i, edge_bid)) {
@@ -242,14 +246,14 @@ void NeighborSurface::fill_sparsity_pattern_for_edge_and_neighbor(BoundaryId edg
 
 }
 
-void NeighborSurface::fill_sparsity_pattern_for_corner(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints, BoundaryId in_b_id_one, BoundaryId in_b_id_two) {
+void NeighborSurface::fill_sparsity_pattern_for_corner(dealii::DynamicSparsityPattern *in_dsp, Constraints *constraints, BoundaryId in_b_id_one, BoundaryId in_b_id_two) {
   std::vector<SurfaceCellData> from_self = Geometry.levels[level].surfaces[in_b_id_one]->get_corner_surface_cell_data(in_b_id_two, b_id);
   std::vector<SurfaceCellData> from_other = mpi_send_recv_surf_cell_data(from_self);
   from_self = Geometry.levels[level].surfaces[in_b_id_two]->get_corner_surface_cell_data(in_b_id_one, b_id);
   fill_sparsity_pattern_with_surface_data_vectors(from_self, from_other, in_dsp, constraints);
 }
 
-void NeighborSurface::fill_sparsity_pattern_for_corners(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints) {
+void NeighborSurface::fill_sparsity_pattern_for_corners(dealii::DynamicSparsityPattern *in_dsp, Constraints *constraints) {
     std::array<std::pair<BoundaryId, BoundaryId>, 4> corners = get_corner_boundary_id_set();
     for(unsigned int i = 0; i < 4; i++) {
         fill_sparsity_pattern_for_corner(in_dsp, constraints, corners[i].first, corners[i].second);

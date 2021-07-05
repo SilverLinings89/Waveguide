@@ -29,9 +29,10 @@ class PMLSurface : public BoundaryCondition {
     void prepare_id_sets_for_boundaries();
     bool is_point_at_boundary(Position, BoundaryId);
     void identify_corner_cells() override;
-    void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
-    void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
-    void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints) override;
+    void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;
+    void fill_matrix(dealii::SparseMatrix<ComplexNumber>*,  Constraints *constraints) override;
+    void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;
+    void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;
     bool is_point_at_boundary(Position2D in_p, BoundaryId in_bid) override;
     bool is_position_at_boundary(Position in_p, BoundaryId in_bid);
     void initialize() override;
@@ -51,11 +52,11 @@ class PMLSurface : public BoundaryCondition {
     void set_boundary_ids();
     void fix_apply_negative_Jacobian_transformation(dealii::Triangulation<3> * in_tria);
     void output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
-    void make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * constraints) override;
-    void make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) override;
+    void make_surface_constraints(Constraints * constraints) override;
+    void make_edge_constraints(Constraints * constraints, BoundaryId other_boundary) override;
     auto get_surface_cell_data(BoundaryId in_bid) -> std::vector<SurfaceCellData> override;
     auto get_inner_surface_cell_data() -> std::vector<SurfaceCellData> override;
     void validate_meshes();
-    void fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constriants) override;
+    void fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constriants) override;
     auto get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) -> std::vector<SurfaceCellData> override;
 };

@@ -73,3 +73,11 @@ The function has been implemented with the name compute_rhs_representation_of_in
 # Monday, 21th of june
 
 Implementing vmult on Inner domain and precomputation of the local matrix. This is a matrix unaware of boundary conditions which is computet entirely locally. There might be work required later on to compute this precisely for higher order sweeping because then the input interface is distributed to multiple cores.
+
+# Monday, 5th of july
+
+Currently the computation of the solution doesnt work at all. The scale is completely off and the solution builds up nummerical errors added on top of the solution with increasing z. My goal for today is to fix the amplitude of the exact solution. I will first implement a parameter to switch to a direct solver in the solve function. That way I don't always have to recompile and comment / un-comment code.
+
+Other points to fix today: Fix the output to only diplay once fot the messages where it makes sense. Fix the crashes in the output routines. Also make PML Domain outputs compatible with inner outputs (requires Exact solution field). Then add pvtu file.
+
+Added parameter for logging level. Fixed a wrong implementation in print infos function to determine visibility for the ...One versions of the logging level. Bug fixed. Default Logging Level was too low.

@@ -110,12 +110,12 @@ Position crossproduct(const Position &u,const Position &v);
 
 void multiply_in_place(const ComplexNumber factor_1, NumericVectorLocal &factor_2);
 
-void print_info(const std::string &label, const std::string &message, bool blocking = false, LoggingLevel level = LoggingLevel::DEBUG_ALL);
-void print_info(const std::string &label, const unsigned int message, bool blocking = false, LoggingLevel level = LoggingLevel::DEBUG_ALL);
-void print_info(const std::string &label, const std::vector<unsigned int> &message, bool blocking = false, LoggingLevel level = LoggingLevel::DEBUG_ALL);
-void print_info(const std::string &label, const std::array<bool,6> &message, bool blocking = false, LoggingLevel level = LoggingLevel::DEBUG_ALL);
+void print_info(const std::string &label, const std::string &message, bool blocking = false, LoggingLevel level = LoggingLevel::DEBUG_ONE);
+void print_info(const std::string &label, const unsigned int message, bool blocking = false, LoggingLevel level = LoggingLevel::DEBUG_ONE);
+void print_info(const std::string &label, const std::vector<unsigned int> &message, bool blocking = false, LoggingLevel level = LoggingLevel::DEBUG_ONE);
+void print_info(const std::string &label, const std::array<bool,6> &message, bool blocking = false, LoggingLevel level = LoggingLevel::DEBUG_ONE);
 
-bool is_visible_message_in_current_logging_level(LoggingLevel level = LoggingLevel::DEBUG_ALL);
+bool is_visible_message_in_current_logging_level(LoggingLevel level = LoggingLevel::DEBUG_ONE);
 void write_print_message(const std::string &label, const std::string &message);
 
 BoundaryId opposing_Boundary_Id(BoundaryId b_id);
@@ -126,7 +126,7 @@ std::vector<DofCouplingInformation> get_coupling_information(std::vector<Interfa
 
 Position deal_vector_to_position(NumericVectorLocal &inp);
 
-auto get_affine_constraints_for_InterfaceData(std::vector<InterfaceDofData> &dofs_interface_1, std::vector<InterfaceDofData> &dofs_interface_2, const unsigned int max_dof) -> dealii::AffineConstraints<ComplexNumber>;
+auto get_affine_constraints_for_InterfaceData(std::vector<InterfaceDofData> &dofs_interface_1, std::vector<InterfaceDofData> &dofs_interface_2, const unsigned int max_dof) -> Constraints;
 
 void shift_interface_dof_data(std::vector<InterfaceDofData> * dofs_interface_1, unsigned int shift);
 

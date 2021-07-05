@@ -428,11 +428,11 @@ struct CellwiseAssemblyDataPML {
 
 };
 
-void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* , dealii::AffineConstraints<ComplexNumber> *){
+void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* , Constraints *){
     // NOT IMPLEMENTED
 }
 
-void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints){
+void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, NumericVectorDistributed* rhs, Constraints *constraints){
   CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_h_nedelec);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
       cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
@@ -458,7 +458,33 @@ void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, Numeri
   matrix->compress(dealii::VectorOperation::add);
 }
 
-void PMLSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, NumericVectorDistributed* rhs, dealii::AffineConstraints<ComplexNumber> *constraints){
+void PMLSurface::fill_matrix(dealii::SparseMatrix<ComplexNumber> * matrix, Constraints *constraints){
+  CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_h_nedelec);
+  for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
+      cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
+      for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
+          cell_data.local_dof_indices[i] += first_own_dof - Geometry.levels[level].inner_first_dof;
+      }
+      cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
+      cell_data.fe_values.reinit(cell_data.cell);
+      cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
+      std::vector<types::global_dof_index> input_dofs(fe_nedelec.dofs_per_line);
+      IndexSet input_dofs_local_set(fe_nedelec.dofs_per_cell);
+      std::vector<Position> input_dof_centers(fe_nedelec.dofs_per_cell);
+      std::vector<Tensor<1, 3, double>> input_dof_dirs(fe_nedelec.dofs_per_cell);
+      cell_data.cell_matrix = 0;
+      for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
+          Position pos = cell_data.get_position_for_q_index(q_index);
+          dealii::Tensor<2,3,ComplexNumber> epsilon = get_pml_tensor_epsilon(pos);
+          dealii::Tensor<2,3,ComplexNumber> mu = get_pml_tensor_mu(pos);
+          cell_data.prepare_for_current_q_index(q_index, epsilon, mu);
+      }
+      constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.local_dof_indices,*matrix);
+  }
+  matrix->compress(dealii::VectorOperation::add);
+}
+
+void PMLSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, NumericVectorDistributed* rhs, Constraints *constraints){
   CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_h_nedelec);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
     cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
@@ -570,23 +596,23 @@ void PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_data, s
   data_out.write_vtu(outputvtu);
 }
 
-void PMLSurface::make_surface_constraints(dealii::AffineConstraints<ComplexNumber> * in_constraints) {
+void PMLSurface::make_surface_constraints(Constraints * in_constraints) {
     std::vector<InterfaceDofData> own_dof_indices = get_dof_association();
     std::vector<InterfaceDofData> inner_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
-    dealii::AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, inner_dof_indices, Geometry.levels[level].n_total_level_dofs);
+    Constraints new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, inner_dof_indices, Geometry.levels[level].n_total_level_dofs);
     std::vector<InterfaceDofData> outer_dofs = get_dof_association_by_boundary_id(outer_boundary_id);
     for(unsigned int i = 0; i < outer_dofs.size(); i++) {
       new_constraints.add_line(outer_dofs[i].index);
       new_constraints.set_inhomogeneity(outer_dofs[i].index, ComplexNumber(0,0));
     }
-    in_constraints->merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
+    in_constraints->merge(new_constraints, Constraints::MergeConflictBehavior::right_object_wins, true);
 }
 
-void PMLSurface::make_edge_constraints(dealii::AffineConstraints<ComplexNumber> * constraints, BoundaryId other_boundary) {
+void PMLSurface::make_edge_constraints(Constraints * constraints, BoundaryId other_boundary) {
     std::vector<InterfaceDofData> other_boundary_id = Geometry.levels[level].surfaces[other_boundary]->get_dof_association_by_boundary_id(b_id);
     std::vector<InterfaceDofData> own_dof_indices = get_dof_association_by_boundary_id(other_boundary);
-    dealii::AffineConstraints<ComplexNumber> new_constraints = get_affine_constraints_for_InterfaceData(other_boundary_id, own_dof_indices, Geometry.levels[level].n_total_level_dofs);
-    constraints->merge(new_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
+    Constraints new_constraints = get_affine_constraints_for_InterfaceData(other_boundary_id, own_dof_indices, Geometry.levels[level].n_total_level_dofs);
+    constraints->merge(new_constraints, Constraints::MergeConflictBehavior::right_object_wins, true);
 }
 
 std::vector<SurfaceCellData> PMLSurface::get_surface_cell_data(BoundaryId in_bid) {
@@ -622,7 +648,7 @@ std::vector<SurfaceCellData> PMLSurface::get_inner_surface_cell_data() {
   return get_surface_cell_data(inner_boundary_id);
 }
 
-void PMLSurface::fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constraints) {
+void PMLSurface::fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constraints) {
   std::vector<unsigned int> cell_dofs(fe_nedelec.dofs_per_cell);
   for(auto it: dof_h_nedelec) {
     it.get_dof_indices(cell_dofs);

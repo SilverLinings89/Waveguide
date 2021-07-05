@@ -93,7 +93,7 @@ std::vector<unsigned int> BoundaryCondition::dof_indices_from_surface_cell_data(
   return ret;
 }
 
-void BoundaryCondition::fill_sparsity_pattern_with_surface_data_vectors(std::vector<SurfaceCellData> first_data_vector, std::vector<SurfaceCellData> second_data_vector, dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints) {
+void BoundaryCondition::fill_sparsity_pattern_with_surface_data_vectors(std::vector<SurfaceCellData> first_data_vector, std::vector<SurfaceCellData> second_data_vector, dealii::DynamicSparsityPattern *in_dsp, Constraints *constraints) {
   for(unsigned int i = 0; i < first_data_vector.size(); i++) {
     std::vector<unsigned int> indices;
     for(unsigned int j = 0; j < first_data_vector[i].dof_numbers.size(); j++) {
@@ -107,7 +107,7 @@ void BoundaryCondition::fill_sparsity_pattern_with_surface_data_vectors(std::vec
   }
 }
 
-void BoundaryCondition::fill_sparsity_pattern_for_inner_surface(dealii::DynamicSparsityPattern *in_dsp, dealii::AffineConstraints<ComplexNumber> *constraints) {
+void BoundaryCondition::fill_sparsity_pattern_for_inner_surface(dealii::DynamicSparsityPattern *in_dsp, Constraints *constraints) {
   std::vector<SurfaceCellData> from_surface = get_inner_surface_cell_data();
   std::vector<SurfaceCellData> from_inner_domain = Geometry.inner_domain->get_surface_cell_data_for_boundary_id_and_level(b_id, level);
   if(from_surface.size() != from_inner_domain.size()) {
@@ -120,7 +120,7 @@ void BoundaryCondition::fill_sparsity_pattern_for_inner_surface(dealii::DynamicS
   fill_sparsity_pattern_with_surface_data_vectors(from_surface, from_inner_domain, in_dsp, constraints);
 }
 
-void BoundaryCondition::fill_sparsity_pattern(dealii::DynamicSparsityPattern * in_dsp, dealii::AffineConstraints<ComplexNumber> * in_constraints) {
+void BoundaryCondition::fill_sparsity_pattern(dealii::DynamicSparsityPattern * in_dsp, Constraints * in_constraints) {
   fill_internal_sparsity_pattern(in_dsp, in_constraints);
   fill_sparsity_pattern_for_inner_surface(in_dsp, in_constraints);
   for(unsigned int i = 0; i < 6; i++) {
@@ -130,7 +130,7 @@ void BoundaryCondition::fill_sparsity_pattern(dealii::DynamicSparsityPattern * i
   }
 }
 
-void BoundaryCondition::make_edge_sparsity_pattern(const BoundaryId in_bid, dealii::AffineConstraints<ComplexNumber> * in_constraints, dealii::DynamicSparsityPattern * in_dsp) {
+void BoundaryCondition::make_edge_sparsity_pattern(const BoundaryId in_bid, Constraints * in_constraints, dealii::DynamicSparsityPattern * in_dsp) {
   if(Geometry.levels[level].surface_type[b_id] != SurfaceType::OPEN_SURFACE && Geometry.levels[level].surface_type[in_bid] != SurfaceType::OPEN_SURFACE) {
     std::vector<SurfaceCellData> own_vector = get_surface_cell_data(in_bid);
     std::vector<SurfaceCellData> other_vector = Geometry.levels[level].surfaces[in_bid]->get_surface_cell_data(b_id);

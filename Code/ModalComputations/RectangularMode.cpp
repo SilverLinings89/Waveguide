@@ -150,7 +150,7 @@ void RectangularMode::make_boundary_conditions() {
     }
   }
 
-  constraints.merge(periodic_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::no_conflicts_allowed, true);
+  constraints.merge(periodic_constraints, Constraints::MergeConflictBehavior::no_conflicts_allowed, true);
   for(unsigned int surf_index = 0; surf_index < 4; surf_index++) {
     std::vector<InterfaceDofData> side_4 = surfaces[surf_index]->get_dof_association_by_boundary_id(4);
     std::vector<InterfaceDofData> side_5 = surfaces[surf_index]->get_dof_association_by_boundary_id(5);
@@ -181,7 +181,7 @@ void RectangularMode::make_boundary_conditions() {
     }
   }
 
-  dealii::AffineConstraints<ComplexNumber> surface_to_surface_constraints;
+  Constraints surface_to_surface_constraints;
   for (unsigned int i = 0; i < 4; i++) {
     for (unsigned int j = i + 1; j < 4; j++) {
       surface_to_surface_constraints.reinit(is);
@@ -198,7 +198,7 @@ void RectangularMode::make_boundary_conditions() {
               << std::endl;
         }
         surface_to_surface_constraints = get_affine_constraints_for_InterfaceData(lower_face_dofs, upper_face_dofs, n_dofs_total); 
-        constraints.merge(surface_to_surface_constraints, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::left_object_wins);
+        constraints.merge(surface_to_surface_constraints, Constraints::MergeConflictBehavior::left_object_wins);
         surface_to_surface_constraints.clear();
       }
     }

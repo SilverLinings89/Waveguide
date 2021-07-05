@@ -441,11 +441,10 @@ void multiply_in_place(const ComplexNumber factor_1, NumericVectorLocal &factor_
 }
 
 void print_info(const std::string &label, const std::string &message, bool blocking, LoggingLevel logging_level) {
-  if(blocking) MPI_Barrier(MPI_COMM_WORLD);
+  // if(blocking) MPI_Barrier(MPI_COMM_WORLD);
   if(is_visible_message_in_current_logging_level(logging_level)) {
     write_print_message(label, message);
   }
-  if(blocking) MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void print_info(const std::string &label, const unsigned int message, bool blocking, LoggingLevel logging_level) {
@@ -471,14 +470,10 @@ void print_info(const std::string &label, const std::array<bool,6> &message, boo
 }
 
 bool is_visible_message_in_current_logging_level(LoggingLevel level) {
-  if(level == LoggingLevel::DEBUG_ONE || level == LoggingLevel::PRODUCTION_ONE) {
+  if(GlobalParams.Logging_Level == LoggingLevel::DEBUG_ONE || GlobalParams.Logging_Level == LoggingLevel::PRODUCTION_ONE) {
     if(GlobalParams.MPI_Rank != 0) return false;
   }
-  bool admissible = level >= GlobalParams.Logging_Level;
-  if(level == LoggingLevel::DEBUG_ONE || level == LoggingLevel::PRODUCTION_ONE) {
-    admissible &= GlobalParams.MPI_Rank == 0;
-  }
-  return admissible;
+  return level >= GlobalParams.Logging_Level;
 }
 
 void write_print_message(const std::string &label, const std::string &message) {
@@ -507,10 +502,10 @@ DofCouplingInformation get_coupling_for_single_pair(const InterfaceDofData &dof_
   return ret;
 }
 
-dealii::AffineConstraints<ComplexNumber> get_affine_constraints_for_InterfaceData(std::vector<InterfaceDofData> &dofs_interface_1, std::vector<InterfaceDofData> &dofs_interface_2, const unsigned int max_dof) {
+Constraints get_affine_constraints_for_InterfaceData(std::vector<InterfaceDofData> &dofs_interface_1, std::vector<InterfaceDofData> &dofs_interface_2, const unsigned int max_dof) {
   dealii::IndexSet is(max_dof);
   is.add_range(0,max_dof);
-  dealii::AffineConstraints<ComplexNumber> ret(is);
+  Constraints ret(is);
   std::vector<DofCouplingInformation> coupling_data = get_coupling_information(dofs_interface_1, dofs_interface_2);
   for(unsigned int i = 0; i < coupling_data.size(); i++) {
     if(coupling_data[i].first_dof < coupling_data[i].second_dof) {

@@ -140,6 +140,8 @@ struct Parameters {
     SignalTaperingType Signal_tapering_type = SignalTaperingType::C1;
 
     bool prescribe_0_on_input_side = false;
+
+    bool solve_directly = false;
     
     auto complete_data() -> void;
     auto check_validity() -> bool;

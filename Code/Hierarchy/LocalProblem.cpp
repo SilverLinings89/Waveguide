@@ -30,7 +30,7 @@
 #include "../Solutions/ExactSolutionConjugate.h"
 
 
-template void dealii::VectorTools::project<3,dealii::Vector<ComplexNumber>,3>(const dealii::Mapping<3, 3> &, const dealii::DoFHandler<3, 3> &, const dealii::AffineConstraints<ComplexNumber> &,
+template void dealii::VectorTools::project<3,dealii::Vector<ComplexNumber>,3>(const dealii::Mapping<3, 3> &, const dealii::DoFHandler<3, 3> &, const Constraints &,
         const dealii::Quadrature<3> &,
         const dealii::Function<3, ComplexNumber> &,
         dealii::Vector<ComplexNumber> &,

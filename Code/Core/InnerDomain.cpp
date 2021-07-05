@@ -118,7 +118,7 @@ std::vector<unsigned int> InnerDomain::dofs_for_cell_around_point(
   return ret;
 }
 
-void InnerDomain::make_sparsity_pattern( dealii::DynamicSparsityPattern *in_pattern, unsigned int shift, dealii::AffineConstraints<ComplexNumber> *in_constraints) {
+void InnerDomain::make_sparsity_pattern( dealii::DynamicSparsityPattern *in_pattern, unsigned int shift, Constraints *in_constraints) {
   auto end = dof_handler.end();
   std::vector<DofNumber> cell_dof_indices(fe.dofs_per_cell);
   for(auto cell = dof_handler.begin_active(); cell != end; cell++) {
@@ -162,10 +162,10 @@ void InnerDomain::make_constraints() {
   local_constraints.reinit(local_dof_indices);
   if(GlobalParams.Index_in_z_direction == 0) {
     if(GlobalParams.prescribe_0_on_input_side) {
-      DoFTools::make_zero_boundary_constraints(dof_handler, 4, local_constraints);
+      // DoFTools::make_zero_boundary_constraints(dof_handler, 4, local_constraints);
     } else {
       if(!GlobalParams.use_tapered_input_signal) {
-        VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, *GlobalParams.source_field, 4, local_constraints);
+        // VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, *GlobalParams.source_field, 4, local_constraints);
       }
     }
   }
@@ -176,7 +176,7 @@ void InnerDomain::make_constraints(AffineConstraints<ComplexNumber> *in_constrai
   if(!local_constraints_made) {
     make_constraints();
   }
-  dealii::AffineConstraints<ComplexNumber> temp(local_constraints_indices);
+  Constraints temp(local_constraints_indices);
   for(auto index : local_dof_indices) {
     if(local_constraints.is_constrained(index)){
       temp.add_line(index + shift);
@@ -188,7 +188,7 @@ void InnerDomain::make_constraints(AffineConstraints<ComplexNumber> *in_constrai
       }
     }
   }
-  in_constraints->merge(temp, dealii::AffineConstraints<ComplexNumber>::MergeConflictBehavior::right_object_wins, true);
+  in_constraints->merge(temp, Constraints::MergeConflictBehavior::right_object_wins, true);
 }
 
 void InnerDomain::SortDofsDownstream() {
@@ -437,7 +437,7 @@ struct CellwiseAssemblyDataNP {
 };
 
 void InnerDomain::assemble_system(unsigned int shift,
-    dealii::AffineConstraints<ComplexNumber> * constraints,
+    Constraints * constraints,
     dealii::PETScWrappers::SparseMatrix *matrix,
     NumericVectorDistributed *rhs) {
   CellwiseAssemblyDataNP cell_data(&fe, &dof_handler);
@@ -459,8 +459,25 @@ void InnerDomain::assemble_system(unsigned int shift,
   rhs->compress(dealii::VectorOperation::add);
 }
 
+void InnerDomain::assemble_system(Constraints * constraints,
+    dealii::SparseMatrix<ComplexNumber> *matrix) {
+  CellwiseAssemblyDataNP cell_data(&fe, &dof_handler);
+  for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
+    cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
+    cell_data.cell_matrix = 0;
+    cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
+    cell_data.fe_values.reinit(cell_data.cell);
+    cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
+    for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
+      cell_data.prepare_for_current_q_index(q_index);
+    }
+    constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.local_dof_indices, *matrix);
+  }
+  matrix->compress(dealii::VectorOperation::add);
+}
+
 void InnerDomain::assemble_system(unsigned int shift,
-    dealii::AffineConstraints<ComplexNumber> * constraints,
+    Constraints * constraints,
     dealii::PETScWrappers::MPI::SparseMatrix * matrix,
     NumericVectorDistributed *rhs) {
   CellwiseAssemblyDataNP cell_data(&fe, &dof_handler);
