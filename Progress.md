@@ -81,3 +81,27 @@ Currently the computation of the solution doesnt work at all. The scale is compl
 Other points to fix today: Fix the output to only diplay once fot the messages where it makes sense. Fix the crashes in the output routines. Also make PML Domain outputs compatible with inner outputs (requires Exact solution field). Then add pvtu file.
 
 Added parameter for logging level. Fixed a wrong implementation in print infos function to determine visibility for the ...One versions of the logging level. Bug fixed. Default Logging Level was too low.
+
+Making PML and inner domains compatible next. To make this so, I have to add an exact solution  output to the pml domain output. Done. Now adding pvtu file in non-local problem. The pvtu should contain all inner domains on the current level as well as the PML domain for PML computations. For this implementation, a string return value has been added to all output_result functions which is the filename of the files written. Compiles. Runs.
+
+The implementation has 2 errors: 
+- There are no data objects visible, because the dof_output generating the pvtu doesnt know of any.
+- The files cannot be found because the paths are wrong.
+
+# Tuesday, 6th of july
+
+The output files are working now. The next step will be to fix the directly solved, non-local problem to the solution it should have. The current problems are:
+
+- The amplitude is too high in the interior. 
+- Something weird is happening on the input interface. The coupling seems broken.
+
+There is an interesting solution to this: The coupling interface dofs have 2 values - the input field and the scattered field. The idea is to only compute the scattered field - i.e subtract the input field from the computed field on the input boundary. I can facilitate this with an inhomogenous constraint on the interface because the dof actually exists twice.
+
+# Wednesday, 7th of july
+
+Today I will implement the dof surface split for the surface dofs. There were some issues in doing so. I will continue tomorrow.
+
+# Thursday, 8th of july
+
+To implement the surface split, all that is required is an adaptation of the make_constraints function. I need an aditional one called make_inhomogenous constraints that adds the inhomogeneities. Because they would conflict I have decided to instead add an argument to the make_surface_constrints function of type bool if inhomogeneities should be built. Otherwise I would have to search through the existing contraints and update some lines. Merging is not possible because the constraint has to be x_inner = x_outer + inhom. Merging would give me two entries. x_inner = inhom and x_inner = x_outer which lead to a different result.
+

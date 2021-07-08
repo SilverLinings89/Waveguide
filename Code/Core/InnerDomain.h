@@ -94,6 +94,7 @@ class InnerDomain {
   dealii::SparseMatrix<ComplexNumber> local_matrix;
   dealii::SparsityPattern sp;
   bool is_local_matrix_prepared = false;
+  dealii::DataOut<3> data_out;
 
   InnerDomain();
   ~InnerDomain();
@@ -129,7 +130,7 @@ class InnerDomain {
   auto get_central_cells(double point_source_radius) -> std::set<std::string>;
   auto get_outer_constrained_faces() -> std::set<unsigned int>;
   std::vector<SurfaceCellData> get_edge_cell_data(BoundaryId first_b_id, BoundaryId second_b_id, unsigned int level);
-  void output_results(std::string in_filename, NumericVectorLocal in_solution);
+  std::string output_results(std::string in_filename, NumericVectorLocal in_solution);
   void fill_rhs_vector(NumericVectorDistributed in_vec, unsigned int level);
   void prepare_inner_matrix();
   auto vmult(const NumericVectorLocal a) -> NumericVectorLocal;

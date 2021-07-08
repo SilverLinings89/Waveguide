@@ -38,6 +38,7 @@ class HierarchicalProblem {
   dealii::IndexSet current_lower_sweeping_dofs;
   std::array<std::vector<InterfaceDofData>, 6> surface_dof_associations;
   dealii::PETScWrappers::MPI::SparseMatrix * matrix;
+  std::vector<std::string> filenames;
 
   HierarchicalProblem(unsigned int level, SweepingDirection direction);
   virtual ~HierarchicalProblem() =0;
@@ -58,7 +59,7 @@ class HierarchicalProblem {
   void compute_final_rhs_mismatch();
 
   virtual void compute_solver_factorization() = 0;
-  void output_results();
+  std::string output_results();
   virtual void reinit_rhs() = 0;
   virtual DofOwner get_dof_owner(unsigned int) = 0;
   void make_sparsity_pattern();

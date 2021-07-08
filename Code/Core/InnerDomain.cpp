@@ -550,9 +550,9 @@ std::vector<SurfaceCellData> InnerDomain::get_surface_cell_data_for_boundary_id_
   return ret;
 }
 
-void InnerDomain::output_results(std::string in_filename, NumericVectorLocal in_solution) {
+std::string InnerDomain::output_results(std::string in_filename, NumericVectorLocal in_solution) {
   print_info("InnerDomain::output_results()", "Start");
-  dealii::DataOut<3> data_out;
+  data_out.clear();
   data_out.attach_dof_handler(Geometry.inner_domain->dof_handler);
   data_out.add_data_vector(in_solution, "Solution");
   std::string filename = GlobalOutputManager.get_numbered_filename(in_filename, GlobalParams.MPI_Rank, "vtu");
@@ -578,6 +578,7 @@ void InnerDomain::output_results(std::string in_filename, NumericVectorLocal in_
   
   // write_phase_plot();
   print_info("InnerDomain::output_results()", "End");
+  return filename;
 }
 
 void InnerDomain::prepare_inner_matrix() {

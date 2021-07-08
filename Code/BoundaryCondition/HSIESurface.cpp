@@ -1327,7 +1327,9 @@ std::vector<unsigned int> HSIESurface::get_lines_for_boundary_id(BoundaryId in_b
   return edges;
 }
 
-void HSIESurface::output_results(const dealii::Vector<ComplexNumber> & , std::string) { }
+std::string HSIESurface::output_results(const dealii::Vector<ComplexNumber> & , std::string) { 
+  return "";
+}
 
 SurfaceCellData HSIESurface::get_surface_cell_data_for_cell_index(const int in_index, const BoundaryId in_bid) {
   auto it2 = dof_h_q.begin();
@@ -1349,7 +1351,7 @@ SurfaceCellData HSIESurface::get_surface_cell_data_for_cell_index(const int in_i
   return ret;
 }
 
-void HSIESurface::make_surface_constraints(Constraints * constraints) {
+void HSIESurface::make_surface_constraints(Constraints * constraints, bool make_inhomogeneity) {
     std::vector<InterfaceDofData> own_dof_indices = get_dof_association();
     std::vector<InterfaceDofData> inner_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
     Constraints new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, inner_dof_indices, Geometry.levels[level].n_total_level_dofs);

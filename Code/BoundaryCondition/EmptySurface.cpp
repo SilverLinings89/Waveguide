@@ -71,11 +71,11 @@ std::vector<InterfaceDofData> EmptySurface::get_dof_association_by_boundary_id(B
     return ret;
 }
 
-void EmptySurface::output_results(const dealii::Vector<ComplexNumber> & , std::string) {
-
+std::string EmptySurface::output_results(const dealii::Vector<ComplexNumber> & , std::string) {
+    return "";
 }
 
-void EmptySurface::make_surface_constraints(Constraints * constraints ) {
+void EmptySurface::make_surface_constraints(Constraints * constraints, bool make_inhomogeneities) {
     std::vector<InterfaceDofData> surf_constraints = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
     for(unsigned int i = 0; i < surf_constraints.size(); i++) {
         const unsigned index = surf_constraints[i].index; 

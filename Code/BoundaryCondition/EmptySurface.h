@@ -22,8 +22,8 @@ class EmptySurface : public BoundaryCondition {
     auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount override;
     auto get_dof_association() -> std::vector<InterfaceDofData> override;
     auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> override;
-    void output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
-    void make_surface_constraints(Constraints * constraints) override;
+    std::string output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
+    void make_surface_constraints(Constraints * constraints, bool make_inhomogeneities) override;
     void make_edge_constraints(Constraints * constraints, BoundaryId other_boundary) override;
     auto get_surface_cell_data(BoundaryId in_bid) -> std::vector<SurfaceCellData> override;
     auto get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) -> std::vector<SurfaceCellData> override;

@@ -22,7 +22,7 @@ public:
   BoundaryCondition(unsigned int in_bid, unsigned int in_level, double in_additional_coordinate, DofNumber first_own_index);
 
   virtual void initialize() = 0;
-  virtual void output_results(const dealii::Vector<ComplexNumber> & , std::string) = 0;
+  virtual std::string output_results(const dealii::Vector<ComplexNumber> & , std::string) = 0;
   
   // Geometry functionality and Boundary Ids.
   virtual void identify_corner_cells() = 0;
@@ -35,7 +35,7 @@ public:
   virtual auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount = 0;
   virtual auto get_dof_association() -> std::vector<InterfaceDofData> = 0;
   virtual auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> = 0;
-  virtual void make_surface_constraints(Constraints * constraints) = 0;
+  virtual void make_surface_constraints(Constraints * constraints, bool make_inhomogeneities) = 0;
   virtual void make_edge_constraints(Constraints * constraints, BoundaryId other_boundary) = 0;
   
   // Generate the sparsity pattern

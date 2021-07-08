@@ -143,11 +143,11 @@ void NeighborSurface::set_boundary_ids() {
 
 }
 
-void NeighborSurface::output_results(const dealii::Vector<ComplexNumber> & , std::string) {
-
+std::string NeighborSurface::output_results(const dealii::Vector<ComplexNumber> & , std::string) {
+    return "";
 }
 
-void NeighborSurface::make_surface_constraints(Constraints * constraints) {
+void NeighborSurface::make_surface_constraints(Constraints * constraints, bool make_inhomogeneities) {
     std::vector<InterfaceDofData> own_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
     const unsigned int n_dofs = own_dof_indices.size();
     unsigned int * dof_indices = new unsigned int[n_dofs];

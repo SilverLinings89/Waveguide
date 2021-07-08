@@ -963,3 +963,23 @@ void NonLocalProblem::print_dof_details(unsigned int dof) {
 bool NonLocalProblem::is_dof_locally_owned(unsigned int dof) {
   return (dof >= Geometry.levels[level].inner_first_dof && dof < Geometry.levels[level].inner_first_dof + Geometry.levels[level].n_local_dofs);
 }
+
+std::string NonLocalProblem::output_results() {
+  HierarchicalProblem::output_results();
+  std::vector<std::vector<std::string>> all_files = dealii::Utilities::MPI::gather(GlobalMPI.communicators_by_level[level], filenames);
+  if(GlobalParams.MPI_Rank == 0) {
+    std::vector<std::string> flattened_filenames;
+    for(unsigned int i = 0; i < all_files.size(); i++) {
+      for(unsigned int j = 0; j < all_files[i].size(); j++) {
+        flattened_filenames.push_back(all_files[i][j]);
+      }
+    }
+    std::string filename = GlobalOutputManager.get_full_filename("level_" + std::to_string(level) + "_solution.pvtu");
+    std::ofstream outputvtu(filename);
+    for(unsigned int i = 0; i < flattened_filenames.size(); i++) {
+      flattened_filenames[i] = "../" + flattened_filenames[i];
+    }
+    Geometry.inner_domain->data_out.write_pvtu_record(outputvtu, flattened_filenames);
+  }
+  return "";
+}

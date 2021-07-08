@@ -136,4 +136,6 @@ private:
   void receive_local_lower_dofs_and_H();
 
   auto compute_interface_norm_for_u(NumericVectorLocal u, BoundaryId) -> double;
+
+  std::string output_results();
 };

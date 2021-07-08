@@ -92,9 +92,9 @@ public:
   void compute_extreme_vertex_coordinates();
   auto vertex_positions_for_ids(std::vector<unsigned int> ids) -> std::vector<Position>;
   auto line_positions_for_ids(std::vector<unsigned int> ids) -> std::vector<Position>;
-  void output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
+  std::string output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
   SurfaceCellData get_surface_cell_data_for_cell_index(const int in_index, const BoundaryId in_bid);
-  void make_surface_constraints(Constraints * constraints) override;
+  void make_surface_constraints(Constraints * constraints, bool make_inhomogeneity) override;
   void make_edge_constraints(Constraints * constraints, BoundaryId other_boundary) override;
   auto get_surface_cell_data(BoundaryId in_bid) -> std::vector<SurfaceCellData> override;
   auto get_inner_surface_cell_data() -> std::vector<SurfaceCellData> override;

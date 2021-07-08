@@ -586,17 +586,20 @@ void PMLSurface::fix_apply_negative_Jacobian_transformation(dealii::Triangulatio
   GridTools::shift(shift, *in_tria);
 }
 
-void PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_data, std::string in_filename) {
+std::string PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_data, std::string in_filename) {
   dealii::DataOut<3> data_out;
   data_out.attach_dof_handler(dof_h_nedelec);
   data_out.add_data_vector(in_data, "Solution");
+  dealii::Vector<ComplexNumber> zero = dealii::Vector<ComplexNumber>(in_data.size());
+  data_out.add_data_vector(zero, "Exact_Solution");
   const std::string filename = GlobalOutputManager.get_numbered_filename(in_filename + "-" + std::to_string(b_id) + "-", GlobalParams.MPI_Rank, "vtu");
   std::ofstream outputvtu(filename);
   data_out.build_patches();
   data_out.write_vtu(outputvtu);
+  return filename;
 }
 
-void PMLSurface::make_surface_constraints(Constraints * in_constraints) {
+void PMLSurface::make_surface_constraints(Constraints * in_constraints, bool add_inhomogeneities) {
     std::vector<InterfaceDofData> own_dof_indices = get_dof_association();
     std::vector<InterfaceDofData> inner_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
     Constraints new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, inner_dof_indices, Geometry.levels[level].n_total_level_dofs);

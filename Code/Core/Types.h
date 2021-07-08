@@ -87,6 +87,10 @@ enum SignalTaperingType {
   C1, C0
 };
 
+enum SignalCouplingMethod {
+  Jump, Tapering, Dirichlet
+};
+
 enum FileType {
   ConvergenceCSV, ParaviewVTU, TexReport, MetaText
 };

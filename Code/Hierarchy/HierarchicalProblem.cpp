@@ -56,7 +56,8 @@ void HierarchicalProblem::make_constraints() {
   Geometry.inner_domain->make_constraints(&constraints, Geometry.levels[level].inner_first_dof, own_dofs);
   // Surface constraints
   for(unsigned int i = 0; i < 6; i++) {
-    Geometry.levels[level].surfaces[i]->make_surface_constraints(&constraints);
+    bool has_inhomogeneity = GlobalParams.Index_in_z_direction == 0 && i == 4;
+    Geometry.levels[level].surfaces[i]->make_surface_constraints(&constraints, has_inhomogeneity);
   }
 
   // Edge constraints
@@ -92,14 +93,18 @@ void HierarchicalProblem::make_sparsity_pattern() {
   print_info("HierarchicalProblem::make_sparsity_patter", "End on level "  + std::to_string(level));
 }
 
-void HierarchicalProblem::output_results() {
+std::string HierarchicalProblem::output_results() {
   print_info("Hierarchical::output_results()", "Start on level " + std::to_string(level));
+  std::string ret = "";
   compute_final_rhs_mismatch();
   NumericVectorLocal in_solution(Geometry.inner_domain->n_dofs);
   for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
     in_solution[i] = solution[Geometry.levels[level].inner_first_dof + i];
   }
-  Geometry.inner_domain->output_results("solution_inner_domain_level" + std::to_string(level) , in_solution);
+  std::string file_1 = Geometry.inner_domain->output_results("solution_inner_domain_level" + std::to_string(level) , in_solution);
+  ret = file_1;
+  filenames.clear();
+  filenames.push_back(file_1);
 
   if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML) {
     for(unsigned int i = 0; i < 6; i++){
@@ -108,7 +113,8 @@ void HierarchicalProblem::output_results() {
         for(unsigned int index = 0; index < Geometry.levels[level].surfaces[i]->dof_counter; index++) {
           ds[index] = solution(index + Geometry.levels[level].surface_first_dof[i]);
         }
-        Geometry.levels[level].surfaces[i]->output_results(ds, "PML_domain_level_" + std::to_string(level));
+        std::string file_2 = Geometry.levels[level].surfaces[i]->output_results(ds, "PML_domain_level_" + std::to_string(level));
+        filenames.push_back(file_2);
       }
     }
   }
@@ -135,6 +141,7 @@ void HierarchicalProblem::output_results() {
   }
 
   print_info("Hierarchical::output_results()", "End on level " + std::to_string(level));
+  return ret;
 }
 
 void HierarchicalProblem::compute_final_rhs_mismatch() {

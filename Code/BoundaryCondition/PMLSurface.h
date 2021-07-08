@@ -51,8 +51,8 @@ class PMLSurface : public BoundaryCondition {
     void compute_coordinate_ranges();
     void set_boundary_ids();
     void fix_apply_negative_Jacobian_transformation(dealii::Triangulation<3> * in_tria);
-    void output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
-    void make_surface_constraints(Constraints * constraints) override;
+    std::string output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
+    void make_surface_constraints(Constraints * constraints, bool make_inhomogeneities) override;
     void make_edge_constraints(Constraints * constraints, BoundaryId other_boundary) override;
     auto get_surface_cell_data(BoundaryId in_bid) -> std::vector<SurfaceCellData> override;
     auto get_inner_surface_cell_data() -> std::vector<SurfaceCellData> override;
