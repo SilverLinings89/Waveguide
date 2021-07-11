@@ -56,12 +56,12 @@ void PMLSurface::prepare_mesh() {
     }
     
     dealii::GridGenerator::subdivided_hyper_rectangle(tria, repetitions, lower_ranges , higher_ranges ,true);
-    triangulation = reforge_triangulation(&tria);
     
-    compute_coordinate_ranges();
+    compute_coordinate_ranges(&tria);
     
     transformation = PMLMeshTransformation(x_range, y_range, z_range, additional_coordinate, b_id/2, Geometry.levels[level].is_surface_truncated);
-    GridTools::transform(transformation, triangulation);
+    GridTools::transform(transformation, tria);
+    triangulation = reforge_triangulation(&tria);
     mesh_is_transformed = true;
 }
 
@@ -510,14 +510,14 @@ void PMLSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, N
   matrix->compress(dealii::VectorOperation::add);
 }
 
-void PMLSurface::compute_coordinate_ranges() {
+void PMLSurface::compute_coordinate_ranges(dealii::Triangulation<3> * in_tria) {
   x_range.first = 100000.0;
   y_range.first = 100000.0;
   z_range.first = 100000.0;
   x_range.second = -100000.0;
   y_range.second = -100000.0;
   z_range.second = -100000.0;
-  for(auto it = triangulation.begin(); it != triangulation.end(); it++) {
+  for(auto it = in_tria->begin(); it != in_tria->end(); it++) {
     for(unsigned int i = 0; i < 6; i++) {
       Position p = it->face(i)->center();
       if(p[0] < x_range.first) {
@@ -603,6 +603,19 @@ void PMLSurface::make_surface_constraints(Constraints * in_constraints, bool add
     std::vector<InterfaceDofData> own_dof_indices = get_dof_association();
     std::vector<InterfaceDofData> inner_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
     Constraints new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, inner_dof_indices, Geometry.levels[level].n_total_level_dofs);
+    if(add_inhomogeneities) {
+      IndexSet owned_dofs(Geometry.inner_domain->dof_handler.n_dofs());
+      owned_dofs.add_range(0, Geometry.inner_domain->dof_handler.n_dofs());
+      AffineConstraints<ComplexNumber> constraints_local(owned_dofs);
+      VectorTools::project_boundary_values_curl_conforming_l2(Geometry.inner_domain->dof_handler, 0, *GlobalParams.source_field , 4, constraints_local);
+      for(unsigned int i = 0; i < Geometry.inner_domain->dof_handler.n_dofs(); i++) {
+        if(constraints_local.is_constrained(i)) {
+          new_constraints.add_line(Geometry.levels[level].inner_first_dof + i);
+          new_constraints.set_inhomogeneity(Geometry.levels[level].inner_first_dof + i, constraints_local.get_inhomogeneity(i));
+        }
+      }
+    }
+    
     std::vector<InterfaceDofData> outer_dofs = get_dof_association_by_boundary_id(outer_boundary_id);
     for(unsigned int i = 0; i < outer_dofs.size(); i++) {
       new_constraints.add_line(outer_dofs[i].index);

@@ -56,12 +56,22 @@ void HierarchicalProblem::make_constraints() {
   Geometry.inner_domain->make_constraints(&constraints, Geometry.levels[level].inner_first_dof, own_dofs);
   // Surface constraints
   for(unsigned int i = 0; i < 6; i++) {
-    bool has_inhomogeneity = GlobalParams.Index_in_z_direction == 0 && i == 4;
+    bool has_inhomogeneity = (GlobalParams.Index_in_z_direction == 0 && i == 4) && (GlobalParams.Signal_coupling_method == SignalCouplingMethod::Jump);
     Geometry.levels[level].surfaces[i]->make_surface_constraints(&constraints, has_inhomogeneity);
   }
 
-  // Edge constraints
+  if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
+    if(GlobalParams.Index_in_z_direction == 0) {
+      IndexSet owned_dofs(Geometry.inner_domain->dof_handler.n_dofs());
+      owned_dofs.add_range(0, Geometry.inner_domain->dof_handler.n_dofs());
+      AffineConstraints<ComplexNumber> constraints_local(owned_dofs);
+      VectorTools::project_boundary_values_curl_conforming_l2(Geometry.inner_domain->dof_handler, 0, *GlobalParams.source_field , 4, constraints_local);
+      constraints_local.shift(Geometry.levels[level].inner_first_dof);
+      constraints.merge(constraints_local, Constraints::MergeConflictBehavior::right_object_wins, true);
+    }
+  }
 
+  // Edge constraints
   for(unsigned int i = 0; i< 6; i++) {
     for(unsigned int j = i+1; j < 6; j++) {
       if(!are_opposing_sites(i, j)) {
@@ -157,7 +167,8 @@ void HierarchicalProblem::execute_vmult() {
 }
 
 void HierarchicalProblem::compute_rhs_representation_of_incoming_wave() {
-  reinit_rhs();
+  // reinit_rhs();
+  /**
   NumericVectorLocal temp(Geometry.inner_domain->dof_handler.n_dofs());
   if(GlobalParams.Index_in_z_direction == 0) {
     // there can be an incoming signal here
@@ -186,4 +197,5 @@ void HierarchicalProblem::compute_rhs_representation_of_incoming_wave() {
     // there cannot be an incoming signal here
     rhs.compress(VectorOperation::add);
   }
+  **/
 }

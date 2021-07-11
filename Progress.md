@@ -105,3 +105,10 @@ Today I will implement the dof surface split for the surface dofs. There were so
 
 To implement the surface split, all that is required is an adaptation of the make_constraints function. I need an aditional one called make_inhomogenous constraints that adds the inhomogeneities. Because they would conflict I have decided to instead add an argument to the make_surface_constrints function of type bool if inhomogeneities should be built. Otherwise I would have to search through the existing contraints and update some lines. Merging is not possible because the constraint has to be x_inner = x_outer + inhom. Merging would give me two entries. x_inner = inhom and x_inner = x_outer which lead to a different result.
 
+Introduced the new Type SignalCouplingMethod and added a member of this type to the Parameters Object. This will help me keep parallel implementations of different coupling methods. Since constraints are always formulated as a constraint on the dof with the lower index, I can extend the function that makes the coupling to also add an inhomogeneity to the line (otherwise I would have to change the sign).
+
+Added an implementation in PMLSurface.cpp make_surface_contraints. Testing it. I temporarily have to disable the compute_rhs_representation_of_incoming_wave for this.
+
+# Friday, 9th of july
+
+Copied the implementation to the HSIE implementation as well. Also added an implementation of Dirichlet boundary values in the Hierarchical Problem class. I also switched the negative signs on the z component in the exact solution. Switched the sign of the interface jump values. This only changes the solutions sign basically. As expected. Trying out some solution steps and sweeping details with Dirichlet boundary data.

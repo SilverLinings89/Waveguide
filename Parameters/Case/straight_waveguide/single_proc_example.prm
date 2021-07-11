@@ -12,7 +12,7 @@ subsection Case parameters
     set Boundary Method = PML
     set HSIE polynomial degree = 5
     set PML n layers = 8
-    set Input Signal Method = Taper
+    set Input Signal Method = Dirichlet
     set PML skaling order = 1
     set Prescribe input zero = true
 end

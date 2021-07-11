@@ -48,7 +48,7 @@ class PMLSurface : public BoundaryCondition {
     auto get_dof_association() -> std::vector<InterfaceDofData> override;
     auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> override;
     void sort_dofs();
-    void compute_coordinate_ranges();
+    void compute_coordinate_ranges(dealii::Triangulation<3> * in_tria);
     void set_boundary_ids();
     void fix_apply_negative_Jacobian_transformation(dealii::Triangulation<3> * in_tria);
     std::string output_results(const dealii::Vector<ComplexNumber> & , std::string) override;

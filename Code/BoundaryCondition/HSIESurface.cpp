@@ -1355,6 +1355,18 @@ void HSIESurface::make_surface_constraints(Constraints * constraints, bool make_
     std::vector<InterfaceDofData> own_dof_indices = get_dof_association();
     std::vector<InterfaceDofData> inner_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
     Constraints new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, inner_dof_indices, Geometry.levels[level].n_total_level_dofs);
+    if(make_inhomogeneity) {
+      IndexSet owned_dofs(Geometry.inner_domain->dof_handler.n_dofs());
+      owned_dofs.add_range(0, Geometry.inner_domain->dof_handler.n_dofs());
+      AffineConstraints<ComplexNumber> constraints_local(owned_dofs);
+      VectorTools::project_boundary_values_curl_conforming_l2(Geometry.inner_domain->dof_handler, 0, *GlobalParams.source_field , 4, constraints_local);
+      for(unsigned int i = 0; i < Geometry.inner_domain->dof_handler.n_dofs(); i++) {
+        if(constraints_local.is_constrained(i)) {
+          new_constraints.add_line(Geometry.levels[level].inner_first_dof + i);
+          new_constraints.set_inhomogeneity(Geometry.levels[level].inner_first_dof + i, constraints_local.get_inhomogeneity(i));
+        }
+      }
+    }
     constraints->merge(new_constraints, Constraints::MergeConflictBehavior::right_object_wins, true);
 }
 

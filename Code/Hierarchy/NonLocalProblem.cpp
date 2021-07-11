@@ -342,7 +342,7 @@ void NonLocalProblem::solve() {
 void NonLocalProblem::apply_sweep(Vec b, Vec u) {
   // Line 1
   NumericVectorLocal local_solution = u_from_x_in(b);
-  zero_lower_interface_dofs(local_solution);
+  // zero_lower_interface_dofs(local_solution);
   NumericVectorLocal temp_vector;
   NumericVectorLocal zero;
   reinit_u_vector(&zero);
