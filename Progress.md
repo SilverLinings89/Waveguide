@@ -112,3 +112,18 @@ Added an implementation in PMLSurface.cpp make_surface_contraints. Testing it. I
 # Friday, 9th of july
 
 Copied the implementation to the HSIE implementation as well. Also added an implementation of Dirichlet boundary values in the Hierarchical Problem class. I also switched the negative signs on the z component in the exact solution. Switched the sign of the interface jump values. This only changes the solutions sign basically. As expected. Trying out some solution steps and sweeping details with Dirichlet boundary data.
+
+# Monday, 12th of july
+
+Frank Hettlich wrote me an Email, that my presentation of domain derivatives looked good to him. I had wondered about his oppinion on this topic since he is a researcher in the field.
+I will now focus on fixing the sweeping preconditioner by utilizing Dirichlet boundary data first. I will ignore the complex conjugate and use PML boundary conditions since they produce the right amplitude for the signal. Dirichlet works nicely here. Performing a run (n° 82) with PML, Dirichlet data and a direct solver. Observations: 
+- The code is currently somewhat slow in assembly. This might be due to the compute intensive function for the assembly of the off diagonal block for vmult.
+- It is also due to a lack of output in the direct solver call in NonLocalProblem::solve() which creates the impression that assembly is still runing even though solution has started. Will put output into NonLocalProblem::solve() to deal with that. Done.
+- The surface of the output geometry seems to be exactly zero for the tangential components.
+- Orthogonal components are of order 10^{-2} compared to the input amplitude.
+- The real parts align perfectly and the solution looks ideal. 0 in the input PML layer (as it should be) and damped in the output PML.
+- The imaginary part overshoots by roughly 10% consitently across the domain. Damping works for it and it has the wrong sign.
+- In general, however this computation looks fine.
+As a next step I will reactivate sweeping and see what happens.
+
+I found an error in my code: zero_lower_interface_dofs returns a new vector, it doesn't change the vector in place. As a consequence, all calls to it I had made, had no effect. Fixed. Still doesn't converge to 0 after the fix. Will analyze the results for better understanding of what is happening.
