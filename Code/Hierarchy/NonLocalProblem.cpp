@@ -23,9 +23,9 @@
 #include <vector>
 
 double l2_norm(DofFieldTrace in_trace) {
-  double ret;
+  double ret = 0;
   for(unsigned int i = 0; i < in_trace.size(); i++) {
-    ret += std::abs(in_trace[i])*std::abs(in_trace[i]);
+    ret += in_trace[i].real()*in_trace[i].real() + in_trace[i].imag() * in_trace[i].imag();
   }
   return std::sqrt(ret);
 }
@@ -316,23 +316,72 @@ dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
 }
 
 void NonLocalProblem::solve() {
+  constraints.set_zero(solution);
+  GlobalTimerManager.switch_context("solve", level);
+  std::cout << "Norm before solving: " << rhs.l2_norm() << std::endl;
+  
   if(!GlobalParams.solve_directly) {
-    GlobalTimerManager.switch_context("solve", level);
-    constraints.set_zero(solution);
-    std::cout << "Norm before solving: " << rhs.l2_norm() << std::endl;
+    NumericVectorLocal u;
+    reinit_u_vector(&u);
+    NumericVectorLocal zero;
+    reinit_u_vector(&zero);
+    DofFieldTrace trace1, trace2;
+    
+    for(unsigned int i = 0; i < GlobalParams.NumberProcesses; i++) {
+      if(GlobalParams.MPI_Rank == i) {
+        if(i != 0) {
+          trace1 = receive_from_below();
+          u = trace_to_field(trace1, 4);
+          u = subtract_fields(zero, vmult(u));
+          set_child_rhs_from_u(u, false);
+        }
+        child->solve();
+        set_u_from_child_solution(&u);
+        if(i!= GlobalParams.NumberProcesses - 1) {
+          trace2 = upper_trace(u);
+          send_up(trace2);
+        }
+        
+        std::cout << std::to_string(i) << ": " << l2_norm(lower_trace(u)) << " and " << l2_norm(upper_trace(u)) << std::endl;
+      }
+    }
+
+    for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
+      solution[Geometry.levels[level].inner_first_dof + i] = u[i];
+    }
+
+    solution.compress(dealii::VectorOperation::insert);
+    
+    constraints.distribute(solution);
+    
+    if(!is_lowest_in_sweeping_direction()) {
+      for(unsigned int j = 0; j < trace1.size(); j++) {
+        solution[Geometry.levels[level].inner_first_dof + lower_interface_dofs.nth_index_in_set(j)] = trace1[j];
+      }
+    }
+
+    if(!is_highest_in_sweeping_direction()) {
+      for(unsigned int j = 0; j < trace2.size(); j++) {
+        solution[Geometry.levels[level].inner_first_dof + upper_interface_dofs.nth_index_in_set(j)] = trace2[j];
+      }
+    }
+
+    solution.compress(dealii::VectorOperation::insert);
+
+    /**
     KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc),nullptr);
     KSPSetTolerances(ksp, 0.000001, 1.0, 1000, GlobalParams.GMRES_max_steps);
     KSPMonitorSet(ksp, MonitorError, nullptr, nullptr);
     KSPSetUp(ksp);
     PetscErrorCode ierr = KSPSolve(ksp, rhs, solution);
-    constraints.distribute(solution);
+    **/
   } else {
     SolverControl sc;
     dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, MPI_COMM_WORLD);
-    constraints.set_zero(solution);
     solver1.solve(*matrix, solution, rhs);
-    constraints.distribute(solution);
   }
+  
+  
   // if(ierr != 0) {
   //   std::cout << "Error code from Petsc: " << std::to_string(ierr) << std::endl;
   //   throw new ExcPETScError(ierr);

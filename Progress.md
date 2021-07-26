@@ -127,3 +127,19 @@ I will now focus on fixing the sweeping preconditioner by utilizing Dirichlet bo
 As a next step I will reactivate sweeping and see what happens.
 
 I found an error in my code: zero_lower_interface_dofs returns a new vector, it doesn't change the vector in place. As a consequence, all calls to it I had made, had no effect. Fixed. Still doesn't converge to 0 after the fix. Will analyze the results for better understanding of what is happening.
+
+# Monday, 26th of july
+
+Picking up after the vacation. Git status clean. Should maybe automate or at least finally remember git submodule init and git submodule update.
+Updated the Readme to list the necessary steps. Build runs fine. My prime focus right now is to fix sweeping. To this end I need to figure out the current issue and so so as fast as possible. In theory, one forward sweep should suffice for the straigt waveguide. I will implement that first.
+Overwriting the current Call to GMRES with the new, single sweep implementation. Basic implementation done. Testing. In the first attempt (run2) I see a sign change between processes. Otherwise, the solution looks good. Fixing it by calling subtract_fields on a zero field and the field generated from the trace.
+
+There is still a jump at interfaces. Now that I have disabled constraints.disrtibute(solution) in the solve function of LocalProblem, there is no more coupling. Disabling it in Nonlocal and re-enabling it in LocalProblem. Adding norm output to determine if I have to send up or down.
+
+The lower and upper interface norms give weird results. 
+| Process Number| Lower interface norm | Upper interface norm |
+| -------- |: --------- :| ---------:|
+| 1 | 1.40273 | 1.51729 |
+| 2 | 2.02703 | 1.64984 |
+| 3 | 8.54735 | 1.83122 |
+| 4 | 19.2088 | 2.35377 |
