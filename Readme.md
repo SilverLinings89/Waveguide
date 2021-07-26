@@ -6,6 +6,14 @@ Need Petsc with complex double as numbers. Also Mumps.
 
 Have to delete the content of the function project_matrix_free in vector_tools_project.templates.h in DealInstall/include/dealii/numerics/
 
+Before the first run, one dependency has to be fetched. To do so, navigate a terminal to the main folder of the repo. Then run the commands `git submodule init` and `git submodule update`. This will clone the gtest framework into the third_party folder. Afterwards, create a folder called `build` in the main folder, enter it and run cmake. I.e.
+```
+git submodule init
+git submodule update
+mkdir build
+cd build
+cmake ..
+```
 
 ## Introduction
 
