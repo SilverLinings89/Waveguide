@@ -137,9 +137,18 @@ Overwriting the current Call to GMRES with the new, single sweep implementation.
 There is still a jump at interfaces. Now that I have disabled constraints.disrtibute(solution) in the solve function of LocalProblem, there is no more coupling. Disabling it in Nonlocal and re-enabling it in LocalProblem. Adding norm output to determine if I have to send up or down.
 
 The lower and upper interface norms give weird results. 
-| Process Number| Lower interface norm | Upper interface norm |
-| -------- |: --------- :| ---------:|
+
+| Process Number | Lower interface norm | Upper interface norm |
+| -------- | --------- | --------- |
 | 1 | 1.40273 | 1.51729 |
 | 2 | 2.02703 | 1.64984 |
 | 3 | 8.54735 | 1.83122 |
 | 4 | 19.2088 | 2.35377 |
+
+Now the solutions look good. The solution is still the complex conjugate of the actual solution but that doesn't matter for now. The next step is to implement the backward sweep as a copy of the forward one. It is important to ensure, that the inverse only is applied once to the last block in the sweeping direction.
+
+As a first step I copied the contents of apply_sweep from the old implementation to a seperate document.
+
+# Tuesday, 27th of july
+
+The computation still does not converge. As a next step I will try running GMRES with sweeping in only one direction. I deactivated the downward sweep. 
