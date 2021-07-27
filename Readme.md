@@ -2,7 +2,11 @@
 
 ## Setup
 
-Need Petsc with complex double as numbers. Also Mumps.
+Software dependencies: 
+- Dealii 9.3.
+- Petsc with complex doubles as number type.
+- Mumps (as a dealii dependency)
+
 
 Have to delete the content of the function project_matrix_free in vector_tools_project.templates.h in DealInstall/include/dealii/numerics/
 
