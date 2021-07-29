@@ -343,19 +343,19 @@ void NonLocalProblem::solve() {
 
 void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   // Line 1
+  temp_solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   NumericVectorLocal u = u_from_x_in(b_in);
   NumericVectorLocal temp_field;
   reinit_u_vector(&temp_field);
   NumericVectorLocal zero;
   reinit_u_vector(&zero);
   DofFieldTrace trace1, trace2;
-  for(unsigned int i = GlobalParams.NumberProcesses - 1; i >= 0; i--) {
+  for(int i = GlobalParams.NumberProcesses - 1; i >= 0; i--) {
     if(GlobalParams.MPI_Rank == i) {
       if(i != GlobalParams.NumberProcesses - 1) {
         trace1 = receive_from_above();
         temp_field = trace_to_field(trace1, upper_sweeping_interface_id);
         u = subtract_fields(u, vmult(temp_field));
-        set_child_rhs_from_u(u, false);
       }
       set_child_rhs_from_u(u, false);
       child->solve();
@@ -367,36 +367,11 @@ void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
     }
   }
   
-  for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
-    solution[Geometry.levels[level].inner_first_dof + i] = u[i];
-  }
-
-  solution.compress(dealii::VectorOperation::insert);
   
-  constraints.distribute(solution);
-  
-  if(!is_lowest_in_sweeping_direction()) {
-    for(unsigned int j = 0; j < trace1.size(); j++) {
-      solution[Geometry.levels[level].inner_first_dof + lower_interface_dofs.nth_index_in_set(j)] = trace1[j];
-    }
-  }
-
-  if(!is_highest_in_sweeping_direction()) {
-    for(unsigned int j = 0; j < trace2.size(); j++) {
-      solution[Geometry.levels[level].inner_first_dof + upper_interface_dofs.nth_index_in_set(j)] = trace2[j];
-    }
-  }
-  solution.compress(dealii::VectorOperation::insert);
-  
-  for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
-    u[i] = solution[Geometry.levels[level].inner_first_dof + i];
-  }
-
   // SECOND PART...
 
   reinit_u_vector(&temp_field);
-  std::cout << "Part 2" << std::endl; 
-
+  
   for(unsigned int i = 0; i < GlobalParams.NumberProcesses; i++) {
     if(GlobalParams.MPI_Rank == i) {
       if(i != 0) {
@@ -404,40 +379,39 @@ void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
         temp_field = trace_to_field(trace1, lower_sweeping_interface_id);
         u = subtract_fields(u, vmult(temp_field));
         set_child_rhs_from_u(u, false);
+        child->solve();
+        set_u_from_child_solution(&u);
       }
-      set_child_rhs_from_u(u, false);
-      child->solve();
-      set_u_from_child_solution(&u);
       if(i!= GlobalParams.NumberProcesses - 1) {
         trace2 = upper_trace(u);
         send_up(trace2);
       }
     }
   }
-  std::cout << "Part 3" << std::endl; 
+  
   for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
-    solution[Geometry.levels[level].inner_first_dof + i] = u[i];
+    temp_solution[Geometry.levels[level].inner_first_dof + i] = u[i];
   }
 
-  solution.compress(dealii::VectorOperation::insert);
+  temp_solution.compress(dealii::VectorOperation::insert);
   
-  constraints.distribute(solution);
+  constraints.distribute(temp_solution);
   
   if(!is_lowest_in_sweeping_direction()) {
     for(unsigned int j = 0; j < trace1.size(); j++) {
-      solution[Geometry.levels[level].inner_first_dof + lower_interface_dofs.nth_index_in_set(j)] = trace1[j];
+      temp_solution[Geometry.levels[level].inner_first_dof + lower_interface_dofs.nth_index_in_set(j)] = trace1[j];
     }
   }
 
   if(!is_highest_in_sweeping_direction()) {
     for(unsigned int j = 0; j < trace2.size(); j++) {
-      solution[Geometry.levels[level].inner_first_dof + upper_interface_dofs.nth_index_in_set(j)] = trace2[j];
+      temp_solution[Geometry.levels[level].inner_first_dof + upper_interface_dofs.nth_index_in_set(j)] = trace2[j];
     }
   }
-  solution.compress(dealii::VectorOperation::insert);
+  temp_solution.compress(dealii::VectorOperation::insert);
   
   for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
-    u[i] = solution[Geometry.levels[level].inner_first_dof + i];
+    u[i] = temp_solution[Geometry.levels[level].inner_first_dof + i];
   }
 
   set_x_out_from_u(&u_out, u);
@@ -454,14 +428,7 @@ NumericVectorLocal NonLocalProblem::u_from_x_in(Vec x_in) {
   ComplexNumber * values = new ComplexNumber[n_loc_dofs];
   VecGetValues(x_in, n_loc_dofs, locally_owned_dofs_index_array, values);
   for(unsigned int i = 0; i < n_loc_dofs; i++) {
-    temp_solution[Geometry.levels[level].inner_first_dof + i] = values[i]; 
-  }
-
-  temp_solution.compress(VectorOperation::insert);
-  constraints.distribute(temp_solution);
-  
-  for(unsigned int i = 0; i < n_loc_dofs; i++) {
-    ret[i] = temp_solution[Geometry.levels[level].inner_first_dof + i];
+    ret[i] = values[i];
   }
   delete[] values;
   return ret;
@@ -471,12 +438,7 @@ void NonLocalProblem::set_x_out_from_u(Vec * x_out, NumericVectorLocal u_in) {
   const unsigned int n_loc_dofs = own_dofs.n_elements();
   ComplexNumber * values = new ComplexNumber[n_loc_dofs];
   for(unsigned int i = 0; i < n_loc_dofs; i++) {
-    temp_solution[Geometry.levels[level].inner_first_dof + i] = u_in[i]; 
-  }
-  temp_solution.compress(VectorOperation::insert);
-  constraints.set_zero(temp_solution);
-  for(unsigned int i = 0; i < n_loc_dofs; i++) {
-     values[i] = temp_solution[Geometry.levels[level].inner_first_dof + i];
+     values[i] = u_in[i];
   }
   VecSetValues(*x_out, n_loc_dofs, locally_owned_dofs_index_array, values, INSERT_VALUES);
   VecAssemblyBegin(*x_out);
