@@ -3,7 +3,7 @@ subsection Case parameters
     set fem order = 0
     set geometry size x = 4.0
     set geometry size y = 3.6
-    set geometry size z = 1.3
+    set geometry size z = 6
     set epsilon in = 2.3409
     set epsilon out = 1.8496
     set mu in = 1.0
@@ -14,5 +14,5 @@ subsection Case parameters
     set PML n layers = 8
     set Input Signal Method = Dirichlet
     set PML skaling order = 1
-    set Prescribe input zero = true
+    set Prescribe input zero = false
 end

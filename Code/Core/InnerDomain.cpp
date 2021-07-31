@@ -402,19 +402,21 @@ struct CellwiseAssemblyDataNP {
       Tensor<1, 3, ComplexNumber> I_Val;
       I_Curl = fe_values[fe_field].curl(i, q_index);
       I_Val = fe_values[fe_field].value(i, q_index);
-/*       if(cell->at_boundary(4) && has_input_interface) {
-        if(!constrained_dofs.is_element(dof_indices[i])) {
-          for(unsigned int j = 0; j < dofs_per_cell; j++) {
-            if(constrained_dofs.is_element(dof_indices[j])) {
-              Tensor<1, 3, ComplexNumber> J_Curl;
-              Tensor<1, 3, ComplexNumber> J_Val;
-              J_Curl = fe_values[fe_field].curl(j, q_index);
-              J_Val = fe_values[fe_field].value(j, q_index);
-              cell_rhs[i] += incoming_wave_field[dof_indices[j]] * (I_Curl * Conjugate_Vector(J_Curl) * JxW - (eps_kappa_2 * ( I_Val * Conjugate_Vector(J_Val)) * JxW));
+      if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Jump) {
+        if(cell->at_boundary(4) && has_input_interface) {
+          if(!constrained_dofs.is_element(dof_indices[i])) {
+            for(unsigned int j = 0; j < dofs_per_cell; j++) {
+              if(constrained_dofs.is_element(dof_indices[j])) {
+                Tensor<1, 3, ComplexNumber> J_Curl;
+                Tensor<1, 3, ComplexNumber> J_Val;
+                J_Curl = fe_values[fe_field].curl(j, q_index);
+                J_Val = fe_values[fe_field].value(j, q_index);
+                cell_rhs[i] += incoming_wave_field[dof_indices[j]] * (I_Curl * Conjugate_Vector(J_Curl) * JxW - (eps_kappa_2 * ( I_Val * Conjugate_Vector(J_Val)) * JxW));
+              }
             }
           }
         }
-      } */
+      }
       for (unsigned int j = 0; j < dofs_per_cell; j++) {
         Tensor<1, 3, ComplexNumber> J_Curl;
         Tensor<1, 3, ComplexNumber> J_Val;
