@@ -428,19 +428,19 @@ NumericVectorLocal NonLocalProblem::u_from_x_in(Vec x_in) {
   ComplexNumber * values = new ComplexNumber[n_loc_dofs];
   VecGetValues(x_in, n_loc_dofs, locally_owned_dofs_index_array, values);
 
-  // temp_solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
-  
-  //for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
-  //  temp_solution[Geometry.levels[level].inner_first_dof + i] = values[i];
-  // }
-
-  // temp_solution.compress(dealii::VectorOperation::insert);
-  
-  // constraints.distribute(temp_solution);
+  temp_solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   
   for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
-    // ret[i] = temp_solution[Geometry.levels[level].inner_first_dof + i];
-    ret[i] = values[i];
+    temp_solution[Geometry.levels[level].inner_first_dof + i] = values[i];
+   }
+
+  temp_solution.compress(dealii::VectorOperation::insert);
+  
+  constraints.distribute(temp_solution);
+  
+  for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
+    ret[i] = temp_solution[Geometry.levels[level].inner_first_dof + i];
+  //  ret[i] = values[i];
   }
 
   delete[] values;
@@ -550,7 +550,9 @@ DofFieldTrace NonLocalProblem::receive_from_below() {
 NumericVectorLocal NonLocalProblem::vmult(NumericVectorLocal in_u) {
   NumericVectorLocal ret;
   reinit_u_vector(&ret);
+  local.constraints.set_zero(in_u);
   local.matrix.vmult(ret, in_u);
+  local.constraints.distribute(ret);
   return ret;
 }
 

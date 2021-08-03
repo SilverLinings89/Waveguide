@@ -55,6 +55,7 @@ void HierarchicalProblem::make_constraints() {
   // Inner constraints
   Geometry.inner_domain->make_constraints(&constraints, Geometry.levels[level].inner_first_dof, own_dofs);
   // Surface constraints
+  
   for(unsigned int i = 0; i < 6; i++) {
     bool has_inhomogeneity = (GlobalParams.Index_in_z_direction == 0 && i == 4) && (GlobalParams.Signal_coupling_method == SignalCouplingMethod::Jump);
     Geometry.levels[level].surfaces[i]->make_surface_constraints(&constraints, has_inhomogeneity);

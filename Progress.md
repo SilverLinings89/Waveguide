@@ -176,3 +176,9 @@ I changed some parameters in the input file to see if prescribe zero was causing
 Next, I removed the constraints.set_zero() and constraints.solve() calls in the solve() function of the local problem because the distributed information my effect the solver. That reduced the starting norm by a factor of nearly 3. Evaling the outputs...
 
 I found a MASSIVE bug. In the LocalProblem::solve() function I called constraints.set_zero(rhs) instead of constraints.set_zero(solution). The bug is fixed but the error persists. Will have to evaluate local solutions manually tomorrow.
+
+# Sunday, 1st of august
+
+The document for the extension of my contract is now finished. It also contains a graph of what the projects structure looks like. The texts and the graph can be used in my dissertation, where I also want introductury sections that explain the work in simple terms.
+
+I am now checking to see what the solver produces, if the constraints get distributed in the set_x_out_from_u function (the values should be correct before any functions get called otherwise the internal solver doesn't see the constraints I think). Also added a set_zero and distribute call to the vmult function, using the local constraint object.
