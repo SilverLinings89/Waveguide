@@ -182,3 +182,25 @@ I found a MASSIVE bug. In the LocalProblem::solve() function I called constraint
 The document for the extension of my contract is now finished. It also contains a graph of what the projects structure looks like. The texts and the graph can be used in my dissertation, where I also want introductury sections that explain the work in simple terms.
 
 I am now checking to see what the solver produces, if the constraints get distributed in the set_x_out_from_u function (the values should be correct before any functions get called otherwise the internal solver doesn't see the constraints I think). Also added a set_zero and distribute call to the vmult function, using the local constraint object.
+
+# Tuesday, 3rd of august
+
+Added a function that only solves the local problem for the global rhs in the solve part. I also removed the member u from the NonlocalProblem type. As a consequence, the functions setSolutionFromVector, setChildSolutionComponentsFromU and setChildRhsComponentsFromU no longer make sense. Will delete them after this run(done). Another problem is, that the logs dont work properly at the moment. The files other than main0.log remain empty. This should be an easy fix.
+
+Once the solver works or I run out of ideas to fix it, I should also fix the timer output. The current timer output seems incorrect.
+
+No difference using right vs left preconditioning. It makes sense to use right for now because it means that convergence is measured in the norm of the original space and not in the preconditioned one. I should introduce a variable later to choose this in the parameters.
+
+The local solver still generates the right amplitude so the error must be in the sweeping implementation.
+
+Found another bug. The sweeping implementation reused trace2 instead of using trace1 and trace2. As a consequence, the sweeping solver was corrupted. This might solve the issue. Running test.
+
+I cannot seem to find the exact source of the error. I have disabled some of the influences of set_zero and distribute and don't currently have a real overview of which calls to transfer a surface are really necessary...
+
+OK, so, status quo: In the current state, the amplitude is incorrect. It is safe to assume, that the local solver works. It generates a stable amplitude.
+
+# Wednesday, 4th of august
+
+I simplified the implementation of the apply_sweep function. There was also another instance of the set_zero / distribute calls in the vmult function, that I have now removed. testing. In the current implementation, the issue is, that there is again a discontinuity at the interfaces with decrease from both sides. I suspect that the distribute() call in the local solver sets the lower boundary zero. Then, after the weep, the distribute call after solve puts a zero for the lower process aswell because of the constraint declaring the 2 dofs as equivalent.
+
+I am now using the part before the sweeping preconditioner to build up a forward sweep and check amplitudes to see, where the error arises. 

@@ -20,7 +20,6 @@ private:
   unsigned int n_blocks_in_sweep;
   unsigned int index_in_sweep;
   KSP ksp;
-  NumericVectorLocal u;
   ComplexNumber * mpi_cache;
   bool is_mpi_cache_ready;
   PC pc;
@@ -76,12 +75,6 @@ private:
   bool is_highest_in_sweeping_direction();
 
   void compute_solver_factorization() override;
-
-  void setSolutionFromVector(Vec x_in);
-
-  void setChildSolutionComponentsFromU();
-
-  void setChildRhsComponentsFromU();
 
   void reinit_rhs() override;
   
