@@ -360,7 +360,7 @@ void NonLocalProblem::solve() {
   if(!GlobalParams.solve_directly) {
     
     KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc), nullptr);
-    KSPSetPCSide(ksp, PCSide::PC_RIGHT);
+    KSPSetPCSide(ksp, PCSide::PC_LEFT);
     KSPSetTolerances(ksp, 0.000001, 1.0, 1000, GlobalParams.GMRES_max_steps);
     KSPMonitorSet(ksp, MonitorError, nullptr, nullptr);
     KSPSetUp(ksp);
