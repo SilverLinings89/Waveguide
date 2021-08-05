@@ -112,7 +112,7 @@ private:
 
   auto subtract_fields(NumericVectorLocal a, NumericVectorLocal b) -> NumericVectorLocal;
 
-  auto set_x_out_from_u(Vec * x_out, NumericVectorLocal u_in) -> void;
+  auto set_x_out_from_u(Vec x_out, NumericVectorLocal u_in) -> void;
 
   auto set_child_solution_from_u(NumericVectorLocal u) -> void;
 

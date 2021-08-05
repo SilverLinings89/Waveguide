@@ -204,3 +204,9 @@ OK, so, status quo: In the current state, the amplitude is incorrect. It is safe
 I simplified the implementation of the apply_sweep function. There was also another instance of the set_zero / distribute calls in the vmult function, that I have now removed. testing. In the current implementation, the issue is, that there is again a discontinuity at the interfaces with decrease from both sides. I suspect that the distribute() call in the local solver sets the lower boundary zero. Then, after the weep, the distribute call after solve puts a zero for the lower process aswell because of the constraint declaring the 2 dofs as equivalent.
 
 I am now using the part before the sweeping preconditioner to build up a forward sweep and check amplitudes to see, where the error arises. 
+
+# Thursday, 5th of august
+
+In the attempted direct solve, I was missing a sign change. Fixed and restarted. In the resulting solution, there were missing interface values, which is now adjusted for run82. Also, the files have been renamed to Precalc and all 4 processes now contribute. The solution of the manual scheme looks great now. I copied the trace copy to the sweeping function.
+
+I am now reenabling the distribution of constraints onto the input vector for apply sweep. Currently, the amplitude is 0.5 and that might be because there is only a sweep in one direction so there might be no backward coupling ... Will check tomorrow.

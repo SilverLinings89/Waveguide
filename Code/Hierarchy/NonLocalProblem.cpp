@@ -328,34 +328,7 @@ void NonLocalProblem::solve() {
   GlobalTimerManager.switch_context("solve", level);
   std::cout << "Norm before solving: " << rhs.l2_norm() << std::endl;
   rhs.compress(VectorOperation::add);
-  if(GlobalParams.MPI_Rank == 0) {
-    NumericVectorLocal u;
-    reinit_u_vector(&u);
-    for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
-      u[i] = rhs[i];
-    }
-    set_child_rhs_from_u(u, false);
-    child->solve();
-    set_u_from_child_solution(&u);
-    NumericVectorLocal u_truncated = NumericVectorLocal(Geometry.inner_domain->n_dofs);
-    for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
-      u_truncated[i] = u[i];
-    }
-    std::cout << "Local solution norm on proc 0: " << l2_norm(u) << std::endl;
-    Geometry.inner_domain->output_results("FirstStepFirstOutput", u_truncated);
-    send_up(upper_trace(u));
-  }
-  if(GlobalParams.MPI_Rank == 1) {
-    NumericVectorLocal u = vmult(trace_to_field( receive_from_below(), 4));
-    set_child_rhs_from_u(u, false);
-    child->solve();
-    set_u_from_child_solution(&u);
-    NumericVectorLocal u_truncated = NumericVectorLocal(Geometry.inner_domain->n_dofs);
-    for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
-      u_truncated[i] = u[i];
-    }
-    Geometry.inner_domain->output_results("FirstStepSecondOutput", u_truncated);
-  }
+
 
   if(!GlobalParams.solve_directly) {
     
@@ -382,6 +355,41 @@ void NonLocalProblem::solve() {
 
 void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   NumericVectorLocal u = u_from_x_in(b_in);
+
+  if(GlobalParams.MPI_Rank == 0) {
+    for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
+      // u[i] = rhs[i];
+    }
+    set_child_rhs_from_u(u, false);
+    child->solve();
+    set_u_from_child_solution(&u);
+    NumericVectorLocal u_truncated = NumericVectorLocal(Geometry.inner_domain->n_dofs);
+    for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
+      u_truncated[i] = u[i];
+    }
+    Geometry.inner_domain->output_results("Precalc", u_truncated);
+    send_up(upper_trace(u));
+  }
+  if(GlobalParams.MPI_Rank != 0) {
+    reinit_u_vector(&u);
+    DofFieldTrace trace = receive_from_below();
+    u = subtract_fields(u,vmult(trace_to_field( trace, 4)));
+    set_child_rhs_from_u(u, false);
+    child->solve();
+    set_u_from_child_solution(&u);
+    NumericVectorLocal u_truncated = NumericVectorLocal(Geometry.inner_domain->n_dofs);
+    for(unsigned int i = 0; i < trace.size(); i++) {
+      u[lower_interface_dofs.nth_index_in_set(i)] = trace[i];
+    }
+    for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
+      u_truncated[i] = u[i];
+    }
+    Geometry.inner_domain->output_results("Precalc", u_truncated);
+    if(GlobalParams.MPI_Rank != 3) {
+      send_up(upper_trace(u));
+    }
+  }
+  /* DofFieldTrace trace;
   if(!is_highest_in_sweeping_direction()) {
     u = subtract_fields(u, vmult(trace_to_field(receive_from_above(), 5)));
   }
@@ -392,13 +400,16 @@ void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   u = S_inv(u);
 
   if(!is_lowest_in_sweeping_direction()) {
-    u = subtract_fields(u, S_inv(vmult(trace_to_field(receive_from_below(), 4))));
+    trace = receive_from_below();
+    u = subtract_fields(u, S_inv(vmult(trace_to_field(trace, 4))));
   }
   if(!is_highest_in_sweeping_direction()) {
     send_up(upper_trace(u));
   }
-
-  set_x_out_from_u(&u_out, u);
+  for(unsigned int i = 0; i < trace.size(); i++) {
+    u[lower_interface_dofs.nth_index_in_set(i)] = trace[i];
+  } */
+  set_x_out_from_u(u_out, u);
 }
 
 void NonLocalProblem::reinit_u_vector(NumericVectorLocal * u) {
@@ -406,6 +417,9 @@ void NonLocalProblem::reinit_u_vector(NumericVectorLocal * u) {
 }
 
 NumericVectorLocal NonLocalProblem::u_from_x_in(Vec x_in) {
+  PetscReal norm;
+  VecNorm(x_in, NORM_2, &norm);
+  std::cout << "Norm: " << norm << std::endl; 
   NumericVectorLocal ret;
   reinit_u_vector(&ret);
   const unsigned int n_loc_dofs = own_dofs.n_elements();
@@ -423,23 +437,28 @@ NumericVectorLocal NonLocalProblem::u_from_x_in(Vec x_in) {
   constraints.distribute(temp_solution);
   
   for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
-  //  ret[i] = temp_solution[Geometry.levels[level].inner_first_dof + i];
-    ret[i] = values[i];
+    ret[i] = temp_solution[Geometry.levels[level].inner_first_dof + i];
+  //   ret[i] = values[i];
   }
 
   delete[] values;
   return ret;
 }
 
-void NonLocalProblem::set_x_out_from_u(Vec * x_out, NumericVectorLocal u_in) {
+void NonLocalProblem::set_x_out_from_u(Vec x_out, NumericVectorLocal u_in) {
+  PetscReal norm_pre;
+  PetscReal norm_post;
+  VecNorm(x_out, NORM_2, &norm_pre);
   const unsigned int n_loc_dofs = own_dofs.n_elements();
   ComplexNumber * values = new ComplexNumber[n_loc_dofs];
   for(unsigned int i = 0; i < n_loc_dofs; i++) {
      values[i] = u_in[i];
   }
-  VecSetValues(*x_out, n_loc_dofs, locally_owned_dofs_index_array, values, INSERT_VALUES);
-  VecAssemblyBegin(*x_out);
-  VecAssemblyEnd(*x_out);
+  VecSetValues(x_out, n_loc_dofs, locally_owned_dofs_index_array, values, INSERT_VALUES);
+  VecAssemblyBegin(x_out);
+  VecAssemblyEnd(x_out);
+  VecNorm(x_out, NORM_2, &norm_post); 
+  std::cout << "On " << GlobalParams.MPI_Rank << " a: " << norm_pre << " b: " << norm_post << " c: " << l2_norm(u_in) << std::endl;
   delete[] values;
 }
 
