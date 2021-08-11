@@ -3,7 +3,7 @@ subsection Case parameters
     set fem order = 0
     set geometry size x = 4.0
     set geometry size y = 3.6
-    set geometry size z = 6
+    set geometry size z = 2.5
     set epsilon in = 2.3409
     set epsilon out = 1.8496
     set mu in = 1.0
@@ -11,7 +11,7 @@ subsection Case parameters
     set signal amplitude = 1.0
     set Boundary Method = PML
     set HSIE polynomial degree = 5
-    set PML n layers = 8
+    set PML n layers = 7
     set Input Signal Method = Dirichlet
     set PML skaling order = 1
     set Prescribe input zero = false

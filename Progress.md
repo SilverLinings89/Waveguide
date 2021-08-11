@@ -210,3 +210,39 @@ I am now using the part before the sweeping preconditioner to build up a forward
 In the attempted direct solve, I was missing a sign change. Fixed and restarted. In the resulting solution, there were missing interface values, which is now adjusted for run82. Also, the files have been renamed to Precalc and all 4 processes now contribute. The solution of the manual scheme looks great now. I copied the trace copy to the sweeping function.
 
 I am now reenabling the distribution of constraints onto the input vector for apply sweep. Currently, the amplitude is 0.5 and that might be because there is only a sweep in one direction so there might be no backward coupling ... Will check tomorrow.
+
+# Sunday, 8th of august
+
+I changed all occurences of distribute_local_to_global to use true as the last argument. 
+
+# Monday, 9th of august
+
+I will now attempt to vary the way I call vmult to make sure the right action happens. If this doesnt work soon I will have to make the sweep variable and run all possible combinations. I massively reduced the geometry sice (50% each direction in cell count) to increase the speed of computation for faster debugging. As a consequence, the amplitude has increased massively. Wondering if there is a numerical error here ...I decreased it again and the amplitude reduced again. Ran four tests for z layers 7,8,9 and 10. Results were the same for all except the first (7) with an amplitude of 2.2e-2.
+Now doing the same for geometry size. Here the amplitude seems to vary very strongly. 2->2.1 doubled the amplitude.
+
+|z length | amplitude (x 0.1)|
+|-|---|
+|2|	0,95|
+|2,1 |	1,1|
+|2,2 |	1,2|
+|2,3 |	1,5|
+|2,4 |	1,9|
+|2,5 |	2,1|
+|2,6 |	2,2|
+|2,7 |	2,5|
+|2,8 |	2,7|
+|2,9 |	3,1|
+|3|	3,4|
+|3,1|	3,5|
+|3,2|	3,6|
+|3,3|	3,7|
+|3,4|	3,7|
+|3,5|	4|
+|3,75|	3,7|
+|4|	3,8|
+|4,25|	3,5|
+|4,5|	3,9|
+
+# Tuesday, 10th of august
+
+The best I could do yesterday was 0.4 as the amplitude dampening factor. Plots of the values listed above imply no interference behaviour. The solution is continuous but the input signal did not couple correctly. I also ran tests with fewer processes and got the same result so the issue does not seem to depend on the number of processes, leaving me to believe that sweeping actually works.

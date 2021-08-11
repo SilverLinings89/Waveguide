@@ -324,14 +324,14 @@ dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
 }
 
 void NonLocalProblem::solve() {
-  constraints.set_zero(solution);
+  
   GlobalTimerManager.switch_context("solve", level);
   std::cout << "Norm before solving: " << rhs.l2_norm() << std::endl;
   rhs.compress(VectorOperation::add);
 
 
   if(!GlobalParams.solve_directly) {
-    
+    constraints.distribute(solution);
     KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc), nullptr);
     KSPSetPCSide(ksp, PCSide::PC_LEFT);
     KSPSetTolerances(ksp, 0.000001, 1.0, 1000, GlobalParams.GMRES_max_steps);
@@ -340,6 +340,7 @@ void NonLocalProblem::solve() {
     PetscErrorCode ierr = KSPSolve(ksp, rhs, solution);
 
   } else {
+    constraints.distribute(solution);
     SolverControl sc;
     dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, MPI_COMM_WORLD);
     solver1.solve(*matrix, solution, rhs);
@@ -355,60 +356,30 @@ void NonLocalProblem::solve() {
 
 void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   NumericVectorLocal u = u_from_x_in(b_in);
-
-  if(GlobalParams.MPI_Rank == 0) {
-    for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
-      // u[i] = rhs[i];
-    }
-    set_child_rhs_from_u(u, false);
-    child->solve();
-    set_u_from_child_solution(&u);
-    NumericVectorLocal u_truncated = NumericVectorLocal(Geometry.inner_domain->n_dofs);
-    for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
-      u_truncated[i] = u[i];
-    }
-    Geometry.inner_domain->output_results("Precalc", u_truncated);
-    send_up(upper_trace(u));
-  }
-  if(GlobalParams.MPI_Rank != 0) {
-    reinit_u_vector(&u);
-    DofFieldTrace trace = receive_from_below();
-    u = subtract_fields(u,vmult(trace_to_field( trace, 4)));
-    set_child_rhs_from_u(u, false);
-    child->solve();
-    set_u_from_child_solution(&u);
-    NumericVectorLocal u_truncated = NumericVectorLocal(Geometry.inner_domain->n_dofs);
-    for(unsigned int i = 0; i < trace.size(); i++) {
-      u[lower_interface_dofs.nth_index_in_set(i)] = trace[i];
-    }
-    for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
-      u_truncated[i] = u[i];
-    }
-    Geometry.inner_domain->output_results("Precalc", u_truncated);
-    if(GlobalParams.MPI_Rank != 3) {
-      send_up(upper_trace(u));
-    }
-  }
-  /* DofFieldTrace trace;
+  
+  DofFieldTrace trace;
   if(!is_highest_in_sweeping_direction()) {
-    u = subtract_fields(u, vmult(trace_to_field(receive_from_above(), 5)));
+    u = subtract_fields(u, trace_to_field(receive_from_above(), 5));
   }
   if(!is_lowest_in_sweeping_direction()) {
-    send_down(lower_trace(S_inv(u)));
+    NumericVectorLocal temp = vmult(zero_lower_interface_dofs(S_inv(u)));
+    send_down(lower_trace(temp));
   }
   
   u = S_inv(u);
 
   if(!is_lowest_in_sweeping_direction()) {
-    trace = receive_from_below();
-    u = subtract_fields(u, S_inv(vmult(trace_to_field(trace, 4))));
+    u = subtract_fields(u, S_inv(trace_to_field(receive_from_below(), 4)));
   }
   if(!is_highest_in_sweeping_direction()) {
-    send_up(upper_trace(u));
+    send_up(upper_trace(vmult(u)));
   }
+
+
   for(unsigned int i = 0; i < trace.size(); i++) {
-    u[lower_interface_dofs.nth_index_in_set(i)] = trace[i];
-  } */
+  //   u[lower_interface_dofs.nth_index_in_set(i)] = trace[i];
+  } 
+  
   set_x_out_from_u(u_out, u);
 }
 
@@ -419,7 +390,7 @@ void NonLocalProblem::reinit_u_vector(NumericVectorLocal * u) {
 NumericVectorLocal NonLocalProblem::u_from_x_in(Vec x_in) {
   PetscReal norm;
   VecNorm(x_in, NORM_2, &norm);
-  std::cout << "Norm: " << norm << std::endl; 
+  if(GlobalParams.MPI_Rank == 0) std::cout << "Norm: " << norm << std::endl; 
   NumericVectorLocal ret;
   reinit_u_vector(&ret);
   const unsigned int n_loc_dofs = own_dofs.n_elements();
@@ -458,7 +429,7 @@ void NonLocalProblem::set_x_out_from_u(Vec x_out, NumericVectorLocal u_in) {
   VecAssemblyBegin(x_out);
   VecAssemblyEnd(x_out);
   VecNorm(x_out, NORM_2, &norm_post); 
-  std::cout << "On " << GlobalParams.MPI_Rank << " a: " << norm_pre << " b: " << norm_post << " c: " << l2_norm(u_in) << std::endl;
+  if(GlobalParams.MPI_Rank == 0) std::cout << "On " << GlobalParams.MPI_Rank << " a: " << norm_pre << " b: " << norm_post << " c: " << l2_norm(u_in) << std::endl;
   delete[] values;
 }
 
@@ -502,6 +473,7 @@ DofFieldTrace NonLocalProblem::upper_trace(NumericVectorLocal u) {
 }
 
 void NonLocalProblem::send_down(DofFieldTrace trace_values) {
+  std::cout << "Send down norm on " << GlobalParams.MPI_Rank << " is " << l2_norm(trace_values) << std::endl;
   reinit_mpi_cache(trace_values.size());
   Direction communication_direction = get_lower_boundary_id_for_sweeping_direction(sweeping_direction);
   std::pair<bool, unsigned int> neighbour_data = GlobalMPI.get_neighbor_for_interface(communication_direction);
@@ -512,6 +484,7 @@ void NonLocalProblem::send_down(DofFieldTrace trace_values) {
 }
 
 void NonLocalProblem::send_up(DofFieldTrace trace_values) {
+  std::cout << "Send up norm on " << GlobalParams.MPI_Rank << " is " << l2_norm(trace_values) << std::endl;
   reinit_mpi_cache(trace_values.size());
   Direction communication_direction = get_upper_boundary_id_for_sweeping_direction(sweeping_direction);
   std::pair<bool, unsigned int> neighbour_data = GlobalMPI.get_neighbor_for_interface(communication_direction);

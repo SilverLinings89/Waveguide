@@ -148,7 +148,7 @@ void LocalProblem::solve() {
   timer1.start ();
   // dealii::PETScWrappers::MPI::Vector temp_rhs = *rhs;
   solution = 0;
-  constraints.set_zero(solution);
+  constraints.distribute(solution);
   solver.solve(*matrix, solution, rhs);
   timer1.stop();
   constraints.distribute(solution);
