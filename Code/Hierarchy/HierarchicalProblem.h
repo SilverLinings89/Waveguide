@@ -59,7 +59,7 @@ class HierarchicalProblem {
   void compute_final_rhs_mismatch();
 
   virtual void compute_solver_factorization() = 0;
-  std::string output_results();
+  std::string output_results(std::string in_fname_part = "solution_inner_domain_level");
   virtual void reinit_rhs() = 0;
   virtual DofOwner get_dof_owner(unsigned int) = 0;
   void make_sparsity_pattern();

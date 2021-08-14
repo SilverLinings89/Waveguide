@@ -642,3 +642,11 @@ ComplexNumber conjugate(const ComplexNumber & in_number) {
   ret.imag(- in_number.imag());
   return ret;
 }
+
+bool is_absorbing_boundary(SurfaceType in_st) {
+  if(in_st == SurfaceType::DIRICHLET_SURFACE || in_st == SurfaceType::OPEN_SURFACE) {
+    return false;
+  } else {
+    return true;
+  }
+}

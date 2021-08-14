@@ -246,3 +246,30 @@ Now doing the same for geometry size. Here the amplitude seems to vary very stro
 # Tuesday, 10th of august
 
 The best I could do yesterday was 0.4 as the amplitude dampening factor. Plots of the values listed above imply no interference behaviour. The solution is continuous but the input signal did not couple correctly. I also ran tests with fewer processes and got the same result so the issue does not seem to depend on the number of processes, leaving me to believe that sweeping actually works.
+
+# Wednesday, 11th of august
+
+So over the last few days I ran nearly 100 tests. 
+The amplitude *does* depend on:
+- the total length of the computational domain
+It *does not* depend on: 
+- properties of the PML
+- the length of idividual blocks (2x2 or 4x1 mu m block length deliver the same result)
+- The number of cell layers per subdomain (above a certain minimum)
+The outcome is that the amplitude of the sweeping solution depends on the total length of the domain. 
+
+I changed the trace_to_field function to also set the dofs in the boundary method associated with the surface passed in as an argument.
+
+# Thursday, 12th of august
+
+There is new code in the function that sets vector components in the child object. That code writes the field values into the dofs enumerated by the additional surface.
+
+Now the behaviour has changed to account for subdomain sizes again. 
+
+I think I found the solution. I have to split Dirichlet and non-Dirichlet constraints.
+
+# Friday, 13th of august
+
+Here we go again. I have come to the conclusion, that I need to split constraints into constraints *with Dirichlet data* and *without*. That has been implemented. Whenever assembling data outside of the preconditioner, I use the constraints with the Dirichlet-data, but inside the preconditioner, I have to use the constraints without. I think.
+
+I have added a datatype for Dirichlet surfaces, that does all one would expect of it. (One more topic: PML domains still bend towards Dirichlet surfaces, this could be changed.) The problem persists equal to the way it did before.

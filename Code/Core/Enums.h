@@ -25,7 +25,7 @@ enum Evaluation_Domain {
 };
 
 enum SurfaceType {
-  OPEN_SURFACE, NEIGHBOR_SURFACE, ABC_SURFACE
+  OPEN_SURFACE, NEIGHBOR_SURFACE, ABC_SURFACE, DIRICHLET_SURFACE
 };
 
 enum Evaluation_Metric {

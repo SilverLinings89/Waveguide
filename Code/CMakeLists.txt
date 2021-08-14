@@ -33,6 +33,7 @@ ADD_LIBRARY(Code
         BoundaryCondition/HSIESurface.cpp
         BoundaryCondition/NeighborSurface.cpp
         BoundaryCondition/EmptySurface.cpp
+        BoundaryCondition/DirichletSurface.cpp
         BoundaryCondition/LaguerreFunction.cpp
         BoundaryCondition/JacobianForCell.cpp
         Hierarchy/HierarchicalProblem.cpp  

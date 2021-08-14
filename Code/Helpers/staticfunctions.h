@@ -133,3 +133,5 @@ void shift_interface_dof_data(std::vector<InterfaceDofData> * dofs_interface_1, 
 dealii::Triangulation<3> reforge_triangulation(dealii::Triangulation<3> * original_triangulation);
 
 ComplexNumber conjugate(const ComplexNumber & in_number);
+
+bool is_absorbing_boundary(SurfaceType in_st);

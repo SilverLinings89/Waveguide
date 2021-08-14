@@ -47,11 +47,9 @@ auto HierarchicalProblem::opposing_site_bid(BoundaryId in_bid) -> BoundaryId {
 
 void HierarchicalProblem::make_constraints() {
   print_info("HierarchicalProblem::make_constraints", "Start");
-
   IndexSet total_dofs_global(Geometry.levels[level].n_total_level_dofs);
   total_dofs_global.add_range(0,Geometry.levels[level].n_total_level_dofs);
   constraints.reinit(total_dofs_global);
-  
   // Inner constraints
   Geometry.inner_domain->make_constraints(&constraints, Geometry.levels[level].inner_first_dof, own_dofs);
   // Surface constraints
@@ -61,22 +59,12 @@ void HierarchicalProblem::make_constraints() {
     Geometry.levels[level].surfaces[i]->make_surface_constraints(&constraints, has_inhomogeneity);
   }
 
-  if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
-    if(GlobalParams.Index_in_z_direction == 0) {
-      IndexSet owned_dofs(Geometry.inner_domain->dof_handler.n_dofs());
-      owned_dofs.add_range(0, Geometry.inner_domain->dof_handler.n_dofs());
-      AffineConstraints<ComplexNumber> constraints_local(owned_dofs);
-      VectorTools::project_boundary_values_curl_conforming_l2(Geometry.inner_domain->dof_handler, 0, *GlobalParams.source_field , 4, constraints_local);
-      constraints_local.shift(Geometry.levels[level].inner_first_dof);
-      constraints.merge(constraints_local, Constraints::MergeConflictBehavior::right_object_wins, true);
-    }
-  }
 
   // Edge constraints
   for(unsigned int i = 0; i< 6; i++) {
     for(unsigned int j = i+1; j < 6; j++) {
       if(!are_opposing_sites(i, j)) {
-        if((!Geometry.levels[level].surface_type[i] == SurfaceType::OPEN_SURFACE) && (!Geometry.levels[level].surface_type[j] == SurfaceType::OPEN_SURFACE)) {
+        if(is_absorbing_boundary(Geometry.levels[level].surface_type[i]) && is_absorbing_boundary(Geometry.levels[level].surface_type[j])) {
           Geometry.levels[level].surfaces[i]->make_edge_constraints(&constraints, j);
         }
       }
@@ -104,7 +92,7 @@ void HierarchicalProblem::make_sparsity_pattern() {
   print_info("HierarchicalProblem::make_sparsity_patter", "End on level "  + std::to_string(level));
 }
 
-std::string HierarchicalProblem::output_results() {
+std::string HierarchicalProblem::output_results(std::string in_fname_part) {
   print_info("Hierarchical::output_results()", "Start on level " + std::to_string(level));
   std::string ret = "";
   compute_final_rhs_mismatch();
@@ -112,14 +100,14 @@ std::string HierarchicalProblem::output_results() {
   for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
     in_solution[i] = solution[Geometry.levels[level].inner_first_dof + i];
   }
-  std::string file_1 = Geometry.inner_domain->output_results("solution_inner_domain_level" + std::to_string(level) , in_solution);
+  std::string file_1 = Geometry.inner_domain->output_results(in_fname_part + std::to_string(level) , in_solution);
   ret = file_1;
   filenames.clear();
   filenames.push_back(file_1);
 
   if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML) {
     for(unsigned int i = 0; i < 6; i++){
-      if(Geometry.levels[level].is_surface_truncated[i]){
+      if(Geometry.levels[level].surface_type[i] == SurfaceType::ABC_SURFACE){
         dealii::Vector<ComplexNumber> ds (Geometry.levels[level].surfaces[i]->dof_counter);
         for(unsigned int index = 0; index < Geometry.levels[level].surfaces[i]->dof_counter; index++) {
           ds[index] = solution(index + Geometry.levels[level].surface_first_dof[i]);
