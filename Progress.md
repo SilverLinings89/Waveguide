@@ -273,3 +273,7 @@ I think I found the solution. I have to split Dirichlet and non-Dirichlet constr
 Here we go again. I have come to the conclusion, that I need to split constraints into constraints *with Dirichlet data* and *without*. That has been implemented. Whenever assembling data outside of the preconditioner, I use the constraints with the Dirichlet-data, but inside the preconditioner, I have to use the constraints without. I think.
 
 I have added a datatype for Dirichlet surfaces, that does all one would expect of it. (One more topic: PML domains still bend towards Dirichlet surfaces, this could be changed.) The problem persists equal to the way it did before.
+
+# Saturday, 14th of august
+
+Currently the amplitude sits at 0.2 for the config I run. The dirichlet surface works well (tested with the direct solver) and the solution is continuous without any calls to distribute.

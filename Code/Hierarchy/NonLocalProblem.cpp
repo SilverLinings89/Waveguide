@@ -359,17 +359,17 @@ void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   
   DofFieldTrace trace;
   if(!is_highest_in_sweeping_direction()) {
-    u = subtract_fields(u, trace_to_field(receive_from_above(), 5));
+    u = subtract_fields(u, vmult(trace_to_field(receive_from_above(), upper_sweeping_interface_id)));
   }
   if(!is_lowest_in_sweeping_direction()) {
-    NumericVectorLocal temp = vmult(zero_lower_interface_dofs(S_inv(u)));
+    NumericVectorLocal temp = S_inv(u);
     send_down(lower_trace(temp));
   }
   
   u = S_inv(u);
 
   if(!is_lowest_in_sweeping_direction()) {
-    u = subtract_fields(u, S_inv(vmult(trace_to_field(receive_from_below(), 4))));
+    u = subtract_fields(u, S_inv(vmult(trace_to_field(receive_from_below(), lower_sweeping_interface_id))));
   }
   if(!is_highest_in_sweeping_direction()) {
     send_up(upper_trace(u));
@@ -410,11 +410,11 @@ NumericVectorLocal NonLocalProblem::u_from_x_in(Vec x_in) {
 
   temp_solution.compress(dealii::VectorOperation::insert);
   
-  constraints.distribute(temp_solution);
+  // constraints.distribute(temp_solution);
   
   for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
-     ret[i] = temp_solution[Geometry.levels[level].inner_first_dof + i];
-  //   ret[i] = values[i];
+  //    ret[i] = temp_solution[Geometry.levels[level].inner_first_dof + i];
+     ret[i] = values[i];
   }
 
   delete[] values;
@@ -530,7 +530,7 @@ NumericVectorLocal NonLocalProblem::vmult(NumericVectorLocal in_u) {
   reinit_u_vector(&ret);
   // local.constraints.set_zero(in_u);
   local.matrix.vmult(ret, in_u);
-  local.constraints.distribute(ret);
+  // local.constraints.distribute(ret);
   return ret;
 }
 
@@ -579,7 +579,7 @@ void NonLocalProblem::set_child_solution_from_u(NumericVectorLocal in_u) {
   }
   
   child->solution.compress(VectorOperation::insert);
-  child->constraints.distribute(child->solution);
+  // child->constraints.distribute(child->solution);
   // child->constraints.set_zero(child->solution);
 }
 
@@ -653,10 +653,10 @@ void NonLocalProblem::set_child_rhs_from_u(NumericVectorLocal in_u, bool add_ont
   }
   
   child->rhs.compress(VectorOperation::insert);
-  child->constraints.distribute(child->rhs);
+  // child->constraints.distribute(child->rhs);
 
   if(add_onto_child_rhs) {
-    child->rhs += child->rhs_mismatch;
+    // child->rhs += child->rhs_mismatch;
   }
 }
 
