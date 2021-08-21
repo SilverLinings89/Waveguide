@@ -106,7 +106,8 @@ private:
 
   auto receive_from_below() -> DofFieldTrace;
 
-  auto vmult(NumericVectorLocal u) -> NumericVectorLocal;
+  auto vmult_down(NumericVectorLocal u) -> NumericVectorLocal;
+  auto vmult_up(DofFieldTrace u) -> NumericVectorLocal;
 
   auto trace_to_field(DofFieldTrace trace, BoundaryId b_id) -> NumericVectorLocal;
 

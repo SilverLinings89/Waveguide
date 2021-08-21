@@ -98,7 +98,7 @@ std::string HierarchicalProblem::output_results(std::string in_fname_part) {
   compute_final_rhs_mismatch();
   NumericVectorLocal in_solution(Geometry.inner_domain->n_dofs);
   for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
-    in_solution[i] = solution[Geometry.levels[level].inner_first_dof + i];
+    in_solution[i] = rhs[Geometry.levels[level].inner_first_dof + i];
   }
   std::string file_1 = Geometry.inner_domain->output_results(in_fname_part + std::to_string(level) , in_solution);
   ret = file_1;

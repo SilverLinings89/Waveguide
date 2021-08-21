@@ -277,3 +277,19 @@ I have added a datatype for Dirichlet surfaces, that does all one would expect o
 # Saturday, 14th of august
 
 Currently the amplitude sits at 0.2 for the config I run. The dirichlet surface works well (tested with the direct solver) and the solution is continuous without any calls to distribute.
+
+# Monday, 15th of august
+
+I finally think I know the base of the error: When computing the downward sweep, lets assume The solution on the two neighboring domains is already correct. I compute the rhs to be sent down. The value I send down would then be exactly the rhs for the correct solution. On the lower process, however, that would lead to a local solution that is close to the one that process already has computed. As a consequence, computing the solution for that rhs and substracting it removes a lot of legitimate signal from the solution. Instead, when computing what to send down, I should use the difference between what is the old solution and the new one.
+
+# Tuesday, 16th of august
+
+I tried some details about deactivating the Dirichlet-zero-values on the upper interface by commenting out lines in the EmptySurface class but the results were not helping the problem. As a consequence, I rolled them back. I also noticed that the IO operations are a lot faster on the office machine compaired to my home PC. It is very fast in general. I guess the WSL2 layer is slowing down the IO part too much.
+
+# Wednesday, 17th of august
+
+I split the vmult function into two. Vmult_up and vmult_down. Because the matrix block product cannot be executed in a clear block sense here, I have to ensure that any entries outside the range of the input and output vectors that are concernned here, are zero before and after the product. No change.
+
+# Friday, 18th of august
+
+Yesterday I came up with further steps to debug. The current implementation is, to compute the solution (which will have an amplitude of around 0.16). The  I compute b - A * u * (1/1.6). The result is the solution term in Run 196. The dominant residual concentration is located at the interfaces between subdomains. It is also largest in the x-components.

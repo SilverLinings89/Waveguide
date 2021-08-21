@@ -326,7 +326,7 @@ dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
 void NonLocalProblem::solve() {
   
   GlobalTimerManager.switch_context("solve", level);
-  std::cout << "Norm before solving: " << rhs.l2_norm() << std::endl;
+  // std::cout << "Norm before solving: " << rhs.l2_norm() << std::endl;
   rhs.compress(VectorOperation::add);
   constraints.distribute(rhs);
 
@@ -345,8 +345,12 @@ void NonLocalProblem::solve() {
     dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, MPI_COMM_WORLD);
     solver1.solve(*matrix, solution, rhs);
   }
-  
-  constraints.distribute(solution);
+
+  solution *= (1.0 / 0.17);
+  matrix->vmult(rhs_mismatch, solution);
+  rhs -= rhs_mismatch;
+
+  // constraints.distribute(solution);
   
   // if(ierr != 0) {
   //   std::cout << "Error code from Petsc: " << std::to_string(ierr) << std::endl;
@@ -359,17 +363,18 @@ void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   
   DofFieldTrace trace;
   if(!is_highest_in_sweeping_direction()) {
-    u = subtract_fields(u, vmult(trace_to_field(receive_from_above(), upper_sweeping_interface_id)));
+    // u = subtract_fields(u, trace_to_field(receive_from_above(), upper_sweeping_interface_id));
+    receive_from_above();
   }
   if(!is_lowest_in_sweeping_direction()) {
-    NumericVectorLocal temp = S_inv(u);
+    NumericVectorLocal temp = vmult_down(S_inv(u));
     send_down(lower_trace(temp));
   }
-  
+  MPI_Barrier(MPI_COMM_WORLD);
   u = S_inv(u);
-
+  MPI_Barrier(MPI_COMM_WORLD);
   if(!is_lowest_in_sweeping_direction()) {
-    u = subtract_fields(u, S_inv(vmult(trace_to_field(receive_from_below(), lower_sweeping_interface_id))));
+    u = subtract_fields(u, S_inv(vmult_up(receive_from_below())));
   }
   if(!is_highest_in_sweeping_direction()) {
     send_up(upper_trace(u));
@@ -384,6 +389,8 @@ void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   if(!is_highest_in_sweeping_direction()) {
     send_up(upper_trace(u));
   }
+
+  
   
   set_x_out_from_u(u_out, u);
 }
@@ -406,15 +413,15 @@ NumericVectorLocal NonLocalProblem::u_from_x_in(Vec x_in) {
   
   for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
     temp_solution[Geometry.levels[level].inner_first_dof + i] = values[i];
-   }
+  }
 
   temp_solution.compress(dealii::VectorOperation::insert);
   
-  // constraints.distribute(temp_solution);
+  constraints.distribute(temp_solution);
   
   for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
-  //    ret[i] = temp_solution[Geometry.levels[level].inner_first_dof + i];
-     ret[i] = values[i];
+     ret[i] = temp_solution[Geometry.levels[level].inner_first_dof + i];
+  //   ret[i] = values[i];
   }
 
   delete[] values;
@@ -422,32 +429,37 @@ NumericVectorLocal NonLocalProblem::u_from_x_in(Vec x_in) {
 }
 
 void NonLocalProblem::set_x_out_from_u(Vec x_out, NumericVectorLocal u_in) {
-  PetscReal norm_pre;
-  PetscReal norm_post;
-  VecNorm(x_out, NORM_2, &norm_pre);
   const unsigned int n_loc_dofs = own_dofs.n_elements();
   ComplexNumber * values = new ComplexNumber[n_loc_dofs];
-  for(unsigned int i = 0; i < n_loc_dofs; i++) {
-     values[i] = u_in[i];
+  temp_solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  
+  for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
+    temp_solution[Geometry.levels[level].inner_first_dof + i] = u_in[i];
   }
+
+  temp_solution.compress(dealii::VectorOperation::insert);
+  
+  constraints.distribute(temp_solution);
+  
+  for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
+    values[i] = temp_solution[Geometry.levels[level].inner_first_dof + i];
+  }
+
   VecSetValues(x_out, n_loc_dofs, locally_owned_dofs_index_array, values, INSERT_VALUES);
   VecAssemblyBegin(x_out);
   VecAssemblyEnd(x_out);
-  VecNorm(x_out, NORM_2, &norm_post); 
-  if(GlobalParams.MPI_Rank == 0) std::cout << "On " << GlobalParams.MPI_Rank << " a: " << norm_pre << " b: " << norm_post << " c: " << l2_norm(u_in) << std::endl;
   delete[] values;
 }
 
 NumericVectorLocal NonLocalProblem::S_inv(NumericVectorLocal in_u) {
-
-  set_child_rhs_from_u(in_u, false);
+  NumericVectorLocal updated = zero_lower_interface_dofs(in_u);
+  set_child_rhs_from_u(updated, false);
 
   child->solve();
 
   NumericVectorLocal ret;
   
   set_u_from_child_solution(&ret);
-  
   return ret;
 }
 
@@ -525,14 +537,29 @@ DofFieldTrace NonLocalProblem::receive_from_below() {
   return ret;
 }
 
-NumericVectorLocal NonLocalProblem::vmult(NumericVectorLocal in_u) {
+NumericVectorLocal NonLocalProblem::vmult_up(DofFieldTrace in_trace) {
   NumericVectorLocal ret;
   reinit_u_vector(&ret);
-  // local.constraints.set_zero(in_u);
-  local.matrix.vmult(ret, in_u);
-  // local.constraints.distribute(ret);
+  NumericVectorLocal input = trace_to_field(in_trace, lower_sweeping_interface_id);
+  local.matrix.vmult(ret, input);
+  ret = zero_lower_interface_dofs(ret);
   return ret;
 }
+
+NumericVectorLocal NonLocalProblem::vmult_down(NumericVectorLocal in_u) {
+  NumericVectorLocal ret;
+  reinit_u_vector(&ret);
+  NumericVectorLocal input = zero_lower_interface_dofs(in_u);
+  local.matrix.vmult(ret, input);
+  for(unsigned int i = 0; i < in_u.size(); i++) {
+    if(!lower_interface_dofs.is_element(i)) {
+      ret[i] = 0;
+    }
+  }
+
+  return ret;
+}
+
 
 NumericVectorLocal NonLocalProblem::trace_to_field(DofFieldTrace trace, BoundaryId b_id) {
   std::vector<InterfaceDofData> dofs = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
@@ -645,7 +672,7 @@ void NonLocalProblem::set_child_rhs_from_u(NumericVectorLocal in_u, bool add_ont
   }
   
   for(unsigned int surf = 0; surf < 6; surf++) {
-    if(Geometry.levels[level].is_surface_truncated[surf] && Geometry.levels[level-1].is_surface_truncated[surf]) {
+    if(Geometry.levels[level].surface_type[surf] == Geometry.levels[level-1].surface_type[surf]) {
       for(unsigned int i = 0; i < Geometry.levels[level].surfaces[surf]->dof_counter; i++) {
         child->rhs[Geometry.levels[level-1].surface_first_dof[surf] + i] = in_u[Geometry.levels[level].surface_first_dof[surf] - Geometry.levels[level].inner_first_dof + i];
       }
@@ -653,7 +680,7 @@ void NonLocalProblem::set_child_rhs_from_u(NumericVectorLocal in_u, bool add_ont
   }
   
   child->rhs.compress(VectorOperation::insert);
-  // child->constraints.distribute(child->rhs);
+  child->constraints.distribute(child->rhs);
 
   if(add_onto_child_rhs) {
     // child->rhs += child->rhs_mismatch;
