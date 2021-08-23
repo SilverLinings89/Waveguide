@@ -330,7 +330,7 @@ void NonLocalProblem::solve() {
   rhs.compress(VectorOperation::add);
   constraints.distribute(rhs);
 
-  if(!GlobalParams.solve_directly) {
+  // if(!GlobalParams.solve_directly) {
     constraints.distribute(solution);
     KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc), nullptr);
     KSPSetPCSide(ksp, PCSide::PC_LEFT);
@@ -339,16 +339,16 @@ void NonLocalProblem::solve() {
     KSPSetUp(ksp);
     PetscErrorCode ierr = KSPSolve(ksp, rhs, solution);
 
-  } else {
-    constraints.distribute(solution);
+  // } else {
+    constraints.distribute(rhs_mismatch);
     SolverControl sc;
     dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, MPI_COMM_WORLD);
-    solver1.solve(*matrix, solution, rhs);
-  }
+    solver1.solve(*matrix, rhs_mismatch, rhs);
+  // }
 
   solution *= (1.0 / 0.17);
-  matrix->vmult(rhs_mismatch, solution);
-  rhs -= rhs_mismatch;
+  // matrix->vmult(rhs_mismatch, solution);
+  solution -= rhs_mismatch;
 
   // constraints.distribute(solution);
   
@@ -380,18 +380,16 @@ void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
     send_up(upper_trace(u));
   }
 
-  if(!is_lowest_in_sweeping_direction()) {
-    trace = receive_from_below();
+  if(!is_highest_in_sweeping_direction()) {
+    trace = receive_from_above();
     for(unsigned int i = 0; i < trace.size(); i++) {
-      u[lower_interface_dofs.nth_index_in_set(i)] = trace[i];
+      u[upper_interface_dofs.nth_index_in_set(i)] = trace[i];
     } 
   }
-  if(!is_highest_in_sweeping_direction()) {
-    send_up(upper_trace(u));
+  if(!is_lowest_in_sweeping_direction()) {
+    send_down(lower_trace(u));
   }
 
-  
-  
   set_x_out_from_u(u_out, u);
 }
 
@@ -402,7 +400,7 @@ void NonLocalProblem::reinit_u_vector(NumericVectorLocal * u) {
 NumericVectorLocal NonLocalProblem::u_from_x_in(Vec x_in) {
   PetscReal norm;
   VecNorm(x_in, NORM_2, &norm);
-  if(GlobalParams.MPI_Rank == 0) std::cout << "Norm: " << norm << std::endl; 
+  // if(GlobalParams.MPI_Rank == 0) std::cout << "Norm: " << norm << std::endl; 
   NumericVectorLocal ret;
   reinit_u_vector(&ret);
   const unsigned int n_loc_dofs = own_dofs.n_elements();
@@ -420,8 +418,8 @@ NumericVectorLocal NonLocalProblem::u_from_x_in(Vec x_in) {
   constraints.distribute(temp_solution);
   
   for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
-     ret[i] = temp_solution[Geometry.levels[level].inner_first_dof + i];
-  //   ret[i] = values[i];
+  //   ret[i] = temp_solution[Geometry.levels[level].inner_first_dof + i];
+     ret[i] = values[i];
   }
 
   delete[] values;
@@ -442,7 +440,8 @@ void NonLocalProblem::set_x_out_from_u(Vec x_out, NumericVectorLocal u_in) {
   constraints.distribute(temp_solution);
   
   for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
-    values[i] = temp_solution[Geometry.levels[level].inner_first_dof + i];
+    //values[i] = temp_solution[Geometry.levels[level].inner_first_dof + i];
+    values[i] = u_in[i];
   }
 
   VecSetValues(x_out, n_loc_dofs, locally_owned_dofs_index_array, values, INSERT_VALUES);

@@ -290,6 +290,11 @@ I tried some details about deactivating the Dirichlet-zero-values on the upper i
 
 I split the vmult function into two. Vmult_up and vmult_down. Because the matrix block product cannot be executed in a clear block sense here, I have to ensure that any entries outside the range of the input and output vectors that are concernned here, are zero before and after the product. No change.
 
-# Friday, 18th of august
+# Thursday, 18th of august
 
 Yesterday I came up with further steps to debug. The current implementation is, to compute the solution (which will have an amplitude of around 0.16). The  I compute b - A * u * (1/1.6). The result is the solution term in Run 196. The dominant residual concentration is located at the interfaces between subdomains. It is also largest in the x-components.
+
+# Saturday, 21th of august
+
+I hav implemented the following: I now compute U_direct - U_sweeping without distribution of boundary values. In the solution I can clearly see, that there is a large concentration of the error along the interfaces. Since GMRES does not converge, a 0 field with localized errors would not be expected. So a light oscillation in the visual field is expected. However, the error spikes. The higher (+z) process is OK, the lower process appears to have the wrong boundary values. This implies that I should copy all the boundary values downwards at the end of the sweep. Implementing.
+
