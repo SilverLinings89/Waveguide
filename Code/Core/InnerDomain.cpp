@@ -455,7 +455,7 @@ void InnerDomain::assemble_system(unsigned int shift,
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
       cell_data.prepare_for_current_q_index(q_index);
     }
-    constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, true);
+    constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, false);
   }
   matrix->compress(dealii::VectorOperation::add);
   rhs->compress(dealii::VectorOperation::add);
@@ -495,7 +495,7 @@ void InnerDomain::assemble_system(unsigned int shift,
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
       cell_data.prepare_for_current_q_index(q_index);
     }
-    constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, true);
+    constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, false);
   }
   matrix->compress(dealii::VectorOperation::add);
   rhs->compress(dealii::VectorOperation::add);
@@ -577,8 +577,7 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
   // }
   data_out.build_patches();
   data_out.write_vtu(outputvtu);
-  
-  // write_phase_plot();
+
   print_info("InnerDomain::output_results()", "End");
   return filename;
 }

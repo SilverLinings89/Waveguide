@@ -125,10 +125,7 @@ void LocalProblem::reinit() {
   reinit_rhs();
   rhs = dealii::PETScWrappers::MPI::Vector(own_dofs, MPI_COMM_SELF);
   solution.reinit(MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs, false);
-  temp_solution.reinit(MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs, false);
-  final_rhs_mismatch.reinit(MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs, false);
   solution = 0;
-  temp_solution = 0;
   make_constraints();
   constraints.close();
   make_sparsity_pattern();
@@ -151,23 +148,13 @@ void LocalProblem::solve() {
   constraints.distribute(solution);
   solver.solve(*matrix, solution, rhs);
   timer1.stop();
-  constraints.distribute(solution);
+  // constraints.distribute(solution);
   solve_counter ++;
 }
 
 void LocalProblem::initialize_index_sets() {
   n_procs_in_sweep = 1;
   rank = 0;
-}
-
-unsigned int LocalProblem::compute_lower_interface_dof_count() {
-  // For local problems there are not interfaces.
-  return 0;
-}
-
-unsigned int LocalProblem::compute_upper_interface_dof_count() {
-  // For local problems there are not interfaces.
-  return 0;
 }
 
 dealii::Vector<ComplexNumber> LocalProblem::get_local_vector_from_global() {
@@ -178,32 +165,6 @@ dealii::Vector<ComplexNumber> LocalProblem::get_local_vector_from_global() {
   }
   print_info("LocalProblem::get_local_vector_from_global", "End");
   return ret;
-}
-
-auto LocalProblem::write_phase_plot() -> void {
-  dealii::Vector<ComplexNumber> output_solution = get_local_vector_from_global();
-  const unsigned int n_points = 50;
-  std::ofstream outfile;
-  std::string filename = GlobalOutputManager.get_full_filename("Phase_Plot" + std::to_string(GlobalParams.MPI_Rank) + ".dat");
-  outfile.open(filename);
-  for(unsigned int i = 0; i < n_points; i++) {
-    dealii::Vector<ComplexNumber> numeric_solution(3);
-    dealii::Vector<ComplexNumber> exact_solution(3);
-    Point<3, double> location = Point<3,double>(0,0, Geometry.local_z_range.first + i * (Geometry.local_z_range.second - Geometry.local_z_range.first)/n_points);
-    dealii::VectorTools::point_value(Geometry.inner_domain->dof_handler, output_solution, location , numeric_solution);
-    GlobalParams.source_field->vector_value(location, exact_solution);
-    outfile << location[2] << "\t";
-    for(unsigned int j = 0; j < 3; j++) {
-      outfile << exact_solution[j].real() << "\t"<< exact_solution[j].imag() << "\t";
-    }
-    for(unsigned int j = 0; j < 3; j++) {
-      outfile << numeric_solution[j].real() << "\t"<< numeric_solution[j].imag() << "\t";
-    }
-    for(unsigned int j = 0; j < 3; j++) {
-      outfile << numeric_solution[j].real() - exact_solution[j].real() << "\t"<< numeric_solution[j].imag()  - exact_solution[j].imag()<< "\t";
-    }
-    outfile << std::endl;
-  }
 }
 
 auto LocalProblem::compare_to_exact_solution() -> void {
@@ -306,6 +267,7 @@ double LocalProblem::compute_error(dealii::VectorTools::NormType in_norm, Functi
   }
   in_data_out->add_data_vector(cellwise_error, "Cellwise_" + error_name + "_error");
   print_info("LocalProblem::compute_error", error_name + " Error: " + std::to_string(error) + " ( computed in " + std::to_string(timer.cpu_time()) + "s)");
+  return error;
 }
 
 double LocalProblem::compute_L2_error() {

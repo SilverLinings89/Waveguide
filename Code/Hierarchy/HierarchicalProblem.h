@@ -25,12 +25,9 @@ class HierarchicalProblem {
   dealii:: SparsityPattern sp;
   DofIndexData indices;
   NumericVectorDistributed solution;
-  NumericVectorDistributed temp_solution;
+  NumericVectorDistributed direct_solution;
+  NumericVectorDistributed solution_error;
   NumericVectorDistributed rhs;
-  NumericVectorDistributed rhs_mismatch;
-  NumericVectorDistributed final_rhs_mismatch;
-  DofCount dofs_process_above;
-  DofCount dofs_process_below;
   unsigned int n_procs_in_sweep;
   unsigned int rank;
   dealii::IndexSet own_dofs;
@@ -43,8 +40,6 @@ class HierarchicalProblem {
   HierarchicalProblem(unsigned int level, SweepingDirection direction);
   virtual ~HierarchicalProblem() =0;
 
-  virtual DofCount compute_lower_interface_dof_count()=0;
-  virtual DofCount compute_upper_interface_dof_count()=0;
   virtual void solve()=0;
   virtual void initialize()=0;
   virtual void initialize_own_dofs() =0;

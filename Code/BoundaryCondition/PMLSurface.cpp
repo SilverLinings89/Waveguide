@@ -453,7 +453,7 @@ void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, Numeri
           dealii::Tensor<2,3,ComplexNumber> mu = get_pml_tensor_mu(pos);
           cell_data.prepare_for_current_q_index(q_index, epsilon, mu);
       }
-      constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, true);
+      constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, false);
   }
   matrix->compress(dealii::VectorOperation::add);
 }
@@ -505,7 +505,7 @@ void PMLSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, N
       dealii::Tensor<2,3,ComplexNumber> mu = get_pml_tensor_mu(pos);
       cell_data.prepare_for_current_q_index(q_index, epsilon, mu);
     }
-    constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, true);
+    constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, false);
   }
   matrix->compress(dealii::VectorOperation::add);
 }

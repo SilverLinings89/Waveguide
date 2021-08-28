@@ -19,10 +19,6 @@ public:
   LocalProblem();
   ~LocalProblem() override;
 
-  DofCount compute_lower_interface_dof_count() override;
-
-  DofCount compute_upper_interface_dof_count() override;
-
   void solve() override;
 
   void initialize() override;
@@ -52,8 +48,6 @@ public:
    double compute_L2_error();
 
   double compute_error(dealii::VectorTools::NormType, Function<3,ComplexNumber> *, dealii::Vector<ComplexNumber> & , dealii::DataOut<3> *);
-
-  auto write_phase_plot() -> void;
 
   DofOwner get_dof_owner(unsigned int id);
 };

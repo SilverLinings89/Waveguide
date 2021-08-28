@@ -508,7 +508,7 @@ Constraints get_affine_constraints_for_InterfaceData(std::vector<InterfaceDofDat
   Constraints ret(is);
   std::vector<DofCouplingInformation> coupling_data = get_coupling_information(dofs_interface_1, dofs_interface_2);
   for(unsigned int i = 0; i < coupling_data.size(); i++) {
-    if(coupling_data[i].first_dof < coupling_data[i].second_dof) {
+    if(coupling_data[i].first_dof > coupling_data[i].second_dof) {
       ret.add_line(coupling_data[i].first_dof);
       ret.add_entry(coupling_data[i].first_dof, coupling_data[i].second_dof, coupling_data[i].coupling_value);
     } else {

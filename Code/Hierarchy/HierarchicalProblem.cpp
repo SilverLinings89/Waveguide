@@ -12,8 +12,6 @@ HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level, SweepingDire
   level(in_own_level) {
   has_child = in_own_level > 0;
   child = nullptr;
-  dofs_process_above = 0;
-  dofs_process_below = 0;
   rank = 0;
   n_procs_in_sweep = 0;
   for(unsigned int i = 0; i < 6; i++) {
@@ -95,7 +93,6 @@ void HierarchicalProblem::make_sparsity_pattern() {
 std::string HierarchicalProblem::output_results(std::string in_fname_part) {
   print_info("Hierarchical::output_results()", "Start on level " + std::to_string(level));
   std::string ret = "";
-  compute_final_rhs_mismatch();
   NumericVectorLocal in_solution(Geometry.inner_domain->n_dofs);
   for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
     in_solution[i] = solution[Geometry.levels[level].inner_first_dof + i];
@@ -112,44 +109,44 @@ std::string HierarchicalProblem::output_results(std::string in_fname_part) {
         for(unsigned int index = 0; index < Geometry.levels[level].surfaces[i]->dof_counter; index++) {
           ds[index] = solution(index + Geometry.levels[level].surface_first_dof[i]);
         }
-        std::string file_2 = Geometry.levels[level].surfaces[i]->output_results(ds, "PML_domain_level_" + std::to_string(level));
+        std::string file_2 = Geometry.levels[level].surfaces[i]->output_results(ds, "pml_domain" + std::to_string(level));
         filenames.push_back(file_2);
       }
     }
   }
 
+  // End of core output
+
   for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
-    in_solution[i] = final_rhs_mismatch[Geometry.levels[level].inner_first_dof + i];
+    in_solution[i] = solution_error[Geometry.levels[level].inner_first_dof + i];
   }
-  Geometry.inner_domain->output_results("rhs_mismatch" + std::to_string(level) , in_solution);
+  Geometry.inner_domain->output_results("error" + std::to_string(level) , in_solution);
 
   if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML) {
     for(unsigned int i = 0; i < 6; i++){
       if(Geometry.levels[level].is_surface_truncated[i]){
         dealii::Vector<ComplexNumber> ds (Geometry.levels[level].surfaces[i]->dof_counter);
         for(unsigned int index = 0; index < Geometry.levels[level].surfaces[i]->dof_counter; index++) {
-          ds[index] = final_rhs_mismatch(index + Geometry.levels[level].surface_first_dof[i]);
+          ds[index] = solution_error(index + Geometry.levels[level].surface_first_dof[i]);
         }
-        Geometry.levels[level].surfaces[i]->output_results(ds, "PML_domain_rhs_mismatch" + std::to_string(level));
+        Geometry.levels[level].surfaces[i]->output_results(ds, "error_in_pml" + std::to_string(level));
       }
     }
   }
 
   if(level != 0) {
-    child->output_results();
+  //  child->output_results();
   }
 
   print_info("Hierarchical::output_results()", "End on level " + std::to_string(level));
   return ret;
 }
 
-void HierarchicalProblem::compute_final_rhs_mismatch() {
-  matrix->vmult(final_rhs_mismatch, solution);
-  final_rhs_mismatch -= rhs;
-}
 
 void HierarchicalProblem::execute_vmult() {
   // constraints.set_zero(solution);
+  NumericVectorDistributed temp_solution;
+  temp_solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   matrix->vmult(temp_solution, solution);
   solution = temp_solution;
   // constraints.distribute(solution);

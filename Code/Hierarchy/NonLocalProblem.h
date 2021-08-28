@@ -28,6 +28,8 @@ private:
   unsigned int lower_sweeping_interface_id;
   unsigned int upper_sweeping_interface_id;
   LocalMatrixPart local;
+  unsigned int n_interface_dofs;
+  std::vector<NumericVectorLocal> stored_solutions;
   
  public:
   NonLocalProblem(unsigned int);
@@ -37,12 +39,6 @@ private:
   auto reinit_mpi_cache(DofCount) -> void;
 
   auto initialize_own_dofs() -> void override;
-
-  auto compute_lower_interface_dof_count() -> DofCount override;
-
-  auto compute_upper_interface_dof_count() -> DofCount override;
-
-  DofCount compute_interface_dofs(BoundaryId interface_id);
 
   dealii::IndexSet compute_interface_dof_set(BoundaryId interface_id);
 
@@ -106,16 +102,15 @@ private:
 
   auto receive_from_below() -> DofFieldTrace;
 
-  auto vmult_down(NumericVectorLocal u) -> NumericVectorLocal;
-  auto vmult_up(DofFieldTrace u) -> NumericVectorLocal;
+  auto vmult_down(const NumericVectorLocal u) -> NumericVectorLocal;
+
+  auto vmult_up(const DofFieldTrace & u) -> NumericVectorLocal;
 
   auto trace_to_field(DofFieldTrace trace, BoundaryId b_id) -> NumericVectorLocal;
 
   auto subtract_fields(NumericVectorLocal a, NumericVectorLocal b) -> NumericVectorLocal;
 
   auto set_x_out_from_u(Vec x_out, NumericVectorLocal u_in) -> void;
-
-  auto set_child_solution_from_u(NumericVectorLocal u) -> void;
 
   auto set_child_rhs_from_u(NumericVectorLocal u, bool add_onto_child_rhs) -> void;
 
@@ -125,11 +120,23 @@ private:
 
   auto zero_lower_interface_dofs(NumericVectorLocal u)-> NumericVectorLocal;
 
-  void update_u_from_trace(NumericVectorLocal * in_u, DofFieldTrace trace, bool from_lower);
-
-  void receive_local_lower_dofs_and_H();
-
   auto compute_interface_norm_for_u(NumericVectorLocal u, BoundaryId) -> double;
 
   std::string output_results();
+
+  double compute_lower_interface_norm(NumericVectorLocal u);
+
+  double compute_upper_interface_norm(NumericVectorLocal u);
+
+  NumericVectorLocal sync_upwards(NumericVectorLocal u);
+
+  NumericVectorLocal sync_downwards(NumericVectorLocal u);
+
+  void store_solution(NumericVectorLocal u);
+
+  void write_output_for_stored_solution(unsigned int index);
+
+  void print_norm_distribution_for_vector(const NumericVectorDistributed & in_vector);
+
+  NumericVectorLocal distribute_constraints_to_local_vector(const NumericVectorLocal u_in);
 };

@@ -298,3 +298,18 @@ Yesterday I came up with further steps to debug. The current implementation is, 
 
 I hav implemented the following: I now compute U_direct - U_sweeping without distribution of boundary values. In the solution I can clearly see, that there is a large concentration of the error along the interfaces. Since GMRES does not converge, a 0 field with localized errors would not be expected. So a light oscillation in the visual field is expected. However, the error spikes. The higher (+z) process is OK, the lower process appears to have the wrong boundary values. This implies that I should copy all the boundary values downwards at the end of the sweep. Implementing.
 
+# Thursday, 26th of august
+
+I made some mistakes and had to git-stash my code. Sadly this cost me some days content of this file. 
+
+Currently I'm improving code-quality by checking for dead code and improving implementation quality wherever I can see good options for it. At the same time I'm running tests with the two possible priorities of dof ownership in the function that generates constraints for two sets of dofs (i.e. constrain the inner to the outer or the outer to the inner).
+
+I appear to have found an inconsistency in the dof set computation that might account for the errors I see. There was an error in the implementation of the computation of interface dof sets. It is fixed now. Searching dowstream problems.
+
+# Friday, 27th of august
+
+I still don't know the exact error. The exact solution generates a term on the input interface which I don't understand because these dofs hava a constraint on them. However, there are terms there that are a difference between the iterative and direct solution. Other then that there is only a slow amplitude increase in the first step solution of the iterative solver versus the direct solution. The next function I want to implement is one that lists the norm of a vector by domain the dofs belong to. I then want to use that to list the domains in which the residual is concentrated.
+
+I switched all calls to distribute_local_to_global() back to use false as the last argument. As a consequence, it should now only be a matter of setting the appropriate dofs 0. This should be easier to diagnose and fix in the long run.
+
+In the current setup, there is only a error in the components related to the upper surface of a subdomain. Not at the input and not at lower sides.
