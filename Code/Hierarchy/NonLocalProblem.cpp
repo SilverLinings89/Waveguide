@@ -364,17 +364,13 @@ void NonLocalProblem::solve() {
     temp_vector[Geometry.levels[level].inner_first_dof + i] = stored_solutions[0][i];
   }
   temp_vector.compress(VectorOperation::insert);
-  // solution = temp_vector;
+  write_multifile_output("FirstSolution", temp_vector);
   temp_rhs.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   matrix->vmult(temp_rhs, temp_vector);
   temp_rhs -= rhs;
   print_norm_distribution_for_vector(temp_rhs);
   solution_error = temp_rhs;
-  // solution *= (1.0 / 0.15) * (1.0 / 0.000007);
-  // matrix->vmult(rhs_mismatch, solution);
-  // solution_error = direct_solution;
-  // solution_error -= solution;
-  // constraints.distribute(solution);
+  write_multifile_output("Residual", solution_error);
   
   if(ierr != 0) {
     std::cout << "Error code from Petsc: " << std::to_string(ierr) << std::endl;
@@ -384,29 +380,23 @@ void NonLocalProblem::solve() {
 
 void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   NumericVectorLocal u = u_from_x_in(b_in);
-  std::cout << "A on " << GlobalParams.MPI_Rank << ": " << l2_norm(u) << std::endl;
   if(!is_highest_in_sweeping_direction()) {
     u = subtract_fields(u, trace_to_field(receive_from_above(), upper_sweeping_interface_id));
   }
-  std::cout << "B on " << GlobalParams.MPI_Rank << ": " << l2_norm(u) << std::endl;
   if(!is_lowest_in_sweeping_direction()) {
     NumericVectorLocal temp = vmult_down(S_inv(u));
     send_down(lower_trace(temp));
   }
-  std::cout << "C on " << GlobalParams.MPI_Rank << ": " << l2_norm(u) << std::endl;
   u = S_inv(u);
-  std::cout << "D on " << GlobalParams.MPI_Rank << ": " << l2_norm(u) << std::endl;
   if(!is_lowest_in_sweeping_direction()) {
     NumericVectorLocal temp = vmult_up(receive_from_below());
-    std::cout << "E on " << GlobalParams.MPI_Rank << ": " << l2_norm(temp) << std::endl;
     temp = S_inv(temp);
-    std::cout << "F on " << GlobalParams.MPI_Rank << ": " << l2_norm(u) << std::endl;
     u = subtract_fields(u, temp);
   }
   if(!is_highest_in_sweeping_direction()) {
     send_up(upper_trace(u));
   }
-  
+  u = sync_downwards(u);
   store_solution(u);
   set_x_out_from_u(u_out, u);
 }
@@ -416,9 +406,6 @@ void NonLocalProblem::reinit_u_vector(NumericVectorLocal * u) {
 }
 
 NumericVectorLocal NonLocalProblem::u_from_x_in(Vec x_in) {
-  PetscReal norm;
-  VecNorm(x_in, NORM_2, &norm);
-  // if(GlobalParams.MPI_Rank == 0) std::cout << "Norm: " << norm << std::endl; 
   NumericVectorLocal ret;
   reinit_u_vector(&ret);
   const unsigned int n_loc_dofs = own_dofs.n_elements();
@@ -566,7 +553,7 @@ NumericVectorLocal NonLocalProblem::trace_to_field(DofFieldTrace trace, Boundary
   for(unsigned int i = 0; i < n_interface_dofs; i++) {
     ret[indices.nth_index_in_set(i)] = trace[i];
   }
-  
+  ret = distribute_constraints_to_local_vector(ret);
   return ret;
 }
 
@@ -699,10 +686,10 @@ void NonLocalProblem::initialize_index_sets() {
 
   lower_interface_dofs = compute_interface_dof_set(lower_sweeping_interface_id);
   upper_interface_dofs = compute_interface_dof_set(upper_sweeping_interface_id);
-  if(lower_interface_dofs.n_elements() != n_interface_dofs || upper_interface_dofs.n_elements() != n_interface_dofs) {
+  n_interface_dofs = lower_interface_dofs.n_elements();
+  if(lower_interface_dofs.n_elements() != upper_interface_dofs.n_elements()) {
     std::cout << "Interface dof sets are incomplete. Indetermintate behaviour." << std::endl;
   }
-  n_interface_dofs = lower_interface_dofs.n_elements();
 
   initialize_own_dofs();
   locally_owned_dofs_index_array = new PetscInt[own_dofs.n_elements()];
@@ -861,22 +848,7 @@ bool NonLocalProblem::is_dof_locally_owned(unsigned int dof) {
 }
 
 std::string NonLocalProblem::output_results() {
-  HierarchicalProblem::output_results();
-  std::vector<std::vector<std::string>> all_files = dealii::Utilities::MPI::gather(GlobalMPI.communicators_by_level[level], filenames);
-  if(GlobalParams.MPI_Rank == 0) {
-    std::vector<std::string> flattened_filenames;
-    for(unsigned int i = 0; i < all_files.size(); i++) {
-      for(unsigned int j = 0; j < all_files[i].size(); j++) {
-        flattened_filenames.push_back(all_files[i][j]);
-      }
-    }
-    std::string filename = GlobalOutputManager.get_full_filename("level_" + std::to_string(level) + "_solution.pvtu");
-    std::ofstream outputvtu(filename);
-    for(unsigned int i = 0; i < flattened_filenames.size(); i++) {
-      flattened_filenames[i] = "../" + flattened_filenames[i];
-    }
-    Geometry.inner_domain->data_out.write_pvtu_record(outputvtu, flattened_filenames);
-  }
+  write_multifile_output("solution", solution);
   return "";
 }
 
@@ -975,4 +947,42 @@ NumericVectorLocal NonLocalProblem::distribute_constraints_to_local_vector(const
     ret[i] = global[Geometry.levels[level].inner_first_dof + i];
   }
   return ret;
+}
+
+void NonLocalProblem::write_multifile_output(const std::string & in_filename, const NumericVectorDistributed field) {
+  std::vector<std::string> generated_files;
+  NumericVectorLocal in_solution(Geometry.inner_domain->n_dofs);
+  for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
+    in_solution[i] = field[Geometry.levels[level].inner_first_dof + i];
+  }
+  std::string file_1 = Geometry.inner_domain->output_results(in_filename + std::to_string(level) , in_solution);
+  generated_files.push_back(file_1);
+
+  if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML) {
+    for(unsigned int i = 0; i < 6; i++){
+      if(Geometry.levels[level].surface_type[i] == SurfaceType::ABC_SURFACE){
+        dealii::Vector<ComplexNumber> ds (Geometry.levels[level].surfaces[i]->dof_counter);
+        for(unsigned int index = 0; index < Geometry.levels[level].surfaces[i]->dof_counter; index++) {
+          ds[index] = field(index + Geometry.levels[level].surface_first_dof[i]);
+        }
+        std::string file_2 = Geometry.levels[level].surfaces[i]->output_results(ds, in_filename + "_pml" + std::to_string(level));
+        generated_files.push_back(file_2);
+      }
+    }
+  }
+  std::vector<std::vector<std::string>> all_files = dealii::Utilities::MPI::gather(GlobalMPI.communicators_by_level[level], generated_files);
+  if(GlobalParams.MPI_Rank == 0) {
+    std::vector<std::string> flattened_filenames;
+    for(unsigned int i = 0; i < all_files.size(); i++) {
+      for(unsigned int j = 0; j < all_files[i].size(); j++) {
+        flattened_filenames.push_back(all_files[i][j]);
+      }
+    }
+    std::string filename = GlobalOutputManager.get_full_filename("_" + in_filename + ".pvtu");
+    std::ofstream outputvtu(filename);
+    for(unsigned int i = 0; i < flattened_filenames.size(); i++) {
+      flattened_filenames[i] = "../" + flattened_filenames[i];
+    }
+    Geometry.inner_domain->data_out.write_pvtu_record(outputvtu, flattened_filenames);
+  }
 }

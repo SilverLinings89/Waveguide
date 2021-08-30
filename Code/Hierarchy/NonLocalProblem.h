@@ -139,4 +139,6 @@ private:
   void print_norm_distribution_for_vector(const NumericVectorDistributed & in_vector);
 
   NumericVectorLocal distribute_constraints_to_local_vector(const NumericVectorLocal u_in);
+
+  void write_multifile_output(const std::string & filename, const NumericVectorDistributed field);
 };

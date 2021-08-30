@@ -313,3 +313,11 @@ I still don't know the exact error. The exact solution generates a term on the i
 I switched all calls to distribute_local_to_global() back to use false as the last argument. As a consequence, it should now only be a matter of setting the appropriate dofs 0. This should be easier to diagnose and fix in the long run.
 
 In the current setup, there is only a error in the components related to the upper surface of a subdomain. Not at the input and not at lower sides.
+
+# Sunday, 29th of august (early night)
+
+It seems I am tracking down the proplems causing the erroneous residual. I will add a better wrapper for the output that wraps the functionality of writing multiple output files and a .pvtu file along with it. Then I can always output the computed solution and the residual without rerunning and recompiling.
+
+That implementation is done. I now have to fix the error that states incompatible interface dof counts. This was just an error in the implementation of the test. The sets are compatible.
+
+Adding a "_" to the filename so the .pvtus are listed at the top.
