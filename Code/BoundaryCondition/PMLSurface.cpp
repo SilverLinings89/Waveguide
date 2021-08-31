@@ -17,8 +17,8 @@
 #include "./BoundaryCondition.h"
 #include "PMLMeshTransformation.h"
 
-PMLSurface::PMLSurface(unsigned int surface, unsigned int in_level, DofNumber in_first_own_index)
-  : BoundaryCondition(surface, in_level, Geometry.surface_extremal_coordinate[surface], in_first_own_index),
+PMLSurface::PMLSurface(unsigned int surface, unsigned int in_level)
+  : BoundaryCondition(surface, in_level, Geometry.surface_extremal_coordinate[surface]),
   fe_nedelec(GlobalParams.Nedelec_element_order) {
      mesh_is_transformed = false;
      outer_boundary_id = surface;
@@ -276,12 +276,14 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(uns
           found_one = true;
           std::vector<DofNumber> face_dofs_indices(fe_nedelec.dofs_per_face);
           cell->face(face)->get_dof_indices(face_dofs_indices);
+          face_dofs_indices = transform_local_to_global_dofs(face_dofs_indices);
           face_set.clear();
           face_set.insert(face_dofs_indices.begin(), face_dofs_indices.end());
           std::vector<InterfaceDofData> cell_dofs_and_orientations_and_points;
           for (unsigned int i = 0; i < dealii::GeometryInfo<3>::lines_per_face; i++) {
             std::vector<DofNumber> line_dofs(fe_nedelec.dofs_per_line);
             cell->face(face)->line(i)->get_dof_indices(line_dofs);
+            line_dofs = transform_local_to_global_dofs(line_dofs);
             line_set.clear();
             line_set.insert(line_dofs.begin(), line_dofs.end());
             for(auto erase_it: line_set) {
@@ -290,7 +292,7 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(uns
             if(!cell->face(face)->line(i)->user_flag_set()) {
               for (unsigned int j = 0; j < fe_nedelec.dofs_per_line; j++) {
                 InterfaceDofData new_item;
-                new_item.index = line_dofs[j] + first_own_dof;
+                new_item.index = line_dofs[j];
                 new_item.base_point = cell->face(face)->line(i)->center();
                 new_item.order = j;
                 cell_dofs_and_orientations_and_points.push_back(new_item);
@@ -301,7 +303,7 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(uns
           unsigned int index = 0;
           for (auto item: face_set) {
             InterfaceDofData new_item;
-            new_item.index = item + first_own_dof;
+            new_item.index = item;
             new_item.base_point = cell->face(face)->center();
             new_item.order = 0;
             cell_dofs_and_orientations_and_points.push_back(new_item);
@@ -436,9 +438,7 @@ void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, Numeri
   CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_h_nedelec);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
       cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
-      for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
-          cell_data.local_dof_indices[i] += first_own_dof;
-      }
+      cell_data.local_dof_indices = transform_local_to_global_dofs(cell_data.local_dof_indices);
       cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
       cell_data.fe_values.reinit(cell_data.cell);
       cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
@@ -462,9 +462,7 @@ void PMLSurface::fill_matrix(dealii::SparseMatrix<ComplexNumber> * matrix, Const
   CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_h_nedelec);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
       cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
-      for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
-          cell_data.local_dof_indices[i] += first_own_dof - Geometry.levels[level].inner_first_dof;
-      }
+      cell_data.local_dof_indices = transform_local_to_global_dofs(cell_data.local_dof_indices);
       cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
       cell_data.fe_values.reinit(cell_data.cell);
       cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
@@ -488,9 +486,7 @@ void PMLSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, N
   CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_h_nedelec);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
     cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
-    for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
-        cell_data.local_dof_indices[i] += first_own_dof;
-    }
+    cell_data.local_dof_indices = transform_local_to_global_dofs(cell_data.local_dof_indices);
     cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
     cell_data.fe_values.reinit(cell_data.cell);
     cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
@@ -599,103 +595,34 @@ std::string PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_
   return filename;
 }
 
-void PMLSurface::make_surface_constraints(Constraints * in_constraints, bool add_inhomogeneities) {
-    std::vector<InterfaceDofData> own_dof_indices = get_dof_association();
-    std::vector<InterfaceDofData> inner_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
-    Constraints new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, inner_dof_indices, Geometry.levels[level].n_total_level_dofs);
-    if(add_inhomogeneities) {
-      IndexSet owned_dofs(Geometry.inner_domain->dof_handler.n_dofs());
-      owned_dofs.add_range(0, Geometry.inner_domain->dof_handler.n_dofs());
-      AffineConstraints<ComplexNumber> constraints_local(owned_dofs);
-      VectorTools::project_boundary_values_curl_conforming_l2(Geometry.inner_domain->dof_handler, 0, *GlobalParams.source_field , 4, constraints_local);
-      for(unsigned int i = 0; i < Geometry.inner_domain->dof_handler.n_dofs(); i++) {
-        if(constraints_local.is_constrained(i)) {
-          new_constraints.add_line(Geometry.levels[level].inner_first_dof + i);
-          new_constraints.set_inhomogeneity(Geometry.levels[level].inner_first_dof + i, constraints_local.get_inhomogeneity(i));
-        }
-      }
-    }
-    
-    std::vector<InterfaceDofData> outer_dofs = get_dof_association_by_boundary_id(outer_boundary_id);
-    for(unsigned int i = 0; i < outer_dofs.size(); i++) {
-      new_constraints.add_line(outer_dofs[i].index);
-      new_constraints.set_inhomogeneity(outer_dofs[i].index, ComplexNumber(0,0));
-    }
-    in_constraints->merge(new_constraints, Constraints::MergeConflictBehavior::right_object_wins, true);
-}
-
-void PMLSurface::make_edge_constraints(Constraints * constraints, BoundaryId other_boundary) {
-    std::vector<InterfaceDofData> other_boundary_id = Geometry.levels[level].surfaces[other_boundary]->get_dof_association_by_boundary_id(b_id);
-    std::vector<InterfaceDofData> own_dof_indices = get_dof_association_by_boundary_id(other_boundary);
-    Constraints new_constraints = get_affine_constraints_for_InterfaceData(other_boundary_id, own_dof_indices, Geometry.levels[level].n_total_level_dofs);
-    constraints->merge(new_constraints, Constraints::MergeConflictBehavior::right_object_wins, true);
-}
-
-std::vector<SurfaceCellData> PMLSurface::get_surface_cell_data(BoundaryId in_bid) {
-  std::vector<SurfaceCellData> ret;
-  std::vector<unsigned int> dof_indices(fe_nedelec.dofs_per_cell);
-  for(auto it = dof_h_nedelec.begin(); it != dof_h_nedelec.end(); it++) {
-    if(it->at_boundary(in_bid)) {
-      SurfaceCellData new_cell;
-      it->get_dof_indices(dof_indices);
-      for(unsigned int i = 0; i < 6; i++) {
-        if(is_position_at_boundary(it->face(i)->center(), in_bid)) {
-          new_cell.surface_face_center = it->face(i)->center();
-        }
-      }
-      for(unsigned int i = 0; i < fe_nedelec.dofs_per_cell; i++) {
-        new_cell.dof_numbers.push_back(dof_indices[i] + first_own_dof);
-      }
-      ret.push_back(new_cell);
+DofCount PMLSurface::compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surface) {
+  IndexSet non_owned_dofs(dof_counter);
+  std::vector<unsigned int> surfaces;
+  for(unsigned int i = 0; i < 3; i++) {
+    if(!is_locally_owned_surface[i]) {
+      surfaces.push_back(i);
     }
   }
-  std::sort(ret.begin(), ret.end(), compareSurfaceCellData);
-  for(unsigned int i = 0; i < ret.size(); i++) {
-    for(unsigned int j = 1; j < ret[i].dof_numbers.size(); j++) {
-      if(ret[i].dof_numbers[j] == ret[i].dof_numbers[j-1]) {
-        std::cout << "Error in PMLSurface::get_surface_cell_data" << std::endl;
-      }
-    }
+  if(b_id > 2 || is_locally_owned_surface[b_id]) {
+    surfaces.push_back(b_id);
   }
-  return ret;
-}
-
-std::vector<SurfaceCellData> PMLSurface::get_inner_surface_cell_data() {
-  return get_surface_cell_data(inner_boundary_id);
-}
-
-void PMLSurface::fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constraints) {
-  std::vector<unsigned int> cell_dofs(fe_nedelec.dofs_per_cell);
-  for(auto it: dof_h_nedelec) {
-    it.get_dof_indices(cell_dofs);
-    for(unsigned int i = 0; i < fe_nedelec.dofs_per_cell; i++) {
-      cell_dofs[i] += first_own_dof;
-    }
-    in_constraints->add_entries_local_to_global(cell_dofs, *in_dsp);
-  }
-}
-
-std::vector<SurfaceCellData> PMLSurface::get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) {
-  std::vector<SurfaceCellData> ret;
-  std::vector<unsigned int> dof_indices(fe_nedelec.dofs_per_cell);
-  for(auto it : dof_h_nedelec) {
-    if(it.at_boundary(main_boundary) && it.at_boundary(secondary_boundary)) {
-      SurfaceCellData scd;
-      for(unsigned int i = 0; i < 6; i++) {
-        for(unsigned int j = 0; j < 4; j++) {
-          Position p = it.face(i)->line(j)->center();
-          if(is_position_at_boundary(p, main_boundary) && is_position_at_boundary(p, secondary_boundary)) {
-            scd.surface_face_center = p;
+  std::vector<unsigned int> local_indices(fe_nedelec.dofs_per_face);
+  // The non owned surfaces are the one towards the inner domain and the surfaces 0,1 and 2 if they are false in the input.
+  for(auto it = dof_h_nedelec.begin_active(); it != dof_h_nedelec.end(); it++) {
+    for(unsigned int face = 0; face < 6; face++) {
+      for(unsigned int surf = 0; surf < surfaces.size(); surf++) {
+        if(it->face(face)->at_boundary(surfaces[surf])) {
+          it->face(face)->get_dof_indices(local_indices);
+          for(unsigned int i = 0; i < fe_nedelec.dofs_per_face; i++) {
+            non_owned_dofs.add_index(local_indices[i]);
           }
         }
       }
-      it.get_dof_indices(dof_indices);
-      for(unsigned int i = 0; i < fe_nedelec.dofs_per_cell; i++) {
-        scd.dof_numbers.push_back(dof_indices[i] + first_own_dof);
-      }
-      ret.push_back(scd);
     }
   }
-  std::sort(ret.begin(), ret.end(), compareSurfaceCellData);
-  return ret;
+  return dof_counter - non_owned_dofs.n_elements();
+}
+
+DofCount PMLSurface::compute_n_locally_active_dofs() {
+  return dof_counter;
 }

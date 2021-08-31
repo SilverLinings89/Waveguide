@@ -17,8 +17,8 @@
 #include "./BoundaryCondition.h"
 #include "PMLMeshTransformation.h"
 
-NeighborSurface::NeighborSurface(unsigned int in_surface, unsigned int in_level, DofNumber in_first_own_index)
-    : BoundaryCondition(in_surface, in_level, Geometry.surface_extremal_coordinate[in_level], in_first_own_index),
+NeighborSurface::NeighborSurface(unsigned int in_surface, unsigned int in_level)
+    : BoundaryCondition(in_surface, in_level, Geometry.surface_extremal_coordinate[in_surface]),
     is_primary(in_surface > 2),
     global_partner_mpi_rank(Geometry.get_global_neighbor_for_interface(Geometry.get_direction_for_boundary_id(in_surface)).second),
     partner_mpi_rank_in_level_communicator(Geometry.get_level_neighbor_for_interface(Geometry.get_direction_for_boundary_id(in_surface), in_level).second) {
@@ -93,7 +93,7 @@ unsigned int NeighborSurface::get_dof_count_by_boundary_id(BoundaryId) {
 }
 
 std::vector<InterfaceDofData> NeighborSurface::get_dof_association() {
-    std::vector<InterfaceDofData> own_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
+    std::vector<InterfaceDofData> own_dof_indices = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_boundary_id(b_id);
     const unsigned int n_dofs = own_dof_indices.size();
     unsigned int * dof_indices = new unsigned int[n_dofs];
     for(unsigned int i = 0; i < n_dofs; i++) {
@@ -114,7 +114,7 @@ std::vector<InterfaceDofData> NeighborSurface::get_dof_association_by_boundary_i
     if(Geometry.levels[level].is_surface_truncated[in_boundary_id]) {
         own_dof_indices = Geometry.levels[level].surfaces[in_boundary_id]->get_dof_association_by_boundary_id(b_id);
     } else {
-        own_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_edge_and_level(b_id, in_boundary_id, level);
+        own_dof_indices = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_edge_and_level(b_id, in_boundary_id, level);
     }
     const unsigned int n_dofs = own_dof_indices.size();
     unsigned int * dof_indices = new unsigned int[n_dofs];
@@ -147,118 +147,8 @@ std::string NeighborSurface::output_results(const dealii::Vector<ComplexNumber> 
     return "";
 }
 
-void NeighborSurface::make_surface_constraints(Constraints * constraints, bool make_inhomogeneities) {
-    std::vector<InterfaceDofData> own_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
-    const unsigned int n_dofs = own_dof_indices.size();
-    unsigned int * dof_indices = new unsigned int[n_dofs];
-    for(unsigned int i = 0; i < n_dofs; i++) {
-        dof_indices[i] = own_dof_indices[i].index;
-    }
-    MPI_Sendrecv_replace(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
-    std::vector<InterfaceDofData> other_dof_indices;
-    for(unsigned int i = 0; i < n_dofs; i++) {
-        InterfaceDofData temp = own_dof_indices[i];
-        temp.index = dof_indices[i];
-        other_dof_indices.push_back(temp);
-    }
-    Constraints new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, other_dof_indices, Geometry.levels[level].n_total_level_dofs);
-    constraints->merge(new_constraints, Constraints::MergeConflictBehavior::right_object_wins, true);
-}
-
-void NeighborSurface::make_edge_constraints(Constraints * constraints, BoundaryId other_boundary) {
-    std::vector<InterfaceDofData> own_dof_indices;
-    if(Geometry.levels[level].is_surface_truncated[other_boundary]) {
-        own_dof_indices = Geometry.levels[level].surfaces[other_boundary]->get_dof_association_by_boundary_id(b_id);
-    } else {
-        own_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_edge_and_level(b_id, other_boundary, level);
-    }
-    const unsigned int n_dofs = own_dof_indices.size();
-    unsigned int * dof_indices = new unsigned int[n_dofs];
-    for(unsigned int i = 0; i < n_dofs; i++) {
-        dof_indices[i] = own_dof_indices[i].index;
-    }
-    MPI_Sendrecv_replace(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
-    std::vector<InterfaceDofData> other_dof_indices;
-    for(unsigned int i = 0; i < n_dofs; i++) {
-        InterfaceDofData temp = own_dof_indices[i];
-        temp.index = dof_indices[i];
-        other_dof_indices.push_back(temp);
-    }
-    Constraints new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, other_dof_indices, Geometry.levels[level].n_total_level_dofs);
-    constraints->merge(new_constraints, Constraints::MergeConflictBehavior::right_object_wins, true);
-}
-
-std::vector<SurfaceCellData> NeighborSurface::get_surface_cell_data(BoundaryId in_bid) {
-    std::vector<SurfaceCellData> data;
-    if(Geometry.levels[level].is_surface_truncated[in_bid]) {
-        data = Geometry.levels[level].surfaces[in_bid]->get_surface_cell_data(b_id);
-    } else {
-        return data;
-    }
-    return mpi_send_recv_surf_cell_data(data);
-}
-
-std::vector<SurfaceCellData> NeighborSurface::get_inner_surface_cell_data() {
-    std::vector<SurfaceCellData> data = Geometry.inner_domain->get_surface_cell_data_for_boundary_id_and_level(b_id, level);
-    return mpi_send_recv_surf_cell_data(data);
-}
-
-void NeighborSurface::fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *, Constraints *) {
-    // Only the other boundary methods do something here, because this one has no "own" dofs.
-}
-
-std::vector<SurfaceCellData> NeighborSurface::get_corner_surface_cell_data(BoundaryId b_id_one, BoundaryId b_id_two) {
-    std::vector<SurfaceCellData> data = Geometry.levels[level].surfaces[b_id_two]->get_corner_surface_cell_data(b_id_one, b_id);
-    return mpi_send_recv_surf_cell_data(data);
-}
-
 void NeighborSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern * in_dsp, Constraints * in_constraints) {
     BoundaryCondition::fill_sparsity_pattern(in_dsp, in_constraints);
-    fill_sparsity_pattern_for_edge(in_dsp, in_constraints);
-    fill_sparsity_pattern_for_corners(in_dsp, in_constraints);
-}
-
-void NeighborSurface::fill_sparsity_pattern_for_edge(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constraints) {
-    for(unsigned int i = 0; i < 6; i++) {
-        if(!(b_id == i || are_opposing_sites(i, b_id))) {
-            fill_sparsity_pattern_for_edge_and_neighbor(i, in_dsp, in_constraints);
-        }
-    }
-}
-
-void NeighborSurface::fill_sparsity_pattern_for_edge_and_neighbor(BoundaryId edge_bid, dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constraints) {
-    BoundaryId edge_bid_opponent = 6;
-    for(unsigned int i = 0; i < 6; i++) {
-        if(are_opposing_sites(i, edge_bid)) {
-            edge_bid_opponent = i;
-        }
-    }
-    
-    std::vector<SurfaceCellData> from_self = Geometry.inner_domain->get_edge_cell_data(b_id, edge_bid, level);
-    std::vector<SurfaceCellData> from_other =  mpi_send_recv_surf_cell_data(from_self);
-    from_self = Geometry.levels[level].surfaces[edge_bid]->get_corner_surface_cell_data(edge_bid_opponent, b_id);
-    fill_sparsity_pattern_with_surface_data_vectors(from_self, from_other, in_dsp, in_constraints);
-
-    from_self = Geometry.levels[level].surfaces[edge_bid]->get_corner_surface_cell_data(edge_bid_opponent, b_id);
-    from_other = mpi_send_recv_surf_cell_data(from_self);
-    from_self = Geometry.inner_domain->get_edge_cell_data(b_id, edge_bid, level);
-    fill_sparsity_pattern_with_surface_data_vectors(from_self, from_other, in_dsp, in_constraints);
-
-}
-
-void NeighborSurface::fill_sparsity_pattern_for_corner(dealii::DynamicSparsityPattern *in_dsp, Constraints *constraints, BoundaryId in_b_id_one, BoundaryId in_b_id_two) {
-  std::vector<SurfaceCellData> from_self = Geometry.levels[level].surfaces[in_b_id_one]->get_corner_surface_cell_data(in_b_id_two, b_id);
-  std::vector<SurfaceCellData> from_other = mpi_send_recv_surf_cell_data(from_self);
-  from_self = Geometry.levels[level].surfaces[in_b_id_two]->get_corner_surface_cell_data(in_b_id_one, b_id);
-  fill_sparsity_pattern_with_surface_data_vectors(from_self, from_other, in_dsp, constraints);
-}
-
-void NeighborSurface::fill_sparsity_pattern_for_corners(dealii::DynamicSparsityPattern *in_dsp, Constraints *constraints) {
-    std::array<std::pair<BoundaryId, BoundaryId>, 4> corners = get_corner_boundary_id_set();
-    for(unsigned int i = 0; i < 4; i++) {
-        fill_sparsity_pattern_for_corner(in_dsp, constraints, corners[i].first, corners[i].second);
-        fill_sparsity_pattern_for_corner(in_dsp, constraints, corners[i].second, corners[i].first);
-    }
 }
 
 std::array<std::pair<BoundaryId, BoundaryId>, 4> NeighborSurface::get_corner_boundary_id_set() {
@@ -333,4 +223,12 @@ std::vector<SurfaceCellData> NeighborSurface::mpi_send_recv_surf_cell_data(std::
         std::cout << "No data provided in mpi_send_recv_surf_cell_data" << std::endl;
     }
     return ret;
+}
+
+DofCount NeighborSurface::compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) {
+    return 0;
+}
+
+DofCount NeighborSurface::compute_n_locally_active_dofs() {
+    return 0;
 }

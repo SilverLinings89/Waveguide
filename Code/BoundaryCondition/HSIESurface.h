@@ -38,7 +38,7 @@ public:
   DofCount n_face_dofs;
   DofCount n_vertex_dofs;
   
-  HSIESurface(unsigned int surface, unsigned int level, DofNumber first_own_index);
+  HSIESurface(unsigned int surface, unsigned int level);
 
   ~HSIESurface();  
   void identify_corner_cells() override;
@@ -84,7 +84,7 @@ public:
   auto get_dof_association() -> std::vector<InterfaceDofData> override;
   auto undo_transform(dealii::Point<2>) -> Position;
   auto undo_transform_for_shape_function(dealii::Point<2>) -> Position;
-  void add_surface_relevant_dof(InterfaceDofData in_gindex_and_orientation);
+  void add_surface_relevant_dof(InterfaceDofData in_index_and_orientation);
   auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> override;
   void clear_user_flags();
   void set_b_id_uses_hsie(unsigned int, bool);
@@ -93,13 +93,8 @@ public:
   auto vertex_positions_for_ids(std::vector<unsigned int> ids) -> std::vector<Position>;
   auto line_positions_for_ids(std::vector<unsigned int> ids) -> std::vector<Position>;
   std::string output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
-  SurfaceCellData get_surface_cell_data_for_cell_index(const int in_index, const BoundaryId in_bid);
-  void make_surface_constraints(Constraints * constraints, bool make_inhomogeneity) override;
-  void make_edge_constraints(Constraints * constraints, BoundaryId other_boundary) override;
-  auto get_surface_cell_data(BoundaryId in_bid) -> std::vector<SurfaceCellData> override;
-  auto get_inner_surface_cell_data() -> std::vector<SurfaceCellData> override;
-  void fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constriants) override;
-  auto get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) -> std::vector<SurfaceCellData> override;
+  DofCount compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) override;
+  DofCount compute_n_locally_active_dofs() override;
 };
 
 

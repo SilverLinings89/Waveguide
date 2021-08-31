@@ -17,8 +17,8 @@
 #include "./BoundaryCondition.h"
 #include "PMLMeshTransformation.h"
 
-EmptySurface::EmptySurface(unsigned int in_surface, unsigned int in_level, DofNumber in_first_own_index)
-    : BoundaryCondition(in_surface, in_level, Geometry.surface_extremal_coordinate[in_level], in_first_own_index)
+EmptySurface::EmptySurface(unsigned int in_surface, unsigned int in_level)
+    : BoundaryCondition(in_surface, in_level, Geometry.surface_extremal_coordinate[in_level])
     {
     dof_counter = 0;
 }
@@ -73,36 +73,6 @@ std::vector<InterfaceDofData> EmptySurface::get_dof_association_by_boundary_id(B
 
 std::string EmptySurface::output_results(const dealii::Vector<ComplexNumber> & , std::string) {
     return "";
-}
-
-void EmptySurface::make_surface_constraints(Constraints * constraints, bool make_inhomogeneities) {
-    std::vector<InterfaceDofData> surf_constraints = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
-    for(unsigned int i = 0; i < surf_constraints.size(); i++) {
-        const unsigned index = surf_constraints[i].index; 
-        constraints->add_line(index);
-        constraints->set_inhomogeneity(index, ComplexNumber(0,0));
-    }
- }
-
-void EmptySurface::make_edge_constraints(Constraints *, BoundaryId) { }
-
-std::vector<SurfaceCellData> EmptySurface::get_surface_cell_data(BoundaryId) {
-    std::vector<SurfaceCellData> ret;
-    return ret;
-}
-
-std::vector<SurfaceCellData> EmptySurface::get_inner_surface_cell_data() {
-    std::vector<SurfaceCellData> data;
-    return data;
-}
-
-void EmptySurface::fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *, Constraints *) {
-    // Only the other boundary methods do something here, because this one has no "own" dofs.
-}
-
-std::vector<SurfaceCellData> EmptySurface::get_corner_surface_cell_data(BoundaryId, BoundaryId) {
-    std::vector<SurfaceCellData> data;
-    return data;
 }
 
 void EmptySurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern * , Constraints * ) { }

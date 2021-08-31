@@ -321,3 +321,31 @@ It seems I am tracking down the proplems causing the erroneous residual. I will 
 That implementation is done. I now have to fix the error that states incompatible interface dof counts. This was just an error in the implementation of the test. The sets are compatible.
 
 Adding a "_" to the filename so the .pvtus are listed at the top.
+
+# Sunday, 29th of august (late night)
+
+I am considering the following: To remove all double numbering of dofs and instead of implementing complex logic to handle the constraints, instead just name them once and handle the numbering as logic. The numbering would be done exclusively by me in my code so I would not have to bother with library functions with weird documentation.
+This would entail:
+- Reimplementing the dof_numbering. This would also mean to split the implementation for the inner domain since the dof_numbering would be different on the various levels.
+- The boundary methods would now only need the dofs that aren't shared by the interior or other surfaces. 
+- The matrix sparsity pattern would be more complex to handle because multiple processes would write to the same lines.
+
+Advantages: 
+- No more constraints.
+- Lower number of dofs.
+- Simpler (more by-the-word) implementation of the numerical scheme.
+- Easier to test since all work happens in my code, not the library.
+
+The commit before this work was "320ebbb..9d66a7a".
+
+Within each datastructure, the dofs should be numbered locally, i.e. in a range [0,...,N-1] for N dofs. Additionally, each structure should have an IndexSet indices with indices.n_elements() = N-1.
+
+# Monday, 30th of august
+
+I have started the implementation. The main work should be done in the class FEDomain which will be a base type for all structures that have dofs. It will manage the computation of the index numbering after everything is prepared. Also, all the domains must now be natively able to compute their correct dof counts (owned and active).
+
+To simplify the implementation, I will also go ahead and add an inner_domain to every level instead of having this object only once. The implementation is fast enough to not have to worry about performance losses.
+
+# Tuesday, 31st of august
+
+I'm slowly grinding through the code to change the dof ownership. This has effects in extremely many places.

@@ -236,7 +236,7 @@ void NonLocalProblem::print_diagnosis_data() {
 void NonLocalProblem::assemble() {
   print_info("NonLocalProblem::assemble", "Begin assembly");
   GlobalTimerManager.switch_context("assemble", level);
-  Geometry.inner_domain->assemble_system(Geometry.levels[level].inner_first_dof, &constraints, matrix, &rhs);
+  Geometry.levels[level].inner_domain->assemble_system(&constraints, matrix, &rhs);
   print_info("NonLocalProblem::assemble", "Inner assembly done. Assembling boundary method contributions.");
   for(unsigned int i = 0; i< 6; i++) {
       Timer timer;
@@ -307,7 +307,7 @@ void NonLocalProblem::assemble_local_system() {
   local.matrix.reinit(local.sp);
 
   // fill matrix here
-  Geometry.inner_domain->assemble_system(&local.constraints, &local.matrix);
+  Geometry.levels[level].inner_domain->assemble_system(&local.constraints, &local.matrix);
   for(unsigned int surf = 0; surf < 6; surf++) {
     if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
       Geometry.levels[level].surfaces[surf]->fill_matrix(&local.matrix, &local.constraints);
@@ -569,7 +569,7 @@ NumericVectorLocal NonLocalProblem::subtract_fields(NumericVectorLocal a, Numeri
 void NonLocalProblem::set_u_from_child_solution(NumericVectorLocal * u_in) {
   reinit_u_vector(u_in);
 
-  for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->dof_handler.n_dofs(); i++) {
     (*u_in)[i] = child->solution[Geometry.levels[level-1].inner_first_dof + i];
   }
 
@@ -584,7 +584,7 @@ void NonLocalProblem::set_u_from_child_solution(NumericVectorLocal * u_in) {
 
 double NonLocalProblem::compute_interface_norm_for_u(NumericVectorLocal u, BoundaryId in_bid) {
   double ret = 0;
-  std::vector<InterfaceDofData> boundary_dofs = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(in_bid, 0);
+  std::vector<InterfaceDofData> boundary_dofs = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_boundary_id(in_bid);
   for(unsigned int i = 0; i < boundary_dofs.size(); i++) {
     ComplexNumber c = u[boundary_dofs[i].index];
     ret += c.real() * c.real() + c.imag() * c.imag();
@@ -619,7 +619,7 @@ NumericVectorLocal NonLocalProblem::zero_lower_interface_dofs(NumericVectorLocal
   } else {
     for(unsigned int i = 0; i < lower_interface_dofs.n_elements(); i++) {
       const unsigned int index = lower_interface_dofs.nth_index_in_set(i);
-      if(index < Geometry.inner_domain->n_dofs) {
+      if(index < Geometry.levels[level].inner_domain->n_locally_active_dofs) {
         ret[i] = ComplexNumber(0,0);
       }
     }
@@ -705,7 +705,7 @@ void NonLocalProblem::initialize_own_dofs() {
 
 dealii::IndexSet NonLocalProblem::compute_interface_dof_set(BoundaryId interface_id) {
   dealii::IndexSet ret(Geometry.levels[level].n_total_level_dofs);
-  std::vector<InterfaceDofData> inner_interface_dofs = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(interface_id, 0);
+  std::vector<InterfaceDofData> inner_interface_dofs = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_boundary_id(interface_id);
   for(unsigned int j = 0; j < inner_interface_dofs.size(); j++) {
     ret.add_index(inner_interface_dofs[j].index);
   }
@@ -897,15 +897,15 @@ void NonLocalProblem::store_solution(NumericVectorLocal u) {
 }
 
 void NonLocalProblem::write_output_for_stored_solution(unsigned int index) {
-  NumericVectorLocal local_solution(Geometry.inner_domain->n_dofs);
-  for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
+  NumericVectorLocal local_solution(Geometry.levels[level].inner_domain->n_locally_active_dofs);
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     local_solution[i] = stored_solutions[index][i];
   }
-  Geometry.inner_domain->output_results("solution_nr_" + std::to_string(index), local_solution);
-  for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
+  Geometry.levels[level].inner_domain->output_results("solution_nr_" + std::to_string(index), local_solution);
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     local_solution[i] = ((std::complex<double>)(stored_solutions[index])[i]) - (std::complex<double>)direct_solution[Geometry.levels[level].inner_first_dof + i];
   }
-  Geometry.inner_domain->output_results("error_of_solution_nr_" + std::to_string(index), local_solution);
+  Geometry.levels[level].inner_domain->output_results("error_of_solution_nr_" + std::to_string(index), local_solution);
 }
 
 void NonLocalProblem::print_norm_distribution_for_vector(const NumericVectorDistributed & in_vector) {
@@ -922,7 +922,7 @@ void NonLocalProblem::print_norm_distribution_for_vector(const NumericVectorDist
     surface_norms[surf] = std::sqrt(surface_norms[surf]);
   }
   double inner_norm = 0;
-  for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     inner_norm += std::pow(std::abs(in_vector[Geometry.levels[level].inner_first_dof + i]), 2);
   }
   std::string output = "On process " + std::to_string(GlobalParams.MPI_Rank) + " Inner domain: " + std::to_string(inner_norm) + " and surface norms: [";
@@ -951,11 +951,11 @@ NumericVectorLocal NonLocalProblem::distribute_constraints_to_local_vector(const
 
 void NonLocalProblem::write_multifile_output(const std::string & in_filename, const NumericVectorDistributed field) {
   std::vector<std::string> generated_files;
-  NumericVectorLocal in_solution(Geometry.inner_domain->n_dofs);
-  for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
+  NumericVectorLocal in_solution(Geometry.levels[level].inner_domain->n_locally_active_dofs);
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     in_solution[i] = field[Geometry.levels[level].inner_first_dof + i];
   }
-  std::string file_1 = Geometry.inner_domain->output_results(in_filename + std::to_string(level) , in_solution);
+  std::string file_1 = Geometry.levels[level].inner_domain->output_results(in_filename + std::to_string(level) , in_solution);
   generated_files.push_back(file_1);
 
   if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML) {
@@ -983,6 +983,6 @@ void NonLocalProblem::write_multifile_output(const std::string & in_filename, co
     for(unsigned int i = 0; i < flattened_filenames.size(); i++) {
       flattened_filenames[i] = "../" + flattened_filenames[i];
     }
-    Geometry.inner_domain->data_out.write_pvtu_record(outputvtu, flattened_filenames);
+    Geometry.levels[level].inner_domain->data_out.write_pvtu_record(outputvtu, flattened_filenames);
   }
 }

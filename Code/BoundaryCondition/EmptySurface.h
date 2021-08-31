@@ -8,7 +8,7 @@
 class EmptySurface : public BoundaryCondition {
   public: 
 
-    EmptySurface(unsigned int in_bid, unsigned int in_level, DofNumber first_own_index);
+    EmptySurface(unsigned int in_bid, unsigned int in_level);
     ~EmptySurface();
     
     void identify_corner_cells() override;
@@ -23,10 +23,6 @@ class EmptySurface : public BoundaryCondition {
     auto get_dof_association() -> std::vector<InterfaceDofData> override;
     auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> override;
     std::string output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
-    void make_surface_constraints(Constraints * constraints, bool make_inhomogeneities) override;
-    void make_edge_constraints(Constraints * constraints, BoundaryId other_boundary) override;
-    auto get_surface_cell_data(BoundaryId in_bid) -> std::vector<SurfaceCellData> override;
-    auto get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) -> std::vector<SurfaceCellData> override;
-    auto get_inner_surface_cell_data() -> std::vector<SurfaceCellData> override;
-    void fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constriants) override;
+    DofCount compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) override;
+    DofCount compute_n_locally_active_dofs() override;
 };

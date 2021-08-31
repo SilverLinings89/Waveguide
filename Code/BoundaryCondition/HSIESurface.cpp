@@ -15,8 +15,8 @@
 
 const unsigned int MAX_DOF_NUMBER = INT_MAX;
 
-HSIESurface::HSIESurface(unsigned int surface, unsigned int in_level, DofNumber in_first_own_index)
-    : BoundaryCondition(surface, in_level, Geometry.surface_extremal_coordinate[surface], in_first_own_index),
+HSIESurface::HSIESurface(unsigned int surface, unsigned int in_level)
+    : BoundaryCondition(surface, in_level, Geometry.surface_extremal_coordinate[surface]),
       order(GlobalParams.HSIE_polynomial_degree),
       dof_h_q(Geometry.surface_meshes[surface]),
       Inner_Element_Order(GlobalParams.Nedelec_element_order),
@@ -866,7 +866,7 @@ void HSIESurface::register_single_dof( unsigned int in_id, const int in_hsie_ord
 
 unsigned int HSIESurface::register_dof() {
   dof_counter++;
-  return dof_counter - 1 + first_own_dof;
+  return dof_counter - 1;
 }
 
 ComplexNumber HSIESurface::evaluate_a(std::vector<HSIEPolynomial> &u, std::vector<HSIEPolynomial> &v, Tensor<2,3,double> G) {
@@ -1331,145 +1331,10 @@ std::string HSIESurface::output_results(const dealii::Vector<ComplexNumber> & , 
   return "";
 }
 
-SurfaceCellData HSIESurface::get_surface_cell_data_for_cell_index(const int in_index, const BoundaryId in_bid) {
-  auto it2 = dof_h_q.begin();
-  SurfaceCellData ret;
-  for(auto it = dof_h_nedelec.begin(); it != dof_h_nedelec.end(); it++) {
-    for(unsigned int i = 0 ; i < 4; i++) {
-      if(is_point_at_boundary(it->face(i)->center(), in_bid)) {
-        ret.surface_face_center = undo_transform(it->face(i)->center());
-      }
-    }
-    if(it->index() == in_index) {
-      DofDataVector cell_dofs = this->get_dof_data_for_cell(it, it2);
-      for(unsigned int i = 0; i < cell_dofs.size(); i++) {
-        ret.dof_numbers.push_back(cell_dofs[i].global_index);
-      }
-    }
-    it2++;
-  }
-  return ret;
+DofCount HSIESurface::compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) {
+    return 0;
 }
 
-void HSIESurface::make_surface_constraints(Constraints * constraints, bool make_inhomogeneity) {
-    std::vector<InterfaceDofData> own_dof_indices = get_dof_association();
-    std::vector<InterfaceDofData> inner_dof_indices = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id_and_level(b_id, level);
-    Constraints new_constraints = get_affine_constraints_for_InterfaceData(own_dof_indices, inner_dof_indices, Geometry.levels[level].n_total_level_dofs);
-    if(make_inhomogeneity) {
-      IndexSet owned_dofs(Geometry.inner_domain->dof_handler.n_dofs());
-      owned_dofs.add_range(0, Geometry.inner_domain->dof_handler.n_dofs());
-      AffineConstraints<ComplexNumber> constraints_local(owned_dofs);
-      VectorTools::project_boundary_values_curl_conforming_l2(Geometry.inner_domain->dof_handler, 0, *GlobalParams.source_field , 4, constraints_local);
-      for(unsigned int i = 0; i < Geometry.inner_domain->dof_handler.n_dofs(); i++) {
-        if(constraints_local.is_constrained(i)) {
-          new_constraints.add_line(Geometry.levels[level].inner_first_dof + i);
-          new_constraints.set_inhomogeneity(Geometry.levels[level].inner_first_dof + i, constraints_local.get_inhomogeneity(i));
-        }
-      }
-    }
-    constraints->merge(new_constraints, Constraints::MergeConflictBehavior::right_object_wins, true);
-}
-
-void HSIESurface::make_edge_constraints(Constraints * constraints, BoundaryId other_boundary) {
-    std::vector<InterfaceDofData> inner_dof_indices = Geometry.levels[level].surfaces[other_boundary]->get_dof_association_by_boundary_id(b_id);
-    std::vector<InterfaceDofData> own_dof_indices = get_dof_association_by_boundary_id(other_boundary);
-    Constraints new_constraints = get_affine_constraints_for_InterfaceData(inner_dof_indices, own_dof_indices, Geometry.levels[level].n_total_level_dofs);
-    constraints->merge(new_constraints, Constraints::MergeConflictBehavior::right_object_wins, true);
-}
-
-std::vector<SurfaceCellData> HSIESurface::get_surface_cell_data(BoundaryId in_bid) {
-  std::vector<SurfaceCellData> ret;
-  auto nedelec = dof_h_nedelec.begin();
-  auto q = dof_h_q.begin();
-  auto end = dof_h_nedelec.end();
-  for(; nedelec != end; nedelec++) {
-    SurfaceCellData new_surf_cell;
-    bool at_boundary = false;
-    for(unsigned int face = 0; face < 4; face++) {
-      if(is_point_at_boundary(nedelec->face(face)->center(), in_bid)) {
-        at_boundary = true;
-        new_surf_cell.surface_face_center = undo_transform(nedelec->face(face)->center());
-      }
-    }
-    if(at_boundary) {
-      DofDataVector cell_vals = get_dof_data_for_cell(nedelec, q);
-      for(unsigned int i = 0; i < cell_vals.size(); i++) {
-        new_surf_cell.dof_numbers.push_back(cell_vals[i].global_index);
-      }
-      ret.push_back(new_surf_cell);
-    }    
-    q++;
-  }
-  std::sort(ret.begin(), ret.end(), compareSurfaceCellData);
-  return ret;
-}
-
-std::vector<SurfaceCellData> HSIESurface::get_inner_surface_cell_data() {
-  std::vector<SurfaceCellData> ret;
-  auto nedelec = dof_h_nedelec.begin();
-  auto q = dof_h_q.begin();
-  auto end = dof_h_nedelec.end();
-  for(; nedelec != end; nedelec++) {
-    DofDataVector cell_vals = get_dof_data_for_cell(nedelec, q);
-    SurfaceCellData new_surf_cell;
-    new_surf_cell.surface_face_center = undo_transform(nedelec->center());
-    for(unsigned int i = 0; i < cell_vals.size(); i++) {
-      new_surf_cell.dof_numbers.push_back(cell_vals[i].global_index);
-    }
-    ret.push_back(new_surf_cell);
-    q++;
-  }
-  std::sort(ret.begin(), ret.end(), compareSurfaceCellData);
-  return ret;
-}
-
-void HSIESurface::fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constriants) {
-
-}
-
-std::vector<SurfaceCellData> HSIESurface::get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) {
-  std::vector<SurfaceCellData> ret;
-  auto cell_nedelec = dof_h_nedelec.begin();
-  bool first = false;
-  bool second = false;
-
-  for(auto cell_q = dof_h_q.begin(); cell_q != dof_h_q.end(); cell_q++ ) {
-    Position face_center;
-    first = (main_boundary == b_id);
-    if(!first) {
-      for(unsigned int i = 0; i < 4; i++) {
-        if(is_point_at_boundary(cell_q->face(i)->center(), main_boundary)) {
-          first = true;
-          face_center = undo_transform(cell_q->face(i)->center());
-        }
-      }
-    }
-    second = (secondary_boundary == b_id);
-    if(!second) {
-      for(unsigned int i = 0; i < 4; i++) {
-        if(is_point_at_boundary(cell_q->face(i)->center(), secondary_boundary)) {
-          second = true;
-        }
-      }
-    }
-    if( first && second ) {
-      SurfaceCellData dof;
-      for(unsigned int i = 0; i < 4; i++) {
-        if(is_point_at_boundary(cell_q->face(i)->center(), main_boundary)) {
-          dof.surface_face_center = undo_transform(cell_q->face(i)->center());
-        }
-      }
-      
-      DofDataVector dofs = get_dof_data_for_cell(cell_nedelec, cell_q);
-
-      for(unsigned int i = 0; i < dofs.size(); i++) {
-        dof.dof_numbers.push_back(dofs[i].global_index);
-      }
-
-      ret.push_back(dof);
-    }
-    cell_nedelec++;
-  }
-  
-  return ret;
+DofCount HSIESurface::compute_n_locally_active_dofs() {
+    return dof_counter;
 }

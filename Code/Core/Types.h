@@ -43,6 +43,7 @@ using FaceAngelingData         = std::array<RayAngelingData, 4>;
 using CubeSurfaceTruncationState = std::array<bool, 6>;
 using DofFieldTrace            = std::vector<ComplexNumber>;
 using Constraints               = dealii::AffineConstraints<ComplexNumber>;
+using DofIndexVector           = std::vector<DofNumber>;
 
 const double FLOATING_PRECISION = 0.00001;
 

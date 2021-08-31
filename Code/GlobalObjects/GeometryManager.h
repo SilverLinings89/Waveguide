@@ -18,6 +18,7 @@ struct LevelGeometry {
   std::vector<dealii::IndexSet> dof_distribution;
   DofNumber n_local_dofs;
   DofNumber n_total_level_dofs;
+  InnerDomain * inner_domain;
 };
 
 class GeometryManager {
@@ -45,14 +46,12 @@ class GeometryManager {
 
   std::array<LevelGeometry,4> levels;
 
-  InnerDomain * inner_domain;
-
   GeometryManager();
 
   virtual ~GeometryManager();
 
   void initialize();
-  void initialize_inner_domain();
+  void initialize_inner_domain(unsigned int in_level);
   void initialize_surfaces();
   void initialize_local_level();
   void initialize_level_1();
@@ -69,9 +68,6 @@ class GeometryManager {
   void set_y_range(std::pair<double, double>);
   void set_z_range(std::pair<double, double>);
 
-  // This function returns false in the first return value if the neighbour is
-  // not a process but an outside boundary. Otherwise it returns the MPI Rank of
-  // the neighboring process in the that direction.
   std::pair<bool, unsigned int> get_global_neighbor_for_interface(Direction);
   std::pair<bool, unsigned int> get_level_neighbor_for_interface(Direction, unsigned int);
   bool math_coordinate_in_waveguide(Position) const;

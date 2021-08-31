@@ -14,7 +14,7 @@ class NeighborSurface : public BoundaryCondition {
     std::array<std::set<unsigned int>, 6> edge_ids_by_boundary_id;
     std::array<std::set<unsigned int>, 6> face_ids_by_boundary_id;
 
-    NeighborSurface(unsigned int in_bid, unsigned int in_level, DofNumber first_own_index);
+    NeighborSurface(unsigned int in_bid, unsigned int in_level);
     ~NeighborSurface();
     
     void prepare_id_sets_for_boundaries();
@@ -39,16 +39,8 @@ class NeighborSurface : public BoundaryCondition {
     void compute_coordinate_ranges();
     void set_boundary_ids();
     std::string output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
-    void make_surface_constraints(Constraints * constraints, bool make_inhomogeneities) override;
-    void make_edge_constraints(Constraints * constraints, BoundaryId other_boundary) override;
-    auto get_surface_cell_data(BoundaryId in_bid) -> std::vector<SurfaceCellData> override;
-    auto get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) -> std::vector<SurfaceCellData> override;
-    auto get_inner_surface_cell_data() -> std::vector<SurfaceCellData> override;
-    void fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constriants) override;
-    void fill_sparsity_pattern_for_edge( dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constriants);
-    void fill_sparsity_pattern_for_edge_and_neighbor(BoundaryId neighbor, dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constriants);
-    void fill_sparsity_pattern_for_corner(dealii::DynamicSparsityPattern *in_dsp, Constraints *constraints, BoundaryId in_b_id_one, BoundaryId in_b_id_two);
-    void fill_sparsity_pattern_for_corners(dealii::DynamicSparsityPattern *in_dsp, Constraints *constraints);
     auto get_corner_boundary_id_set() -> std::array<std::pair<BoundaryId, BoundaryId>, 4>;
     auto mpi_send_recv_surf_cell_data(std::vector<SurfaceCellData>) -> std::vector<SurfaceCellData>;
+    DofCount compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) override;
+    DofCount compute_n_locally_active_dofs() override;
 };

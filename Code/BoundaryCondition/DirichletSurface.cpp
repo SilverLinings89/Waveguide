@@ -17,8 +17,8 @@
 #include "./BoundaryCondition.h"
 #include "PMLMeshTransformation.h"
 
-DirichletSurface::DirichletSurface(unsigned int in_surface, unsigned int in_level, DofNumber in_first_own_index)
-    : BoundaryCondition(in_surface, in_level, Geometry.surface_extremal_coordinate[in_level], in_first_own_index)
+DirichletSurface::DirichletSurface(unsigned int in_surface, unsigned int in_level)
+    : BoundaryCondition(in_surface, in_level, Geometry.surface_extremal_coordinate[in_level])
     {
     dof_counter = 0;
 }
@@ -75,34 +75,12 @@ std::string DirichletSurface::output_results(const dealii::Vector<ComplexNumber>
     return "";
 }
 
-void DirichletSurface::make_surface_constraints(Constraints * constraints, bool make_inhomogeneities) {
-    IndexSet owned_dofs(Geometry.inner_domain->dof_handler.n_dofs());
-    owned_dofs.add_range(0, Geometry.inner_domain->dof_handler.n_dofs());
-    AffineConstraints<ComplexNumber> constraints_local(owned_dofs);
-    VectorTools::project_boundary_values_curl_conforming_l2(Geometry.inner_domain->dof_handler, 0, *GlobalParams.source_field , b_id, constraints_local);
-    constraints_local.shift(first_own_dof);
-    constraints->merge(constraints_local, Constraints::MergeConflictBehavior::right_object_wins, true);
-}
-
-void DirichletSurface::make_edge_constraints(Constraints *, BoundaryId) { }
-
-std::vector<SurfaceCellData> DirichletSurface::get_surface_cell_data(BoundaryId) {
-    std::vector<SurfaceCellData> ret;
-    return ret;
-}
-
-std::vector<SurfaceCellData> DirichletSurface::get_inner_surface_cell_data() {
-    std::vector<SurfaceCellData> data;
-    return data;
-}
-
-void DirichletSurface::fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *, Constraints *) {
-    // Only the other boundary methods do something here, because this one has no "own" dofs.
-}
-
-std::vector<SurfaceCellData> DirichletSurface::get_corner_surface_cell_data(BoundaryId, BoundaryId) {
-    std::vector<SurfaceCellData> data;
-    return data;
-}
-
 void DirichletSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern * , Constraints * ) { }
+
+DofCount DirichletSurface::compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) {
+    return 0;
+}
+
+DofCount DirichletSurface::compute_n_locally_active_dofs() {
+    return 0;
+}

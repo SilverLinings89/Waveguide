@@ -23,7 +23,7 @@ class PMLSurface : public BoundaryCondition {
     std::pair<double, double> z_range;
     dealii::Triangulation<3> triangulation;
     
-    PMLSurface(unsigned int in_bid, unsigned int in_level, DofNumber first_own_index);
+    PMLSurface(unsigned int in_bid, unsigned int in_level);
     ~PMLSurface();
     
     void prepare_id_sets_for_boundaries();
@@ -52,11 +52,7 @@ class PMLSurface : public BoundaryCondition {
     void set_boundary_ids();
     void fix_apply_negative_Jacobian_transformation(dealii::Triangulation<3> * in_tria);
     std::string output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
-    void make_surface_constraints(Constraints * constraints, bool make_inhomogeneities) override;
-    void make_edge_constraints(Constraints * constraints, BoundaryId other_boundary) override;
-    auto get_surface_cell_data(BoundaryId in_bid) -> std::vector<SurfaceCellData> override;
-    auto get_inner_surface_cell_data() -> std::vector<SurfaceCellData> override;
     void validate_meshes();
-    void fill_internal_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constriants) override;
-    auto get_corner_surface_cell_data(BoundaryId main_boundary, BoundaryId secondary_boundary) -> std::vector<SurfaceCellData> override;
+    DofCount compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) override;
+    DofCount compute_n_locally_active_dofs() override;
 };

@@ -6,12 +6,13 @@
 #include <deal.II/base/index_set.h>
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/petsc_sparse_matrix.h>
-#include <deal.II/lac/petsc_vector.h> 
+#include <deal.II/lac/petsc_vector.h>
+#include "../Core/FEDomain.h"
 
 class LocalProblem;
 class NonLocalProblem; 
 
-class HierarchicalProblem {
+class HierarchicalProblem: public FEDomain {
  public:
   const SweepingDirection sweeping_direction;
   const SweepingLevel level;

@@ -63,7 +63,7 @@ dealii::IndexSet LocalProblem::compute_interface_dof_set(BoundaryId interface_id
   dealii::IndexSet ret(Geometry.levels[0].n_local_dofs);
   for(unsigned int i = 0; i < 6; i++) {
     if( i == interface_id) {
-      std::vector<InterfaceDofData> current = Geometry.inner_domain->get_surface_dof_vector_for_boundary_id(interface_id);
+      std::vector<InterfaceDofData> current = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_boundary_id(interface_id);
       for(unsigned int j = 0; j < current.size(); j++) {
         ret.add_index(current[j].index);
       }      
@@ -105,7 +105,7 @@ void LocalProblem::validate() {
 }
 
 void LocalProblem::assemble() {
-  Geometry.inner_domain->assemble_system(0, &constraints, matrix, &rhs);
+  Geometry.levels[level].inner_domain->assemble_system(&constraints, matrix, &rhs);
   GlobalTimerManager.switch_context("assemble", level);
   for (unsigned int surface = 0; surface < 6; surface++) {
     if(Geometry.levels[0].is_surface_truncated[surface]) {
@@ -159,8 +159,8 @@ void LocalProblem::initialize_index_sets() {
 
 dealii::Vector<ComplexNumber> LocalProblem::get_local_vector_from_global() {
   print_info("LocalProblem::get_local_vector_from_global", "Start");
-  dealii::Vector<ComplexNumber> ret(Geometry.inner_domain->dof_handler.n_dofs());
-  for (unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
+  dealii::Vector<ComplexNumber> ret(Geometry.levels[level].inner_domain->n_locally_active_dofs);
+  for (unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     ret[i] = solution(i);
   }
   print_info("LocalProblem::get_local_vector_from_global", "End");
@@ -168,8 +168,8 @@ dealii::Vector<ComplexNumber> LocalProblem::get_local_vector_from_global() {
 }
 
 auto LocalProblem::compare_to_exact_solution() -> void {
-  NumericVectorLocal solution_inner(Geometry.inner_domain->n_dofs);
-  for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
+  NumericVectorLocal solution_inner(Geometry.levels[level].inner_domain->n_locally_active_dofs);
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     solution_inner[i] = solution(i);
   }
 
@@ -179,7 +179,7 @@ auto LocalProblem::compare_to_exact_solution() -> void {
     Position p = {0,0, z};
     NumericVectorLocal local_solution(3);
     NumericVectorLocal exact_solution(3);
-    VectorTools::point_value(Geometry.inner_domain->dof_handler, solution_inner, p, local_solution);
+    VectorTools::point_value(Geometry.levels[level].inner_domain->dof_handler, solution_inner, p, local_solution);
     GlobalParams.source_field->vector_value(p, exact_solution);
     myfile << "0\t0\t" << z << "\t" << local_solution[0].real()<< "\t" << local_solution[0].imag() ;
     myfile << "\t" << local_solution[1].real()<< "\t"<< local_solution[1].imag();
@@ -196,7 +196,7 @@ auto LocalProblem::compare_to_exact_solution() -> void {
     Position p = {0,y,0};
     NumericVectorLocal local_solution(3);
     NumericVectorLocal exact_solution(3);
-    VectorTools::point_value(Geometry.inner_domain->dof_handler, solution_inner, p, local_solution);
+    VectorTools::point_value(Geometry.levels[level].inner_domain->dof_handler, solution_inner, p, local_solution);
     GlobalParams.source_field->vector_value(p, exact_solution);
     myfile <<"0\t" << y << "\t0\t"<< local_solution[0].real()<< "\t"<< local_solution[0].imag() ;
     myfile << "\t" << local_solution[1].real()<< "\t"<< local_solution[1].imag();
@@ -213,7 +213,7 @@ auto LocalProblem::compare_to_exact_solution() -> void {
     Position p = {x,0,0};
     NumericVectorLocal local_solution(3);
     NumericVectorLocal exact_solution(3);
-    VectorTools::point_value(Geometry.inner_domain->dof_handler, solution_inner, p, local_solution);
+    VectorTools::point_value(Geometry.levels[level].inner_domain->dof_handler, solution_inner, p, local_solution);
     GlobalParams.source_field->vector_value(p, exact_solution);
     myfile << x << "\t0\t0";
     myfile << "\t" << local_solution[0].real()<< "\t"<< local_solution[0].imag() ;
@@ -241,10 +241,10 @@ double LocalProblem::compute_error(dealii::VectorTools::NormType in_norm, Functi
   Timer timer;
   timer.start ();
   double error = 0;
-  dealii::Vector<double> cellwise_error(Geometry.inner_domain->triangulation.n_active_cells());
-  dealii::VectorTools::integrate_difference(Geometry.inner_domain->dof_handler, in_solution, *in_exact, cellwise_error, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), in_norm);
+  dealii::Vector<double> cellwise_error(Geometry.levels[level].inner_domain->triangulation.n_active_cells());
+  dealii::VectorTools::integrate_difference(Geometry.levels[level].inner_domain->dof_handler, in_solution, *in_exact, cellwise_error, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), in_norm);
   unsigned int idx = 0;
-  for(auto it = Geometry.inner_domain->dof_handler.begin_active(); it != Geometry.inner_domain->dof_handler.end(); it++) {
+  for(auto it = Geometry.levels[level].inner_domain->dof_handler.begin_active(); it != Geometry.levels[level].inner_domain->dof_handler.end(); it++) {
     bool zero_component = false;
     if(GlobalParams.use_tapered_input_signal) {
       const double z = it->center()[2];
@@ -257,7 +257,7 @@ double LocalProblem::compute_error(dealii::VectorTools::NormType in_norm, Functi
     }
     idx++;
   }
-  error = dealii::VectorTools::compute_global_error(Geometry.inner_domain->triangulation, cellwise_error, in_norm);
+  error = dealii::VectorTools::compute_global_error(Geometry.levels[level].inner_domain->triangulation, cellwise_error, in_norm);
   timer.stop ();
   std::string error_name ="";
   if(in_norm == dealii::VectorTools::NormType::H1_norm) {
@@ -271,20 +271,20 @@ double LocalProblem::compute_error(dealii::VectorTools::NormType in_norm, Functi
 }
 
 double LocalProblem::compute_L2_error() {
-  NumericVectorLocal solution_inner(Geometry.inner_domain->n_dofs);
-  for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
+  NumericVectorLocal solution_inner(Geometry.levels[level].inner_domain->n_locally_active_dofs);
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     solution_inner[i] = solution(i);
   }
-  dealii::Vector<double> cellwise_error(Geometry.inner_domain->triangulation.n_active_cells());
+  dealii::Vector<double> cellwise_error(Geometry.levels[level].inner_domain->triangulation.n_active_cells());
   dealii::VectorTools::integrate_difference(
     MappingQGeneric<3>(1),
-    Geometry.inner_domain->dof_handler,
+    Geometry.levels[level].inner_domain->dof_handler,
     solution_inner,
     *GlobalParams.source_field,
     cellwise_error,
     dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
     dealii::VectorTools::NormType::L2_norm );
-  return dealii::VectorTools::compute_global_error(Geometry.inner_domain->triangulation, cellwise_error, dealii::VectorTools::NormType::L2_norm);
+  return dealii::VectorTools::compute_global_error(Geometry.levels[level].inner_domain->triangulation, cellwise_error, dealii::VectorTools::NormType::L2_norm);
 }
 
 DofOwner LocalProblem::get_dof_owner(unsigned int dof) {

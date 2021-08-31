@@ -48,26 +48,7 @@ void HierarchicalProblem::make_constraints() {
   IndexSet total_dofs_global(Geometry.levels[level].n_total_level_dofs);
   total_dofs_global.add_range(0,Geometry.levels[level].n_total_level_dofs);
   constraints.reinit(total_dofs_global);
-  // Inner constraints
-  Geometry.inner_domain->make_constraints(&constraints, Geometry.levels[level].inner_first_dof, own_dofs);
-  // Surface constraints
-  
-  for(unsigned int i = 0; i < 6; i++) {
-    bool has_inhomogeneity = (GlobalParams.Index_in_z_direction == 0 && i == 4) && (GlobalParams.Signal_coupling_method == SignalCouplingMethod::Jump);
-    Geometry.levels[level].surfaces[i]->make_surface_constraints(&constraints, has_inhomogeneity);
-  }
-
-
-  // Edge constraints
-  for(unsigned int i = 0; i< 6; i++) {
-    for(unsigned int j = i+1; j < 6; j++) {
-      if(!are_opposing_sites(i, j)) {
-        if(is_absorbing_boundary(Geometry.levels[level].surface_type[i]) && is_absorbing_boundary(Geometry.levels[level].surface_type[j])) {
-          Geometry.levels[level].surfaces[i]->make_edge_constraints(&constraints, j);
-        }
-      }
-    }
-  }
+  // TODO
 
   constraints.close();
   
@@ -80,7 +61,7 @@ void HierarchicalProblem::make_sparsity_pattern() {
   dealii::IndexSet is(Geometry.levels[level].n_total_level_dofs);
   is.add_range(0, Geometry.levels[level].n_total_level_dofs);
   
-  Geometry.inner_domain->make_sparsity_pattern(&dsp, Geometry.levels[level].inner_first_dof, &constraints);
+  Geometry.levels[level].inner_domain->make_sparsity_pattern(&dsp, Geometry.levels[level].inner_first_dof, &constraints);
   for (unsigned int surface = 0; surface < 6; surface++) {
     Geometry.levels[level].surfaces[surface]->fill_sparsity_pattern(&dsp, &constraints);
   }
@@ -93,11 +74,11 @@ void HierarchicalProblem::make_sparsity_pattern() {
 std::string HierarchicalProblem::output_results(std::string in_fname_part) {
   print_info("Hierarchical::output_results()", "Start on level " + std::to_string(level));
   std::string ret = "";
-  NumericVectorLocal in_solution(Geometry.inner_domain->n_dofs);
-  for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
+  NumericVectorLocal in_solution(Geometry.levels[level].inner_domain->dof_handler.n_dofs());
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->dof_handler.n_dofs(); i++) {
     in_solution[i] = solution[Geometry.levels[level].inner_first_dof + i];
   }
-  std::string file_1 = Geometry.inner_domain->output_results(in_fname_part + std::to_string(level) , in_solution);
+  std::string file_1 = Geometry.levels[level].inner_domain->output_results(in_fname_part + std::to_string(level) , in_solution);
   ret = file_1;
   filenames.clear();
   filenames.push_back(file_1);
@@ -117,10 +98,10 @@ std::string HierarchicalProblem::output_results(std::string in_fname_part) {
 
   // End of core output
 
-  for(unsigned int i = 0; i < Geometry.inner_domain->n_dofs; i++) {
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     in_solution[i] = solution_error[Geometry.levels[level].inner_first_dof + i];
   }
-  Geometry.inner_domain->output_results("error" + std::to_string(level) , in_solution);
+  Geometry.levels[level].inner_domain->output_results("error" + std::to_string(level) , in_solution);
 
   if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML) {
     for(unsigned int i = 0; i < 6; i++){

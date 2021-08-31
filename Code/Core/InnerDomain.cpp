@@ -35,15 +35,14 @@
 #include "../Solutions/ExactSolutionRamped.h"
 #include "../Solutions/ExactSolutionConjugate.h"
 
-InnerDomain::InnerDomain()
+InnerDomain::InnerDomain(unsigned int in_level)
     :
       mesh_generator{},
       space_transformation{0},
     fe(GlobalParams.Nedelec_element_order),
       triangulation(Triangulation<3>::MeshSmoothing(Triangulation<3>::none)),
       dof_handler(triangulation){
-  n_dofs = 0;
-  local_constraints_made = false;
+  level = in_level;
 }
 
 InnerDomain::~InnerDomain() {}
@@ -93,8 +92,7 @@ void InnerDomain::make_grid() {
   triangulation = reforge_triangulation(&temp_tria);
   dof_handler.distribute_dofs(fe);
   SortDofsDownstream();
-  n_dofs = dof_handler.n_dofs();
-  print_info("InnerDomain::make_grid", "Mesh Preparation finished. System has " + std::to_string(n_dofs) + " degrees of freedom.", false, LoggingLevel::PRODUCTION_ONE);
+  print_info("InnerDomain::make_grid", "Mesh Preparation finished. System has " + std::to_string(dof_handler.n_dofs()) + " degrees of freedom.", false, LoggingLevel::PRODUCTION_ONE);
   print_info("InnerDomain::make_grid", "end");
 }
 
@@ -138,57 +136,6 @@ auto InnerDomain::get_central_cells(double radius) -> std::set<std::string> {
     }
   }
   return ret;
-}
-
-auto InnerDomain::get_outer_constrained_faces() -> std::set<unsigned int> {
-  std::set<unsigned int> constrained_faces;
-  for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
-    if(constrained_cells.contains(it->id().to_string())) {
-      for(unsigned int i = 0; i < 6; i++) {
-        if(constrained_faces.contains(it->face_index(i))) {
-          constrained_faces.erase(it->face_index(i));
-        } else {
-          constrained_faces.insert(it->face_index(i));
-        }
-      }
-    }
-  }
-  return constrained_faces;
-}
-
-void InnerDomain::make_constraints() {
-  local_dof_indices.set_size(n_dofs);
-  local_dof_indices.add_range(0, n_dofs);
-  local_constraints.reinit(local_dof_indices);
-  if(GlobalParams.Index_in_z_direction == 0) {
-    if(GlobalParams.prescribe_0_on_input_side) {
-      // DoFTools::make_zero_boundary_constraints(dof_handler, 4, local_constraints);
-    } else {
-      if(!GlobalParams.use_tapered_input_signal) {
-        // VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, *GlobalParams.source_field, 4, local_constraints);
-      }
-    }
-  }
-  local_constraints_made = true;
-}
-
-void InnerDomain::make_constraints(AffineConstraints<ComplexNumber> *in_constraints, unsigned int shift, IndexSet local_constraints_indices) {
-  if(!local_constraints_made) {
-    make_constraints();
-  }
-  Constraints temp(local_constraints_indices);
-  for(auto index : local_dof_indices) {
-    if(local_constraints.is_constrained(index)){
-      temp.add_line(index + shift);
-      for(auto entry : *local_constraints.get_constraint_entries(index)) {
-        temp.add_entry(index+shift, entry.first + shift, entry.second);
-      }
-      if(local_constraints.is_inhomogeneously_constrained(index)) {
-        temp.set_inhomogeneity(index+shift, local_constraints.get_inhomogeneity(index));
-      }
-    }
-  }
-  in_constraints->merge(temp, Constraints::MergeConflictBehavior::right_object_wins, true);
 }
 
 void InnerDomain::SortDofsDownstream() {
@@ -247,12 +194,6 @@ void InnerDomain::SortDofsDownstream() {
   }
   dof_handler.renumber_dofs(new_numbering);
   print_info("InnerDomain::SortDofsDownstream", "End");
-}
-
-std::vector<InterfaceDofData> InnerDomain::get_surface_dof_vector_for_boundary_id_and_level(unsigned int b_id, unsigned int in_level) {
-  std::vector<InterfaceDofData> ret = get_surface_dof_vector_for_boundary_id(b_id);
-  shift_interface_dof_data(&ret, Geometry.levels[in_level].inner_first_dof);
-  return ret;
 }
 
 std::vector<InterfaceDofData> InnerDomain::get_surface_dof_vector_for_boundary_id(
@@ -438,16 +379,13 @@ struct CellwiseAssemblyDataNP {
 
 };
 
-void InnerDomain::assemble_system(unsigned int shift,
-    Constraints * constraints,
+void InnerDomain::assemble_system(Constraints * constraints,
     dealii::PETScWrappers::SparseMatrix *matrix,
     NumericVectorDistributed *rhs) {
   CellwiseAssemblyDataNP cell_data(&fe, &dof_handler);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
     cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
-    for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
-      cell_data.local_dof_indices[i] += shift;
-    }
+    cell_data.local_dof_indices = transform_local_to_global_dofs(cell_data.local_dof_indices);
     cell_data.cell_matrix = 0;
     cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
     cell_data.fe_values.reinit(cell_data.cell);
@@ -478,16 +416,13 @@ void InnerDomain::assemble_system(Constraints * constraints,
   matrix->compress(dealii::VectorOperation::add);
 }
 
-void InnerDomain::assemble_system(unsigned int shift,
-    Constraints * constraints,
+void InnerDomain::assemble_system(Constraints * constraints,
     dealii::PETScWrappers::MPI::SparseMatrix * matrix,
     NumericVectorDistributed *rhs) {
   CellwiseAssemblyDataNP cell_data(&fe, &dof_handler);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
     cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
-    for (unsigned int i = 0; i < cell_data.local_dof_indices.size(); i++) {
-      cell_data.local_dof_indices[i] += shift;
-    }
+    cell_data.local_dof_indices = transform_local_to_global_dofs(cell_data.local_dof_indices);
     cell_data.cell_matrix = 0;
     cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
     cell_data.fe_values.reinit(cell_data.cell);
@@ -555,26 +490,19 @@ std::vector<SurfaceCellData> InnerDomain::get_surface_cell_data_for_boundary_id_
 std::string InnerDomain::output_results(std::string in_filename, NumericVectorLocal in_solution) {
   print_info("InnerDomain::output_results()", "Start");
   data_out.clear();
-  data_out.attach_dof_handler(Geometry.inner_domain->dof_handler);
+  data_out.attach_dof_handler(dof_handler);
   data_out.add_data_vector(in_solution, "Solution");
   std::string filename = GlobalOutputManager.get_numbered_filename(in_filename, GlobalParams.MPI_Rank, "vtu");
   std::ofstream outputvtu(filename);
-  local_constraints.close();  
   
   Function<3,ComplexNumber> * esc;
   esc = GlobalParams.source_field;
   
   dealii::Vector<ComplexNumber> interpolated_exact_solution(in_solution.size());
-  VectorTools::project(dof_handler, local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *esc, interpolated_exact_solution);
+  // VectorTools::project(dof_handler, local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *esc, interpolated_exact_solution);
   
   data_out.add_data_vector(interpolated_exact_solution, "Exact_Solution");
   
-  // compute_error(dealii::VectorTools::NormType::L2_norm, esc, output_solution, &data_out);
-  
-  // dealii::Vector<ComplexNumber> error_field(output_solution.size());
-  // for(unsigned int i = 0; i < error_field.size(); i++) {
-  //  error_field[i] = conjugate(interpolated_exact_solution[i]) - output_solution[i];
-  // }
   data_out.build_patches();
   data_out.write_vtu(outputvtu);
 
@@ -582,37 +510,23 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
   return filename;
 }
 
-void InnerDomain::prepare_inner_matrix() {
-  IndexSet local_dofs(dof_handler.n_dofs());
-  local_dofs.add_range(0, dof_handler.n_dofs());
-  AffineConstraints<ComplexNumber> constraints(local_dofs);
-  dealii::DynamicSparsityPattern dsp;
-  dsp.reinit(dof_handler.n_dofs(), dof_handler.n_dofs(), local_dofs);
-  DoFTools::make_sparsity_pattern(dof_handler,dsp, constraints);
-  sp.copy_from(dsp);
-  sp.compress();
-  local_matrix.reinit(sp);
-  CellwiseAssemblyDataNP cell_data(&fe, &dof_handler);
-  for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
-    cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
-    cell_data.cell_matrix = 0;
-    cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
-    cell_data.fe_values.reinit(cell_data.cell);
-    cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
-    for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
-      cell_data.prepare_for_current_q_index(q_index);
+
+DofCount InnerDomain::compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) {
+  IndexSet set_of_locally_owned_dofs(dof_handler.n_dofs());
+  set_of_locally_owned_dofs.add_range(0,dof_handler.n_dofs());
+  IndexSet dofs_to_remove(dof_handler.n_dofs());
+  for(unsigned int surf = 0; surf < 6; surf++) {
+    if(Geometry.levels[level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE) {
+      std::vector<InterfaceDofData> dofs = get_surface_dof_vector_for_boundary_id(surf);
+      for(unsigned int i = 0; i < dofs.size(); i++) {
+        dofs_to_remove.add_index(dofs[i].index);
+      }
     }
-    constraints.distribute_local_to_global(cell_data.cell_matrix, cell_data.local_dof_indices, local_matrix);
   }
-  local_matrix.compress(dealii::VectorOperation::add);
-  is_local_matrix_prepared = true;
+  set_of_locally_owned_dofs.subtract_set(dofs_to_remove);
+  return set_of_locally_owned_dofs.n_elements();
 }
 
-NumericVectorLocal InnerDomain::vmult(const NumericVectorLocal a) {
-  if(!is_local_matrix_prepared) {
-    prepare_inner_matrix();
-  }
-  NumericVectorLocal ret(dof_handler.n_dofs());
-  local_matrix.vmult(ret, a);
-  return ret;
+DofCount InnerDomain::compute_n_locally_active_dofs() {
+  return dof_handler.n_dofs();
 }

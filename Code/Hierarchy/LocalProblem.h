@@ -45,9 +45,13 @@ public:
 
   void compute_solver_factorization() override;
 
-   double compute_L2_error();
+  double compute_L2_error();
 
   double compute_error(dealii::VectorTools::NormType, Function<3,ComplexNumber> *, dealii::Vector<ComplexNumber> & , dealii::DataOut<3> *);
 
   DofOwner get_dof_owner(unsigned int id);
+
+  DofCount compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surface) override;
+
+  DofCount compute_n_locally_active_dofs() override;
 };
