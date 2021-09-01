@@ -434,6 +434,15 @@ void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETSc
     // NOT IMPLEMENTED
 }
 
+void PMLSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constraints) {
+  std::vector<unsigned int> local_indices(fe_nedelec.dofs_per_cell);
+  for(auto it = dof_h_nedelec.begin_active(); it != dof_h_nedelec.end(); it++) {
+    it->get_dof_indices(local_indices);
+    local_indices = transform_local_to_global_dofs(local_indices);
+    in_constraints->add_entries_local_to_global(local_indices, *in_dsp);
+  }
+}
+
 void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, NumericVectorDistributed* rhs, Constraints *constraints){
   CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_h_nedelec);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
@@ -611,10 +620,12 @@ DofCount PMLSurface::compute_n_locally_owned_dofs(std::array<bool, 6> is_locally
   for(auto it = dof_h_nedelec.begin_active(); it != dof_h_nedelec.end(); it++) {
     for(unsigned int face = 0; face < 6; face++) {
       for(unsigned int surf = 0; surf < surfaces.size(); surf++) {
-        if(it->face(face)->at_boundary(surfaces[surf])) {
-          it->face(face)->get_dof_indices(local_indices);
-          for(unsigned int i = 0; i < fe_nedelec.dofs_per_face; i++) {
-            non_owned_dofs.add_index(local_indices[i]);
+        if(it->face(face)->at_boundary()) {
+          if(it->face(face)->boundary_id() == surfaces[surf]) {
+            it->face(face)->get_dof_indices(local_indices);
+            for(unsigned int i = 0; i < fe_nedelec.dofs_per_face; i++) {
+              non_owned_dofs.add_index(local_indices[i]);
+            }
           }
         }
       }

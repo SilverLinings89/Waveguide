@@ -76,3 +76,11 @@ std::string EmptySurface::output_results(const dealii::Vector<ComplexNumber> & ,
 }
 
 void EmptySurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern * , Constraints * ) { }
+
+DofCount EmptySurface::compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) {
+    return 0;
+}
+
+DofCount EmptySurface::compute_n_locally_active_dofs() {
+    return 0;
+}

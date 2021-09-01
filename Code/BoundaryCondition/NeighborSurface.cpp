@@ -148,7 +148,6 @@ std::string NeighborSurface::output_results(const dealii::Vector<ComplexNumber> 
 }
 
 void NeighborSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern * in_dsp, Constraints * in_constraints) {
-    BoundaryCondition::fill_sparsity_pattern(in_dsp, in_constraints);
 }
 
 std::array<std::pair<BoundaryId, BoundaryId>, 4> NeighborSurface::get_corner_boundary_id_set() {
@@ -174,56 +173,6 @@ std::array<std::pair<BoundaryId, BoundaryId>, 4> NeighborSurface::get_corner_bou
   return corners;
 }
 
-std::vector<SurfaceCellData> NeighborSurface::mpi_send_recv_surf_cell_data(std::vector<SurfaceCellData> in_data) {
-    std::vector<SurfaceCellData> ret = in_data;
-    if(in_data.size() > 0) {
-        unsigned int * meta_data = new unsigned int[2];
-        meta_data[0] = in_data.size();  // N cells
-        meta_data[1] = in_data[0].dof_numbers.size(); // N dofs per cell
-        MPI_Sendrecv_replace(meta_data, 2, MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
-        if(meta_data[0] != in_data.size()) {
-            std::cout << "Incompatible cell counts in mpi_send_recv_surf_cell_data" << std::endl;
-            exit(0);
-        }
-        std::vector<unsigned int> indices = dof_indices_from_surface_cell_data(ret);
-        if(meta_data[1] != in_data[0].dof_numbers.size()) {
-            unsigned int com_buffer_size = (in_data[0].dof_numbers.size() > meta_data[1])?in_data[0].dof_numbers.size(): meta_data[1];
-            unsigned int * dof_indices = new unsigned int[com_buffer_size];
-            for(unsigned int i = 0; i < indices.size(); i++) {
-                dof_indices[i] = indices[i];
-            }
-            for(unsigned int i = indices.size(); i < com_buffer_size; i++) {
-                dof_indices[i] = 0;
-            }
-            MPI_Sendrecv_replace(dof_indices, com_buffer_size, MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
-            for(unsigned int i = 0; i < ret.size(); i++) {
-                ret[i].dof_numbers.clear();
-                for(unsigned int j = 0; j < meta_data[1]; j++) {
-                    ret[i].dof_numbers.push_back(dof_indices[i * meta_data[1] + j]);
-                }
-            }
-            delete [] dof_indices;
-            return ret;
-        } else {
-            unsigned int * dof_indices = new unsigned int[indices.size()];
-            for(unsigned int i = 0; i < indices.size(); i++) {
-                dof_indices[i] = indices[i];
-            }
-            MPI_Sendrecv_replace(dof_indices, indices.size(), MPI_UNSIGNED, global_partner_mpi_rank, 0, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0 );
-            const unsigned int n_dofs_per_cell = ret[0].dof_numbers.size();
-            for(unsigned int i = 0; i < ret.size(); i++) {
-                for(unsigned int j = 0; j < n_dofs_per_cell; j++) {
-                    ret[i].dof_numbers[j] = dof_indices[i*n_dofs_per_cell + j];
-                }
-            }
-            delete [] dof_indices;
-            return ret;
-        }
-    } else {
-        std::cout << "No data provided in mpi_send_recv_surf_cell_data" << std::endl;
-    }
-    return ret;
-}
 
 DofCount NeighborSurface::compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) {
     return 0;

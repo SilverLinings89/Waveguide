@@ -12,7 +12,7 @@
 class LocalProblem;
 class NonLocalProblem; 
 
-class HierarchicalProblem: public FEDomain {
+class HierarchicalProblem {
  public:
   const SweepingDirection sweeping_direction;
   const SweepingLevel level;

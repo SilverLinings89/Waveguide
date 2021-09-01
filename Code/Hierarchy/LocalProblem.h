@@ -51,7 +51,4 @@ public:
 
   DofOwner get_dof_owner(unsigned int id);
 
-  DofCount compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surface) override;
-
-  DofCount compute_n_locally_active_dofs() override;
 };

@@ -29,7 +29,6 @@ public:
   virtual bool is_point_at_boundary(Position2D in_p, BoundaryId in_bid) = 0;
   void set_mesh_boundary_ids();
   auto get_boundary_ids() -> std::vector<BoundaryId>;
-  void compute_extreme_vertex_coordinates();
   
   // Make constraints
   virtual auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount = 0;
@@ -37,7 +36,7 @@ public:
   virtual auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> = 0;
   
   // Generate the sparsity pattern
-  virtual void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints *constraints);
+  virtual void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints *constraints) = 0;
   
   // Fill the system matrix
   virtual void fill_matrix(dealii::PETScWrappers::SparseMatrix*,      NumericVectorDistributed* rhs, Constraints *constraints) = 0;

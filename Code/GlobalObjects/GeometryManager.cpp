@@ -29,7 +29,6 @@ void GeometryManager::initialize() {
   surface_extremal_coordinate[3] = local_y_range.second;
   surface_extremal_coordinate[4] = local_z_range.first;
   surface_extremal_coordinate[5] = local_z_range.second;
-  initialize_inner_domain();
   initialize_local_level();
   initialize_surfaces();
   print_info("GeometryManager::initialize", "End");
@@ -61,48 +60,53 @@ Position GeometryManager::get_global_center() {
   return ret;
 }
 
-void GeometryManager::initialize_inner_domain() {
-  levels[0].inner_domain.make_mesh();
-  for (unsigned int side = 0; side < 6; side++) {
-    dealii::Triangulation<2, 3> temp_triangulation;
-    dealii::Triangulation<2> surf_tria;
-    Mesh tria;
-    tria.copy_triangulation(levels[0].inner_domain.triangulation);
-    std::set<unsigned int> b_ids;
-    b_ids.insert(side);
-    switch (side) {
-      case 0:
-        dealii::GridTools::transform(Transform_0_to_5, tria);
-        break;
-      case 1:
-        dealii::GridTools::transform(Transform_1_to_5, tria);
-        break;
-      case 2:
-        dealii::GridTools::transform(Transform_2_to_5, tria);
-        break;
-      case 3:
-        dealii::GridTools::transform(Transform_3_to_5, tria);
-        break;
-      case 4:
-        dealii::GridTools::transform(Transform_4_to_5, tria);
-        break;
-      default:
-        break;
+void GeometryManager::initialize_inner_domain(unsigned int in_level) {
+  levels[in_level].inner_domain = new InnerDomain(in_level);
+  levels[in_level].inner_domain->make_grid();
+  if(in_level == 0) {
+    for (unsigned int side = 0; side < 6; side++) {
+      dealii::Triangulation<2, 3> temp_triangulation;
+      dealii::Triangulation<2> surf_tria;
+      Mesh tria;
+      tria.copy_triangulation(levels[0].inner_domain->triangulation);
+      std::set<unsigned int> b_ids;
+      b_ids.insert(side);
+      switch (side) {
+        case 0:
+          dealii::GridTools::transform(Transform_0_to_5, tria);
+          break;
+        case 1:
+          dealii::GridTools::transform(Transform_1_to_5, tria);
+          break;
+        case 2:
+          dealii::GridTools::transform(Transform_2_to_5, tria);
+          break;
+        case 3:
+          dealii::GridTools::transform(Transform_3_to_5, tria);
+          break;
+        case 4:
+          dealii::GridTools::transform(Transform_4_to_5, tria);
+          break;
+        default:
+          break;
+      }
+      dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation, b_ids);
+      dealii::GridGenerator::flatten_triangulation(temp_triangulation, surface_meshes[side]);
     }
-    dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation, b_ids);
-    dealii::GridGenerator::flatten_triangulation(temp_triangulation, surface_meshes[side]);
   }
 }
 
 void GeometryManager::initialize_surfaces() {
-  local_inner_dofs = inner_domain->n_dofs;
   if(GlobalParams.Blocks_in_z_direction != 1) {
+    initialize_inner_domain(1);
     initialize_level_1();
   }
   if(GlobalParams.Blocks_in_y_direction != 1) {
+    initialize_inner_domain(2);
     initialize_level_2();
   }
   if(GlobalParams.Blocks_in_x_direction != 1) {
+    initialize_inner_domain(3);
     initialize_level_3();
   }
   validate_surface_first_dof();
@@ -195,8 +199,7 @@ void GeometryManager::initialize_level_3() {
 
 void GeometryManager::perform_initialization(unsigned int in_level) {
   print_info("GeometryManager::perform_initialization", "Start level " + std::to_string(in_level));
-  levels[in_level].inner_domain = new InnerDomain();
-  levels[in_level].inner_domain->make_mesh();
+
   for(unsigned int surf = 0; surf < 6; surf++) {
     if(surf == 4 && GlobalParams.Index_in_z_direction == 0 && GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
       levels[in_level].surface_type[surf] = SurfaceType::DIRICHLET_SURFACE;
@@ -216,6 +219,29 @@ void GeometryManager::perform_initialization(unsigned int in_level) {
     }
     levels[in_level].surfaces[surf]->initialize();
   }
+  unsigned int n_owned_dofs = 0;
+  std::array<bool, 6> is_owned;
+  for(unsigned int i = 0; i < 3; i++) {
+    is_owned[i] = (levels[in_level].surface_type[i] != SurfaceType::NEIGHBOR_SURFACE);
+  }
+  for(unsigned int i = 4; i < 6; i++) {
+    is_owned[i] = true;
+  }
+  levels[in_level].inner_domain->initialize_dof_counts(levels[in_level].inner_domain->compute_n_locally_active_dofs(), levels[in_level].inner_domain->compute_n_locally_owned_dofs(is_owned));
+  n_owned_dofs += levels[in_level].inner_domain->n_locally_owned_dofs;
+  for(unsigned int surf = 0; surf < 6; surf++) {
+    levels[in_level].surfaces[surf]->initialize_dof_counts(levels[in_level].surfaces[surf]->compute_n_locally_active_dofs(), levels[in_level].surfaces[surf]->compute_n_locally_owned_dofs(is_owned));
+    n_owned_dofs += levels[in_level].surfaces[surf]->n_locally_owned_dofs;
+  }
+  levels[in_level].dof_distribution = dealii::Utilities::MPI::create_ascending_partitioning(GlobalMPI.communicators_by_level[in_level], n_owned_dofs);
+  unsigned int first_dof = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].nth_index_in_set(0);
+  levels[in_level].inner_domain->finish_initialization(first_dof);
+  first_dof += levels[in_level].inner_domain->n_locally_owned_dofs;
+  for(unsigned int i = 0; i < 6; i++) {
+    levels[in_level].surfaces[i]->finish_initialization(first_dof);
+    first_dof += levels[in_level].surfaces[i]->n_locally_owned_dofs;
+  }
+
   print_info("GeometryManager::perform_initialization", "End level " + std::to_string(in_level));
 }
 

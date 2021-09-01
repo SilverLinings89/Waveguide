@@ -598,6 +598,26 @@ void HSIESurface::fill_matrix(
     matrix->compress(dealii::VectorOperation::add);
 }
 
+void HSIESurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constraints) {
+  auto it = dof_h_nedelec.begin();
+  auto end = dof_h_nedelec.end();
+  const unsigned int dofs_per_cell =
+      GeometryInfo<2>::vertices_per_cell * compute_dofs_per_vertex() +
+      GeometryInfo<2>::lines_per_cell * compute_dofs_per_edge(false) +
+      compute_dofs_per_face(false);
+  auto it2 = dof_h_q.begin();
+  for (; it != end; ++it) {
+    DofDataVector cell_dofs = this->get_dof_data_for_cell(it, it2);
+    std::vector<unsigned int> local_indices;
+    for (unsigned int i = 0; i < cell_dofs.size(); i++) {
+      local_indices.push_back(cell_dofs[i].global_index);
+    }
+    local_indices = transform_local_to_global_dofs(local_indices);
+    in_constraints->add_entries_local_to_global(local_indices, *in_dsp);
+    it2++;
+  }
+}
+
 DofCountsStruct HSIESurface::compute_n_edge_dofs() {
   DoFHandler<2>::active_cell_iterator cell;
   DoFHandler<2>::active_cell_iterator cell2;

@@ -141,8 +141,4 @@ private:
   NumericVectorLocal distribute_constraints_to_local_vector(const NumericVectorLocal u_in);
 
   void write_multifile_output(const std::string & filename, const NumericVectorDistributed field);
-
-  DofCount compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surface) override;
-
-  DofCount compute_n_locally_active_dofs() override;
 };
