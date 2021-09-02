@@ -78,5 +78,23 @@ void BoundaryCondition::set_mesh_boundary_ids() {
 }
 
 std::vector<unsigned int> BoundaryCondition::get_boundary_ids() {
-    return (Geometry.surface_meshes[b_id].get_boundary_ids());
+  return (Geometry.surface_meshes[b_id].get_boundary_ids());
+}
+
+std::vector<DofNumber> BoundaryCondition::get_global_dof_indices_by_boundary_id(BoundaryId in_boundary_id) {
+  std::vector<InterfaceDofData> dof_data = get_dof_association_by_boundary_id(in_boundary_id);
+  std::vector<DofNumber> ret;
+  for(unsigned int i = 0; i < dof_data.size(); i++) {
+    ret.push_back(dof_data[i].index);
+  }
+  ret = transform_local_to_global_dofs(ret);
+  return ret;
+}
+
+void BoundaryCondition::send_up_inner_dofs() {
+  std::cout << "BoundaryCondition::send_up_inner_dofs() should not be called. It should only be called in derived classes!" << std::endl; 
+}
+
+void BoundaryCondition::receive_from_below_dofs() {
+  std::cout << "BoundaryCondition::receive_from_below_dofs() should not be called. It should only be called in derived classes!" << std::endl;
 }

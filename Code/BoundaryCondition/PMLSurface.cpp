@@ -276,14 +276,12 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(uns
           found_one = true;
           std::vector<DofNumber> face_dofs_indices(fe_nedelec.dofs_per_face);
           cell->face(face)->get_dof_indices(face_dofs_indices);
-          face_dofs_indices = transform_local_to_global_dofs(face_dofs_indices);
           face_set.clear();
           face_set.insert(face_dofs_indices.begin(), face_dofs_indices.end());
           std::vector<InterfaceDofData> cell_dofs_and_orientations_and_points;
           for (unsigned int i = 0; i < dealii::GeometryInfo<3>::lines_per_face; i++) {
             std::vector<DofNumber> line_dofs(fe_nedelec.dofs_per_line);
             cell->face(face)->line(i)->get_dof_indices(line_dofs);
-            line_dofs = transform_local_to_global_dofs(line_dofs);
             line_set.clear();
             line_set.insert(line_dofs.begin(), line_dofs.end());
             for(auto erase_it: line_set) {

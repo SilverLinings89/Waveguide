@@ -349,3 +349,9 @@ To simplify the implementation, I will also go ahead and add an inner_domain to 
 # Tuesday, 31st of august
 
 I'm slowly grinding through the code to change the dof ownership. This has effects in extremely many places.
+
+# Wednesday, 1st of august
+
+I have implemented a huge amount of the new stuff. I have made the decision that get_dof_association() and get_dof_association_by_boundary_id() will always return in LOKAL dof numbering ( i.e. [0, ..., NDOFS - 1]). I will then add a function to the FEDomain set_global_dof_indices_by_boundary which sets(std::vector<InterfaceDofData>) to set the global indices. 
+
+I have decided to go this way because all the calls to get_dof_association will now only happen in the setup. Therefore I can also repurpose them to the function I need in the setup rather then rewriting them.

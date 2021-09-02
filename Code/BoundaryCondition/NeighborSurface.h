@@ -13,6 +13,7 @@ class NeighborSurface : public BoundaryCondition {
     const unsigned int partner_mpi_rank_in_level_communicator;
     std::array<std::set<unsigned int>, 6> edge_ids_by_boundary_id;
     std::array<std::set<unsigned int>, 6> face_ids_by_boundary_id;
+    std::array<std::vector<InterfaceDofData>, 6> dof_indices_by_boundary_id;
 
     NeighborSurface(unsigned int in_bid, unsigned int in_level);
     ~NeighborSurface();
@@ -29,7 +30,6 @@ class NeighborSurface : public BoundaryCondition {
     bool is_position_at_boundary(Position in_p, BoundaryId in_bid);
     void initialize() override;
     void set_mesh_boundary_ids(); 
-    void prepare_mesh();
     auto cells_for_boundary_id(unsigned int boundary_id) -> unsigned int;
     void init_fe();
     auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount override;
@@ -42,4 +42,6 @@ class NeighborSurface : public BoundaryCondition {
     auto get_corner_boundary_id_set() -> std::array<std::pair<BoundaryId, BoundaryId>, 4>;
     DofCount compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) override;
     DofCount compute_n_locally_active_dofs() override;
+    void send_up_inner_dofs() override;
+    void receive_from_below_dofs() override;
 };

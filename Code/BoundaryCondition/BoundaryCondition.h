@@ -30,11 +30,11 @@ public:
   void set_mesh_boundary_ids();
   auto get_boundary_ids() -> std::vector<BoundaryId>;
   
-  // Make constraints
   virtual auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount = 0;
   virtual auto get_dof_association() -> std::vector<InterfaceDofData> = 0;
   virtual auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> = 0;
-  
+  virtual auto get_global_dof_indices_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<DofNumber>;
+
   // Generate the sparsity pattern
   virtual void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints *constraints) = 0;
   
@@ -44,4 +44,6 @@ public:
   virtual void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) = 0;
   virtual void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) = 0;
 
+  virtual void send_up_inner_dofs();
+  virtual void receive_from_below_dofs();
 };
