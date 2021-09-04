@@ -28,6 +28,7 @@ class GeometryManager {
   double shape_sector_length;
   unsigned int shape_sector_count;
   unsigned int local_inner_dofs;
+  bool are_surface_meshes_initialized;
 
   double h_x;
   double h_y;
@@ -53,10 +54,6 @@ class GeometryManager {
   void initialize();
   void initialize_inner_domain(unsigned int in_level);
   void initialize_surfaces();
-  void initialize_local_level();
-  void initialize_level_1();
-  void initialize_level_2();
-  void initialize_level_3();
   void perform_initialization(unsigned int level);
   double eps_kappa_2(Position);
 
@@ -73,10 +70,14 @@ class GeometryManager {
   bool math_coordinate_in_waveguide(Position) const;
   dealii::Tensor<2,3> get_epsilon_tensor(const Position &);
   double get_epsilon_for_point(const Position &);
-  unsigned int compute_n_dofs_on_level(const unsigned int level);
   Position get_global_center();
   Position get_local_center();
   auto get_boundary_for_direction(Direction) -> BoundaryId;
   auto get_direction_for_boundary_id(BoundaryId) -> Direction;
-  void validate_surface_first_dof();
+  void validate_global_dof_indices(unsigned int in_level);
+  SurfaceType get_surface_type(BoundaryId b_id, unsigned int level);
+  void distribute_dofs_on_level(unsigned int level);
+  void set_surface_types_and_properties(unsigned int level);
+  void initialize_surfaces_on_level(unsigned int level);
+  void initialize_level(unsigned int level);
 };

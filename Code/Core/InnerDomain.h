@@ -114,6 +114,7 @@ class InnerDomain: public FEDomain {
   std::vector<SurfaceCellData> get_edge_cell_data(BoundaryId first_b_id, BoundaryId second_b_id, unsigned int level);
   std::string output_results(std::string in_filename, NumericVectorLocal in_solution);
   void fill_rhs_vector(NumericVectorDistributed in_vec, unsigned int level);
-  DofCount compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surface) override;
+  DofCount compute_n_locally_owned_dofs() override;
   DofCount compute_n_locally_active_dofs() override;
+  void determine_non_owned_dofs() override;
 };

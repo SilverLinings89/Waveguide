@@ -9,6 +9,7 @@
 
 class BoundaryCondition: public FEDomain {
 public:
+  std::array<std::array<bool, 6>, 6> is_surface_owned;
   const BoundaryId b_id;
   const unsigned int level;
   const double additional_coordinate;
@@ -46,4 +47,5 @@ public:
 
   virtual void send_up_inner_dofs();
   virtual void receive_from_below_dofs();
+  virtual void finish_dof_index_initialization();
 };

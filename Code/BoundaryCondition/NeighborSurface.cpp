@@ -168,7 +168,7 @@ std::array<std::pair<BoundaryId, BoundaryId>, 4> NeighborSurface::get_corner_bou
 }
 
 
-DofCount NeighborSurface::compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) {
+DofCount NeighborSurface::compute_n_locally_owned_dofs() {
     return 0;
 }
 
@@ -183,7 +183,7 @@ void NeighborSurface::send_up_inner_dofs() {
     for(unsigned int i = 0; i < n_dofs; i++){
         local_indices[i] = dofs[i].index;
     }
-    local_indices = transform_local_to_global_dofs(local_indices);
+    local_indices = Geometry.levels[level].inner_domain->transform_local_to_global_dofs(local_indices);
     unsigned int * local_indices_buffer = new unsigned int[n_dofs];
     for(unsigned int i = 0; i < n_dofs; i++) {
         local_indices_buffer[i] = local_indices[i];
@@ -199,10 +199,16 @@ void NeighborSurface::receive_from_below_dofs() {
         local_indices[i] = dofs[i].index;
     } 
     unsigned int * dof_indices = new unsigned int[n_dofs];
+    std::cout << "RC" << std::endl;
     MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0);
+    std::cout << "RD" << std::endl;
     DofIndexVector global_indices(n_dofs);
     for(unsigned int i = 0; i < n_dofs; i++){
         global_indices[i] = dof_indices[i];
     }
     Geometry.levels[level].inner_domain->set_non_local_dof_indices(local_indices, global_indices);
+}
+
+void NeighborSurface::determine_non_owned_dofs() {
+
 }

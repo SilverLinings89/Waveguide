@@ -135,8 +135,7 @@ void LocalProblem::reinit() {
 }
 
 void LocalProblem::initialize_own_dofs() {
-  own_dofs.set_size(Geometry.levels[0].n_local_dofs);
-  own_dofs.add_range(0, Geometry.levels[0].n_local_dofs);
+  
 }
 
 void LocalProblem::solve() {

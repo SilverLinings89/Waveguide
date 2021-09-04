@@ -94,8 +94,10 @@ public:
   auto vertex_positions_for_ids(std::vector<unsigned int> ids) -> std::vector<Position>;
   auto line_positions_for_ids(std::vector<unsigned int> ids) -> std::vector<Position>;
   std::string output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
-  DofCount compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) override;
+  DofCount compute_n_locally_owned_dofs() override;
   DofCount compute_n_locally_active_dofs() override;
+  void finish_dof_index_initialization() override;
+  void determine_non_owned_dofs() override;
 };
 
 

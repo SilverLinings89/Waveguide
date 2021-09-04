@@ -1351,10 +1351,28 @@ std::string HSIESurface::output_results(const dealii::Vector<ComplexNumber> & , 
   return "";
 }
 
-DofCount HSIESurface::compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) {
+DofCount HSIESurface::compute_n_locally_owned_dofs() {
     return 0;
 }
 
 DofCount HSIESurface::compute_n_locally_active_dofs() {
     return dof_counter;
+}
+
+void HSIESurface::finish_dof_index_initialization() {
+  for(unsigned int surf = 0; surf < 6; surf+=2) {
+    if(surf != b_id && !are_opposing_sites(surf, b_id)) {
+      DofIndexVector dofs_in_global_numbering = Geometry.levels[level].surfaces[surf]->get_global_dof_indices_by_boundary_id(b_id);
+      std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(surf);
+      DofIndexVector dofs_in_local_numbering(local_interface_data.size());
+      for(unsigned int i = 0; i < local_interface_data.size(); i++) {
+        dofs_in_local_numbering[i] = local_interface_data[i].index;
+      }
+      set_non_local_dof_indices(dofs_in_local_numbering, dofs_in_global_numbering);
+    }
+  }
+}
+
+void HSIESurface::determine_non_owned_dofs() {
+  // TODO: This needs to be implemented, but I will do it once PML works.
 }

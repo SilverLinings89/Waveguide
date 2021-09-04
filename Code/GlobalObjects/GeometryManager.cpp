@@ -11,7 +11,19 @@
 #include "../BoundaryCondition/NeighborSurface.h"
 #include "../Helpers/staticfunctions.h"
 
-GeometryManager::GeometryManager() {}
+unsigned int count_occurences_of_max_uint(std::vector<unsigned int> vector) {
+  unsigned int ret = 0;
+  for(unsigned int i = 0; i < vector.size(); i++) {
+    if(vector[i] == UINT_MAX) {
+      ret++;
+    }
+  }
+  return ret;
+}
+
+GeometryManager::GeometryManager() {
+  are_surface_meshes_initialized = false;
+}
 
 GeometryManager::~GeometryManager() {}
 
@@ -29,19 +41,25 @@ void GeometryManager::initialize() {
   surface_extremal_coordinate[3] = local_y_range.second;
   surface_extremal_coordinate[4] = local_z_range.first;
   surface_extremal_coordinate[5] = local_z_range.second;
-  initialize_local_level();
-  initialize_surfaces();
-  print_info("GeometryManager::initialize", "End");
-}
-
-unsigned int GeometryManager::compute_n_dofs_on_level(const unsigned int level) {
-  unsigned int ret = local_inner_dofs;
-  for(unsigned int i = 0; i < 6; i++) {
-    if(levels[level].is_surface_truncated[i]) {
-      ret += levels[0].surfaces[i]->dof_counter;
-    }
+  
+  initialize_level(0);
+  validate_global_dof_indices(0);
+  MPI_Barrier(MPI_COMM_WORLD);
+  if(GlobalParams.Blocks_in_z_direction != 1) {
+    initialize_level(1);
+    validate_global_dof_indices(1);
   }
-  return ret;
+  MPI_Barrier(MPI_COMM_WORLD);
+  if(GlobalParams.Blocks_in_y_direction != 1) {
+    initialize_level(2);
+    validate_global_dof_indices(2);
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+  if(GlobalParams.Blocks_in_x_direction != 1) {
+    initialize_level(3);
+    validate_global_dof_indices(3);
+  }
+  print_info("GeometryManager::initialize", "End");
 }
 
 Position GeometryManager::get_local_center() {
@@ -63,12 +81,12 @@ Position GeometryManager::get_global_center() {
 void GeometryManager::initialize_inner_domain(unsigned int in_level) {
   levels[in_level].inner_domain = new InnerDomain(in_level);
   levels[in_level].inner_domain->make_grid();
-  if(in_level == 0) {
+  if(!are_surface_meshes_initialized) {
     for (unsigned int side = 0; side < 6; side++) {
       dealii::Triangulation<2, 3> temp_triangulation;
       dealii::Triangulation<2> surf_tria;
       Mesh tria;
-      tria.copy_triangulation(levels[0].inner_domain->triangulation);
+      tria.copy_triangulation(levels[in_level].inner_domain->triangulation);
       std::set<unsigned int> b_ids;
       b_ids.insert(side);
       switch (side) {
@@ -93,156 +111,67 @@ void GeometryManager::initialize_inner_domain(unsigned int in_level) {
       dealii::GridGenerator::extract_boundary_mesh(tria, temp_triangulation, b_ids);
       dealii::GridGenerator::flatten_triangulation(temp_triangulation, surface_meshes[side]);
     }
+    are_surface_meshes_initialized = true;
   }
 }
 
-void GeometryManager::initialize_surfaces() {
-  if(GlobalParams.Blocks_in_z_direction != 1) {
-    initialize_inner_domain(1);
-    initialize_level_1();
+void GeometryManager::validate_global_dof_indices(unsigned int in_level) {
+  unsigned int occurences = count_occurences_of_max_uint(levels[in_level].inner_domain->global_index_mapping);
+  if(occurences != 0) {
+    std::cout << "On level " << in_level << " on " << GlobalParams.MPI_Rank << " in the interior there were " << occurences <<std::endl;
   }
-  if(GlobalParams.Blocks_in_y_direction != 1) {
-    initialize_inner_domain(2);
-    initialize_level_2();
-  }
-  if(GlobalParams.Blocks_in_x_direction != 1) {
-    initialize_inner_domain(3);
-    initialize_level_3();
-  }
-  validate_surface_first_dof();
-}
-
-void GeometryManager::validate_surface_first_dof() {
   for(unsigned int i = 0; i < 6; i++) {
-    if(levels[0].surface_first_dof[i] == 0) std::cout << "Level 0, Surface "<< i << " Error. Surface first dof has wrong value." << std::endl;
-  }
-  if(GlobalParams.Blocks_in_z_direction != 1) {
-    for(unsigned int i = 0; i < 6; i++) {
-      if(levels[1].surface_first_dof[i] == 0) std::cout << "Level 1, Surface "<< i << " Error. Surface first dof has wrong value." << std::endl;
-    }
-  }
-  if(GlobalParams.Blocks_in_y_direction != 1) {
-    for(unsigned int i = 0; i < 6; i++) {
-      if(levels[2].surface_first_dof[i] == 0) std::cout << "Level 2, Surface "<< i << " Error. Surface first dof has wrong value." << std::endl;
-    }
-  }
-  if(GlobalParams.Blocks_in_x_direction != 1) {
-    for(unsigned int i = 0; i < 6; i++) {
-      if(levels[3].surface_first_dof[i] == 0) std::cout << "Level 3, Surface "<< i << " Error. Surface first dof has wrong value." << std::endl;
+    occurences = count_occurences_of_max_uint(levels[in_level].surfaces[i]->global_index_mapping);
+    if(occurences != 0) {
+      std::cout << "On level " << in_level << " on " << GlobalParams.MPI_Rank << " on surface " << i << " there were " << occurences <<std::endl;
     }
   }
 }
 
-void GeometryManager::initialize_local_level() {
-  for(unsigned int i = 0; i < 6; i++) {
-    levels[0].is_surface_truncated[i] = true;
-  }
-  for(unsigned int i = 0; i < 6; i++) {
-    if(i == 4) {
-      if(GlobalParams.Index_in_z_direction != 0 && GlobalParams.NumberProcesses > 1) {
-        levels[0].surfaces[i] = std::shared_ptr<BoundaryCondition>(new EmptySurface(i,0));
-        levels[0].surface_type[i] = SurfaceType::OPEN_SURFACE;
-      } else {
-        if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
-          levels[0].surfaces[i] = std::shared_ptr<BoundaryCondition>(new DirichletSurface(i,0));
-          levels[0].surface_type[i] = SurfaceType::DIRICHLET_SURFACE;
-        } else {
-          levels[0].surface_type[i] = SurfaceType::ABC_SURFACE;
-          if(GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE) {
-            levels[0].surfaces[i] = std::shared_ptr<BoundaryCondition>(new HSIESurface(i, 0));
-          } else {
-            levels[0].surfaces[i] = std::shared_ptr<BoundaryCondition>(new PMLSurface(i, 0));
-          }
-        }
-      }
-    } else  {
-      levels[0].surface_type[i] = SurfaceType::ABC_SURFACE;
-      if(GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE) {
-        levels[0].surfaces[i] = std::shared_ptr<BoundaryCondition>(new HSIESurface(i, 0));
-      } else {
-        levels[0].surfaces[i] = std::shared_ptr<BoundaryCondition>(new PMLSurface(i, 0));
-      }
-    }
-    levels[0].surfaces[i]->initialize();
-  }
-}
-
-void GeometryManager::initialize_level_1() {
-  for(unsigned int i = 0; i < 6; i++) {
-    levels[1].is_surface_truncated[i] = true;
-  }
-  levels[1].is_surface_truncated[4] = GlobalParams.Index_in_z_direction == 0;
-  levels[1].is_surface_truncated[5] = GlobalParams.Index_in_z_direction == (GlobalParams.Blocks_in_z_direction - 1);
-  perform_initialization(1);
-}
-
-void GeometryManager::initialize_level_2() {
-  for(unsigned int i = 0; i < 6; i++) {
-    levels[2].is_surface_truncated[i] = true;
-  }
-  levels[2].is_surface_truncated[2] = GlobalParams.Index_in_y_direction == 0;
-  levels[2].is_surface_truncated[3] = GlobalParams.Index_in_y_direction == (GlobalParams.Blocks_in_y_direction - 1);
-  levels[2].is_surface_truncated[4] = GlobalParams.Index_in_z_direction == 0;
-  levels[2].is_surface_truncated[5] = GlobalParams.Index_in_z_direction == (GlobalParams.Blocks_in_z_direction - 1);
-  perform_initialization(2);
-}
-
-void GeometryManager::initialize_level_3() {
-  levels[3].is_surface_truncated[0] = GlobalParams.Index_in_x_direction == 0;
-  levels[3].is_surface_truncated[1] = GlobalParams.Index_in_x_direction == (GlobalParams.Blocks_in_x_direction - 1);
-  levels[3].is_surface_truncated[2] = GlobalParams.Index_in_y_direction == 0;
-  levels[3].is_surface_truncated[3] = GlobalParams.Index_in_y_direction == (GlobalParams.Blocks_in_y_direction - 1);
-  levels[3].is_surface_truncated[4] = GlobalParams.Index_in_z_direction == 0;
-  levels[3].is_surface_truncated[5] = GlobalParams.Index_in_z_direction == (GlobalParams.Blocks_in_z_direction - 1);
-  perform_initialization(3);
-}
-
-void GeometryManager::perform_initialization(unsigned int in_level) {
-  print_info("GeometryManager::perform_initialization", "Start level " + std::to_string(in_level));
-
-  for(unsigned int surf = 0; surf < 6; surf++) {
-    if(surf == 4 && GlobalParams.Index_in_z_direction == 0 && GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
-      levels[in_level].surface_type[surf] = SurfaceType::DIRICHLET_SURFACE;
-      levels[in_level].surfaces[4] = std::shared_ptr<BoundaryCondition>(new DirichletSurface(4,in_level));
-    } else {
-      if(levels[in_level].is_surface_truncated[surf]) {
-        levels[in_level].surface_type[surf] = SurfaceType::ABC_SURFACE;
-        if(GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE) {
-          levels[in_level].surfaces[surf] = std::make_shared<HSIESurface>(surf, in_level);
-        } else {
-          levels[in_level].surfaces[surf] = std::make_shared<PMLSurface>(surf, in_level);
-        }
-      } else {
-        levels[in_level].surface_type[surf] = SurfaceType::NEIGHBOR_SURFACE;
-        levels[in_level].surfaces[surf] = std::make_shared<NeighborSurface>(surf, in_level);
-      }
-    }
-    levels[in_level].surfaces[surf]->initialize();
-  }
+void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
+  print_info("GeometryManager::distribute_dofs_on_level", "Start level " + std::to_string(in_level));
   unsigned int n_owned_dofs = 0;
-  std::array<bool, 6> is_owned;
-  for(unsigned int i = 0; i < 3; i++) {
-    is_owned[i] = (levels[in_level].surface_type[i] != SurfaceType::NEIGHBOR_SURFACE);
-  }
-  for(unsigned int i = 4; i < 6; i++) {
-    is_owned[i] = true;
-  }
-  levels[in_level].inner_domain->initialize_dof_counts(levels[in_level].inner_domain->compute_n_locally_active_dofs(), levels[in_level].inner_domain->compute_n_locally_owned_dofs(is_owned));
+  levels[in_level].inner_domain->initialize_dof_counts(levels[in_level].inner_domain->compute_n_locally_active_dofs(), levels[in_level].inner_domain->compute_n_locally_owned_dofs());
   n_owned_dofs += levels[in_level].inner_domain->n_locally_owned_dofs;
   for(unsigned int surf = 0; surf < 6; surf++) {
-    levels[in_level].surfaces[surf]->initialize_dof_counts(levels[in_level].surfaces[surf]->compute_n_locally_active_dofs(), levels[in_level].surfaces[surf]->compute_n_locally_owned_dofs(is_owned));
+    levels[in_level].surfaces[surf]->initialize_dof_counts(levels[in_level].surfaces[surf]->compute_n_locally_active_dofs(), levels[in_level].surfaces[surf]->compute_n_locally_owned_dofs());
     n_owned_dofs += levels[in_level].surfaces[surf]->n_locally_owned_dofs;
   }
   levels[in_level].dof_distribution = dealii::Utilities::MPI::create_ascending_partitioning(GlobalMPI.communicators_by_level[in_level], n_owned_dofs);
   unsigned int first_dof = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].nth_index_in_set(0);
+  levels[in_level].inner_domain->determine_non_owned_dofs();
+  for(unsigned int i = 0; i < 6; i++) {
+    levels[in_level].surfaces[i]->determine_non_owned_dofs();
+  }
   levels[in_level].inner_domain->finish_initialization(first_dof);
   first_dof += levels[in_level].inner_domain->n_locally_owned_dofs;
   for(unsigned int i = 0; i < 6; i++) {
     levels[in_level].surfaces[i]->finish_initialization(first_dof);
     first_dof += levels[in_level].surfaces[i]->n_locally_owned_dofs;
   }
-
-  print_info("GeometryManager::perform_initialization", "End level " + std::to_string(in_level));
+  levels[in_level].n_local_dofs = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].n_elements();
+  levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution[0].size();
+  std::cout << "Stage 2"<< std::endl;
+  MPI_Barrier(MPI_COMM_WORLD);
+  for(unsigned int i = 0; i < 6; i += 2) {
+    if(Geometry.levels[in_level].surface_type[i] == SurfaceType::NEIGHBOR_SURFACE) {
+      Geometry.levels[in_level].surfaces[i]->receive_from_below_dofs();
+    }
+  }
+  // Since all the information only depends on the inner domain, I can now send
+  // the global dof indices to the upper neighbor
+  for(unsigned int i = 1; i < 6; i += 2) {
+    if(Geometry.levels[in_level].surface_type[i] == SurfaceType::NEIGHBOR_SURFACE) {
+      Geometry.levels[in_level].surfaces[i]->send_up_inner_dofs();
+    }
+  }
+  std::cout << "Stage 3"<< std::endl;
+  MPI_Barrier(MPI_COMM_WORLD);
+  // Now I can initialize all the surface-to-surface dof indices
+  for(unsigned int i = 0; i < 6; i++) {
+    Geometry.levels[in_level].surfaces[i]->finish_dof_index_initialization();
+  }
+  print_info("GeometryManager::distribute_dofs_on_level", "End level " + std::to_string(in_level));
 }
 
 dealii::Tensor<2,3> GeometryManager::get_epsilon_tensor(const Position & in_p) {
@@ -504,4 +433,167 @@ Direction GeometryManager::get_direction_for_boundary_id(BoundaryId in_bid) {
       std::cout << "Weird call in get direction for boundary id function" << std::endl;
       return Direction::MinusX;
   }
+}
+
+SurfaceType GeometryManager::get_surface_type(BoundaryId b_id, unsigned int in_level) {
+  if(in_level == 0) {
+    if(b_id == 4) {
+      if(GlobalParams.Index_in_z_direction == 0) {
+        if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
+          return SurfaceType::DIRICHLET_SURFACE;
+        } else {
+          return SurfaceType::ABC_SURFACE;
+        }
+      } else {
+        return SurfaceType::OPEN_SURFACE;
+      }
+    }
+    return SurfaceType::ABC_SURFACE;
+  }
+  if(in_level == 1) {
+    if(b_id == 4) {
+      if(GlobalParams.Index_in_z_direction == 0) {
+        if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
+          return SurfaceType::DIRICHLET_SURFACE;
+        } else {
+          return SurfaceType::ABC_SURFACE;
+        }
+      } else {
+        return SurfaceType::NEIGHBOR_SURFACE;
+      }
+    }
+    if(b_id == 5) {
+      if(GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction - 1) {
+        return SurfaceType::ABC_SURFACE;
+      } else {
+        return SurfaceType::NEIGHBOR_SURFACE;
+      }
+    }
+    return SurfaceType::ABC_SURFACE;
+  }
+  if(in_level == 2) {
+     if(b_id == 2) {
+      if(GlobalParams.Index_in_y_direction == 0) {
+        return SurfaceType::ABC_SURFACE;
+      } else {
+        return SurfaceType::NEIGHBOR_SURFACE;
+      }
+    }
+    if(b_id == 3) {
+      if(GlobalParams.Index_in_y_direction == GlobalParams.Blocks_in_y_direction - 1) {
+        return SurfaceType::ABC_SURFACE;
+      } else {
+        return SurfaceType::NEIGHBOR_SURFACE;
+      }
+    }
+    if(b_id == 4) {
+      if(GlobalParams.Index_in_z_direction == 0) {
+        if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
+          return SurfaceType::DIRICHLET_SURFACE;
+        } else {
+          return SurfaceType::ABC_SURFACE;
+        }
+      } else {
+        return SurfaceType::NEIGHBOR_SURFACE;
+      }
+    }
+    if(b_id == 5) {
+      if(GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction - 1) {
+        return SurfaceType::ABC_SURFACE;
+      } else {
+        return SurfaceType::NEIGHBOR_SURFACE;
+      }
+    }
+    return SurfaceType::ABC_SURFACE;
+  }
+  if(in_level == 3) {
+    if(b_id == 0) {
+      if(GlobalParams.Index_in_x_direction == 0) {
+        return SurfaceType::ABC_SURFACE;
+      } else {
+        return SurfaceType::NEIGHBOR_SURFACE;
+      }
+    }
+    if(b_id == 1) {
+      if(GlobalParams.Index_in_x_direction == GlobalParams.Blocks_in_x_direction - 1) {
+        return SurfaceType::ABC_SURFACE;
+      } else {
+        return SurfaceType::NEIGHBOR_SURFACE;
+      }
+    }
+    if(b_id == 2) {
+      if(GlobalParams.Index_in_y_direction == 0) {
+        return SurfaceType::ABC_SURFACE;
+      } else {
+        return SurfaceType::NEIGHBOR_SURFACE;
+      }
+    }
+    if(b_id == 3) {
+      if(GlobalParams.Index_in_y_direction == GlobalParams.Blocks_in_y_direction - 1) {
+        return SurfaceType::ABC_SURFACE;
+      } else {
+        return SurfaceType::NEIGHBOR_SURFACE;
+      }
+    }
+    if(b_id == 4) {
+      if(GlobalParams.Index_in_z_direction == 0) {
+        if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
+          return SurfaceType::DIRICHLET_SURFACE;
+        } else {
+          return SurfaceType::ABC_SURFACE;
+        }
+      } else {
+        return SurfaceType::NEIGHBOR_SURFACE;
+      }
+    }
+    if(b_id == 5) {
+      if(GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction - 1) {
+        return SurfaceType::ABC_SURFACE;
+      } else {
+        return SurfaceType::NEIGHBOR_SURFACE;
+      }
+    }
+    return SurfaceType::ABC_SURFACE;
+  }
+}
+
+void GeometryManager::set_surface_types_and_properties(unsigned int in_level) {
+  for(unsigned int i = 0; i < 6; i++) {
+    levels[in_level].surface_type[i] = get_surface_type(i,in_level);
+    levels[in_level].is_surface_truncated[i] = (levels[in_level].surface_type[i] == SurfaceType::ABC_SURFACE);
+  }
+}
+
+void GeometryManager::initialize_surfaces_on_level(unsigned int in_level) {
+  for(unsigned int surf = 0; surf < 6; surf++) {
+    switch (levels[in_level].surface_type[surf])
+    {
+      case SurfaceType::ABC_SURFACE:
+        if(GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE) {
+          levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new HSIESurface(surf, in_level));
+        } else {
+          levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new PMLSurface(surf, in_level));
+        }
+        break;
+      case SurfaceType::DIRICHLET_SURFACE:
+        levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new DirichletSurface(surf, in_level));
+        break;
+      case SurfaceType::NEIGHBOR_SURFACE:
+        levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new NeighborSurface(surf, in_level));
+        break;
+      case SurfaceType::OPEN_SURFACE:
+        levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new EmptySurface(surf,in_level));
+        break;
+      default:
+        break;
+    }
+    levels[in_level].surfaces[surf]->initialize();
+  }
+}
+
+void GeometryManager::initialize_level(unsigned int in_level) {
+  initialize_inner_domain(in_level);
+  set_surface_types_and_properties(in_level);
+  initialize_surfaces_on_level(in_level);
+  distribute_dofs_on_level(in_level);
 }

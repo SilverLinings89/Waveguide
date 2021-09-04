@@ -255,65 +255,9 @@ void NonLocalProblem::assemble() {
   MPI_Barrier(MPI_COMM_WORLD);
   print_info("NonLocalProblem::assemble", "Compress vectors.");
   solution.compress(dealii::VectorOperation::add);
-  MPI_Barrier(MPI_COMM_WORLD);
-  print_info("NonLocalProblem::assemble", "Assemble local system for vmult.");
-  assemble_local_system();
-  MPI_Barrier(MPI_COMM_WORLD);
   print_info("NonLocalProblem::assemble", "End assembly.");
 }
 
-void NonLocalProblem::assemble_local_system() {
-  local.n_dofs = Geometry.levels[level].n_local_dofs;
-  local.local_dofs = dealii::IndexSet(local.n_dofs);
-  local.local_dofs.add_range(0, local.n_dofs);
-  local.constraints = Constraints(local.local_dofs);
-  local.lower_sweeping_dofs.set_size(local.n_dofs);
-  local.upper_sweeping_dofs.set_size(local.n_dofs);
-  for(unsigned int i = 0; i < lower_interface_dofs.n_elements(); i++) {
-    local.lower_sweeping_dofs.add_index(lower_interface_dofs.nth_index_in_set(i));
-  }
-  for(unsigned int i = 0; i < upper_interface_dofs.n_elements(); i++) {
-    local.upper_sweeping_dofs.add_index(upper_interface_dofs.nth_index_in_set(i));
-  }
-  local.constraints.reinit(local.local_dofs);
-  // fill constraints here
-  for(unsigned int dof = Geometry.levels[level].inner_first_dof; dof < Geometry.levels[level].inner_first_dof + Geometry.levels[level].n_local_dofs; dof++) {
-    if(constraints.is_constrained(dof) && (!local.lower_sweeping_dofs.is_element(dof - Geometry.levels[level].inner_first_dof))) {
-      local.constraints.add_line(dof - Geometry.levels[level].inner_first_dof);
-      if(constraints.is_inhomogeneously_constrained(dof)) {
-        local.constraints.set_inhomogeneity(dof - Geometry.levels[level].inner_first_dof, constraints.get_inhomogeneity(dof));
-      }
-
-      for(auto it : *constraints.get_constraint_entries(dof)) {
-        if(it.first >= Geometry.levels[level].inner_first_dof && it.first <  Geometry.levels[level].inner_first_dof + Geometry.levels[level].n_local_dofs) {
-          local.constraints.add_entry(dof - Geometry.levels[level].inner_first_dof, it.first - Geometry.levels[level].inner_first_dof, it.second);
-        }
-      }
-    }
-  }
-  local.constraints.close();
-
-  dealii::DynamicSparsityPattern dsp(local.local_dofs);
-  // fill dsp here
-  for(unsigned int dof = Geometry.levels[level].inner_first_dof; dof < Geometry.levels[level].inner_first_dof + Geometry.levels[level].n_local_dofs; dof++) {
-    for(dealii::SparsityPattern::iterator it = sp.begin(dof); it < sp.end(dof); it++) {
-      if(it->column() >= Geometry.levels[level].inner_first_dof && it->column() < Geometry.levels[level].inner_first_dof + Geometry.levels[level].n_local_dofs) {
-        dsp.add(it->row() - Geometry.levels[level].inner_first_dof, it->column() - Geometry.levels[level].inner_first_dof);
-      }
-    }
-  }
-
-  local.sp.copy_from(dsp);
-  local.matrix.reinit(local.sp);
-
-  // fill matrix here
-  Geometry.levels[level].inner_domain->assemble_system(&local.constraints, &local.matrix);
-  for(unsigned int surf = 0; surf < 6; surf++) {
-    if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
-      Geometry.levels[level].surfaces[surf]->fill_matrix(&local.matrix, &local.constraints);
-    }
-  }
-}
 
 dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
   dealii::Vector<ComplexNumber> ret(Geometry.levels[level].n_local_dofs);
@@ -707,7 +651,7 @@ dealii::IndexSet NonLocalProblem::compute_interface_dof_set(BoundaryId interface
   dealii::IndexSet ret(Geometry.levels[level].n_total_level_dofs);
   std::vector<InterfaceDofData> inner_interface_dofs = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_boundary_id(interface_id);
   for(unsigned int j = 0; j < inner_interface_dofs.size(); j++) {
-    ret.add_index(inner_interface_dofs[j].index);
+    ret.add_index(Geometry.levels[level].inner_domain->global_index_mapping[inner_interface_dofs[j].index]);
   }
   
   for(unsigned int i = 0; i < 6; i++) {
@@ -715,7 +659,7 @@ dealii::IndexSet NonLocalProblem::compute_interface_dof_set(BoundaryId interface
       if(Geometry.levels[level].is_surface_truncated[i]) {
         std::vector<InterfaceDofData> surface_interface_dofs = Geometry.levels[level].surfaces[i]->get_dof_association_by_boundary_id(interface_id);
         for(unsigned int j = 0; j < surface_interface_dofs.size(); j++) {
-          ret.add_index(surface_interface_dofs[j].index - Geometry.levels[level].inner_first_dof); 
+          ret.add_index(Geometry.levels[level].surfaces[i]->global_index_mapping[surface_interface_dofs[j].index]); 
         }
       }
     }

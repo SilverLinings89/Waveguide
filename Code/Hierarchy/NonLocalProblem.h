@@ -48,8 +48,6 @@ private:
 
   void assemble() override;
 
-  void assemble_local_system();
-
   void solve() override;
 
   void apply_sweep(Vec x_in, Vec x_out);

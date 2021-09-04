@@ -47,6 +47,7 @@ auto HierarchicalProblem::opposing_site_bid(BoundaryId in_bid) -> BoundaryId {
 
 void HierarchicalProblem::make_constraints() {
   print_info("HierarchicalProblem::make_constraints", "Start");
+  distribute_global_indices();
   IndexSet total_dofs_global(Geometry.levels[level].n_total_level_dofs);
   total_dofs_global.add_range(0,Geometry.levels[level].n_total_level_dofs);
   constraints.reinit(total_dofs_global);
@@ -140,14 +141,7 @@ void HierarchicalProblem::compute_rhs_representation_of_incoming_wave() {
 }
 
 void HierarchicalProblem::distribute_global_indices() {
-  for(unsigned int i = 0; i < 6; i += 2) {
-    if(Geometry.levels[level].surface_type[i] == SurfaceType::NEIGHBOR_SURFACE) {
-      Geometry.levels[level].surfaces[i]->receive_from_below_dofs();
-    }
-  }
-  for(unsigned int i = 1; i < 6; i += 2) {
-    if(Geometry.levels[level].surface_type[i] == SurfaceType::NEIGHBOR_SURFACE) {
-      Geometry.levels[level].surfaces[i]->send_up_inner_dofs();
-    }
-  }
+  // First receive all dofs from below
+
+
 }

@@ -511,11 +511,11 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
 }
 
 
-DofCount InnerDomain::compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) {
+DofCount InnerDomain::compute_n_locally_owned_dofs() {
   IndexSet set_of_locally_owned_dofs(dof_handler.n_dofs());
   set_of_locally_owned_dofs.add_range(0,dof_handler.n_dofs());
   IndexSet dofs_to_remove(dof_handler.n_dofs());
-  for(unsigned int surf = 0; surf < 6; surf++) {
+  for(unsigned int surf = 0; surf < 6; surf += 2) {
     if(Geometry.levels[level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE) {
       std::vector<InterfaceDofData> dofs = get_surface_dof_vector_for_boundary_id(surf);
       for(unsigned int i = 0; i < dofs.size(); i++) {
@@ -529,4 +529,17 @@ DofCount InnerDomain::compute_n_locally_owned_dofs(std::array<bool, 6> is_locall
 
 DofCount InnerDomain::compute_n_locally_active_dofs() {
   return dof_handler.n_dofs();
+}
+
+void InnerDomain::determine_non_owned_dofs() {
+  for(unsigned int i = 0; i < 6; i += 2) {
+    if(Geometry.levels[level].surface_type[i] == SurfaceType::NEIGHBOR_SURFACE) {
+      std::vector<InterfaceDofData> dof_data = get_surface_dof_vector_for_boundary_id(i);
+      std::vector<unsigned int> local_dof_indices(dof_data.size());
+      for(unsigned int j = 0; j < dof_data.size(); j++) {
+        local_dof_indices[j] = dof_data[j].index;
+      }
+      mark_local_dofs_as_non_local(local_dof_indices);
+    }
+  }
 }

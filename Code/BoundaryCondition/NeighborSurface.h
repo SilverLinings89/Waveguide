@@ -40,8 +40,9 @@ class NeighborSurface : public BoundaryCondition {
     void set_boundary_ids();
     std::string output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
     auto get_corner_boundary_id_set() -> std::array<std::pair<BoundaryId, BoundaryId>, 4>;
-    DofCount compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) override;
+    DofCount compute_n_locally_owned_dofs() override;
     DofCount compute_n_locally_active_dofs() override;
     void send_up_inner_dofs() override;
     void receive_from_below_dofs() override;
+    void determine_non_owned_dofs() override;
 };

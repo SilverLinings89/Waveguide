@@ -23,6 +23,7 @@ class EmptySurface : public BoundaryCondition {
     auto get_dof_association() -> std::vector<InterfaceDofData> override;
     auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> override;
     std::string output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
-    DofCount compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) override;
+    DofCount compute_n_locally_owned_dofs() override;
     DofCount compute_n_locally_active_dofs() override;
+    void determine_non_owned_dofs() override;
 };

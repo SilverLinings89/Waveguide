@@ -54,6 +54,9 @@ class PMLSurface : public BoundaryCondition {
     void fix_apply_negative_Jacobian_transformation(dealii::Triangulation<3> * in_tria);
     std::string output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
     void validate_meshes();
-    DofCount compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) override;
+    DofCount compute_n_locally_owned_dofs() override;
     DofCount compute_n_locally_active_dofs() override;
+    void finish_dof_index_initialization() override;
+    void determine_non_owned_dofs() override;
+    dealii::IndexSet compute_non_owned_dofs();
 };

@@ -3,7 +3,6 @@
 FEDomain::FEDomain() {
     n_locally_active_dofs = 0;
     n_locally_owned_dofs = 0;
-    first_own_dof = UINT_MAX;
 }
 
 void FEDomain::initialize_dof_counts(DofCount in_n_locally_active_dofs, DofCount in_n_locally_owned_dofs) {
@@ -23,6 +22,7 @@ bool FEDomain::finish_initialization(DofNumber first_own_index) {
         }
     }
     if(n_non_owned_dofs + n_locally_owned_dofs != n_locally_active_dofs) {
+        std::cout << "CASE A: Non owned: " << n_non_owned_dofs << " Owned: " << n_locally_owned_dofs << " but should be " << n_locally_active_dofs << " and " << first_own_index <<  std::endl;
         return false;
     }
     DofNumber running_index = first_own_index;
@@ -44,6 +44,9 @@ std::vector<DofNumber> FEDomain::transform_local_to_global_dofs(std::vector<DofN
 }
 
 void FEDomain::set_non_local_dof_indices(DofIndexVector local_indices, DofIndexVector global_indices) {
+    if(local_indices.size() != global_indices.size()) {
+        std::cout << "There was a vector size mismatch in FEDomain::set_non_local_dof_indices( " << local_indices.size() << " vs " << global_indices.size() << ")" << std::endl;
+    }
     for(unsigned int i = 0; i < local_indices.size(); i++) {
         global_index_mapping[local_indices[i]] = global_indices[i];
     }

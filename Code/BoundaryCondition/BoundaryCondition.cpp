@@ -10,7 +10,12 @@ BoundaryCondition::BoundaryCondition(unsigned int in_bid, unsigned int in_level,
   b_id(in_bid),
   level(in_level),
   additional_coordinate(in_additional_coordinate) {
-
+  is_surface_owned[0] = {true , true , false, true,  false, true };
+  is_surface_owned[1] = {true , true , false, true,  false, true };
+  is_surface_owned[2] = {true,  true,  true , true , false, true };
+  is_surface_owned[3] = {false, false, true , true , false, true };
+  is_surface_owned[4] = {true,  true,  true,  true,  true , true };
+  is_surface_owned[5] = {false, false, false, false, true , true };
 }
 
 void BoundaryCondition::identify_corner_cells() {
@@ -97,4 +102,14 @@ void BoundaryCondition::send_up_inner_dofs() {
 
 void BoundaryCondition::receive_from_below_dofs() {
   std::cout << "BoundaryCondition::receive_from_below_dofs() should not be called. It should only be called in derived classes!" << std::endl;
+}
+
+void BoundaryCondition::finish_dof_index_initialization() {
+  for(unsigned int surf = 0; surf < 6; surf++) {
+    if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
+      if(surf != b_id && !are_opposing_sites(surf, b_id)) {
+
+      }
+    }
+  }
 }

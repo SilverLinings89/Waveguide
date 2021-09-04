@@ -77,10 +77,14 @@ std::string DirichletSurface::output_results(const dealii::Vector<ComplexNumber>
 
 void DirichletSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern * , Constraints * ) { }
 
-DofCount DirichletSurface::compute_n_locally_owned_dofs(std::array<bool, 6> is_locally_owned_surfac) {
+DofCount DirichletSurface::compute_n_locally_owned_dofs() {
     return 0;
 }
 
 DofCount DirichletSurface::compute_n_locally_active_dofs() {
     return 0;
+}
+
+void DirichletSurface::determine_non_owned_dofs() {
+
 }
