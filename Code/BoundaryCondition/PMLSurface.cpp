@@ -15,6 +15,7 @@
 #include <mpi.h>
 #include <string>
 #include "./BoundaryCondition.h"
+#include "./NeighborSurface.h"
 #include "PMLMeshTransformation.h"
 
 PMLSurface::PMLSurface(unsigned int surface, unsigned int in_level)
@@ -643,15 +644,25 @@ DofCount PMLSurface::compute_n_locally_active_dofs() {
 
 void PMLSurface::finish_dof_index_initialization() {
   for(unsigned int surf = 0; surf < 6; surf++) {
-    if(!is_surface_owned[b_id][surf] && (Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE || Geometry.levels[level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE)) {
-      DofIndexVector dofs_in_global_numbering = Geometry.levels[level].surfaces[surf]->get_global_dof_indices_by_boundary_id(b_id);
-      std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(surf);
-      DofIndexVector dofs_in_local_numbering(local_interface_data.size());
-      for(unsigned int i = 0; i < local_interface_data.size(); i++) {
-        dofs_in_local_numbering[i] = local_interface_data[i].index;
+    if(!is_surface_owned[b_id][surf]) {
+      if (Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
+        DofIndexVector dofs_in_global_numbering = Geometry.levels[level].surfaces[surf]->get_global_dof_indices_by_boundary_id(b_id);
+        std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(surf);
+        DofIndexVector dofs_in_local_numbering(local_interface_data.size());
+        for(unsigned int i = 0; i < local_interface_data.size(); i++) {
+          dofs_in_local_numbering[i] = local_interface_data[i].index;
+        }
+        set_non_local_dof_indices(dofs_in_local_numbering, dofs_in_global_numbering);
       }
-      std::cout << "(" << GlobalParams.MPI_Rank << ", " << b_id << ", " << dofs_in_local_numbering.size() << " , " << dofs_in_global_numbering.size() << ")" << std::endl;
-      set_non_local_dof_indices(dofs_in_local_numbering, dofs_in_global_numbering);
+      if(Geometry.levels[level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE) {
+        DofIndexVector global_indices = Geometry.levels[level].surfaces[surf]->receive_boundary_dofs(surf);
+        std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(surf);
+        DofIndexVector dofs_in_local_numbering(local_interface_data.size());
+        for(unsigned int i = 0; i < local_interface_data.size(); i++) {
+          dofs_in_local_numbering[i] = local_interface_data[i].index;
+        }
+        set_non_local_dof_indices(dofs_in_local_numbering, global_indices);
+      }
     }
   }
 }

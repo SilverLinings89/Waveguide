@@ -45,4 +45,7 @@ class NeighborSurface : public BoundaryCondition {
     void send_up_inner_dofs() override;
     void receive_from_below_dofs() override;
     void determine_non_owned_dofs() override;
+    void send_up_boundary_dofs(unsigned int other_bid);
+    std::vector<DofNumber> receive_boundary_dofs(unsigned int other_bid) override;
+    void finish_dof_index_initialization() override;
 };

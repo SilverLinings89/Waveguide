@@ -44,17 +44,14 @@ void GeometryManager::initialize() {
   
   initialize_level(0);
   validate_global_dof_indices(0);
-  MPI_Barrier(MPI_COMM_WORLD);
   if(GlobalParams.Blocks_in_z_direction != 1) {
     initialize_level(1);
     validate_global_dof_indices(1);
   }
-  MPI_Barrier(MPI_COMM_WORLD);
   if(GlobalParams.Blocks_in_y_direction != 1) {
     initialize_level(2);
     validate_global_dof_indices(2);
   }
-  MPI_Barrier(MPI_COMM_WORLD);
   if(GlobalParams.Blocks_in_x_direction != 1) {
     initialize_level(3);
     validate_global_dof_indices(3);
@@ -129,7 +126,6 @@ void GeometryManager::validate_global_dof_indices(unsigned int in_level) {
 }
 
 void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
-  print_info("GeometryManager::distribute_dofs_on_level", "Start level " + std::to_string(in_level));
   unsigned int n_owned_dofs = 0;
   levels[in_level].inner_domain->initialize_dof_counts(levels[in_level].inner_domain->compute_n_locally_active_dofs(), levels[in_level].inner_domain->compute_n_locally_owned_dofs());
   n_owned_dofs += levels[in_level].inner_domain->n_locally_owned_dofs;
@@ -151,13 +147,12 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   }
   levels[in_level].n_local_dofs = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].n_elements();
   levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution[0].size();
-  std::cout << "Stage 2"<< std::endl;
-  MPI_Barrier(MPI_COMM_WORLD);
   for(unsigned int i = 0; i < 6; i += 2) {
     if(Geometry.levels[in_level].surface_type[i] == SurfaceType::NEIGHBOR_SURFACE) {
       Geometry.levels[in_level].surfaces[i]->receive_from_below_dofs();
     }
   }
+  std::cout << "done receiving" << std::endl;
   // Since all the information only depends on the inner domain, I can now send
   // the global dof indices to the upper neighbor
   for(unsigned int i = 1; i < 6; i += 2) {
@@ -165,13 +160,13 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
       Geometry.levels[in_level].surfaces[i]->send_up_inner_dofs();
     }
   }
-  std::cout << "Stage 3"<< std::endl;
-  MPI_Barrier(MPI_COMM_WORLD);
+  std::cout << "done sending" << std::endl;
   // Now I can initialize all the surface-to-surface dof indices
   for(unsigned int i = 0; i < 6; i++) {
     Geometry.levels[in_level].surfaces[i]->finish_dof_index_initialization();
+    std::cout << "On proc " << GlobalParams.MPI_Rank << " surf " << i << " is done."<< std::endl;
   }
-  print_info("GeometryManager::distribute_dofs_on_level", "End level " + std::to_string(in_level));
+  std::cout << "done initializing on level " << in_level << std::endl;
 }
 
 dealii::Tensor<2,3> GeometryManager::get_epsilon_tensor(const Position & in_p) {
@@ -592,8 +587,10 @@ void GeometryManager::initialize_surfaces_on_level(unsigned int in_level) {
 }
 
 void GeometryManager::initialize_level(unsigned int in_level) {
+  print_info("GeometryManager::initialize_level", "Start level " + std::to_string(in_level));
   initialize_inner_domain(in_level);
   set_surface_types_and_properties(in_level);
   initialize_surfaces_on_level(in_level);
   distribute_dofs_on_level(in_level);
+  print_info("GeometryManager::initialize_level", "End level " + std::to_string(in_level));
 }

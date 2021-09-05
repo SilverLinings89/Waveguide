@@ -105,11 +105,11 @@ void BoundaryCondition::receive_from_below_dofs() {
 }
 
 void BoundaryCondition::finish_dof_index_initialization() {
-  for(unsigned int surf = 0; surf < 6; surf++) {
-    if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
-      if(surf != b_id && !are_opposing_sites(surf, b_id)) {
 
-      }
-    }
-  }
+}
+
+std::vector<DofNumber> BoundaryCondition::receive_boundary_dofs(unsigned int other_bid) {
+  std::vector<DofNumber> ret;
+  std::cout << "BoundaryCondition::receive_boundary_dofs got called but never should." << std::endl;
+  return ret;
 }

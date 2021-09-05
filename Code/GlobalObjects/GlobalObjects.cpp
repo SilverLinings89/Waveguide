@@ -21,4 +21,5 @@ void initialize_global_variables(const std::string run_file, const std::string c
   GlobalOutputManager.initialize();
 
   GlobalTimerManager.initialize();
+  print_info("GlobalPreparation", "Complete");
 }

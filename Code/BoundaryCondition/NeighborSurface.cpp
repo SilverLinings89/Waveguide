@@ -199,9 +199,7 @@ void NeighborSurface::receive_from_below_dofs() {
         local_indices[i] = dofs[i].index;
     } 
     unsigned int * dof_indices = new unsigned int[n_dofs];
-    std::cout << "RC" << std::endl;
     MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0);
-    std::cout << "RD" << std::endl;
     DofIndexVector global_indices(n_dofs);
     for(unsigned int i = 0; i < n_dofs; i++){
         global_indices[i] = dof_indices[i];
@@ -211,4 +209,43 @@ void NeighborSurface::receive_from_below_dofs() {
 
 void NeighborSurface::determine_non_owned_dofs() {
 
+}
+
+void NeighborSurface::send_up_boundary_dofs(unsigned int other_bid) {
+	if(other_bid != b_id && !are_opposing_sites(other_bid, b_id)) {
+		if(Geometry.levels[level].surface_type[other_bid] == SurfaceType::ABC_SURFACE) {
+			std::vector<InterfaceDofData> dof_data = Geometry.levels[level].surfaces[other_bid]->get_dof_association_by_boundary_id(b_id);
+			const unsigned int n_dofs = dof_data.size();
+			std::vector<DofNumber> indices(n_dofs);
+			for(unsigned int i = 0; i < n_dofs; i++) {
+				indices[i] = dof_data[i].index;
+			}
+			indices = Geometry.levels[level].surfaces[other_bid]->transform_local_to_global_dofs(indices);
+			unsigned int * global_indices = new unsigned int [n_dofs];
+			for(unsigned int i = 0; i < n_dofs; i++) {
+				global_indices[i] = indices[i];
+			}
+			MPI_Send(global_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, 0, MPI_COMM_WORLD);
+		}
+	}
+}
+
+std::vector<DofNumber> NeighborSurface::receive_boundary_dofs(unsigned int other_bid) {
+    std::vector<DofNumber> ret;
+    const unsigned int n_dofs = Geometry.levels[level].surfaces[other_bid]->get_dof_association_by_boundary_id(b_id).size();
+    unsigned int * dof_indices = new unsigned int [n_dofs];
+    MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0);
+    ret.resize(n_dofs);
+    for(unsigned int i = 0; i < n_dofs; i++) {
+        ret[i] = dof_indices[i];
+    }
+    return ret;
+}
+
+void NeighborSurface::finish_dof_index_initialization() {
+	if(b_id % 2 == 1) {
+		for(unsigned int surf = 0; surf < 6; surf++) {
+			send_up_boundary_dofs(surf);
+		}
+	}
 }

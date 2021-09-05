@@ -358,4 +358,4 @@ I have decided to go this way because all the calls to get_dof_association will 
 
 # Saturday, 4th of august
 
-By now, the local level initializes but the code breaks in the non-local initialization.
+By now, the local level initializes but the code breaks in the non-local initialization. Refactored the Geometry Manager to align function names with content and to make the structure more clear. That structure works now. Fixing dof commmunication of neighbor surfaces. Initialization now finishes.
