@@ -574,7 +574,9 @@ void GeometryManager::initialize_surfaces_on_level(unsigned int in_level) {
         levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new DirichletSurface(surf, in_level));
         break;
       case SurfaceType::NEIGHBOR_SURFACE:
-        levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new NeighborSurface(surf, in_level));
+        NeighborSurface * new_surf = new NeighborSurface(surf, in_level);
+        levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new_surf);
+        levels[in_level].neighbor_surfaces.push_back(std::shared_ptr<NeighborSurface>(new_surf));
         break;
       case SurfaceType::OPEN_SURFACE:
         levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new EmptySurface(surf,in_level));

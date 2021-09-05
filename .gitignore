@@ -83,3 +83,7 @@ build
 *.pc
 .clangd
 waveguide_tests
+
+GPATH
+GRTAGS
+GTAGS

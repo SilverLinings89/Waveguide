@@ -19,6 +19,7 @@ struct LevelGeometry {
   DofNumber n_local_dofs;
   DofNumber n_total_level_dofs;
   InnerDomain * inner_domain;
+  std::vector<std::shared_ptr<NeighborSurface>> neighbor_surfaces;
 };
 
 class GeometryManager {
