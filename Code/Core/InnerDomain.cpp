@@ -116,14 +116,12 @@ std::vector<unsigned int> InnerDomain::dofs_for_cell_around_point(
   return ret;
 }
 
-void InnerDomain::make_sparsity_pattern( dealii::DynamicSparsityPattern *in_pattern, unsigned int shift, Constraints *in_constraints) {
+void InnerDomain::fill_sparsity_pattern( dealii::DynamicSparsityPattern *in_pattern, Constraints *in_constraints) {
   auto end = dof_handler.end();
   std::vector<DofNumber> cell_dof_indices(fe.dofs_per_cell);
   for(auto cell = dof_handler.begin_active(); cell != end; cell++) {
     cell->get_dof_indices(cell_dof_indices);
-    for(unsigned int i = 0; i < fe.dofs_per_cell; i++) {
-      cell_dof_indices[i] += shift; 
-    }
+    cell_dof_indices = transform_local_to_global_dofs(cell_dof_indices);
     in_constraints->add_entries_local_to_global(cell_dof_indices, *in_pattern);
   }
 }

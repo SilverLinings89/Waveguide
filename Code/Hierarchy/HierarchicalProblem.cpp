@@ -64,7 +64,7 @@ void HierarchicalProblem::make_sparsity_pattern() {
   dealii::IndexSet is(Geometry.levels[level].n_total_level_dofs);
   is.add_range(0, Geometry.levels[level].n_total_level_dofs);
   
-  Geometry.levels[level].inner_domain->make_sparsity_pattern(&dsp, Geometry.levels[level].inner_first_dof, &constraints);
+  Geometry.levels[level].inner_domain->fill_sparsity_pattern(&dsp, &constraints);
   for (unsigned int surface = 0; surface < 6; surface++) {
     Geometry.levels[level].surfaces[surface]->fill_sparsity_pattern(&dsp, &constraints);
   }

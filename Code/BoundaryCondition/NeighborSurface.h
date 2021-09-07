@@ -14,6 +14,8 @@ class NeighborSurface : public BoundaryCondition {
     std::array<std::set<unsigned int>, 6> edge_ids_by_boundary_id;
     std::array<std::set<unsigned int>, 6> face_ids_by_boundary_id;
     std::array<std::vector<InterfaceDofData>, 6> dof_indices_by_boundary_id;
+    std::array<std::vector<unsigned int>, 6> boundary_dofs;
+    std::vector<unsigned int> inner_dofs;
 
     NeighborSurface(unsigned int in_bid, unsigned int in_level);
     ~NeighborSurface();
@@ -48,4 +50,5 @@ class NeighborSurface : public BoundaryCondition {
     void send_up_boundary_dofs(unsigned int other_bid);
     std::vector<DofNumber> receive_boundary_dofs(unsigned int other_bid) override;
     void finish_dof_index_initialization() override;
+    void distribute_dof_indices();
 };

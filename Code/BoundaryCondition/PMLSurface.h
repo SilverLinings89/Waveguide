@@ -59,4 +59,5 @@ class PMLSurface : public BoundaryCondition {
     void finish_dof_index_initialization() override;
     void determine_non_owned_dofs() override;
     dealii::IndexSet compute_non_owned_dofs();
+    bool finish_initialization(DofNumber first_own_index) override;
 };

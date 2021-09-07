@@ -438,6 +438,10 @@ void PMLSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, C
   for(auto it = dof_h_nedelec.begin_active(); it != dof_h_nedelec.end(); it++) {
     it->get_dof_indices(local_indices);
     local_indices = transform_local_to_global_dofs(local_indices);
+    for(unsigned int i = 0; i < local_indices.size(); i++) {
+      std::cout << local_indices[i] << " ";
+    } 
+    std::cout << std::endl;
     in_constraints->add_entries_local_to_global(local_indices, *in_dsp);
   }
 }
@@ -654,15 +658,6 @@ void PMLSurface::finish_dof_index_initialization() {
         }
         set_non_local_dof_indices(dofs_in_local_numbering, dofs_in_global_numbering);
       }
-      if(Geometry.levels[level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE) {
-        DofIndexVector global_indices = Geometry.levels[level].surfaces[surf]->receive_boundary_dofs(surf);
-        std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(surf);
-        DofIndexVector dofs_in_local_numbering(local_interface_data.size());
-        for(unsigned int i = 0; i < local_interface_data.size(); i++) {
-          dofs_in_local_numbering[i] = local_interface_data[i].index;
-        }
-        set_non_local_dof_indices(dofs_in_local_numbering, global_indices);
-      }
     }
   }
 }
@@ -675,4 +670,16 @@ void PMLSurface::determine_non_owned_dofs() {
     local_dofs[i] = non_owned_dofs.nth_index_in_set(i);
   }
   mark_local_dofs_as_non_local(local_dofs);
+}
+
+bool PMLSurface::finish_initialization(DofNumber index) {
+  std::vector<InterfaceDofData> dofs = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_boundary_id(b_id);
+  std::vector<InterfaceDofData> own = get_dof_association();
+  std::vector<unsigned int> local_indices, global_indices;
+  for(unsigned int i = 0; i < dofs.size(); i++) {
+    local_indices.push_back(own[i].index);
+    global_indices.push_back(dofs[i].index);
+  }
+  set_non_local_dof_indices(local_indices, global_indices);
+  return FEDomain::finish_initialization(index);
 }

@@ -21,6 +21,16 @@ unsigned int count_occurences_of_max_uint(std::vector<unsigned int> vector) {
   return ret;
 }
 
+unsigned int count_occurences_of_zero(std::vector<unsigned int> vector) {
+  unsigned int ret = 0;
+  for(unsigned int i = 0; i < vector.size(); i++) {
+    if(vector[i] == 0) {
+      ret++;
+    }
+  }
+  return ret;
+}
+
 GeometryManager::GeometryManager() {
   are_surface_meshes_initialized = false;
 }
@@ -139,6 +149,12 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   for(unsigned int i = 0; i < 6; i++) {
     levels[in_level].surfaces[i]->determine_non_owned_dofs();
   }
+
+  levels[in_level].inner_domain->freeze_ownership();
+  for(unsigned int i = 0; i < 6; i++) {
+    levels[in_level].surfaces[i]->freeze_ownership();
+  }
+
   levels[in_level].inner_domain->finish_initialization(first_dof);
   first_dof += levels[in_level].inner_domain->n_locally_owned_dofs;
   for(unsigned int i = 0; i < 6; i++) {
@@ -147,26 +163,17 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   }
   levels[in_level].n_local_dofs = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].n_elements();
   levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution[0].size();
-  for(unsigned int i = 0; i < 6; i += 2) {
-    if(Geometry.levels[in_level].surface_type[i] == SurfaceType::NEIGHBOR_SURFACE) {
-      Geometry.levels[in_level].surfaces[i]->receive_from_below_dofs();
-    }
-  }
-  std::cout << "done receiving" << std::endl;
-  // Since all the information only depends on the inner domain, I can now send
-  // the global dof indices to the upper neighbor
-  for(unsigned int i = 1; i < 6; i += 2) {
-    if(Geometry.levels[in_level].surface_type[i] == SurfaceType::NEIGHBOR_SURFACE) {
-      Geometry.levels[in_level].surfaces[i]->send_up_inner_dofs();
-    }
-  }
-  std::cout << "done sending" << std::endl;
+  
   // Now I can initialize all the surface-to-surface dof indices
   for(unsigned int i = 0; i < 6; i++) {
     Geometry.levels[in_level].surfaces[i]->finish_dof_index_initialization();
-    std::cout << "On proc " << GlobalParams.MPI_Rank << " surf " << i << " is done."<< std::endl;
   }
-  std::cout << "done initializing on level " << in_level << std::endl;
+  for(unsigned int i = 0; i < 6; i++) {
+    Geometry.levels[in_level].surfaces[i]->finish_dof_index_initialization();
+  }
+  for(unsigned int i = 0; i < 6; i++) {
+    Geometry.levels[in_level].surfaces[i]->finish_dof_index_initialization();
+  }
 }
 
 dealii::Tensor<2,3> GeometryManager::get_epsilon_tensor(const Position & in_p) {
@@ -574,9 +581,7 @@ void GeometryManager::initialize_surfaces_on_level(unsigned int in_level) {
         levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new DirichletSurface(surf, in_level));
         break;
       case SurfaceType::NEIGHBOR_SURFACE:
-        NeighborSurface * new_surf = new NeighborSurface(surf, in_level);
-        levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new_surf);
-        levels[in_level].neighbor_surfaces.push_back(std::shared_ptr<NeighborSurface>(new_surf));
+        levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new NeighborSurface(surf, in_level));
         break;
       case SurfaceType::OPEN_SURFACE:
         levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new EmptySurface(surf,in_level));

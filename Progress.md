@@ -359,3 +359,22 @@ I have decided to go this way because all the calls to get_dof_association will 
 # Saturday, 4th of august
 
 By now, the local level initializes but the code breaks in the non-local initialization. Refactored the Geometry Manager to align function names with content and to make the structure more clear. That structure works now. Fixing dof commmunication of neighbor surfaces. Initialization now finishes.
+
+# Monday, 6th of august
+
+Most of the core is implemented. I realized that there is an error where apparently the same number as surface dofs of the inner domain is not generated properly on the surfaces. This may either be the interior surface not being initialized properly or it is the outer surface.
+
+The order should be as follows: 
+- Determine dof counts everywhere (in parallel)
+- Receive on all lower neighbor surfaces
+- Initialize all local counts
+- Send all upper neighbor surfaces
+
+The first step can be done in parallel. The important point here is, that every surface and inner domain can determine if a dof is locally owned or not so dof counts can be figured out from the beginning.
+Receiving from below is blocking so this would wait until the lower process(es) have determined all dof indices. Once all lower surfaces have received from their counterpart, all dofs on the level can be numbered as in the necessary information is available. Once that is done, the computed global indices of the upper interface can be sent upward on the neighbor interfaces.
+
+The first step is handled by the call to initialize_dof_counts() and determine_non_owned_dofs() where the first sets the numbers of dofs and initializes the datastructure and the second decides which dof belongs where. Next I call receive on all the neighbor surfaces because they will do nothing if they are upper ones.
+
+The next step is to distribute all local dofs. This is the function finish_initialization() where I pass in the first_own_index in old parlance and initialize all locally owned dofs. Then the dofs need to be distributed such that all the other FEDomains that see this one will receive those values.
+
+In the very last step, all neighbor surfaces send up.

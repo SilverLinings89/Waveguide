@@ -10,12 +10,12 @@ BoundaryCondition::BoundaryCondition(unsigned int in_bid, unsigned int in_level,
   b_id(in_bid),
   level(in_level),
   additional_coordinate(in_additional_coordinate) {
-  is_surface_owned[0] = {true , true , false, true,  false, true };
-  is_surface_owned[1] = {true , true , false, true,  false, true };
-  is_surface_owned[2] = {true,  true,  true , true , false, true };
-  is_surface_owned[3] = {false, false, true , true , false, true };
-  is_surface_owned[4] = {true,  true,  true,  true,  true , true };
-  is_surface_owned[5] = {false, false, false, false, true , true };
+  is_surface_owned[0] = {true , false , false, true,  false, true };
+  is_surface_owned[1] = {false , true , false, true,  false, true };
+  is_surface_owned[2] = {true,  true,  true , false , false, true };
+  is_surface_owned[3] = {false, false, false , true , false, true };
+  is_surface_owned[4] = {true,  true,  true,  true,  true , false };
+  is_surface_owned[5] = {false, false, false, false, false , true };
 }
 
 void BoundaryCondition::identify_corner_cells() {
