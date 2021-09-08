@@ -139,4 +139,8 @@ private:
   NumericVectorLocal distribute_constraints_to_local_vector(const NumericVectorLocal u_in);
 
   void write_multifile_output(const std::string & filename, const NumericVectorDistributed field);
+
+  void communicate_external_dsp(DynamicSparsityPattern * in_dsp);
+
+  void make_sparsity_pattern() override;
 };

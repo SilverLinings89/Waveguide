@@ -58,7 +58,7 @@ class HierarchicalProblem {
   std::string output_results(std::string in_fname_part = "solution_inner_domain_level");
   virtual void reinit_rhs() = 0;
   virtual DofOwner get_dof_owner(unsigned int) = 0;
-  void make_sparsity_pattern();
+  virtual void make_sparsity_pattern();
   void execute_vmult();
   void compute_rhs_representation_of_incoming_wave();
   void initialize_dof_counts();

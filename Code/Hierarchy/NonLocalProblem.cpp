@@ -930,3 +930,95 @@ void NonLocalProblem::write_multifile_output(const std::string & in_filename, co
     Geometry.levels[level].inner_domain->data_out.write_pvtu_record(outputvtu, flattened_filenames);
   }
 }
+
+void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) {
+  std::vector<std::vector<unsigned int>> rows, cols;
+  const unsigned int n_procs = Geometry.levels[level].dof_distribution.size();
+  for(unsigned int i = 0; i < n_procs; i++) {
+    rows.emplace_back();
+    cols.emplace_back();
+  }
+  for(auto it = in_dsp->begin(); it != in_dsp->end(); it++) {
+    if(!own_dofs.is_element(it->row())) {
+      for(unsigned int proc = 0; proc < n_procs; proc++) {
+        if(Geometry.levels[level].dof_distribution[proc].is_element(it->row())) {
+          rows[proc].push_back(it->row());
+          cols[proc].push_back(it->column());
+        }
+      }
+    }
+  }
+  unsigned int entries_by_proc[n_procs];
+  for(unsigned int i = 0; i < n_procs; i++) {
+    entries_by_proc[i] = rows[i].size();
+  }
+  unsigned int recv_buffer[n_procs];
+  MPI_Alltoall(&entries_by_proc, 1, MPI_UNSIGNED, recv_buffer, 1, MPI_UNSIGNED, GlobalMPI.communicators_by_level[level]);
+  for(unsigned int other_proc = 0; other_proc < n_procs; other_proc++) {
+    if(other_proc != rank) {
+      if(recv_buffer[other_proc] != 0 || entries_by_proc[other_proc] != 0) {
+        if(rank < other_proc) {
+          // Send then receive
+          if(entries_by_proc[other_proc] > 0) {
+            unsigned int sent_rows[entries_by_proc[other_proc]];
+            unsigned int sent_cols[entries_by_proc[other_proc]];
+            for(unsigned int i = 0; i < entries_by_proc[other_proc]; i++) {
+              sent_rows[i] = rows[other_proc][i];
+              sent_cols[i] = cols[other_proc][i];
+            }
+            MPI_Send(sent_rows, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, 0, GlobalMPI.communicators_by_level[level]);
+            MPI_Send(sent_cols, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, 0, GlobalMPI.communicators_by_level[level]);
+          }
+          // receive part
+          if(recv_buffer[other_proc] > 0) {
+            // There is something to receive
+            unsigned int received_rows[recv_buffer[other_proc]];
+            unsigned int received_cols[recv_buffer[other_proc]];
+            MPI_Recv(received_rows, recv_buffer[other_proc], MPI_UNSIGNED, other_proc, 0, GlobalMPI.communicators_by_level[level], 0);
+            MPI_Recv(received_cols, recv_buffer[other_proc], MPI_UNSIGNED, other_proc, 0, GlobalMPI.communicators_by_level[level], 0);
+            for(unsigned int i = 0; i < recv_buffer[other_proc]; i++) {
+              in_dsp->add(received_rows[i], received_cols[i]);
+            }
+          }
+        } else {
+          // Receive then send
+          if(recv_buffer[other_proc] > 0) {
+            // There is something to receive
+            unsigned int received_rows[recv_buffer[other_proc]];
+            unsigned int received_cols[recv_buffer[other_proc]];
+            MPI_Recv(received_rows, recv_buffer[other_proc], MPI_UNSIGNED, other_proc, 0, GlobalMPI.communicators_by_level[level], 0);
+            MPI_Recv(received_cols, recv_buffer[other_proc], MPI_UNSIGNED, other_proc, 0, GlobalMPI.communicators_by_level[level], 0);
+            for(unsigned int i = 0; i < recv_buffer[other_proc]; i++) {
+              in_dsp->add(received_rows[i], received_cols[i]);
+            }
+          }
+
+          if(entries_by_proc[other_proc] > 0) {
+            unsigned int sent_rows[entries_by_proc[other_proc]];
+            unsigned int sent_cols[entries_by_proc[other_proc]];
+            for(unsigned int i = 0; i < entries_by_proc[other_proc]; i++) {
+              sent_rows[i] = rows[other_proc][i];
+              sent_cols[i] = cols[other_proc][i];
+            }
+            MPI_Send(sent_rows, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, 0, GlobalMPI.communicators_by_level[level]);
+            MPI_Send(sent_cols, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, 0, GlobalMPI.communicators_by_level[level]);
+          }
+        }     
+      }
+    }
+  }
+}
+
+void NonLocalProblem::make_sparsity_pattern() {
+  print_info("NonLocalProblem::make_sparsity_pattern", "Start on level "  + std::to_string(level));
+  dealii::DynamicSparsityPattern dsp = {Geometry.levels[level].n_total_level_dofs, Geometry.levels[level].n_total_level_dofs};
+  
+  Geometry.levels[level].inner_domain->fill_sparsity_pattern(&dsp, &constraints);
+  for (unsigned int surface = 0; surface < 6; surface++) {
+    Geometry.levels[level].surfaces[surface]->fill_sparsity_pattern(&dsp, &constraints);
+  }
+  communicate_external_dsp(&dsp);
+  sp.copy_from(dsp);
+  sp.compress();
+  print_info("NonLocalProblem::make_sparsity_pattern", "End on level "  + std::to_string(level));
+}

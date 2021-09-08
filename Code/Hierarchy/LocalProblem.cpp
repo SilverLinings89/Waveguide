@@ -48,6 +48,7 @@ LocalProblem::LocalProblem() :
     if((GlobalParams.prescribe_0_on_input_side || (!GlobalParams.use_tapered_input_signal)) && GlobalParams.Index_in_z_direction == 0) {
       // Geometry.levels[0].is_surface_truncated[4] = false;
     }
+    own_dofs = Geometry.levels[0].dof_distribution[0];
 }
 
 LocalProblem::~LocalProblem() {

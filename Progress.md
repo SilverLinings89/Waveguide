@@ -386,4 +386,4 @@ The above logic will be implemented today. It is done. Now I reach vector initia
 # Wednesday, 8th of august
 
 The dof distribution now works. The next step is building the sparsity pattern, wich is complicated, because the lower dofs don't know about the pattern entries the higher processes make. To do this, I must serialize the non-local contribution and send it the the right process.
-The Neighbor surface has all data for this and should handle it.
+The Neighbor surface has all data for this and should handle it. Now reaching pc_apply ao all the initialization seems to work properly.
