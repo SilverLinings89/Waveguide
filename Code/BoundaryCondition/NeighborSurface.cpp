@@ -240,7 +240,7 @@ void NeighborSurface::finish_dof_index_initialization() {
 		for(unsigned int surf = 0; surf < 6; surf++) {
 			if(surf != b_id && !are_opposing_sites(surf, b_id)) {
 				if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
-						send_up_boundary_dofs(surf);
+					send_up_boundary_dofs(surf);
 				}
 			}
 		}

@@ -1,5 +1,8 @@
 #include "HierarchicalProblem.h"
 #include <string>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <sstream>
 #include "../Helpers/Parameters.h"
 #include "../Core/Types.h"
 #include "../Helpers/staticfunctions.h"
@@ -59,10 +62,8 @@ void HierarchicalProblem::make_constraints() {
 }
 
 void HierarchicalProblem::make_sparsity_pattern() {
-  print_info("HierarchicalProblem::make_sparsity_patter", "Start on level "  + std::to_string(level));
+  print_info("HierarchicalProblem::make_sparsity_pattern", "Start on level "  + std::to_string(level));
   dealii::DynamicSparsityPattern dsp = {Geometry.levels[level].n_total_level_dofs, Geometry.levels[level].n_total_level_dofs};
-  dealii::IndexSet is(Geometry.levels[level].n_total_level_dofs);
-  is.add_range(0, Geometry.levels[level].n_total_level_dofs);
   
   Geometry.levels[level].inner_domain->fill_sparsity_pattern(&dsp, &constraints);
   for (unsigned int surface = 0; surface < 6; surface++) {
@@ -71,7 +72,7 @@ void HierarchicalProblem::make_sparsity_pattern() {
   
   sp.copy_from(dsp);
   sp.compress();
-  print_info("HierarchicalProblem::make_sparsity_patter", "End on level "  + std::to_string(level));
+  print_info("HierarchicalProblem::make_sparsity_pattern", "End on level "  + std::to_string(level));
 }
 
 std::string HierarchicalProblem::output_results(std::string in_fname_part) {

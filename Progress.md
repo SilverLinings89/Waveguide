@@ -378,3 +378,12 @@ The first step is handled by the call to initialize_dof_counts() and determine_n
 The next step is to distribute all local dofs. This is the function finish_initialization() where I pass in the first_own_index in old parlance and initialize all locally owned dofs. Then the dofs need to be distributed such that all the other FEDomains that see this one will receive those values.
 
 In the very last step, all neighbor surfaces send up.
+
+# Tuesday, 7th of august
+
+The above logic will be implemented today. It is done. Now I reach vector initialization.
+
+# Wednesday, 8th of august
+
+The dof distribution now works. The next step is building the sparsity pattern, wich is complicated, because the lower dofs don't know about the pattern entries the higher processes make. To do this, I must serialize the non-local contribution and send it the the right process.
+The Neighbor surface has all data for this and should handle it.

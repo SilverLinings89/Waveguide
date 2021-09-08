@@ -438,10 +438,6 @@ void PMLSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, C
   for(auto it = dof_h_nedelec.begin_active(); it != dof_h_nedelec.end(); it++) {
     it->get_dof_indices(local_indices);
     local_indices = transform_local_to_global_dofs(local_indices);
-    for(unsigned int i = 0; i < local_indices.size(); i++) {
-      std::cout << local_indices[i] << " ";
-    } 
-    std::cout << std::endl;
     in_constraints->add_entries_local_to_global(local_indices, *in_dsp);
   }
 }
@@ -615,20 +611,24 @@ DofCount PMLSurface::compute_n_locally_owned_dofs() {
 dealii::IndexSet PMLSurface::compute_non_owned_dofs() {
   IndexSet non_owned_dofs(dof_counter);
   std::vector<unsigned int> non_locally_owned_surfaces;
-  non_locally_owned_surfaces.push_back(b_id);
   for(unsigned int surf = 0; surf < 6; surf++) {
-    if(Geometry.levels[level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE || Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
-      if(!is_surface_owned[b_id][surf]) {
-        non_locally_owned_surfaces.push_back(surf);
+    if(surf != b_id && !are_opposing_sites(surf, b_id)) {
+      if(Geometry.levels[level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE || Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
+        if(!is_surface_owned[b_id][surf]) {
+          non_locally_owned_surfaces.push_back(surf);
+        }
       }
     }
   }
+  
+  non_locally_owned_surfaces.push_back(inner_boundary_id);
+
   std::vector<unsigned int> local_indices(fe_nedelec.dofs_per_face);
   // The non owned surfaces are the one towards the inner domain and the surfaces 0,1 and 2 if they are false in the input.
   for(auto it = dof_h_nedelec.begin_active(); it != dof_h_nedelec.end(); it++) {
     for(unsigned int face = 0; face < 6; face++) {
-      for(auto surf: non_locally_owned_surfaces) {
-        if(it->face(face)->at_boundary()) {
+      if(it->face(face)->at_boundary()) {
+        for(auto surf: non_locally_owned_surfaces) {
           if(it->face(face)->boundary_id() == surf) {
             it->face(face)->get_dof_indices(local_indices);
             for(unsigned int i = 0; i < fe_nedelec.dofs_per_face; i++) {
@@ -681,5 +681,6 @@ bool PMLSurface::finish_initialization(DofNumber index) {
     global_indices.push_back(dofs[i].index);
   }
   set_non_local_dof_indices(local_indices, global_indices);
+  
   return FEDomain::finish_initialization(index);
 }

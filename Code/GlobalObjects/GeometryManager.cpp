@@ -149,10 +149,15 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   for(unsigned int i = 0; i < 6; i++) {
     levels[in_level].surfaces[i]->determine_non_owned_dofs();
   }
-
   levels[in_level].inner_domain->freeze_ownership();
   for(unsigned int i = 0; i < 6; i++) {
     levels[in_level].surfaces[i]->freeze_ownership();
+  }
+
+  for(unsigned int surf = 0; surf < 6; surf += 2 ) {
+    if(Geometry.levels[in_level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE) {
+      Geometry.levels[in_level].surfaces[surf]->finish_dof_index_initialization();
+    }
   }
 
   levels[in_level].inner_domain->finish_initialization(first_dof);
@@ -160,20 +165,26 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   for(unsigned int i = 0; i < 6; i++) {
     levels[in_level].surfaces[i]->finish_initialization(first_dof);
     first_dof += levels[in_level].surfaces[i]->n_locally_owned_dofs;
+  }  
+  
+  for(unsigned int i = 0; i < 6; i++) {
+    Geometry.levels[in_level].surfaces[i]->finish_dof_index_initialization();
   }
+
+  for(unsigned int surf = 1; surf < 6; surf += 2 ) {
+    if(Geometry.levels[in_level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE) {
+      Geometry.levels[in_level].surfaces[surf]->finish_dof_index_initialization();
+    }
+  }
+
+  
+
   levels[in_level].n_local_dofs = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].n_elements();
   levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution[0].size();
   
   // Now I can initialize all the surface-to-surface dof indices
-  for(unsigned int i = 0; i < 6; i++) {
-    Geometry.levels[in_level].surfaces[i]->finish_dof_index_initialization();
-  }
-  for(unsigned int i = 0; i < 6; i++) {
-    Geometry.levels[in_level].surfaces[i]->finish_dof_index_initialization();
-  }
-  for(unsigned int i = 0; i < 6; i++) {
-    Geometry.levels[in_level].surfaces[i]->finish_dof_index_initialization();
-  }
+
+
 }
 
 dealii::Tensor<2,3> GeometryManager::get_epsilon_tensor(const Position & in_p) {

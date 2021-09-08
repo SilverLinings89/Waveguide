@@ -258,7 +258,6 @@ void NonLocalProblem::assemble() {
   print_info("NonLocalProblem::assemble", "End assembly.");
 }
 
-
 dealii::Vector<ComplexNumber> NonLocalProblem::get_local_vector_from_global() {
   dealii::Vector<ComplexNumber> ret(Geometry.levels[level].n_local_dofs);
   return ret;
@@ -605,12 +604,16 @@ void NonLocalProblem::reinit() {
   make_sparsity_pattern();
 
   reinit_rhs();
-  
+  std::vector<unsigned int> local_rows;
+  for(unsigned int p = 0; p < Geometry.levels[level].dof_distribution.size(); p++) {
+    local_rows.push_back(Geometry.levels[level].dof_distribution[p].n_elements());
+  }
+
   solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   direct_solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   solution_error.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
-  matrix->reinit(Geometry.levels[level].dof_distribution[rank], Geometry.levels[level].dof_distribution[rank], sp, GlobalMPI.communicators_by_level[level]);
-  
+  // matrix->reinit(Geometry.levels[level].dof_distribution[rank], Geometry.levels[level].dof_distribution[rank], sp, GlobalMPI.communicators_by_level[level]);
+  matrix->reinit(GlobalMPI.communicators_by_level[level], sp,local_rows ,local_rows, rank);
   print_info("Nonlocal reinit", "Reinit done");
 }
 
@@ -641,10 +644,7 @@ void NonLocalProblem::initialize_index_sets() {
 }
 
 void NonLocalProblem::initialize_own_dofs() {
-  own_dofs = IndexSet(Geometry.levels[level].n_total_level_dofs);
-  unsigned int first_dof = Geometry.levels[level].inner_first_dof;
-  unsigned int last_dof = Geometry.levels[level].surface_first_dof[5] + Geometry.levels[level].surfaces[5]->dof_counter;
-  own_dofs.add_range(first_dof, last_dof);
+  own_dofs = Geometry.levels[level].dof_distribution[GlobalMPI.rank_on_level[level]];
 }
 
 dealii::IndexSet NonLocalProblem::compute_interface_dof_set(BoundaryId interface_id) {
