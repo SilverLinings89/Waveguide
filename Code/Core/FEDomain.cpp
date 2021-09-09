@@ -66,3 +66,11 @@ void FEDomain::mark_local_dofs_as_non_local(DofIndexVector in_dofs) {
         is_dof_owned[in_dofs[i]] = false;
     }
 }
+
+NumericVectorLocal FEDomain::get_local_vector_from_global(const NumericVectorDistributed in_vector) {
+    NumericVectorLocal ret(n_locally_active_dofs);
+    for(unsigned int i = 0; i < n_locally_active_dofs; i++) {
+        ret[i] = in_vector[global_index_mapping[i]];
+    }
+    return ret;
+}

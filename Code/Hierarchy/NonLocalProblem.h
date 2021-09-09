@@ -19,6 +19,8 @@ private:
   dealii::SolverControl sc;
   unsigned int n_blocks_in_sweep;
   unsigned int index_in_sweep;
+  unsigned int n_locally_active_dofs;
+  dealii::IndexSet locally_active_dofs;
   KSP ksp;
   ComplexNumber * mpi_cache;
   bool is_mpi_cache_ready;
@@ -110,7 +112,7 @@ private:
 
   auto set_x_out_from_u(Vec x_out, NumericVectorLocal u_in) -> void;
 
-  auto set_child_rhs_from_u(NumericVectorLocal u, bool add_onto_child_rhs) -> void;
+  auto set_child_rhs_from_u(NumericVectorLocal u) -> void;
 
   auto set_u_from_child_solution(NumericVectorLocal * u)-> void;
 

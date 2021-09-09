@@ -159,6 +159,16 @@ NonLocalProblem::NonLocalProblem(unsigned int level) :
     index_in_sweep = GlobalParams.Index_in_z_direction;
   }
   is_mpi_cache_ready = false;
+  locally_active_dofs = dealii::IndexSet(Geometry.levels[level].n_total_level_dofs);
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->global_index_mapping.size(); i++) {
+    locally_active_dofs.add_index(Geometry.levels[level].inner_domain->global_index_mapping[i]);
+  }
+  for(unsigned int surf = 0; surf < 6; surf++) {
+    for(unsigned int i = 0; i < Geometry.levels[level].surfaces[surf]->global_index_mapping.size(); i++) {
+      locally_active_dofs.add_index(Geometry.levels[level].surfaces[surf]->global_index_mapping[i]);
+    }  
+  }
+  n_locally_active_dofs = locally_active_dofs.n_elements();
 }
 
 void NonLocalProblem::init_solver_and_preconditioner() {
@@ -345,15 +355,14 @@ void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
 }
 
 void NonLocalProblem::reinit_u_vector(NumericVectorLocal * u) {
-  u->reinit(Geometry.levels[level].n_local_dofs);
+  u->reinit(n_locally_active_dofs);
 }
 
 NumericVectorLocal NonLocalProblem::u_from_x_in(Vec x_in) {
   NumericVectorLocal ret;
   reinit_u_vector(&ret);
-  const unsigned int n_loc_dofs = own_dofs.n_elements();
-  ComplexNumber * values = new ComplexNumber[n_loc_dofs];
-  VecGetValues(x_in, n_loc_dofs, locally_owned_dofs_index_array, values);
+  ComplexNumber * values = new ComplexNumber[n_locally_active_dofs];
+  VecGetValues(x_in, n_locally_active_dofs, locally_owned_dofs_index_array, values);
 
   for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
      ret[i] = values[i];
@@ -364,22 +373,20 @@ NumericVectorLocal NonLocalProblem::u_from_x_in(Vec x_in) {
 }
 
 void NonLocalProblem::set_x_out_from_u(Vec x_out, NumericVectorLocal u_in) {
-  const unsigned int n_loc_dofs = own_dofs.n_elements();
-  ComplexNumber * values = new ComplexNumber[n_loc_dofs];
+  ComplexNumber * values = new ComplexNumber[n_locally_active_dofs];
   
-  for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
+  for(unsigned int i = 0; i < n_locally_active_dofs; i++) {
     values[i] = u_in[i];
   }
 
-  VecSetValues(x_out, n_loc_dofs, locally_owned_dofs_index_array, values, INSERT_VALUES);
+  VecSetValues(x_out, n_locally_active_dofs, locally_owned_dofs_index_array, values, INSERT_VALUES);
   VecAssemblyBegin(x_out);
   VecAssemblyEnd(x_out);
   delete[] values;
 }
 
 NumericVectorLocal NonLocalProblem::S_inv(NumericVectorLocal in_u) {
-  NumericVectorLocal updated = zero_lower_interface_dofs(in_u);
-  set_child_rhs_from_u(updated, false);
+  set_child_rhs_from_u(in_u);
 
   child->solve();
 
@@ -461,7 +468,6 @@ NumericVectorLocal NonLocalProblem::vmult_up(const DofFieldTrace & in_trace) {
   std::cout << "In vmult_up before: trace_norm: " << l2_norm(in_trace) << " and " << l2_norm(input) << std::endl;
   local.matrix.vmult(ret, input);
   std::cout << "In vmult_up after: trace_norm: " << l2_norm(ret) << " and ";
-  ret = zero_lower_interface_dofs(ret);
   std::cout << l2_norm(ret) << std::endl;
   return ret;
 }
@@ -469,7 +475,6 @@ NumericVectorLocal NonLocalProblem::vmult_up(const DofFieldTrace & in_trace) {
 NumericVectorLocal NonLocalProblem::vmult_down(const NumericVectorLocal in_u) {
   NumericVectorLocal ret;
   reinit_u_vector(&ret);
-  NumericVectorLocal input = zero_lower_interface_dofs(in_u);
   local.matrix.vmult(ret, in_u);
   /**
   for(unsigned int i = 0; i < in_u.size(); i++) {
@@ -570,7 +575,7 @@ NumericVectorLocal NonLocalProblem::zero_lower_interface_dofs(NumericVectorLocal
   return ret;
 }
 
-void NonLocalProblem::set_child_rhs_from_u(NumericVectorLocal in_u, bool add_onto_child_rhs) {
+void NonLocalProblem::set_child_rhs_from_u(NumericVectorLocal in_u) {
   // child->rhs_mismatch = child->rhs;
   // child->rhs_mismatch.compress(VectorOperation::insert);
   child->rhs = 0;
@@ -589,9 +594,7 @@ void NonLocalProblem::set_child_rhs_from_u(NumericVectorLocal in_u, bool add_ont
   child->rhs.compress(VectorOperation::insert);
   child->constraints.distribute(child->rhs);
 
-  if(add_onto_child_rhs) {
-    // child->rhs += child->rhs_mismatch;
-  }
+
 }
 
 void NonLocalProblem::reinit() {
@@ -639,8 +642,8 @@ void NonLocalProblem::initialize_index_sets() {
   }
 
   initialize_own_dofs();
-  locally_owned_dofs_index_array = new PetscInt[own_dofs.n_elements()];
-  get_petsc_index_array_from_index_set(locally_owned_dofs_index_array, own_dofs);
+  locally_owned_dofs_index_array = new PetscInt[n_locally_active_dofs];
+  get_petsc_index_array_from_index_set(locally_owned_dofs_index_array, locally_active_dofs);
 }
 
 void NonLocalProblem::initialize_own_dofs() {

@@ -23,4 +23,5 @@ class FEDomain {
     virtual DofCount compute_n_locally_owned_dofs() = 0;
     virtual DofCount compute_n_locally_active_dofs() = 0;
     void freeze_ownership();
+    NumericVectorLocal get_local_vector_from_global(const NumericVectorDistributed in_vector);
 };
