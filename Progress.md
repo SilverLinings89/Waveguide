@@ -350,17 +350,17 @@ To simplify the implementation, I will also go ahead and add an inner_domain to 
 
 I'm slowly grinding through the code to change the dof ownership. This has effects in extremely many places.
 
-# Wednesday, 1st of august
+# Wednesday, 1st of september
 
 I have implemented a huge amount of the new stuff. I have made the decision that get_dof_association() and get_dof_association_by_boundary_id() will always return in LOKAL dof numbering ( i.e. [0, ..., NDOFS - 1]). I will then add a function to the FEDomain set_global_dof_indices_by_boundary which sets(std::vector<InterfaceDofData>) to set the global indices. 
 
 I have decided to go this way because all the calls to get_dof_association will now only happen in the setup. Therefore I can also repurpose them to the function I need in the setup rather then rewriting them.
 
-# Saturday, 4th of august
+# Saturday, 4th of september
 
 By now, the local level initializes but the code breaks in the non-local initialization. Refactored the Geometry Manager to align function names with content and to make the structure more clear. That structure works now. Fixing dof commmunication of neighbor surfaces. Initialization now finishes.
 
-# Monday, 6th of august
+# Monday, 6th of september
 
 Most of the core is implemented. I realized that there is an error where apparently the same number as surface dofs of the inner domain is not generated properly on the surfaces. This may either be the interior surface not being initialized properly or it is the outer surface.
 
@@ -379,11 +379,36 @@ The next step is to distribute all local dofs. This is the function finish_initi
 
 In the very last step, all neighbor surfaces send up.
 
-# Tuesday, 7th of august
+# Tuesday, 7th of september
 
 The above logic will be implemented today. It is done. Now I reach vector initialization.
 
-# Wednesday, 8th of august
+# Wednesday, 8th of september
 
 The dof distribution now works. The next step is building the sparsity pattern, wich is complicated, because the lower dofs don't know about the pattern entries the higher processes make. To do this, I must serialize the non-local contribution and send it the the right process.
 The Neighbor surface has all data for this and should handle it. Now reaching pc_apply ao all the initialization seems to work properly.
+
+# Saturday, 11th of september
+
+I have decided to implement the sweeping preconditioner as a collective operation. That means, there will be no copying to a local vector and the loop will have a different structure compared to before (I had this once experimentally). The difference is then, that for example the off-diagonal block matrix vector product will be executed on all processes - they simply set zero in their vector for the product. If I only set the components of process i and only read the components of the solution of subdomain j, then I have evaluated a off-diagonal product for the (i,j) block.
+
+This has to be done, because vmult on the problem-level matrix is itself a collective call, so performing it for only one block would not work otherwise. If there ever were problems with this approach, I could redefine the matrix and vectors to be block-structures and then just perform a call on a block but for now, a collective implementation will suffice.
+
+I will go in more detail tomorrow or on monday, when I can check what is available in the library concerning vector-operations.
+
+# Monday, 13th of september
+
+Today I will begin the implementation mentioned above. It will require restructuring the Hierarchical Problem and both its derivatives. I could also butcher the new features in quick and dirty, but this is an opportunity to do it right. Since there will be no more distinguising between local and distributed vectors, I will need less utility functions and the logic should be clearer after this rework. This is why I want to work on this more wholistically, because if I don't go that route, there will be a lot of old code, that isn't used anymore. I should also consider static code analysis to find unused code at this point.
+
+I will start by updating the headers and removing everything that is no longer required. Then I will prototype the functions that will be required after the rework.
+
+The functions that do most of the work will be collective and I will preface their name with "collective_".
+
+In the apply_sweep function I need:
+- off-diagonal product which is implemented as a global operation
+- S^{-1}, where I copy all locally owned dofs downwards and set the others to 0. Then the lower level solver gets executed and the solution gets copied up.
+- A vector substraction function, that updates the local entries of the vector.
+
+I can use the dealii::LinearAlgebra::distributed::Vector class to perform data synchronization between processes. It provides read from ghost values, so I can pass the locally_active_dofs into the constructor as the values I want synced and then just call update_ghost_values() to retrieve the data.
+
+I have now removed all the code I wont need anymore, which was a lot. The code is currently compilable. The apply_sweep function is empty. I reactivated the direct vs iterative switch in solve.

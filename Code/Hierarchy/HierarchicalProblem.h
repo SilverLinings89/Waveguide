@@ -43,12 +43,10 @@ class HierarchicalProblem {
 
   virtual void solve()=0;
   virtual void initialize()=0;
-  virtual void initialize_own_dofs() =0;
   void make_constraints();
   virtual void assemble()=0;
   virtual void initialize_index_sets()=0;
   void constrain_identical_dof_sets(std::vector<unsigned int> *set_one, std::vector<unsigned int> *set_two, Constraints *affine_constraints);
-  virtual dealii::Vector<ComplexNumber> get_local_vector_from_global() = 0;
   virtual auto get_center() -> Position const = 0;
   virtual auto reinit() -> void = 0;
   auto opposing_site_bid(BoundaryId) -> BoundaryId;
@@ -57,7 +55,6 @@ class HierarchicalProblem {
   virtual void compute_solver_factorization() = 0;
   std::string output_results(std::string in_fname_part = "solution_inner_domain_level");
   virtual void reinit_rhs() = 0;
-  virtual DofOwner get_dof_owner(unsigned int) = 0;
   virtual void make_sparsity_pattern();
   void execute_vmult();
   void compute_rhs_representation_of_incoming_wave();

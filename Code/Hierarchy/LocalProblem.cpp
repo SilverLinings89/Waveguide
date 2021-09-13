@@ -83,7 +83,6 @@ dealii::IndexSet LocalProblem::compute_interface_dof_set(BoundaryId interface_id
 void LocalProblem::initialize() {
   print_info("LocalProblem::initialize", "Start");
   GlobalTimerManager.switch_context("initialize", level);
-  initialize_own_dofs();
   print_info("LocalProblem::initialize", "Number of local dofs: " + std::to_string(Geometry.levels[0].n_local_dofs) , false, LoggingLevel::DEBUG_ALL);
   for(unsigned int i = 0; i < 6; i++) {
     if(Geometry.levels[0].is_surface_truncated[i]){
@@ -135,10 +134,6 @@ void LocalProblem::reinit() {
   matrix->reinit(MPI_COMM_SELF, sp, lines_per_proc, lines_per_proc, 0);
 }
 
-void LocalProblem::initialize_own_dofs() {
-  
-}
-
 void LocalProblem::solve() {
   GlobalTimerManager.switch_context("solve", level);
   Timer timer1;
@@ -155,16 +150,6 @@ void LocalProblem::solve() {
 void LocalProblem::initialize_index_sets() {
   n_procs_in_sweep = 1;
   rank = 0;
-}
-
-dealii::Vector<ComplexNumber> LocalProblem::get_local_vector_from_global() {
-  print_info("LocalProblem::get_local_vector_from_global", "Start");
-  dealii::Vector<ComplexNumber> ret(Geometry.levels[level].inner_domain->n_locally_active_dofs);
-  for (unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
-    ret[i] = solution(i);
-  }
-  print_info("LocalProblem::get_local_vector_from_global", "End");
-  return ret;
 }
 
 auto LocalProblem::compare_to_exact_solution() -> void {
@@ -285,20 +270,4 @@ double LocalProblem::compute_L2_error() {
     dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
     dealii::VectorTools::NormType::L2_norm );
   return dealii::VectorTools::compute_global_error(Geometry.levels[level].inner_domain->triangulation, cellwise_error, dealii::VectorTools::NormType::L2_norm);
-}
-
-DofOwner LocalProblem::get_dof_owner(unsigned int dof) {
-  DofOwner ret;
-  ret.owner = 0;
-  ret.is_boundary_dof = dof < Geometry.levels[0].surface_first_dof[0];
-  if(ret.is_boundary_dof) {
-    for(unsigned int i = 0; i < 5; i++) {
-      if(dof < Geometry.levels[0].surface_first_dof[i+1]) {
-        ret.surface_id = i;
-        return ret;
-      }
-    }
-  }
-  ret.surface_id = 5;
-  return ret;
 }

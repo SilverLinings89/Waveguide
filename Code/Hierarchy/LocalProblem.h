@@ -23,16 +23,12 @@ public:
 
   void initialize() override;
 
-  void initialize_own_dofs() override;
-
   void assemble() override;
 
   void initialize_index_sets() override;
 
   void validate();
 
-  dealii::Vector<ComplexNumber> get_local_vector_from_global() override;
-  
   auto get_center() -> Position const override;
 
   auto reinit() -> void override;
@@ -48,7 +44,5 @@ public:
   double compute_L2_error();
 
   double compute_error(dealii::VectorTools::NormType, Function<3,ComplexNumber> *, dealii::Vector<ComplexNumber> & , dealii::DataOut<3> *);
-
-  DofOwner get_dof_owner(unsigned int id);
 
 };
