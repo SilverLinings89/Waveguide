@@ -49,4 +49,6 @@ public:
   virtual void receive_from_below_dofs();
   virtual void finish_dof_index_initialization();
   virtual std::vector<DofNumber> receive_boundary_dofs(unsigned int other_bid);
+
+  virtual auto make_constraints() -> Constraints;
 };

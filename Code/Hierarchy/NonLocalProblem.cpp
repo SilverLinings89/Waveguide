@@ -247,10 +247,10 @@ void NonLocalProblem::assemble() {
 }
 
 void NonLocalProblem::solve() {
+  print_info("NonLocalProblem::solve", "Start");
   GlobalTimerManager.switch_context("solve", level);
   rhs.compress(VectorOperation::add);
-  constraints.distribute(rhs);
-
+  
   if(!GlobalParams.solve_directly) {
     // Solve with sweeping
     constraints.distribute(solution);
@@ -270,21 +270,8 @@ void NonLocalProblem::solve() {
     dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, MPI_COMM_WORLD);
     solver1.solve(*matrix, solution, rhs);
   }
-  
-  NumericVectorDistributed temp_vector, temp_rhs;
-  temp_vector.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
-  for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
-    temp_vector[Geometry.levels[level].inner_first_dof + i] = stored_solutions[0][i];
-  }
-  temp_vector.compress(VectorOperation::insert);
-  write_multifile_output("FirstSolution", temp_vector);
-  temp_rhs.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
-  matrix->vmult(temp_rhs, temp_vector);
-  temp_rhs -= rhs;
-  solution_error = temp_rhs;
-  write_multifile_output("Residual", solution_error);
-  
-  
+  constraints.distribute(solution);
+  print_info("NonLocalProblem::solve", "End");
 }
 
 void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
@@ -474,21 +461,27 @@ void NonLocalProblem::write_output_for_stored_solution(unsigned int index) {
 
 void NonLocalProblem::write_multifile_output(const std::string & in_filename, const NumericVectorDistributed field) {
   std::vector<std::string> generated_files;
-  NumericVectorLocal in_solution(Geometry.levels[level].inner_domain->n_locally_active_dofs);
-  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
-    in_solution[i] = field[Geometry.levels[level].inner_first_dof + i];
+  dealii::LinearAlgebra::distributed::Vector<ComplexNumber> shared_solution;
+  shared_solution.reinit(own_dofs, locally_active_dofs, GlobalMPI.communicators_by_level[level]);
+  for(unsigned int i= 0; i < own_dofs.n_elements(); i++) {
+    shared_solution[own_dofs.nth_index_in_set(i)] = field[own_dofs.nth_index_in_set(i)];
   }
-  std::string file_1 = Geometry.levels[level].inner_domain->output_results(in_filename + std::to_string(level) , in_solution);
+  shared_solution.update_ghost_values();
+  NumericVectorLocal local_solution(Geometry.levels[level].inner_domain->n_locally_active_dofs);
+  
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
+    local_solution[i] = shared_solution[Geometry.levels[level].inner_domain->global_index_mapping[i]];
+  }
+  std::string file_1 = Geometry.levels[level].inner_domain->output_results(in_filename + std::to_string(level) , local_solution);
   generated_files.push_back(file_1);
-
   if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML) {
-    for(unsigned int i = 0; i < 6; i++){
-      if(Geometry.levels[level].surface_type[i] == SurfaceType::ABC_SURFACE){
-        dealii::Vector<ComplexNumber> ds (Geometry.levels[level].surfaces[i]->dof_counter);
-        for(unsigned int index = 0; index < Geometry.levels[level].surfaces[i]->dof_counter; index++) {
-          ds[index] = field(index + Geometry.levels[level].surface_first_dof[i]);
+    for (unsigned int surf = 0; surf < 6; surf++) {
+      if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE){
+        dealii::Vector<ComplexNumber> ds (Geometry.levels[level].surfaces[surf]->n_locally_active_dofs);
+        for(unsigned int index = 0; index < Geometry.levels[level].surfaces[surf]->n_locally_active_dofs; index++) {
+          ds[index] = shared_solution[Geometry.levels[level].surfaces[surf]->global_index_mapping[index]];
         }
-        std::string file_2 = Geometry.levels[level].surfaces[i]->output_results(ds, in_filename + "_pml" + std::to_string(level));
+        std::string file_2 = Geometry.levels[level].surfaces[surf]->output_results(ds, in_filename + "_pml" + std::to_string(level));
         generated_files.push_back(file_2);
       }
     }

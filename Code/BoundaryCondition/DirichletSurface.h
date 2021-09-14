@@ -26,4 +26,5 @@ class DirichletSurface : public BoundaryCondition {
     DofCount compute_n_locally_owned_dofs() override;
     DofCount compute_n_locally_active_dofs() override;
     void determine_non_owned_dofs() override;
+    auto make_constraints() -> Constraints override;
 };

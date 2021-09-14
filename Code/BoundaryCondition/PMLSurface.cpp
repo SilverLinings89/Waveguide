@@ -684,3 +684,18 @@ bool PMLSurface::finish_initialization(DofNumber index) {
   
   return FEDomain::finish_initialization(index);
 }
+
+Constraints PMLSurface::make_constraints() {
+	Constraints ret(Geometry.levels[level].inner_domain->global_dof_indices);
+	dealii::IndexSet local_dof_set(Geometry.levels[level].inner_domain->n_locally_active_dofs);
+	local_dof_set.add_range(0,Geometry.levels[level].inner_domain->n_locally_active_dofs);
+	AffineConstraints<ComplexNumber> constraints_local(local_dof_set);
+	std::vector<InterfaceDofData> dofs = get_dof_association_by_boundary_id(outer_boundary_id);
+  for(auto dof : dofs) {
+		const unsigned int local_index = dof.index;
+		const unsigned int global_index = global_index_mapping[local_index];
+		ret.add_line(global_index);
+		ret.set_inhomogeneity(global_index, ComplexNumber(0,0));
+	}
+  return ret;
+}

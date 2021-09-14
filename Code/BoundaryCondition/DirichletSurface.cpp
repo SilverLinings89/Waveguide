@@ -88,3 +88,19 @@ DofCount DirichletSurface::compute_n_locally_active_dofs() {
 void DirichletSurface::determine_non_owned_dofs() {
 
 }
+
+Constraints DirichletSurface::make_constraints() {
+	Constraints ret(Geometry.levels[level].inner_domain->global_dof_indices);
+	dealii::IndexSet local_dof_set(Geometry.levels[level].inner_domain->n_locally_active_dofs);
+	local_dof_set.add_range(0,Geometry.levels[level].inner_domain->n_locally_active_dofs);
+	AffineConstraints<ComplexNumber> constraints_local(local_dof_set);
+	ExactSolution es(true, false);
+  VectorTools::project_boundary_values_curl_conforming_l2(Geometry.levels[level].inner_domain->dof_handler, 0, es, 4, constraints_local);
+	for(auto line : constraints_local.get_lines()) {
+		const unsigned int local_index = line.index;
+		const unsigned int global_index = Geometry.levels[level].inner_domain->global_index_mapping[local_index];
+		ret.add_line(global_index);
+		ret.set_inhomogeneity(global_index, line.inhomogeneity);
+	}
+  return ret;
+}

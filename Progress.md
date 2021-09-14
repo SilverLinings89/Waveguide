@@ -412,3 +412,5 @@ In the apply_sweep function I need:
 I can use the dealii::LinearAlgebra::distributed::Vector class to perform data synchronization between processes. It provides read from ghost values, so I can pass the locally_active_dofs into the constructor as the values I want synced and then just call update_ghost_values() to retrieve the data.
 
 I have now removed all the code I wont need anymore, which was a lot. The code is currently compilable. The apply_sweep function is empty. I reactivated the direct vs iterative switch in solve.
+
+Updated the output code to use the direct solver flag again. Also, the output now works again I think. However, the Dirichlet data is not yet working. The code runs completely again but the solution of a direct solve is not correct.

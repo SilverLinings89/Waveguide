@@ -113,3 +113,8 @@ std::vector<DofNumber> BoundaryCondition::receive_boundary_dofs(unsigned int oth
   std::cout << "BoundaryCondition::receive_boundary_dofs got called but never should." << std::endl;
   return ret;
 }
+
+Constraints BoundaryCondition::make_constraints() {
+  Constraints ret(global_dof_indices);
+  return ret;
+}
