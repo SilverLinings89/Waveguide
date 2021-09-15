@@ -279,43 +279,71 @@ void NonLocalProblem::solve() {
 }
 
 void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
+  NumericVectorDistributed temp_solution = vector_from_vec_obj(b_in);
+  temp_solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  NumericVectorDistributed vec_a, vec_b;
+  vec_a.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  vec_b.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   
-}
-
-void NonLocalProblem::set_x_out_from_u(Vec x_out, NumericVectorLocal u_in) {
-  ComplexNumber * values = new ComplexNumber[n_locally_active_dofs];
-  
-  for(unsigned int i = 0; i < n_locally_active_dofs; i++) {
-    values[i] = u_in[i];
+  for(unsigned int i = n_procs_in_sweep - 1; i > 0; i--) {
+    S_inv(&temp_solution, &vec_a, i == rank);
+    vec_b = off_diagonal_product(i, i-1, &vec_a);
+    subtract_vectors(&temp_solution, &vec_b);
+    vec_b.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   }
 
-  VecSetValues(x_out, n_locally_active_dofs, locally_owned_dofs_index_array, values, INSERT_VALUES);
+  copy_local_part(&temp_solution, &vec_b);
+  S_inv(&vec_b, &temp_solution, true);
+  
+  vec_a.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  vec_b.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  
+  for(unsigned int i = 0; i < n_procs_in_sweep-1; i++) {
+    vec_a = off_diagonal_product(i, i+1, &temp_solution);
+    S_inv(&vec_a, &vec_b, rank == i+1);
+    subtract_vectors(&temp_solution, &vec_b);
+  }
+
+  set_x_out_from_u(u_out, &temp_solution);
+}
+
+void NonLocalProblem::set_x_out_from_u(Vec x_out, NumericVectorDistributed * u_in) {
+  ComplexNumber * values = new ComplexNumber[own_dofs.n_elements()];
+  
+  for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
+    values[i] = u_in->operator()(own_dofs.nth_index_in_set(i));
+  }
+
+  VecSetValues(x_out, own_dofs.n_elements(), locally_owned_dofs_index_array, values, INSERT_VALUES);
   VecAssemblyBegin(x_out);
   VecAssemblyEnd(x_out);
   delete[] values;
 }
 
-NumericVectorLocal NonLocalProblem::S_inv(NumericVectorLocal in_u) {
-  set_child_rhs_from_u(in_u);
-
-  child->solve();
-
-  NumericVectorLocal ret;
-  
-  set_u_from_child_solution(&ret);
-  return ret;
+void NonLocalProblem::S_inv(NumericVectorDistributed * src, NumericVectorDistributed * dst, bool execute_locally) {
+  dst->reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  if(execute_locally) {
+    set_child_rhs_from_vector(src);
+    child->solve();
+    set_vector_from_child_solution(dst);
+  }
+  dst->compress(dealii::VectorOperation::insert);
 }
 
-void NonLocalProblem::set_u_from_child_solution(NumericVectorLocal * u_in) {
+void NonLocalProblem::set_vector_from_child_solution(NumericVectorDistributed * u_in) {
   
-  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->dof_handler.n_dofs(); i++) {
-    (*u_in)[i] = child->solution[Geometry.levels[level-1].inner_first_dof + i];
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
+    if(Geometry.levels[level].inner_domain->is_dof_owned[i] && Geometry.levels[level-1].inner_domain->is_dof_owned[i]) {
+      u_in->operator()(Geometry.levels[level].inner_domain->global_index_mapping[i]) = child->rhs[Geometry.levels[level-1].inner_domain->global_index_mapping[i]];
+    }
   }
-
+  
   for(unsigned int surf = 0; surf < 6; surf++) {
-    if(Geometry.levels[level].is_surface_truncated[surf] && Geometry.levels[level-1].is_surface_truncated[surf]) {
-      for(unsigned int i = 0; i < Geometry.levels[level].surfaces[surf]->dof_counter; i++) {
-        (*u_in)[Geometry.levels[level].surface_first_dof[surf] - Geometry.levels[level].inner_first_dof + i] = child->solution[Geometry.levels[level-1].surface_first_dof[surf] + i];
+    if(Geometry.levels[level].surface_type[surf] == Geometry.levels[level-1].surface_type[surf]) {
+      for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
+        if(Geometry.levels[level].surfaces[surf]->is_dof_owned[i] && Geometry.levels[level-1].surfaces[surf]->is_dof_owned[i]) {
+          u_in->operator()(Geometry.levels[level].surfaces[surf]->global_index_mapping[i]) = child->rhs[Geometry.levels[level-1].surfaces[surf]->global_index_mapping[i]];
+        }
       }
     }
   }
@@ -331,26 +359,27 @@ double NonLocalProblem::compute_interface_norm_for_u(NumericVectorLocal u, Bound
   return std::sqrt(ret);
 }
 
-void NonLocalProblem::set_child_rhs_from_u(NumericVectorLocal in_u) {
+void NonLocalProblem::set_child_rhs_from_vector(NumericVectorDistributed * in_u) {
   // child->rhs_mismatch = child->rhs;
   // child->rhs_mismatch.compress(VectorOperation::insert);
-  child->rhs = 0;
-  for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
-    child->rhs[Geometry.levels[level-1].inner_first_dof + i] = in_u[i];
+  child->reinit_rhs();
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
+    if(Geometry.levels[level].inner_domain->is_dof_owned[i] && Geometry.levels[level-1].inner_domain->is_dof_owned[i]) {
+      child->rhs[Geometry.levels[level-1].inner_domain->global_index_mapping[i]] = in_u->operator()(Geometry.levels[level].inner_domain->global_index_mapping[i]);
+    }
   }
-  
+  std::cout << "A" << std::endl;
   for(unsigned int surf = 0; surf < 6; surf++) {
     if(Geometry.levels[level].surface_type[surf] == Geometry.levels[level-1].surface_type[surf]) {
-      for(unsigned int i = 0; i < Geometry.levels[level].surfaces[surf]->dof_counter; i++) {
-        child->rhs[Geometry.levels[level-1].surface_first_dof[surf] + i] = in_u[Geometry.levels[level].surface_first_dof[surf] - Geometry.levels[level].inner_first_dof + i];
+      for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
+        if(Geometry.levels[level].surfaces[surf]->is_dof_owned[i] && Geometry.levels[level-1].surfaces[surf]->is_dof_owned[i]) {
+          child->rhs[Geometry.levels[level-1].surfaces[surf]->global_index_mapping[i]] = in_u->operator()(Geometry.levels[level].surfaces[surf]->global_index_mapping[i]);
+        }
       }
     }
   }
   
   child->rhs.compress(VectorOperation::insert);
-  child->constraints.distribute(child->rhs);
-
-
 }
 
 void NonLocalProblem::reinit() {
@@ -390,8 +419,8 @@ void NonLocalProblem::initialize() {
  
 void NonLocalProblem::initialize_index_sets() {
   own_dofs = Geometry.levels[level].dof_distribution[GlobalMPI.rank_on_level[level]];
-  locally_owned_dofs_index_array = new PetscInt[n_locally_active_dofs];
-  get_petsc_index_array_from_index_set(locally_owned_dofs_index_array, locally_active_dofs);
+  locally_owned_dofs_index_array = new PetscInt[own_dofs.n_elements()];
+  get_petsc_index_array_from_index_set(locally_owned_dofs_index_array, own_dofs);
 }
 
 auto NonLocalProblem::get_center() -> Position const {
@@ -600,4 +629,58 @@ void NonLocalProblem::make_sparsity_pattern() {
   sp.copy_from(dsp);
   sp.compress();
   print_info("NonLocalProblem::make_sparsity_pattern", "End on level "  + std::to_string(level));
+}
+
+NumericVectorDistributed NonLocalProblem::vector_from_vec_obj(Vec in_v) {
+  NumericVectorDistributed ret;
+  ret.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  const unsigned int n_loc_dofs = own_dofs.n_elements();
+  ComplexNumber * values = new ComplexNumber[n_loc_dofs];
+  VecGetValues(in_v, n_loc_dofs, locally_owned_dofs_index_array, values);
+
+  for(unsigned int i = 0; i < Geometry.levels[level].n_local_dofs; i++) {
+     ret[i] = values[i];
+  }
+
+  delete[] values;
+  return ret;
+}
+
+void NonLocalProblem::zero_local_contribution(NumericVectorDistributed * in_v) {
+  for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
+    in_v->operator[](own_dofs.nth_index_in_set(i)) = 0;
+  }
+}
+
+void NonLocalProblem::copy_local_part(NumericVectorDistributed * src, NumericVectorDistributed * dst) {
+  for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
+    dst->operator[](own_dofs.nth_index_in_set(i)) = src->operator()(own_dofs.nth_index_in_set(i));
+  }
+}
+
+NumericVectorDistributed NonLocalProblem::off_diagonal_product(unsigned int i, unsigned int j, NumericVectorDistributed * in_v) {
+  NumericVectorDistributed ret;
+  ret.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  NumericVectorDistributed left;
+  left.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  if(rank == i) {
+    for(unsigned int index = 0; index < own_dofs.n_elements(); index++) {
+      left[own_dofs.nth_index_in_set(index)] = in_v->operator[](own_dofs.nth_index_in_set(index));
+    }
+  } 
+  left.compress(VectorOperation::insert);
+  matrix->vmult(ret, left);
+  if(rank != j) {
+    for(unsigned int index = 0; index < own_dofs.n_elements(); index++) {
+      ret[own_dofs.nth_index_in_set(index)] = 0;
+    }
+  }
+  return ret;
+}
+
+void NonLocalProblem::subtract_vectors(NumericVectorDistributed * a, NumericVectorDistributed * b) {
+  for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
+    a->operator[](own_dofs.nth_index_in_set(i)) = b->operator[](own_dofs.nth_index_in_set(i));
+  }
+  a->compress(dealii::VectorOperation::insert);
 }

@@ -55,13 +55,11 @@ private:
   
   // New functions.
 
-  auto S_inv(NumericVectorLocal u) -> NumericVectorLocal;
+  void S_inv(NumericVectorDistributed * src, NumericVectorDistributed * dst, bool execute_locally);
 
-  auto set_x_out_from_u(Vec x_out, NumericVectorLocal u_in) -> void;
+  auto set_x_out_from_u(Vec x_out, NumericVectorDistributed * u_in) -> void;
 
-  auto set_child_rhs_from_u(NumericVectorLocal u) -> void;
-
-  auto set_u_from_child_solution(NumericVectorLocal * u)-> void;
+  auto set_u_from_child_solution(NumericVectorDistributed * u)-> void;
 
   auto compute_interface_norm_for_u(NumericVectorLocal u, BoundaryId) -> double;
 
@@ -76,4 +74,18 @@ private:
   void communicate_external_dsp(DynamicSparsityPattern * in_dsp);
 
   void make_sparsity_pattern() override;
+
+  NumericVectorDistributed vector_from_vec_obj(Vec in_v);
+
+  void set_vector_from_child_solution(NumericVectorDistributed *);
+
+  void set_child_rhs_from_vector(NumericVectorDistributed *);
+
+  void zero_local_contribution(NumericVectorDistributed *);
+
+  void copy_local_part(NumericVectorDistributed * src, NumericVectorDistributed * dst);
+
+  void subtract_vectors(NumericVectorDistributed * a, NumericVectorDistributed * b);
+
+  NumericVectorDistributed off_diagonal_product(unsigned int i, unsigned int j, NumericVectorDistributed *);
 };

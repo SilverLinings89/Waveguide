@@ -117,8 +117,7 @@ void LocalProblem::assemble() {
 }
 
 void LocalProblem::reinit_rhs() {
-  // rhs = new NumericVectorDistributed(MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs);
-  // rhs = new dealii::PETScWrappers::MPI::Vector(own_dofs, GlobalMPI.communicators_by_level[level]);
+  rhs.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
 }
 
 void LocalProblem::reinit() {

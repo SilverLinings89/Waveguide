@@ -423,3 +423,8 @@ Ok, so there is obviously an error int he way that either the dof-numbering or t
 Both of these errors are important and they might influence eachother.
 I am really stuck at the moment so I will see if the problem is in the distribution of dofs. To figure this out, I will write output that will print the dof indices of every dof. Then I will run this with a mini example consisting of only one cell inner and one cell layer for PML.
 I found an error in the distribution of dof numbers which is fixed now. This fixed the issue. The computation is now correct again.
+On ot the itterative solver. I will need to implement all the operations as global operations, which will make interacting with datastructures a lot simpler because I will allways use global numbering. There will only be copies when communicating with the level below. Also: I have to decide if I want to use a replacement vector for the internal work or the actual VEC object I am supposed to put the solution into.
+
+# Wednesday, 15th of september
+
+Initial Sweeping implementation done. Currently, there is some indexing problem in S_inv's call to set_child_rhs which I will figure out next. The entire sweep application is implemented as a collective operation.
