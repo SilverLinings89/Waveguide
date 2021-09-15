@@ -69,9 +69,7 @@ bool NeighborSurface::is_position_at_boundary(Position, BoundaryId) {
 }
 
 void NeighborSurface::initialize() {
-	for(unsigned int surf = 0; surf < 6; surf++) {
-
-	}
+	
 }
 
 unsigned int NeighborSurface::cells_for_boundary_id(unsigned int) {
@@ -177,13 +175,13 @@ void NeighborSurface::receive_from_below_dofs() {
 	const unsigned int n_dofs = dofs.size();
 	DofIndexVector local_indices(n_dofs);
 	for(unsigned int i = 0; i < n_dofs; i++){
-			local_indices[i] = dofs[i].index;
+		local_indices[i] = dofs[i].index;
 	} 
 	unsigned int * dof_indices = new unsigned int[n_dofs];
 	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0);
 	DofIndexVector global_indices(n_dofs);
 	for(unsigned int i = 0; i < n_dofs; i++){
-			global_indices[i] = dof_indices[i];
+		global_indices[i] = dof_indices[i];
 	}
 	Geometry.levels[level].inner_domain->set_non_local_dof_indices(local_indices, global_indices);
 }

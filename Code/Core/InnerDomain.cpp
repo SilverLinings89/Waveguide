@@ -293,7 +293,8 @@ struct CellwiseAssemblyDataNP {
   fe_field(0),
   exact_solution_ramped(true, false)
   { 
-    has_input_interface = GlobalParams.Index_in_z_direction == 0;
+    // has_input_interface = GlobalParams.Index_in_z_direction == 0;
+    has_input_interface = false;
     cell_rhs = 0;
     for (unsigned int i = 0; i < 3; i++) {
       for (unsigned int j = 0; j < 3; j++) {
@@ -495,9 +496,12 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
   
   Function<3,ComplexNumber> * esc;
   esc = GlobalParams.source_field;
-  
+  dealii::IndexSet local_indices(n_locally_active_dofs);
+  local_indices.add_range(0,n_locally_active_dofs);
+  Constraints local_constraints(local_indices);
+  local_constraints.close();
   dealii::Vector<ComplexNumber> interpolated_exact_solution(in_solution.size());
-  // VectorTools::project(dof_handler, local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *esc, interpolated_exact_solution);
+  VectorTools::project(dof_handler, local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *esc, interpolated_exact_solution);
   
   data_out.add_data_vector(interpolated_exact_solution, "Exact_Solution");
   

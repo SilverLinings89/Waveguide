@@ -8,7 +8,7 @@
 class NeighborSurface : public BoundaryCondition {
     
   public: 
-    const bool is_primary; // The process with lower rank on the surface is the primary. It "goes first" when equal tasks have to be performed one after the other.
+    const bool is_primary;
     const unsigned int global_partner_mpi_rank;
     const unsigned int partner_mpi_rank_in_level_communicator;
     std::array<std::set<unsigned int>, 6> edge_ids_by_boundary_id;

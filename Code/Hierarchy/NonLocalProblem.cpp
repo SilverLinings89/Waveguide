@@ -232,15 +232,10 @@ void NonLocalProblem::assemble() {
       Geometry.levels[level].surfaces[i]->fill_matrix(matrix, &rhs, &constraints);
       timer.stop();
   }
-  MPI_Barrier(MPI_COMM_WORLD);
   print_info("NonLocalProblem::assemble", "Compress matrix.");
   matrix->compress(dealii::VectorOperation::add);
-  MPI_Barrier(MPI_COMM_WORLD);
   print_info("NonLocalProblem::assemble", "Assemble child.");
   child->assemble();
-  print_info("NonLocalProblem::assemble", "Assemble rhs.");
-  compute_rhs_representation_of_incoming_wave();
-  MPI_Barrier(MPI_COMM_WORLD);
   print_info("NonLocalProblem::assemble", "Compress vectors.");
   solution.compress(dealii::VectorOperation::add);
   print_info("NonLocalProblem::assemble", "End assembly.");
@@ -250,7 +245,8 @@ void NonLocalProblem::solve() {
   print_info("NonLocalProblem::solve", "Start");
   GlobalTimerManager.switch_context("solve", level);
   rhs.compress(VectorOperation::add);
-  
+  child->solve();
+  child->output_results("ChildOutput");
   if(!GlobalParams.solve_directly) {
     // Solve with sweeping
     constraints.distribute(solution);
@@ -301,6 +297,7 @@ NumericVectorLocal NonLocalProblem::S_inv(NumericVectorLocal in_u) {
   set_u_from_child_solution(&ret);
   return ret;
 }
+
 void NonLocalProblem::set_u_from_child_solution(NumericVectorLocal * u_in) {
   
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->dof_handler.n_dofs(); i++) {
@@ -366,8 +363,10 @@ void NonLocalProblem::reinit() {
   solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   direct_solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   solution_error.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
-  // matrix->reinit(Geometry.levels[level].dof_distribution[rank], Geometry.levels[level].dof_distribution[rank], sp, GlobalMPI.communicators_by_level[level]);
-  matrix->reinit(GlobalMPI.communicators_by_level[level], sp,local_rows ,local_rows, rank);
+  IndexSet all_dofs(Geometry.levels[level].n_total_level_dofs);
+  all_dofs.add_range(0,Geometry.levels[level].n_total_level_dofs);
+  matrix->reinit(Geometry.levels[level].dof_distribution[rank], Geometry.levels[level].dof_distribution[rank], sp, GlobalMPI.communicators_by_level[level]);
+  //matrix->reinit(GlobalMPI.communicators_by_level[level], sp,local_rows ,local_rows, rank);
   print_info("Nonlocal reinit", "Reinit done");
 }
 

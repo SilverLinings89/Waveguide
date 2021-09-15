@@ -414,3 +414,12 @@ I can use the dealii::LinearAlgebra::distributed::Vector class to perform data s
 I have now removed all the code I wont need anymore, which was a lot. The code is currently compilable. The apply_sweep function is empty. I reactivated the direct vs iterative switch in solve.
 
 Updated the output code to use the direct solver flag again. Also, the output now works again I think. However, the Dirichlet data is not yet working. The code runs completely again but the solution of a direct solve is not correct.
+
+# Tuesday, 14th of september
+
+Ok, so there is obviously an error int he way that either the dof-numbering or the solution output is implemented. Current symptoms:
+- The solution behaves weird. The amplitude for real and imag part are in phase with eachother and the amplitudes are both wrong (real too big, imag too small).
+- There are discontinuities at every boundary interface.
+Both of these errors are important and they might influence eachother.
+I am really stuck at the moment so I will see if the problem is in the distribution of dofs. To figure this out, I will write output that will print the dof indices of every dof. Then I will run this with a mini example consisting of only one cell inner and one cell layer for PML.
+

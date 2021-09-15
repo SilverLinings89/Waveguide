@@ -138,12 +138,10 @@ void LocalProblem::solve() {
   GlobalTimerManager.switch_context("solve", level);
   Timer timer1;
   timer1.start ();
-  // dealii::PETScWrappers::MPI::Vector temp_rhs = *rhs;
   solution = 0;
-  constraints.distribute(solution);
   solver.solve(*matrix, solution, rhs);
+  constraints.distribute(solution);
   timer1.stop();
-  // constraints.distribute(solution);
   solve_counter ++;
 }
 

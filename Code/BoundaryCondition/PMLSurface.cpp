@@ -595,6 +595,9 @@ std::string PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_
   data_out.attach_dof_handler(dof_h_nedelec);
   data_out.add_data_vector(in_data, "Solution");
   dealii::Vector<ComplexNumber> zero = dealii::Vector<ComplexNumber>(in_data.size());
+  for(unsigned int i = 0; i < in_data.size(); i++) {
+    zero[i] = 0;
+  }
   data_out.add_data_vector(zero, "Exact_Solution");
   const std::string filename = GlobalOutputManager.get_numbered_filename(in_filename + "-" + std::to_string(b_id) + "-", GlobalParams.MPI_Rank, "vtu");
   std::ofstream outputvtu(filename);
@@ -648,7 +651,7 @@ DofCount PMLSurface::compute_n_locally_active_dofs() {
 
 void PMLSurface::finish_dof_index_initialization() {
   for(unsigned int surf = 0; surf < 6; surf++) {
-    if(!is_surface_owned[b_id][surf]) {
+    if(!is_surface_owned[b_id][surf] && (surf != inner_boundary_id && surf != outer_boundary_id)) {
       if (Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
         DofIndexVector dofs_in_global_numbering = Geometry.levels[level].surfaces[surf]->get_global_dof_indices_by_boundary_id(b_id);
         std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(surf);
@@ -660,6 +663,18 @@ void PMLSurface::finish_dof_index_initialization() {
       }
     }
   }
+  // Do the same for the inner interface
+  std::vector<InterfaceDofData> global_interface_data = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_boundary_id(b_id);
+  std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(inner_boundary_id);
+  DofIndexVector dofs_in_local_numbering(local_interface_data.size());
+  DofIndexVector dofs_in_global_numbering(local_interface_data.size());
+  
+  for(unsigned int i = 0; i < local_interface_data.size(); i++) {
+    dofs_in_local_numbering[i] = local_interface_data[i].index;
+    dofs_in_global_numbering[i] = global_interface_data[i].index;
+  }
+  set_non_local_dof_indices(dofs_in_local_numbering, dofs_in_global_numbering);
+
 }
 
 void PMLSurface::determine_non_owned_dofs() {
@@ -686,11 +701,10 @@ bool PMLSurface::finish_initialization(DofNumber index) {
 }
 
 Constraints PMLSurface::make_constraints() {
-	Constraints ret(Geometry.levels[level].inner_domain->global_dof_indices);
-	dealii::IndexSet local_dof_set(Geometry.levels[level].inner_domain->n_locally_active_dofs);
-	local_dof_set.add_range(0,Geometry.levels[level].inner_domain->n_locally_active_dofs);
-	AffineConstraints<ComplexNumber> constraints_local(local_dof_set);
-	std::vector<InterfaceDofData> dofs = get_dof_association_by_boundary_id(outer_boundary_id);
+  IndexSet global_indices = IndexSet(Geometry.levels[level].n_total_level_dofs);
+  global_indices.add_range(0, Geometry.levels[level].n_total_level_dofs);
+  Constraints ret(global_indices);
+  std::vector<InterfaceDofData> dofs = get_dof_association_by_boundary_id(outer_boundary_id);
   for(auto dof : dofs) {
 		const unsigned int local_index = dof.index;
 		const unsigned int global_index = global_index_mapping[local_index];

@@ -50,14 +50,13 @@ auto HierarchicalProblem::opposing_site_bid(BoundaryId in_bid) -> BoundaryId {
 
 void HierarchicalProblem::make_constraints() {
   print_info("HierarchicalProblem::make_constraints", "Start");
-  distribute_global_indices();
   IndexSet total_dofs_global(Geometry.levels[level].n_total_level_dofs);
   total_dofs_global.add_range(0,Geometry.levels[level].n_total_level_dofs);
   constraints.reinit(total_dofs_global);
   
   for(unsigned int i = 0; i < 6; i++) {
     Constraints local_constraints = Geometry.levels[level].surfaces[i]->make_constraints();
-    constraints.merge(local_constraints, Constraints::MergeConflictBehavior::right_object_wins,true);
+    constraints.merge(local_constraints, Constraints::MergeConflictBehavior::left_object_wins,true);
   }
 
   constraints.close();
@@ -84,7 +83,7 @@ std::string HierarchicalProblem::output_results(std::string in_fname_part) {
   std::string ret = "";
   NumericVectorLocal in_solution(Geometry.levels[level].inner_domain->dof_handler.n_dofs());
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->dof_handler.n_dofs(); i++) {
-    in_solution[i] = solution[Geometry.levels[level].inner_first_dof + i];
+    in_solution[i] = solution[Geometry.levels[level].inner_domain->global_index_mapping[i]];
   }
   std::string file_1 = Geometry.levels[level].inner_domain->output_results(in_fname_part + std::to_string(level) , in_solution);
   ret = file_1;
@@ -96,7 +95,7 @@ std::string HierarchicalProblem::output_results(std::string in_fname_part) {
       if(Geometry.levels[level].surface_type[i] == SurfaceType::ABC_SURFACE){
         dealii::Vector<ComplexNumber> ds (Geometry.levels[level].surfaces[i]->dof_counter);
         for(unsigned int index = 0; index < Geometry.levels[level].surfaces[i]->dof_counter; index++) {
-          ds[index] = solution(index + Geometry.levels[level].surface_first_dof[i]);
+          ds[index] = solution[Geometry.levels[level].surfaces[i]->global_index_mapping[index]];
         }
         std::string file_2 = Geometry.levels[level].surfaces[i]->output_results(ds, "pml_domain" + std::to_string(level));
         filenames.push_back(file_2);
@@ -105,24 +104,6 @@ std::string HierarchicalProblem::output_results(std::string in_fname_part) {
   }
 
   // End of core output
-
-  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
-    in_solution[i] = solution_error[Geometry.levels[level].inner_first_dof + i];
-  }
-  Geometry.levels[level].inner_domain->output_results("error" + std::to_string(level) , in_solution);
-
-  if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML) {
-    for(unsigned int i = 0; i < 6; i++){
-      if(Geometry.levels[level].is_surface_truncated[i]){
-        dealii::Vector<ComplexNumber> ds (Geometry.levels[level].surfaces[i]->dof_counter);
-        for(unsigned int index = 0; index < Geometry.levels[level].surfaces[i]->dof_counter; index++) {
-          ds[index] = solution_error(index + Geometry.levels[level].surface_first_dof[i]);
-        }
-        Geometry.levels[level].surfaces[i]->output_results(ds, "error_in_pml" + std::to_string(level));
-      }
-    }
-  }
-
   if(level != 0) {
   //  child->output_results();
   }
@@ -141,12 +122,3 @@ void HierarchicalProblem::execute_vmult() {
   // constraints.distribute(solution);
 }
 
-void HierarchicalProblem::compute_rhs_representation_of_incoming_wave() {
-  
-}
-
-void HierarchicalProblem::distribute_global_indices() {
-  // First receive all dofs from below
-
-
-}
