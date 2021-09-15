@@ -422,4 +422,4 @@ Ok, so there is obviously an error int he way that either the dof-numbering or t
 - There are discontinuities at every boundary interface.
 Both of these errors are important and they might influence eachother.
 I am really stuck at the moment so I will see if the problem is in the distribution of dofs. To figure this out, I will write output that will print the dof indices of every dof. Then I will run this with a mini example consisting of only one cell inner and one cell layer for PML.
-
+I found an error in the distribution of dof numbers which is fixed now. This fixed the issue. The computation is now correct again.

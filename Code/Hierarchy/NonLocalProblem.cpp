@@ -22,6 +22,14 @@
 #include <string>
 #include <vector>
 
+void print_dof_ranges(std::string name, FEDomain * in_fedomain) {
+  std::cout << "For " << name << " I found the dofs ";
+  for(unsigned int i = 0; i < in_fedomain->global_index_mapping.size(); i++) {
+    std::cout << in_fedomain->global_index_mapping[i] << " "; 
+  }
+  std::cout << std::endl;
+}
+
 double l2_norm(DofFieldTrace in_trace) {
   double ret = 0;
   for(unsigned int i = 0; i < in_trace.size(); i++) {
@@ -239,14 +247,14 @@ void NonLocalProblem::assemble() {
   print_info("NonLocalProblem::assemble", "Compress vectors.");
   solution.compress(dealii::VectorOperation::add);
   print_info("NonLocalProblem::assemble", "End assembly.");
+  
 }
 
 void NonLocalProblem::solve() {
   print_info("NonLocalProblem::solve", "Start");
   GlobalTimerManager.switch_context("solve", level);
   rhs.compress(VectorOperation::add);
-  child->solve();
-  child->output_results("ChildOutput");
+  
   if(!GlobalParams.solve_directly) {
     // Solve with sweeping
     constraints.distribute(solution);

@@ -671,7 +671,7 @@ void PMLSurface::finish_dof_index_initialization() {
   
   for(unsigned int i = 0; i < local_interface_data.size(); i++) {
     dofs_in_local_numbering[i] = local_interface_data[i].index;
-    dofs_in_global_numbering[i] = global_interface_data[i].index;
+    dofs_in_global_numbering[i] = Geometry.levels[level].inner_domain->global_index_mapping[global_interface_data[i].index];
   }
   set_non_local_dof_indices(dofs_in_local_numbering, dofs_in_global_numbering);
 

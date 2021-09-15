@@ -179,8 +179,6 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
     }
   }
 
-  
-
   levels[in_level].n_local_dofs = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].n_elements();
   levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution[0].size();
   
