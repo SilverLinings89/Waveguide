@@ -88,4 +88,6 @@ private:
   void subtract_vectors(NumericVectorDistributed * a, NumericVectorDistributed * b);
 
   NumericVectorDistributed off_diagonal_product(unsigned int i, unsigned int j, NumericVectorDistributed *);
+
+  void print_vector_norm(NumericVectorDistributed * , std::string marker);
 };

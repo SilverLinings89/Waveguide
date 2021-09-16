@@ -1,5 +1,5 @@
 subsection Run parameters
-  set GMRES maximum steps    = 1
+  set GMRES maximum steps    = 10
   set solve directly         = false
   set sweeping level         = 1
   set processes in x         = 1

@@ -114,6 +114,7 @@ void LocalProblem::assemble() {
   }
   matrix->compress(dealii::VectorOperation::add);
   rhs.compress(dealii::VectorOperation::add);
+  solution_error = rhs;
 }
 
 void LocalProblem::reinit_rhs() {
@@ -124,7 +125,9 @@ void LocalProblem::reinit() {
   reinit_rhs();
   rhs = dealii::PETScWrappers::MPI::Vector(own_dofs, MPI_COMM_SELF);
   solution.reinit(MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs, false);
+  solution_error.reinit(MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs, false);
   solution = 0;
+  solution_error = 0;
   make_constraints();
   constraints.close();
   make_sparsity_pattern();
@@ -139,7 +142,7 @@ void LocalProblem::solve() {
   timer1.start ();
   solution = 0;
   solver.solve(*matrix, solution, rhs);
-  constraints.distribute(solution);
+  // constraints.distribute(solution);
   timer1.stop();
   solve_counter ++;
 }
