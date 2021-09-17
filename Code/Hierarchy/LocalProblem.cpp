@@ -141,8 +141,10 @@ void LocalProblem::solve() {
   Timer timer1;
   timer1.start ();
   solution = 0;
+  // std::cout << "Before: " << rhs.l2_norm() << std::endl;
+  constraints.distribute(rhs);
   solver.solve(*matrix, solution, rhs);
-  // constraints.distribute(solution);
+  // std::cout << "After: " << solution.l2_norm() << std::endl;
   timer1.stop();
   solve_counter ++;
 }

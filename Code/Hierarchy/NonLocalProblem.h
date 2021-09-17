@@ -23,6 +23,7 @@ private:
   PetscInt* locally_owned_dofs_index_array;
   std::vector<NumericVectorLocal> stored_solutions;
   unsigned int n_locally_active_dofs;
+  unsigned int step_counter = 0;
   
  public:
   NonLocalProblem(unsigned int);

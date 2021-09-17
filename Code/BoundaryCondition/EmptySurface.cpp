@@ -88,3 +88,18 @@ DofCount EmptySurface::compute_n_locally_active_dofs() {
 void EmptySurface::determine_non_owned_dofs() {
 
 }
+
+Constraints EmptySurface::make_constraints() {
+	Constraints ret(Geometry.levels[level].inner_domain->global_dof_indices);
+	dealii::IndexSet local_dof_set(Geometry.levels[level].inner_domain->n_locally_active_dofs);
+	local_dof_set.add_range(0,Geometry.levels[level].inner_domain->n_locally_active_dofs);
+	AffineConstraints<ComplexNumber> constraints_local(local_dof_set);
+    std::vector<InterfaceDofData> dofs = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_boundary_id(b_id);
+	for(auto line : dofs) {
+		const unsigned int local_index = line.index;
+		const unsigned int global_index = Geometry.levels[level].inner_domain->global_index_mapping[local_index];
+		ret.add_line(global_index);
+		ret.set_inhomogeneity(global_index, ComplexNumber(0,0));
+	}
+  return ret;
+}
