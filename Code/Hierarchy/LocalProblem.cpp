@@ -140,12 +140,15 @@ void LocalProblem::solve() {
   GlobalTimerManager.switch_context("solve", level);
   Timer timer1;
   timer1.start ();
-  solution = 0;
   // std::cout << "Before: " << rhs.l2_norm() << std::endl;
-  constraints.distribute(rhs);
+  // constraints.distribute(rhs);
+  rhs.compress(dealii::VectorOperation::insert);
   solver.solve(*matrix, solution, rhs);
   // std::cout << "After: " << solution.l2_norm() << std::endl;
   timer1.stop();
+  if(solve_counter == 0 && GlobalParams.MPI_Rank == 0) {
+    output_results("FirstStep");
+  } 
   solve_counter ++;
 }
 

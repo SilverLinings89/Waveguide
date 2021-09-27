@@ -274,7 +274,9 @@ void NonLocalProblem::solve() {
     dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, MPI_COMM_WORLD);
     solver1.solve(*matrix, solution, rhs);
   }
+  matrix->residual(solution_error, solution, rhs);
   constraints.distribute(solution);
+  write_multifile_output("error_of_solution", solution_error);
   print_info("NonLocalProblem::solve", "End");
 }
 
@@ -302,6 +304,7 @@ void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   vec_a.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   vec_b.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   
+  write_multifile_output("Step" + std::to_string(step_counter), temp_solution);
   for(unsigned int i = 0; i < n_procs_in_sweep-1; i++) {
     vec_a = off_diagonal_product(i, i+1, &temp_solution);
     print_vector_norm(&vec_a, "C1");
@@ -310,7 +313,6 @@ void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
     print_vector_norm(&temp_solution, "C2");
     vec_b.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   }
-  write_multifile_output("Step" + std::to_string(step_counter), temp_solution);
   step_counter ++;
   set_x_out_from_u(u_out, &temp_solution);
 }
@@ -338,56 +340,14 @@ void NonLocalProblem::S_inv(NumericVectorDistributed * src, NumericVectorDistrib
   dst->compress(dealii::VectorOperation::insert);
 }
 
-void NonLocalProblem::set_vector_from_child_solution(NumericVectorDistributed * u_in) {
-  
-  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
-    if(Geometry.levels[level].inner_domain->is_dof_owned[i] && Geometry.levels[level-1].inner_domain->is_dof_owned[i]) {
-      u_in->operator[](Geometry.levels[level].inner_domain->global_index_mapping[i]) = child->solution[Geometry.levels[level-1].inner_domain->global_index_mapping[i]];
-    }
-  }
-  
-  for(unsigned int surf = 0; surf < 6; surf++) {
-    if(Geometry.levels[level].surface_type[surf] == Geometry.levels[level-1].surface_type[surf]) {
-      for(unsigned int i = 0; i < Geometry.levels[level].surfaces[surf]->n_locally_active_dofs; i++) {
-        if(Geometry.levels[level].surfaces[surf]->is_dof_owned[i] && Geometry.levels[level-1].surfaces[surf]->is_dof_owned[i]) {
-          u_in->operator[](Geometry.levels[level].surfaces[surf]->global_index_mapping[i]) = child->solution[Geometry.levels[level-1].surfaces[surf]->global_index_mapping[i]];
-        }
-      }
-    }
-  }
-}
-
-double NonLocalProblem::compute_interface_norm_for_u(NumericVectorLocal u, BoundaryId in_bid) {
-  double ret = 0;
-  std::vector<InterfaceDofData> boundary_dofs = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_boundary_id(in_bid);
-  for(unsigned int i = 0; i < boundary_dofs.size(); i++) {
-    ComplexNumber c = u[boundary_dofs[i].index];
-    ret += c.real() * c.real() + c.imag() * c.imag();
-  }
-  return std::sqrt(ret);
+void NonLocalProblem::set_vector_from_child_solution(NumericVectorDistributed * in_u) {
+  child->solution.extract_subvector_to(vector_copy_child_indeces, vector_copy_array);
+  in_u->set(vector_copy_own_indices, vector_copy_array);
 }
 
 void NonLocalProblem::set_child_rhs_from_vector(NumericVectorDistributed * in_u) {
-  // child->rhs_mismatch = child->rhs;
-  // child->rhs_mismatch.compress(VectorOperation::insert);
-  child->reinit_rhs();
-  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
-    if(Geometry.levels[level].inner_domain->is_dof_owned[i] && Geometry.levels[level-1].inner_domain->is_dof_owned[i]) {
-      ComplexNumber temp = in_u->operator()(Geometry.levels[level].inner_domain->global_index_mapping[i]);
-      child->rhs[Geometry.levels[level-1].inner_domain->global_index_mapping[i]] = temp;
-    }
-  }
-  for(unsigned int surf = 0; surf < 6; surf++) {
-    if(Geometry.levels[level].surface_type[surf] == Geometry.levels[level-1].surface_type[surf]) {
-      for(unsigned int i = 0; i < Geometry.levels[level].surfaces[surf]->n_locally_active_dofs; i++) {
-        if(Geometry.levels[level].surfaces[surf]->is_dof_owned[i] && Geometry.levels[level-1].surfaces[surf]->is_dof_owned[i]) {
-          ComplexNumber temp = in_u->operator()(Geometry.levels[level].surfaces[surf]->global_index_mapping[i]);
-          child->rhs[Geometry.levels[level-1].surfaces[surf]->global_index_mapping[i]] = temp;
-        }
-      }
-    }
-  }
-  child->rhs.compress(VectorOperation::insert);
+  in_u->extract_subvector_to(vector_copy_own_indices, vector_copy_array);
+  child->rhs.set(vector_copy_child_indeces, vector_copy_array);
 }
 
 void NonLocalProblem::reinit() {
@@ -412,6 +372,27 @@ void NonLocalProblem::reinit() {
   all_dofs.add_range(0,Geometry.levels[level].n_total_level_dofs);
   matrix->reinit(Geometry.levels[level].dof_distribution[rank], Geometry.levels[level].dof_distribution[rank], sp, GlobalMPI.communicators_by_level[level]);
   //matrix->reinit(GlobalMPI.communicators_by_level[level], sp,local_rows ,local_rows, rank);
+
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
+    if(Geometry.levels[level].inner_domain->is_dof_owned[i] && Geometry.levels[level-1].inner_domain->is_dof_owned[i]) {
+      vector_copy_own_indices.push_back(Geometry.levels[level].inner_domain->global_index_mapping[i]);
+      vector_copy_child_indeces.push_back(Geometry.levels[level-1].inner_domain->global_index_mapping[i]);
+      vector_copy_array.push_back(ComplexNumber(0.0, 0.0));
+    }
+  }
+  
+  for(unsigned int surf = 0; surf < 6; surf++) {
+    if(Geometry.levels[level].surface_type[surf] == Geometry.levels[level-1].surface_type[surf]) {
+      for(unsigned int i = 0; i < Geometry.levels[level].surfaces[surf]->n_locally_active_dofs; i++) {
+        if(Geometry.levels[level].surfaces[surf]->is_dof_owned[i] && Geometry.levels[level-1].surfaces[surf]->is_dof_owned[i]) {
+          vector_copy_own_indices.push_back(Geometry.levels[level].surfaces[surf]->global_index_mapping[i]);
+          vector_copy_child_indeces.push_back(Geometry.levels[level-1].surfaces[surf]->global_index_mapping[i]);
+          vector_copy_array.push_back(ComplexNumber(0.0, 0.0));
+        }
+      }
+    }
+  }
+
   print_info("Nonlocal reinit", "Reinit done");
 }
 

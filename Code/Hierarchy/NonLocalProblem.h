@@ -24,6 +24,9 @@ private:
   std::vector<NumericVectorLocal> stored_solutions;
   unsigned int n_locally_active_dofs;
   unsigned int step_counter = 0;
+  std::vector<unsigned int> vector_copy_own_indices;
+  std::vector<unsigned int> vector_copy_child_indeces;
+  std::vector<ComplexNumber> vector_copy_array;
   
  public:
   NonLocalProblem(unsigned int);
@@ -61,8 +64,6 @@ private:
   auto set_x_out_from_u(Vec x_out, NumericVectorDistributed * u_in) -> void;
 
   auto set_u_from_child_solution(NumericVectorDistributed * u)-> void;
-
-  auto compute_interface_norm_for_u(NumericVectorLocal u, BoundaryId) -> double;
 
   std::string output_results();
 

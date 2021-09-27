@@ -18,9 +18,9 @@
 #include "PMLMeshTransformation.h"
 
 DirichletSurface::DirichletSurface(unsigned int in_surface, unsigned int in_level)
-    : BoundaryCondition(in_surface, in_level, Geometry.surface_extremal_coordinate[in_level])
-    {
-    dof_counter = 0;
+	: BoundaryCondition(in_surface, in_level, Geometry.surface_extremal_coordinate[in_level])
+	{
+	dof_counter = 0;
 }
 
 DirichletSurface::~DirichletSurface() {
@@ -28,21 +28,21 @@ DirichletSurface::~DirichletSurface() {
 }
 
 void DirichletSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, NumericVectorDistributed*, Constraints *) {
-    matrix->compress(dealii::VectorOperation::add); // <-- this operation is collective and therefore required.
+	matrix->compress(dealii::VectorOperation::add); // <-- this operation is collective and therefore required.
 }
 
 void DirichletSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix *, NumericVectorDistributed *, Constraints *) {
-    // Nothing to do here, work happens on neighbor process.
+	// Nothing to do here, work happens on neighbor process.
 }
 
 void DirichletSurface::fill_matrix(dealii::SparseMatrix<ComplexNumber> * matrix, Constraints *) {
-    matrix->compress(dealii::VectorOperation::add);
-    // Nothing to do here, work happens on neighbor process.
+	matrix->compress(dealii::VectorOperation::add);
+	// Nothing to do here, work happens on neighbor process.
 }
 
 void DirichletSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, NumericVectorDistributed *, Constraints *) {
-     matrix->compress(dealii::VectorOperation::add); // <-- this operation is collective and therefore required.
-    // Nothing to do here, work happens on neighbor process.
+	 matrix->compress(dealii::VectorOperation::add); // <-- this operation is collective and therefore required.
+	// Nothing to do here, work happens on neighbor process.
 }
 
 void DirichletSurface::identify_corner_cells() {
@@ -50,7 +50,7 @@ void DirichletSurface::identify_corner_cells() {
 }
 
 bool DirichletSurface::is_point_at_boundary(Position2D, BoundaryId) {
-    return false;
+	return false;
 }
 
 void DirichletSurface::initialize() {
@@ -58,31 +58,31 @@ void DirichletSurface::initialize() {
 }
 
 unsigned int DirichletSurface::get_dof_count_by_boundary_id(BoundaryId) {
-    return 0;
+	return 0;
 }
 
 std::vector<InterfaceDofData> DirichletSurface::get_dof_association() {
-    std::vector<InterfaceDofData> ret;
-    return ret;
+	std::vector<InterfaceDofData> ret;
+	return ret;
 }
 
 std::vector<InterfaceDofData> DirichletSurface::get_dof_association_by_boundary_id(BoundaryId) {
-    std::vector<InterfaceDofData> ret;
-    return ret;
+	std::vector<InterfaceDofData> ret;
+	return ret;
 }
 
 std::string DirichletSurface::output_results(const dealii::Vector<ComplexNumber> & , std::string) {
-    return "";
+	return "";
 }
 
 void DirichletSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern * , Constraints * ) { }
 
 DofCount DirichletSurface::compute_n_locally_owned_dofs() {
-    return 0;
+	return 0;
 }
 
 DofCount DirichletSurface::compute_n_locally_active_dofs() {
-    return 0;
+	return 0;
 }
 
 void DirichletSurface::determine_non_owned_dofs() {
@@ -95,12 +95,25 @@ Constraints DirichletSurface::make_constraints() {
 	local_dof_set.add_range(0,Geometry.levels[level].inner_domain->n_locally_active_dofs);
 	AffineConstraints<ComplexNumber> constraints_local(local_dof_set);
 	ExactSolution es(true, false);
-  VectorTools::project_boundary_values_curl_conforming_l2(Geometry.levels[level].inner_domain->dof_handler, 0, es, 4, constraints_local);
+	VectorTools::project_boundary_values_curl_conforming_l2(Geometry.levels[level].inner_domain->dof_handler, 0, es, 4, constraints_local);
 	for(auto line : constraints_local.get_lines()) {
 		const unsigned int local_index = line.index;
 		const unsigned int global_index = Geometry.levels[level].inner_domain->global_index_mapping[local_index];
 		ret.add_line(global_index);
 		ret.set_inhomogeneity(global_index, line.inhomogeneity);
+	}
+	for(unsigned int surf = 0; surf < 6; surf++) {
+		if(surf != b_id && !are_opposing_sites(b_id, surf)) {
+			if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
+				std::vector<InterfaceDofData> dofs = Geometry.levels[level].surfaces[surf]->get_dof_association_by_boundary_id(b_id);
+				for(unsigned int i = 0; i < dofs.size(); i++) {
+					const unsigned int local_index = dofs[i].index;
+					const unsigned int global_index = Geometry.levels[level].surfaces[surf]->global_index_mapping[local_index];
+					ret.add_line(global_index);
+					ret.set_inhomogeneity(global_index, ComplexNumber(0,0));
+				}
+			}
+		}
 	}
   return ret;
 }

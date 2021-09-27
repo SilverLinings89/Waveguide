@@ -101,5 +101,18 @@ Constraints EmptySurface::make_constraints() {
 		ret.add_line(global_index);
 		ret.set_inhomogeneity(global_index, ComplexNumber(0,0));
 	}
+	for(unsigned int surf = 0; surf < 6; surf++) {
+		if(surf != b_id && !are_opposing_sites(b_id, surf)) {
+			if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
+				std::vector<InterfaceDofData> dofs = Geometry.levels[level].surfaces[surf]->get_dof_association_by_boundary_id(b_id);
+				for(unsigned int i = 0; i < dofs.size(); i++) {
+					const unsigned int local_index = dofs[i].index;
+					const unsigned int global_index = Geometry.levels[level].surfaces[surf]->global_index_mapping[local_index];
+					ret.add_line(global_index);
+					ret.set_inhomogeneity(global_index, ComplexNumber(0,0));
+				}
+			}
+		}
+	}
   return ret;
 }
