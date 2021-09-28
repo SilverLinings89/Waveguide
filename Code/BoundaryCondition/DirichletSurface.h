@@ -11,7 +11,6 @@ class DirichletSurface : public BoundaryCondition {
     DirichletSurface(unsigned int in_bid, unsigned int in_level);
     ~DirichletSurface();
     
-    void identify_corner_cells() override;
     void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;
     void fill_matrix(dealii::SparseMatrix<ComplexNumber>*,  Constraints *constraints) override;
     void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;

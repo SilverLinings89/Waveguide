@@ -22,7 +22,6 @@ class NeighborSurface : public BoundaryCondition {
     
     void prepare_id_sets_for_boundaries();
     bool is_point_at_boundary(Position, BoundaryId);
-    void identify_corner_cells() override;
     void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;
     void fill_matrix(dealii::SparseMatrix<ComplexNumber>*,  Constraints *constraints) override;
     void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;

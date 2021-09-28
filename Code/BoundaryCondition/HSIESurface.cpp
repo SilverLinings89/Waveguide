@@ -1062,10 +1062,6 @@ std::vector<InterfaceDofData> HSIESurface::get_dof_association() {
   return ret;
 }
 
-void HSIESurface::identify_corner_cells() {
-
-}
-
 bool HSIESurface::check_dof_assignment_integrity() {
   HSIEPolynomial::computeDandI(order + 2, k0);
   auto it = dof_h_nedelec.begin_active();

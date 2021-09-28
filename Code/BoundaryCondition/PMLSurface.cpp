@@ -116,10 +116,6 @@ bool PMLSurface::is_point_at_boundary(Position2D, BoundaryId) {
   return false;
 }
 
-void PMLSurface::identify_corner_cells() {
-  
-}
-
 void PMLSurface::validate_meshes() {
   std::array<unsigned int, 6> cells_per_surface;
   std::array<unsigned int, 6> dofs_per_surface;

@@ -39,9 +39,8 @@ public:
   DofCount n_vertex_dofs;
   
   HSIESurface(unsigned int surface, unsigned int level);
+  ~HSIESurface();
 
-  ~HSIESurface();  
-  void identify_corner_cells() override;
   std::vector<HSIEPolynomial> build_curl_term_q(unsigned int, const dealii::Tensor<1, 2>);
   std::vector<HSIEPolynomial> build_curl_term_nedelec(unsigned int, const dealii::Tensor<1, 2>, const dealii::Tensor<1, 2>, const double, const double);
   std::vector<HSIEPolynomial> build_non_curl_term_q(unsigned int, const double);

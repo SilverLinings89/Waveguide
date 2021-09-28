@@ -45,10 +45,6 @@ void DirichletSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* mat
 	// Nothing to do here, work happens on neighbor process.
 }
 
-void DirichletSurface::identify_corner_cells() {
-
-}
-
 bool DirichletSurface::is_point_at_boundary(Position2D, BoundaryId) {
 	return false;
 }

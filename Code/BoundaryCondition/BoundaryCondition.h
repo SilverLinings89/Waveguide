@@ -13,13 +13,12 @@ public:
   const BoundaryId b_id;
   const unsigned int level;
   const double additional_coordinate;
-  std::vector<unsigned int> corner_cell_ids;
   std::vector<InterfaceDofData> surface_dofs;
   bool surface_dof_sorting_done;
   bool boundary_coordinates_computed = false;
   std::array<double, 6> boundary_vertex_coordinates;
   DofCount dof_counter;
-  bool is_isolated_boundary; // If this is set to true, the Boundary does not couple to anything other than the interior. This happens on lower sweeping levels.
+  bool is_isolated_boundary;
 
   BoundaryCondition(unsigned int in_bid, unsigned int in_level, double in_additional_coordinate);
 
@@ -27,7 +26,6 @@ public:
   virtual std::string output_results(const dealii::Vector<ComplexNumber> & , std::string) = 0;
   
   // Geometry functionality and Boundary Ids.
-  virtual void identify_corner_cells() = 0;
   virtual bool is_point_at_boundary(Position2D in_p, BoundaryId in_bid) = 0;
   void set_mesh_boundary_ids();
   auto get_boundary_ids() -> std::vector<BoundaryId>;
@@ -52,4 +50,6 @@ public:
   virtual std::vector<DofNumber> receive_boundary_dofs(unsigned int other_bid);
 
   virtual auto make_constraints() -> Constraints;
+
+  void mark_as_isolated();
 };

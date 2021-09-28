@@ -45,10 +45,6 @@ void EmptySurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix,
     // Nothing to do here, work happens on neighbor process.
 }
 
-void EmptySurface::identify_corner_cells() {
-
-}
-
 bool EmptySurface::is_point_at_boundary(Position2D, BoundaryId) {
     return false;
 }

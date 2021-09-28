@@ -55,10 +55,6 @@ bool NeighborSurface::is_point_at_boundary(Position, BoundaryId) {
 	return false;
 }
 
-void NeighborSurface::identify_corner_cells() {
-
-}
-
 bool NeighborSurface::is_point_at_boundary(Position2D, BoundaryId) {
 	return false;
 }

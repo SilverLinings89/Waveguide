@@ -10,26 +10,13 @@ BoundaryCondition::BoundaryCondition(unsigned int in_bid, unsigned int in_level,
   b_id(in_bid),
   level(in_level),
   additional_coordinate(in_additional_coordinate) {
+    is_isolated_boundary = false;
   is_surface_owned[0] = {true , false , false, true,  false, true };
   is_surface_owned[1] = {false , true , false, true,  false, true };
   is_surface_owned[2] = {true,  true,  true , false , false, true };
   is_surface_owned[3] = {false, false, false , true , false, true };
   is_surface_owned[4] = {true,  true,  true,  true,  true , false };
   is_surface_owned[5] = {false, false, false, false, false , true };
-}
-
-void BoundaryCondition::identify_corner_cells() {
-  auto it = Geometry.surface_meshes[b_id].begin_active();
-  auto end = Geometry.surface_meshes[b_id].end();
-  for(; it != end; ++it) {
-    unsigned int outside_edges = 0;
-    for(unsigned int i = 0; i< dealii::GeometryInfo<2>::faces_per_cell; ++i) {
-      if(it->face(i)->at_boundary()) outside_edges++;
-    }
-    if(outside_edges == 2) {
-      this->corner_cell_ids.push_back(it->index());
-    }
-  }
 }
 
 void BoundaryCondition::set_mesh_boundary_ids() {
@@ -117,4 +104,8 @@ std::vector<DofNumber> BoundaryCondition::receive_boundary_dofs(unsigned int oth
 Constraints BoundaryCondition::make_constraints() {
   Constraints ret(global_dof_indices);
   return ret;
+}
+
+void BoundaryCondition::mark_as_isolated() {
+  this->is_isolated_boundary = true;
 }
