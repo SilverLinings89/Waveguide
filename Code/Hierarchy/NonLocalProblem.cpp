@@ -256,7 +256,7 @@ void NonLocalProblem::solve() {
   GlobalTimerManager.switch_context("solve", level);
   rhs.compress(VectorOperation::add);
   print_vector_norm(&rhs, "RHS");
-  if(!GlobalParams.solve_directly) {
+  // if(!GlobalParams.solve_directly) {
     // Solve with sweeping
     KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc), nullptr);
     KSPSetPCSide(ksp, PCSide::PC_RIGHT);
@@ -268,14 +268,15 @@ void NonLocalProblem::solve() {
       std::cout << "Error code from Petsc: " << std::to_string(ierr) << std::endl;
     //   throw new ExcPETScError(ierr);
     }  
-  } else {
+  // } else {
     // Solve Directly for reference
     SolverControl sc;
     dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, MPI_COMM_WORLD);
-    solver1.solve(*matrix, solution, rhs);
-  }
-  matrix->residual(solution_error, solution, rhs);
-  constraints.distribute(solution);
+    solver1.solve(*matrix, solution_error, rhs);
+  // }
+  // matrix->residual(solution_error, solution, rhs);
+  subtract_vectors(&solution, &solution_error);
+  // constraints.distribute(solution);
   write_multifile_output("error_of_solution", solution_error);
   print_info("NonLocalProblem::solve", "End");
 }

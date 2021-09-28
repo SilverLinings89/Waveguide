@@ -428,3 +428,21 @@ On ot the itterative solver. I will need to implement all the operations as glob
 # Wednesday, 15th of september
 
 Initial Sweeping implementation done. Currently, there is some indexing problem in S_inv's call to set_child_rhs which I will figure out next. The entire sweep application is implemented as a collective operation.
+
+# Monday, 27th of september
+
+Some updates in this file were lost. But the implementation is looking stable so far. The only issue is currently the amplitude in the solution. I will implement some more output about the vectors (norm by process etc.).
+After replaceing the vector get and set operations, this part appeared to work and now, the amplitude is correct.
+
+# Tuesday, 28th of september
+
+The problem is solved now. The remaining issue is, that the boundary methods are not the same on all levels. The angeling for edge PML cells can cause 2 errors:
+1. They have different values than a straigt edge dof on the higher level would have.
+2. They are sorted differently than the straight ones.
+For these two reasons I cannot just copy the values between levels. I would copy wrong values and put them into wrong locations.
+
+As a result, I have to rethink how I deal with this case. This solution has to be evaluated for both PML and HSIE. My first instinct is to simply leave all edges on PML domains straight and all non-interface dofs locally owned in the boundary method. This is a suboptimal solution because there are no boundary conditions on the sideway interfaces of the pml domain which makes the problem underdetermined. I will try this solution for both HSIE and PML and see how the solutions turn out. If they are insuficient in convergence rate or non-physical solutions I can change that. 
+
+For PML I could consider to keep PML-edges the same on all levels but angled on the highest level. This would mean that a solution on the highest level would be physically viable, because on that level the boundary methods are appropriate and the system is not underdetermined. Also, in that case, the right-hand side terms might fix the issue of missing boundary conditions because the off-diagonal products essentially imply a boundary condition on those sides.
+
+To implement this solution I introduce the value is_isolated on BoundaryCondition type objects. If this is set to true, the edges are straight and the dofs are all locally owned (except the ones facing the interior). It will not couple to any other boundaries. This is the case if this surface is a NeighborSurface on higher sweeping levels.

@@ -19,6 +19,7 @@ public:
   bool boundary_coordinates_computed = false;
   std::array<double, 6> boundary_vertex_coordinates;
   DofCount dof_counter;
+  bool is_isolated_boundary; // If this is set to true, the Boundary does not couple to anything other than the interior. This happens on lower sweeping levels.
 
   BoundaryCondition(unsigned int in_bid, unsigned int in_level, double in_additional_coordinate);
 
