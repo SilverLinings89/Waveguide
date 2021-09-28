@@ -445,6 +445,10 @@ Direction GeometryManager::get_direction_for_boundary_id(BoundaryId in_bid) {
   }
 }
 
+bool GeometryManager::is_surface_isolated(BoundaryId b_id, unsigned int in_level) {
+  return (get_surface_type(b_id, in_level) == SurfaceType::ABC_SURFACE) && (get_surface_type(b_id, in_level+1) == SurfaceType::NEIGHBOR_SURFACE);
+}
+
 SurfaceType GeometryManager::get_surface_type(BoundaryId b_id, unsigned int in_level) {
   if(in_level == 0) {
     if(b_id == 4) {
@@ -583,6 +587,9 @@ void GeometryManager::initialize_surfaces_on_level(unsigned int in_level) {
           levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new HSIESurface(surf, in_level));
         } else {
           levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new PMLSurface(surf, in_level));
+        }
+        if(is_surface_isolated(surf, in_level)) {
+          levels[in_level].surfaces[surf]->mark_as_isolated();
         }
         break;
       case SurfaceType::DIRICHLET_SURFACE:

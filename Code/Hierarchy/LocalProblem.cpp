@@ -55,10 +55,6 @@ LocalProblem::~LocalProblem() {
   delete matrix;
 }
 
-auto LocalProblem::get_center() -> Position const {
-  return Geometry.get_local_center();
-}
-
 dealii::IndexSet LocalProblem::compute_interface_dof_set(BoundaryId interface_id) {
   BoundaryId opposing_interface_id = opposing_Boundary_Id(interface_id);
   dealii::IndexSet ret(Geometry.levels[0].n_local_dofs);

@@ -46,12 +46,6 @@ private:
   void initialize_index_sets() override;
 
   void reinit() override;
-  
-  auto get_center() -> Position const override;
-
-  bool is_lowest_in_sweeping_direction();
-
-  bool is_highest_in_sweeping_direction();
 
   void compute_solver_factorization() override;
 
@@ -82,8 +76,6 @@ private:
   void set_vector_from_child_solution(NumericVectorDistributed *);
 
   void set_child_rhs_from_vector(NumericVectorDistributed *);
-
-  void zero_local_contribution(NumericVectorDistributed *);
 
   void copy_local_part(NumericVectorDistributed * src, NumericVectorDistributed * dst);
 

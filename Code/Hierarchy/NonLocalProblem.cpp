@@ -413,52 +413,6 @@ void NonLocalProblem::initialize_index_sets() {
   get_petsc_index_array_from_index_set(locally_owned_dofs_index_array, own_dofs);
 }
 
-auto NonLocalProblem::get_center() -> Position const {
-  Position local_contribution = Geometry.get_local_center();
-  double x = dealii::Utilities::MPI::min_max_avg(local_contribution[0], GlobalMPI.communicators_by_level[level]).avg;
-  double y = dealii::Utilities::MPI::min_max_avg(local_contribution[1], GlobalMPI.communicators_by_level[level]).avg;
-  double z = dealii::Utilities::MPI::min_max_avg(local_contribution[2], GlobalMPI.communicators_by_level[level]).avg;
-  return {x,y,z};
-}
-
-bool NonLocalProblem::is_lowest_in_sweeping_direction() {
-  if(sweeping_direction == SweepingDirection::X) {
-    if(GlobalParams.Index_in_x_direction == 0) {
-      return true;
-    }
-  }
-  if(sweeping_direction == SweepingDirection::Y) {
-    if(GlobalParams.Index_in_y_direction == 0) {
-      return true;
-    }
-  }
-  if(sweeping_direction == SweepingDirection::Z) {
-    if(GlobalParams.Index_in_z_direction == 0) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool NonLocalProblem::is_highest_in_sweeping_direction() {
-  if(sweeping_direction == SweepingDirection::X) {
-    if(GlobalParams.Index_in_x_direction == GlobalParams.Blocks_in_x_direction-1) {
-      return true;
-    }
-  }
-  if(sweeping_direction == SweepingDirection::Y) {
-    if(GlobalParams.Index_in_y_direction == GlobalParams.Blocks_in_y_direction-1) {
-      return true;
-    }
-  }
-  if(sweeping_direction == SweepingDirection::Z) {
-    if(GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction-1) {
-      return true;
-    }
-  }
-  return false;
-}
-
 void NonLocalProblem::compute_solver_factorization() {
   child->compute_solver_factorization();
   // child->output_results();
@@ -636,12 +590,6 @@ NumericVectorDistributed NonLocalProblem::vector_from_vec_obj(Vec in_v) {
   ret.compress(dealii::VectorOperation::insert);
   delete[] values;
   return ret;
-}
-
-void NonLocalProblem::zero_local_contribution(NumericVectorDistributed * in_v) {
-  for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
-    in_v->operator[](own_dofs.nth_index_in_set(i)) = ComplexNumber(0,0);
-  }
 }
 
 void NonLocalProblem::copy_local_part(NumericVectorDistributed * src, NumericVectorDistributed * dst) {

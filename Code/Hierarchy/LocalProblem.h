@@ -29,8 +29,6 @@ public:
 
   void validate();
 
-  auto get_center() -> Position const override;
-
   auto reinit() -> void override;
 
   auto reinit_rhs() -> void override;

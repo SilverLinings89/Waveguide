@@ -446,3 +446,5 @@ As a result, I have to rethink how I deal with this case. This solution has to b
 For PML I could consider to keep PML-edges the same on all levels but angled on the highest level. This would mean that a solution on the highest level would be physically viable, because on that level the boundary methods are appropriate and the system is not underdetermined. Also, in that case, the right-hand side terms might fix the issue of missing boundary conditions because the off-diagonal products essentially imply a boundary condition on those sides.
 
 To implement this solution I introduce the value is_isolated on BoundaryCondition type objects. If this is set to true, the edges are straight and the dofs are all locally owned (except the ones facing the interior). It will not couple to any other boundaries. This is the case if this surface is a NeighborSurface on higher sweeping levels.
+
+I removed all identify_corner_cells calls because the functions and the generated content had no effect anymore. It does currently build.

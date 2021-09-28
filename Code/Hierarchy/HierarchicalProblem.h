@@ -47,7 +47,6 @@ class HierarchicalProblem {
   virtual void assemble()=0;
   virtual void initialize_index_sets()=0;
   void constrain_identical_dof_sets(std::vector<unsigned int> *set_one, std::vector<unsigned int> *set_two, Constraints *affine_constraints);
-  virtual auto get_center() -> Position const = 0;
   virtual auto reinit() -> void = 0;
   auto opposing_site_bid(BoundaryId) -> BoundaryId;
   void compute_final_rhs_mismatch();
