@@ -506,7 +506,7 @@ void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) 
     entries_by_proc[i] = rows[i].size();
   }
   unsigned int * recv_buffer = new unsigned int[n_procs];
-  MPI_Alltoall(&entries_by_proc, 1, MPI_UNSIGNED, recv_buffer, 1, MPI_UNSIGNED, GlobalMPI.communicators_by_level[level]);
+  MPI_Alltoall(entries_by_proc, 1, MPI_UNSIGNED, recv_buffer, 1, MPI_UNSIGNED, GlobalMPI.communicators_by_level[level]);
   for(unsigned int other_proc = 0; other_proc < n_procs; other_proc++) {
     if(other_proc != rank) {
       if(recv_buffer[other_proc] != 0 || entries_by_proc[other_proc] != 0) {
