@@ -288,8 +288,8 @@ struct CellwiseAssemblyDataNP {
   mu_zero(1.0),
   cell_rhs(dofs_per_cell),
   local_dof_indices(dofs_per_cell),
-  fe_field(0),
-  exact_solution_ramped(true, false)
+  exact_solution_ramped(true, false),
+  fe_field(0)
   { 
     // has_input_interface = GlobalParams.Index_in_z_direction == 0;
     has_input_interface = false;

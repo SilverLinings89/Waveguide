@@ -11,12 +11,12 @@ BoundaryCondition::BoundaryCondition(unsigned int in_bid, unsigned int in_level,
   level(in_level),
   additional_coordinate(in_additional_coordinate) {
     is_isolated_boundary = false;
-  is_surface_owned[0] = {true , false , false, true,  false, true };
-  is_surface_owned[1] = {false , true , false, true,  false, true };
-  is_surface_owned[2] = {true,  true,  true , false , false, true };
-  is_surface_owned[3] = {false, false, false , true , false, true };
-  is_surface_owned[4] = {true,  true,  true,  true,  true , false };
-  is_surface_owned[5] = {false, false, false, false, false , true };
+  is_surface_owned[0] = {{true , false , false, true,  false, true }};
+  is_surface_owned[1] = {{false , true , false, true,  false, true }};
+  is_surface_owned[2] = {{true,  true,  true , false , false, true }};
+  is_surface_owned[3] = {{false, false, false , true , false, true }};
+  is_surface_owned[4] = {{true,  true,  true,  true,  true , false }};
+  is_surface_owned[5] = {{false, false, false, false, false , true }};
 }
 
 void BoundaryCondition::set_mesh_boundary_ids() {
@@ -95,7 +95,7 @@ void BoundaryCondition::finish_dof_index_initialization() {
 
 }
 
-std::vector<DofNumber> BoundaryCondition::receive_boundary_dofs(unsigned int other_bid) {
+std::vector<DofNumber> BoundaryCondition::receive_boundary_dofs(unsigned int) {
   std::vector<DofNumber> ret;
   std::cout << "BoundaryCondition::receive_boundary_dofs got called but never should." << std::endl;
   return ret;

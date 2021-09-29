@@ -116,7 +116,7 @@ std::string NeighborSurface::output_results(const dealii::Vector<ComplexNumber> 
 	return "";
 }
 
-void NeighborSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern * in_dsp, Constraints * in_constraints) {
+void NeighborSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern * , Constraints * ) {
 }
 
 std::array<std::pair<BoundaryId, BoundaryId>, 4> NeighborSurface::get_corner_boundary_id_set() {

@@ -23,8 +23,10 @@ HSIESurface::HSIESurface(unsigned int surface, unsigned int in_level)
       fe_nedelec(Inner_Element_Order),
       fe_q(Inner_Element_Order + 1),
       kappa(2.0 * GlobalParams.Pi / GlobalParams.Lambda) {
-    dof_h_nedelec.initialize(Geometry.surface_meshes[surface], fe_nedelec);
-    dof_h_q.initialize(Geometry.surface_meshes[surface], fe_q);
+    dof_h_nedelec.reinit(Geometry.surface_meshes[surface]);
+    dof_h_nedelec.distribute_dofs(fe_nedelec);
+    dof_h_q.reinit(Geometry.surface_meshes[surface]);
+    dof_h_q.distribute_dofs(fe_q);
     set_mesh_boundary_ids();
     dof_counter = 0;
     k0 = GlobalParams.kappa_0;
@@ -601,10 +603,6 @@ void HSIESurface::fill_matrix(
 void HSIESurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constraints) {
   auto it = dof_h_nedelec.begin();
   auto end = dof_h_nedelec.end();
-  const unsigned int dofs_per_cell =
-      GeometryInfo<2>::vertices_per_cell * compute_dofs_per_vertex() +
-      GeometryInfo<2>::lines_per_cell * compute_dofs_per_edge(false) +
-      compute_dofs_per_face(false);
   auto it2 = dof_h_q.begin();
   for (; it != end; ++it) {
     DofDataVector cell_dofs = this->get_dof_data_for_cell(it, it2);
@@ -1286,8 +1284,8 @@ void HSIESurface::set_V0(Position in_V0) {
 }
 
 void HSIESurface::compute_extreme_vertex_coordinates() {
-  std::array<double, 3> upper_coordinates = {-100000, -100000, -100000};
-  std::array<double, 3> lower_coordinates = {100000, 100000, 100000};
+  std::array<double, 3> upper_coordinates = {{-100000, -100000, -100000}};
+  std::array<double, 3> lower_coordinates = {{100000, 100000, 100000}};
   
   for(auto it = Geometry.surface_meshes[b_id].begin(); it != Geometry.surface_meshes[b_id].end(); it++) {
     for(unsigned int ind = 0; ind < 4; ind++) {
@@ -1348,11 +1346,12 @@ std::string HSIESurface::output_results(const dealii::Vector<ComplexNumber> & , 
 }
 
 DofCount HSIESurface::compute_n_locally_owned_dofs() {
-    return 0;
+  IndexSet non_owned_dofs = compute_non_owned_dofs();
+  return dof_counter - non_owned_dofs.n_elements();
 }
 
 DofCount HSIESurface::compute_n_locally_active_dofs() {
-    return dof_counter;
+  return dof_counter;
 }
 
 void HSIESurface::finish_dof_index_initialization() {
@@ -1370,7 +1369,13 @@ void HSIESurface::finish_dof_index_initialization() {
 }
 
 void HSIESurface::determine_non_owned_dofs() {
-  // TODO: This needs to be implemented, but I will do it once PML works.
+  IndexSet non_owned_dofs = compute_non_owned_dofs();
+  const unsigned int n_dofs = non_owned_dofs.n_elements();
+  std::vector<unsigned int> local_dofs(n_dofs);
+  for(unsigned int i = 0; i < n_dofs; i++) {
+    local_dofs[i] = non_owned_dofs.nth_index_in_set(i);
+  }
+  mark_local_dofs_as_non_local(local_dofs);
 }
 
 bool HSIESurface::finish_initialization(DofNumber index) {

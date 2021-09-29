@@ -569,6 +569,8 @@ SurfaceType GeometryManager::get_surface_type(BoundaryId b_id, unsigned int in_l
     }
     return SurfaceType::ABC_SURFACE;
   }
+  std::cout << "Error in GeometryManager::get_surface_type" << std::endl;
+  return SurfaceType::ABC_SURFACE;
 }
 
 void GeometryManager::set_surface_types_and_properties(unsigned int in_level) {

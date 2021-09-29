@@ -461,4 +461,6 @@ Today, I will reactivate some other parts of the implementation:
 
 With all those pieces back in play I should be able to see what my scheme is capable off and plan a migration back to HPC systems with a fully operational system.
 
-Starting with the HSIE implementation. I have added an output of the last git commit as a marker I can use in the future to see, with wich version I generated results.
+Starting with the HSIE implementation. I have added an output of the last git commit as a marker I can use in the future to see, with wich version I generated results. Returning to fixing HSIE.
+
+Fixed all compiler warnings in Code (test still contains some about definitions of undefined functions).

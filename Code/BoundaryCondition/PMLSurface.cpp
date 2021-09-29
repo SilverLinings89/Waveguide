@@ -18,7 +18,7 @@
 #include "./NeighborSurface.h"
 #include "PMLMeshTransformation.h"
 
-CubeSurfaceTruncationState isolated_truncation_state = {false, false, false, false, false, false};
+CubeSurfaceTruncationState isolated_truncation_state = {{false, false, false, false, false, false}};
 
 PMLSurface::PMLSurface(unsigned int surface, unsigned int in_level)
   : BoundaryCondition(surface, in_level, Geometry.surface_extremal_coordinate[surface]),
@@ -93,7 +93,7 @@ unsigned int PMLSurface::cells_for_boundary_id(unsigned int boundary_id) {
 }
 
 void PMLSurface::init_fe() {
-    dof_h_nedelec.initialize(triangulation, fe_nedelec);
+    dof_h_nedelec.reinit(triangulation);
     dof_h_nedelec.distribute_dofs(fe_nedelec);
     dof_counter = dof_h_nedelec.n_dofs();
     sort_dofs();

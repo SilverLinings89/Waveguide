@@ -459,7 +459,7 @@ void multiply_in_place(const ComplexNumber factor_1, NumericVectorLocal &factor_
   }
 }
 
-void print_info(const std::string &label, const std::string &message, bool blocking, LoggingLevel logging_level) {
+void print_info(const std::string &label, const std::string &message, bool , LoggingLevel logging_level) {
   // if(blocking) MPI_Barrier(MPI_COMM_WORLD);
   if(is_visible_message_in_current_logging_level(logging_level)) {
     write_print_message(label, message);
