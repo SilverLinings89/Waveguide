@@ -97,6 +97,8 @@ public:
   DofCount compute_n_locally_active_dofs() override;
   void finish_dof_index_initialization() override;
   void determine_non_owned_dofs() override;
+  dealii::IndexSet compute_non_owned_dofs();
+  bool finish_initialization(DofNumber first_own_index) override;
 };
 
 

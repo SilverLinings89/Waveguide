@@ -630,7 +630,7 @@ dealii::IndexSet PMLSurface::compute_non_owned_dofs() {
     for(unsigned int surf = 0; surf < 6; surf++) {
       if(surf != b_id && !are_opposing_sites(surf, b_id)) {
         if(Geometry.levels[level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE || Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
-          if(!is_surface_owned[b_id][surf]) {
+          if(!is_surface_owned[b_id][surf] && !Geometry.levels[level].surfaces[surf]->is_isolated_boundary) {
             non_locally_owned_surfaces.push_back(surf);
           }
         }

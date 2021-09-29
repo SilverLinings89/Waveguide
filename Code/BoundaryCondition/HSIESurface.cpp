@@ -1372,3 +1372,46 @@ void HSIESurface::finish_dof_index_initialization() {
 void HSIESurface::determine_non_owned_dofs() {
   // TODO: This needs to be implemented, but I will do it once PML works.
 }
+
+bool HSIESurface::finish_initialization(DofNumber index) {
+  std::vector<InterfaceDofData> dofs = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_boundary_id(b_id);
+  std::vector<InterfaceDofData> own = get_dof_association();
+  std::vector<unsigned int> local_indices, global_indices;
+  for(unsigned int i = 0; i < dofs.size(); i++) {
+    local_indices.push_back(own[i].index);
+    global_indices.push_back(dofs[i].index);
+  }
+  set_non_local_dof_indices(local_indices, global_indices);
+  return FEDomain::finish_initialization(index);
+}
+
+dealii::IndexSet HSIESurface::compute_non_owned_dofs() {
+  IndexSet non_owned_dofs(dof_counter);
+  std::vector<unsigned int> non_locally_owned_surfaces;
+  if(!is_isolated_boundary) {
+    for(unsigned int surf = 0; surf < 6; surf++) {
+      if(surf != b_id && !are_opposing_sites(surf, b_id)) {
+        if(Geometry.levels[level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE || Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
+          if(!is_surface_owned[b_id][surf]) {
+            non_locally_owned_surfaces.push_back(surf);
+          }
+        }
+      }
+    }
+  }
+
+  std::vector<unsigned int> local_indices(fe_nedelec.dofs_per_face);
+  // The non owned surfaces are the one towards the inner domain and the surfaces 0,1 and 2 if they are false in the input.
+  for(auto surf: non_locally_owned_surfaces) {
+    std::vector<InterfaceDofData> dofs = get_dof_association_by_boundary_id(surf);
+    for(auto dof : dofs) {
+      non_owned_dofs.add_index(dof.index);
+    }
+  }
+  // The dofs shared with the inner domain are not owned either.
+  std::vector<InterfaceDofData> dofs = get_dof_association();
+  for(auto dof : dofs) {
+    non_owned_dofs.add_index(dof.index);
+  }
+  return non_owned_dofs;
+}

@@ -13,6 +13,6 @@ subsection Case parameters
     set HSIE polynomial degree = 5
     set PML n layers = 7
     set Input Signal Method = Dirichlet
-    set PML skaling order = 1
+    set PML skaling order = 3
     set Prescribe input zero = false
 end

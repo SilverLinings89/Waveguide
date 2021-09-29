@@ -1,5 +1,10 @@
+#ifndef GIT_COMMIT_HASH
+#define GIT_COMMIT_HASH "?"
+#endif
+
 #include "./OutputManager.h"
 #include "../GlobalObjects/GlobalObjects.h"
+#include "../Helpers/staticfunctions.h"
 #include <iostream>
 #include <fstream>
 
@@ -40,6 +45,7 @@ void OutputManager::initialize() {
     mkdir(output_folder_path.c_str(), ACCESSPERMS);
     log_stream.open(output_folder_path + "/main" + std::to_string(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) + ".log", std::ios::binary);
     write_run_description();
+    print_info("Git status:", GIT_COMMIT_HASH);
 }
 
 OutputManager::~OutputManager() {
