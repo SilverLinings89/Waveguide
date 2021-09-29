@@ -69,12 +69,10 @@ std::vector<InterfaceDofData> InnerDomain::get_surface_dof_vector_for_edge(Bound
       }
     }
   }
-
   return ret;
 }
 
 void InnerDomain::make_grid() {
-  print_info("InnerDomain::make_grid", "start");
   Triangulation<3> temp_tria;
   std::vector<unsigned int> repetitions;
   repetitions.push_back(GlobalParams.Cells_in_x);

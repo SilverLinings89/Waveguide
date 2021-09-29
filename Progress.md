@@ -448,3 +448,17 @@ For PML I could consider to keep PML-edges the same on all levels but angled on 
 To implement this solution I introduce the value is_isolated on BoundaryCondition type objects. If this is set to true, the edges are straight and the dofs are all locally owned (except the ones facing the interior). It will not couple to any other boundaries. This is the case if this surface is a NeighborSurface on higher sweeping levels.
 
 I removed all identify_corner_cells calls because the functions and the generated content had no effect anymore. It does currently build.
+In a build later on, the first step reduced the residual by 95%. After that, convergence became stale.
+
+# Wednesday, 29th of September
+
+Today, I will reactivate some other parts of the implementation:
+- The HSIE implementation to see if sweeping works with it
+- Timers (Their output is somehow broken at the moment)
+- The hierarchical part
+- The shape optimization implementation
+- The adjoint shape gradient computation
+
+With all those pieces back in play I should be able to see what my scheme is capable off and plan a migration back to HPC systems witha fully operational system.
+
+Starting with the HSIE implementation.

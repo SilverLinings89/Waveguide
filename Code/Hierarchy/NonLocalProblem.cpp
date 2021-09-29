@@ -256,7 +256,7 @@ void NonLocalProblem::solve() {
   GlobalTimerManager.switch_context("solve", level);
   rhs.compress(VectorOperation::add);
   print_vector_norm(&rhs, "RHS");
-  // if(!GlobalParams.solve_directly) {
+  if(!GlobalParams.solve_directly) {
     // Solve with sweeping
     KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc), nullptr);
     KSPSetPCSide(ksp, PCSide::PC_RIGHT);
@@ -268,15 +268,15 @@ void NonLocalProblem::solve() {
       std::cout << "Error code from Petsc: " << std::to_string(ierr) << std::endl;
     //   throw new ExcPETScError(ierr);
     }  
-  // } else {
+  } else {
     // Solve Directly for reference
     SolverControl sc;
     dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, MPI_COMM_WORLD);
     solver1.solve(*matrix, solution_error, rhs);
-  // }
-  // matrix->residual(solution_error, solution, rhs);
-  subtract_vectors(&solution, &solution_error);
-  // constraints.distribute(solution);
+  }
+  matrix->residual(solution_error, solution, rhs);
+  // subtract_vectors(&solution, &solution_error);
+  constraints.distribute(solution);
   write_multifile_output("error_of_solution", solution_error);
   print_info("NonLocalProblem::solve", "End");
 }
@@ -305,7 +305,6 @@ void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   vec_a.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   vec_b.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   
-  write_multifile_output("Step" + std::to_string(step_counter), temp_solution);
   for(unsigned int i = 0; i < n_procs_in_sweep-1; i++) {
     vec_a = off_diagonal_product(i, i+1, &temp_solution);
     print_vector_norm(&vec_a, "C1");
@@ -318,11 +317,13 @@ void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   set_x_out_from_u(u_out, &temp_solution);
 }
 
-void NonLocalProblem::set_x_out_from_u(Vec x_out, NumericVectorDistributed * u_in) {
+void NonLocalProblem::set_x_out_from_u(Vec x_out, NumericVectorDistributed * in_u) {
   ComplexNumber * values = new ComplexNumber[own_dofs.n_elements()];
   
+  in_u->extract_subvector_to(vector_copy_own_indices, vector_copy_array);
+
   for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
-    values[i] = u_in->operator()(own_dofs.nth_index_in_set(i));
+    values[i] = vector_copy_array[i];
   }
 
   VecSetValues(x_out, own_dofs.n_elements(), locally_owned_dofs_index_array, values, INSERT_VALUES);
@@ -583,10 +584,9 @@ NumericVectorDistributed NonLocalProblem::vector_from_vec_obj(Vec in_v) {
   ComplexNumber * values = new ComplexNumber[n_loc_dofs];
   VecGetValues(in_v, n_loc_dofs, locally_owned_dofs_index_array, values);
   for(unsigned int i = 0; i < n_loc_dofs; i++) {
-     ret[own_dofs.nth_index_in_set(i)] = values[i];
-     norm += std::abs(values[i]);
+     vector_copy_array[i] = values[i];
   }
-  norm = std::sqrt(norm);
+  ret.set(vector_copy_own_indices, vector_copy_array);
   ret.compress(dealii::VectorOperation::insert);
   delete[] values;
   return ret;
@@ -636,9 +636,13 @@ void NonLocalProblem::subtract_vectors(NumericVectorDistributed * a, NumericVect
 }
 
 void NonLocalProblem::print_vector_norm(NumericVectorDistributed * in_v, std::string marker) {
+  in_v->extract_subvector_to(vector_copy_own_indices, vector_copy_array);
+  double local_norm = 0.0;
+  for(unsigned int i = 0; i < vector_copy_array.size(); i++) {
+    local_norm += std::abs(vector_copy_array[i])*std::abs(vector_copy_array[i]);
+  }
+  local_norm = dealii::Utilities::MPI::sum(local_norm, MPI_COMM_WORLD);
   if(GlobalParams.MPI_Rank == 0) {
-    std::cout << marker << ": " << in_v->l2_norm() << std::endl;
-  } else {
-    in_v->l2_norm();
+    std::cout << marker << ": " << std::sqrt(local_norm) << std::endl;
   }
 }

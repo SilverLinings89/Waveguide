@@ -59,13 +59,24 @@ void PMLSurface::prepare_mesh() {
     }
     
     dealii::GridGenerator::subdivided_hyper_rectangle(tria, repetitions, lower_ranges , higher_ranges ,true);
-    
+    CubeSurfaceTruncationState truncation_state;
+
     compute_coordinate_ranges(&tria);
     if(is_isolated_boundary) {
-      transformation = PMLMeshTransformation(x_range, y_range, z_range, additional_coordinate, b_id/2, isolated_truncation_state);
+      for(unsigned int i = 0; i < 6; i++) {
+        truncation_state[i] = isolated_truncation_state[i];
+      }
     } else {
-      transformation = PMLMeshTransformation(x_range, y_range, z_range, additional_coordinate, b_id/2, Geometry.levels[level].is_surface_truncated);
+      for(unsigned int i = 0; i < 6; i++) {
+        truncation_state[i] = Geometry.levels[level].is_surface_truncated[i];
+      }
     }
+    for(unsigned int i = 0; i < 6; i++) {
+      if(Geometry.levels[level].surfaces[i]->is_isolated_boundary) {
+        truncation_state[i] = false;
+      }
+    }
+    transformation = PMLMeshTransformation(x_range, y_range, z_range, additional_coordinate, b_id/2, truncation_state);
     GridTools::transform(transformation, tria);
     triangulation = reforge_triangulation(&tria);
     mesh_is_transformed = true;

@@ -604,6 +604,8 @@ void GeometryManager::initialize_surfaces_on_level(unsigned int in_level) {
       default:
         break;
     }
+  }
+  for(unsigned int surf = 0; surf < 6; surf++) {
     levels[in_level].surfaces[surf]->initialize();
   }
 }
