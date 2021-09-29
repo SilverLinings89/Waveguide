@@ -32,6 +32,8 @@ extern SpaceTransformation *the_st;
  */
 Tensor<1, 3, double> crossproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 
+std::string exec(const char* cmd);
+
 ComplexNumber matrixD(int in_row, int in_column, ComplexNumber in_k0);
 
 bool comparePositions(Position p1, Position p2);
