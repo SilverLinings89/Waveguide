@@ -434,29 +434,6 @@ void InnerDomain::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase
   print_info("InnerDomain::write_matrix_and_rhs_metrics", "End");
 }
 
-std::vector<SurfaceCellData> InnerDomain::get_edge_cell_data(BoundaryId first_b_id, BoundaryId second_b_id, unsigned int level) {
-  std::vector<SurfaceCellData> ret;
-  std::vector<DofNumber> dof_indices(fe.dofs_per_cell);
-  for(auto cell = dof_handler.begin(); cell != dof_handler.end(); cell++) {
-    if(cell->at_boundary(first_b_id) && cell->at_boundary(second_b_id)) {
-      SurfaceCellData cd;
-      for(unsigned int i = 0; i < 6; i++) {
-        if(cell->face(i)->boundary_id() == first_b_id) {
-          cd.surface_face_center = cell->face(i)->center();
-        }
-      }
-      cell->get_dof_indices(dof_indices);
-      transform_local_to_global_dofs(dof_indices);
-      for(unsigned int i = 0; i < fe.dofs_per_cell; i++) {
-        cd.dof_numbers.push_back(dof_indices[i]);
-      }
-      ret.push_back(cd);
-    }
-  }
-  std::sort(ret.begin(), ret.end(), compareSurfaceCellData);
-  return ret;
-}
-
 std::string InnerDomain::output_results(std::string in_filename, NumericVectorLocal in_solution) {
   print_info("InnerDomain::output_results()", "Start");
   data_out.clear();

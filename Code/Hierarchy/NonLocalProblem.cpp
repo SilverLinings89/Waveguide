@@ -256,10 +256,6 @@ void NonLocalProblem::solve() {
   GlobalTimerManager.switch_context("solve", level);
   rhs.compress(VectorOperation::add);
   print_vector_norm(&rhs, "RHS");
-  if(rank == 0) {
-    child->solve();
-    child->output_results("child_solution");
-  }
   if(!GlobalParams.solve_directly) {
     // Solve with sweeping
     KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc), nullptr);
