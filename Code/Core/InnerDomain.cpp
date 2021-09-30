@@ -51,12 +51,6 @@ bool compareConstraintPairs(ConstraintPair v1, ConstraintPair v2) {
   return (v1.left < v2.left);
 }
 
-std::vector<InterfaceDofData> InnerDomain::get_surface_dof_vector_for_edge_and_level(BoundaryId first_bid, BoundaryId second_bid, unsigned int level) {
-  std::vector<InterfaceDofData> ret = get_surface_dof_vector_for_edge(first_bid, second_bid);
-  shift_interface_dof_data(&ret, Geometry.levels[level].inner_first_dof);
-  return ret;
-}
-
 std::vector<InterfaceDofData> InnerDomain::get_surface_dof_vector_for_edge(BoundaryId first_bid, BoundaryId second_bid) {
   std::vector<InterfaceDofData> ret;
   std::vector<InterfaceDofData> interface_1 = get_surface_dof_vector_for_boundary_id(first_bid);
@@ -452,30 +446,9 @@ std::vector<SurfaceCellData> InnerDomain::get_edge_cell_data(BoundaryId first_b_
         }
       }
       cell->get_dof_indices(dof_indices);
+      transform_local_to_global_dofs(dof_indices);
       for(unsigned int i = 0; i < fe.dofs_per_cell; i++) {
-        cd.dof_numbers.push_back(dof_indices[i] += Geometry.levels[level].inner_first_dof);
-      }
-      ret.push_back(cd);
-    }
-  }
-  std::sort(ret.begin(), ret.end(), compareSurfaceCellData);
-  return ret;
-}
-
-std::vector<SurfaceCellData> InnerDomain::get_surface_cell_data_for_boundary_id_and_level(BoundaryId b_id, unsigned int level) {
-  std::vector<SurfaceCellData> ret;
-  for(auto cell : dof_handler) {
-    if(cell.at_boundary(b_id)) {
-      SurfaceCellData cd;
-      for(unsigned int i = 0; i < 6; i++) {
-        if(cell.face(i)->boundary_id() == b_id) {
-          cd.surface_face_center = cell.face(i)->center();
-        }
-      }
-      std::vector<DofNumber> dof_indices(fe.dofs_per_cell);
-      cell.get_dof_indices(dof_indices);
-      for(unsigned int i = 0; i < fe.dofs_per_cell; i++) {
-        cd.dof_numbers.push_back(dof_indices[i] + Geometry.levels[level].inner_first_dof);
+        cd.dof_numbers.push_back(dof_indices[i]);
       }
       ret.push_back(cd);
     }

@@ -256,6 +256,10 @@ void NonLocalProblem::solve() {
   GlobalTimerManager.switch_context("solve", level);
   rhs.compress(VectorOperation::add);
   print_vector_norm(&rhs, "RHS");
+  if(rank == 0) {
+    child->solve();
+    child->output_results("child_solution");
+  }
   if(!GlobalParams.solve_directly) {
     // Solve with sweeping
     KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc), nullptr);
@@ -426,18 +430,6 @@ std::string NonLocalProblem::output_results() {
 
 void NonLocalProblem::store_solution(NumericVectorLocal u) {
   stored_solutions.push_back(u);
-}
-
-void NonLocalProblem::write_output_for_stored_solution(unsigned int index) {
-  NumericVectorLocal local_solution(Geometry.levels[level].inner_domain->n_locally_active_dofs);
-  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
-    local_solution[i] = stored_solutions[index][i];
-  }
-  Geometry.levels[level].inner_domain->output_results("solution_nr_" + std::to_string(index), local_solution);
-  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
-    local_solution[i] = ((std::complex<double>)(stored_solutions[index])[i]) - (std::complex<double>)direct_solution[Geometry.levels[level].inner_first_dof + i];
-  }
-  Geometry.levels[level].inner_domain->output_results("error_of_solution_nr_" + std::to_string(index), local_solution);
 }
 
 void NonLocalProblem::write_multifile_output(const std::string & in_filename, const NumericVectorDistributed field) {

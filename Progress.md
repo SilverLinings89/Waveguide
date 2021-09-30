@@ -463,4 +463,7 @@ With all those pieces back in play I should be able to see what my scheme is cap
 
 Starting with the HSIE implementation. I have added an output of the last git commit as a marker I can use in the future to see, with wich version I generated results. Returning to fixing HSIE.
 
-Fixed all compiler warnings in Code (test still contains some about definitions of undefined functions).
+Fixed all compiler warnings in Code (test still contains some about definitions of undefined functions). Currently, the direct solution is 0 and the preconditioners struggles extremely when switching to HSIE. There seems to be some issue in assembling the matrix. The numbers of owned and non-owned dofs look fine.
+
+I removed some old instances of inner_first_index that might have caused the issue. In the local solution, the wave is visible and has the right amplitude for the real part. The imaginary part doesn't. There seems to be reflection. I also fixed some misunderstandings in get_dof_association and get_dof_assiciation_by_boundary_id.
+

@@ -55,7 +55,6 @@ class HierarchicalProblem {
   std::string output_results(std::string in_fname_part = "solution_inner_domain_level");
   virtual void reinit_rhs() = 0;
   virtual void make_sparsity_pattern();
-  void execute_vmult();
   void initialize_dof_counts();
 };
 

@@ -63,8 +63,6 @@ private:
 
   void store_solution(NumericVectorLocal u);
 
-  void write_output_for_stored_solution(unsigned int index);
-
   void write_multifile_output(const std::string & filename, const NumericVectorDistributed field);
 
   void communicate_external_dsp(DynamicSparsityPattern * in_dsp);

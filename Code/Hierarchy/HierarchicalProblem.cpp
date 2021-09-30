@@ -111,14 +111,3 @@ std::string HierarchicalProblem::output_results(std::string in_fname_part) {
   print_info("Hierarchical::output_results()", "End on level " + std::to_string(level));
   return ret;
 }
-
-
-void HierarchicalProblem::execute_vmult() {
-  // constraints.set_zero(solution);
-  NumericVectorDistributed temp_solution;
-  temp_solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
-  matrix->vmult(temp_solution, solution);
-  solution = temp_solution;
-  // constraints.distribute(solution);
-}
-
