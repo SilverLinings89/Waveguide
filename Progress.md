@@ -484,3 +484,5 @@ I have implemented the PML offset. The PML should now ignore the first cell laye
 Next I will implement output for the number of dofs by type. 
 Running test with the new PML safe layer, I see that there is still no convergence. Will analyze later.
 I also added the dof count outputs.
+
+I ran the PML code for higher order. In total there are 400K dofs in the 10x10x10 system with boundary methods. Laptop suffers. Since I no longer rely on all the code to compute interface dof sets, it seems that the code is now more stable. Assembly for boundary methods in the distributed case (level 1) seemst to work nicely. Assembly runs completely for the higher level and takes about 10 Minutes.
