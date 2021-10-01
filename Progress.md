@@ -489,3 +489,8 @@ I ran the PML code for higher order. In total there are 400K dofs in the 10x10x1
 
 About the erroneous dofs on interfaces. The dofs that cause the residual are the upper interface dofs of a domain - mainly in the boundary methods.The further out you go, the bigger the error. I will have to check if these get assembled correctly (non-transformed etc.).
 It is good to see, that the code runs for higher order elements but it is not yet stable. I can analyze the run results to see if there are obvious problems. Could not connect via TeamViewer. Will have to retry tomorrow.
+
+# Friday, 1st of October
+
+I removed some old functions. During that, I noticed that most likely I no longer need to sort the dofs. That was needed before I reforged the meshes. As a consequence, this logic might actually cause the issues I see at interfaces by reorienting dofs the wrong way. Testing.
+I also evaluated the results of the higher order run. The results look pretty similar in their errors to the HSIE problems on lowest order. This leads me to believe it's a problem with face orientations as mentioned above. There seems to be no issue without the sorting. Will now reattempt the higher order computations and HSIE.

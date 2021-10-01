@@ -97,7 +97,6 @@ void PMLSurface::init_fe() {
     dof_h_nedelec.reinit(triangulation);
     dof_h_nedelec.distribute_dofs(fe_nedelec);
     dof_counter = dof_h_nedelec.n_dofs();
-    sort_dofs();
 }
 
 bool PMLSurface::is_position_at_boundary(Position in_p, BoundaryId in_bid) {
@@ -191,62 +190,6 @@ void PMLSurface::initialize() {
   init_fe();
   prepare_id_sets_for_boundaries();
   // validate_meshes();
-}
-
-void PMLSurface::sort_dofs() {
-  triangulation.clear_user_flags();
-  std::vector<std::pair<DofNumber, Position>> current;
-  std::vector<types::global_dof_index> local_line_dofs(fe_nedelec.dofs_per_line);
-  std::set<DofNumber> line_set;
-  std::vector<DofNumber> local_face_dofs(fe_nedelec.dofs_per_face);
-  std::set<DofNumber> face_set;
-  std::vector<DofNumber> local_cell_dofs(fe_nedelec.dofs_per_cell);
-  std::set<DofNumber> cell_set;
-  auto cell = dof_h_nedelec.begin_active();
-  auto endc = dof_h_nedelec.end();
-  for (; cell != endc; ++cell) {
-    cell->get_dof_indices(local_cell_dofs);
-    cell_set.clear();
-    cell_set.insert(local_cell_dofs.begin(), local_cell_dofs.end());
-    for(unsigned int face = 0; face < GeometryInfo<3>::faces_per_cell; face++) {
-      cell->face(face)->get_dof_indices(local_face_dofs);
-      face_set.clear();
-      face_set.insert(local_face_dofs.begin(), local_face_dofs.end());
-      for(auto firstit : face_set) {
-        cell_set.erase(firstit);
-      }
-      for(unsigned int line = 0; line < GeometryInfo<3>::lines_per_face; line++) {
-        cell->face(face)->line(line)->get_dof_indices(local_line_dofs);
-        line_set.clear();
-        line_set.insert(local_line_dofs.begin(), local_line_dofs.end());
-        for(auto firstit : line_set) {
-          face_set.erase(firstit);
-        }
-        if(!cell->face(face)->line(line)->user_flag_set()){
-          for(auto dof: line_set) {
-            current.emplace_back(dof, cell->face(face)->line(line)->center());
-          }
-          cell->face(face)->line(line)->set_user_flag();
-        }
-      }
-      if(!cell->face(face)->user_flag_set()){
-        for(auto dof: face_set) {
-          current.emplace_back(dof, cell->face(face)->center());
-        }
-        cell->face(face)->set_user_flag();
-      }
-    }
-    for(auto dof: cell_set) {
-      current.emplace_back(dof, cell->center());
-    }
-  }
-  std::sort(current.begin(), current.end(), compareDofBaseData);
-  std::vector<unsigned int> new_numbering;
-  new_numbering.resize(current.size());
-  for (unsigned int i = 0; i < current.size(); i++) {
-    new_numbering[current[i].first] = i;
-  }
-  dof_h_nedelec.renumber_dofs(new_numbering);
 }
 
 void PMLSurface::prepare_id_sets_for_boundaries(){

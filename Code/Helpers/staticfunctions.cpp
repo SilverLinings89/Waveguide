@@ -91,10 +91,10 @@ auto compute_center_of_triangulation(const Mesh *in_mesh) -> Position {
 }
 
 bool comparePositions(const Position pos_a,const Position pos_b) {
-  if (pos_a[2] != pos_b[2]) {
+  if (std::abs(pos_a[2] - pos_b[2]) > 0.0001) {
     return pos_a[2] < pos_b[2];
   }
-  if (pos_a[1] != pos_b[1]) {
+  if (std::abs(pos_a[1] - pos_b[1]) > 0.0001) {
     return pos_a[1] < pos_b[1];
   }
   return pos_a[0] < pos_b[0];

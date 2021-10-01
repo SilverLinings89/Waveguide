@@ -102,13 +102,9 @@ class InnerDomain: public FEDomain {
   void Compute_Dof_Numbers();
   void solution_evaluation(Position position, double *solution) const;
   void adjoint_solution_evaluation(Position position, double *solution) const;
-  void SortDofsDownstream();
   std::vector<InterfaceDofData> get_surface_dof_vector_for_boundary_id(BoundaryId b_id);
-  std::vector<InterfaceDofData> get_surface_dof_vector_for_edge(BoundaryId first_bid, BoundaryId second_bid);
-  std::vector<unsigned int> dofs_for_cell_around_point(Position &in_p);
   void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_pattern, Constraints *constraints);
   void write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs);
-  auto get_central_cells(double point_source_radius) -> std::set<std::string>;
   std::string output_results(std::string in_filename, NumericVectorLocal in_solution);
   void fill_rhs_vector(NumericVectorDistributed in_vec, unsigned int level);
   DofCount compute_n_locally_owned_dofs() override;

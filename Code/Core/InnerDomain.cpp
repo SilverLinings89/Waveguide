@@ -51,21 +51,6 @@ bool compareConstraintPairs(ConstraintPair v1, ConstraintPair v2) {
   return (v1.left < v2.left);
 }
 
-std::vector<InterfaceDofData> InnerDomain::get_surface_dof_vector_for_edge(BoundaryId first_bid, BoundaryId second_bid) {
-  std::vector<InterfaceDofData> ret;
-  std::vector<InterfaceDofData> interface_1 = get_surface_dof_vector_for_boundary_id(first_bid);
-  std::vector<InterfaceDofData> interface_2 = get_surface_dof_vector_for_boundary_id(second_bid);
-
-  for(unsigned int i = 0; i < interface_1.size(); i++) {
-    for(unsigned int j = 0; j < interface_2.size(); j++) {
-      if(interface_1[i].index == interface_2[j].index) {
-        ret.push_back(interface_1[i]);
-      }
-    }
-  }
-  return ret;
-}
-
 void InnerDomain::make_grid() {
   Triangulation<3> temp_tria;
   std::vector<unsigned int> repetitions;
@@ -83,7 +68,6 @@ void InnerDomain::make_grid() {
       lower, upper, true);
   triangulation = reforge_triangulation(&temp_tria);
   dof_handler.distribute_dofs(fe);
-  SortDofsDownstream();
   print_info("InnerDomain::make_grid", "Mesh Preparation finished. System has " + std::to_string(dof_handler.n_dofs()) + " degrees of freedom.", false, LoggingLevel::PRODUCTION_ONE);
   print_info("InnerDomain::make_grid", "end");
 }
@@ -91,21 +75,6 @@ void InnerDomain::make_grid() {
 bool compareIndexCenterPairs(std::pair<int, double> c1,
                              std::pair<int, double> c2) {
   return c1.second < c2.second;
-}
-
-std::vector<unsigned int> InnerDomain::dofs_for_cell_around_point(
-    Position &in_p) {
-  std::vector<unsigned int> ret(fe.dofs_per_cell);
-  print_info("InnerDomain::dofs_for_cell_around_point", "Dofs per cell: " + std::to_string(fe.dofs_per_cell), false, LoggingLevel::PRODUCTION_ONE);
-  auto cell = dof_handler.begin_active();
-  auto endc = dof_handler.end();
-  for (; cell != endc; ++cell) {
-    if (cell->point_inside(in_p)) {
-      cell->get_dof_indices(ret);
-      return ret;
-    }
-  }
-  return ret;
 }
 
 void InnerDomain::fill_sparsity_pattern( dealii::DynamicSparsityPattern *in_pattern, Constraints *in_constraints) {
@@ -116,74 +85,6 @@ void InnerDomain::fill_sparsity_pattern( dealii::DynamicSparsityPattern *in_patt
     cell_dof_indices = transform_local_to_global_dofs(cell_dof_indices);
     in_constraints->add_entries_local_to_global(cell_dof_indices, *in_pattern);
   }
-}
-
-auto InnerDomain::get_central_cells(double radius) -> std::set<std::string> {
-  std::set<std::string> ret;
-  for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
-    if( std::abs(it->center()[0]) < radius &&  std::abs(it->center()[1]) < radius && std::abs(it->center()[2]) < radius  ) {
-      ret.insert(it->id().to_string());
-    }
-  }
-  return ret;
-}
-
-void InnerDomain::SortDofsDownstream() {
-  print_info("InnerDomain::SortDofsDownstream", "Start");
-  triangulation.clear_user_flags();
-  std::vector<std::pair<DofNumber, Position>> current;
-  std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
-  std::set<DofNumber> line_set;
-  std::vector<DofNumber> local_face_dofs(fe.dofs_per_face);
-  std::set<DofNumber> face_set;
-  std::vector<DofNumber> local_cell_dofs(fe.dofs_per_cell);
-  std::set<DofNumber> cell_set;
-  auto cell = dof_handler.begin_active();
-  auto endc = dof_handler.end();
-  for (; cell != endc; ++cell) {
-    cell->get_dof_indices(local_cell_dofs);
-    cell_set.clear();
-    cell_set.insert(local_cell_dofs.begin(), local_cell_dofs.end());
-    for(unsigned int face = 0; face < GeometryInfo<3>::faces_per_cell; face++) {
-      cell->face(face)->get_dof_indices(local_face_dofs);
-      face_set.clear();
-      face_set.insert(local_face_dofs.begin(), local_face_dofs.end());
-      for(auto firstit : face_set) {
-        cell_set.erase(firstit);
-      }
-      for(unsigned int line = 0; line < GeometryInfo<3>::lines_per_face; line++) {
-        cell->face(face)->line(line)->get_dof_indices(local_line_dofs);
-        line_set.clear();
-        line_set.insert(local_line_dofs.begin(), local_line_dofs.end());
-        for(auto firstit : line_set) {
-          face_set.erase(firstit);
-        }
-        if(!cell->face(face)->line(line)->user_flag_set()){
-          for(auto dof: line_set) {
-            current.emplace_back(dof, cell->face(face)->line(line)->center());
-          }
-          cell->face(face)->line(line)->set_user_flag();
-        }
-      }
-      if(!cell->face(face)->user_flag_set()){
-        for(auto dof: face_set) {
-          current.emplace_back(dof, cell->face(face)->center());
-        }
-        cell->face(face)->set_user_flag();
-      }
-    }
-    for(auto dof: cell_set) {
-      current.emplace_back(dof, cell->center());
-    }
-  }
-  std::sort(current.begin(), current.end(), compareDofBaseData);
-  std::vector<unsigned int> new_numbering;
-  new_numbering.resize(current.size());
-  for (unsigned int i = 0; i < current.size(); i++) {
-    new_numbering[current[i].first] = i;
-  }
-  dof_handler.renumber_dofs(new_numbering);
-  print_info("InnerDomain::SortDofsDownstream", "End");
 }
 
 std::vector<InterfaceDofData> InnerDomain::get_surface_dof_vector_for_boundary_id(
