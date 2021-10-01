@@ -618,5 +618,11 @@ void GeometryManager::initialize_level(unsigned int in_level) {
   set_surface_types_and_properties(in_level);
   initialize_surfaces_on_level(in_level);
   distribute_dofs_on_level(in_level);
+  print_level_dof_counts(in_level);
   print_info("GeometryManager::initialize_level", "End level " + std::to_string(in_level));
+}
+
+void GeometryManager::print_level_dof_counts(unsigned int level) {
+  unsigned int n_total_inner_dofs =  dealii::Utilities::MPI::sum(Geometry.levels[level].inner_domain->n_locally_owned_dofs, GlobalMPI.communicators_by_level[level]);
+  print_info("GeometryManager", "On level " + std::to_string(level) + " there are " + std::to_string(levels[level].n_total_level_dofs) + " total dofs. "+ std::to_string(n_total_inner_dofs) + " inner ones, " + std::to_string(levels[level].n_total_level_dofs-n_total_inner_dofs) + " boundary dofs.");
 }

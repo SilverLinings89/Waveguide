@@ -283,34 +283,34 @@ void NonLocalProblem::solve() {
 
 void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   NumericVectorDistributed temp_solution = vector_from_vec_obj(b_in);
-  print_vector_norm(&temp_solution, "Z1");
+  // print_vector_norm(&temp_solution, "Z1");
   NumericVectorDistributed vec_a, vec_b;
   vec_a.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   vec_b.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   
   for(unsigned int i = n_procs_in_sweep - 1; i > 0; i--) {
     S_inv(&temp_solution, &vec_a, i == rank);
-    print_vector_norm(&vec_a, "A1");
+    // print_vector_norm(&vec_a, "A1");
     vec_b = off_diagonal_product(i, i-1, &vec_a);
-    print_vector_norm(&vec_b, "A2");
+    // print_vector_norm(&vec_b, "A2");
     subtract_vectors(&temp_solution, &vec_b);
     vec_b.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
     vec_a.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   }
   
   copy_local_part(&temp_solution, &vec_b);
-  print_vector_norm(&temp_solution, "B1");
+  // print_vector_norm(&temp_solution, "B1");
   S_inv(&vec_b, &temp_solution, true);
-  print_vector_norm(&temp_solution, "B2");
+  // print_vector_norm(&temp_solution, "B2");
   vec_a.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   vec_b.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   
   for(unsigned int i = 0; i < n_procs_in_sweep-1; i++) {
     vec_a = off_diagonal_product(i, i+1, &temp_solution);
-    print_vector_norm(&vec_a, "C1");
+    // print_vector_norm(&vec_a, "C1");
     S_inv(&vec_a, &vec_b, rank == i+1);
     subtract_vectors(&temp_solution, &vec_b);
-    print_vector_norm(&temp_solution, "C2");
+    // print_vector_norm(&temp_solution, "C2");
     vec_b.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   }
   step_counter ++;
@@ -590,11 +590,8 @@ NumericVectorDistributed NonLocalProblem::vector_from_vec_obj(Vec in_v) {
 }
 
 void NonLocalProblem::copy_local_part(NumericVectorDistributed * src, NumericVectorDistributed * dst) {
-  for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
-    ComplexNumber temp = src->operator()(own_dofs.nth_index_in_set(i));
-    dst->operator[](own_dofs.nth_index_in_set(i)) = temp;
-  }
-  dst->compress(dealii::VectorOperation::insert);
+  src->extract_subvector_to(vector_copy_own_indices, vector_copy_array);
+  dst->set(vector_copy_own_indices, vector_copy_array);
 }
 
 NumericVectorDistributed NonLocalProblem::off_diagonal_product(unsigned int i, unsigned int j, NumericVectorDistributed * in_v) {

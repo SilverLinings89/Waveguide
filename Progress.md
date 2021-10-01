@@ -472,12 +472,15 @@ I removed some old instances of inner_first_index that might have caused the iss
 I worked all day on regression testing the zero solutions. The bug has been found and fixed. Current status: For PML, there is no full convergence. For HSIE, the direct solutions is distorted. Somehow the non-X components of the solution are too large and as a consequence, there are weird distortions in the solution. The real part also overshoots.
 
 I have had some additional ideas: 
-1. The first layer of the PML should have no PML material. That would have the advantage of it not effecting the dofs directly at the surface. This might improve convergence behaviour because the surface dofs couple into that first layer and are therefore subject to a decrease in field amplitude. The implementation should be straight forward.
-2. I can implement a search for the ideal geometry by also performing material optimization. The material tensors consist of two terms: epsilon_r for inside or outside the waveguide and the material tensor for the shape transformation. Currently, my adjoint based approach uses only optimizations in the parameters fed into the material tensor computation. I could also compute if a cell should be inside or outside the domain with an integral over the cell and \Delta epsilon = 1.
-3. I should add output for the number of inner dofs vs boundary method dofs for the non-local and local problem and output them. This can be done pretty easily.
-4. For HSIE I should write code to compute the norm of the non-nedelec dofs in the solution vector. This would help to see if there is something extremly weird going on.
-5. I should run tests for higher element orders.
-6. I should run tests for higher level sweeping.
-7. I need a solid setup to run my code remotely on my KIT PC because of RAM constraints.
+- The first layer of the PML should have no PML material. That would have the advantage of it not effecting the dofs directly at the surface. This might improve convergence behaviour because the surface dofs couple into that first layer and are therefore subject to a decrease in field amplitude. The implementation should be straight forward. (Done)
+- I need a solid setup to run my code remotely on my KIT PC because of RAM constraints. (Done)
+- I should add output for the number of inner dofs vs boundary method dofs for the non-local and local problem and output them. This can be done pretty easily. (Done)
+- For HSIE I should write code to compute the norm of the non-nedelec dofs in the solution vector. This would help to see if there is something extremly weird going on.
+- I should run tests for higher element orders.
+- I should run tests for higher level sweeping.
+- I can implement a search for the ideal geometry by also performing material optimization. The material tensors consist of two terms: epsilon_r for inside or outside the waveguide and the material tensor for the shape transformation. Currently, my adjoint based approach uses only optimizations in the parameters fed into the material tensor computation. I could also compute if a cell should be inside or outside the domain with an integral over the cell and \Delta epsilon = 1.
 
 I have implemented the PML offset. The PML should now ignore the first cell layer. At a later point I should add a function checking that the PML actually consists of more than one layer.
+Next I will implement output for the number of dofs by type. 
+Running test with the new PML safe layer, I see that there is still no convergence. Will analyze later.
+I also added the dof count outputs.
