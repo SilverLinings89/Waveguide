@@ -312,14 +312,12 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(uns
               cell->face(face)->line(i)->set_user_flag();
             }
           }
-          unsigned int index = 0;
           for (auto item: face_set) {
             InterfaceDofData new_item;
             new_item.index = item;
             new_item.base_point = cell->face(face)->center();
             new_item.order = 0;
             cell_dofs_and_orientations_and_points.push_back(new_item);
-            index++;
           }
           for (auto item: cell_dofs_and_orientations_and_points) {
             ret.push_back(item);

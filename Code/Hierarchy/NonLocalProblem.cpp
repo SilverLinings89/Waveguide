@@ -600,21 +600,15 @@ NumericVectorDistributed NonLocalProblem::off_diagonal_product(unsigned int i, u
   NumericVectorDistributed left;
   left.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   if(rank == i) {
-    for(unsigned int index = 0; index < own_dofs.n_elements(); index++) {
-      ComplexNumber temp = in_v->operator[](own_dofs.nth_index_in_set(index));
-      left[own_dofs.nth_index_in_set(index)] = temp;
-    }
-  } 
-  left.compress(VectorOperation::insert);
-  if(i < j) {
-    matrix->vmult(ret, left);
-  } else {
-    matrix->Tvmult(ret, left);
+    in_v->extract_subvector_to(vector_copy_own_indices, vector_copy_array);
+    left.set(vector_copy_own_indices, vector_copy_array);
   }
+  matrix->vmult(ret, left);
   if(rank != j) {
-    for(unsigned int index = 0; index < own_dofs.n_elements(); index++) {
-      ret[own_dofs.nth_index_in_set(index)] = 0;
+    for(unsigned int index= 0; index < vector_copy_array.size(); index++) {
+      vector_copy_array[index] = ComplexNumber(0,0);
     }
+    ret.set(vector_copy_own_indices, vector_copy_array);
   }
   ret.compress(dealii::VectorOperation::insert);
   return ret;
