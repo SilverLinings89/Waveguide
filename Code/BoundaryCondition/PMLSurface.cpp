@@ -25,6 +25,7 @@ PMLSurface::PMLSurface(unsigned int surface, unsigned int in_level)
   fe_nedelec(GlobalParams.Nedelec_element_order) {
      mesh_is_transformed = false;
      outer_boundary_id = surface;
+     non_pml_layer_thickness = GlobalParams.PML_thickness / GlobalParams.PML_N_Layers;
      if(surface % 2 == 0) {
        inner_boundary_id = surface + 1;
      } else {
@@ -341,7 +342,12 @@ DofCount PMLSurface::get_dof_count_by_boundary_id(BoundaryId in_bid) {
 }
 
 double PMLSurface::fraction_of_pml_direction(Position in_p) {
-  return std::abs(in_p[b_id/2]-additional_coordinate) / GlobalParams.PML_thickness;
+  double temp = std::abs(in_p[b_id/2]-additional_coordinate);
+  if(temp < non_pml_layer_thickness) {
+    return 0.0;
+  } else {
+    return (temp - non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
+  }
 }
 
 dealii::Tensor<2,3,ComplexNumber> PMLSurface::get_pml_tensor_epsilon(Position in_p) {

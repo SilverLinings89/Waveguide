@@ -21,6 +21,7 @@ class PMLSurface : public BoundaryCondition {
     std::pair<double, double> x_range;
     std::pair<double, double> y_range;
     std::pair<double, double> z_range;
+    double non_pml_layer_thickness; // thickness of the cell layer closest to the surface. Here I set the transformation tensor to 0 to ensure surface dofs are not damped.
     dealii::Triangulation<3> triangulation;
     
     PMLSurface(unsigned int in_bid, unsigned int in_level);

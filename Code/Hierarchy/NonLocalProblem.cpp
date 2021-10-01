@@ -272,7 +272,7 @@ void NonLocalProblem::solve() {
     // Solve Directly for reference
     SolverControl sc;
     dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, MPI_COMM_WORLD);
-    solver1.solve(*matrix, solution_error, rhs);
+    solver1.solve(*matrix, solution, rhs);
   }
   matrix->residual(solution_error, solution, rhs);
   // subtract_vectors(&solution, &solution_error);
