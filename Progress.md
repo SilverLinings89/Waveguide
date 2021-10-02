@@ -475,8 +475,8 @@ I have had some additional ideas:
 - The first layer of the PML should have no PML material. That would have the advantage of it not effecting the dofs directly at the surface. This might improve convergence behaviour because the surface dofs couple into that first layer and are therefore subject to a decrease in field amplitude. The implementation should be straight forward. (Done)
 - I need a solid setup to run my code remotely on my KIT PC because of RAM constraints. (Done)
 - I should add output for the number of inner dofs vs boundary method dofs for the non-local and local problem and output them. This can be done pretty easily. (Done)
+- I should run tests for higher element orders. (Done)
 - For HSIE I should write code to compute the norm of the non-nedelec dofs in the solution vector. This would help to see if there is something extremly weird going on.
-- I should run tests for higher element orders.
 - I should run tests for higher level sweeping.
 - I can implement a search for the ideal geometry by also performing material optimization. The material tensors consist of two terms: epsilon_r for inside or outside the waveguide and the material tensor for the shape transformation. Currently, my adjoint based approach uses only optimizations in the parameters fed into the material tensor computation. I could also compute if a cell should be inside or outside the domain with an integral over the cell and \Delta epsilon = 1.
 
@@ -496,3 +496,17 @@ I removed some old functions. During that, I noticed that most likely I no longe
 I also evaluated the results of the higher order run. The results look pretty similar in their errors to the HSIE problems on lowest order. This leads me to believe it's a problem with face orientations as mentioned above. There seems to be no issue without the sorting. Will now reattempt the higher order computations and HSIE. Lowest order and HSIE with sweeping gives a 0 solution. The solution is not exactly zero but of order e-5.
 On the other hand: Order one computation for PML works now, including sweeping which is big progress. It even seems to deal with the interface dof error better than the lower order case does.
 
+So currently there are either one or two problems:
+1. For PML, there is no convergence, because thereis residual at the interfaces.
+2. For HSIE, the solutions are completely wrong: because there appears to be incorrect coupling which introduces weird back scattering on cell layer level.
+
+This could also be caused by the same issue.
+To start again - I will check if the domain shape of the local problems is appropriate.  The shape of the local problems is correct. The isolated PML does not seem to cause trouble. However, it might be the case, that solving the local problem is the error. The "lower" dofs are not locally owned. In the upward sweep they are therefor zeroed after the off-diagonal product. This could cause problems down the road. I implemented a first solution to this based on MPI_Allgather in set_child_rhs_from_vector.
+
+# Saturday, 2nd of October
+
+The implementation to carry over the non-owned dofs seems to work but it didnt fix the issue. However, it may be, that I have another problem: If there is a neighbor surface, it only generates constraints for it's own dofs (i.e. the locally active dofs). This should however also happen for the boundary dofs of adjacent boundary methods. Implementing. This was already implemented, so that was not the issue.
+
+I just noticed, that the first step is the one that works but the first step is also the one, where the downward sweep has no effect (starts with 0). So I will see what happens if the downward sweep is disabled completely. If that makes no difference, there is an issue in the implementation of the downward sweep. If not, I will have to keep searching. It would fit because then, the communication in the downward direction would only occur through GMRES which would explain the slow but existing convergence rate.
+
+I have also undone the changes in the communication pattern because they were irrelevant.
