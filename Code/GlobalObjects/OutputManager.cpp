@@ -41,7 +41,9 @@ void OutputManager::initialize() {
     mkdir(output_folder_path.c_str(), ACCESSPERMS);
     log_stream.open(output_folder_path + "/main" + std::to_string(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) + ".log", std::ios::binary);
     write_run_description();
-    print_info("Git status:", exec("git rev-parse HEAD"));
+    std::string git_commit_hash = exec("git rev-parse HEAD");
+    git_commit_hash.erase(std::remove(git_commit_hash.begin(), git_commit_hash.end(), '\n'), git_commit_hash.end());
+    print_info("Git status:",git_commit_hash);
 }
 
 OutputManager::~OutputManager() {

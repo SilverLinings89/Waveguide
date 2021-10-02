@@ -87,8 +87,7 @@ void InnerDomain::fill_sparsity_pattern( dealii::DynamicSparsityPattern *in_patt
   }
 }
 
-std::vector<InterfaceDofData> InnerDomain::get_surface_dof_vector_for_boundary_id(
-    unsigned int b_id) {
+std::vector<InterfaceDofData> InnerDomain::get_surface_dof_vector_for_boundary_id(unsigned int b_id) {
   std::vector<InterfaceDofData> ret;
   std::vector<types::global_dof_index> local_line_dofs(fe.dofs_per_line);
   std::set<DofNumber> line_set;

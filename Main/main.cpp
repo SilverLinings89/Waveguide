@@ -75,7 +75,6 @@ int main(int argc, char *argv[]) {
 
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
-  print_info("Main", "Prepare Streams", true);
   initialize_global_variables(run_file, case_file);
   Simulation * simulation;
   if (GlobalParams.Enable_Parameter_Run) {

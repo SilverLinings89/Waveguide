@@ -493,4 +493,6 @@ It is good to see, that the code runs for higher order elements but it is not ye
 # Friday, 1st of October
 
 I removed some old functions. During that, I noticed that most likely I no longer need to sort the dofs. That was needed before I reforged the meshes. As a consequence, this logic might actually cause the issues I see at interfaces by reorienting dofs the wrong way. Testing.
-I also evaluated the results of the higher order run. The results look pretty similar in their errors to the HSIE problems on lowest order. This leads me to believe it's a problem with face orientations as mentioned above. There seems to be no issue without the sorting. Will now reattempt the higher order computations and HSIE.
+I also evaluated the results of the higher order run. The results look pretty similar in their errors to the HSIE problems on lowest order. This leads me to believe it's a problem with face orientations as mentioned above. There seems to be no issue without the sorting. Will now reattempt the higher order computations and HSIE. Lowest order and HSIE with sweeping gives a 0 solution. The solution is not exactly zero but of order e-5.
+On the other hand: Order one computation for PML works now, including sweeping which is big progress. It even seems to deal with the interface dof error better than the lower order case does.
+
