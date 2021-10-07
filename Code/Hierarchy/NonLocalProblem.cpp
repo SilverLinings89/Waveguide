@@ -240,7 +240,7 @@ Direction get_direction_for_boundary_id(BoundaryId bid) {
 
 void NonLocalProblem::assemble() {
   print_info("NonLocalProblem::assemble", "Begin assembly");
-  GlobalTimerManager.switch_context("assemble", level);
+  GlobalTimerManager.switch_context("Assemble", level);
   Timer timer;
   timer.start();
   Geometry.levels[level].inner_domain->assemble_system(&constraints, matrix, &rhs);
@@ -256,13 +256,13 @@ void NonLocalProblem::assemble() {
   print_info("NonLocalProblem::assemble", "Compress vectors.");
   solution.compress(dealii::VectorOperation::add);
   print_info("NonLocalProblem::assemble", "End assembly.");
-  
+  GlobalTimerManager.leave_context(level);
 }
 
 void NonLocalProblem::solve() {
   
   print_info("NonLocalProblem::solve", "Start");
-  GlobalTimerManager.switch_context("solve", level);
+  GlobalTimerManager.switch_context("Solve", level);
   rhs.compress(VectorOperation::add);
   print_vector_norm(&rhs, "RHS");
   if(!GlobalParams.solve_directly) {
@@ -270,7 +270,7 @@ void NonLocalProblem::solve() {
     KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc), nullptr);
     KSPSetPCSide(ksp, PCSide::PC_RIGHT);
     KSPGMRESSetRestart(ksp, GlobalParams.GMRES_max_steps);
-    KSPSetTolerances(ksp, 0.000001, 1.0, 1000, GlobalParams.GMRES_max_steps);
+    KSPSetTolerances(ksp, 0.0001, 1.0, 1000, GlobalParams.GMRES_max_steps);
     KSPMonitorSet(ksp, MonitorError, nullptr, nullptr);
     KSPSetUp(ksp);
     PetscErrorCode ierr = KSPSolve(ksp, rhs, solution);
@@ -284,6 +284,7 @@ void NonLocalProblem::solve() {
     dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, GlobalMPI.communicators_by_level[level]);
     solver1.solve(*matrix, solution_error, rhs);
   }
+  GlobalTimerManager.leave_context(level);
   matrix->residual(solution_error, solution, rhs);
   // subtract_vectors(&solution, &solution_error);
   // constraints.distribute(solution);
@@ -377,6 +378,7 @@ void NonLocalProblem::set_child_rhs_from_vector(NumericVectorDistributed * in_u)
 
 void NonLocalProblem::reinit() {
   print_info("Nonlocal reinit", "Reinit starting");
+  GlobalTimerManager.switch_context("Reinit", level);
   child->reinit();
   
   make_constraints();
@@ -417,18 +419,19 @@ void NonLocalProblem::reinit() {
       }
     }
   }
-
+  GlobalTimerManager.leave_context(level);
   print_info("Nonlocal reinit", "Reinit done");
 }
 
 void NonLocalProblem::initialize() {
-  GlobalTimerManager.switch_context("initialize", level);
+  GlobalTimerManager.switch_context("Initialize", level);
   child->initialize();
   n_procs_in_sweep = dealii::Utilities::MPI::n_mpi_processes(GlobalMPI.communicators_by_level[level]);
   rank = dealii::Utilities::MPI::this_mpi_process(GlobalMPI.communicators_by_level[level]);
   initialize_index_sets();
   reinit();
   init_solver_and_preconditioner();
+  GlobalTimerManager.leave_context(level);
 }
  
 void NonLocalProblem::initialize_index_sets() {

@@ -535,3 +535,12 @@ for(unsigned int surf = 0; surf < 6; surf++) {
 The code now starts the run but gets stuck in the preconditioner. Evaluating why. The problem is, that the ranks are unique which makes sense in every application so far. However, in the level 2 sweep, multiple processes have to perform a S_inv at the same time. This means, they have to react as if they had the same rank. At the same time, there are some operations, where the unique rank counts. I therefore need a new value that is the index_in_sweeping_direction. Then all the processes with the same value here perform an action at the same time. Quickly checking if the code still works for level 1. Then I'm done for the day. The new implementation of boundary dof index ownership seems much more stable and comprehensive. The work item for tomorrow is obvious. I also copied the seg-fault issue solution to the HSIE implementation to make it work again. Additional commit.
 
 I forced the GMRES Solver from PETSC to never do any restarts since they destroy the schemes convergence. I also noticed that the residual depends heavily on the parameters of the PML, leading me to believe that maybe the problem is not in the implementation but simply in the parameters of the PML.
+
+# Thursday,  7th of October
+
+Today, the goals are (in order):
+- Optimize the PML parameters for fast convergence.
+- Optimize the outputs of timers and convergence history.
+- Running the first, higher-level sweeping preconditioner. Ideally also level 3.
+
+Once these blocks are done, I will focus on repairing whatever the current issue in the HSIE implementation is.

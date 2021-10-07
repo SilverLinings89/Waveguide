@@ -77,6 +77,9 @@ void HierarchicalProblem::make_sparsity_pattern() {
 }
 
 std::string HierarchicalProblem::output_results(std::string in_fname_part) {
+  GlobalTimerManager.switch_context("Output Results", level);
+  Timer timer;
+  timer.start();
   print_info("Hierarchical::output_results()", "Start on level " + std::to_string(level));
   std::string ret = "";
   NumericVectorLocal in_solution(Geometry.levels[level].inner_domain->dof_handler.n_dofs());
@@ -107,5 +110,7 @@ std::string HierarchicalProblem::output_results(std::string in_fname_part) {
   }
 
   print_info("Hierarchical::output_results()", "End on level " + std::to_string(level));
+  timer.stop();
+  GlobalTimerManager.leave_context(level);
   return ret;
 }

@@ -15,5 +15,5 @@ class TimerManager {
     void initialize();
     void switch_context(std::string context, unsigned int level);
     void write_output();
-
+    void leave_context(unsigned int level);
 };

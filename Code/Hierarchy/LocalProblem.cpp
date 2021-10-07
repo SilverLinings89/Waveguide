@@ -78,7 +78,7 @@ dealii::IndexSet LocalProblem::compute_interface_dof_set(BoundaryId interface_id
 
 void LocalProblem::initialize() {
   print_info("LocalProblem::initialize", "Start");
-  GlobalTimerManager.switch_context("initialize", level);
+  GlobalTimerManager.switch_context("Initialize", 0);
   print_info("LocalProblem::initialize", "Number of local dofs: " + std::to_string(Geometry.levels[0].n_local_dofs) , false, LoggingLevel::DEBUG_ALL);
   for(unsigned int i = 0; i < 6; i++) {
     if(Geometry.levels[0].is_surface_truncated[i]){
@@ -91,6 +91,7 @@ void LocalProblem::initialize() {
   if(GlobalParams.NumberProcesses == 1) {
     reinit();
   }
+  GlobalTimerManager.leave_context(0);
   print_info("LocalProblem::initialize", "End");
 }
 
@@ -101,8 +102,10 @@ void LocalProblem::validate() {
 }
 
 void LocalProblem::assemble() {
+  GlobalTimerManager.switch_context("Assemble", level);
+  Timer timer;
+  timer.start();
   Geometry.levels[level].inner_domain->assemble_system(&constraints, matrix, &rhs);
-  GlobalTimerManager.switch_context("assemble", level);
   for (unsigned int surface = 0; surface < 6; surface++) {
     if(Geometry.levels[0].is_surface_truncated[surface]) {
       Geometry.levels[0].surfaces[surface]->fill_matrix(matrix, &rhs, &constraints);
@@ -111,6 +114,8 @@ void LocalProblem::assemble() {
   matrix->compress(dealii::VectorOperation::add);
   rhs.compress(dealii::VectorOperation::add);
   solution_error = rhs;
+  timer.stop();
+  GlobalTimerManager.leave_context(0);
 }
 
 void LocalProblem::reinit_rhs() {
@@ -118,6 +123,7 @@ void LocalProblem::reinit_rhs() {
 }
 
 void LocalProblem::reinit() {
+  GlobalTimerManager.switch_context("Reinit", 0);
   reinit_rhs();
   rhs = dealii::PETScWrappers::MPI::Vector(own_dofs, MPI_COMM_SELF);
   solution.reinit(MPI_COMM_SELF, Geometry.levels[0].n_local_dofs, Geometry.levels[0].n_local_dofs, false);
@@ -130,10 +136,11 @@ void LocalProblem::reinit() {
   std::vector<unsigned int> lines_per_proc;
   lines_per_proc.push_back(sp.n_cols());
   matrix->reinit(MPI_COMM_SELF, sp, lines_per_proc, lines_per_proc, 0);
+  GlobalTimerManager.leave_context(0);
 }
 
 void LocalProblem::solve() {
-  GlobalTimerManager.switch_context("solve", level);
+  GlobalTimerManager.switch_context("Solve", 0);
   Timer timer1;
   timer1.start ();
   // std::cout << "Before: " << rhs.l2_norm() << std::endl;
@@ -146,6 +153,7 @@ void LocalProblem::solve() {
     output_results("FirstStep");
   } 
   solve_counter ++;
+  GlobalTimerManager.leave_context(0);
 }
 
 void LocalProblem::initialize_index_sets() {
