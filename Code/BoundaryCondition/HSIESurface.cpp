@@ -1357,7 +1357,7 @@ DofCount HSIESurface::compute_n_locally_active_dofs() {
 void HSIESurface::finish_dof_index_initialization() {
   if(!is_isolated_boundary) {
     for(BoundaryId surf:adjacent_boundaries) {
-      if(!are_edge_dofs_owned[surf]) {
+      if(!are_edge_dofs_owned[surf] && Geometry.levels[level].surface_type[surf] != SurfaceType::NEIGHBOR_SURFACE) {
         DofIndexVector dofs_in_global_numbering = Geometry.levels[level].surfaces[surf]->get_global_dof_indices_by_boundary_id(b_id);
         std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(surf);
         DofIndexVector dofs_in_local_numbering(local_interface_data.size());
