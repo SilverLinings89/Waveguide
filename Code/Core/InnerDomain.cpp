@@ -28,7 +28,6 @@
 #include "../Core/Types.h"
 #include "../Helpers/staticfunctions.h"
 #include "../MeshGenerators/SquareMeshGenerator.h"
-#include "SolutionWeight.h"
 #include "../GlobalObjects/GlobalObjects.h"
 #include "../SpaceTransformations/HomogenousTransformationRectangular.h"
 #include "../Helpers/PointSourceField.h"

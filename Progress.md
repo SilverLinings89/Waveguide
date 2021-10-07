@@ -539,8 +539,8 @@ I forced the GMRES Solver from PETSC to never do any restarts since they destroy
 # Thursday,  7th of October
 
 Today, the goals are (in order):
+- Optimize the outputs of timers and convergence history. (Done)
 - Optimize the PML parameters for fast convergence.
-- Optimize the outputs of timers and convergence history.
 - Running the first, higher-level sweeping preconditioner. Ideally also level 3.
 
 Once these blocks are done, I will focus on repairing whatever the current issue in the HSIE implementation is.

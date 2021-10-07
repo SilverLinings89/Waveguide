@@ -16,7 +16,6 @@
 #include "../Code/GlobalObjects/OutputManager.h"
 #include "../Code/GlobalObjects/TimerManager.h"
 #include "../Code/Solutions/ExactSolution.h"
-#include "../Code/Core/SolutionWeight.h"
 #include "../Code/OutputGenerators/Console/GradientTable.h"
 #include "../Code/SpaceTransformations/SpaceTransformation.h"
 #include "../Code/SpaceTransformations/InhomogenousTransformationRectangular.h"

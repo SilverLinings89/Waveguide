@@ -3,7 +3,6 @@ INCLUDE_DIRECTORIES(Core, Helpers, MeshGenerators, OptimizationAlgorithm, Optimi
 ADD_LIBRARY(Code
         Core/Sector.cpp
         Core/FEDomain.cpp
-        Core/SolutionWeight.cpp
         Core/InnerDomain.cpp
         Core/Types.h
         Runners/Simulation.cpp
