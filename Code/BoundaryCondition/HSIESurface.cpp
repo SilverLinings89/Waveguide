@@ -1356,20 +1356,19 @@ DofCount HSIESurface::compute_n_locally_active_dofs() {
 
 void HSIESurface::finish_dof_index_initialization() {
   if(!is_isolated_boundary) {
-    for(unsigned int surf = 0; surf < 6; surf++) {
-      if(!is_surface_owned[b_id][surf] && (surf != b_id && !are_opposing_sites(b_id, surf)) && !Geometry.levels[level].surfaces[surf]->is_isolated_boundary) {
-        if (Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
-          DofIndexVector dofs_in_global_numbering = Geometry.levels[level].surfaces[surf]->get_global_dof_indices_by_boundary_id(b_id);
-          std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(surf);
-          DofIndexVector dofs_in_local_numbering(local_interface_data.size());
-          for(unsigned int i = 0; i < local_interface_data.size(); i++) {
-            dofs_in_local_numbering[i] = local_interface_data[i].index;
-          }
-          set_non_local_dof_indices(dofs_in_local_numbering, dofs_in_global_numbering);
+    for(BoundaryId surf:adjacent_boundaries) {
+      if(!are_edge_dofs_owned[surf]) {
+        DofIndexVector dofs_in_global_numbering = Geometry.levels[level].surfaces[surf]->get_global_dof_indices_by_boundary_id(b_id);
+        std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(surf);
+        DofIndexVector dofs_in_local_numbering(local_interface_data.size());
+        for(unsigned int i = 0; i < local_interface_data.size(); i++) {
+          dofs_in_local_numbering[i] = local_interface_data[i].index;
         }
+        set_non_local_dof_indices(dofs_in_local_numbering, dofs_in_global_numbering);
       }
     }
   }
+
   // Do the same for the inner interface
   std::vector<InterfaceDofData> global_interface_data = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_boundary_id(b_id);
   std::vector<InterfaceDofData> local_interface_data = get_dof_association();
@@ -1410,13 +1409,9 @@ dealii::IndexSet HSIESurface::compute_non_owned_dofs() {
   IndexSet non_owned_dofs(dof_counter);
   std::vector<unsigned int> non_locally_owned_surfaces;
   if(!is_isolated_boundary) {
-    for(unsigned int surf = 0; surf < 6; surf++) {
-      if(surf != b_id && !are_opposing_sites(surf, b_id)) {
-        if(Geometry.levels[level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE || Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
-          if(!is_surface_owned[b_id][surf] && !Geometry.levels[level].surfaces[surf]->is_isolated_boundary) {
-            non_locally_owned_surfaces.push_back(surf);
-          }
-        }
+    for(auto surf: adjacent_boundaries) {
+      if(!are_edge_dofs_owned[surf]) {
+        non_locally_owned_surfaces.push_back(surf);
       }
     }
   }

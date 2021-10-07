@@ -510,3 +510,26 @@ The implementation to carry over the non-owned dofs seems to work but it didnt f
 I just noticed, that the first step is the one that works but the first step is also the one, where the downward sweep has no effect (starts with 0). So I will see what happens if the downward sweep is disabled completely. If that makes no difference, there is an issue in the implementation of the downward sweep. If not, I will have to keep searching. It would fit because then, the communication in the downward direction would only occur through GMRES which would explain the slow but existing convergence rate.
 
 I have also undone the changes in the communication pattern because they were irrelevant.
+
+# Monday, 4th of October
+
+So far I cant tell yet what the issue really is. I will now implement a function that lists the dof ranges. Maybe I should write a MPI test suite to run tests on larger example cases. This would be a good issue for today. I will print on every process for the Boundary ID 1 what the highest and lowest dof on Interface 1-4 and 1-5 is.
+
+# Wednesday, 6th of October
+
+I spent all of yesterday, trying to find out what the source of the errors for PML might be. I was not successful. The runs for higher level sweeping currently don't work because of issues in boundary method dof ownership. I have reimplemented that part and hope, that it is now more reliable. There is now a static function to determine the ownership and the results get persisted in the BoundaryMethod objects. There is also an array with adjacent boundaries to allow for the more simplistic implementation with
+```
+for(auto surf: adjacent_boundary_ids) {
+    ...
+}
+```
+instead of the older 
+```
+for(unsigned int surf = 0; surf < 6; surf++) {
+    if(surf != b_id && !are_opposing(b_id, surf) {
+        ...
+    }
+}
+```
+
+The code now starts the run but gets stuck in the preconditioner. Evaluating why. The problem is, that the ranks are unique which makes sense in every application so far. However, in the level 2 sweep, multiple processes have to perform a S_inv at the same time. This means, they have to react as if they had the same rank. At the same time, there are some operations, where the unique rank counts. I therefore need a new value that is the index_in_sweeping_direction. Then all the processes with the same value here perform an action at the same time.

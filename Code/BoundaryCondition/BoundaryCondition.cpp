@@ -9,14 +9,15 @@ using namespace dealii;
 BoundaryCondition::BoundaryCondition(unsigned int in_bid, unsigned int in_level, double in_additional_coordinate):
   b_id(in_bid),
   level(in_level),
-  additional_coordinate(in_additional_coordinate) {
+  additional_coordinate(in_additional_coordinate),
+  adjacent_boundaries(get_adjacent_boundary_ids(in_bid)) {
     is_isolated_boundary = false;
-  is_surface_owned[0] = {{true , false , false, true,  false, true }};
-  is_surface_owned[1] = {{false , true , false, true,  false, true }};
-  is_surface_owned[2] = {{true,  true,  true , false , false, true }};
-  is_surface_owned[3] = {{false, false, false , true , false, true }};
-  is_surface_owned[4] = {{true,  true,  true,  true,  true , false }};
-  is_surface_owned[5] = {{false, false, false, false, false , true }};
+    for(unsigned int i = 0; i < 6; i++) {
+      are_edge_dofs_owned[i] = false;
+    }
+    for(auto surf: adjacent_boundaries) {
+      are_edge_dofs_owned[surf] = are_edge_dofs_locally_owned(b_id, surf, level);
+    }
 }
 
 void BoundaryCondition::set_mesh_boundary_ids() {
@@ -79,6 +80,7 @@ std::vector<DofNumber> BoundaryCondition::get_global_dof_indices_by_boundary_id(
   for(unsigned int i = 0; i < dof_data.size(); i++) {
     ret.push_back(dof_data[i].index);
   }
+  
   ret = transform_local_to_global_dofs(ret);
   return ret;
 }
@@ -107,5 +109,52 @@ Constraints BoundaryCondition::make_constraints() {
 }
 
 void BoundaryCondition::mark_as_isolated() {
-  this->is_isolated_boundary = true;
+  is_isolated_boundary = true;
+}
+
+double BoundaryCondition::boundary_norm(NumericVectorDistributed * in_v) {
+  double ret = 0;
+  for(unsigned int i = 0; i < global_index_mapping.size(); i++) {
+    ret += norm_squared(in_v->operator()(global_index_mapping[i]));
+  }
+  return std::sqrt(ret);
+}
+
+double BoundaryCondition::boundary_surface_norm(NumericVectorDistributed * in_v, BoundaryId in_bid) {
+  double ret = 0;
+  auto dofs = get_dof_association_by_boundary_id(in_bid);
+  for(auto it : dofs) {
+    ret += norm_squared(in_v->operator()(it.index));
+  }
+  return std::sqrt(ret);
+}
+
+void BoundaryCondition::print_dof_validation() {
+  unsigned int n_invalid_dofs = 0;
+  for(unsigned int i = 0; i < n_locally_active_dofs; i++) {
+    if(global_index_mapping[i] >= Geometry.levels[level].n_total_level_dofs) {
+      n_invalid_dofs++;
+    }
+  }
+  if(n_invalid_dofs > 0) {
+    std::cout << "On process " << GlobalParams.MPI_Rank << " surface " << b_id << " has " << n_invalid_dofs << " invalid dofs." << std::endl;
+    for(unsigned int surf = 0; surf < 6; surf++) {
+      if(surf != b_id && !are_opposing_sites(b_id, surf)) {
+        unsigned int invalid_dof_count = 0;
+        unsigned int owned_invalid = 0;
+        auto dofs = get_dof_association_by_boundary_id(surf);
+        for(auto dof:dofs) {
+          if(global_index_mapping[dof.index] >= Geometry.levels[level].n_total_level_dofs) {
+            invalid_dof_count++;
+            if(is_dof_owned[dof.index]) {
+              owned_invalid++;
+            }
+          }
+        }
+        if(invalid_dof_count > 0) {
+          std::cout << "On process " << GlobalParams.MPI_Rank << " surface " << b_id << " there were "<< invalid_dof_count<< "(" << owned_invalid << ") invalid dofs towards "<< surf << std::endl;
+        }
+      }
+    }
+  }
 }

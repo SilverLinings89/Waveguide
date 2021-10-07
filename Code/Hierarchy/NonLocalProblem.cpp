@@ -70,7 +70,7 @@ Direction get_upper_boundary_id_for_sweeping_direction(SweepingDirection in_dire
 
 static PetscErrorCode MonitorError(KSP , PetscInt its, PetscReal rnorm, void *)
 {
-  if (dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0) {
+  if (GlobalParams.MPI_Rank == 0) {
     std::cout << "Residual in step " << std::to_string(its) << "  : " << std::to_string(rnorm);
     if(last_residual != -1 ) {
       std::cout << " Factor: " << std::to_string(rnorm / last_residual);
@@ -170,9 +170,18 @@ NonLocalProblem::NonLocalProblem(unsigned int level) :
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->global_index_mapping.size(); i++) {
     locally_active_dofs.add_index(Geometry.levels[level].inner_domain->global_index_mapping[i]);
   }
+  
+  for(unsigned int surf = 0; surf < 6; surf++) {
+    Geometry.levels[level].surfaces[surf]->print_dof_validation();
+  }
   for(unsigned int surf = 0; surf < 6; surf++) {
     for(unsigned int i = 0; i < Geometry.levels[level].surfaces[surf]->global_index_mapping.size(); i++) {
-      locally_active_dofs.add_index(Geometry.levels[level].surfaces[surf]->global_index_mapping[i]);
+      unsigned int global_index = Geometry.levels[level].surfaces[surf]->global_index_mapping[i];
+      if(global_index > Geometry.levels[level].n_total_level_dofs) {
+        
+      } else {
+        locally_active_dofs.add_index(global_index);
+      }
     }  
   }
   n_locally_active_dofs = locally_active_dofs.n_elements();
@@ -193,7 +202,7 @@ void NonLocalProblem::init_solver_and_preconditioner() {
 }
 
 void NonLocalProblem::reinit_rhs() {
-  rhs.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  reinit_vector(&rhs);
 }
 
 NonLocalProblem::~NonLocalProblem() {
@@ -232,14 +241,14 @@ Direction get_direction_for_boundary_id(BoundaryId bid) {
 void NonLocalProblem::assemble() {
   print_info("NonLocalProblem::assemble", "Begin assembly");
   GlobalTimerManager.switch_context("assemble", level);
+  Timer timer;
+  timer.start();
   Geometry.levels[level].inner_domain->assemble_system(&constraints, matrix, &rhs);
   print_info("NonLocalProblem::assemble", "Inner assembly done. Assembling boundary method contributions.");
   for(unsigned int i = 0; i< 6; i++) {
-      Timer timer;
-      timer.start();
       Geometry.levels[level].surfaces[i]->fill_matrix(matrix, &rhs, &constraints);
-      timer.stop();
   }
+  timer.stop();
   print_info("NonLocalProblem::assemble", "Compress matrix.");
   matrix->compress(dealii::VectorOperation::add);
   print_info("NonLocalProblem::assemble", "Assemble child.");
@@ -251,7 +260,7 @@ void NonLocalProblem::assemble() {
 }
 
 void NonLocalProblem::solve() {
-  init_solver_and_preconditioner();
+  
   print_info("NonLocalProblem::solve", "Start");
   GlobalTimerManager.switch_context("solve", level);
   rhs.compress(VectorOperation::add);
@@ -271,12 +280,13 @@ void NonLocalProblem::solve() {
   } else {
     // Solve Directly for reference
     SolverControl sc;
-    dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, MPI_COMM_WORLD);
-    solver1.solve(*matrix, solution, rhs);
+    dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, GlobalMPI.communicators_by_level[level]);
+    solver1.solve(*matrix, solution_error, rhs);
   }
   matrix->residual(solution_error, solution, rhs);
   // subtract_vectors(&solution, &solution_error);
-  constraints.distribute(solution);
+  // constraints.distribute(solution);
+  subtract_vectors(&solution_error, &solution);
   write_multifile_output("error_of_solution", solution_error);
   print_info("NonLocalProblem::solve", "End");
 }
@@ -285,33 +295,36 @@ void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   NumericVectorDistributed temp_solution = vector_from_vec_obj(b_in);
   // print_vector_norm(&temp_solution, "Z1");
   NumericVectorDistributed vec_a, vec_b;
-  vec_a.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
-  vec_b.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  reinit_vector(&vec_a);
+  reinit_vector(&vec_b);
+  
+  std::cout << "A on " << level << std::endl; 
   
   for(unsigned int i = n_procs_in_sweep - 1; i > 0; i--) {
+    std::cout << rank << std::endl;
     S_inv(&temp_solution, &vec_a, i == rank);
-    // print_vector_norm(&vec_a, "A1");
+    if(rank == i) {
+      copy_local_part(&vec_a, &temp_solution);
+    }
     vec_b = off_diagonal_product(i, i-1, &vec_a);
-    // print_vector_norm(&vec_b, "A2");
     subtract_vectors(&temp_solution, &vec_b);
-    vec_b.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
-    vec_a.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+    reinit_vector(&vec_a);
+    reinit_vector(&vec_b);
   }
   
-  copy_local_part(&temp_solution, &vec_b);
-  // print_vector_norm(&temp_solution, "B1");
-  S_inv(&vec_b, &temp_solution, true);
-  // print_vector_norm(&temp_solution, "B2");
-  vec_a.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
-  vec_b.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
-  
+  S_inv(&temp_solution, &vec_a, 0 == rank);
+  if(rank == 0) {
+    copy_local_part(&vec_a, &temp_solution);
+  }
+  reinit_vector(&vec_a);
+  std::cout << "B on " << level << std::endl; 
   for(unsigned int i = 0; i < n_procs_in_sweep-1; i++) {
     vec_a = off_diagonal_product(i, i+1, &temp_solution);
     // print_vector_norm(&vec_a, "C1");
     S_inv(&vec_a, &vec_b, rank == i+1);
     subtract_vectors(&temp_solution, &vec_b);
     // print_vector_norm(&temp_solution, "C2");
-    vec_b.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+    reinit_vector(&vec_b);
   }
   step_counter ++;
   set_x_out_from_u(u_out, &temp_solution);
@@ -321,11 +334,12 @@ void NonLocalProblem::set_x_out_from_u(Vec x_out, NumericVectorDistributed * in_
   ComplexNumber * values = new ComplexNumber[own_dofs.n_elements()];
   
   in_u->extract_subvector_to(vector_copy_own_indices, vector_copy_array);
-
+  double norm = 0;
   for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
     values[i] = vector_copy_array[i];
+    norm += std::abs(values[i]) * std::abs(values[i]);
   }
-
+  
   VecSetValues(x_out, own_dofs.n_elements(), locally_owned_dofs_index_array, values, INSERT_VALUES);
   VecAssemblyBegin(x_out);
   VecAssemblyEnd(x_out);
@@ -344,12 +358,23 @@ void NonLocalProblem::S_inv(NumericVectorDistributed * src, NumericVectorDistrib
 
 void NonLocalProblem::set_vector_from_child_solution(NumericVectorDistributed * in_u) {
   child->solution.extract_subvector_to(vector_copy_child_indeces, vector_copy_array);
+  double norm = 0;
+  for(unsigned int i = 0; i < vector_copy_array.size(); i++) {
+    norm += std::abs(vector_copy_array[i])*std::abs(vector_copy_array[i]);
+  }
+  norm = std::sqrt(norm);
+  std::cout << "Copied norm: " << norm << std::endl;
   in_u->set(vector_copy_own_indices, vector_copy_array);
 }
 
 void NonLocalProblem::set_child_rhs_from_vector(NumericVectorDistributed * in_u) {
+  child->reinit_rhs();
   in_u->extract_subvector_to(vector_copy_own_indices, vector_copy_array);
   child->rhs.set(vector_copy_child_indeces, vector_copy_array);
+  child->rhs.compress(VectorOperation::insert);
+  if(rank != 0) {
+    child->constraints.distribute(child->rhs);
+  }
 }
 
 void NonLocalProblem::reinit() {
@@ -367,9 +392,9 @@ void NonLocalProblem::reinit() {
     local_rows.push_back(Geometry.levels[level].dof_distribution[p].n_elements());
   }
 
-  solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
-  direct_solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
-  solution_error.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  reinit_vector(&solution);
+  reinit_vector(&direct_solution);
+  reinit_vector(&solution_error);
   IndexSet all_dofs(Geometry.levels[level].n_total_level_dofs);
   all_dofs.add_range(0,Geometry.levels[level].n_total_level_dofs);
   matrix->reinit(Geometry.levels[level].dof_distribution[rank], Geometry.levels[level].dof_distribution[rank], sp, GlobalMPI.communicators_by_level[level]);
@@ -405,7 +430,7 @@ void NonLocalProblem::initialize() {
   rank = dealii::Utilities::MPI::this_mpi_process(GlobalMPI.communicators_by_level[level]);
   initialize_index_sets();
   reinit();
-  
+  init_solver_and_preconditioner();
 }
  
 void NonLocalProblem::initialize_index_sets() {
@@ -576,12 +601,14 @@ void NonLocalProblem::make_sparsity_pattern() {
 
 NumericVectorDistributed NonLocalProblem::vector_from_vec_obj(Vec in_v) {
   NumericVectorDistributed ret;
-  ret.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  reinit_vector(&ret);
   const unsigned int n_loc_dofs = own_dofs.n_elements();
   ComplexNumber * values = new ComplexNumber[n_loc_dofs];
   VecGetValues(in_v, n_loc_dofs, locally_owned_dofs_index_array, values);
+  double norm = 0;
   for(unsigned int i = 0; i < n_loc_dofs; i++) {
      vector_copy_array[i] = values[i];
+     norm += std::abs(values[i]) * std::abs(values[i]);
   }
   ret.set(vector_copy_own_indices, vector_copy_array);
   ret.compress(dealii::VectorOperation::insert);
@@ -596,9 +623,9 @@ void NonLocalProblem::copy_local_part(NumericVectorDistributed * src, NumericVec
 
 NumericVectorDistributed NonLocalProblem::off_diagonal_product(unsigned int i, unsigned int j, NumericVectorDistributed * in_v) {
   NumericVectorDistributed ret;
-  ret.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   NumericVectorDistributed left;
-  left.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  reinit_vector(&ret);
+  reinit_vector(&left);
   if(rank == i) {
     in_v->extract_subvector_to(vector_copy_own_indices, vector_copy_array);
     left.set(vector_copy_own_indices, vector_copy_array);
@@ -629,8 +656,13 @@ void NonLocalProblem::print_vector_norm(NumericVectorDistributed * in_v, std::st
   for(unsigned int i = 0; i < vector_copy_array.size(); i++) {
     local_norm += std::abs(vector_copy_array[i])*std::abs(vector_copy_array[i]);
   }
-  local_norm = dealii::Utilities::MPI::sum(local_norm, MPI_COMM_WORLD);
+  // std::cout << "on rank " << GlobalParams.MPI_Rank << " : " << local_norm << std::endl;
+  local_norm = dealii::Utilities::MPI::sum(local_norm, GlobalMPI.communicators_by_level[level]);
   if(GlobalParams.MPI_Rank == 0) {
     std::cout << marker << ": " << std::sqrt(local_norm) << std::endl;
   }
+}
+
+void NonLocalProblem::reinit_vector(NumericVectorDistributed * in_v) {
+  in_v->reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
 }

@@ -60,12 +60,9 @@ void InnerDomain::make_grid() {
   std::string m = "Cells: " + std::to_string(GlobalParams.Cells_in_x) + " x " + std::to_string(GlobalParams.Cells_in_y) + " x " + std::to_string(GlobalParams.Cells_in_z) + " Geometry: [" + std::to_string(Geometry.local_x_range.first) + "," + std::to_string(Geometry.local_x_range.second);
   m += "] x [" + std::to_string(Geometry.local_y_range.first) + "," + std::to_string(Geometry.local_y_range.second) + "] x [" + std::to_string(Geometry.local_z_range.first) + "," + std::to_string(Geometry.local_z_range.second) + "]";
   print_info("InnerDomain::make_grid", m, false, LoggingLevel::PRODUCTION_ALL);
-  Position lower(Geometry.local_x_range.first, Geometry.local_y_range.first,
-      Geometry.local_z_range.first);
-  Position upper(Geometry.local_x_range.second, Geometry.local_y_range.second,
-      Geometry.local_z_range.second);
-  dealii::GridGenerator::subdivided_hyper_rectangle(temp_tria, repetitions,
-      lower, upper, true);
+  Position lower(Geometry.local_x_range.first, Geometry.local_y_range.first, Geometry.local_z_range.first);
+  Position upper(Geometry.local_x_range.second, Geometry.local_y_range.second, Geometry.local_z_range.second);
+  dealii::GridGenerator::subdivided_hyper_rectangle(temp_tria, repetitions, lower, upper, true);
   triangulation = reforge_triangulation(&temp_tria);
   dof_handler.distribute_dofs(fe);
   print_info("InnerDomain::make_grid", "Mesh Preparation finished. System has " + std::to_string(dof_handler.n_dofs()) + " degrees of freedom.", false, LoggingLevel::PRODUCTION_ONE);

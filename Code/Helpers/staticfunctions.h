@@ -36,6 +36,8 @@ std::string exec(const char* cmd);
 
 ComplexNumber matrixD(int in_row, int in_column, ComplexNumber in_k0);
 
+std::pair<DofNumber, DofNumber> get_max_and_min_dof_for_interface_data(std::vector<InterfaceDofData> in_data);
+
 bool comparePositions(Position p1, Position p2);
 
 bool compareDofBaseData(std::pair<DofNumber, Position> c1, std::pair<DofNumber, Position> c2);
@@ -137,3 +139,9 @@ dealii::Triangulation<3> reforge_triangulation(dealii::Triangulation<3> * origin
 ComplexNumber conjugate(const ComplexNumber & in_number);
 
 bool is_absorbing_boundary(SurfaceType in_st);
+
+double norm_squared(const ComplexNumber in_c);
+
+bool are_edge_dofs_locally_owned(BoundaryId self, BoundaryId other, unsigned int in_level);
+
+std::vector<BoundaryId> get_adjacent_boundary_ids(BoundaryId self);

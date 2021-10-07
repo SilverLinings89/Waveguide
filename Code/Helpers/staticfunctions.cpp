@@ -74,6 +74,21 @@ unsigned int message_count = 0;
 
 void set_the_st(SpaceTransformation *in_st) { the_st = in_st; }
 
+std::pair<DofNumber, DofNumber> get_max_and_min_dof_for_interface_data(std::vector<InterfaceDofData> in_data) {
+  std::pair<DofNumber, DofNumber> ret;
+  ret.first = 1000000000;
+  ret.second = 0;
+  for(unsigned int i = 0; i < in_data.size(); i++) {
+    if(in_data[i].index < ret.first) {
+      ret.first = in_data[i].index;
+    }
+    if(in_data[i].index > ret.second) {
+      ret.second = in_data[i].index;
+    }
+  }
+  return ret;
+}
+
 auto compute_center_of_triangulation(const Mesh *in_mesh) -> Position {
   double x_average = 0;
   double y_average = 0;
@@ -668,4 +683,55 @@ bool is_absorbing_boundary(SurfaceType in_st) {
   } else {
     return true;
   }
+}
+
+double norm_squared(const ComplexNumber in_c) {
+  return in_c.real() * in_c.real() + in_c.imag()*in_c.imag();
+}
+
+bool base_edge_ownership(BoundaryId self, BoundaryId other) {
+  if(self == other) {
+    return true;
+  }
+  if(are_opposing_sites(self, other)) {
+    return false;
+  }
+  if(self == 0) {
+    return (other == 3) || (other == 5);
+  }
+  if(self == 1) {
+    return (other == 3) || (other == 5);
+  }
+  if(self == 2) {
+    return (other == 0) || (other == 1) || (other == 5);
+  }
+  if(self == 3) {
+    return other == 5;
+  }
+  return self == 4;
+}
+
+bool are_edge_dofs_locally_owned(BoundaryId self, BoundaryId other, unsigned int in_level) {
+  if(Geometry.is_surface_isolated(other, in_level)) {
+    return true;
+  }
+  if(Geometry.levels[in_level].surface_type[other] != SurfaceType::NEIGHBOR_SURFACE && Geometry.levels[in_level].surface_type[self] != SurfaceType::NEIGHBOR_SURFACE ) {
+    if(Geometry.levels[in_level].surface_type[other] != Geometry.levels[in_level].surface_type[self]) {
+      return true;
+    }
+  }
+  if(Geometry.levels[in_level].surface_type[other] == SurfaceType::NEIGHBOR_SURFACE) {
+    return (other % 2) == 1;
+  }
+  return base_edge_ownership(self, other);
+}
+
+std::vector<BoundaryId> get_adjacent_boundary_ids(BoundaryId self) {
+  std::vector<BoundaryId> ret;
+  for(unsigned int i = 0; i < 6; i++) {
+    if(i != self && !are_opposing_sites(self, i)) {
+      ret.push_back(i);
+    }
+  }
+  return ret;
 }

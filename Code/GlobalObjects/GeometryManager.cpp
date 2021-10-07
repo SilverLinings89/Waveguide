@@ -143,6 +143,7 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
     levels[in_level].surfaces[surf]->initialize_dof_counts(levels[in_level].surfaces[surf]->compute_n_locally_active_dofs(), levels[in_level].surfaces[surf]->compute_n_locally_owned_dofs());
     n_owned_dofs += levels[in_level].surfaces[surf]->n_locally_owned_dofs;
   }
+  
   levels[in_level].dof_distribution = dealii::Utilities::MPI::create_ascending_partitioning(GlobalMPI.communicators_by_level[in_level], n_owned_dofs);
   unsigned int first_dof = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].nth_index_in_set(0);
   levels[in_level].inner_domain->determine_non_owned_dofs();
@@ -153,35 +154,33 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   for(unsigned int i = 0; i < 6; i++) {
     levels[in_level].surfaces[i]->freeze_ownership();
   }
-
+  
   levels[in_level].inner_domain->finish_initialization(first_dof);
   for(unsigned int surf = 0; surf < 6; surf += 2 ) {
     if(Geometry.levels[in_level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE) {
+      std::cout << GlobalParams.MPI_Rank << " receives via " << surf << " from " << Geometry.levels[in_level].surfaces[surf]->global_partner_mpi_rank << std::endl;
       Geometry.levels[in_level].surfaces[surf]->finish_dof_index_initialization();
     }
   }
-
   first_dof += levels[in_level].inner_domain->n_locally_owned_dofs;
   for(unsigned int i = 0; i < 6; i++) {
     levels[in_level].surfaces[i]->finish_initialization(first_dof);
     first_dof += levels[in_level].surfaces[i]->n_locally_owned_dofs;
   }  
-  
   for(unsigned int i = 0; i < 6; i++) {
     if(Geometry.levels[in_level].surface_type[i] != SurfaceType::NEIGHBOR_SURFACE) {
       Geometry.levels[in_level].surfaces[i]->finish_dof_index_initialization();
     }
   }
-
   for(unsigned int surf = 1; surf < 6; surf += 2 ) {
     if(Geometry.levels[in_level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE) {
+      std::cout << GlobalParams.MPI_Rank << " sends via " << surf << " to " << Geometry.levels[in_level].surfaces[surf]->global_partner_mpi_rank << std::endl;
       Geometry.levels[in_level].surfaces[surf]->finish_dof_index_initialization();
     }
   }
-
+  
   levels[in_level].n_local_dofs = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].n_elements();
   levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution[0].size();
-  
 }
 
 dealii::Tensor<2,3> GeometryManager::get_epsilon_tensor(const Position & in_p) {
@@ -283,30 +282,28 @@ std::pair<bool, unsigned int> GeometryManager::get_global_neighbor_for_interface
       if (GlobalParams.Index_in_y_direction == 0) {
         ret.first = false;
       } else {
-        ret.second = GlobalParams.MPI_Rank - GlobalParams.Blocks_in_y_direction;
+        ret.second = GlobalParams.MPI_Rank - GlobalParams.Blocks_in_x_direction;
       }
       break;
     case Direction::PlusY:
       if (GlobalParams.Index_in_y_direction == GlobalParams.Blocks_in_y_direction - 1) {
         ret.first = false;
       } else {
-        ret.second = GlobalParams.MPI_Rank + GlobalParams.Blocks_in_y_direction;
+        ret.second = GlobalParams.MPI_Rank + GlobalParams.Blocks_in_x_direction;
       }
       break;
     case Direction::MinusZ:
       if (GlobalParams.Index_in_z_direction == 0) {
         ret.first = false;
       } else {
-        ret.second =
-            GlobalParams.MPI_Rank - (GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction);
+        ret.second = GlobalParams.MPI_Rank - (GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction);
       }
       break;
     case Direction::PlusZ:
       if (GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction - 1) {
         ret.first = false;
       } else {
-        ret.second =
-            GlobalParams.MPI_Rank + (GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction);
+        ret.second = GlobalParams.MPI_Rank + (GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction);
       }
       break;
   }
@@ -486,7 +483,7 @@ SurfaceType GeometryManager::get_surface_type(BoundaryId b_id, unsigned int in_l
     return SurfaceType::ABC_SURFACE;
   }
   if(in_level == 2) {
-     if(b_id == 2) {
+    if(b_id == 2) {
       if(GlobalParams.Index_in_y_direction == 0) {
         return SurfaceType::ABC_SURFACE;
       } else {

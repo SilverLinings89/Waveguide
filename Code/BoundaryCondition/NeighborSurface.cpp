@@ -19,9 +19,8 @@
 
 NeighborSurface::NeighborSurface(unsigned int in_surface, unsigned int in_level)
     : BoundaryCondition(in_surface, in_level, Geometry.surface_extremal_coordinate[in_surface]),
-    is_primary(in_surface % 2 == 0),
-    global_partner_mpi_rank(Geometry.get_global_neighbor_for_interface(Geometry.get_direction_for_boundary_id(in_surface)).second),
-    partner_mpi_rank_in_level_communicator(Geometry.get_level_neighbor_for_interface(Geometry.get_direction_for_boundary_id(in_surface), in_level).second) {
+    is_lower_process(in_surface % 2 == 0) {
+    global_partner_mpi_rank =Geometry.get_global_neighbor_for_interface(Geometry.get_direction_for_boundary_id(in_surface)).second;
     dof_counter = 0;
 }
 
@@ -218,7 +217,7 @@ std::vector<DofNumber> NeighborSurface::receive_boundary_dofs(unsigned int other
 }
 
 void NeighborSurface::finish_dof_index_initialization() {
-	if(is_primary) {
+	if(is_lower_process) {
 		// this interface does not own, so it receives
 		receive_from_below_dofs();
 		for(unsigned int surf = 0; surf < 6; surf++) {
@@ -243,17 +242,15 @@ void NeighborSurface::finish_dof_index_initialization() {
 }
 
 void NeighborSurface::distribute_dof_indices() {
-	if(is_primary) {
-		for(unsigned int surf = 0; surf < 6; surf++) {
-			if(surf != b_id && !are_opposing_sites(b_id, surf)) {
-				if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
-					std::vector<InterfaceDofData> dof_data = Geometry.levels[level].surfaces[surf]->get_dof_association_by_boundary_id(b_id);
-					std::vector<unsigned int> dof_indices;
-					for(unsigned int i = 0; i < dof_data.size(); i++) {
-						dof_indices.push_back(dof_data[i].index);
-					}
-					Geometry.levels[level].surfaces[surf]->set_non_local_dof_indices(dof_indices, boundary_dofs[surf]);
+	if(is_lower_process) {
+		for(auto surf : adjacent_boundaries) {
+			if(are_edge_dofs_owned[surf]) {
+				std::vector<InterfaceDofData> dof_data = Geometry.levels[level].surfaces[surf]->get_dof_association_by_boundary_id(b_id);
+				std::vector<unsigned int> dof_indices;
+				for(unsigned int i = 0; i < dof_data.size(); i++) {
+					dof_indices.push_back(dof_data[i].index);
 				}
+				Geometry.levels[level].surfaces[surf]->set_non_local_dof_indices(dof_indices, boundary_dofs[surf]);
 			}
 		}
 	}

@@ -8,9 +8,7 @@
 class NeighborSurface : public BoundaryCondition {
     
   public: 
-    const bool is_primary;
-    const unsigned int global_partner_mpi_rank;
-    const unsigned int partner_mpi_rank_in_level_communicator;
+    const bool is_lower_process;
     std::array<std::set<unsigned int>, 6> edge_ids_by_boundary_id;
     std::array<std::set<unsigned int>, 6> face_ids_by_boundary_id;
     std::array<std::vector<InterfaceDofData>, 6> dof_indices_by_boundary_id;

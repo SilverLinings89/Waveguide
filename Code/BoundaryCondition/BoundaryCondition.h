@@ -9,7 +9,6 @@
 
 class BoundaryCondition: public FEDomain {
 public:
-  std::array<std::array<bool, 6>, 6> is_surface_owned;
   const BoundaryId b_id;
   const unsigned int level;
   const double additional_coordinate;
@@ -19,6 +18,9 @@ public:
   std::array<double, 6> boundary_vertex_coordinates;
   DofCount dof_counter;
   bool is_isolated_boundary;
+  unsigned int global_partner_mpi_rank;
+  const std::vector<BoundaryId> adjacent_boundaries;
+  std::array<bool, 6> are_edge_dofs_owned;
 
   BoundaryCondition(unsigned int in_bid, unsigned int in_level, double in_additional_coordinate);
 
@@ -52,4 +54,8 @@ public:
   virtual auto make_constraints() -> Constraints;
 
   void mark_as_isolated();
+  double boundary_norm(NumericVectorDistributed *);
+  double boundary_surface_norm(NumericVectorDistributed *, BoundaryId);
+
+  void print_dof_validation();
 };

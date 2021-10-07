@@ -13,7 +13,6 @@ struct LevelGeometry {
   std::array<SurfaceType, 6> surface_type;
   CubeSurfaceTruncationState is_surface_truncated;
   std::array<std::shared_ptr<BoundaryCondition> , 6> surfaces;
-  std::array<DofNumber, 6> surface_first_dof;
   unsigned int inner_first_dof;
   std::vector<dealii::IndexSet> dof_distribution;
   DofNumber n_local_dofs;

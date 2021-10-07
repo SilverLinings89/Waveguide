@@ -574,13 +574,9 @@ dealii::IndexSet PMLSurface::compute_non_owned_dofs() {
   IndexSet non_owned_dofs(dof_counter);
   std::vector<unsigned int> non_locally_owned_surfaces;
   if(!is_isolated_boundary) {
-    for(unsigned int surf = 0; surf < 6; surf++) {
-      if(surf != b_id && !are_opposing_sites(surf, b_id)) {
-        if(Geometry.levels[level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE || Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
-          if(!is_surface_owned[b_id][surf] && !Geometry.levels[level].surfaces[surf]->is_isolated_boundary) {
-            non_locally_owned_surfaces.push_back(surf);
-          }
-        }
+    for(auto surf : adjacent_boundaries) {
+      if(!are_edge_dofs_owned[surf]) {
+        non_locally_owned_surfaces.push_back(surf);
       }
     }
   }
@@ -611,17 +607,18 @@ DofCount PMLSurface::compute_n_locally_active_dofs() {
 
 void PMLSurface::finish_dof_index_initialization() {
   if(!is_isolated_boundary) {
-    for(unsigned int surf = 0; surf < 6; surf++) {
-      if(!is_surface_owned[b_id][surf] && (surf != inner_boundary_id && surf != outer_boundary_id) && !Geometry.levels[level].surfaces[surf]->is_isolated_boundary) {
-        if (Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
-          DofIndexVector dofs_in_global_numbering = Geometry.levels[level].surfaces[surf]->get_global_dof_indices_by_boundary_id(b_id);
-          std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(surf);
-          DofIndexVector dofs_in_local_numbering(local_interface_data.size());
-          for(unsigned int i = 0; i < local_interface_data.size(); i++) {
-            dofs_in_local_numbering[i] = local_interface_data[i].index;
-          }
-          set_non_local_dof_indices(dofs_in_local_numbering, dofs_in_global_numbering);
+    for(auto surf : adjacent_boundaries) {
+      if(!are_edge_dofs_owned[surf] && Geometry.levels[level].surface_type[surf] != SurfaceType::NEIGHBOR_SURFACE) {
+        DofIndexVector dofs_in_global_numbering = Geometry.levels[level].surfaces[surf]->get_global_dof_indices_by_boundary_id(b_id);
+        std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(surf);
+        DofIndexVector dofs_in_local_numbering(local_interface_data.size());
+        if(dofs_in_global_numbering.size() != dofs_in_local_numbering.size()) {
+          std::cout << "On proc " << GlobalParams.MPI_Rank << " and " << b_id << "  and " << surf <<std::endl;
         }
+        for(unsigned int i = 0; i < local_interface_data.size(); i++) {
+          dofs_in_local_numbering[i] = local_interface_data[i].index;
+        }
+        set_non_local_dof_indices(dofs_in_local_numbering, dofs_in_global_numbering);
       }
     }
   }
@@ -630,13 +627,14 @@ void PMLSurface::finish_dof_index_initialization() {
   std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(inner_boundary_id);
   DofIndexVector dofs_in_local_numbering(local_interface_data.size());
   DofIndexVector dofs_in_global_numbering(local_interface_data.size());
-  
+  if(global_interface_data.size() != local_interface_data.size()) {
+    std::cout << "Occured: " << global_interface_data.size() << " and " << local_interface_data.size() << std::endl;
+  }
   for(unsigned int i = 0; i < local_interface_data.size(); i++) {
     dofs_in_local_numbering[i] = local_interface_data[i].index;
     dofs_in_global_numbering[i] = Geometry.levels[level].inner_domain->global_index_mapping[global_interface_data[i].index];
   }
   set_non_local_dof_indices(dofs_in_local_numbering, dofs_in_global_numbering);
-
 }
 
 void PMLSurface::determine_non_owned_dofs() {

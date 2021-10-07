@@ -11,8 +11,9 @@ subsection Case parameters
     set signal amplitude = 1.0
     set Boundary Method = PML
     set HSIE polynomial degree = 15
-    set PML n layers = 7
+    set PML n layers = 10
+    set PML thickness = 0.5
     set Input Signal Method = Dirichlet
-    set PML skaling order = 1
+    set PML skaling order = 3
     set Prescribe input zero = false
 end
