@@ -269,6 +269,7 @@ void NonLocalProblem::solve() {
     // Solve with sweeping
     KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc), nullptr);
     KSPSetPCSide(ksp, PCSide::PC_RIGHT);
+    KSPGMRESSetRestart(ksp, GlobalParams.GMRES_max_steps);
     KSPSetTolerances(ksp, 0.000001, 1.0, 1000, GlobalParams.GMRES_max_steps);
     KSPMonitorSet(ksp, MonitorError, nullptr, nullptr);
     KSPSetUp(ksp);
@@ -298,10 +299,7 @@ void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   reinit_vector(&vec_a);
   reinit_vector(&vec_b);
   
-  std::cout << "A on " << level << std::endl; 
-  
   for(unsigned int i = n_procs_in_sweep - 1; i > 0; i--) {
-    std::cout << rank << std::endl;
     S_inv(&temp_solution, &vec_a, i == rank);
     if(rank == i) {
       copy_local_part(&vec_a, &temp_solution);
@@ -317,7 +315,7 @@ void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
     copy_local_part(&vec_a, &temp_solution);
   }
   reinit_vector(&vec_a);
-  std::cout << "B on " << level << std::endl; 
+  
   for(unsigned int i = 0; i < n_procs_in_sweep-1; i++) {
     vec_a = off_diagonal_product(i, i+1, &temp_solution);
     // print_vector_norm(&vec_a, "C1");
@@ -363,7 +361,7 @@ void NonLocalProblem::set_vector_from_child_solution(NumericVectorDistributed * 
     norm += std::abs(vector_copy_array[i])*std::abs(vector_copy_array[i]);
   }
   norm = std::sqrt(norm);
-  std::cout << "Copied norm: " << norm << std::endl;
+  // std::cout << "Copied norm: " << norm << std::endl;
   in_u->set(vector_copy_own_indices, vector_copy_array);
 }
 
