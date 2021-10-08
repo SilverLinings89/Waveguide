@@ -12,7 +12,9 @@ subsection Case parameters
     set Boundary Method = PML
     set HSIE polynomial degree = 15
     set PML n layers = 7
-    set Input Signal Method = Dirichlet
+    set PML thickness = 0.5
     set PML skaling order = 1
+    set PML sigma max = 5.0
+    set Input Signal Method = Dirichlet
     set Prescribe input zero = false
 end

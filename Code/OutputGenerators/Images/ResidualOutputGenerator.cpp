@@ -41,7 +41,7 @@ void ResidualOutputGenerator::write_gnuplot_file() {
                 out << "series" << i << "["<< val + 1 << "] = " << data_series[i].values[val] << std::endl;
             }
         }
-        out << "set logscale y" << std::endl << "set xlabel 'Step'" << std::endl << "set ylabel 'Residual'" << "set format y \"%.1e\"" << std::endl;
+        out << "set logscale y" << std::endl << "set xlabel 'Step'" << std::endl << "set ylabel 'Residual'" << std::endl <<  "set format y \"%.1e\"" << std::endl;
         for(unsigned int i = 0; i < data_series.size(); i++) {
             out << "plot series" << i << " with linespoints title\"" << data_series[i].name << "\""<<std::endl;
         }
