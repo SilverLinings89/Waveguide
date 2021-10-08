@@ -12,7 +12,6 @@
 
 class LocalProblem: public HierarchicalProblem {
 public:
-  unsigned int solve_counter = 0;
   SolverControl sc;
   dealii::PETScWrappers::SparseDirectMUMPS solver;
 

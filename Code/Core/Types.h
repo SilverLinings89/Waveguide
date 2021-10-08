@@ -208,3 +208,9 @@ struct SurfaceCellData {
   std::vector<DofNumber> dof_numbers;
   Position surface_face_center;
 };
+
+struct DataSeries {
+  std::vector<double> values;
+  bool is_closed;
+  std::string name;
+};

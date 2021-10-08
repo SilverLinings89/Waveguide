@@ -1,13 +1,3 @@
-/*
- * PointVal.cpp
- *
- *  Created on: Dec 12, 2017
- *      Author: pascal
- */
-
-#ifndef PointValSourceFlag
-#define PointValSourceFlag
-
 #include <complex>
 #include "PointVal.h"
 
@@ -33,5 +23,3 @@ void PointVal::rescale(double inp) {
   Ey = Ey * inp;
   Ez = Ez * inp;
 }
-
-#endif

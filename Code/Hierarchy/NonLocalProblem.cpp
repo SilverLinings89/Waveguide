@@ -68,8 +68,9 @@ Direction get_upper_boundary_id_for_sweeping_direction(SweepingDirection in_dire
   return Direction::PlusZ;
 }
 
-static PetscErrorCode MonitorError(KSP , PetscInt its, PetscReal rnorm, void *)
+static PetscErrorCode MonitorError(KSP , PetscInt its, PetscReal rnorm, void * outputter)
 {
+  ((ResidualOutputGenerator *)outputter)->push_value(rnorm);
   if (GlobalParams.MPI_Rank == 0) {
     std::cout << "Residual in step " << std::to_string(its) << "  : " << std::to_string(rnorm);
     if(last_residual != -1 ) {
@@ -185,6 +186,7 @@ NonLocalProblem::NonLocalProblem(unsigned int level) :
     }  
   }
   n_locally_active_dofs = locally_active_dofs.n_elements();
+  residual_output = new ResidualOutputGenerator("ConvergenceHistoryLevel"+std::to_string(level), "Convergence History on level " + std::to_string(level));
 }
 
 void NonLocalProblem::init_solver_and_preconditioner() {
@@ -266,14 +268,16 @@ void NonLocalProblem::solve() {
   rhs.compress(VectorOperation::add);
   print_vector_norm(&rhs, "RHS");
   if(!GlobalParams.solve_directly) {
+    residual_output->new_series("Run " + std::to_string(solve_counter + 1));
     // Solve with sweeping
     KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc), nullptr);
     KSPSetPCSide(ksp, PCSide::PC_RIGHT);
     KSPGMRESSetRestart(ksp, GlobalParams.GMRES_max_steps);
     KSPSetTolerances(ksp, 0.0001, 1.0, 1000, GlobalParams.GMRES_max_steps);
-    KSPMonitorSet(ksp, MonitorError, nullptr, nullptr);
+    KSPMonitorSet(ksp, MonitorError, residual_output, nullptr);
     KSPSetUp(ksp);
     PetscErrorCode ierr = KSPSolve(ksp, rhs, solution);
+    residual_output->close_current_series();
     if(ierr != 0) {
       std::cout << "Error code from Petsc: " << std::to_string(ierr) << std::endl;
     //   throw new ExcPETScError(ierr);
@@ -289,6 +293,7 @@ void NonLocalProblem::solve() {
   // subtract_vectors(&solution, &solution_error);
   // constraints.distribute(solution);
   subtract_vectors(&solution_error, &solution);
+  solve_counter++;
   write_multifile_output("error_of_solution", solution_error);
   print_info("NonLocalProblem::solve", "End");
 }
@@ -455,6 +460,9 @@ void NonLocalProblem::store_solution(NumericVectorLocal u) {
 }
 
 void NonLocalProblem::write_multifile_output(const std::string & in_filename, const NumericVectorDistributed field) {
+  if(GlobalParams.MPI_Rank == 0) {
+    residual_output->run_gnuplot();
+  }
   std::vector<std::string> generated_files;
   dealii::LinearAlgebra::distributed::Vector<ComplexNumber> shared_solution;
   shared_solution.reinit(own_dofs, locally_active_dofs, GlobalMPI.communicators_by_level[level]);

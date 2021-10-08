@@ -48,6 +48,7 @@ ADD_LIBRARY(Code
         GlobalObjects/GlobalObjects.cpp
         GlobalObjects/ModeManager.cpp
         GlobalObjects/OutputManager.cpp
+        OutputGenerators/Images/ResidualOutputGenerator.cpp
         )
 
 DEAL_II_SETUP_TARGET(Code)

@@ -22,6 +22,7 @@ HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level, SweepingDire
   for(unsigned int i = 0; i < 6; i++) {
     is_surface_locked.push_back(false);
   }
+  solve_counter = 0;
 }
 
 void HierarchicalProblem::constrain_identical_dof_sets(

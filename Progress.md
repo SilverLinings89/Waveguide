@@ -544,3 +544,4 @@ Today, the goals are (in order):
 - Running the first, higher-level sweeping preconditioner. Ideally also level 3.
 
 Once these blocks are done, I will focus on repairing whatever the current issue in the HSIE implementation is.
+There is now a new output object, that can generate a gnuplot script and execute it to generate a convergence history. That history is stored in the solution directory and contains all runs of all non-local levels. The script works and I worked on some details of the output.

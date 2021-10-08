@@ -8,6 +8,7 @@
 #include <deal.II/lac/petsc_sparse_matrix.h>
 #include <deal.II/lac/petsc_vector.h>
 #include "../Core/FEDomain.h"
+#include "../OutputGenerators/Images/ResidualOutputGenerator.h"
 
 class LocalProblem;
 class NonLocalProblem; 
@@ -37,6 +38,8 @@ class HierarchicalProblem {
   std::array<std::vector<InterfaceDofData>, 6> surface_dof_associations;
   dealii::PETScWrappers::MPI::SparseMatrix * matrix;
   std::vector<std::string> filenames;
+  ResidualOutputGenerator * residual_output;
+  unsigned int solve_counter;
 
   HierarchicalProblem(unsigned int level, SweepingDirection direction);
   virtual ~HierarchicalProblem() =0;
