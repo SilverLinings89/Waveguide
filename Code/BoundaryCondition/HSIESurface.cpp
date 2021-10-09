@@ -1199,6 +1199,7 @@ std::vector<InterfaceDofData> HSIESurface::get_dof_association_by_boundary_id(Bo
 
   if (in_boundary_id == b_id) {
     std::vector<InterfaceDofData> surface_dofs_unsorted(0);
+    std::cout << "This should never be called in HSIESurface" << std::endl;
     return surface_dofs_unsorted;
   } 
   std::vector<InterfaceDofData> surface_dofs_unsorted;
@@ -1237,42 +1238,6 @@ std::vector<InterfaceDofData> HSIESurface::get_dof_association_by_boundary_id(Bo
   std::sort(surface_dofs_unsorted.begin(), surface_dofs_unsorted.end(), compareDofBaseDataAndOrientation);
   
   return surface_dofs_unsorted;
-}
-
-unsigned int HSIESurface::get_dof_count_by_boundary_id(BoundaryId in_boundary_id) {
-  unsigned int ret = 0;
-  if (in_boundary_id == b_id) {
-    return dof_counter;
-  } else {
-    auto it = dof_h_nedelec.begin_active();
-    auto it2 = dof_h_q.begin_active();
-    auto end = dof_h_nedelec.end();
-    std::vector<unsigned int> vertex_indices;
-    for (; it != end; ++it) {
-      if (it->at_boundary()) {
-        for (unsigned int edge = 0; edge < 4; edge++) {
-          if (it->face(edge)->boundary_id() == in_boundary_id) {
-            ret += compute_dofs_per_edge(true);
-            const unsigned int first_index = it2->face(edge)->vertex_index(0);
-            const unsigned int second_index = it2->face(edge)->vertex_index(1);
-            auto search = find(vertex_indices.begin(), vertex_indices.end(),
-                first_index);
-            if (search != vertex_indices.end()) {
-              ret += compute_dofs_per_vertex();
-              vertex_indices.push_back(first_index);
-            }
-            search = find(vertex_indices.begin(), vertex_indices.end(), second_index);
-            if (search != vertex_indices.end()) {
-              ret += compute_dofs_per_vertex();
-              vertex_indices.push_back(second_index);
-            }
-          }
-        }
-      }
-      it2++;
-    }
-  }
-  return ret;
 }
 
 void HSIESurface::add_surface_relevant_dof(InterfaceDofData dof_data) {
@@ -1415,15 +1380,13 @@ dealii::IndexSet HSIESurface::compute_non_owned_dofs() {
       }
     }
   }
+  non_locally_owned_surfaces.push_back(opposing_Boundary_Id(b_id));
+
   for(auto surf: non_locally_owned_surfaces) {
     std::vector<InterfaceDofData> dofs = get_dof_association_by_boundary_id(surf);
     for(auto dof : dofs) {
       non_owned_dofs.add_index(dof.index);
     }
-  }
-  std::vector<InterfaceDofData> dofs = get_dof_association();
-  for(auto dof : dofs) {
-    non_owned_dofs.add_index(dof.index);
   }
   return non_owned_dofs;
 }

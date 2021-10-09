@@ -53,10 +53,6 @@ void DirichletSurface::initialize() {
 
 }
 
-unsigned int DirichletSurface::get_dof_count_by_boundary_id(BoundaryId) {
-	return 0;
-}
-
 std::vector<InterfaceDofData> DirichletSurface::get_dof_association() {
 	std::vector<InterfaceDofData> ret;
 	return ret;

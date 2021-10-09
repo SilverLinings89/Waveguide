@@ -1,4 +1,5 @@
 #include "FEDomain.h"
+#include "../Helpers/staticfunctions.h"
 
 FEDomain::FEDomain() {
     n_locally_active_dofs = 0;
@@ -73,4 +74,14 @@ NumericVectorLocal FEDomain::get_local_vector_from_global(const NumericVectorDis
         ret[i] = in_vector[global_index_mapping[i]];
     }
     return ret;
+}
+
+double FEDomain::local_norm_of_vector(NumericVectorDistributed * in_v) {
+    double norm = 0;
+    for(unsigned int i = 0; i < n_locally_active_dofs; i++) {
+        if(is_dof_owned[i]) {
+            norm += norm_squared(in_v->operator()(global_index_mapping[i]));
+        }
+    }
+    return std::sqrt(norm);
 }

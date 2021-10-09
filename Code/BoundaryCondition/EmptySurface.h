@@ -18,7 +18,6 @@ class EmptySurface : public BoundaryCondition {
     void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constriants) override;
     bool is_point_at_boundary(Position2D in_p, BoundaryId in_bid) override;
     void initialize() override;
-    auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount override;
     auto get_dof_association() -> std::vector<InterfaceDofData> override;
     auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> override;
     std::string output_results(const dealii::Vector<ComplexNumber> & , std::string) override;

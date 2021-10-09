@@ -80,7 +80,6 @@ public:
   bool check_number_of_dofs_for_cell_integrity();
   auto get_dof_data_for_base_dof_nedelec(DofNumber base_dof_index) -> DofDataVector;
   auto get_dof_data_for_base_dof_q(DofNumber base_dof_index) -> DofDataVector;
-  auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount override;
   auto get_dof_association() -> std::vector<InterfaceDofData> override;
   auto undo_transform(dealii::Point<2>) -> Position;
   auto undo_transform_for_shape_function(dealii::Point<2>) -> Position;

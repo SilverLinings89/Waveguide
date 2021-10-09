@@ -75,10 +75,6 @@ void NeighborSurface::init_fe(){
 
 }
 
-unsigned int NeighborSurface::get_dof_count_by_boundary_id(BoundaryId) {
-	return 0;
-}
-
 std::vector<InterfaceDofData> NeighborSurface::get_dof_association() {
 	std::vector<InterfaceDofData> dof_indices = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_boundary_id(b_id);
 	for(unsigned int i = 0; i < dof_indices.size(); i++) {

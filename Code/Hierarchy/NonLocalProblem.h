@@ -54,15 +54,13 @@ private:
   void reinit_vector(NumericVectorDistributed *);
   // New functions.
 
-  void S_inv(NumericVectorDistributed * src, NumericVectorDistributed * dst, bool execute_locally);
+  void S_inv(NumericVectorDistributed * src, NumericVectorDistributed * dst);
 
   auto set_x_out_from_u(Vec x_out, NumericVectorDistributed * u_in) -> void;
 
   auto set_u_from_child_solution(NumericVectorDistributed * u)-> void;
 
   std::string output_results();
-
-  void store_solution(NumericVectorLocal u);
 
   void write_multifile_output(const std::string & filename, const NumericVectorDistributed field);
 
@@ -76,11 +74,11 @@ private:
 
   void set_child_rhs_from_vector(NumericVectorDistributed *);
 
-  void copy_local_part(NumericVectorDistributed * src, NumericVectorDistributed * dst);
-
-  void subtract_vectors(NumericVectorDistributed * a, NumericVectorDistributed * b);
-
-  NumericVectorDistributed off_diagonal_product(unsigned int i, unsigned int j, NumericVectorDistributed *);
-
   void print_vector_norm(NumericVectorDistributed * , std::string marker);
+
+  void perform_downward_sweep(NumericVectorDistributed *);
+
+  void apply_local_inverses(NumericVectorDistributed *);
+
+  void perform_upward_sweep(NumericVectorDistributed *);
 };

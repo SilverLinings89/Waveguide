@@ -46,7 +46,6 @@ class PMLSurface : public BoundaryCondition {
     auto get_pml_tensor_epsilon(Position) -> dealii::Tensor<2,3,ComplexNumber>;
     auto get_pml_tensor_mu(Position) -> dealii::Tensor<2,3,ComplexNumber>;
     auto get_pml_tensor(Position) -> dealii::Tensor<2,3,ComplexNumber>;
-    auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount override;
     auto get_dof_association() -> std::vector<InterfaceDofData> override;
     auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> override;
     void compute_coordinate_ranges(dealii::Triangulation<3> * in_tria);

@@ -31,7 +31,6 @@ class NeighborSurface : public BoundaryCondition {
     void set_mesh_boundary_ids(); 
     auto cells_for_boundary_id(unsigned int boundary_id) -> unsigned int;
     void init_fe();
-    auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount override;
     auto get_dof_association() -> std::vector<InterfaceDofData> override;
     auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> override;
     void sort_dofs();

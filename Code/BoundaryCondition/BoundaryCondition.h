@@ -32,7 +32,6 @@ public:
   void set_mesh_boundary_ids();
   auto get_boundary_ids() -> std::vector<BoundaryId>;
   
-  virtual auto get_dof_count_by_boundary_id(BoundaryId in_boundary_id) -> DofCount = 0;
   virtual auto get_dof_association() -> std::vector<InterfaceDofData> = 0;
   virtual auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> = 0;
   virtual auto get_global_dof_indices_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<DofNumber>;

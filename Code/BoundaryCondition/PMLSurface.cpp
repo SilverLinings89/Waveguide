@@ -278,10 +278,6 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association() {
     return get_dof_association_by_boundary_id(inner_boundary_id);
 }
 
-DofCount PMLSurface::get_dof_count_by_boundary_id(BoundaryId in_bid) {
-    return (get_dof_association_by_boundary_id(in_bid)).size();
-}
-
 double PMLSurface::fraction_of_pml_direction(Position in_p) {
   double temp = std::abs(in_p[b_id/2]-additional_coordinate);
   if(temp < non_pml_layer_thickness) {
@@ -570,37 +566,6 @@ DofCount PMLSurface::compute_n_locally_owned_dofs() {
   return dof_counter - non_owned_dofs.n_elements();
 }
 
-dealii::IndexSet PMLSurface::compute_non_owned_dofs() {
-  IndexSet non_owned_dofs(dof_counter);
-  std::vector<unsigned int> non_locally_owned_surfaces;
-  if(!is_isolated_boundary) {
-    for(auto surf : adjacent_boundaries) {
-      if(!are_edge_dofs_owned[surf]) {
-        non_locally_owned_surfaces.push_back(surf);
-      }
-    }
-  }
-  non_locally_owned_surfaces.push_back(inner_boundary_id);
-
-  std::vector<unsigned int> local_indices(fe_nedelec.dofs_per_face);
-  // The non owned surfaces are the one towards the inner domain and the surfaces 0,1 and 2 if they are false in the input.
-  for(auto it = dof_h_nedelec.begin_active(); it != dof_h_nedelec.end(); it++) {
-    for(unsigned int face = 0; face < 6; face++) {
-      if(it->face(face)->at_boundary()) {
-        for(auto surf: non_locally_owned_surfaces) {
-          if(it->face(face)->boundary_id() == surf) {
-            it->face(face)->get_dof_indices(local_indices);
-            for(unsigned int i = 0; i < fe_nedelec.dofs_per_face; i++) {
-              non_owned_dofs.add_index(local_indices[i]);
-            }
-          }
-        }
-      }
-    }
-  }
-  return non_owned_dofs;
-}
-
 DofCount PMLSurface::compute_n_locally_active_dofs() {
   return dof_counter;
 }
@@ -612,9 +577,6 @@ void PMLSurface::finish_dof_index_initialization() {
         DofIndexVector dofs_in_global_numbering = Geometry.levels[level].surfaces[surf]->get_global_dof_indices_by_boundary_id(b_id);
         std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(surf);
         DofIndexVector dofs_in_local_numbering(local_interface_data.size());
-        if(dofs_in_global_numbering.size() != dofs_in_local_numbering.size()) {
-          std::cout << "On proc " << GlobalParams.MPI_Rank << " and " << b_id << "  and " << surf <<std::endl;
-        }
         for(unsigned int i = 0; i < local_interface_data.size(); i++) {
           dofs_in_local_numbering[i] = local_interface_data[i].index;
         }
@@ -627,9 +589,7 @@ void PMLSurface::finish_dof_index_initialization() {
   std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(inner_boundary_id);
   DofIndexVector dofs_in_local_numbering(local_interface_data.size());
   DofIndexVector dofs_in_global_numbering(local_interface_data.size());
-  if(global_interface_data.size() != local_interface_data.size()) {
-    std::cout << "Occured: " << global_interface_data.size() << " and " << local_interface_data.size() << std::endl;
-  }
+  
   for(unsigned int i = 0; i < local_interface_data.size(); i++) {
     dofs_in_local_numbering[i] = local_interface_data[i].index;
     dofs_in_global_numbering[i] = Geometry.levels[level].inner_domain->global_index_mapping[global_interface_data[i].index];
@@ -671,4 +631,35 @@ Constraints PMLSurface::make_constraints() {
 		ret.set_inhomogeneity(global_index, ComplexNumber(0,0));
 	}
   return ret;
+}
+
+dealii::IndexSet PMLSurface::compute_non_owned_dofs() {
+  IndexSet non_owned_dofs(dof_counter);
+  std::vector<unsigned int> non_locally_owned_surfaces;
+  if(!is_isolated_boundary) {
+    for(auto surf : adjacent_boundaries) {
+      if(!are_edge_dofs_owned[surf]) {
+        non_locally_owned_surfaces.push_back(surf);
+      }
+    }
+  }
+  non_locally_owned_surfaces.push_back(inner_boundary_id);
+
+  std::vector<unsigned int> local_indices(fe_nedelec.dofs_per_face);
+  // The non owned surfaces are the one towards the inner domain and the surfaces 0,1 and 2 if they are false in the input.
+  for(auto it = dof_h_nedelec.begin_active(); it != dof_h_nedelec.end(); it++) {
+    for(unsigned int face = 0; face < 6; face++) {
+      if(it->face(face)->at_boundary()) {
+        for(auto surf: non_locally_owned_surfaces) {
+          if(it->face(face)->boundary_id() == surf) {
+            it->face(face)->get_dof_indices(local_indices);
+            for(unsigned int i = 0; i < fe_nedelec.dofs_per_face; i++) {
+              non_owned_dofs.add_index(local_indices[i]);
+            }
+          }
+        }
+      }
+    }
+  }
+  return non_owned_dofs;
 }

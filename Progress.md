@@ -540,8 +540,26 @@ I forced the GMRES Solver from PETSC to never do any restarts since they destroy
 
 Today, the goals are (in order):
 - Optimize the outputs of timers and convergence history. (Done)
-- Optimize the PML parameters for fast convergence.
+- Optimize the PML parameters for fast convergence. (Done)
 - Running the first, higher-level sweeping preconditioner. Ideally also level 3.
 
 Once these blocks are done, I will focus on repairing whatever the current issue in the HSIE implementation is.
 There is now a new output object, that can generate a gnuplot script and execute it to generate a convergence history. That history is stored in the solution directory and contains all runs of all non-local levels. The script works and I worked on some details of the output.
+
+# Friday, 8th of October
+
+The convergence study shows, that while the PML parameters have an impact on the convergence after the first step, they don't dominate it to an extent, where the expected convergence is attainable by only using the proper PML parameters. I could use this as an example for how much PML has to be tuned, but other than that, the important take-away is, that this isn't the error I was searching for.
+
+I will now switch to FEDomain implementation of local norm output, to be able to list vector norms by affected domain. This will help me see what is going wrong in the downward sweep. Implementation done. Checking. I see that the norms are largest for high process index and small for small process index. 
+
+I reimplemented all of apply_sweep. The result is exactly the same. It is now split into a downward sweep, an upward sweep and an application of the local inverse (the three-step variant rather than the 2 step variant).
+
+# Saturday, 8th of October
+
+I don't really know what the issue is anymore. The sweeps are implemented as they are described in the paper. What strikes me as odd is that the norm of the vectors increases during the sweep, there seems to be some kind of disparity in the process that makes the communication of the off-diagonal product result a source of error which it apparently is. However - I have no clue where that happens.
+Also: The problem in the HSIE implementation persists, leading me to believe there is still something wrong in that implementation, too. I have not solved the higher level sweeping issue about the rank in the sweep either. Again as a list:
+- Find the bug in the sweeping implementation
+- Find the bug in the HSIE implementation
+- Implement the computation of the rank-in-sweep and run the code with it.
+
+Today, I will focus on the HSIE issue. I made some minor adjustments and removed some old code.

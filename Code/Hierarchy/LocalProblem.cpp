@@ -149,9 +149,23 @@ void LocalProblem::solve() {
   solver.solve(*matrix, solution, rhs);
   // std::cout << "After: " << solution.l2_norm() << std::endl;
   timer1.stop();
-  if(solve_counter == 0 && GlobalParams.MPI_Rank == 0) {
+  if(solve_counter == 1 && GlobalParams.MPI_Rank == 0) {
+    std::cout << "A" <<std::endl;
     output_results("FirstStep");
   } 
+  if(solve_counter == 2 && GlobalParams.MPI_Rank != 0) {
+    std::cout << "B" <<std::endl;
+    output_results("FirstStep");
+  }
+  if(solve_counter == 2 && GlobalParams.MPI_Rank == 0) {
+    std::cout << "C" <<std::endl;
+    output_results("SecondStep");
+  } 
+  if(solve_counter == 4 && GlobalParams.MPI_Rank != 0) {
+    std::cout << "D" <<std::endl;
+    output_results("SecondStep");
+  }
+
   solve_counter ++;
   GlobalTimerManager.leave_context(0);
 }
