@@ -242,7 +242,7 @@ void HSIESurface::fill_matrix(
       local_indices = transform_local_to_global_dofs(local_indices);
       Vector<ComplexNumber> cell_rhs(dofs_per_cell);
       cell_rhs = 0;
-      constraints->distribute_local_to_global(cell_matrix, cell_rhs, local_indices, *matrix, *rhs);
+      constraints->distribute_local_to_global(cell_matrix, cell_rhs, local_indices, *matrix, *rhs, true);
       it2++;
       cell_counter++;
     }
@@ -483,8 +483,8 @@ void HSIESurface::fill_matrix(
       Vector<ComplexNumber> cell_rhs(cell_dofs.size());
       cell_rhs = 0;
       local_indices = transform_local_to_global_dofs(local_indices);
-      constraints->distribute_local_to_global(cell_mass_matrix, cell_rhs, local_indices, *mass_matrix, *rhs);
-      constraints->distribute_local_to_global(cell_stiffness_matrix, cell_rhs, local_indices, *stiffness_matrix, *rhs);
+      constraints->distribute_local_to_global(cell_mass_matrix, cell_rhs, local_indices, *mass_matrix, *rhs, true);
+      constraints->distribute_local_to_global(cell_stiffness_matrix, cell_rhs, local_indices, *stiffness_matrix, *rhs, true);
       it2++;
       cell_counter++;
     }
@@ -593,7 +593,7 @@ void HSIESurface::fill_matrix(
       Vector<ComplexNumber> cell_rhs(cell_dofs.size());
       cell_rhs = 0;
       local_indices = transform_local_to_global_dofs(local_indices);
-      constraints->distribute_local_to_global(cell_matrix, cell_rhs, local_indices, *matrix, *rhs);
+      constraints->distribute_local_to_global(cell_matrix, cell_rhs, local_indices, *matrix, *rhs, true);
       it2++;
       cell_counter++;
     }

@@ -22,51 +22,7 @@
 #include <string>
 #include <vector>
 
-void print_dof_ranges(std::string name, FEDomain * in_fedomain) {
-  std::cout << "For " << name << " I found the dofs ";
-  for(unsigned int i = 0; i < in_fedomain->global_index_mapping.size(); i++) {
-    std::cout << in_fedomain->global_index_mapping[i] << " "; 
-  }
-  std::cout << std::endl;
-}
-
-double l2_norm(DofFieldTrace in_trace) {
-  double ret = 0;
-  for(unsigned int i = 0; i < in_trace.size(); i++) {
-    ret += in_trace[i].real()*in_trace[i].real() + in_trace[i].imag() * in_trace[i].imag();
-  }
-  return std::sqrt(ret);
-}
-
-double l2_norm(NumericVectorLocal in_vector) {
-  double ret = 0;
-  for(unsigned int i = 0; i < in_vector.size(); i++) {
-    ret += in_vector[i].real()*in_vector[i].real() + in_vector[i].imag() * in_vector[i].imag();
-  }
-  return std::sqrt(ret);
-}
-
 static double last_residual = -1;
-
-Direction get_lower_boundary_id_for_sweeping_direction(SweepingDirection in_direction) {
-  if(in_direction == SweepingDirection::X) {
-    return Direction::MinusX;
-  }
-  if(in_direction == SweepingDirection::Y) {
-    return Direction::MinusY;
-  }
-  return Direction::MinusZ;
-}
-
-Direction get_upper_boundary_id_for_sweeping_direction(SweepingDirection in_direction) {
-  if(in_direction == SweepingDirection::X) {
-    return Direction::PlusX;
-  }
-  if(in_direction == SweepingDirection::Y) {
-    return Direction::PlusY;
-  }
-  return Direction::PlusZ;
-}
 
 static PetscErrorCode MonitorError(KSP , PetscInt its, PetscReal rnorm, void * outputter)
 {
@@ -80,14 +36,6 @@ static PetscErrorCode MonitorError(KSP , PetscInt its, PetscReal rnorm, void * o
     last_residual = rnorm;
   }
   return(0);
-}
-
-double l2_norm_of_vector(std::vector<ComplexNumber> input) {
-  double norm = 0;
-  for(unsigned int i = 0; i< input.size(); i++) {
-    norm += std::abs(input[i]);
-  }
-  return std::sqrt(norm);
 }
 
 int convergence_test(KSP , const PetscInt iteration, const PetscReal residual_norm, KSPConvergedReason *reason, void * solver_control_x)
@@ -258,6 +206,16 @@ void NonLocalProblem::assemble() {
   print_info("NonLocalProblem::assemble", "Compress vectors.");
   solution.compress(dealii::VectorOperation::add);
   print_info("NonLocalProblem::assemble", "End assembly.");
+  if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
+    for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
+      if(constraints.is_inhomogeneously_constrained(own_dofs.nth_index_in_set(i))) {
+        if(std::abs(constraints.get_inhomogeneity(own_dofs.nth_index_in_set(i))) > internal_vector_norm) {
+          internal_vector_norm = std::abs(constraints.get_inhomogeneity(own_dofs.nth_index_in_set(i)));
+        }
+      }
+    }
+    internal_vector_norm = dealii::Utilities::MPI::max(internal_vector_norm, MPI_COMM_WORLD);
+  }
   GlobalTimerManager.leave_context(level);
 }
 
@@ -266,6 +224,7 @@ void NonLocalProblem::solve() {
   print_info("NonLocalProblem::solve", "Start");
   GlobalTimerManager.switch_context("Solve", level);
   rhs.compress(VectorOperation::add);
+  constraints.distribute(solution);
   print_vector_norm(&rhs, "RHS");
   std::cout << matrix->is_symmetric() << std::endl;
   if(!GlobalParams.solve_directly) {
@@ -301,7 +260,7 @@ void NonLocalProblem::solve() {
 
 void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   NumericVectorDistributed u = vector_from_vec_obj(b_in);
-
+  // constraints.distribute(u);
   perform_downward_sweep( &u );
 
   apply_local_inverses( &u );
@@ -592,7 +551,6 @@ NumericVectorDistributed NonLocalProblem::vector_from_vec_obj(Vec in_v) {
   return ret;
 }
 
-
 void NonLocalProblem::print_vector_norm(NumericVectorDistributed * in_v, std::string marker) {
   in_v->extract_subvector_to(vector_copy_own_indices, vector_copy_array);
   double local_norm = 0.0;
@@ -606,8 +564,8 @@ void NonLocalProblem::print_vector_norm(NumericVectorDistributed * in_v, std::st
   }
   // std::cout << "on rank " << GlobalParams.MPI_Rank << " : " << local_norm << std::endl;
   local_norm = dealii::Utilities::MPI::sum(local_norm, GlobalMPI.communicators_by_level[level]);
-  if(GlobalParams.MPI_Rank == 0) {
-    std::cout << marker << ": " << std::sqrt(local_norm) << " and " << max << std::endl;
+  if(rank == 0) {
+    std::cout << marker << " on " << GlobalParams.MPI_Rank << ": " << std::sqrt(local_norm) << " and " << max << std::endl;
   }
 }
 
@@ -624,17 +582,20 @@ void NonLocalProblem::perform_downward_sweep(NumericVectorDistributed * u) {
       S_inv(u, &temp1);
     }
     temp1.compress(VectorOperation::insert);
+    print_vector_norm(&temp1, "d_pre");
     matrix->vmult(temp2, temp1);
+    print_vector_norm(&temp2, "d_post");
     if(rank == i-1) {
       for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
         const unsigned int index = own_dofs.nth_index_in_set(j);
-        ComplexNumber current_value = (*u)(index);
-        ComplexNumber delta = temp2[index];
+        ComplexNumber current_value((*u)(index).real(), (*u)(index).imag());
+        ComplexNumber delta(temp2[index].real(), temp2[index].imag());
         (*u)[index] = current_value - delta;
       }
     }
     u->compress(VectorOperation::insert);
   }
+  // print_vector_norm(u, "DownwardNorm");
 }
 
 void NonLocalProblem::apply_local_inverses(NumericVectorDistributed * u) {
@@ -647,6 +608,7 @@ void NonLocalProblem::apply_local_inverses(NumericVectorDistributed * u) {
     (*u)[index] = (ComplexNumber) temp1[index];
   }
   u->compress(VectorOperation::insert);
+  // print_vector_norm(u, "InversionNorm");
 }
 
 void NonLocalProblem::perform_upward_sweep(NumericVectorDistributed * u) {
@@ -661,7 +623,10 @@ void NonLocalProblem::perform_upward_sweep(NumericVectorDistributed * u) {
       }
     }
     temp1.compress(VectorOperation::insert);
+    print_vector_norm(&temp1, "u_pre");
     matrix->Tvmult(temp2, temp1);
+    print_vector_norm(&temp2, "u_post");
+    
     if(rank == i+1) {
       S_inv(&temp2, &temp3);
       for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
@@ -673,4 +638,5 @@ void NonLocalProblem::perform_upward_sweep(NumericVectorDistributed * u) {
     }
     u->compress(VectorOperation::insert);
   }
+  // print_vector_norm(u, "UpwardNorm");
 }

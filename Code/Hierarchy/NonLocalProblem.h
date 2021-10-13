@@ -27,6 +27,7 @@ private:
   std::vector<unsigned int> vector_copy_own_indices;
   std::vector<unsigned int> vector_copy_child_indeces;
   std::vector<ComplexNumber> vector_copy_array;
+  double internal_vector_norm = 0.0;
   
  public:
   NonLocalProblem(unsigned int);

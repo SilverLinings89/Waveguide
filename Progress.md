@@ -563,3 +563,18 @@ Also: The problem in the HSIE implementation persists, leading me to believe the
 - Implement the computation of the rank-in-sweep and run the code with it.
 
 Today, I will focus on the HSIE issue. I made some minor adjustments and removed some old code.
+
+# Wednesday, 12th of October
+
+I'm traveling home from Canada today, writing this on the plane. I have had an idea to figure out a propable cause for the current issue:
+By switching the way the inhomogenous constraints are made, I find a dof, for which I know the exact value. The value with the max inhomogenous value can be used to reconstruct the actual norm of the vector by multiplying the vector with a constant factor.
+
+What I thought might be the issue is also not the problem. The only thing that remains are the open side-surfaces of boundary conditions. I will have to come up with a PML implementation that fixes that problem by constructing a more complex PML domain and solving the correct problem. If that works, the same is the issue for Hardy.
+
+Maybe I can merge the existing meshes, extract a boundary mesh and then extrude that mesh n_layers times. I am however not sure if merging meshes is a thing in dealii. Will have to check with internet. This would simplify the process. ALso, finding the boundary dofs will not be as simple because defining the boundary cells isn`t simple, but it is all possible and easier for PML than for HSIE.
+
+This should be possible to do on thursday morning. I will use todays afternoon to research possibilities and prepare the implementation.
+
+There is another point worth mentioning: I have decided to include the Doxygen Docu in my dissertation. I will need a way to be able to reference classes and segments of code from the tex document. That would enable me to give the user a more complete guide to what I've done and how it works. This, however, requires a setup, that generates the Doxygen in a Latex-conform way that can then be included and referenced. I will also have to research, how to generate doxygen output that can be embedded actively in Latex Documents.
+
+The initial implementation of the PML will only be done for the surface pair 4-5 and lowest order sweeping. If that solves the problem, I know what I am dealing with and can invest the time to finish a more general implementation. But first I should truely check if what I think is really the issue. It would make sense but is not guaranteed.

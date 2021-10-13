@@ -80,14 +80,6 @@ void LocalProblem::initialize() {
   print_info("LocalProblem::initialize", "Start");
   GlobalTimerManager.switch_context("Initialize", 0);
   print_info("LocalProblem::initialize", "Number of local dofs: " + std::to_string(Geometry.levels[0].n_local_dofs) , false, LoggingLevel::DEBUG_ALL);
-  for(unsigned int i = 0; i < 6; i++) {
-    if(Geometry.levels[0].is_surface_truncated[i]){
-      surface_dof_associations[i] = Geometry.levels[0].surfaces[i]->get_dof_association();
-    }
-  }
-  for(unsigned int i = 0; i < 6; i++) {
-    surface_index_sets[i] = compute_interface_dof_set(i);
-  }
   if(GlobalParams.NumberProcesses == 1) {
     reinit();
   }
@@ -119,7 +111,7 @@ void LocalProblem::assemble() {
 }
 
 void LocalProblem::reinit_rhs() {
-  rhs.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  rhs.reinit(own_dofs, MPI_COMM_SELF);
 }
 
 void LocalProblem::reinit() {
@@ -149,6 +141,7 @@ void LocalProblem::solve() {
   solver.solve(*matrix, solution, rhs);
   // std::cout << "After: " << solution.l2_norm() << std::endl;
   timer1.stop();
+  /**
   if(solve_counter == 1 && GlobalParams.MPI_Rank == 0) {
     std::cout << "A" <<std::endl;
     output_results("FirstStep");
@@ -165,8 +158,8 @@ void LocalProblem::solve() {
     std::cout << "D" <<std::endl;
     output_results("SecondStep");
   }
-
   solve_counter ++;
+  **/
   GlobalTimerManager.leave_context(0);
 }
 
