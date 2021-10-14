@@ -578,3 +578,34 @@ This should be possible to do on thursday morning. I will use todays afternoon t
 There is another point worth mentioning: I have decided to include the Doxygen Docu in my dissertation. I will need a way to be able to reference classes and segments of code from the tex document. That would enable me to give the user a more complete guide to what I've done and how it works. This, however, requires a setup, that generates the Doxygen in a Latex-conform way that can then be included and referenced. I will also have to research, how to generate doxygen output that can be embedded actively in Latex Documents.
 
 The initial implementation of the PML will only be done for the surface pair 4-5 and lowest order sweeping. If that solves the problem, I know what I am dealing with and can invest the time to finish a more general implementation. But first I should truely check if what I think is really the issue. It would make sense but is not guaranteed.
+
+# Thursday, 13th of October
+
+The first relevant step is, that there will be no more "isolated" boundary methods. Instead, they will couple with the other surfaces again and consist of the original boundary method core plus connecting domains. During the setup of the boundary method this information exists so I can pass it in and use it to build the correct mesh.
+The functionality of merging triangulations does not currently exist. As a consequence I need to build it myself. It will consist of the following steps:
+
+- Start as usual with a surface mesh. 
+- Build additional meshes for the surfaces facing the other boundary methods. All required information about this is available at the time, the constructor gets called.
+- Merge the surface triangulations manually. That means:
+    - Get lists of nodes and edges for all the triangulations.
+    - Identify the nodes and edges that are the same in all the datastructures.
+    - Build a total collection of nodes and edges.
+    - Build a new initialization list for the 2D mesh.
+    - Extrude the mesh.
+- Run the reforge mesh functionality.
+- Identify the corner areas. This is now more of a search than a geometric operation because the interfaces are all on the same surface of the mesh.
+
+Test coverage is somewhat important here, because these pieces are error-prone.
+
+This implementation implies, that edge angeling is now a global property. Somehow one could also do without for PML. I think this would make sense because it gets rid of weird cell shapes and sizes and tends towards more homogenous cell shapes and sizex. This might be difficult for HSIE. Have to check.
+
+For one level sweeping this is simple. The surfaces 0-4 (minus and plus x and y surfaces) have straight edges towards the surfaces 4 and 5.
+
+An alternative would be to only have one boundary method for PML, one object that does all the work. Then I would simply have to create a mesh that, combined with the interior domain, triangulates the entire computational domain. This would require a lot of highly specialized code and should not be done, I guess.
+
+It makes sense to introduce the following hierarchy:
+- 0 and 1 boundaries extend completely orthogonal.
+- 2 and 3 boundaries additionally contain connecting blocks with the 0 and 1 boundaries.
+- 4 and 5 boundaries additionally contain connecting blocks towards all other boundaries.
+
+The computation of the PML Tensor is also a bit more complicated now. I have to consider the cells in whom the PMLs overlap. See PML paper for details. I can handle this somewhat efficiently by giving material or subdomain ids to the cells that help identify what is the case.
