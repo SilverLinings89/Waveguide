@@ -609,3 +609,13 @@ It makes sense to introduce the following hierarchy:
 - 4 and 5 boundaries additionally contain connecting blocks towards all other boundaries.
 
 The computation of the PML Tensor is also a bit more complicated now. I have to consider the cells in whom the PMLs overlap. See PML paper for details. I can handle this somewhat efficiently by giving material or subdomain ids to the cells that help identify what is the case.
+
+# Monday 18th of October
+
+Today, I implement the boundary condition overlap for PML. I found out, that there is a mesh merging function for coarse grids and will now attempt to use it.
+
+I have written a first implementation, it aborts pretty early on. The error is not in prepare_mesh.
+
+# Monday 25th of October
+
+During last week I have tried to fix the mesh implementation for the new PML domain shape. There were some problems along the way and some counts still don't match in all cases.

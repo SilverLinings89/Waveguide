@@ -143,7 +143,6 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
     levels[in_level].surfaces[surf]->initialize_dof_counts(levels[in_level].surfaces[surf]->compute_n_locally_active_dofs(), levels[in_level].surfaces[surf]->compute_n_locally_owned_dofs());
     n_owned_dofs += levels[in_level].surfaces[surf]->n_locally_owned_dofs;
   }
-  
   levels[in_level].dof_distribution = dealii::Utilities::MPI::create_ascending_partitioning(GlobalMPI.communicators_by_level[in_level], n_owned_dofs);
   unsigned int first_dof = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].nth_index_in_set(0);
   levels[in_level].inner_domain->determine_non_owned_dofs();
@@ -154,7 +153,6 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   for(unsigned int i = 0; i < 6; i++) {
     levels[in_level].surfaces[i]->freeze_ownership();
   }
-  
   levels[in_level].inner_domain->finish_initialization(first_dof);
   for(unsigned int surf = 0; surf < 6; surf += 2 ) {
     if(Geometry.levels[in_level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE) {
@@ -178,7 +176,6 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
       Geometry.levels[in_level].surfaces[surf]->finish_dof_index_initialization();
     }
   }
-  
   levels[in_level].n_local_dofs = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].n_elements();
   levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution[0].size();
 }
@@ -586,9 +583,6 @@ void GeometryManager::initialize_surfaces_on_level(unsigned int in_level) {
           levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new HSIESurface(surf, in_level));
         } else {
           levels[in_level].surfaces[surf] = std::shared_ptr<BoundaryCondition>(new PMLSurface(surf, in_level));
-        }
-        if(is_surface_isolated(surf, in_level)) {
-          levels[in_level].surfaces[surf]->mark_as_isolated();
         }
         break;
       case SurfaceType::DIRICHLET_SURFACE:

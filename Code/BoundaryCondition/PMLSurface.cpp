@@ -20,10 +20,36 @@
 
 CubeSurfaceTruncationState isolated_truncation_state = {{false, false, false, false, false, false}};
 
+double get_surface_coordinate_for_bid(BoundaryId my_bid) {
+  double surface_coordinate = 0;
+  switch (my_bid)
+  {
+    case 0:
+      surface_coordinate = Geometry.local_x_range.first;
+      break;
+    case 1:
+      surface_coordinate = Geometry.local_x_range.second;
+      break;
+    case 2:
+      surface_coordinate = Geometry.local_y_range.first;
+      break;
+    case 3:
+      surface_coordinate = Geometry.local_y_range.second;
+      break;
+    case 4:
+      surface_coordinate = Geometry.local_z_range.first;
+      break;
+    case 5:
+      surface_coordinate = Geometry.local_z_range.second;
+      break;
+  }
+  return surface_coordinate;
+}
+
 PMLSurface::PMLSurface(unsigned int surface, unsigned int in_level)
   : BoundaryCondition(surface, in_level, Geometry.surface_extremal_coordinate[surface]),
-  fe_nedelec(GlobalParams.Nedelec_element_order) {
-     mesh_is_transformed = false;
+  fe_nedelec(GlobalParams.Nedelec_element_order),
+  surface_coordinate(get_surface_coordinate_for_bid(surface)) {
      outer_boundary_id = surface;
      non_pml_layer_thickness = GlobalParams.PML_thickness / GlobalParams.PML_N_Layers;
      if(surface % 2 == 0) {
@@ -36,59 +62,87 @@ PMLSurface::PMLSurface(unsigned int surface, unsigned int in_level)
 PMLSurface::~PMLSurface() {}
 
 void PMLSurface::prepare_mesh() {
-    Triangulation<3> tria;
-    std::vector<unsigned int> repetitions;
-    repetitions.push_back(GlobalParams.Cells_in_x);
-    repetitions.push_back(GlobalParams.Cells_in_y);
-    repetitions.push_back(GlobalParams.Cells_in_z);
-    repetitions[b_id / 2] = GlobalParams.PML_N_Layers - 1;
-    Position lower_ranges;
-    lower_ranges[0] = Geometry.local_x_range.first;
-    lower_ranges[1] = Geometry.local_y_range.first;
-    lower_ranges[2] = Geometry.local_z_range.first;
-    Position higher_ranges;
-    higher_ranges[0] = Geometry.local_x_range.second;
-    higher_ranges[1] = Geometry.local_y_range.second;
-    higher_ranges[2] = Geometry.local_z_range.second;
+  Triangulation<3> tria;
+  std::vector<unsigned int> repetitions;
+  repetitions.push_back(GlobalParams.Cells_in_x);
+  repetitions.push_back(GlobalParams.Cells_in_y);
+  repetitions.push_back(GlobalParams.Cells_in_z);
+  repetitions[b_id / 2] = GlobalParams.PML_N_Layers;
+  Position lower_ranges;
+  lower_ranges[0] = Geometry.local_x_range.first;
+  lower_ranges[1] = Geometry.local_y_range.first;
+  lower_ranges[2] = Geometry.local_z_range.first;
+  Position higher_ranges;
+  higher_ranges[0] = Geometry.local_x_range.second;
+  higher_ranges[1] = Geometry.local_y_range.second;
+  higher_ranges[2] = Geometry.local_z_range.second;
 
-    if(b_id % 2 == 0) {
-      lower_ranges[b_id / 2] = additional_coordinate - GlobalParams.PML_thickness;
-      higher_ranges[b_id / 2] = additional_coordinate;
-    } else {
-      lower_ranges[b_id / 2] = additional_coordinate;
-      higher_ranges[b_id / 2] = additional_coordinate + GlobalParams.PML_thickness;
-    }
-    
-    dealii::GridGenerator::subdivided_hyper_rectangle(tria, repetitions, lower_ranges , higher_ranges ,true);
-    CubeSurfaceTruncationState truncation_state;
+  if(b_id % 2 == 0) {
+    lower_ranges[b_id / 2] = additional_coordinate - GlobalParams.PML_thickness;
+    higher_ranges[b_id / 2] = additional_coordinate;
+  } else {
+    lower_ranges[b_id / 2] = additional_coordinate;
+    higher_ranges[b_id / 2] = additional_coordinate + GlobalParams.PML_thickness;
+  }
+  
+  dealii::GridGenerator::subdivided_hyper_rectangle(tria, repetitions, lower_ranges , higher_ranges ,true);
+  CubeSurfaceTruncationState truncation_state;
 
-    compute_coordinate_ranges(&tria);
-    if(is_isolated_boundary) {
-      for(unsigned int i = 0; i < 6; i++) {
-        truncation_state[i] = isolated_truncation_state[i];
-      }
-    } else {
-      for(unsigned int i = 0; i < 6; i++) {
-        truncation_state[i] = Geometry.levels[level].is_surface_truncated[i];
+  compute_coordinate_ranges(&tria);
+  for(unsigned int i = 0; i < adjacent_boundaries.size(); i++) {
+    dealii::Triangulation<3> t;
+    bool built = mg_process_edge(&t , adjacent_boundaries[i]);
+    if(built) {
+      dealii::GridGenerator::merge_triangulations(tria,t,tria);
+    }
+  }
+  for(unsigned int i = 0; i < adjacent_boundaries.size(); i++) {
+    for(unsigned int j = i+1; j < adjacent_boundaries.size(); j++) {
+      if(!are_opposing_sites(adjacent_boundaries[i], adjacent_boundaries[j])) {
+        dealii::Triangulation<3> t;
+        bool built = mg_process_corner(&t, adjacent_boundaries[i], adjacent_boundaries[j]);
+        if(built) {
+          dealii::GridGenerator::merge_triangulations(tria,t,tria);
+        }
       }
     }
-    for(unsigned int i = 0; i < 6; i++) {
-      if(Geometry.levels[level].surfaces[i]->is_isolated_boundary) {
-        truncation_state[i] = false;
+  }
+  triangulation = reforge_triangulation(&tria);
+  set_boundary_ids();
+  std::map<unsigned int, unsigned int> boundary_count;
+  {
+    typename Triangulation<3>::active_cell_iterator cell = triangulation.begin_active();
+    typename Triangulation<3>::active_cell_iterator endc = triangulation.end();
+    for (; cell != endc; ++cell) {
+      for (unsigned int face = 0; face < GeometryInfo<3>::faces_per_cell; ++face) {
+        if (cell->face(face)->at_boundary()) {
+          boundary_count[cell->face(face)->boundary_id()]++;
+        }
       }
     }
-    transformation = PMLMeshTransformation(x_range, y_range, z_range, additional_coordinate, b_id/2, truncation_state);
-    GridTools::transform(transformation, tria);
-    triangulation = reforge_triangulation(&tria);
-    mesh_is_transformed = true;
+    std::string m = " boundary indicators: ";
+    for (auto &it : boundary_count) {
+      m += std::to_string(it.first) + "(" + std::to_string(it.second) + " times) ";
+    }
+    std::cout << "On " << std::to_string(GlobalParams.MPI_Rank) << ": " << m << std::endl;
+  }
+  std::string filename ="Grid" + std::to_string(GlobalParams.MPI_Rank) + "-" + std::to_string(b_id) + ".vtk";
+  std::ofstream out(filename.c_str());
+  dealii::GridOut grid_out;
+  grid_out.write_vtk(triangulation, out);
+  out.close();
 }
 
 unsigned int PMLSurface::cells_for_boundary_id(unsigned int boundary_id) {
     unsigned int ret = 0;
     for(auto it = triangulation.begin(); it!= triangulation.end(); it++) {
-        if(it->at_boundary(boundary_id)) {
+      if(it->at_boundary()) {
+        for(unsigned int i = 0; i < 6; i++) {
+          if(it->face(i)->boundary_id() == boundary_id) {
             ret++;
+          }
         }
+      }
     }
     return ret;
 }
@@ -99,33 +153,79 @@ void PMLSurface::init_fe() {
     dof_counter = dof_h_nedelec.n_dofs();
 }
 
-bool PMLSurface::is_position_at_boundary(Position in_p, BoundaryId in_bid) {
-  Position p = in_p;
-  if(mesh_is_transformed) {
-    p = transformation.undo_transform(in_p);
-  }
+bool PMLSurface::is_position_at_boundary(const Position in_p, const BoundaryId in_bid) {
   switch (in_bid)
   {
     case 0:
-      if(p[0] == x_range.first) return true;
+      if(std::abs(in_p[0] - x_range.first) < FLOATING_PRECISION) return true;
       break;
     case 1:
-      if(p[0] == x_range.second) return true;
+      if(std::abs(in_p[0] - x_range.second) < FLOATING_PRECISION) return true;
       break;
     case 2:
-      if(p[1] == y_range.first) return true;
+      if(std::abs(in_p[1] - y_range.first) < FLOATING_PRECISION) return true;
       break;
     case 3:
-      if(p[1] == y_range.second) return true;
+      if(std::abs(in_p[1] - y_range.second) < FLOATING_PRECISION) return true;
       break;
     case 4:
-      if(p[2] == z_range.first) return true;
+      if(std::abs(in_p[2] - z_range.first) < FLOATING_PRECISION) return true;
       break;
     case 5:
-      if(p[2] == z_range.second) return true;
+      if(std::abs(in_p[2] - z_range.second) < FLOATING_PRECISION) return true;
       break;
   }
   return false;
+}
+
+bool PMLSurface::is_position_at_extended_boundary(const Position in_p, const BoundaryId in_bid) {
+  if(std::abs(in_p[b_id / 2] - surface_coordinate) < FLOATING_PRECISION) {
+    
+    switch(b_id / 2) {
+      case 0:
+        return false;
+        break;
+      case 1:
+        if((in_bid / 2) == 0) {
+          if(in_p[0] < Geometry.local_x_range.first && in_bid == 0) {
+            
+            return true;
+          }
+          if(in_p[0] > Geometry.local_x_range.second && in_bid == 1) {
+            return true;
+          }
+        } else {
+          return false;
+        }
+        break;
+      case 2:
+        if(in_bid == 3) {
+          return in_p[1] > Geometry.local_y_range.second;
+        }
+        if(in_bid == 2) {
+          return in_p[1] < Geometry.local_y_range.first;
+        }
+        if(in_bid == 1) {
+          bool not_y = in_p[1] <= Geometry.local_y_range.second && in_p[1] >= Geometry.local_y_range.first;
+          if(not_y) {
+            return in_p[0] > Geometry.local_x_range.second;
+          } else {
+            return false;
+          }
+        }
+        if(in_bid == 0) {
+          bool not_y = in_p[1] <= Geometry.local_y_range.second && in_p[1] >= Geometry.local_y_range.first;
+          if(not_y) {
+            return in_p[0] < Geometry.local_x_range.first;
+          } else {
+            return false;
+          }
+        }
+        break;
+    }
+  } else {
+    return b_id == in_bid;
+  }
 }
 
 bool PMLSurface::is_point_at_boundary(Position2D, BoundaryId) {
@@ -133,86 +233,27 @@ bool PMLSurface::is_point_at_boundary(Position2D, BoundaryId) {
 }
 
 void PMLSurface::validate_meshes() {
-  std::array<unsigned int, 6> cells_per_surface;
-  std::array<unsigned int, 6> dofs_per_surface;
-  for(unsigned int i = 0; i < 6; i++) {
-    cells_per_surface[i] = cells_for_boundary_id(i);
-    dofs_per_surface[i] = get_dof_association_by_boundary_id(i).size();
-  }
-  unsigned int inner_count = cells_per_surface[b_id];
-  unsigned int other_count = 0;
-  if(b_id == 0 || b_id == 1) {
-    other_count = cells_per_surface[2];
-  } else {
-    other_count = cells_per_surface[0];
-  }
-  bool correct = true;
-  for(unsigned int i = 0; i < 6; i++) {
-    if(i == b_id || are_opposing_sites(b_id , i)) {
-      if(cells_per_surface[i] != inner_count) {
-        correct = false;
-      }
-    } else {
-      if(cells_per_surface[i] != other_count) {
-        correct = false;
+  bool all_correct = true;
+  for(auto other_boundary: adjacent_boundaries) {
+    if(Geometry.levels[level].surface_type[other_boundary] == SurfaceType::ABC_SURFACE) {
+      unsigned int own_cells = cells_for_boundary_id(other_boundary);
+      unsigned int other_side = Geometry.levels[level].surfaces[other_boundary]->cells_for_boundary_id(b_id);
+      std::vector<InterfaceDofData> own_dof_data = get_dof_association_by_boundary_id(other_boundary);
+      std::vector<InterfaceDofData> other_dof_data = Geometry.levels[level].surfaces[other_boundary]->get_dof_association_by_boundary_id(b_id);
+      if(own_cells != other_side || own_dof_data.size() != other_dof_data.size()) {
+        all_correct = false;
+        std::cout << "On " << std::to_string(b_id) << " for " << std::to_string(other_boundary) << " (" << own_cells << " vs " << other_side << ") and ("  << own_dof_data.size() << " vs " << other_dof_data.size() << ")." << std::endl;
       }
     }
   }
-
-  inner_count = dofs_per_surface[b_id];
-  other_count = 0;
-  if(b_id == 0 || b_id == 1) {
-    other_count = dofs_per_surface[2];
-  } else {
-    other_count = dofs_per_surface[0];
-  }
-  for(unsigned int i = 0; i < 6; i++) {
-    if(i == b_id || are_opposing_sites(b_id , i)) {
-      if(dofs_per_surface[i] != inner_count) {
-        correct = false;
-      }
-    } else {
-      if(dofs_per_surface[i] != other_count) {
-        correct = false;
-      }
-    }
-  }
-  if(!correct) {
-    std::cout << "The validation of surface " << b_id << " failed." << std::endl;
-    for(unsigned int i = 0; i < 6; i++) {
-      std::cout << "surf " << i << ": " << cells_per_surface[i] << " and " << dofs_per_surface[i] << std::endl;
-    }
+  if(all_correct) {
+    std::cout << "On " << std::to_string(b_id) << " all boundaries are OK." << std::endl;
   }
 }
 
 void PMLSurface::initialize() {
   prepare_mesh();
   init_fe();
-  prepare_id_sets_for_boundaries();
-  // validate_meshes();
-}
-
-void PMLSurface::prepare_id_sets_for_boundaries(){
-  for(unsigned int i = 0; i < 6; i++) {
-    face_ids_by_boundary_id[i].clear();
-    edge_ids_by_boundary_id[i].clear();
-  }
-  for(auto it = dof_h_nedelec.begin(); it != dof_h_nedelec.end(); it++) {
-    if(it->at_boundary()) {
-      for(unsigned int face = 0; face < 6; face++) {
-        if(it->face(face)->at_boundary()) {
-          for(unsigned int current_boundary_id = 0; current_boundary_id < 6; current_boundary_id++) {
-            if(is_position_at_boundary(it->face(face)->center(), current_boundary_id)) {
-              face_ids_by_boundary_id[current_boundary_id].insert(it->face_index(face));
-              for(unsigned int edge = 0; edge < 4; edge++) {
-                edge_ids_by_boundary_id[current_boundary_id].insert(it->face(face)->line_index(edge));
-              }
-            }
-          }
-        }
-      }
-    }
-  }
 }
 
 std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(unsigned int in_bid) {
@@ -223,14 +264,9 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(uns
   std::set<DofNumber> face_set;
   triangulation.clear_user_flags();
   for (auto cell : dof_h_nedelec.active_cell_iterators()) {
-    if (cell->at_boundary(in_bid)) {
-      bool found_one = false;
+    if (cell->at_boundary()) {
       for (unsigned int face = 0; face < 6; face++) {
-        if (cell->face(face)->boundary_id() == in_bid && found_one) {
-          print_info("PMLSurface::get_dof_association_by_boundary_id", "There was an error!", false, LoggingLevel::PRODUCTION_ALL);
-        }
         if (cell->face(face)->boundary_id() == in_bid) {
-          found_one = true;
           std::vector<DofNumber> face_dofs_indices(fe_nedelec.dofs_per_face);
           cell->face(face)->get_dof_indices(face_dofs_indices);
           face_set.clear();
@@ -478,41 +514,99 @@ void PMLSurface::compute_coordinate_ranges(dealii::Triangulation<3> * in_tria) {
   z_range.second = -100000.0;
   for(auto it = in_tria->begin(); it != in_tria->end(); it++) {
     for(unsigned int i = 0; i < 6; i++) {
-      Position p = it->face(i)->center();
-      if(p[0] < x_range.first) {
-        x_range.first = p[0];
-      }
-      if(p[0] > x_range.second) {
-        x_range.second = p[0];
-      }
-      if(p[1] < y_range.first) {
-        y_range.first = p[1];
-      }
-      if(p[1] > y_range.second) {
-        y_range.second = p[1];
-      }
-      if(p[2] < z_range.first) {
-        z_range.first = p[2];
-      }
-      if(p[2] > z_range.second) {
-        z_range.second = p[2];
+      if(it->face(i)->at_boundary()) {
+        Position p = it->face(i)->center();
+        if(p[0] < x_range.first) {
+          x_range.first = p[0];
+        }
+        if(p[0] > x_range.second) {
+          x_range.second = p[0];
+        }
+        if(p[1] < y_range.first) {
+          y_range.first = p[1];
+        }
+        if(p[1] > y_range.second) {
+          y_range.second = p[1];
+        }
+        if(p[2] < z_range.first) {
+          z_range.first = p[2];
+        }
+        if(p[2] > z_range.second) {
+          z_range.second = p[2];
+        }
       }
     }
   }
 }
 
+bool PMLSurface::extend_mesh_in_direction(BoundaryId in_bid) {
+  if(Geometry.levels[level].surface_type[in_bid] != SurfaceType::ABC_SURFACE) {
+    return false;
+  }
+  if(b_id == 4 || b_id == 5) {
+    return true;
+  }
+  if(b_id == 0 || b_id == 1) {
+    return false;
+  }
+  if(b_id == 2 || b_id == 3) {
+    return in_bid < b_id;
+  }
+  return false;
+}
+
 void PMLSurface::set_boundary_ids() {
+  // first set all to outer_boundary_id
+  for(auto it = triangulation.begin(); it != triangulation.end(); it++) {
+    for(unsigned int face = 0; face < 6; face ++) {
+      if(it->face(face)->at_boundary()) {
+        it->face(face)->set_all_boundary_ids(outer_boundary_id);
+      }
+    }
+  }
+  // then locate all the faces connecting to the inner domain
+  for(auto it = triangulation.begin(); it != triangulation.end(); it++) {
+    for(unsigned int face = 0; face < 6; face ++) {
+      if(it->face(face)->at_boundary()) {
+        Position p = it->face(face)->center();
+        // Have to use outer_boundary_id here because direction 4 of the pml (-z) is at the boundary 5 of the inner domain (+z)
+        if(p[b_id/2] == get_surface_coordinate_for_bid(outer_boundary_id)) {
+          bool is_located_properly = true;
+          is_located_properly &= p[0] > Geometry.local_x_range.first - FLOATING_PRECISION;
+          is_located_properly &= p[0] < Geometry.local_x_range.second + FLOATING_PRECISION;
+          is_located_properly &= p[1] > Geometry.local_y_range.first - FLOATING_PRECISION;
+          is_located_properly &= p[1] < Geometry.local_y_range.second + FLOATING_PRECISION;
+          is_located_properly &= p[2] > Geometry.local_z_range.first - FLOATING_PRECISION;
+          is_located_properly &= p[2] < Geometry.local_z_range.second + FLOATING_PRECISION;
+          if(is_located_properly) {
+            it->face(face)->set_all_boundary_ids(inner_boundary_id);
+          }
+        }
+        
+      }
+    }
+  }
+
+  // then check all of the other boundary ids.
   for(auto it = triangulation.begin(); it != triangulation.end(); it++) {
     for(unsigned int face = 0; face < 6; face ++) {
       if(it->face(face)->at_boundary()) {
         Position p = it->face(face)->center();
         for(unsigned int i = 0; i < 6; i++) {
-          if(is_position_at_boundary(p, i)) {
-            it->face(face)->set_all_boundary_ids(i);
+          if(i != b_id && !are_opposing_sites(i,b_id)) {
+            bool is_at_boundary = false;
+            if(extend_mesh_in_direction(i)) {
+              is_at_boundary = is_position_at_extended_boundary(p,i);
+            } else {
+              is_at_boundary = is_position_at_boundary(p,i);
+            }
+            if(is_at_boundary) {
+              it->face(face)->set_all_boundary_ids(i);
+            }
           }
         }
       }
-    }   
+    }
   }
 }
 
@@ -571,17 +665,15 @@ DofCount PMLSurface::compute_n_locally_active_dofs() {
 }
 
 void PMLSurface::finish_dof_index_initialization() {
-  if(!is_isolated_boundary) {
-    for(auto surf : adjacent_boundaries) {
-      if(!are_edge_dofs_owned[surf] && Geometry.levels[level].surface_type[surf] != SurfaceType::NEIGHBOR_SURFACE) {
-        DofIndexVector dofs_in_global_numbering = Geometry.levels[level].surfaces[surf]->get_global_dof_indices_by_boundary_id(b_id);
-        std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(surf);
-        DofIndexVector dofs_in_local_numbering(local_interface_data.size());
-        for(unsigned int i = 0; i < local_interface_data.size(); i++) {
-          dofs_in_local_numbering[i] = local_interface_data[i].index;
-        }
-        set_non_local_dof_indices(dofs_in_local_numbering, dofs_in_global_numbering);
+  for(auto surf : adjacent_boundaries) {
+    if(!are_edge_dofs_owned[surf] && Geometry.levels[level].surface_type[surf] != SurfaceType::NEIGHBOR_SURFACE) {
+      DofIndexVector dofs_in_global_numbering = Geometry.levels[level].surfaces[surf]->get_global_dof_indices_by_boundary_id(b_id);
+      std::vector<InterfaceDofData> local_interface_data = get_dof_association_by_boundary_id(surf);
+      DofIndexVector dofs_in_local_numbering(local_interface_data.size());
+      for(unsigned int i = 0; i < local_interface_data.size(); i++) {
+        dofs_in_local_numbering[i] = local_interface_data[i].index;
       }
+      set_non_local_dof_indices(dofs_in_local_numbering, dofs_in_global_numbering);
     }
   }
   // Do the same for the inner interface
@@ -598,6 +690,7 @@ void PMLSurface::finish_dof_index_initialization() {
 }
 
 void PMLSurface::determine_non_owned_dofs() {
+  validate_meshes();
   IndexSet non_owned_dofs = compute_non_owned_dofs();
   const unsigned int n_dofs = non_owned_dofs.n_elements();
   std::vector<unsigned int> local_dofs(n_dofs);
@@ -636,11 +729,9 @@ Constraints PMLSurface::make_constraints() {
 dealii::IndexSet PMLSurface::compute_non_owned_dofs() {
   IndexSet non_owned_dofs(dof_counter);
   std::vector<unsigned int> non_locally_owned_surfaces;
-  if(!is_isolated_boundary) {
-    for(auto surf : adjacent_boundaries) {
-      if(!are_edge_dofs_owned[surf]) {
-        non_locally_owned_surfaces.push_back(surf);
-      }
+  for(auto surf : adjacent_boundaries) {
+    if(!are_edge_dofs_owned[surf]) {
+      non_locally_owned_surfaces.push_back(surf);
     }
   }
   non_locally_owned_surfaces.push_back(inner_boundary_id);
@@ -662,4 +753,97 @@ dealii::IndexSet PMLSurface::compute_non_owned_dofs() {
     }
   }
   return non_owned_dofs;
+}
+
+bool PMLSurface::mg_process_edge(dealii::Triangulation<3> * tria, BoundaryId other_bid) {
+  // This line checks if the domain even exists
+  bool domain_exists = Geometry.levels[level].is_surface_truncated[other_bid];
+  // the next step checks if this boundary generates it. For b_id 4 and 5, this is always the case. For 2 and 3 it is only true if the other b_id 
+  bool is_owned = false;
+  if(b_id == 4 || b_id == 5) {
+    is_owned = true;
+  }
+  if(b_id == 2 || b_id == 3) {
+    is_owned = (other_bid == 0 || other_bid == 1);
+  }
+  if(domain_exists && is_owned) {
+    std::vector<unsigned int> subdivisions(3);
+    Position p1, p2;
+    if(b_id / 2 != 0 && other_bid /2 != 0) {
+      subdivisions[0] = GlobalParams.Cells_in_x;
+      p1[0] = Geometry.local_x_range.first;
+      p2[0] = Geometry.local_x_range.second;
+    } else {
+      subdivisions[0] = GlobalParams.PML_N_Layers;
+      if(b_id == 0 || other_bid == 0) {
+        p1[0] = Geometry.local_x_range.first - GlobalParams.PML_thickness;
+        p2[0] = Geometry.local_x_range.first;
+      } else {
+        p1[0] = Geometry.local_x_range.second;
+        p2[0] = Geometry.local_x_range.second + GlobalParams.PML_thickness;
+      }
+    }
+    if(b_id / 2 != 1 && other_bid /2 != 1) {
+      subdivisions[1] = GlobalParams.Cells_in_y;
+      p1[1] = Geometry.local_y_range.first;
+      p2[1] = Geometry.local_y_range.second;
+    } else {
+      subdivisions[1] = GlobalParams.PML_N_Layers;
+      if(b_id == 2 || other_bid == 2) {
+        p1[1] = Geometry.local_y_range.first - GlobalParams.PML_thickness;
+        p2[1] = Geometry.local_y_range.first;
+      } else {
+        p1[1] = Geometry.local_y_range.second;
+        p2[1] = Geometry.local_y_range.second + GlobalParams.PML_thickness;
+      }
+    }
+    if(b_id / 2 != 2 && other_bid /2 != 2) {
+      subdivisions[2] = GlobalParams.Cells_in_z;
+      p1[2] = Geometry.local_z_range.first;
+      p2[2] = Geometry.local_z_range.second;
+    } else {
+      subdivisions[2] = GlobalParams.PML_N_Layers;
+      if(b_id == 4 || other_bid == 4) {
+        p1[2] = Geometry.local_z_range.first - GlobalParams.PML_thickness;
+        p2[2] = Geometry.local_z_range.first;
+      } else {
+        p1[2] = Geometry.local_z_range.second;
+        p2[2] = Geometry.local_z_range.second + GlobalParams.PML_thickness;
+      }
+    }
+    dealii::GridGenerator::subdivided_hyper_rectangle(*tria,subdivisions, p1, p2);
+    return true;
+  }
+  return false;
+}
+
+bool PMLSurface::mg_process_corner(dealii::Triangulation<3> * tria, BoundaryId first_bid, BoundaryId second_bid) {
+  if(b_id == 4 || b_id == 5) {
+    bool generate_this_part = Geometry.levels[level].is_surface_truncated[first_bid] && Geometry.levels[level].is_surface_truncated[second_bid];
+    if(generate_this_part) {
+      // Do the generation.
+      GridGenerator::subdivided_hyper_cube(*tria,GlobalParams.PML_N_Layers,0,GlobalParams.PML_thickness);
+      dealii::Tensor<1,3> shift;
+      bool lower_x = first_bid == 0 || second_bid == 0;
+      bool lower_y = first_bid == 2 || second_bid == 2;
+      if(lower_x) {
+        shift[0] = - GlobalParams.PML_thickness + Geometry.local_x_range.first;
+      } else {
+        shift[0] = Geometry.local_x_range.second;
+      }
+      if(lower_y) {
+        shift[1] = - GlobalParams.PML_thickness + Geometry.local_y_range.first;
+      } else {
+        shift[1] = Geometry.local_y_range.second;
+      }
+      if(b_id == 4) {
+        shift[2] = - GlobalParams.PML_thickness + Geometry.local_z_range.first;
+      } else {
+        shift[2] = Geometry.local_z_range.second;
+      }
+      dealii::GridTools::shift(shift, *tria);
+      return true;
+    }
+  }
+  return false;
 }

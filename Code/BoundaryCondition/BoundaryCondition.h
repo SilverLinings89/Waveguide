@@ -17,7 +17,6 @@ public:
   bool boundary_coordinates_computed = false;
   std::array<double, 6> boundary_vertex_coordinates;
   DofCount dof_counter;
-  bool is_isolated_boundary;
   unsigned int global_partner_mpi_rank;
   const std::vector<BoundaryId> adjacent_boundaries;
   std::array<bool, 6> are_edge_dofs_owned;
@@ -52,9 +51,10 @@ public:
 
   virtual auto make_constraints() -> Constraints;
 
-  void mark_as_isolated();
   double boundary_norm(NumericVectorDistributed *);
   double boundary_surface_norm(NumericVectorDistributed *, BoundaryId);
+
+  virtual unsigned int cells_for_boundary_id(unsigned int boundary_id);
 
   void print_dof_validation();
 };

@@ -11,7 +11,6 @@ BoundaryCondition::BoundaryCondition(unsigned int in_bid, unsigned int in_level,
   level(in_level),
   additional_coordinate(in_additional_coordinate),
   adjacent_boundaries(get_adjacent_boundary_ids(in_bid)) {
-    is_isolated_boundary = false;
     for(unsigned int i = 0; i < 6; i++) {
       are_edge_dofs_owned[i] = false;
     }
@@ -108,10 +107,6 @@ Constraints BoundaryCondition::make_constraints() {
   return ret;
 }
 
-void BoundaryCondition::mark_as_isolated() {
-  is_isolated_boundary = true;
-}
-
 double BoundaryCondition::boundary_norm(NumericVectorDistributed * in_v) {
   double ret = 0;
   for(unsigned int i = 0; i < global_index_mapping.size(); i++) {
@@ -127,6 +122,10 @@ double BoundaryCondition::boundary_surface_norm(NumericVectorDistributed * in_v,
     ret += norm_squared(in_v->operator()(it.index));
   }
   return std::sqrt(ret);
+}
+
+unsigned int BoundaryCondition::cells_for_boundary_id(unsigned int boundary_id) {
+  return 0;
 }
 
 void BoundaryCondition::print_dof_validation() {

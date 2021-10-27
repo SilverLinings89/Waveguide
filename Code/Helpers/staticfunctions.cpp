@@ -225,19 +225,17 @@ double dotproduct(Tensor<1, 3, double> a, Tensor<1, 3, double> b) {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
-template <int dim>
-void mesh_info(const Triangulation<dim> &tria, const std::string &filename) {
-  print_info("mesh_info", "Mesh info:\ndimension: " + std::to_string(dim) + "\nno. of cells: " + std::to_string(tria.n_active_cells()), false, LoggingLevel::PRODUCTION_ALL);
+void mesh_info(Triangulation<3> * tria, std::string &filename) {
+  print_info("mesh_info", "Mesh info:\ndimension: 3\nno. of cells: " + std::to_string(tria->n_active_cells()), false, LoggingLevel::PRODUCTION_ALL);
   {
     std::map<unsigned int, unsigned int> boundary_count;
-    typename Triangulation<dim>::active_cell_iterator cell =
-        tria.begin_active();
-    typename Triangulation<dim>::active_cell_iterator endc = tria.end();
+    typename Triangulation<3>::active_cell_iterator cell = tria->begin_active();
+    typename Triangulation<3>::active_cell_iterator endc = tria->end();
     for (; cell != endc; ++cell) {
-      for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell;
-           ++face) {
-        if (cell->face(face)->at_boundary())
+      for (unsigned int face = 0; face < GeometryInfo<3>::faces_per_cell; ++face) {
+        if (cell->face(face)->at_boundary()) {
           boundary_count[cell->face(face)->boundary_id()]++;
+        }
       }
     }
     std::string m = " boundary indicators: ";
@@ -248,7 +246,7 @@ void mesh_info(const Triangulation<dim> &tria, const std::string &filename) {
   }
   std::ofstream out(filename.c_str());
   GridOut grid_out;
-  grid_out.write_vtk(tria, out);
+  grid_out.write_vtk(*tria, out);
   out.close();
   print_info("mesh_info" , "written to " + filename, false, LoggingLevel::DEBUG_ONE);
 }

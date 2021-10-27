@@ -54,8 +54,7 @@ void set_the_st(SpaceTransformation *);
 
 double dotproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 
-template <int dim>
-void mesh_info(const Triangulation<dim>, const std::string);
+void mesh_info(Triangulation<3> *, std::string);
 
 template <int dim>
 void mesh_info(const Triangulation<dim>);
