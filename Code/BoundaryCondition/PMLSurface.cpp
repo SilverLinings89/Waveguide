@@ -109,28 +109,6 @@ void PMLSurface::prepare_mesh() {
   }
   triangulation = reforge_triangulation(&tria);
   set_boundary_ids();
-  std::map<unsigned int, unsigned int> boundary_count;
-  {
-    typename Triangulation<3>::active_cell_iterator cell = triangulation.begin_active();
-    typename Triangulation<3>::active_cell_iterator endc = triangulation.end();
-    for (; cell != endc; ++cell) {
-      for (unsigned int face = 0; face < GeometryInfo<3>::faces_per_cell; ++face) {
-        if (cell->face(face)->at_boundary()) {
-          boundary_count[cell->face(face)->boundary_id()]++;
-        }
-      }
-    }
-    std::string m = " boundary indicators: ";
-    for (auto &it : boundary_count) {
-      m += std::to_string(it.first) + "(" + std::to_string(it.second) + " times) ";
-    }
-    std::cout << "On " << std::to_string(GlobalParams.MPI_Rank) << ": " << m << std::endl;
-  }
-  std::string filename ="Grid" + std::to_string(GlobalParams.MPI_Rank) + "-" + std::to_string(b_id) + ".vtk";
-  std::ofstream out(filename.c_str());
-  dealii::GridOut grid_out;
-  grid_out.write_vtk(triangulation, out);
-  out.close();
 }
 
 unsigned int PMLSurface::cells_for_boundary_id(unsigned int boundary_id) {
@@ -314,13 +292,36 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association() {
     return get_dof_association_by_boundary_id(inner_boundary_id);
 }
 
-double PMLSurface::fraction_of_pml_direction(Position in_p) {
-  double temp = std::abs(in_p[b_id/2]-additional_coordinate);
-  if(temp < non_pml_layer_thickness) {
-    return 0.0;
+std::array<double, 3> PMLSurface::fraction_of_pml_direction(Position in_p) {
+  std::array<double, 3> ret;
+  if(in_p[0] < Geometry.local_x_range.first) {
+    ret[0] = (Geometry.local_x_range.first - in_p[0] + non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
   } else {
-    return (temp - non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
+    if(in_p[0] > Geometry.local_x_range.second) {
+      ret[0] = (in_p[0] - Geometry.local_x_range.second - non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
+    } else {
+      ret[0] = 0.0;
+    }
   }
+  if(in_p[1] < Geometry.local_y_range.first) {
+    ret[1] = (Geometry.local_y_range.first - in_p[1] + non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
+  } else {
+    if(in_p[1] > Geometry.local_y_range.second) {
+      ret[1] = (in_p[1] - Geometry.local_y_range.second - non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
+    } else {
+      ret[1] = 0.0;
+    }
+  }
+  if(in_p[2] < Geometry.local_z_range.first) {
+    ret[2] = (Geometry.local_z_range.first - in_p[0] + non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
+  } else {
+    if(in_p[2] > Geometry.local_z_range.second) {
+      ret[2] = (in_p[2] - Geometry.local_z_range.second - non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
+    } else {
+      ret[2] = 0.0;
+    }
+  }
+  return ret;
 }
 
 dealii::Tensor<2,3,ComplexNumber> PMLSurface::get_pml_tensor_epsilon(Position in_p) {
@@ -337,20 +338,18 @@ dealii::Tensor<2,3,ComplexNumber> PMLSurface::get_pml_tensor_mu(Position in_p) {
 
 dealii::Tensor<2,3,ComplexNumber> PMLSurface::get_pml_tensor(Position in_p) {
   dealii::Tensor<2,3,ComplexNumber> ret;
-  double fraction = fraction_of_pml_direction(in_p);
-  ComplexNumber part_a = {1 , std::pow(fraction, GlobalParams.PML_skaling_order) * GlobalParams.PML_Sigma_Max};
+  const std::array<double, 3> fractions = fraction_of_pml_direction(in_p);
+  ComplexNumber sx = {1 , std::pow(fractions[0], GlobalParams.PML_skaling_order) * GlobalParams.PML_Sigma_Max};
+  ComplexNumber sy = {1 , std::pow(fractions[1], GlobalParams.PML_skaling_order) * GlobalParams.PML_Sigma_Max};
+  ComplexNumber sz = {1 , std::pow(fractions[2], GlobalParams.PML_skaling_order) * GlobalParams.PML_Sigma_Max};
   for(unsigned int i = 0; i < 3; i++) {
       for(unsigned int j = 0; j < 3; j++) {
           ret[i][j] = 0;
       }
   }
-  for(unsigned int i = 0; i < 3; i++) {
-      if(i == b_id/2) {
-          ret[i][i] = 1.0 / part_a;
-      } else {
-          ret[i][i] = part_a;
-      }
-  }
+  ret[0][0] = sy*sz/sx;
+  ret[1][1] = sx*sz/sy;
+  ret[2][2] = sx*sy/sz;
   return ret;
 }
 

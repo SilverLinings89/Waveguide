@@ -41,7 +41,7 @@ class PMLSurface : public BoundaryCondition {
     void prepare_mesh();
     auto cells_for_boundary_id(unsigned int boundary_id) -> unsigned int override;
     void init_fe();
-    auto fraction_of_pml_direction(Position) -> double;
+    auto fraction_of_pml_direction(Position) -> std::array<double, 3> ;
     auto get_pml_tensor_epsilon(Position) -> dealii::Tensor<2,3,ComplexNumber>;
     auto get_pml_tensor_mu(Position) -> dealii::Tensor<2,3,ComplexNumber>;
     auto get_pml_tensor(Position) -> dealii::Tensor<2,3,ComplexNumber>;

@@ -226,7 +226,6 @@ void NonLocalProblem::solve() {
   rhs.compress(VectorOperation::add);
   constraints.distribute(solution);
   print_vector_norm(&rhs, "RHS");
-  std::cout << matrix->is_symmetric() << std::endl;
   if(!GlobalParams.solve_directly) {
     residual_output->new_series("Run " + std::to_string(solve_counter + 1));
     // Solve with sweeping
@@ -582,9 +581,7 @@ void NonLocalProblem::perform_downward_sweep(NumericVectorDistributed * u) {
       S_inv(u, &temp1);
     }
     temp1.compress(VectorOperation::insert);
-    print_vector_norm(&temp1, "d_pre");
     matrix->vmult(temp2, temp1);
-    print_vector_norm(&temp2, "d_post");
     if(rank == i-1) {
       for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
         const unsigned int index = own_dofs.nth_index_in_set(j);
@@ -623,9 +620,7 @@ void NonLocalProblem::perform_upward_sweep(NumericVectorDistributed * u) {
       }
     }
     temp1.compress(VectorOperation::insert);
-    print_vector_norm(&temp1, "u_pre");
     matrix->Tvmult(temp2, temp1);
-    print_vector_norm(&temp2, "u_post");
     
     if(rank == i+1) {
       S_inv(&temp2, &temp3);
