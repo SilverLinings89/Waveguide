@@ -224,8 +224,8 @@ void PMLSurface::validate_meshes() {
       }
     }
   }
-  if(all_correct) {
-    std::cout << "On " << std::to_string(b_id) << " all boundaries are OK." << std::endl;
+  if(!all_correct) {
+    std::cout << "On " << std::to_string(b_id) << " some boundaries are not OK." << std::endl;
   }
 }
 

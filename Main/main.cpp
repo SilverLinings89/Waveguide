@@ -95,5 +95,6 @@ int main(int argc, char *argv[]) {
   print_info("Main", "Run Simulation", true);
   simulation->run();
 
+  MPI_Barrier(MPI_COMM_WORLD);
   return 0;
 }

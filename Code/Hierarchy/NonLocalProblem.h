@@ -53,7 +53,6 @@ private:
   void reinit_rhs() override;
   
   void reinit_vector(NumericVectorDistributed *);
-  // New functions.
 
   void S_inv(NumericVectorDistributed * src, NumericVectorDistributed * dst);
 

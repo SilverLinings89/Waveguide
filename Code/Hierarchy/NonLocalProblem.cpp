@@ -577,12 +577,12 @@ void NonLocalProblem::perform_downward_sweep(NumericVectorDistributed * u) {
     NumericVectorDistributed temp1, temp2;
     reinit_vector(&temp1);
     reinit_vector(&temp2);
-    if(rank == i) {
+    if(index_in_sweep == i) {
       S_inv(u, &temp1);
     }
     temp1.compress(VectorOperation::insert);
     matrix->vmult(temp2, temp1);
-    if(rank == i-1) {
+    if(index_in_sweep == i-1) {
       for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
         const unsigned int index = own_dofs.nth_index_in_set(j);
         ComplexNumber current_value((*u)(index).real(), (*u)(index).imag());
@@ -614,7 +614,7 @@ void NonLocalProblem::perform_upward_sweep(NumericVectorDistributed * u) {
     reinit_vector(&temp1);
     reinit_vector(&temp2);
     reinit_vector(&temp3);
-    if(rank == i) {
+    if(index_in_sweep == i) {
       for(unsigned int index = 0; index < own_dofs.n_elements(); index++) {
         temp1[own_dofs.nth_index_in_set(index)] = (ComplexNumber)((*u)[own_dofs.nth_index_in_set(index)]);
       }
@@ -622,7 +622,7 @@ void NonLocalProblem::perform_upward_sweep(NumericVectorDistributed * u) {
     temp1.compress(VectorOperation::insert);
     matrix->Tvmult(temp2, temp1);
     
-    if(rank == i+1) {
+    if(index_in_sweep == i+1) {
       S_inv(&temp2, &temp3);
       for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
         const unsigned int index = own_dofs.nth_index_in_set(j);
