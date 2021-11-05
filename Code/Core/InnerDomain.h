@@ -54,7 +54,6 @@
 #include "../Helpers/staticfunctions.h"
 #include "./Sector.h"
 #include "../MeshGenerators/SquareMeshGenerator.h"
-#include "../SpaceTransformations/HomogenousTransformationRectangular.h"
 #include "../Core/Enums.h"
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/table_handler.h>
@@ -81,7 +80,6 @@
 class InnerDomain: public FEDomain {
  public:
   SquareMeshGenerator mesh_generator;
-  HomogenousTransformationRectangular space_transformation;
   dealii::FE_NedelecSZ<3> fe;
   dealii::Triangulation<3> triangulation;
   DofHandler3D dof_handler;

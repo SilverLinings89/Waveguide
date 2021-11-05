@@ -38,7 +38,6 @@ std::string total_filename = "total.log";
 int StepsR = 10;
 int StepsPhi = 10;
 int alert_counter = 0;
-SpaceTransformation *the_st;
 Parameters GlobalParams;
 GeometryManager Geometry;
 MPICommunicator GlobalMPI;

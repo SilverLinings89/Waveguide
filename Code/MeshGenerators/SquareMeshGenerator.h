@@ -4,8 +4,8 @@
 #include <deal.II/grid/tria.h>
 #include <array>
 #include <vector>
-#include "../SpaceTransformations/SpaceTransformation.h"
 #include "./SquareMeshGenerator.h"
+#include "../Core/Types.h"
 
 /**
  * \class SquareMeshGenerator
@@ -53,17 +53,15 @@ class SquareMeshGenerator {
    * be prepared. All further information is derived from the parameter file and
    * not given by parameters.
    */
-  void prepare_triangulation(Triangulation<3> *in_tria);
+  void prepare_triangulation(dealii::Triangulation<3> *in_tria);
 
-  unsigned int getDominantComponentAndDirection(
-      Position in_dir) const;
+  unsigned int getDominantComponentAndDirection(Position in_dir) const;
 
-  void set_boundary_ids(Triangulation<3> &) const;
+  void set_boundary_ids(dealii::Triangulation<3> &) const;
 
-  Triangulation<3>::active_cell_iterator cell, endc;
+  dealii::Triangulation<3>::active_cell_iterator cell, endc;
 
-  void refine_triangulation_iteratively(Triangulation<3, 3> *);
+  void refine_triangulation_iteratively(dealii::Triangulation<3, 3> *);
 
-  bool check_and_mark_one_cell_for_refinement(
-      Triangulation<3>::active_cell_iterator);
+  bool check_and_mark_one_cell_for_refinement(dealii::Triangulation<3>::active_cell_iterator);
 };

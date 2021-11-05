@@ -443,127 +443,123 @@ bool GeometryManager::is_surface_isolated(BoundaryId b_id, unsigned int in_level
   return (get_surface_type(b_id, in_level) == SurfaceType::ABC_SURFACE) && (get_surface_type(b_id, in_level+1) == SurfaceType::NEIGHBOR_SURFACE);
 }
 
+SurfaceType get_surf_type_for_level_0(BoundaryId b_id) {
+  // The lower interfaces for all sweeping directions are Open. Additionally there is dirichlet data. All others are ABC.
+  if(b_id == 4) {
+    return SurfaceType::OPEN_SURFACE;
+  }
+  if(GlobalParams.HSIE_SWEEPING_LEVEL > 1 && b_id == 2 && GlobalParams.Index_in_y_direction != 0) {
+    return SurfaceType::OPEN_SURFACE;
+  }
+  if(GlobalParams.HSIE_SWEEPING_LEVEL == 3 && b_id == 0 && GlobalParams.Index_in_x_direction != 0) {
+    return SurfaceType::OPEN_SURFACE;
+  }
+  return SurfaceType::ABC_SURFACE;
+}
+
+SurfaceType get_surf_type_for_level_1(BoundaryId b_id) {
+  if(GlobalParams.HSIE_SWEEPING_LEVEL == 1) {
+    if(b_id == 4 || b_id == 5) {
+      return SurfaceType::NEIGHBOR_SURFACE;
+    }
+    return SurfaceType::ABC_SURFACE;
+  }
+
+  if(GlobalParams.HSIE_SWEEPING_LEVEL == 2) {
+    if(b_id == 2 || b_id == 3) {
+      return SurfaceType::NEIGHBOR_SURFACE;
+    }
+    if(b_id == 4) {
+      return SurfaceType::OPEN_SURFACE;
+    }
+    return SurfaceType::ABC_SURFACE;
+  }
+  
+  if(GlobalParams.HSIE_SWEEPING_LEVEL == 3) {
+    if(b_id == 0 || b_id == 1) {
+      return SurfaceType::NEIGHBOR_SURFACE;
+    }
+    if(b_id == 4 || b_id == 2) {
+      return SurfaceType::OPEN_SURFACE;
+    }
+    return SurfaceType::ABC_SURFACE;
+  }
+}
+
+SurfaceType get_surf_type_for_level_2(BoundaryId b_id) {
+  if(GlobalParams.HSIE_SWEEPING_LEVEL == 2) {
+    if(b_id == 2 || b_id == 3 || b_id == 4 || b_id == 5) {
+      return SurfaceType::NEIGHBOR_SURFACE;
+    }
+    return SurfaceType::ABC_SURFACE;
+  }
+  
+  if(GlobalParams.HSIE_SWEEPING_LEVEL == 3) {
+    if(b_id == 0 || b_id == 1 || b_id == 2 || b_id == 3) {
+      return SurfaceType::NEIGHBOR_SURFACE;
+    }
+    if(b_id == 4) {
+      return SurfaceType::OPEN_SURFACE;
+    }
+    return SurfaceType::ABC_SURFACE;
+  }
+}
+
+SurfaceType get_surf_type_for_level_3(BoundaryId b_id) {
+  return SurfaceType::NEIGHBOR_SURFACE;
+}
+
+std::pair<bool, SurfaceType> handle_exterior_boundaries(BoundaryId b_id) {
+  // The fist value of the return pair describes if the boundary has been handled.
+  std::pair<bool, SurfaceType> ret;
+  ret.first = true;
+  ret.second = SurfaceType::ABC_SURFACE;
+  if(b_id == 0 && GlobalParams.Index_in_x_direction == 0) {
+    return ret;
+  }
+  if(b_id == 1 && GlobalParams.Index_in_x_direction == GlobalParams.Blocks_in_x_direction - 1) {
+    return ret;
+  }
+  if(b_id == 2 && GlobalParams.Index_in_y_direction == 0) {
+    return ret;
+  }
+  if(b_id == 3 && GlobalParams.Index_in_x_direction == GlobalParams.Blocks_in_y_direction - 1) {
+    return ret;
+  }
+  if(b_id == 4 && GlobalParams.Index_in_z_direction == 0 ) {
+    if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
+      ret.second = SurfaceType::DIRICHLET_SURFACE;
+      return ret;
+    } else {
+      ret.second = SurfaceType::ABC_SURFACE;
+      return ret;
+    }
+  }
+  if(b_id == 5 && GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction - 1) {
+    return ret;
+  }
+  ret.first = false;
+  return ret;
+}
+
 SurfaceType GeometryManager::get_surface_type(BoundaryId b_id, unsigned int in_level) {
-  if(in_level == 0) {
-    if(b_id == 4) {
-      if(GlobalParams.Index_in_z_direction == 0) {
-        if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
-          return SurfaceType::DIRICHLET_SURFACE;
-        } else {
-          return SurfaceType::ABC_SURFACE;
-        }
-      } else {
-        return SurfaceType::OPEN_SURFACE;
-      }
-    }
-    return SurfaceType::ABC_SURFACE;
+  unsigned int level_difference = GlobalParams.HSIE_SWEEPING_LEVEL - in_level;
+  std::pair<bool, SurfaceType> exterior_boundary = handle_exterior_boundaries(b_id);
+  if(exterior_boundary.first) return exterior_boundary.second;
+  switch(in_level) {
+    case 0:
+      return get_surf_type_for_level_0(b_id);
+      break;
+    case 1:
+      return get_surf_type_for_level_1(b_id);
+      break;
+    case 2:
+      return get_surf_type_for_level_2(b_id);
+      break;
+    case 3:
+      return get_surf_type_for_level_3(b_id);
+      break;
   }
-  if(in_level == 1) {
-    if(b_id == 4) {
-      if(GlobalParams.Index_in_z_direction == 0) {
-        if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
-          return SurfaceType::DIRICHLET_SURFACE;
-        } else {
-          return SurfaceType::ABC_SURFACE;
-        }
-      } else {
-        return SurfaceType::NEIGHBOR_SURFACE;
-      }
-    }
-    if(b_id == 5) {
-      if(GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction - 1) {
-        return SurfaceType::ABC_SURFACE;
-      } else {
-        return SurfaceType::NEIGHBOR_SURFACE;
-      }
-    }
-    return SurfaceType::ABC_SURFACE;
-  }
-  if(in_level == 2) {
-    if(b_id == 2) {
-      if(GlobalParams.Index_in_y_direction == 0) {
-        return SurfaceType::ABC_SURFACE;
-      } else {
-        return SurfaceType::NEIGHBOR_SURFACE;
-      }
-    }
-    if(b_id == 3) {
-      if(GlobalParams.Index_in_y_direction == GlobalParams.Blocks_in_y_direction - 1) {
-        return SurfaceType::ABC_SURFACE;
-      } else {
-        return SurfaceType::NEIGHBOR_SURFACE;
-      }
-    }
-    if(b_id == 4) {
-      if(GlobalParams.Index_in_z_direction == 0) {
-        if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
-          return SurfaceType::DIRICHLET_SURFACE;
-        } else {
-          return SurfaceType::ABC_SURFACE;
-        }
-      } else {
-        return SurfaceType::NEIGHBOR_SURFACE;
-      }
-    }
-    if(b_id == 5) {
-      if(GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction - 1) {
-        return SurfaceType::ABC_SURFACE;
-      } else {
-        return SurfaceType::NEIGHBOR_SURFACE;
-      }
-    }
-    return SurfaceType::ABC_SURFACE;
-  }
-  if(in_level == 3) {
-    if(b_id == 0) {
-      if(GlobalParams.Index_in_x_direction == 0) {
-        return SurfaceType::ABC_SURFACE;
-      } else {
-        return SurfaceType::NEIGHBOR_SURFACE;
-      }
-    }
-    if(b_id == 1) {
-      if(GlobalParams.Index_in_x_direction == GlobalParams.Blocks_in_x_direction - 1) {
-        return SurfaceType::ABC_SURFACE;
-      } else {
-        return SurfaceType::NEIGHBOR_SURFACE;
-      }
-    }
-    if(b_id == 2) {
-      if(GlobalParams.Index_in_y_direction == 0) {
-        return SurfaceType::ABC_SURFACE;
-      } else {
-        return SurfaceType::NEIGHBOR_SURFACE;
-      }
-    }
-    if(b_id == 3) {
-      if(GlobalParams.Index_in_y_direction == GlobalParams.Blocks_in_y_direction - 1) {
-        return SurfaceType::ABC_SURFACE;
-      } else {
-        return SurfaceType::NEIGHBOR_SURFACE;
-      }
-    }
-    if(b_id == 4) {
-      if(GlobalParams.Index_in_z_direction == 0) {
-        if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
-          return SurfaceType::DIRICHLET_SURFACE;
-        } else {
-          return SurfaceType::ABC_SURFACE;
-        }
-      } else {
-        return SurfaceType::NEIGHBOR_SURFACE;
-      }
-    }
-    if(b_id == 5) {
-      if(GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction - 1) {
-        return SurfaceType::ABC_SURFACE;
-      } else {
-        return SurfaceType::NEIGHBOR_SURFACE;
-      }
-    }
-    return SurfaceType::ABC_SURFACE;
-  }
-  std::cout << "Error in GeometryManager::get_surface_type" << std::endl;
   return SurfaceType::ABC_SURFACE;
 }
 

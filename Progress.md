@@ -619,3 +619,32 @@ I have written a first implementation, it aborts pretty early on. The error is n
 # Monday 25th of October
 
 During last week I have tried to fix the mesh implementation for the new PML domain shape. There were some problems along the way and some counts still don't match in all cases.
+
+# Wednesday 3rd of November
+
+Therre has been immense progress. PML now works for sweeping. The next steps will follow two paths:
+1. Make all the other parts work with the Code again. That includes transformation optics code, optimization code, etc. Maybe even implement the hybrid optimization code.
+2. Get HSIE to work, too. This would simply offer a parallel line of tests but isn't required short term and not even long term if it is difficult to acchieve.
+
+In my work for now, I will focus on getting part 1 to work again. That first means to integrate all the material tensor computations again.
+
+I need a global SpaceTransformation Object. This shoule be able to switch between normal and adjoint state, perform the optimization of shape and it should also contain all the shape information. I will wrap this into 
+
+# Thursday 4th of November
+
+I have decided to fix the HSP first. This will enable me to run larger computations and is in general a new feature that will form a core part of my dissertation once functional. It is also not far from being completed. The issues here are more along the lines of bugfixing rather than implementing new functionality.
+
+To reiterate, if the sweeping level is 2, that means:
+- On level 0 I use a direct solver / LocalProblem.
+- On level 1 I use sweeping in the y-direction / NonLocalProblem. In the minimal example, procs [0,1] and [2,3] form working pairs. Sweeping interfaces are 2 (-y) and 3(+y).
+- On level 2 I use sweeping in the z-direction / NonLocalProblem. All processes are involved on the highest level. Sweeping interfaces are 4 (-z) and 5 (+z).
+
+I reimplemented the SurfaceType computation in the Geometry Manager because it was asigning incorrect types for higher sweeping.
+
+The issue I was running into was, that in some of the input files, the sweeping level was set to 1 even though there was sweeping required in the z and y direction. That lead to an issue. I should test against this case or simply compute the required sweeping level.
+
+The current block occurs in reinit_vector which appears to have an indexing issue. I found an error that caused the initialization twice multiple times. This should lead to a significant speedup and wasn't really visible before. Currently, only process 0 arrives at the call to reinit_rhs().
+
+Some hours later: The error was pretty instructional. I was using MPI_Send and MPI_Recv without tags which apparently led to a situation for higher sweeps for the communication of sparsity pattern where multiple messages with the same tag overwrote eachother. As a consequence, some processes got stuck unable to determine the fact that their message had been handled. I replaced 0 as a tag with the sending process' rank. Then the messages are unique and the communication works as expected.
+
+Assembly works completely but the sovler crashes. Problem for future-me.

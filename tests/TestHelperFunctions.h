@@ -26,7 +26,6 @@ int StepsR = 10;
 int StepsPhi = 10;
 int alert_counter = 0;
 std::string input_file_name;
-SpaceTransformation *the_st;
 
 static void setup_GlobalParams_for_tests(unsigned int n_cells_x, unsigned int n_cells_y, unsigned int n_cells_z, BoundaryConditionType b_type, double size_x, double size_y, double size_z) {
   GlobalParams.Blocks_in_x_direction = 1;

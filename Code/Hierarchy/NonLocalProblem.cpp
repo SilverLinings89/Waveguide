@@ -313,9 +313,10 @@ void NonLocalProblem::set_child_rhs_from_vector(NumericVectorDistributed * in_u)
 }
 
 void NonLocalProblem::reinit() {
-  print_info("Nonlocal reinit", "Reinit starting");
+  print_info("Nonlocal reinit", "Reinit starting for level " + std::to_string(level));
+  MPI_Barrier(MPI_COMM_WORLD);
   GlobalTimerManager.switch_context("Reinit", level);
-  child->reinit();
+  // child->reinit();
   
   make_constraints();
   // print_diagnosis_data();
@@ -327,7 +328,6 @@ void NonLocalProblem::reinit() {
   for(unsigned int p = 0; p < Geometry.levels[level].dof_distribution.size(); p++) {
     local_rows.push_back(Geometry.levels[level].dof_distribution[p].n_elements());
   }
-
   reinit_vector(&solution);
   reinit_vector(&direct_solution);
   reinit_vector(&solution_error);
@@ -335,7 +335,6 @@ void NonLocalProblem::reinit() {
   all_dofs.add_range(0,Geometry.levels[level].n_total_level_dofs);
   matrix->reinit(Geometry.levels[level].dof_distribution[rank], Geometry.levels[level].dof_distribution[rank], sp, GlobalMPI.communicators_by_level[level]);
   //matrix->reinit(GlobalMPI.communicators_by_level[level], sp,local_rows ,local_rows, rank);
-
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     if(Geometry.levels[level].inner_domain->is_dof_owned[i] && Geometry.levels[level-1].inner_domain->is_dof_owned[i]) {
       vector_copy_own_indices.push_back(Geometry.levels[level].inner_domain->global_index_mapping[i]);
@@ -343,7 +342,6 @@ void NonLocalProblem::reinit() {
       vector_copy_array.push_back(ComplexNumber(0.0, 0.0));
     }
   }
-  
   for(unsigned int surf = 0; surf < 6; surf++) {
     if(Geometry.levels[level].surface_type[surf] == Geometry.levels[level-1].surface_type[surf]) {
       for(unsigned int i = 0; i < Geometry.levels[level].surfaces[surf]->n_locally_active_dofs; i++) {
@@ -356,7 +354,7 @@ void NonLocalProblem::reinit() {
     }
   }
   GlobalTimerManager.leave_context(level);
-  print_info("Nonlocal reinit", "Reinit done");
+  print_info("Nonlocal reinit", "Reinit done for level " + std::to_string(level));
 }
 
 void NonLocalProblem::initialize() {
@@ -468,8 +466,8 @@ void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) 
               sent_rows[i] = rows[other_proc][i];
               sent_cols[i] = cols[other_proc][i];
             }
-            MPI_Send(sent_rows, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, 0, GlobalMPI.communicators_by_level[level]);
-            MPI_Send(sent_cols, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, 0, GlobalMPI.communicators_by_level[level]);
+            MPI_Send(sent_rows, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, rank, GlobalMPI.communicators_by_level[level]);
+            MPI_Send(sent_cols, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, rank, GlobalMPI.communicators_by_level[level]);
             delete[] sent_rows;
             delete[] sent_cols;
           }
@@ -478,8 +476,8 @@ void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) 
             // There is something to receive
             unsigned int * received_rows = new unsigned int [recv_buffer[other_proc]];
             unsigned int * received_cols = new unsigned int [recv_buffer[other_proc]];
-            MPI_Recv(received_rows, recv_buffer[other_proc], MPI_UNSIGNED, other_proc, 0, GlobalMPI.communicators_by_level[level], 0);
-            MPI_Recv(received_cols, recv_buffer[other_proc], MPI_UNSIGNED, other_proc, 0, GlobalMPI.communicators_by_level[level], 0);
+            MPI_Recv(received_rows, recv_buffer[other_proc], MPI_UNSIGNED, other_proc, other_proc, GlobalMPI.communicators_by_level[level], 0);
+            MPI_Recv(received_cols, recv_buffer[other_proc], MPI_UNSIGNED, other_proc, other_proc, GlobalMPI.communicators_by_level[level], 0);
             for(unsigned int i = 0; i < recv_buffer[other_proc]; i++) {
               in_dsp->add(received_rows[i], received_cols[i]);
             }
@@ -492,8 +490,8 @@ void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) 
             // There is something to receive
             unsigned int * received_rows = new unsigned int [recv_buffer[other_proc]];
             unsigned int * received_cols = new unsigned int [recv_buffer[other_proc]];
-            MPI_Recv(received_rows, recv_buffer[other_proc], MPI_UNSIGNED, other_proc, 0, GlobalMPI.communicators_by_level[level], 0);
-            MPI_Recv(received_cols, recv_buffer[other_proc], MPI_UNSIGNED, other_proc, 0, GlobalMPI.communicators_by_level[level], 0);
+            MPI_Recv(received_rows, recv_buffer[other_proc], MPI_UNSIGNED, other_proc, other_proc, GlobalMPI.communicators_by_level[level], 0);
+            MPI_Recv(received_cols, recv_buffer[other_proc], MPI_UNSIGNED, other_proc, other_proc, GlobalMPI.communicators_by_level[level], 0);
             for(unsigned int i = 0; i < recv_buffer[other_proc]; i++) {
               in_dsp->add(received_rows[i], received_cols[i]);
             }
@@ -508,12 +506,12 @@ void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) 
               sent_rows[i] = rows[other_proc][i];
               sent_cols[i] = cols[other_proc][i];
             }
-            MPI_Send(sent_rows, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, 0, GlobalMPI.communicators_by_level[level]);
-            MPI_Send(sent_cols, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, 0, GlobalMPI.communicators_by_level[level]);
+            MPI_Send(sent_rows, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, rank, GlobalMPI.communicators_by_level[level]);
+            MPI_Send(sent_cols, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, rank, GlobalMPI.communicators_by_level[level]);
             delete[] sent_rows;
             delete[] sent_cols;
           }
-        }     
+        }
       }
     }
   }

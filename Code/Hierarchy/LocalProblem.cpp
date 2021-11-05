@@ -80,9 +80,7 @@ void LocalProblem::initialize() {
   print_info("LocalProblem::initialize", "Start");
   GlobalTimerManager.switch_context("Initialize", 0);
   print_info("LocalProblem::initialize", "Number of local dofs: " + std::to_string(Geometry.levels[0].n_local_dofs) , false, LoggingLevel::DEBUG_ALL);
-  if(GlobalParams.NumberProcesses == 1) {
-    reinit();
-  }
+  reinit();
   GlobalTimerManager.leave_context(0);
   print_info("LocalProblem::initialize", "End");
 }

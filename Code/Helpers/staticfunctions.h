@@ -7,7 +7,6 @@
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/lac/affine_constraints.h>
 #include <fstream>
-#include "../SpaceTransformations/SpaceTransformation.h"
 #include "./Parameters.h"
 #include "../Core/Types.h"
 
@@ -22,7 +21,8 @@ extern int StepsR;
 extern int StepsPhi;
 extern int alert_counter;
 extern std::string input_file_name;
-extern SpaceTransformation *the_st;
+
+using namespace dealii;
 
 /**
  * For given vectors \f$\boldsymbol{a},\boldsymbol{b} \in \mathbb{R}^3\f$, this
@@ -49,8 +49,6 @@ bool compareSurfaceCellData(SurfaceCellData c1, SurfaceCellData c2);
 bool compareDofDataByGlobalIndex(InterfaceDofData, InterfaceDofData);
 
 bool areDofsClose(const InterfaceDofData &a, const InterfaceDofData &b);
-
-void set_the_st(SpaceTransformation *);
 
 double dotproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 

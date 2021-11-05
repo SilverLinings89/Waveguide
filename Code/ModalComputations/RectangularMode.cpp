@@ -3,7 +3,7 @@
 #include "../Helpers/staticfunctions.h"
 #include <deal.II/lac/petsc_compatibility.h>
 #include <deal.II/lac/petsc_solver.h>
-// #include <deal.II/lac/slepc_solver.h>
+#include "../GlobalObjects/GlobalObjects.h"
 
 using namespace dealii;
 

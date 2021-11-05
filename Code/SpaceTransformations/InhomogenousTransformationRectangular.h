@@ -9,6 +9,7 @@
 
 #include "../Core/InnerDomain.h"
 #include "../Core/Sector.h"
+#include "SpaceTransformation.h"
 
 /**
  * \class InhomogenousTransformationRectangle

@@ -29,7 +29,6 @@
 #include "../Helpers/staticfunctions.h"
 #include "../MeshGenerators/SquareMeshGenerator.h"
 #include "../GlobalObjects/GlobalObjects.h"
-#include "../SpaceTransformations/HomogenousTransformationRectangular.h"
 #include "../Helpers/PointSourceField.h"
 #include "../Solutions/ExactSolutionRamped.h"
 #include "../Solutions/ExactSolutionConjugate.h"
@@ -37,7 +36,6 @@
 InnerDomain::InnerDomain(unsigned int in_level)
     :
       mesh_generator{},
-      space_transformation{0},
     fe(GlobalParams.Nedelec_element_order),
       triangulation(Triangulation<3>::MeshSmoothing(Triangulation<3>::none)),
       dof_handler(triangulation){

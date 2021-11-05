@@ -72,8 +72,6 @@ extern GeometryManager Geometry;
 extern OutputManager GlobalOutputManager;
 unsigned int message_count = 0;
 
-void set_the_st(SpaceTransformation *in_st) { the_st = in_st; }
-
 std::pair<DofNumber, DofNumber> get_max_and_min_dof_for_interface_data(std::vector<InterfaceDofData> in_data) {
   std::pair<DofNumber, DofNumber> ret;
   ret.first = 1000000000;
