@@ -201,6 +201,7 @@ void NonLocalProblem::assemble() {
   timer.stop();
   print_info("NonLocalProblem::assemble", "Compress matrix.");
   matrix->compress(dealii::VectorOperation::add);
+  rhs.compress(dealii::VectorOperation::add);
   print_info("NonLocalProblem::assemble", "Assemble child.");
   child->assemble();
   print_info("NonLocalProblem::assemble", "Compress vectors.");

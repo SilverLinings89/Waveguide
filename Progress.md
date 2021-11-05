@@ -647,4 +647,4 @@ The current block occurs in reinit_vector which appears to have an indexing issu
 
 Some hours later: The error was pretty instructional. I was using MPI_Send and MPI_Recv without tags which apparently led to a situation for higher sweeps for the communication of sparsity pattern where multiple messages with the same tag overwrote eachother. As a consequence, some processes got stuck unable to determine the fact that their message had been handled. I replaced 0 as a tag with the sending process' rank. Then the messages are unique and the communication works as expected.
 
-Assembly works completely but the sovler crashes. Problem for future-me.
+Assembly works completely but the solver gets stuck. Problem for future-me.
