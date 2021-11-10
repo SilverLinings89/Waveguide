@@ -206,6 +206,7 @@ void NonLocalProblem::assemble() {
   child->assemble();
   print_info("NonLocalProblem::assemble", "Compress vectors.");
   solution.compress(dealii::VectorOperation::add);
+  rhs.compress(VectorOperation::add);
   print_info("NonLocalProblem::assemble", "End assembly.");
   if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
     for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
@@ -221,12 +222,13 @@ void NonLocalProblem::assemble() {
 }
 
 void NonLocalProblem::solve() {
-  
   print_info("NonLocalProblem::solve", "Start");
   GlobalTimerManager.switch_context("Solve", level);
-  rhs.compress(VectorOperation::add);
+  
   constraints.distribute(solution);
-  print_vector_norm(&rhs, "RHS");
+  if(level == GlobalParams.HSIE_SWEEPING_LEVEL) {
+    print_vector_norm(&rhs, "RHS");
+  }
   if(!GlobalParams.solve_directly) {
     residual_output->new_series("Run " + std::to_string(solve_counter + 1));
     // Solve with sweeping
@@ -262,11 +264,8 @@ void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   NumericVectorDistributed u = vector_from_vec_obj(b_in);
   // constraints.distribute(u);
   perform_downward_sweep( &u );
-
   apply_local_inverses( &u );
-
   perform_upward_sweep( &u );
-
   set_x_out_from_u(u_out, &u);
 }
 
@@ -308,7 +307,7 @@ void NonLocalProblem::set_child_rhs_from_vector(NumericVectorDistributed * in_u)
   in_u->extract_subvector_to(vector_copy_own_indices, vector_copy_array);
   child->rhs.set(vector_copy_child_indeces, vector_copy_array);
   child->rhs.compress(VectorOperation::insert);
-  if(rank != 0) {
+  if(GlobalParams.Index_in_z_direction && level == 1) {
     child->constraints.distribute(child->rhs);
   }
 }

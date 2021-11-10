@@ -648,3 +648,13 @@ The current block occurs in reinit_vector which appears to have an indexing issu
 Some hours later: The error was pretty instructional. I was using MPI_Send and MPI_Recv without tags which apparently led to a situation for higher sweeps for the communication of sparsity pattern where multiple messages with the same tag overwrote eachother. As a consequence, some processes got stuck unable to determine the fact that their message had been handled. I replaced 0 as a tag with the sending process' rank. Then the messages are unique and the communication works as expected.
 
 Assembly works completely but the solver gets stuck. Problem for future-me.
+
+# Tuesday, 9th of November
+
+I fixed the sweeping preconditioner to now run for higher levels. However, it doesn't converge. I think the issue is the constraints not being enforced. The block had also occured due to this. The issue was, that there was a call to child->constraints->distribute for rank 0 assuming that that child would then be a local problem which it isn't for higher level sweeping. Also: That implementation was wrong. I need to also check if the Dirichlet-values are being built propery. Maybe I should make it possible to solve higher level problems with the direct solver so I can check if the matrices and rhs are correct. So tomorrow I will: 
+
+1. Implement a direct solver application for level 1 to see if level 2 converges then (figure out if the boundary conditions or any other assembly errors occur)
+2. Implement the distribute constraints such that the constraints are always being applied. It seemed in the solution of the non-converging run that there was no input signal on one half (process 1) of the input interface.
+
+Once that works I will reimplement the entire part that generates material tensors. Maybe also rework it to be able to use bent waveguides.
+
