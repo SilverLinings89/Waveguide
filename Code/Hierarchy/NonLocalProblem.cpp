@@ -229,7 +229,11 @@ void NonLocalProblem::solve() {
   if(level == GlobalParams.HSIE_SWEEPING_LEVEL) {
     print_vector_norm(&rhs, "RHS");
   }
-  if(!GlobalParams.solve_directly) {
+  
+  bool run_itterative_solver = GlobalParams.solve_directly;
+  // if(level == 1) run_itterative_solver = false;
+
+  if(run_itterative_solver) {
     residual_output->new_series("Run " + std::to_string(solve_counter + 1));
     // Solve with sweeping
     KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc), nullptr);
@@ -248,15 +252,17 @@ void NonLocalProblem::solve() {
     // Solve Directly for reference
     SolverControl sc;
     dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, GlobalMPI.communicators_by_level[level]);
-    solver1.solve(*matrix, solution_error, rhs);
+    solver1.solve(*matrix, solution, rhs);
   }
   GlobalTimerManager.leave_context(level);
-  matrix->residual(solution_error, solution, rhs);
   // subtract_vectors(&solution, &solution_error);
   // constraints.distribute(solution);
 
   solve_counter++;
-  write_multifile_output("error_of_solution", solution_error);
+  if(level == GlobalParams.HSIE_SWEEPING_LEVEL) {
+    matrix->residual(solution_error, solution, rhs);
+    write_multifile_output("error_of_solution", solution_error);
+  }
   print_info("NonLocalProblem::solve", "End");
 }
 
@@ -380,7 +386,9 @@ void NonLocalProblem::compute_solver_factorization() {
 }
 
 std::string NonLocalProblem::output_results() {
+  print_info("NonLocalProblem", "Start output results on level" + std::to_string(level));
   write_multifile_output("solution", solution);
+  print_info("NonLocalProblem", "End output results on level" + std::to_string(level));
   return "";
 }
 

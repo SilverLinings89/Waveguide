@@ -523,7 +523,7 @@ std::pair<bool, SurfaceType> handle_exterior_boundaries(BoundaryId b_id) {
   if(b_id == 2 && GlobalParams.Index_in_y_direction == 0) {
     return ret;
   }
-  if(b_id == 3 && GlobalParams.Index_in_x_direction == GlobalParams.Blocks_in_y_direction - 1) {
+  if(b_id == 3 && GlobalParams.Index_in_y_direction == GlobalParams.Blocks_in_y_direction - 1) {
     return ret;
   }
   if(b_id == 4 && GlobalParams.Index_in_z_direction == 0 ) {
