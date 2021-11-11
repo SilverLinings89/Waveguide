@@ -1,0 +1,12 @@
+subsection Run parameters
+  set GMRES maximum steps    = 5
+  set solve directly         = false
+  set sweeping level         = 3
+  set processes in x         = 2
+  set processes in y         = 2
+  set processes in z         = 2
+  set cell count x           = 10
+  set cell count y           = 10
+  set cell count z           = 10
+  set Logging Level          = Debug One
+end

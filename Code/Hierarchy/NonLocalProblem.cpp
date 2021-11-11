@@ -22,26 +22,16 @@
 #include <string>
 #include <vector>
 
-static double last_residual = -1;
-
 static PetscErrorCode MonitorError(KSP , PetscInt its, PetscReal rnorm, void * outputter)
 {
   ((ResidualOutputGenerator *)outputter)->push_value(rnorm);
-  if (GlobalParams.MPI_Rank == 0) {
-    std::cout << "Residual in step " << std::to_string(its) << "  : " << std::to_string(rnorm);
-    if(last_residual != -1 ) {
-      std::cout << " Factor: " << std::to_string(rnorm / last_residual);
-    }
-    std::cout << std::endl;
-    last_residual = rnorm;
-  }
+  ((ResidualOutputGenerator *)outputter)->write_residual_statement_to_console();
   return(0);
 }
 
 int convergence_test(KSP , const PetscInt iteration, const PetscReal residual_norm, KSPConvergedReason *reason, void * solver_control_x)
 {
-  SolverControl &solver_control =
-    *reinterpret_cast<SolverControl *>(solver_control_x);
+  SolverControl &solver_control = *reinterpret_cast<SolverControl *>(solver_control_x);
 
   const SolverControl::State state = solver_control.check(iteration, residual_norm);
 
@@ -134,7 +124,7 @@ NonLocalProblem::NonLocalProblem(unsigned int level) :
     }  
   }
   n_locally_active_dofs = locally_active_dofs.n_elements();
-  residual_output = new ResidualOutputGenerator("ConvergenceHistoryLevel"+std::to_string(level), "Convergence History on level " + std::to_string(level));
+  residual_output = new ResidualOutputGenerator("ConvergenceHistoryLevel"+std::to_string(level), "Convergence History on level " + std::to_string(level), index_in_sweep == 0, level );
 }
 
 void NonLocalProblem::init_solver_and_preconditioner() {
@@ -207,6 +197,7 @@ void NonLocalProblem::assemble() {
   print_info("NonLocalProblem::assemble", "Compress vectors.");
   solution.compress(dealii::VectorOperation::add);
   rhs.compress(VectorOperation::add);
+  constraints.distribute(solution);
   print_info("NonLocalProblem::assemble", "End assembly.");
   if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
     for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
@@ -222,7 +213,6 @@ void NonLocalProblem::assemble() {
 }
 
 void NonLocalProblem::solve() {
-  print_info("NonLocalProblem::solve", "Start");
   GlobalTimerManager.switch_context("Solve", level);
   
   constraints.distribute(solution);
@@ -230,7 +220,7 @@ void NonLocalProblem::solve() {
     print_vector_norm(&rhs, "RHS");
   }
   
-  bool run_itterative_solver = GlobalParams.solve_directly;
+  bool run_itterative_solver = !GlobalParams.solve_directly;
   // if(level == 1) run_itterative_solver = false;
 
   if(run_itterative_solver) {
@@ -263,14 +253,14 @@ void NonLocalProblem::solve() {
     matrix->residual(solution_error, solution, rhs);
     write_multifile_output("error_of_solution", solution_error);
   }
-  print_info("NonLocalProblem::solve", "End");
+
+
 }
 
 void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
   NumericVectorDistributed u = vector_from_vec_obj(b_in);
   // constraints.distribute(u);
   perform_downward_sweep( &u );
-  apply_local_inverses( &u );
   perform_upward_sweep( &u );
   set_x_out_from_u(u_out, &u);
 }
@@ -393,7 +383,7 @@ std::string NonLocalProblem::output_results() {
 }
 
 void NonLocalProblem::write_multifile_output(const std::string & in_filename, const NumericVectorDistributed field) {
-  if(GlobalParams.MPI_Rank == 0) {
+  if(GlobalParams.MPI_Rank == 0 && !GlobalParams.solve_directly) {
     residual_output->run_gnuplot();
   }
   std::vector<std::string> generated_files;
@@ -579,7 +569,7 @@ void NonLocalProblem::reinit_vector(NumericVectorDistributed * in_v) {
 }
 
 void NonLocalProblem::perform_downward_sweep(NumericVectorDistributed * u) {
-  for(unsigned int i = n_procs_in_sweep - 1; i > 0; i--) {
+  for(int i = n_procs_in_sweep - 1; i >= 0; i--) {
     NumericVectorDistributed temp1, temp2;
     reinit_vector(&temp1);
     reinit_vector(&temp2);
@@ -596,22 +586,15 @@ void NonLocalProblem::perform_downward_sweep(NumericVectorDistributed * u) {
         (*u)[index] = current_value - delta;
       }
     }
+    if(index_in_sweep == i) {
+      for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
+        const unsigned int index = own_dofs.nth_index_in_set(j);
+        (*u)[index] = (ComplexNumber) temp1[index];
+      }
+    }
     u->compress(VectorOperation::insert);
   }
   // print_vector_norm(u, "DownwardNorm");
-}
-
-void NonLocalProblem::apply_local_inverses(NumericVectorDistributed * u) {
-  NumericVectorDistributed temp1;
-  reinit_vector(&temp1);
-  S_inv(u, &temp1);
-  temp1.compress(VectorOperation::insert);
-  for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
-    const unsigned int index = own_dofs.nth_index_in_set(j);
-    (*u)[index] = (ComplexNumber) temp1[index];
-  }
-  u->compress(VectorOperation::insert);
-  // print_vector_norm(u, "InversionNorm");
 }
 
 void NonLocalProblem::perform_upward_sweep(NumericVectorDistributed * u) {

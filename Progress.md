@@ -658,3 +658,14 @@ I fixed the sweeping preconditioner to now run for higher levels. However, it do
 
 Once that works I will reimplement the entire part that generates material tensors. Maybe also rework it to be able to use bent waveguides.
 
+# Wednesday, 10th of November
+
+The hierarchical sweeping preconditioner works. ... !!!
+The next step is to fix the convergence history output. For this I need to write the output through the non-local problem class which is available via the shell argument.
+This was an error. I had been running the direct solver. So if I use a direkt solver on level 1 it works. That means that the matrixes assembled on level 1 are correct and their proper solution is what I need. The itterative solver only doesn't converge here. To figure out why, I will run both solvers on level 1 and figure out what the difference between direct and ittereative solution is.
+
+# Thursday, 11th of November
+
+First step is to remove the inefficient pieces of the itterative part. Currently there are three steps: Downward sweep, application of the inverses and upward sweep. This increases the runtime by 50% for 2 processes. I added one additional S_inv to the downward sweep and stored the result in the solution right away. This should make apply_local_inverses obsolete. Running test. I have to be careful here. There is a line in the non_local_solver solve() function that enables the direct solver for levels but that isn't controled by the variable GlobalParams.solve_directly.
+
+There is some bug in the parallel execution that is causing a lock here. I will skip this for now becaus ultimately it isn't important. This was a stupid mistakes. In the perform downward sweep the itterator was an unsigned int being decreased by 1 every step. In the original solution >0 was the condition to continue which is fine. I changed that to >=0 for the additional step in the downward loop. However that is always true for unsigned ints. I changed the iterator type to int to avoid this and feel stupid.

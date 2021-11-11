@@ -78,7 +78,5 @@ private:
 
   void perform_downward_sweep(NumericVectorDistributed *);
 
-  void apply_local_inverses(NumericVectorDistributed *);
-
   void perform_upward_sweep(NumericVectorDistributed *);
 };

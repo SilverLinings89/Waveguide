@@ -448,10 +448,10 @@ SurfaceType get_surf_type_for_level_0(BoundaryId b_id) {
   if(b_id == 4) {
     return SurfaceType::OPEN_SURFACE;
   }
-  if(GlobalParams.HSIE_SWEEPING_LEVEL > 1 && b_id == 2 && GlobalParams.Index_in_y_direction != 0) {
+  if(GlobalParams.HSIE_SWEEPING_LEVEL > 1 && b_id == 2 ) {
     return SurfaceType::OPEN_SURFACE;
   }
-  if(GlobalParams.HSIE_SWEEPING_LEVEL == 3 && b_id == 0 && GlobalParams.Index_in_x_direction != 0) {
+  if(GlobalParams.HSIE_SWEEPING_LEVEL == 3 && b_id == 0 ) {
     return SurfaceType::OPEN_SURFACE;
   }
   return SurfaceType::ABC_SURFACE;
