@@ -671,3 +671,12 @@ First step is to remove the inefficient pieces of the itterative part. Currently
 There is some bug in the parallel execution that is causing a lock here. I will skip this for now becaus ultimately it isn't important. This was a stupid mistakes. In the perform downward sweep the itterator was an unsigned int being decreased by 1 every step. In the original solution >0 was the condition to continue which is fine. I changed that to >=0 for the additional step in the downward loop. However that is always true for unsigned ints. I changed the iterator type to int to avoid this and feel stupid. Works.
 
 Next I will implement comparison between direct and itterative solution on level 1 for max level 2 runs.
+
+# Friday, 12th of November
+
+I performed a lot of tests. One of the issues appears to be that the PML on the lower level in the base of a boundary / dirichlet overlap enforces incorrect boundary conidtions. I can solve that 
+
+# Monday, 16th of November
+
+After days of work, I have not yet been able to get this to work and time is running out until 20th to produce computational HSP results for the internal meeting. I will have to fix this on tuesday to still have a reasonable chance to make the deadline for the full shape runs.
+

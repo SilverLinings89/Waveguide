@@ -87,25 +87,27 @@ Constraints DirichletSurface::make_constraints() {
 	local_dof_set.add_range(0,Geometry.levels[level].inner_domain->n_locally_active_dofs);
 	AffineConstraints<ComplexNumber> constraints_local(local_dof_set);
 	ExactSolution es(true, false);
-	VectorTools::project_boundary_values_curl_conforming_l2(Geometry.levels[level].inner_domain->dof_handler, 0, es, 4, constraints_local);
+	VectorTools::project_boundary_values_curl_conforming_l2(Geometry.levels[level].inner_domain->dof_handler, 0, es, b_id, constraints_local);
 	for(auto line : constraints_local.get_lines()) {
 		const unsigned int local_index = line.index;
 		const unsigned int global_index = Geometry.levels[level].inner_domain->global_index_mapping[local_index];
 		ret.add_line(global_index);
 		ret.set_inhomogeneity(global_index, line.inhomogeneity);
 	}
+	constraints_local.clear();
 	for(unsigned int surf = 0; surf < 6; surf++) {
 		if(surf != b_id && !are_opposing_sites(b_id, surf)) {
 			if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
-				std::vector<InterfaceDofData> dofs = Geometry.levels[level].surfaces[surf]->get_dof_association_by_boundary_id(b_id);
-				for(unsigned int i = 0; i < dofs.size(); i++) {
-					const unsigned int local_index = dofs[i].index;
+				VectorTools::project_boundary_values_curl_conforming_l2(Geometry.levels[level].surfaces[surf]->dof_handler, 0, es, b_id, constraints_local);
+				for(auto line : constraints_local.get_lines()) {
+					const unsigned int local_index = line.index;
 					const unsigned int global_index = Geometry.levels[level].surfaces[surf]->global_index_mapping[local_index];
 					ret.add_line(global_index);
-					ret.set_inhomogeneity(global_index, ComplexNumber(0,0));
+					ret.set_inhomogeneity(global_index, line.inhomogeneity);
 				}
+				constraints_local.clear();
 			}
 		}
 	}
-  return ret;
+	return ret;
 }

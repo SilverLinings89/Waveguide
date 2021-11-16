@@ -126,9 +126,9 @@ unsigned int PMLSurface::cells_for_boundary_id(unsigned int boundary_id) {
 }
 
 void PMLSurface::init_fe() {
-    dof_h_nedelec.reinit(triangulation);
-    dof_h_nedelec.distribute_dofs(fe_nedelec);
-    dof_counter = dof_h_nedelec.n_dofs();
+    dof_handler.reinit(triangulation);
+    dof_handler.distribute_dofs(fe_nedelec);
+    dof_counter = dof_handler.n_dofs();
 }
 
 bool PMLSurface::is_position_at_boundary(const Position in_p, const BoundaryId in_bid) {
@@ -241,7 +241,7 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(uns
   std::vector<DofNumber> local_face_dofs(fe_nedelec.dofs_per_face);
   std::set<DofNumber> face_set;
   triangulation.clear_user_flags();
-  for (auto cell : dof_h_nedelec.active_cell_iterators()) {
+  for (auto cell : dof_handler.active_cell_iterators()) {
     if (cell->at_boundary()) {
       for (unsigned int face = 0; face < 6; face++) {
         if (cell->face(face)->boundary_id() == in_bid) {
@@ -425,7 +425,7 @@ void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETSc
 
 void PMLSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constraints) {
   std::vector<unsigned int> local_indices(fe_nedelec.dofs_per_cell);
-  for(auto it = dof_h_nedelec.begin_active(); it != dof_h_nedelec.end(); it++) {
+  for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
     it->get_dof_indices(local_indices);
     local_indices = transform_local_to_global_dofs(local_indices);
     in_constraints->add_entries_local_to_global(local_indices, *in_dsp);
@@ -433,7 +433,7 @@ void PMLSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, C
 }
 
 void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, NumericVectorDistributed* rhs, Constraints *constraints){
-  CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_h_nedelec);
+  CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_handler);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
       cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
       cell_data.local_dof_indices = transform_local_to_global_dofs(cell_data.local_dof_indices);
@@ -457,7 +457,7 @@ void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, Numeri
 }
 
 void PMLSurface::fill_matrix(dealii::SparseMatrix<ComplexNumber> * matrix, Constraints *constraints){
-  CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_h_nedelec);
+  CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_handler);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
       cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
       cell_data.local_dof_indices = transform_local_to_global_dofs(cell_data.local_dof_indices);
@@ -481,7 +481,7 @@ void PMLSurface::fill_matrix(dealii::SparseMatrix<ComplexNumber> * matrix, Const
 }
 
 void PMLSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, NumericVectorDistributed* rhs, Constraints *constraints){
-  CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_h_nedelec);
+  CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_handler);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
     cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
     cell_data.local_dof_indices = transform_local_to_global_dofs(cell_data.local_dof_indices);
@@ -640,7 +640,7 @@ void PMLSurface::fix_apply_negative_Jacobian_transformation(dealii::Triangulatio
 
 std::string PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_data, std::string in_filename) {
   dealii::DataOut<3> data_out;
-  data_out.attach_dof_handler(dof_h_nedelec);
+  data_out.attach_dof_handler(dof_handler);
   data_out.add_data_vector(in_data, "Solution");
   dealii::Vector<ComplexNumber> zero = dealii::Vector<ComplexNumber>(in_data.size());
   for(unsigned int i = 0; i < in_data.size(); i++) {
@@ -737,7 +737,7 @@ dealii::IndexSet PMLSurface::compute_non_owned_dofs() {
 
   std::vector<unsigned int> local_indices(fe_nedelec.dofs_per_face);
   // The non owned surfaces are the one towards the inner domain and the surfaces 0,1 and 2 if they are false in the input.
-  for(auto it = dof_h_nedelec.begin_active(); it != dof_h_nedelec.end(); it++) {
+  for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
     for(unsigned int face = 0; face < 6; face++) {
       if(it->face(face)->at_boundary()) {
         for(auto surf: non_locally_owned_surfaces) {

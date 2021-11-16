@@ -20,6 +20,7 @@ public:
   unsigned int global_partner_mpi_rank;
   const std::vector<BoundaryId> adjacent_boundaries;
   std::array<bool, 6> are_edge_dofs_owned;
+  DofHandler3D dof_handler;
 
   BoundaryCondition(unsigned int in_bid, unsigned int in_level, double in_additional_coordinate);
 

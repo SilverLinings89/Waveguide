@@ -10,7 +10,6 @@ class PMLSurface : public BoundaryCondition {
     ComplexNumber sigma_0;
     unsigned int inner_boundary_id;
     unsigned int outer_boundary_id;
-    DofHandler3D dof_h_nedelec;
     dealii::FE_NedelecSZ<3> fe_nedelec;
     PMLMeshTransformation transformation;
     bool mesh_is_transformed;

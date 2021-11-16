@@ -54,10 +54,32 @@ void HierarchicalProblem::make_constraints() {
   IndexSet total_dofs_global(Geometry.levels[level].n_total_level_dofs);
   total_dofs_global.add_range(0,Geometry.levels[level].n_total_level_dofs);
   constraints.reinit(total_dofs_global);
-  for(unsigned int i = 0; i < 6; i++) {
-    Constraints local_constraints = Geometry.levels[level].surfaces[i]->make_constraints();
-    constraints.merge(local_constraints, Constraints::MergeConflictBehavior::left_object_wins,true);
+
+  // ABC Surfaces are least important
+  for(unsigned int surface = 0; surface < 6; surface++) {
+    if(Geometry.levels[level].surface_type[surface] == SurfaceType::ABC_SURFACE) {
+      Constraints local_constraints = Geometry.levels[level].surfaces[surface]->make_constraints();
+      constraints.merge(local_constraints, Constraints::MergeConflictBehavior::right_object_wins,true);
+    }
   }
+  
+  // Dirichlet surfaces are more important than ABC
+  for(unsigned int surface = 0; surface < 6; surface++) {
+    if(Geometry.levels[level].surface_type[surface] == SurfaceType::DIRICHLET_SURFACE) {
+      Constraints local_constraints = Geometry.levels[level].surfaces[surface]->make_constraints();
+      constraints.merge(local_constraints, Constraints::MergeConflictBehavior::right_object_wins,true);
+    }
+  }
+  
+  // Open surfaces are most important
+  for(unsigned int surface = 0; surface < 6; surface++) {
+    if(Geometry.levels[level].surface_type[surface] == SurfaceType::OPEN_SURFACE) {
+      Constraints local_constraints = Geometry.levels[level].surfaces[surface]->make_constraints();
+      constraints.merge(local_constraints, Constraints::MergeConflictBehavior::right_object_wins,true);
+    }
+  }
+  
+  
   constraints.close();
   
   print_info("HierarchicalProblem::make_constraints", "End");

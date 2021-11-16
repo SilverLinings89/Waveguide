@@ -237,12 +237,34 @@ void NonLocalProblem::solve() {
     if(ierr != 0) {
       std::cout << "Error code from Petsc: " << std::to_string(ierr) << std::endl;
     //   throw new ExcPETScError(ierr);
-    }  
+    }
+    if(level == GlobalParams.HSIE_SWEEPING_LEVEL) {
+      constraints.distribute(solution);
+    }
   } else {
     // Solve Directly for reference
     SolverControl sc;
     dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, GlobalMPI.communicators_by_level[level]);
     solver1.solve(*matrix, solution, rhs);
+  }
+  if(solve_counter == 0 && level == 1) {
+    SolverControl sc;
+    dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, GlobalMPI.communicators_by_level[level]);
+    solver1.solve(*matrix, direct_solution, rhs);
+    direct_solution.compress(VectorOperation::insert);
+    /**
+    direct_solution.extract_subvector_to(vector_copy_own_indices, vector_copy_array);
+    std::vector<PetscScalar> second_vector;
+    second_vector.resize(vector_copy_array.size());
+    solution.extract_subvector_to(vector_copy_own_indices, second_vector);
+    for(unsigned int i = 0; i < vector_copy_array.size(); i++) {
+      vector_copy_array[i] -= second_vector[i];
+    }
+    direct_solution.set(vector_copy_own_indices, vector_copy_array);
+    direct_solution.compress(VectorOperation::insert);
+    **/
+    write_multifile_output("DirectSolution", direct_solution);
+    write_multifile_output("ComputedSolution", solution);
   }
   GlobalTimerManager.leave_context(level);
   // subtract_vectors(&solution, &solution_error);
@@ -312,10 +334,8 @@ void NonLocalProblem::reinit() {
   print_info("Nonlocal reinit", "Reinit starting for level " + std::to_string(level));
   MPI_Barrier(MPI_COMM_WORLD);
   GlobalTimerManager.switch_context("Reinit", level);
-  // child->reinit();
   
   make_constraints();
-  // print_diagnosis_data();
   
   make_sparsity_pattern();
 
@@ -330,7 +350,6 @@ void NonLocalProblem::reinit() {
   IndexSet all_dofs(Geometry.levels[level].n_total_level_dofs);
   all_dofs.add_range(0,Geometry.levels[level].n_total_level_dofs);
   matrix->reinit(Geometry.levels[level].dof_distribution[rank], Geometry.levels[level].dof_distribution[rank], sp, GlobalMPI.communicators_by_level[level]);
-  //matrix->reinit(GlobalMPI.communicators_by_level[level], sp,local_rows ,local_rows, rank);
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     if(Geometry.levels[level].inner_domain->is_dof_owned[i] && Geometry.levels[level-1].inner_domain->is_dof_owned[i]) {
       vector_copy_own_indices.push_back(Geometry.levels[level].inner_domain->global_index_mapping[i]);
@@ -594,7 +613,6 @@ void NonLocalProblem::perform_downward_sweep(NumericVectorDistributed * u) {
     }
     u->compress(VectorOperation::insert);
   }
-  // print_vector_norm(u, "DownwardNorm");
 }
 
 void NonLocalProblem::perform_upward_sweep(NumericVectorDistributed * u) {
@@ -622,5 +640,4 @@ void NonLocalProblem::perform_upward_sweep(NumericVectorDistributed * u) {
     }
     u->compress(VectorOperation::insert);
   }
-  // print_vector_norm(u, "UpwardNorm");
 }
