@@ -19,6 +19,7 @@ ADD_LIBRARY(Code
         Solutions/ExactSolution.cpp
         Solutions/ExactSolutionRamped.cpp
         Solutions/ExactSolutionConjugate.cpp
+        Solutions/PMLTransformedExactSolution.cpp
         MeshGenerators/SquareMeshGenerator.cpp
         SpaceTransformations/DualProblemTransformationWrapper.cpp
         SpaceTransformations/HomogenousTransformationRectangular.cpp

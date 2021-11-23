@@ -14,8 +14,11 @@
 class NonLocalProblem: public HierarchicalProblem {
 private:
   dealii::SolverControl sc;
-  unsigned int n_blocks_in_sweep;
-  unsigned int index_in_sweep;
+  unsigned int n_blocks_in_sweeping_direction;
+  unsigned int index_in_sweeping_direction;
+  unsigned int total_rank_in_sweep;
+  unsigned int n_procs_in_sweep;
+
   dealii::IndexSet locally_active_dofs;
   KSP ksp;
   PC pc;
@@ -33,6 +36,8 @@ private:
   NonLocalProblem(unsigned int);
 
   ~NonLocalProblem() override;
+
+  void prepare_sweeping_data();
 
   void assemble() override;
 

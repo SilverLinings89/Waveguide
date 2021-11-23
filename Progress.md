@@ -676,7 +676,33 @@ Next I will implement comparison between direct and itterative solution on level
 
 I performed a lot of tests. One of the issues appears to be that the PML on the lower level in the base of a boundary / dirichlet overlap enforces incorrect boundary conidtions. I can solve that 
 
-# Monday, 16th of November
+# Monday, 15th of November
 
 After days of work, I have not yet been able to get this to work and time is running out until 20th to produce computational HSP results for the internal meeting. I will have to fix this on tuesday to still have a reasonable chance to make the deadline for the full shape runs.
+
+# Tuesday, 16th of November
+
+Step one is to deactivate level 2 sweeping and only run level 1. Done. I will now be skipping GMRES for higher level and call S_inv instead. On level 1 I use GMRES. Then I output a direct and itterative solution as well as the difference.
+
+MEMO: Once this is working I have to also implement the L2-error-estimation for the exact solution case so I can run convergence tests against the exact solution.
+
+The sweeping solution now shows a clear sign of an error along the central axis. I will try to evaluate the process that has the additional PML layer. That is process 0.
+
+# Wednesday, 17th of November
+
+I now have a PML transforamtion implementation to apply the appropriate boundary values on the surface I think. Testing now. It uses the dampening of the signal E_in * exp(- sigma_eff * x) where x is the depth in the pml and sigma_eff = int_0^x sigma(x). This however does not yet converge.
+
+# Friday, 19th of November
+
+I have fixed several issues, but so far, the level one doesn't converge yet. I have now proceeded to only running a downward and upward sweep (without GMRES) to figure out what the solution of this process would look like and how it differs from the exact solution (direct solver) as a means to find the problem. 
+
+# Monday, 22th of November
+
+I fixed the new racing condition that was introduced by splitting the pure rank into total rank in sweep, index in sweeping direction and number of procs in sweep. This may have been the issue causing the 0-solutions on some procs. Running now.
+
+In the current state, the method appears to work for the lower level 1 block, but the solution doesn't really propagate to the second one.
+
+# Tuesday, 23rd of November
+
+I have not so far been able to determine the issue. The solution in the lower-z-block looks qualitatively right except of a too large amplitude I cannot explain so far. On the upper-z-block, there is basically no signal. That most likely means that the signal doesn't propagate - why that is the case I have not yet been able to determine either.
 

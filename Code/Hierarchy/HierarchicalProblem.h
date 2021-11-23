@@ -15,7 +15,7 @@ class NonLocalProblem;
 
 class HierarchicalProblem {
  public:
-  const SweepingDirection sweeping_direction;
+  SweepingDirection sweeping_direction;
   const SweepingLevel level;
   Constraints constraints;
   std::array<dealii::IndexSet, 6> surface_index_sets;
@@ -30,8 +30,6 @@ class HierarchicalProblem {
   NumericVectorDistributed direct_solution;
   NumericVectorDistributed solution_error;
   NumericVectorDistributed rhs;
-  unsigned int n_procs_in_sweep;
-  unsigned int rank;
   dealii::IndexSet own_dofs;
   dealii::IndexSet current_upper_sweeping_dofs;
   dealii::IndexSet current_lower_sweeping_dofs;
@@ -45,6 +43,7 @@ class HierarchicalProblem {
   virtual ~HierarchicalProblem() =0;
 
   virtual void solve()=0;
+  void solve_with_timers_and_count();
   virtual void initialize()=0;
   void make_constraints();
   virtual void assemble()=0;

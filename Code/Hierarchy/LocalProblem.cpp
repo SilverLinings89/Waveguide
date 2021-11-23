@@ -130,35 +130,27 @@ void LocalProblem::reinit() {
 }
 
 void LocalProblem::solve() {
-  GlobalTimerManager.switch_context("Solve", 0);
-  Timer timer1;
-  timer1.start ();
-  // std::cout << "Before: " << rhs.l2_norm() << std::endl;
-  // constraints.distribute(rhs);
+  
   rhs.compress(dealii::VectorOperation::insert);
   solver.solve(*matrix, solution, rhs);
-  // std::cout << "After: " << solution.l2_norm() << std::endl;
-  timer1.stop();
-
+  
   if(solve_counter == 0 && GlobalParams.MPI_Rank == 0) {
     output_results("FirstStep0");
   } 
   if(solve_counter == 0 && GlobalParams.MPI_Rank == 1) {
     output_results("FirstStep1");
   }
-  if(solve_counter == 1 && GlobalParams.MPI_Rank == 2) {
+  if(solve_counter == 0 && GlobalParams.MPI_Rank == 2) {
     output_results("FirstStep2");
   } 
   if(solve_counter == 1 && GlobalParams.MPI_Rank == 3) {
     output_results("FirstStep3");
   }
-  solve_counter ++;
-  GlobalTimerManager.leave_context(0);
+  
 }
 
 void LocalProblem::initialize_index_sets() {
-  n_procs_in_sweep = 1;
-  rank = 0;
+  
 }
 
 auto LocalProblem::compare_to_exact_solution() -> void {

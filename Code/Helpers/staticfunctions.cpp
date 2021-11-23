@@ -709,7 +709,7 @@ bool base_edge_ownership(BoundaryId self, BoundaryId other) {
 
 bool are_edge_dofs_locally_owned(BoundaryId self, BoundaryId other, unsigned int in_level) {
   if(Geometry.is_surface_isolated(other, in_level)) {
-    return true;
+    // return true;
   }
   if(Geometry.levels[in_level].surface_type[other] != SurfaceType::NEIGHBOR_SURFACE && Geometry.levels[in_level].surface_type[self] != SurfaceType::NEIGHBOR_SURFACE ) {
     if(Geometry.levels[in_level].surface_type[other] != Geometry.levels[in_level].surface_type[self]) {
@@ -730,4 +730,29 @@ std::vector<BoundaryId> get_adjacent_boundary_ids(BoundaryId self) {
     }
   }
   return ret;
+}
+
+SweepingDirection get_sweeping_direction_for_level(unsigned int in_level) {
+  if(GlobalParams.HSIE_SWEEPING_LEVEL == 1) { 
+    return SweepingDirection::Z;
+  }
+  if(GlobalParams.HSIE_SWEEPING_LEVEL == 2) {
+    if(in_level == 1) {
+      return SweepingDirection::Y;
+    }
+    if(in_level == 2) {
+      return SweepingDirection::Z;
+    }
+  }
+  if(GlobalParams.HSIE_SWEEPING_LEVEL == 3) { 
+    if(in_level == 1) {
+      return SweepingDirection::X;
+    }
+    if(in_level == 2) {
+      return SweepingDirection::Y;
+    }
+    if(in_level == 3) {
+      return SweepingDirection::Z;
+    }
+  }
 }

@@ -13,12 +13,11 @@
 HierarchicalProblem::~HierarchicalProblem() { }
 
 HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level, SweepingDirection in_direction) :
-  sweeping_direction(in_direction),
   level(in_own_level) {
+  
+  sweeping_direction = get_sweeping_direction_for_level(in_own_level);
   has_child = in_own_level > 0;
   child = nullptr;
-  rank = 0;
-  n_procs_in_sweep = 0;
   for(unsigned int i = 0; i < 6; i++) {
     is_surface_locked.push_back(false);
   }
@@ -54,7 +53,7 @@ void HierarchicalProblem::make_constraints() {
   IndexSet total_dofs_global(Geometry.levels[level].n_total_level_dofs);
   total_dofs_global.add_range(0,Geometry.levels[level].n_total_level_dofs);
   constraints.reinit(total_dofs_global);
-
+  
   // ABC Surfaces are least important
   for(unsigned int surface = 0; surface < 6; surface++) {
     if(Geometry.levels[level].surface_type[surface] == SurfaceType::ABC_SURFACE) {
@@ -78,8 +77,6 @@ void HierarchicalProblem::make_constraints() {
       constraints.merge(local_constraints, Constraints::MergeConflictBehavior::right_object_wins,true);
     }
   }
-  
-  
   constraints.close();
   
   print_info("HierarchicalProblem::make_constraints", "End");
@@ -136,4 +133,15 @@ std::string HierarchicalProblem::output_results(std::string in_fname_part) {
   timer.stop();
   GlobalTimerManager.leave_context(level);
   return ret;
+}
+
+void HierarchicalProblem::solve_with_timers_and_count() {
+  GlobalTimerManager.switch_context("Solve", level);
+  Timer t;
+  t.start ();
+
+  solve();
+  solve_counter ++;
+  t.stop();
+  GlobalTimerManager.leave_context(level);
 }

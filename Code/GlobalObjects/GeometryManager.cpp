@@ -439,19 +439,19 @@ Direction GeometryManager::get_direction_for_boundary_id(BoundaryId in_bid) {
   }
 }
 
-bool GeometryManager::is_surface_isolated(BoundaryId b_id, unsigned int in_level) {
-  return (get_surface_type(b_id, in_level) == SurfaceType::ABC_SURFACE) && (get_surface_type(b_id, in_level+1) == SurfaceType::NEIGHBOR_SURFACE);
+bool GeometryManager::is_surface_isolated(BoundaryId in_b_id, unsigned int in_level) {
+  return (get_surface_type(in_b_id, in_level) == SurfaceType::ABC_SURFACE) && (get_surface_type(in_b_id, in_level+1) == SurfaceType::NEIGHBOR_SURFACE);
 }
 
-SurfaceType get_surf_type_for_level_0(BoundaryId b_id) {
+SurfaceType get_surf_type_for_level_0(BoundaryId in_b_id) {
   // The lower interfaces for all sweeping directions are Open. Additionally there is dirichlet data. All others are ABC.
-  if(b_id == 4) {
+  if(in_b_id == 4) {
     return SurfaceType::OPEN_SURFACE;
   }
-  if(GlobalParams.HSIE_SWEEPING_LEVEL > 1 && b_id == 2 ) {
+  if(GlobalParams.HSIE_SWEEPING_LEVEL > 1 && in_b_id == 2 ) {
     return SurfaceType::OPEN_SURFACE;
   }
-  if(GlobalParams.HSIE_SWEEPING_LEVEL == 3 && b_id == 0 ) {
+  if(GlobalParams.HSIE_SWEEPING_LEVEL == 3 && in_b_id == 0 ) {
     return SurfaceType::OPEN_SURFACE;
   }
   return SurfaceType::ABC_SURFACE;

@@ -86,25 +86,17 @@ NonLocalProblem::NonLocalProblem(unsigned int level) :
   HierarchicalProblem(level, static_cast<SweepingDirection> (2 + GlobalParams.HSIE_SWEEPING_LEVEL - level)),
   sc(GlobalParams.GMRES_max_steps, GlobalParams.Solver_Precision, true, true)
 {
+  sweeping_direction = get_sweeping_direction_for_level(level);
   if(level > 1) {
     child = new NonLocalProblem(level - 1);
   } else {
     child = new LocalProblem();
   }
-  
+
+  prepare_sweeping_data();
+
   matrix = new dealii::PETScWrappers::MPI::SparseMatrix();
-  if(sweeping_direction == SweepingDirection::X) {
-    n_blocks_in_sweep = GlobalParams.Blocks_in_x_direction;
-    index_in_sweep = GlobalParams.Index_in_x_direction;
-  }
-  if(sweeping_direction == SweepingDirection::Y) {
-    n_blocks_in_sweep = GlobalParams.Blocks_in_y_direction;
-    index_in_sweep = GlobalParams.Index_in_y_direction;
-  }
-  if(sweeping_direction == SweepingDirection::Z) {
-    n_blocks_in_sweep = GlobalParams.Blocks_in_z_direction;
-    index_in_sweep = GlobalParams.Index_in_z_direction;
-  }
+  
   locally_active_dofs = dealii::IndexSet(Geometry.levels[level].n_total_level_dofs);
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->global_index_mapping.size(); i++) {
     locally_active_dofs.add_index(Geometry.levels[level].inner_domain->global_index_mapping[i]);
@@ -124,7 +116,40 @@ NonLocalProblem::NonLocalProblem(unsigned int level) :
     }  
   }
   n_locally_active_dofs = locally_active_dofs.n_elements();
-  residual_output = new ResidualOutputGenerator("ConvergenceHistoryLevel"+std::to_string(level), "Convergence History on level " + std::to_string(level), index_in_sweep == 0, level );
+  residual_output = new ResidualOutputGenerator("ConvergenceHistoryLevel"+std::to_string(level), "Convergence History on level " + std::to_string(level), total_rank_in_sweep == 0, level );
+}
+
+void NonLocalProblem::prepare_sweeping_data() {
+  bool processed = false;
+
+  if(sweeping_direction == SweepingDirection::X) {
+    processed = true;
+    n_blocks_in_sweeping_direction = GlobalParams.Blocks_in_x_direction;
+    index_in_sweeping_direction = GlobalParams.Index_in_x_direction;
+    total_rank_in_sweep = index_in_sweeping_direction;
+    n_procs_in_sweep = GlobalParams.Blocks_in_x_direction;
+  }
+  if(sweeping_direction == SweepingDirection::Y) {
+    processed = true;
+    n_blocks_in_sweeping_direction = GlobalParams.Blocks_in_y_direction;
+    index_in_sweeping_direction = GlobalParams.Index_in_y_direction;
+    total_rank_in_sweep = index_in_sweeping_direction;
+    if(GlobalParams.Blocks_in_x_direction > 1) {
+      total_rank_in_sweep = index_in_sweeping_direction * GlobalParams.Blocks_in_x_direction +  GlobalParams.Index_in_x_direction;
+    }
+    n_procs_in_sweep = GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction;
+  }
+  if(sweeping_direction == SweepingDirection::Z) {
+    processed = true;
+    n_blocks_in_sweeping_direction = GlobalParams.Blocks_in_z_direction;
+    index_in_sweeping_direction = GlobalParams.Index_in_z_direction;
+    total_rank_in_sweep = GlobalParams.MPI_Rank;
+    n_procs_in_sweep = GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction * GlobalParams.Blocks_in_z_direction;
+  }
+  if(!processed) {
+    std::cout << "FAILURE on " << level << std::endl;
+  } 
+  // std::cout << "On level " << level << " and global rank " << GlobalParams.MPI_Rank << ": I am " << index_in_sweeping_direction << " and total rank " << total_rank_in_sweep << ". [" << GlobalParams.Index_in_x_direction << "x"<< GlobalParams.Index_in_y_direction << "x"<<GlobalParams.Index_in_z_direction << "]"<< std::endl;
 }
 
 void NonLocalProblem::init_solver_and_preconditioner() {
@@ -197,31 +222,18 @@ void NonLocalProblem::assemble() {
   print_info("NonLocalProblem::assemble", "Compress vectors.");
   solution.compress(dealii::VectorOperation::add);
   rhs.compress(VectorOperation::add);
-  constraints.distribute(solution);
+  // constraints.distribute(solution);
   print_info("NonLocalProblem::assemble", "End assembly.");
-  if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Dirichlet) {
-    for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
-      if(constraints.is_inhomogeneously_constrained(own_dofs.nth_index_in_set(i))) {
-        if(std::abs(constraints.get_inhomogeneity(own_dofs.nth_index_in_set(i))) > internal_vector_norm) {
-          internal_vector_norm = std::abs(constraints.get_inhomogeneity(own_dofs.nth_index_in_set(i)));
-        }
-      }
-    }
-    internal_vector_norm = dealii::Utilities::MPI::max(internal_vector_norm, MPI_COMM_WORLD);
-  }
   GlobalTimerManager.leave_context(level);
 }
 
 void NonLocalProblem::solve() {
-  GlobalTimerManager.switch_context("Solve", level);
   
-  constraints.distribute(solution);
   if(level == GlobalParams.HSIE_SWEEPING_LEVEL) {
     print_vector_norm(&rhs, "RHS");
   }
-  
+
   bool run_itterative_solver = !GlobalParams.solve_directly;
-  // if(level == 1) run_itterative_solver = false;
 
   if(run_itterative_solver) {
     residual_output->new_series("Run " + std::to_string(solve_counter + 1));
@@ -236,47 +248,19 @@ void NonLocalProblem::solve() {
     residual_output->close_current_series();
     if(ierr != 0) {
       std::cout << "Error code from Petsc: " << std::to_string(ierr) << std::endl;
-    //   throw new ExcPETScError(ierr);
     }
-    if(level == GlobalParams.HSIE_SWEEPING_LEVEL) {
-      constraints.distribute(solution);
-    }
+
   } else {
     // Solve Directly for reference
     SolverControl sc;
-    dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, GlobalMPI.communicators_by_level[level]);
-    solver1.solve(*matrix, solution, rhs);
+    dealii::PETScWrappers::SparseDirectMUMPS direct_solver(sc, GlobalMPI.communicators_by_level[level]);
+    direct_solver.solve(*matrix, solution, rhs);
   }
-  if(solve_counter == 0 && level == 1) {
-    SolverControl sc;
-    dealii::PETScWrappers::SparseDirectMUMPS solver1(sc, GlobalMPI.communicators_by_level[level]);
-    solver1.solve(*matrix, direct_solution, rhs);
-    direct_solution.compress(VectorOperation::insert);
-    /**
-    direct_solution.extract_subvector_to(vector_copy_own_indices, vector_copy_array);
-    std::vector<PetscScalar> second_vector;
-    second_vector.resize(vector_copy_array.size());
-    solution.extract_subvector_to(vector_copy_own_indices, second_vector);
-    for(unsigned int i = 0; i < vector_copy_array.size(); i++) {
-      vector_copy_array[i] -= second_vector[i];
-    }
-    direct_solution.set(vector_copy_own_indices, vector_copy_array);
-    direct_solution.compress(VectorOperation::insert);
-    **/
-    write_multifile_output("DirectSolution", direct_solution);
-    write_multifile_output("ComputedSolution", solution);
-  }
-  GlobalTimerManager.leave_context(level);
-  // subtract_vectors(&solution, &solution_error);
-  // constraints.distribute(solution);
-
-  solve_counter++;
-  if(level == GlobalParams.HSIE_SWEEPING_LEVEL) {
+  
+  if(GlobalParams.HSIE_SWEEPING_LEVEL == level) {
     matrix->residual(solution_error, solution, rhs);
-    write_multifile_output("error_of_solution", solution_error);
+    write_multifile_output("ErrorOfSolution", solution_error);
   }
-
-
 }
 
 void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
@@ -291,10 +275,9 @@ void NonLocalProblem::set_x_out_from_u(Vec x_out, NumericVectorDistributed * in_
   ComplexNumber * values = new ComplexNumber[own_dofs.n_elements()];
   
   in_u->extract_subvector_to(vector_copy_own_indices, vector_copy_array);
-  double norm = 0;
+
   for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
     values[i] = vector_copy_array[i];
-    norm += std::abs(values[i]) * std::abs(values[i]);
   }
   
   VecSetValues(x_out, own_dofs.n_elements(), locally_owned_dofs_index_array, values, INSERT_VALUES);
@@ -305,19 +288,14 @@ void NonLocalProblem::set_x_out_from_u(Vec x_out, NumericVectorDistributed * in_
 
 void NonLocalProblem::S_inv(NumericVectorDistributed * src, NumericVectorDistributed * dst) {
   set_child_rhs_from_vector(src);
-  child->solve();
+  child->solve_with_timers_and_count();
   set_vector_from_child_solution(dst);
 }
 
 void NonLocalProblem::set_vector_from_child_solution(NumericVectorDistributed * in_u) {
   child->solution.extract_subvector_to(vector_copy_child_indeces, vector_copy_array);
-  double norm = 0;
-  for(unsigned int i = 0; i < vector_copy_array.size(); i++) {
-    norm += std::abs(vector_copy_array[i])*std::abs(vector_copy_array[i]);
-  }
-  norm = std::sqrt(norm);
-  // std::cout << "Copied norm: " << norm << std::endl;
   in_u->set(vector_copy_own_indices, vector_copy_array);
+  in_u->compress(VectorOperation::insert);
 }
 
 void NonLocalProblem::set_child_rhs_from_vector(NumericVectorDistributed * in_u) {
@@ -326,7 +304,7 @@ void NonLocalProblem::set_child_rhs_from_vector(NumericVectorDistributed * in_u)
   child->rhs.set(vector_copy_child_indeces, vector_copy_array);
   child->rhs.compress(VectorOperation::insert);
   if(GlobalParams.Index_in_z_direction && level == 1) {
-    child->constraints.distribute(child->rhs);
+    // child->constraints.distribute(child->rhs);
   }
 }
 
@@ -349,7 +327,7 @@ void NonLocalProblem::reinit() {
   reinit_vector(&solution_error);
   IndexSet all_dofs(Geometry.levels[level].n_total_level_dofs);
   all_dofs.add_range(0,Geometry.levels[level].n_total_level_dofs);
-  matrix->reinit(Geometry.levels[level].dof_distribution[rank], Geometry.levels[level].dof_distribution[rank], sp, GlobalMPI.communicators_by_level[level]);
+  matrix->reinit(Geometry.levels[level].dof_distribution[total_rank_in_sweep], Geometry.levels[level].dof_distribution[total_rank_in_sweep], sp, GlobalMPI.communicators_by_level[level]);
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     if(Geometry.levels[level].inner_domain->is_dof_owned[i] && Geometry.levels[level-1].inner_domain->is_dof_owned[i]) {
       vector_copy_own_indices.push_back(Geometry.levels[level].inner_domain->global_index_mapping[i]);
@@ -375,8 +353,6 @@ void NonLocalProblem::reinit() {
 void NonLocalProblem::initialize() {
   GlobalTimerManager.switch_context("Initialize", level);
   child->initialize();
-  n_procs_in_sweep = dealii::Utilities::MPI::n_mpi_processes(GlobalMPI.communicators_by_level[level]);
-  rank = dealii::Utilities::MPI::this_mpi_process(GlobalMPI.communicators_by_level[level]);
   initialize_index_sets();
   reinit();
   init_solver_and_preconditioner();
@@ -384,7 +360,7 @@ void NonLocalProblem::initialize() {
 }
  
 void NonLocalProblem::initialize_index_sets() {
-  own_dofs = Geometry.levels[level].dof_distribution[GlobalMPI.rank_on_level[level]];
+  own_dofs = Geometry.levels[level].dof_distribution[total_rank_in_sweep];
   locally_owned_dofs_index_array = new PetscInt[own_dofs.n_elements()];
   get_petsc_index_array_from_index_set(locally_owned_dofs_index_array, own_dofs);
 }
@@ -450,14 +426,13 @@ void NonLocalProblem::write_multifile_output(const std::string & in_filename, co
 
 void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) {
   std::vector<std::vector<unsigned int>> rows, cols;
-  const unsigned int n_procs = Geometry.levels[level].dof_distribution.size();
-  for(unsigned int i = 0; i < n_procs; i++) {
+  for(unsigned int i = 0; i < n_procs_in_sweep; i++) {
     rows.emplace_back();
     cols.emplace_back();
   }
   for(auto it = in_dsp->begin(); it != in_dsp->end(); it++) {
     if(!own_dofs.is_element(it->row())) {
-      for(unsigned int proc = 0; proc < n_procs; proc++) {
+      for(unsigned int proc = 0; proc < n_procs_in_sweep; proc++) {
         if(Geometry.levels[level].dof_distribution[proc].is_element(it->row())) {
           rows[proc].push_back(it->row());
           cols[proc].push_back(it->column());
@@ -465,16 +440,16 @@ void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) 
       }
     }
   }
-  unsigned int * entries_by_proc = new unsigned int[n_procs];
-  for(unsigned int i = 0; i < n_procs; i++) {
+  unsigned int * entries_by_proc = new unsigned int[n_procs_in_sweep];
+  for(unsigned int i = 0; i < n_procs_in_sweep; i++) {
     entries_by_proc[i] = rows[i].size();
   }
-  unsigned int * recv_buffer = new unsigned int[n_procs];
+  unsigned int * recv_buffer = new unsigned int[n_procs_in_sweep];
   MPI_Alltoall(entries_by_proc, 1, MPI_UNSIGNED, recv_buffer, 1, MPI_UNSIGNED, GlobalMPI.communicators_by_level[level]);
-  for(unsigned int other_proc = 0; other_proc < n_procs; other_proc++) {
-    if(other_proc != rank) {
+  for(unsigned int other_proc = 0; other_proc < n_procs_in_sweep; other_proc++) {
+    if(other_proc != total_rank_in_sweep) {
       if(recv_buffer[other_proc] != 0 || entries_by_proc[other_proc] != 0) {
-        if(rank < other_proc) {
+        if(total_rank_in_sweep < other_proc) {
           // Send then receive
           if(entries_by_proc[other_proc] > 0) {
             unsigned int * sent_rows = new unsigned int [entries_by_proc[other_proc]];
@@ -483,8 +458,8 @@ void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) 
               sent_rows[i] = rows[other_proc][i];
               sent_cols[i] = cols[other_proc][i];
             }
-            MPI_Send(sent_rows, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, rank, GlobalMPI.communicators_by_level[level]);
-            MPI_Send(sent_cols, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, rank, GlobalMPI.communicators_by_level[level]);
+            MPI_Send(sent_rows, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, total_rank_in_sweep, GlobalMPI.communicators_by_level[level]);
+            MPI_Send(sent_cols, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, total_rank_in_sweep, GlobalMPI.communicators_by_level[level]);
             delete[] sent_rows;
             delete[] sent_cols;
           }
@@ -523,8 +498,8 @@ void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) 
               sent_rows[i] = rows[other_proc][i];
               sent_cols[i] = cols[other_proc][i];
             }
-            MPI_Send(sent_rows, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, rank, GlobalMPI.communicators_by_level[level]);
-            MPI_Send(sent_cols, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, rank, GlobalMPI.communicators_by_level[level]);
+            MPI_Send(sent_rows, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, total_rank_in_sweep, GlobalMPI.communicators_by_level[level]);
+            MPI_Send(sent_cols, entries_by_proc[other_proc], MPI_UNSIGNED, other_proc, total_rank_in_sweep, GlobalMPI.communicators_by_level[level]);
             delete[] sent_rows;
             delete[] sent_cols;
           }
@@ -544,6 +519,7 @@ void NonLocalProblem::make_sparsity_pattern() {
   for (unsigned int surface = 0; surface < 6; surface++) {
     Geometry.levels[level].surfaces[surface]->fill_sparsity_pattern(&dsp, &constraints);
   }
+  
   communicate_external_dsp(&dsp);
   sp.copy_from(dsp);
   sp.compress();
@@ -576,9 +552,8 @@ void NonLocalProblem::print_vector_norm(NumericVectorDistributed * in_v, std::st
     } 
     local_norm += local;
   }
-  // std::cout << "on rank " << GlobalParams.MPI_Rank << " : " << local_norm << std::endl;
   local_norm = dealii::Utilities::MPI::sum(local_norm, GlobalMPI.communicators_by_level[level]);
-  if(rank == 0) {
+  if(index_in_sweeping_direction == 0) {
     std::cout << marker << " on " << GlobalParams.MPI_Rank << ": " << std::sqrt(local_norm) << " and " << max << std::endl;
   }
 }
@@ -588,16 +563,16 @@ void NonLocalProblem::reinit_vector(NumericVectorDistributed * in_v) {
 }
 
 void NonLocalProblem::perform_downward_sweep(NumericVectorDistributed * u) {
-  for(int i = n_procs_in_sweep - 1; i >= 0; i--) {
+  for(int i = n_blocks_in_sweeping_direction - 1; i >= 0; i--) {
     NumericVectorDistributed temp1, temp2;
     reinit_vector(&temp1);
     reinit_vector(&temp2);
-    if(index_in_sweep == i) {
+    if(index_in_sweeping_direction == i) {
       S_inv(u, &temp1);
     }
     temp1.compress(VectorOperation::insert);
     matrix->vmult(temp2, temp1);
-    if(index_in_sweep == i-1) {
+    if(index_in_sweeping_direction == i-1) {
       for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
         const unsigned int index = own_dofs.nth_index_in_set(j);
         ComplexNumber current_value((*u)(index).real(), (*u)(index).imag());
@@ -605,7 +580,7 @@ void NonLocalProblem::perform_downward_sweep(NumericVectorDistributed * u) {
         (*u)[index] = current_value - delta;
       }
     }
-    if(index_in_sweep == i) {
+    if(index_in_sweeping_direction == i) {
       for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
         const unsigned int index = own_dofs.nth_index_in_set(j);
         (*u)[index] = (ComplexNumber) temp1[index];
@@ -615,29 +590,29 @@ void NonLocalProblem::perform_downward_sweep(NumericVectorDistributed * u) {
   }
 }
 
-void NonLocalProblem::perform_upward_sweep(NumericVectorDistributed * u) {
-  for(unsigned int i = 0; i < n_procs_in_sweep-1; i++) {
+void NonLocalProblem::perform_upward_sweep(NumericVectorDistributed * in_u) {
+  for(unsigned int i = 0; i < n_blocks_in_sweeping_direction-1; i++) {
     NumericVectorDistributed temp1, temp2, temp3;
     reinit_vector(&temp1);
     reinit_vector(&temp2);
     reinit_vector(&temp3);
-    if(index_in_sweep == i) {
+    if(index_in_sweeping_direction == i) {
       for(unsigned int index = 0; index < own_dofs.n_elements(); index++) {
-        temp1[own_dofs.nth_index_in_set(index)] = (ComplexNumber)((*u)[own_dofs.nth_index_in_set(index)]);
+        temp1[own_dofs.nth_index_in_set(index)] = (ComplexNumber)((*in_u)[own_dofs.nth_index_in_set(index)]);
       }
     }
     temp1.compress(VectorOperation::insert);
     matrix->Tvmult(temp2, temp1);
     
-    if(index_in_sweep == i+1) {
+    if(index_in_sweeping_direction == i+1) {
       S_inv(&temp2, &temp3);
       for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
         const unsigned int index = own_dofs.nth_index_in_set(j);
-        ComplexNumber current_value = (*u)(index);
+        ComplexNumber current_value = (*in_u)(index);
         ComplexNumber delta = temp3[index];
-        (*u)[index] = current_value - delta;
+        (*in_u)[index] = current_value - delta;
       }   
     }
-    u->compress(VectorOperation::insert);
+    in_u->compress(VectorOperation::insert);
   }
 }
