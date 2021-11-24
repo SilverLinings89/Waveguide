@@ -706,3 +706,32 @@ In the current state, the method appears to work for the lower level 1 block, bu
 
 I have not so far been able to determine the issue. The solution in the lower-z-block looks qualitatively right except of a too large amplitude I cannot explain so far. On the upper-z-block, there is basically no signal. That most likely means that the signal doesn't propagate - why that is the case I have not yet been able to determine either.
 
+# Wednesday, 24th of November
+
+The first indication I have gotten about the cause of the error is, that in the solutions there are infringements on the boundary constraints outside the PML. This leads me to believe that the problem has to do with dof-numbering and is a result of copying the solution up and down between hierarchy levels. This, as far as I know, is the only way this could occur.
+
+As I thought there was a dof count mismatch. They always happen for boundary 5. I will write surface details output to determine why this is happening and how to mitigate it. For 3 processes in y- and 2 in z-direction, the outputs are as follows: 
+
+On level 0 for process 0: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type PML(7380). Boundary 3 type PML(7380). Boundary 4 type Dirichlet. Boundary 5 type PML(18468). 
+On level 0 for process 1: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type Open. Boundary 3 type PML(7380). Boundary 4 type Dirichlet. Boundary 5 type PML(12924). 
+On level 0 for process 2: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type Open. Boundary 3 type PML(7380). Boundary 4 type Dirichlet. Boundary 5 type PML(12924). 
+On level 0 for process 3: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type PML(7380). Boundary 3 type PML(7380). Boundary 4 type Open. Boundary 5 type PML(18468). 
+On level 0 for process 4: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type Open. Boundary 3 type PML(7380). Boundary 4 type Open. Boundary 5 type PML(12924). 
+On level 0 for process 5: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type Open. Boundary 3 type PML(7380). Boundary 4 type Open. Boundary 5 type PML(12924). 
+
+On level 1 for process 0: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type PML(7380). Boundary 3 type Neighbor. Boundary 4 type Dirichlet. Boundary 5 type PML(12924). 
+On level 1 for process 1: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type Neighbor. Boundary 3 type Neighbor. Boundary 4 type Dirichlet. Boundary 5 type PML(7380). 
+On level 1 for process 2: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type Neighbor. Boundary 3 type PML(7380). Boundary 4 type Dirichlet. Boundary 5 type PML(12924). 
+On level 1 for process 3: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type PML(7380). Boundary 3 type Neighbor. Boundary 4 type Open. Boundary 5 type PML(12924). 
+On level 1 for process 4: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type Neighbor. Boundary 3 type Neighbor. Boundary 4 type Open. Boundary 5 type PML(7380). 
+On level 1 for process 5: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type Neighbor. Boundary 3 type PML(7380). Boundary 4 type Open. Boundary 5 type PML(12924). 
+
+On level 2 for process 0: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type PML(7380). Boundary 3 type Neighbor. Boundary 4 type Dirichlet. Boundary 5 type Neighbor. 
+On level 2 for process 1: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type Neighbor. Boundary 3 type Neighbor. Boundary 4 type Dirichlet. Boundary 5 type Neighbor. 
+On level 2 for process 2: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type Neighbor. Boundary 3 type PML(7380). Boundary 4 type Dirichlet. Boundary 5 type Neighbor. 
+On level 2 for process 3: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type PML(7380). Boundary 3 type Neighbor. Boundary 4 type Neighbor. Boundary 5 type PML(12924). 
+On level 2 for process 4: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type Neighbor. Boundary 3 type Neighbor. Boundary 4 type Neighbor. Boundary 5 type PML(7380). 
+On level 2 for process 5: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type Neighbor. Boundary 3 type PML(7380). Boundary 4 type Neighbor. Boundary 5 type PML(12924). 
+
+Even after fixing this an error persists. I have to check in more detail. After a reimplementation, the solver now converges on level 1 for the lower part. And for the upper part. AND ALSO ON LEVEL 2!!!!!!!!!
+ 

@@ -84,4 +84,8 @@ private:
   void perform_downward_sweep(NumericVectorDistributed *);
 
   void perform_upward_sweep(NumericVectorDistributed *);
+
+  void complex_pml_domain_matching(BoundaryId in_bid);
+
+  void register_dof_copy_pair(DofNumber own_index, DofNumber child_index);
 };

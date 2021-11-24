@@ -594,9 +594,30 @@ void GeometryManager::initialize_surfaces_on_level(unsigned int in_level) {
         break;
     }
   }
+  std::string output_details = "On level " + std::to_string(in_level) + " for process " + std::to_string(GlobalParams.MPI_Rank) + ": ";
   for(unsigned int surf = 0; surf < 6; surf++) {
     levels[in_level].surfaces[surf]->initialize();
+    output_details += "Boundary " + std::to_string(surf) + " type ";
+    switch (levels[in_level].surface_type[surf])
+    {
+      case SurfaceType::ABC_SURFACE:
+        output_details += "PML(" + std::to_string(levels[in_level].surfaces[surf]->dof_counter) +")";
+        break;
+      case SurfaceType::DIRICHLET_SURFACE:
+        output_details += "Dirichlet";
+        break;
+      case SurfaceType::NEIGHBOR_SURFACE:
+        output_details += "Neighbor";
+        break;
+      case SurfaceType::OPEN_SURFACE:
+        output_details += "Open";
+        break;
+      default:
+        break;
+    }
+    output_details += ". ";
   }
+  // std::cout << output_details <<std::endl;
 }
 
 void GeometryManager::initialize_level(unsigned int in_level) {

@@ -123,7 +123,7 @@ bool areDofsClose(const InterfaceDofData &a,
   for (unsigned int i = 0; i < 3; i++) {
     dist += (a.base_point[i] - b.base_point[i]) * (a.base_point[i] - b.base_point[i]);
   }
-  return std::sqrt(dist) < 0.001;
+  return std::sqrt(dist) < FLOATING_PRECISION;
 }
 
 bool compare_non_position_data(InterfaceDofData c1, InterfaceDofData c2) {

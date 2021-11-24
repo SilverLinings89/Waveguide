@@ -257,6 +257,17 @@ void NonLocalProblem::solve() {
     direct_solver.solve(*matrix, solution, rhs);
   }
   
+  if(level == 1 && GlobalParams.Index_in_z_direction == 0 && solve_counter == 0) {
+    std::cout << "A" << std::endl;
+    SolverControl sc;
+    dealii::PETScWrappers::SparseDirectMUMPS direct_solver(sc, GlobalMPI.communicators_by_level[level]);
+    direct_solver.solve(*matrix, direct_solution, rhs);
+    solution_error = direct_solution;
+    solution_error -= solution;
+    write_multifile_output("FirstStepLower", solution_error);
+  }
+
+
   if(GlobalParams.HSIE_SWEEPING_LEVEL == level) {
     matrix->residual(solution_error, solution, rhs);
     write_multifile_output("ErrorOfSolution", solution_error);
@@ -295,7 +306,7 @@ void NonLocalProblem::S_inv(NumericVectorDistributed * src, NumericVectorDistrib
 void NonLocalProblem::set_vector_from_child_solution(NumericVectorDistributed * in_u) {
   child->solution.extract_subvector_to(vector_copy_child_indeces, vector_copy_array);
   in_u->set(vector_copy_own_indices, vector_copy_array);
-  in_u->compress(VectorOperation::insert);
+  //in_u->compress(VectorOperation::insert);
 }
 
 void NonLocalProblem::set_child_rhs_from_vector(NumericVectorDistributed * in_u) {
@@ -337,17 +348,77 @@ void NonLocalProblem::reinit() {
   }
   for(unsigned int surf = 0; surf < 6; surf++) {
     if(Geometry.levels[level].surface_type[surf] == Geometry.levels[level-1].surface_type[surf]) {
-      for(unsigned int i = 0; i < Geometry.levels[level].surfaces[surf]->n_locally_active_dofs; i++) {
-        if(Geometry.levels[level].surfaces[surf]->is_dof_owned[i] && Geometry.levels[level-1].surfaces[surf]->is_dof_owned[i]) {
-          vector_copy_own_indices.push_back(Geometry.levels[level].surfaces[surf]->global_index_mapping[i]);
-          vector_copy_child_indeces.push_back(Geometry.levels[level-1].surfaces[surf]->global_index_mapping[i]);
-          vector_copy_array.push_back(ComplexNumber(0.0, 0.0));
+      if(Geometry.levels[level].surfaces[surf]->dof_counter != Geometry.levels[level-1].surfaces[surf]->dof_counter) {
+        std::cout << "Dof Count mismatch! On level " << level << " for surface " << surf << " on process " << GlobalParams.MPI_Rank << " there were " << Geometry.levels[level].surfaces[surf]->dof_counter << " but below there were " << Geometry.levels[level-1].surfaces[surf]->dof_counter << std::endl;
+        complex_pml_domain_matching(surf);
+      } else {
+        for(unsigned int i = 0; i < Geometry.levels[level].surfaces[surf]->n_locally_active_dofs; i++) {
+          if(Geometry.levels[level].surfaces[surf]->is_dof_owned[i] && Geometry.levels[level-1].surfaces[surf]->is_dof_owned[i]) {
+            register_dof_copy_pair(Geometry.levels[level].surfaces[surf]->global_index_mapping[i], Geometry.levels[level-1].surfaces[surf]->global_index_mapping[i]);
+          }
         }
       }
     }
   }
   GlobalTimerManager.leave_context(level);
   print_info("Nonlocal reinit", "Reinit done for level " + std::to_string(level));
+}
+
+void NonLocalProblem::register_dof_copy_pair(DofNumber own_index, DofNumber child_index) {
+  vector_copy_own_indices.push_back(own_index);
+  vector_copy_child_indeces.push_back(child_index);
+  vector_copy_array.push_back(ComplexNumber(0.0, 0.0));
+}
+
+void NonLocalProblem::complex_pml_domain_matching(BoundaryId in_bid) {
+  // always more dofs on the lower level
+  dealii::IndexSet lower_is (Geometry.levels[level-1].n_total_level_dofs);
+  dealii::IndexSet upper_is (Geometry.levels[level].n_total_level_dofs);
+  unsigned int counter = 0;
+  auto higher_cell = Geometry.levels[level].surfaces[in_bid]->dof_handler.begin();
+  auto lower_cell = Geometry.levels[level-1].surfaces[in_bid]->dof_handler.begin();
+  auto higher_end = Geometry.levels[level].surfaces[in_bid]->dof_handler.end();
+  auto lower_end = Geometry.levels[level-1].surfaces[in_bid]->dof_handler.end();
+  while(higher_cell != higher_end) {
+    bool found = true;
+    // first find the same cell in the child
+    if(! ((higher_cell->center() - lower_cell->center()).norm() < FLOATING_PRECISION)) {
+      while((higher_cell->center() - lower_cell->center()).norm() > FLOATING_PRECISION && lower_cell != lower_end) {
+        lower_cell++;
+      }
+      if(lower_cell == lower_end) {
+        lower_cell = Geometry.levels[level-1].surfaces[in_bid]->dof_handler.begin();
+      }
+      while((higher_cell->center() - lower_cell->center()).norm() > FLOATING_PRECISION && lower_cell != lower_end) {
+        lower_cell++;
+      }
+      if(lower_cell == lower_end) {
+        found = false;
+        std::cout << "ERROR IN COMPLEX PML DOMAIN MATCHING" << std::endl;
+      }
+    }
+    if(found) {
+      // lower_cell and higher_cell point to the same cell on two different levels. Match the dofs.
+      const unsigned int n_dofs_per_cell = Geometry.levels[level].surfaces[in_bid]->dof_handler.get_fe().dofs_per_cell;
+      std::vector<DofNumber> lower_dofs(n_dofs_per_cell);
+      std::vector<DofNumber> upper_dofs(n_dofs_per_cell);
+      lower_cell->get_dof_indices(lower_dofs);
+      std::sort(lower_dofs.begin(), lower_dofs.end());
+      higher_cell->get_dof_indices(upper_dofs);
+      std::sort(upper_dofs.begin(), upper_dofs.end());
+      for(unsigned int i = 0; i < n_dofs_per_cell; i++) {
+        if(Geometry.levels[level].surfaces[in_bid]->is_dof_owned[upper_dofs[i]] && Geometry.levels[level-1].surfaces[in_bid]->is_dof_owned[lower_dofs[i]]) {
+          lower_is.add_index(Geometry.levels[level-1].surfaces[in_bid]->global_index_mapping[lower_dofs[i]]);
+          upper_is.add_index(Geometry.levels[level].surfaces[in_bid]->global_index_mapping[upper_dofs[i]]);
+        }
+      }
+    }
+    lower_cell++;
+    higher_cell++;
+  }
+  for(unsigned int i = 0; i < upper_is.n_elements(); i++) {
+    register_dof_copy_pair(upper_is.nth_index_in_set(i), lower_is.nth_index_in_set(i));
+  }
 }
 
 void NonLocalProblem::initialize() {
