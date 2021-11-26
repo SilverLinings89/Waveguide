@@ -134,19 +134,6 @@ void LocalProblem::solve() {
   rhs.compress(dealii::VectorOperation::insert);
   solver.solve(*matrix, solution, rhs);
   
-  if(solve_counter == 0 && GlobalParams.MPI_Rank == 0) {
-    output_results("FirstStep0");
-  } 
-  if(solve_counter == 0 && GlobalParams.MPI_Rank == 1) {
-    output_results("FirstStep1");
-  }
-  if(solve_counter == 0 && GlobalParams.MPI_Rank == 2) {
-    output_results("FirstStep2");
-  } 
-  if(solve_counter == 1 && GlobalParams.MPI_Rank == 3) {
-    output_results("FirstStep3");
-  }
-  
 }
 
 void LocalProblem::initialize_index_sets() {
