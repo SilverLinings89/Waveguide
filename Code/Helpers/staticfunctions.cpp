@@ -708,10 +708,8 @@ bool base_edge_ownership(BoundaryId self, BoundaryId other) {
 }
 
 bool are_edge_dofs_locally_owned(BoundaryId self, BoundaryId other, unsigned int in_level) {
-  if(Geometry.is_surface_isolated(other, in_level)) {
-    // return true;
-  }
-  if(Geometry.levels[in_level].surface_type[other] != SurfaceType::NEIGHBOR_SURFACE && Geometry.levels[in_level].surface_type[self] != SurfaceType::NEIGHBOR_SURFACE ) {
+  if( Geometry.levels[in_level].surface_type[other] != SurfaceType::NEIGHBOR_SURFACE && 
+      Geometry.levels[in_level].surface_type[self] != SurfaceType::NEIGHBOR_SURFACE ) {
     if(Geometry.levels[in_level].surface_type[other] != Geometry.levels[in_level].surface_type[self]) {
       return true;
     }

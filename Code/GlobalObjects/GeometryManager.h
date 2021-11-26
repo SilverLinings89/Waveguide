@@ -79,6 +79,5 @@ class GeometryManager {
   void set_surface_types_and_properties(unsigned int level);
   void initialize_surfaces_on_level(unsigned int level);
   void initialize_level(unsigned int level);
-  bool is_surface_isolated(BoundaryId b_id, unsigned int in_level);
   void print_level_dof_counts(unsigned int level);
 };

@@ -18,8 +18,6 @@
 #include "./NeighborSurface.h"
 #include "PMLMeshTransformation.h"
 
-CubeSurfaceTruncationState isolated_truncation_state = {{false, false, false, false, false, false}};
-
 double get_surface_coordinate_for_bid(BoundaryId my_bid) {
   double surface_coordinate = 0;
   switch (my_bid)

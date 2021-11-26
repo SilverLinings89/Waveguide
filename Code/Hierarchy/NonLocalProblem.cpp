@@ -257,21 +257,6 @@ void NonLocalProblem::solve() {
     direct_solver.solve(*matrix, solution, rhs);
   }
   
-  if(level == 1 && GlobalParams.Index_in_z_direction == 0 && solve_counter == 0) {
-    std::cout << "A" << std::endl;
-    SolverControl sc;
-    dealii::PETScWrappers::SparseDirectMUMPS direct_solver(sc, GlobalMPI.communicators_by_level[level]);
-    direct_solver.solve(*matrix, direct_solution, rhs);
-    solution_error = direct_solution;
-    solution_error -= solution;
-    write_multifile_output("FirstStepLower", solution_error);
-  }
-
-
-  if(GlobalParams.HSIE_SWEEPING_LEVEL == level) {
-    matrix->residual(solution_error, solution, rhs);
-    write_multifile_output("ErrorOfSolution", solution_error);
-  }
 }
 
 void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
@@ -349,7 +334,6 @@ void NonLocalProblem::reinit() {
   for(unsigned int surf = 0; surf < 6; surf++) {
     if(Geometry.levels[level].surface_type[surf] == Geometry.levels[level-1].surface_type[surf]) {
       if(Geometry.levels[level].surfaces[surf]->dof_counter != Geometry.levels[level-1].surfaces[surf]->dof_counter) {
-        std::cout << "Dof Count mismatch! On level " << level << " for surface " << surf << " on process " << GlobalParams.MPI_Rank << " there were " << Geometry.levels[level].surfaces[surf]->dof_counter << " but below there were " << Geometry.levels[level-1].surfaces[surf]->dof_counter << std::endl;
         complex_pml_domain_matching(surf);
       } else {
         for(unsigned int i = 0; i < Geometry.levels[level].surfaces[surf]->n_locally_active_dofs; i++) {
@@ -451,6 +435,12 @@ std::string NonLocalProblem::output_results() {
 void NonLocalProblem::write_multifile_output(const std::string & in_filename, const NumericVectorDistributed field) {
   if(GlobalParams.MPI_Rank == 0 && !GlobalParams.solve_directly) {
     residual_output->run_gnuplot();
+    if(level > 1) {
+      child->residual_output->run_gnuplot();
+      if(level == 3) {
+        child->child->residual_output->run_gnuplot();
+      }  
+    }
   }
   std::vector<std::string> generated_files;
   dealii::LinearAlgebra::distributed::Vector<ComplexNumber> shared_solution;
@@ -625,7 +615,7 @@ void NonLocalProblem::print_vector_norm(NumericVectorDistributed * in_v, std::st
   }
   local_norm = dealii::Utilities::MPI::sum(local_norm, GlobalMPI.communicators_by_level[level]);
   if(index_in_sweeping_direction == 0) {
-    std::cout << marker << " on " << GlobalParams.MPI_Rank << ": " << std::sqrt(local_norm) << " and " << max << std::endl;
+    std::cout << marker << ": " << std::sqrt(local_norm) << std::endl;
   }
 }
 

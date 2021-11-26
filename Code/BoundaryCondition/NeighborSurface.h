@@ -8,7 +8,7 @@
 class NeighborSurface : public BoundaryCondition {
     
   public: 
-    const bool is_lower_process;
+    const bool is_lower_interface;
     std::array<std::set<unsigned int>, 6> edge_ids_by_boundary_id;
     std::array<std::set<unsigned int>, 6> face_ids_by_boundary_id;
     std::array<std::vector<InterfaceDofData>, 6> dof_indices_by_boundary_id;
@@ -37,7 +37,6 @@ class NeighborSurface : public BoundaryCondition {
     void compute_coordinate_ranges();
     void set_boundary_ids();
     std::string output_results(const dealii::Vector<ComplexNumber> & , std::string) override;
-    auto get_corner_boundary_id_set() -> std::array<std::pair<BoundaryId, BoundaryId>, 4>;
     DofCount compute_n_locally_owned_dofs() override;
     DofCount compute_n_locally_active_dofs() override;
     void send_up_inner_dofs() override;

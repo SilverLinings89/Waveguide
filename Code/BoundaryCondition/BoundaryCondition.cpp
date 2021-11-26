@@ -151,7 +151,7 @@ void BoundaryCondition::print_dof_validation() {
           }
         }
         if(invalid_dof_count > 0) {
-          std::cout << "On process " << GlobalParams.MPI_Rank << " surface " << b_id << " there were "<< invalid_dof_count<< "(" << owned_invalid << ") invalid dofs towards "<< surf << std::endl;
+          std::cout << "On process " << GlobalParams.MPI_Rank << " surface " << b_id << " there were "<< invalid_dof_count << "(" << owned_invalid << ") invalid dofs towards "<< surf << std::endl;
         }
       }
     }

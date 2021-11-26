@@ -130,7 +130,7 @@ void GeometryManager::validate_global_dof_indices(unsigned int in_level) {
   for(unsigned int i = 0; i < 6; i++) {
     occurences = count_occurences_of_max_uint(levels[in_level].surfaces[i]->global_index_mapping);
     if(occurences != 0) {
-      std::cout << "On level " << in_level << " on " << GlobalParams.MPI_Rank << " on surface " << i << " there were " << occurences <<std::endl;
+      levels[in_level].surfaces[i]->print_dof_validation();
     }
   }
 }
@@ -156,7 +156,6 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   levels[in_level].inner_domain->finish_initialization(first_dof);
   for(unsigned int surf = 0; surf < 6; surf += 2 ) {
     if(Geometry.levels[in_level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE) {
-      std::cout << GlobalParams.MPI_Rank << " receives via " << surf << " from " << Geometry.levels[in_level].surfaces[surf]->global_partner_mpi_rank << std::endl;
       Geometry.levels[in_level].surfaces[surf]->finish_dof_index_initialization();
     }
   }
@@ -172,7 +171,6 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   }
   for(unsigned int surf = 1; surf < 6; surf += 2 ) {
     if(Geometry.levels[in_level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE) {
-      std::cout << GlobalParams.MPI_Rank << " sends via " << surf << " to " << Geometry.levels[in_level].surfaces[surf]->global_partner_mpi_rank << std::endl;
       Geometry.levels[in_level].surfaces[surf]->finish_dof_index_initialization();
     }
   }
@@ -268,8 +266,7 @@ std::pair<bool, unsigned int> GeometryManager::get_global_neighbor_for_interface
       }
       break;
     case Direction::PlusX:
-      if (GlobalParams.Index_in_x_direction ==
-          GlobalParams.Blocks_in_x_direction - 1) {
+      if (GlobalParams.Index_in_x_direction == GlobalParams.Blocks_in_x_direction - 1) {
         ret.first = false;
       } else {
         ret.second = GlobalParams.MPI_Rank + 1;
@@ -437,10 +434,6 @@ Direction GeometryManager::get_direction_for_boundary_id(BoundaryId in_bid) {
       std::cout << "Weird call in get direction for boundary id function" << std::endl;
       return Direction::MinusX;
   }
-}
-
-bool GeometryManager::is_surface_isolated(BoundaryId in_b_id, unsigned int in_level) {
-  return (get_surface_type(in_b_id, in_level) == SurfaceType::ABC_SURFACE) && (get_surface_type(in_b_id, in_level+1) == SurfaceType::NEIGHBOR_SURFACE);
 }
 
 SurfaceType get_surf_type_for_level_0(BoundaryId in_b_id) {

@@ -19,8 +19,8 @@
 
 NeighborSurface::NeighborSurface(unsigned int in_surface, unsigned int in_level)
     : BoundaryCondition(in_surface, in_level, Geometry.surface_extremal_coordinate[in_surface]),
-    is_lower_process(in_surface % 2 == 0) {
-    global_partner_mpi_rank =Geometry.get_global_neighbor_for_interface(Geometry.get_direction_for_boundary_id(in_surface)).second;
+    is_lower_interface(in_surface % 2 == 0) {
+    global_partner_mpi_rank = Geometry.get_global_neighbor_for_interface(Geometry.get_direction_for_boundary_id(in_surface)).second;
     dof_counter = 0;
 }
 
@@ -114,30 +114,6 @@ std::string NeighborSurface::output_results(const dealii::Vector<ComplexNumber> 
 void NeighborSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern * , Constraints * ) {
 }
 
-std::array<std::pair<BoundaryId, BoundaryId>, 4> NeighborSurface::get_corner_boundary_id_set() {
-  std::array<std::pair<BoundaryId, BoundaryId>, 4> corners;
-  if(b_id == 0 || b_id == 1) {
-		corners[0] = std::pair<BoundaryId, BoundaryId>(2,4);
-		corners[1] = std::pair<BoundaryId, BoundaryId>(3,4);
-		corners[2] = std::pair<BoundaryId, BoundaryId>(2,5);
-		corners[3] = std::pair<BoundaryId, BoundaryId>(3,5);
-  }
-  if(b_id == 2 || b_id == 3) {
-		corners[0] = std::pair<BoundaryId, BoundaryId>(0,4);
-		corners[1] = std::pair<BoundaryId, BoundaryId>(1,4);
-		corners[2] = std::pair<BoundaryId, BoundaryId>(0,5);
-		corners[3] = std::pair<BoundaryId, BoundaryId>(1,5);
-  }
-  if(b_id == 4 || b_id == 5) {
-		corners[0] = std::pair<BoundaryId, BoundaryId>(0,2);
-		corners[1] = std::pair<BoundaryId, BoundaryId>(1,2);
-		corners[2] = std::pair<BoundaryId, BoundaryId>(0,3);
-		corners[3] = std::pair<BoundaryId, BoundaryId>(1,3);
-  }
-  return corners;
-}
-
-
 DofCount NeighborSurface::compute_n_locally_owned_dofs() {
 	return 0;
 }
@@ -158,7 +134,7 @@ void NeighborSurface::send_up_inner_dofs() {
 	for(unsigned int i = 0; i < n_dofs; i++) {
 		local_indices_buffer[i] = local_indices[i];
 	}
-	MPI_Send(local_indices_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, 0, MPI_COMM_WORLD);
+	MPI_Send(local_indices_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, global_partner_mpi_rank, MPI_COMM_WORLD);
 }
 
 void NeighborSurface::receive_from_below_dofs() {
@@ -169,7 +145,7 @@ void NeighborSurface::receive_from_below_dofs() {
 		local_indices[i] = dofs[i].index;
 	} 
 	unsigned int * dof_indices = new unsigned int[n_dofs];
-	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0);
+	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, GlobalParams.MPI_Rank, MPI_COMM_WORLD, 0);
 	DofIndexVector global_indices(n_dofs);
 	for(unsigned int i = 0; i < n_dofs; i++){
 		global_indices[i] = dof_indices[i];
@@ -195,7 +171,7 @@ void NeighborSurface::send_up_boundary_dofs(unsigned int other_bid) {
 			for(unsigned int i = 0; i < n_dofs; i++) {
 				global_indices[i] = indices[i];
 			}
-			MPI_Send(global_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, 0, MPI_COMM_WORLD);
+			MPI_Send(global_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, global_partner_mpi_rank, MPI_COMM_WORLD);
 		}
 	}
 }
@@ -204,7 +180,7 @@ std::vector<DofNumber> NeighborSurface::receive_boundary_dofs(unsigned int other
 	std::vector<DofNumber> ret;
 	const unsigned int n_dofs = Geometry.levels[level].surfaces[other_bid]->get_dof_association_by_boundary_id(b_id).size();
 	unsigned int * dof_indices = new unsigned int [n_dofs];
-	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, 0, MPI_COMM_WORLD, 0);
+	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, GlobalParams.MPI_Rank, MPI_COMM_WORLD, 0);
 	ret.resize(n_dofs);
 	for(unsigned int i = 0; i < n_dofs; i++) {
 		ret[i] = dof_indices[i];
@@ -213,7 +189,7 @@ std::vector<DofNumber> NeighborSurface::receive_boundary_dofs(unsigned int other
 }
 
 void NeighborSurface::finish_dof_index_initialization() {
-	if(is_lower_process) {
+	if(is_lower_interface) {
 		// this interface does not own, so it receives
 		receive_from_below_dofs();
 		for(unsigned int surf = 0; surf < 6; surf++) {
@@ -238,14 +214,24 @@ void NeighborSurface::finish_dof_index_initialization() {
 }
 
 void NeighborSurface::distribute_dof_indices() {
-	if(is_lower_process) {
+	if(is_lower_interface) {
 		for(auto surf : adjacent_boundaries) {
-			if(are_edge_dofs_owned[surf]) {
+			if(Geometry.levels[level].surface_type[surf] != SurfaceType::NEIGHBOR_SURFACE) {
 				std::vector<InterfaceDofData> dof_data = Geometry.levels[level].surfaces[surf]->get_dof_association_by_boundary_id(b_id);
 				std::vector<unsigned int> dof_indices;
 				for(unsigned int i = 0; i < dof_data.size(); i++) {
 					dof_indices.push_back(dof_data[i].index);
 				}
+				
+				if(GlobalParams.MPI_Rank == 1 && b_id == 0 && surf == 2) {
+					unsigned int counter = 0;
+					for(unsigned int i = 0; i < boundary_dofs[surf].size(); i++) {
+						if(boundary_dofs[surf][i] > Geometry.levels[level].n_total_level_dofs) {
+							counter ++;
+						}
+					}
+				}
+				
 				Geometry.levels[level].surfaces[surf]->set_non_local_dof_indices(dof_indices, boundary_dofs[surf]);
 			}
 		}

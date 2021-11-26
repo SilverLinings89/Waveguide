@@ -734,4 +734,15 @@ On level 2 for process 4: Boundary 0 type PML(2948). Boundary 1 type PML(2948). 
 On level 2 for process 5: Boundary 0 type PML(2948). Boundary 1 type PML(2948). Boundary 2 type Neighbor. Boundary 3 type PML(7380). Boundary 4 type Neighbor. Boundary 5 type PML(12924). 
 
 Even after fixing this an error persists. I have to check in more detail. After a reimplementation, the solver now converges on level 1 for the lower part. And for the upper part. AND ALSO ON LEVEL 2!!!!!!!!!
- 
+
+# Thursday, 25th of November
+
+The problem for level 3 runs is, that some dofs, that are not locally owned for a boundary, are not assigned their global indices. I will write a more general code to evaluate when and why this is happening.
+
+Since I no longer use the case of isolated surfaces, I have removed that implementation from the code.
+
+# Friday, 26th of November
+
+I now have an implementation that does the job and reaches assembly for level 3. Running checks for all usecases. The error (if it works properly now) was, that the dof indices across sweeping interfaces were not sent properly in all cases. The solution was forcing the proper exchange in NeighborSurface::distribute_dof_indices(). For level 3 I see convergence on all levels.
+
+I added output for the lower level sweeping convergence and removed some old diagnostic output.
