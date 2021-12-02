@@ -1,13 +1,3 @@
-/*
- * DualProblemTransformationWrapper.cpp
- *
- *  Created on: Jan 10, 2017
- *      Author: pascal
- */
-
-#ifndef DualTransformationWrapper_CPP
-#define DualTransformationWrapper_CPP
-
 #include "DualProblemTransformationWrapper.h"
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
@@ -21,8 +11,8 @@
 using namespace dealii;
 
 DualProblemTransformationWrapper::DualProblemTransformationWrapper(
-    SpaceTransformation *in_st, int inner_rank)
-    : SpaceTransformation(3, inner_rank),
+    SpaceTransformation *in_st)
+    : SpaceTransformation(3),
       epsilon_K(GlobalParams.Epsilon_R_in_waveguide),
       epsilon_M(GlobalParams.Epsilon_R_outside_waveguide),
       sectors(GlobalParams.Number_of_sectors),
@@ -152,5 +142,3 @@ bool DualProblemTransformationWrapper::IsDofFree(int input) const {
 }
 
 void DualProblemTransformationWrapper::Print() const { return st->Print(); }
-
-#endif

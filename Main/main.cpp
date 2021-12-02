@@ -18,9 +18,6 @@
 #include "../Code/Solutions/ExactSolution.h"
 #include "../Code/OutputGenerators/Console/GradientTable.h"
 #include "../Code/SpaceTransformations/SpaceTransformation.h"
-#include "../Code/SpaceTransformations/InhomogenousTransformationRectangular.h"
-#include "../Code/SpaceTransformations/HomogenousTransformationRectangular.h"
-#include "../Code/SpaceTransformations/DualProblemTransformationWrapper.h"
 #include "../Code/MeshGenerators/SquareMeshGenerator.h"
 #include "../Code/Helpers/ShapeDescription.h"
 #include "../Code/Runners/Simulation.h"
@@ -44,6 +41,7 @@ MPICommunicator GlobalMPI;
 ModeManager GlobalModeManager;
 OutputManager GlobalOutputManager;
 TimerManager GlobalTimerManager;
+SpaceTransformation * GlobalSpaceTransformation;
 
 int main(int argc, char *argv[]) {
   std::string run_file = "../Parameters/Run/base.prm";

@@ -1,5 +1,4 @@
-#ifndef InhomogenousTransformationRectangleFlag
-#define InhomogenousTransformationRectangleFlag
+#pragma once 
 
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
@@ -24,7 +23,7 @@
 
 class InhomogenousTransformationRectangular : public SpaceTransformation {
  public:
-  InhomogenousTransformationRectangular(int);
+  InhomogenousTransformationRectangular();
 
   virtual ~InhomogenousTransformationRectangular();
 
@@ -227,5 +226,3 @@ class InhomogenousTransformationRectangular : public SpaceTransformation {
 
   ComplexNumber evaluate_for_z(double z_in, InnerDomain *);
 };
-
-#endif

@@ -1,6 +1,3 @@
-#ifndef SpaceTransformation_CPP
-#define SpaceTransformation_CPP
-
 #include "SpaceTransformation.h"
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_lib.h>
@@ -8,6 +5,7 @@
 #include <complex>
 #include "../Core/Sector.h"
 #include "../Helpers/QuadratureFormulaCircle.cpp"
+#include "../GlobalObjects/GlobalObjects.h"
 
 std::pair<int, double> SpaceTransformation::Z_to_Sector_and_local_z(
     double in_z) const {
@@ -34,15 +32,14 @@ std::pair<int, double> SpaceTransformation::Z_to_Sector_and_local_z(
   return ret;
 }
 
-SpaceTransformation::SpaceTransformation(int in_dofs_per_layer, int in_rank)
+SpaceTransformation::SpaceTransformation(int in_dofs_per_layer)
     : dofs_per_layer(in_dofs_per_layer),
       boundary_dofs_in(in_dofs_per_layer),
       boundary_dofs_out(in_dofs_per_layer),
       epsilon_K(GlobalParams.Epsilon_R_in_waveguide),
       epsilon_M(GlobalParams.Epsilon_R_outside_waveguide),
       sectors(GlobalParams.Number_of_sectors),
-      deltaY(GlobalParams.Vertical_displacement_of_waveguide),
-      rank(in_rank) {
+      deltaY(GlobalParams.Vertical_displacement_of_waveguide) {
   InitialQuality = 0;
 }
 
@@ -92,6 +89,3 @@ Tensor<2, 3, ComplexNumber> SpaceTransformation::get_Tensor_for_step(
   set_dof(dof, old_value);
   return trafo2 - trafo1;
 }
-
-
-#endif

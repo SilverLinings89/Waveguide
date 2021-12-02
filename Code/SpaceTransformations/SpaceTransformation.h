@@ -1,5 +1,4 @@
-#ifndef SPACETRANSFORMATION_H_
-#define SPACETRANSFORMATION_H_
+#pragma once
 
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
@@ -7,11 +6,11 @@
 #include <math.h>
 #include <vector>
 #include "../Core/Enums.h"
-#include "../GlobalObjects/GlobalObjects.h"
+#include "../Core/Types.h"
 
 using namespace dealii;
 
-class InnerDomain;
+
 template <unsigned int Dofs_Per_Sector>
 class Sector;
 
@@ -41,7 +40,7 @@ class SpaceTransformation {
 
   const unsigned int boundary_dofs_out;
 
-  SpaceTransformation(int, int);
+  SpaceTransformation(int);
 
   virtual Position math_to_phys(Position coord) const = 0;
 
@@ -245,7 +244,4 @@ class SpaceTransformation {
    */
   virtual void Print() const = 0;
 
-  const int rank;
 };
-
-#endif

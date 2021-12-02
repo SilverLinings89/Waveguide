@@ -26,7 +26,7 @@ class InnerDomain;
 
 class HomogenousTransformationRectangular : public SpaceTransformation {
  public:
-  HomogenousTransformationRectangular(int);
+  HomogenousTransformationRectangular();
 
   virtual ~HomogenousTransformationRectangular();
 

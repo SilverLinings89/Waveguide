@@ -746,3 +746,15 @@ Since I no longer use the case of isolated surfaces, I have removed that impleme
 I now have an implementation that does the job and reaches assembly for level 3. Running checks for all usecases. The error (if it works properly now) was, that the dof indices across sweeping interfaces were not sent properly in all cases. The solution was forcing the proper exchange in NeighborSurface::distribute_dof_indices(). For level 3 I see convergence on all levels.
 
 I added output for the lower level sweeping convergence and removed some old diagnostic output.
+
+# Thursday, 2nd of December
+
+This week, I have been working on two issues: 
+- To evaluate if the Hardy Space Infinite Elements could be adapted with limited effort to the requirements of the current code.
+- To evaluate if it would be easy to run the direct solver on the local level on a GPU.
+
+About the HSIE I have come to the conclusion that it is not currently woth making that time investment. It would require assembling the correct coupling terms for edge and corner cells with 2 or 3 infinite directions which is not simple and is not documented in any of the relevant publications except for one case for Helmholz in 2D. This means it would likely take a while to do and therefore I will now rely on the PML implementation which simply works.
+
+The CUDA part is interesting but also non-trivial. The documnetation by the deal.ii team does not go into a lot of details how to get a matrix onto the device and how to run the direct solver. Also: Type-defaults are float and double, so there would be additional work in making the templates available for std::complexy<double> and checking if the algorithms accutally support this. On top of this, I would have to evaluate if the solvers even work for relevant sizes and how to handle devices across MPI so this would likely mean that a lot of time would have to be invested which I dont want to do at the moment.
+
+I am now working on making all the predefined shapes work again. To this goal, I am cleaning up the SpaceTransformation implementation in the TO-module (Folder Code/SpaceTransformation). With the global SpaceTransformation object, the code now compiles again.

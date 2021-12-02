@@ -28,7 +28,6 @@ class GeometryManager {
   unsigned int shape_sector_count;
   unsigned int local_inner_dofs;
   bool are_surface_meshes_initialized;
-
   double h_x;
   double h_y;
   double h_z;

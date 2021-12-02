@@ -1,6 +1,3 @@
-#ifndef INHOMOGENOUS_TRANSFORMATION_RECTANGULAR_CPP
-#define INHOMOGENOUS_TRANSFORMATION_RECTANGULAR_CPP
-
 #include "InhomogenousTransformationRectangular.h"
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
@@ -12,9 +9,8 @@
 
 using namespace dealii;
 
-InhomogenousTransformationRectangular::InhomogenousTransformationRectangular(
-    int in_rank)
-    : SpaceTransformation(3, in_rank),
+InhomogenousTransformationRectangular::InhomogenousTransformationRectangular()
+    : SpaceTransformation(3),
       epsilon_K(GlobalParams.Epsilon_R_in_waveguide),
       epsilon_M(GlobalParams.Epsilon_R_outside_waveguide),
       sectors(GlobalParams.Number_of_sectors),
@@ -277,5 +273,3 @@ InhomogenousTransformationRectangular::get_Space_Transformation_Tensor(
 
   return transformation;
 }
-
-#endif

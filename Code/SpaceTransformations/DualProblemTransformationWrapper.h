@@ -1,5 +1,4 @@
-#ifndef DualProblemTransformationWrapperFlag
-#define DualProblemTransformationWrapperFlag
+#pragma once
 
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
@@ -28,7 +27,7 @@ class DualProblemTransformationWrapper : public SpaceTransformation {
    * construction is straight forward. \param non_dual_st This pointer points to
    * the actual transformation that is being wrapped.
    */
-  DualProblemTransformationWrapper(SpaceTransformation *non_dual_st, int rank);
+  DualProblemTransformationWrapper(SpaceTransformation *non_dual_st);
 
   ~DualProblemTransformationWrapper();
 
@@ -258,5 +257,3 @@ class DualProblemTransformationWrapper : public SpaceTransformation {
   void Print() const;
   SpaceTransformation *st;
 };
-
-#endif

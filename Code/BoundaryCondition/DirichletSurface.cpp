@@ -96,18 +96,20 @@ Constraints DirichletSurface::make_constraints() {
 		ret.set_inhomogeneity(global_index, line.inhomogeneity);
 	}
 	constraints_local.clear();
-	for(unsigned int surf = 0; surf < 6; surf++) {
-		if(surf != b_id && !are_opposing_sites(b_id, surf)) {
-			if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
-				PMLTransformedExactSolution ptes(b_id, additional_coordinate);
-				VectorTools::project_boundary_values_curl_conforming_l2(Geometry.levels[level].surfaces[surf]->dof_handler, 0, ptes, b_id, constraints_local);
-				for(auto line : constraints_local.get_lines()) {
-					const unsigned int local_index = line.index;
-					const unsigned int global_index = Geometry.levels[level].surfaces[surf]->global_index_mapping[local_index];
-					ret.add_line(global_index);
-					ret.set_inhomogeneity(global_index, line.inhomogeneity);
+	if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML) {
+		for(unsigned int surf = 0; surf < 6; surf++) {
+			if(surf != b_id && !are_opposing_sites(b_id, surf)) {
+				if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
+					PMLTransformedExactSolution ptes(b_id, additional_coordinate);
+					VectorTools::project_boundary_values_curl_conforming_l2(Geometry.levels[level].surfaces[surf]->dof_handler, 0, ptes, b_id, constraints_local);
+					for(auto line : constraints_local.get_lines()) {
+						const unsigned int local_index = line.index;
+						const unsigned int global_index = Geometry.levels[level].surfaces[surf]->global_index_mapping[local_index];
+						ret.add_line(global_index);
+						ret.set_inhomogeneity(global_index, line.inhomogeneity);
+					}
+					constraints_local.clear();
 				}
-				constraints_local.clear();
 			}
 		}
 	}

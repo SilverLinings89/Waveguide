@@ -1370,18 +1370,17 @@ bool HSIESurface::finish_initialization(DofNumber index) {
 
 dealii::IndexSet HSIESurface::compute_non_owned_dofs() {
   IndexSet non_owned_dofs(dof_counter);
-  std::vector<unsigned int> non_locally_owned_surfaces;
-  for(auto surf: adjacent_boundaries) {
-    if(!are_edge_dofs_owned[surf]) {
-      non_locally_owned_surfaces.push_back(surf);
-    }
+  for(auto it : surface_dofs) {
+    non_owned_dofs.add_index(it.index);
   }
-  non_locally_owned_surfaces.push_back(opposing_Boundary_Id(b_id));
-
-  for(auto surf: non_locally_owned_surfaces) {
-    std::vector<InterfaceDofData> dofs = get_dof_association_by_boundary_id(surf);
-    for(auto dof : dofs) {
-      non_owned_dofs.add_index(dof.index);
+  for(auto surf : adjacent_boundaries) {
+    if(Geometry.levels[level].surface_type[surf] == SurfaceType::NEIGHBOR_SURFACE) {
+      if(surf % 2 == 0) {
+        std::vector<InterfaceDofData> dofs_data = get_dof_association_by_boundary_id(surf);
+        for(auto it : dofs_data) {
+          non_owned_dofs.add_index(it.index);
+        }
+      }
     }
   }
   return non_owned_dofs;

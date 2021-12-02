@@ -7,6 +7,8 @@
 #include "../Code/GlobalObjects/ModeManager.h"
 #include "../Code/SpaceTransformations/SpaceTransformation.h"
 #include "../Code/BoundaryCondition/HSIEPolynomial.h"
+#include "../Code/GlobalObjects/OutputManager.h"
+#include "../Code/GlobalObjects/TimerManager.h"
 #include <fstream>
 
 Parameters GlobalParams;
@@ -15,6 +17,8 @@ MPICommunicator GlobalMPI;
 ModeManager GlobalModeManager;
 OutputManager GlobalOutputManager;
 TimerManager GlobalTimerManager;
+SpaceTransformation * GlobalSpaceTransformation;
+
 std::string solutionpath = "";
 std::ofstream log_stream;
 std::string constraints_filename = "constraints.log";

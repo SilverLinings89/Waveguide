@@ -1,5 +1,6 @@
 #include "../Helpers/Parameters.h"
 #include "GeometryManager.h"
+#include "../SpaceTransformations/InhomogenousTransformationRectangular.h"
 #include "../Hierarchy/MPICommunicator.h"
 #include "../Helpers/staticfunctions.h"
 #include "ModeManager.h"
@@ -21,5 +22,7 @@ void initialize_global_variables(const std::string run_file, const std::string c
   GlobalOutputManager.initialize();
 
   GlobalTimerManager.initialize();
+
+  GlobalSpaceTransformation = new InhomogenousTransformationRectangular();
   print_info("GlobalPreparation", "Complete");
 }

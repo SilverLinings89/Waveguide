@@ -14,7 +14,7 @@ class LocalProblem: public HierarchicalProblem {
 public:
   SolverControl sc;
   dealii::PETScWrappers::SparseDirectMUMPS solver;
-
+  
   LocalProblem();
   ~LocalProblem() override;
 

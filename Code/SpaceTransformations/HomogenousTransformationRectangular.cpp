@@ -1,6 +1,3 @@
-#ifndef HOMOGENOUS_TRANSFORMATION_RECTANGULAR_CPP
-#define HOMOGENOUS_TRANSFORMATION_RECTANGULAR_CPP
-
 #include "HomogenousTransformationRectangular.h"
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
@@ -12,9 +9,8 @@
 
 using namespace dealii;
 
-HomogenousTransformationRectangular::HomogenousTransformationRectangular(
-    int in_rank)
-    : SpaceTransformation(2, in_rank),
+HomogenousTransformationRectangular::HomogenousTransformationRectangular()
+    : SpaceTransformation(2),
       epsilon_K(GlobalParams.Epsilon_R_in_waveguide),
       epsilon_M(GlobalParams.Epsilon_R_outside_waveguide),
       sectors(GlobalParams.Number_of_sectors),
@@ -322,5 +318,3 @@ void HomogenousTransformationRectangular::Print() const {
 unsigned int HomogenousTransformationRectangular::NDofs() const {
   return sectors * 2 + 2;
 }
-
-#endif
