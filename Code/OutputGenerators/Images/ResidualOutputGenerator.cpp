@@ -15,7 +15,7 @@ ResidualOutputGenerator::ResidualOutputGenerator(std::string in_name, std::strin
     level(in_level) {
     fname = GlobalOutputManager.get_numbered_filename(name, GlobalParams.MPI_Rank, "plt");
     ofname = GlobalOutputManager.get_numbered_filename(name, GlobalParams.MPI_Rank, "png");
-    for(unsigned int i = 0; i < GlobalParams.HSIE_SWEEPING_LEVEL - level; i++) {
+    for(unsigned int i = 0; i < GlobalParams.Sweeping_Level - level; i++) {
         spacing += "\t";
     }
 }

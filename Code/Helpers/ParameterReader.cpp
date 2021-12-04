@@ -74,7 +74,7 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.Blocks_in_x_direction = run_prm.get_integer("processes in x");
         ret.Blocks_in_y_direction = run_prm.get_integer("processes in y");
         ret.Blocks_in_z_direction = run_prm.get_integer("processes in z");
-        ret.HSIE_SWEEPING_LEVEL = run_prm.get_integer("sweeping level");
+        ret.Sweeping_Level = run_prm.get_integer("sweeping level");
         ret.Cells_in_x = run_prm.get_integer("cell count x");
         ret.Cells_in_y = run_prm.get_integer("cell count y");
         ret.Cells_in_z = run_prm.get_integer("cell count z");

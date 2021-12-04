@@ -44,7 +44,7 @@ static void setup_GlobalParams_for_tests(unsigned int n_cells_x, unsigned int n_
   GlobalParams.Geometry_Size_X = size_x;
   GlobalParams.Geometry_Size_Y = size_y;
   GlobalParams.Geometry_Size_Z = size_z;
-  GlobalParams.HSIE_SWEEPING_LEVEL = 1;
+  GlobalParams.Sweeping_Level = 1;
   GlobalParams.MPI_Rank = 0;
   GlobalParams.Nedelec_element_order = 0;
   GlobalParams.BoundaryCondition = b_type;

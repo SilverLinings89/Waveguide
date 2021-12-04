@@ -107,7 +107,7 @@ struct Parameters {
 
     // 1 means normal sweeping, 2 means hierarchical sweeping with depth
     // 1, 3 means hierarchical sweeping with depth 2.
-    unsigned int HSIE_SWEEPING_LEVEL = 1;  
+    unsigned int Sweeping_Level = 1;  
 
     LoggingLevel Logging_Level = LoggingLevel::DEBUG_ALL;
 

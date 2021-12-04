@@ -10,7 +10,7 @@
 #include "LevelDofIndexData.h"
 
 DofIndexData::DofIndexData() {
-  for (unsigned int i = 0; i < GlobalParams.HSIE_SWEEPING_LEVEL; i++) {
+  for (unsigned int i = 0; i < GlobalParams.Sweeping_Level; i++) {
     indexCountsByLevel.push_back(*(new LevelDofIndexData()));
   }
   isSurfaceNeighbor = new bool[6];

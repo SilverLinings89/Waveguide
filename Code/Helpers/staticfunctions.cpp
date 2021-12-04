@@ -731,10 +731,10 @@ std::vector<BoundaryId> get_adjacent_boundary_ids(BoundaryId self) {
 }
 
 SweepingDirection get_sweeping_direction_for_level(unsigned int in_level) {
-  if(GlobalParams.HSIE_SWEEPING_LEVEL == 1) { 
+  if(GlobalParams.Sweeping_Level == 1) { 
     return SweepingDirection::Z;
   }
-  if(GlobalParams.HSIE_SWEEPING_LEVEL == 2) {
+  if(GlobalParams.Sweeping_Level == 2) {
     if(in_level == 1) {
       return SweepingDirection::Y;
     }
@@ -742,7 +742,7 @@ SweepingDirection get_sweeping_direction_for_level(unsigned int in_level) {
       return SweepingDirection::Z;
     }
   }
-  if(GlobalParams.HSIE_SWEEPING_LEVEL == 3) { 
+  if(GlobalParams.Sweeping_Level == 3) { 
     if(in_level == 1) {
       return SweepingDirection::X;
     }

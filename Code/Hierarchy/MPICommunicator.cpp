@@ -25,7 +25,7 @@ void MPICommunicator::initialize() {
   MPI_Comm local = MPI_COMM_WORLD;
   communicators_by_level.push_back(MPI_COMM_WORLD);
   rank_on_level.push_back(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD));
-  while (local_level < GlobalParams.HSIE_SWEEPING_LEVEL) {
+  while (local_level < GlobalParams.Sweeping_Level) {
     MPI_Comm new_com;
     MPI_Comm_split(local, get_index_for_direction_index(local_level), GlobalParams.MPI_Rank, &new_com);
     local = new_com;

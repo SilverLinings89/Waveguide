@@ -32,6 +32,7 @@
 #include "../Helpers/PointSourceField.h"
 #include "../Solutions/ExactSolutionRamped.h"
 #include "../Solutions/ExactSolutionConjugate.h"
+#include "../SpaceTransformations/SpaceTransformation.h"
 
 InnerDomain::InnerDomain(unsigned int in_level)
     :
@@ -213,6 +214,9 @@ struct CellwiseAssemblyDataNP {
   };
 
   void prepare_for_current_q_index(unsigned int q_index) {
+    if(GlobalParams.Use_Predefined_Shape) {
+      transformation = GlobalSpaceTransformation->get_Space_Transformation_Tensor(quadrature_points[q_index]);
+    }
     mu = invert(transformation);
     const double eps_kappa_2 = Geometry.eps_kappa_2(quadrature_points[q_index]);
     if (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])) {
@@ -220,6 +224,7 @@ struct CellwiseAssemblyDataNP {
     } else {
       epsilon = transformation * eps_out;
     }
+    
     std::vector<unsigned int> dof_indices(dofs_per_cell);
     cell->get_dof_indices(dof_indices);
     const double JxW = fe_values.JxW(q_index);

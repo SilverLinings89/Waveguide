@@ -758,3 +758,7 @@ About the HSIE I have come to the conclusion that it is not currently woth makin
 The CUDA part is interesting but also non-trivial. The documnetation by the deal.ii team does not go into a lot of details how to get a matrix onto the device and how to run the direct solver. Also: Type-defaults are float and double, so there would be additional work in making the templates available for std::complexy<double> and checking if the algorithms accutally support this. On top of this, I would have to evaluate if the solvers even work for relevant sizes and how to handle devices across MPI so this would likely mean that a lot of time would have to be invested which I dont want to do at the moment.
 
 I am now working on making all the predefined shapes work again. To this goal, I am cleaning up the SpaceTransformation implementation in the TO-module (Folder Code/SpaceTransformation). With the global SpaceTransformation object, the code now compiles again.
+
+# Friday, 3rd of December
+
+After a long workshop I have invested some time on checking for some details in my config files. I have found the old code to load a shape description and added it again.

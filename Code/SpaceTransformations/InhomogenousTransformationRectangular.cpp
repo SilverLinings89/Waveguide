@@ -21,8 +21,7 @@ InhomogenousTransformationRectangular::InhomogenousTransformationRectangular()
 InhomogenousTransformationRectangular::
     ~InhomogenousTransformationRectangular() {}
 
-Position InhomogenousTransformationRectangular::math_to_phys(
-    Position coord) const {
+Position InhomogenousTransformationRectangular::math_to_phys(Position coord) const {
   Position ret;
   std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
   double m = case_sectors[sec.first].get_m(sec.second);
@@ -32,8 +31,7 @@ Position InhomogenousTransformationRectangular::math_to_phys(
   return ret;
 }
 
-Position InhomogenousTransformationRectangular::phys_to_math(
-    Position coord) const {
+Position InhomogenousTransformationRectangular::phys_to_math(Position coord) const {
   Position ret;
   std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
   double m = case_sectors[sec.first].get_m(sec.second);
@@ -125,14 +123,12 @@ double InhomogenousTransformationRectangular::Sector_Length() const {
 
 void InhomogenousTransformationRectangular::estimate_and_initialize() {
   if (GlobalParams.Use_Predefined_Shape) {
-    Sector<2> the_first(true, false, GlobalParams.sd.z[0],
-                        GlobalParams.sd.z[1]);
+    Sector<2> the_first(true, false, GlobalParams.sd.z[0], GlobalParams.sd.z[1]);
     the_first.set_properties_force(GlobalParams.sd.m[0], GlobalParams.sd.m[1],
                                    GlobalParams.sd.v[0], GlobalParams.sd.v[1]);
     case_sectors.push_back(the_first);
     for (int i = 1; i < GlobalParams.sd.Sectors - 2; i++) {
-      Sector<2> intermediate(false, false, GlobalParams.sd.z[i],
-                             GlobalParams.sd.z[i + 1]);
+      Sector<2> intermediate(false, false, GlobalParams.sd.z[i], GlobalParams.sd.z[i + 1]);
       intermediate.set_properties_force(
           GlobalParams.sd.m[i], GlobalParams.sd.m[i + 1], GlobalParams.sd.v[i],
           GlobalParams.sd.v[i + 1]);

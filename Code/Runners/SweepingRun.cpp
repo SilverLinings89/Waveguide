@@ -29,7 +29,7 @@ void SweepingRun::prepare() {
     rmProblem = new RectangularMode();
   } 
   
-  mainProblem = new NonLocalProblem(GlobalParams.HSIE_SWEEPING_LEVEL);
+  mainProblem = new NonLocalProblem(GlobalParams.Sweeping_Level);
   mainProblem->initialize();
   
   print_info("SweepingRun::prepare", "End", true, LoggingLevel::DEBUG_ONE);

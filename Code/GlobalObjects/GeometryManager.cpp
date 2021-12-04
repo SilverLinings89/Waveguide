@@ -441,24 +441,24 @@ SurfaceType get_surf_type_for_level_0(BoundaryId in_b_id) {
   if(in_b_id == 4) {
     return SurfaceType::OPEN_SURFACE;
   }
-  if(GlobalParams.HSIE_SWEEPING_LEVEL > 1 && in_b_id == 2 ) {
+  if(GlobalParams.Sweeping_Level > 1 && in_b_id == 2 ) {
     return SurfaceType::OPEN_SURFACE;
   }
-  if(GlobalParams.HSIE_SWEEPING_LEVEL == 3 && in_b_id == 0 ) {
+  if(GlobalParams.Sweeping_Level == 3 && in_b_id == 0 ) {
     return SurfaceType::OPEN_SURFACE;
   }
   return SurfaceType::ABC_SURFACE;
 }
 
 SurfaceType get_surf_type_for_level_1(BoundaryId b_id) {
-  if(GlobalParams.HSIE_SWEEPING_LEVEL == 1) {
+  if(GlobalParams.Sweeping_Level == 1) {
     if(b_id == 4 || b_id == 5) {
       return SurfaceType::NEIGHBOR_SURFACE;
     }
     return SurfaceType::ABC_SURFACE;
   }
 
-  if(GlobalParams.HSIE_SWEEPING_LEVEL == 2) {
+  if(GlobalParams.Sweeping_Level == 2) {
     if(b_id == 2 || b_id == 3) {
       return SurfaceType::NEIGHBOR_SURFACE;
     }
@@ -468,7 +468,7 @@ SurfaceType get_surf_type_for_level_1(BoundaryId b_id) {
     return SurfaceType::ABC_SURFACE;
   }
   
-  if(GlobalParams.HSIE_SWEEPING_LEVEL == 3) {
+  if(GlobalParams.Sweeping_Level == 3) {
     if(b_id == 0 || b_id == 1) {
       return SurfaceType::NEIGHBOR_SURFACE;
     }
@@ -480,14 +480,14 @@ SurfaceType get_surf_type_for_level_1(BoundaryId b_id) {
 }
 
 SurfaceType get_surf_type_for_level_2(BoundaryId b_id) {
-  if(GlobalParams.HSIE_SWEEPING_LEVEL == 2) {
+  if(GlobalParams.Sweeping_Level == 2) {
     if(b_id == 2 || b_id == 3 || b_id == 4 || b_id == 5) {
       return SurfaceType::NEIGHBOR_SURFACE;
     }
     return SurfaceType::ABC_SURFACE;
   }
   
-  if(GlobalParams.HSIE_SWEEPING_LEVEL == 3) {
+  if(GlobalParams.Sweeping_Level == 3) {
     if(b_id == 0 || b_id == 1 || b_id == 2 || b_id == 3) {
       return SurfaceType::NEIGHBOR_SURFACE;
     }
@@ -536,7 +536,7 @@ std::pair<bool, SurfaceType> handle_exterior_boundaries(BoundaryId b_id) {
 }
 
 SurfaceType GeometryManager::get_surface_type(BoundaryId b_id, unsigned int in_level) {
-  unsigned int level_difference = GlobalParams.HSIE_SWEEPING_LEVEL - in_level;
+  unsigned int level_difference = GlobalParams.Sweeping_Level - in_level;
   std::pair<bool, SurfaceType> exterior_boundary = handle_exterior_boundaries(b_id);
   if(exterior_boundary.first) return exterior_boundary.second;
   switch(in_level) {

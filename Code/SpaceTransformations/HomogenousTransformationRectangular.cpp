@@ -192,10 +192,8 @@ double HomogenousTransformationRectangular::Sector_Length() const {
 
 void HomogenousTransformationRectangular::estimate_and_initialize() {
   if (GlobalParams.Use_Predefined_Shape) {
-    Sector<2> the_first(true, false, GlobalParams.sd.z[0],
-                        GlobalParams.sd.z[1]);
-    the_first.set_properties_force(GlobalParams.sd.m[0], GlobalParams.sd.m[1],
-                                   GlobalParams.sd.v[0], GlobalParams.sd.v[1]);
+    Sector<2> the_first(true, false, GlobalParams.sd.z[0], GlobalParams.sd.z[1]);
+    the_first.set_properties_force(GlobalParams.sd.m[0], GlobalParams.sd.m[1], GlobalParams.sd.v[0], GlobalParams.sd.v[1]);
     case_sectors.push_back(the_first);
     for (int i = 1; i < GlobalParams.sd.Sectors - 2; i++) {
       Sector<2> intermediate(false, false, GlobalParams.sd.z[i],

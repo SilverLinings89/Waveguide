@@ -83,7 +83,7 @@ PetscErrorCode pc_create(SampleShellPC *shell, NonLocalProblem * parent)
 }
 
 NonLocalProblem::NonLocalProblem(unsigned int level) :
-  HierarchicalProblem(level, static_cast<SweepingDirection> (2 + GlobalParams.HSIE_SWEEPING_LEVEL - level)),
+  HierarchicalProblem(level, static_cast<SweepingDirection> (2 + GlobalParams.Sweeping_Level - level)),
   sc(GlobalParams.GMRES_max_steps, GlobalParams.Solver_Precision, true, true)
 {
   sweeping_direction = get_sweeping_direction_for_level(level);
@@ -229,7 +229,7 @@ void NonLocalProblem::assemble() {
 
 void NonLocalProblem::solve() {
   
-  if(level == GlobalParams.HSIE_SWEEPING_LEVEL) {
+  if(level == GlobalParams.Sweeping_Level) {
     print_vector_norm(&rhs, "RHS");
   }
 
