@@ -762,3 +762,10 @@ I am now working on making all the predefined shapes work again. To this goal, I
 # Friday, 3rd of December
 
 After a long workshop I have invested some time on checking for some details in my config files. I have found the old code to load a shape description and added it again.
+
+# Monday, 6th of December
+
+Now that the updates are in, the paramter reader should be able to process requests to compute predefined shapes with the indices from 1 to 35 and there is a flag "Use Predefined Case" that signals this to the entire code. 
+
+I will now start running these cases on one machine to see if all the code works and I will also reenable the mesh-transformation for outputs to see if this code works well after all the work done to other parts.
+
