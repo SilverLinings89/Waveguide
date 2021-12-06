@@ -54,6 +54,8 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("Input Signal Method", "Dirichlet", Patterns::Selection("Dirichlet|Taper|Jump"), "Taper uses a tapered exact solution to build a right hand side. Dirichlet applies dirichlet boundary values.");
         case_prm.declare_entry("Signal tapering type", "C1", Patterns::Selection("C0|C1"), "Tapering type for signal input");
         case_prm.declare_entry("Prescribe input zero", "false", Patterns::Bool(), "If this is set to true, there will be a dirichlet zero condition enforced on the global input interface (Process index z: 0, boundary id: 4).");
+        case_prm.declare_entry("Predefined case number", "1", Patterns::Integer(), "Number in [1,35] that describes the predefined shape to use.");
+        case_prm.declare_entry("Use predefined shape", "false", Patterns::Bool(), "If set to true, the geometry for the predefined case from 'Predefined case number' will be used.");
     }
     case_prm.leave_subsection();
 }
@@ -129,6 +131,8 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
             ret.Signal_tapering_type = SignalTaperingType::C0;
         }
         ret.prescribe_0_on_input_side = case_prm.get_bool("Prescribe input zero");
+        ret.Use_Predefined_Shape = case_prm.get_bool("Use predefined shape");
+        ret.Number_of_Predefined_Shape = case_prm.get_integer("Predefined case number");
     }
     return ret;
 }

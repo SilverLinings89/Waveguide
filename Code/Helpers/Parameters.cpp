@@ -43,26 +43,26 @@ auto Parameters::complete_data() -> void {
     }
     Omega = 2.0 * Pi / Lambda;
     if(Use_Predefined_Shape) {
-	  deallog << "Using case " << Number_of_Predefined_Shape << std::endl;
-	  std::ifstream input( "Modes/test.csv" );
-	  std::string line;
-	  int counter = 0;
-	  bool case_found = false;
-	  if(Number_of_Predefined_Shape >= 0 && Number_of_Predefined_Shape < 36){
-        while(std::getline( input, line ) && counter < 36){
-          if(counter == Number_of_Predefined_Shape) {
-            sd.SetByString(line);
-            case_found = true;
+      deallog << "Using case " << Number_of_Predefined_Shape << std::endl;
+      std::ifstream input( "Modes/test.csv" );
+      std::string line;
+      int counter = 0;
+      bool case_found = false;
+      if(Number_of_Predefined_Shape >= 0 && Number_of_Predefined_Shape < 36){
+          while(std::getline( input, line ) && counter < 36){
+            if(counter == Number_of_Predefined_Shape) {
+              sd.SetByString(line);
+              case_found = true;
+            }
+            counter++;
           }
-          counter++;
-        }
-        if(!case_found) {
-          deallog << "There was a severe error. The case was not found therefore not initialized." << std::endl;
-        }
-	  }
-	} else {
-	  deallog << "Not using case." << std::endl;
-	}
+          if(!case_found) {
+            deallog << "There was a severe error. The case was not found therefore not initialized." << std::endl;
+          }
+      }
+    } else {
+      deallog << "Not using case." << std::endl;
+    }
 }
 
 auto Parameters::check_validity() -> bool {
