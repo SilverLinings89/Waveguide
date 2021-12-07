@@ -11,6 +11,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include "../GlobalObjects/GlobalObjects.h"
 
 ShapeDescription::ShapeDescription() {}
 
@@ -35,4 +36,14 @@ void ShapeDescription::SetByString(std::string str) {
     std::getline(iss, token, ',');
     v.push_back(std::stod(token));
   }
+  GlobalParams.Sector_thickness = (z[z.size() - 1] - z[0]) / (Sectors - 1);
+  std::cout << "Sector thickness: " << GlobalParams.Sector_thickness << std::endl;
+  /**
+  if(GlobalParams.MPI_Rank == 0) {
+    std::cout << "I found " << std::to_string(Sectors) << " sectors and initialized them:" << std::endl;;
+    for(unsigned int i = 0; i < Sectors; i++) {
+      std::cout << "  Sector " << i  << " has m: " << m[i] << " v: " << v[i] << " and z:" << z[i] << std::endl;
+    }
+  }
+  **/
 }

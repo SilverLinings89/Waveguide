@@ -7,27 +7,23 @@
 #include "../Helpers/QuadratureFormulaCircle.cpp"
 #include "../GlobalObjects/GlobalObjects.h"
 
-std::pair<int, double> SpaceTransformation::Z_to_Sector_and_local_z(
-    double in_z) const {
+std::pair<int, double> SpaceTransformation::Z_to_Sector_and_local_z(double in_z) const {
   std::pair<int, double> ret;
   ret.first = 0;
   ret.second = 0.0;
   if (in_z <= Geometry.global_z_range.first) {
     ret.first = 0;
     ret.second = 0.0;
-  } else if (in_z < Geometry.global_z_range.second
-      && in_z > Geometry.global_z_range.first) {
-    ret.first = floor(
-        (in_z + Geometry.global_z_range.first)
-            /
-                      (GlobalParams.Sector_thickness));
-    ret.second = (in_z + Geometry.global_z_range.first
-        -
-                  (ret.first * GlobalParams.Sector_thickness)) /
-                 (GlobalParams.Sector_thickness);
+  } else if (in_z < Geometry.global_z_range.second && in_z > Geometry.global_z_range.first) {
+    ret.first = floor( (in_z + Geometry.global_z_range.first) / (GlobalParams.Sector_thickness));
+    ret.second = (in_z + Geometry.global_z_range.first -  (ret.first * GlobalParams.Sector_thickness)) / (GlobalParams.Sector_thickness);
   } else if (in_z >= Geometry.global_z_range.second) {
     ret.first = sectors - 1;
     ret.second = 1.0;
+  }
+
+  if (ret.second < 0 || ret.second > 1){
+    std::cout << "In an erroneous call: ret.second: " << ret.second << " and in_z: " << in_z << " located in sector " << ret.first << std::endl; 
   }
   return ret;
 }

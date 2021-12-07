@@ -769,3 +769,12 @@ Now that the updates are in, the paramter reader should be able to process reque
 
 I will now start running these cases on one machine to see if all the code works and I will also reenable the mesh-transformation for outputs to see if this code works well after all the work done to other parts.
 
+There is currently an error in the computation of transformation tensors. I have not worked with this part of the code for quite some time now and will  work to resolve it now.
+
+I have updated some parameter files and called the estimate_and_initialize function for the space transformation wich performs the setup. The call to this function had been missing and triggered the error.
+
+As another step today, I will implement the dynamic convergence control for higher level sweeping in which the residual for convergence on lower levels is set to a relative value of the current residual on higher levels like 1% of the current residual on the level above. This saves time in the computation and makes sense because otherwise the lower level solutions are extremely precise while the right-hand-side values are still massively flawed which makes little sense.
+
+# Tuesday, 7th of December
+
+Today I will fix the Tensor computation. The coordinate computation doesn't work currently. I have implemented the computation of sector length again but there seams to be another error.

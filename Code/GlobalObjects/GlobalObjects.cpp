@@ -24,5 +24,8 @@ void initialize_global_variables(const std::string run_file, const std::string c
   GlobalTimerManager.initialize();
 
   GlobalSpaceTransformation = new InhomogenousTransformationRectangular();
+
+  GlobalSpaceTransformation->estimate_and_initialize();
+  
   print_info("GlobalPreparation", "Complete");
 }

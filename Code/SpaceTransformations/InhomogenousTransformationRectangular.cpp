@@ -251,8 +251,7 @@ InhomogenousTransformationRectangular::get_Space_Transformation_Tensor(
   std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
 
   Tensor<2, 3, double> transformation =
-      case_sectors[sector_z.first].TransformationTensorInternal(
-          position[0], position[1], sector_z.second);
+      case_sectors[sector_z.first].TransformationTensorInternal(position[0], position[1], sector_z.second);
 
   return transformation;
 }

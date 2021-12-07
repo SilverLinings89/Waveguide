@@ -68,8 +68,7 @@ Tensor<2, 3, double> HomogenousTransformationRectangular::get_Space_Transformati
   return transformation;
 }
 
-Position HomogenousTransformationRectangular::phys_to_math(
-    Position coord) const {
+Position HomogenousTransformationRectangular::phys_to_math(Position coord) const {
   Position ret;
   if (coord[2] < GlobalParams.Geometry_Size_Z / (-2.0)) {
     ret[0] = (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide) * coord[0] /
