@@ -3,7 +3,7 @@ subsection Case parameters
     set fem order = 0
     set geometry size x = 4.0
     set geometry size y = 3.6
-    set geometry size z = 20
+    set geometry size z = 40
     set epsilon in = 2.3409
     set epsilon out = 1.8496
     set mu in = 1.0
@@ -17,5 +17,5 @@ subsection Case parameters
     set Input Signal Method = Dirichlet
     set Prescribe input zero = false
     set Use predefined shape = true
-    set Predefined case number = 1
+    set Predefined case number = 30
 end

@@ -23,7 +23,9 @@ std::pair<int, double> SpaceTransformation::Z_to_Sector_and_local_z(double in_z)
   }
 
   if (ret.second < 0 || ret.second > 1){
-    std::cout << "In an erroneous call: ret.second: " << ret.second << " and in_z: " << in_z << " located in sector " << ret.first << std::endl; 
+    std::cout << "Global ranges: " << Geometry.global_z_range.first << " to " << Geometry.global_z_range.second << std::endl;
+    std::cout << "Details " << GlobalParams.Sector_thickness << ", " << floor( (in_z + Geometry.global_z_range.first) / (GlobalParams.Sector_thickness)) << " and " << (in_z + Geometry.global_z_range.first) / (GlobalParams.Sector_thickness) << std::endl;
+    std::cout << "In an erroneous call: ret.first: " << ret.first << " ret.second: " << ret.second << " and in_z: " << in_z << " located in sector " << ret.first << " and " << GlobalParams.Sector_thickness << std::endl; 
   }
   return ret;
 }

@@ -9,11 +9,23 @@
 
 class InnerDomain;
 
+/**
+ * \class GeometryManager
+ * \brief One object of this type is globally available to handle the geometry of the computation (what is the global computational domain, what is computed locally).
+ * 
+ * This object is one of the first to be initialized. It contains the coordinate ranges locally and globally. It also has several LevelGeometry objects in a vector. This is the core data behind the sweeping hierarchy. These level objects contain:
+ * - the surface types for all boundaries on this level
+ * - pointers to the boundary condition objects
+ * - dof counting data (how many dofs exist on the level, how many dofs does this process own on this level) and also which dofs are stored where in the dof_distribution member.
+ * 
+ * This object can also determine if a coordinate is inside or outside of the waveguide and computes kappa squared required for the assembly of Maxwell's equations.
+ * 
+ */
+
 struct LevelGeometry {
   std::array<SurfaceType, 6> surface_type;
   CubeSurfaceTruncationState is_surface_truncated;
   std::array<std::shared_ptr<BoundaryCondition> , 6> surfaces;
-  unsigned int inner_first_dof;
   std::vector<dealii::IndexSet> dof_distribution;
   DofNumber n_local_dofs;
   DofNumber n_total_level_dofs;
@@ -54,6 +66,7 @@ class GeometryManager {
   void initialize_surfaces();
   void perform_initialization(unsigned int level);
   double eps_kappa_2(Position);
+  double kappa_2();
 
   std::pair<double, double> compute_x_range();
   std::pair<double, double> compute_y_range();
@@ -68,8 +81,6 @@ class GeometryManager {
   bool math_coordinate_in_waveguide(Position) const;
   dealii::Tensor<2,3> get_epsilon_tensor(const Position &);
   double get_epsilon_for_point(const Position &);
-  Position get_global_center();
-  Position get_local_center();
   auto get_boundary_for_direction(Direction) -> BoundaryId;
   auto get_direction_for_boundary_id(BoundaryId) -> Direction;
   void validate_global_dof_indices(unsigned int in_level);

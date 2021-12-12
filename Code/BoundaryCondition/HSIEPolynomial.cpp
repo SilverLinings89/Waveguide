@@ -7,8 +7,7 @@ bool HSIEPolynomial::matricesLoaded = false;
 dealii::FullMatrix<ComplexNumber> HSIEPolynomial::D;
 dealii::FullMatrix<ComplexNumber> HSIEPolynomial::I;
 
-void HSIEPolynomial::computeDandI(unsigned int dimension,
-                                  ComplexNumber k0) {
+void HSIEPolynomial::computeDandI(unsigned int dimension, ComplexNumber k0) {
   HSIEPolynomial::D.reinit(dimension, dimension);
   for (unsigned int i = 0; i < dimension; i++) {
     for (unsigned int j = 0; j < dimension; j++) {

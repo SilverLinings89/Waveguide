@@ -3,6 +3,13 @@
 #include "../Core/Enums.h"
 #include <string>
 
+/**
+ * \struct DofData
+ * 
+ * \brief This is only for the storage of basic data. 
+ * 
+ */
+
 struct DofData {
   DofType type;
   int hsie_order;

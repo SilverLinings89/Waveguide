@@ -30,7 +30,6 @@ Position DualProblemTransformationWrapper::phys_to_math(Position coord) const {
 Position transform_position(Position in_position) {
   Position ret = in_position;
   ret[2] = -ret[2];
-  // ret[2] += GlobalParams.M_BC_Zplus*GlobalParams.Sector_thickness;
   return ret;
 }
 

@@ -23,13 +23,15 @@ class Sector;
  * should be used for the waveguide? This can either be rectangular or tubular.
  * Should the coordinate-transformation always be equal to identity in any
  * domain where PML is applied? (yes or no). However, the space transformation
- * is the only information required to compute the Tensor \f$g\f$ which is a 3x3
+ * is the only information required to compute the Tensor \f$g\f$ which is a \f$3\times3\f$
  * matrix whilch (multiplied by the material value of the untransfomred
  * coordinate either inside or outside the waveguide) gives us the value of
  * \f$\epsilon\f$ and \f$\mu\f$. From this class we derive several different
- * classes which then specify the interface specified in this class. \author
- * Pascal Kraft \date 17.12.2015
+ * classes which then specify the interface specified in this class. 
+ * \author Pascal Kraft 
+ * \date 17.12.2015
  */
+
 class SpaceTransformation {
  public:
   bool homogenized = false;

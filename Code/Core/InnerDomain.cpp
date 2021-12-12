@@ -218,7 +218,7 @@ struct CellwiseAssemblyDataNP {
       transformation = GlobalSpaceTransformation->get_Space_Transformation_Tensor(quadrature_points[q_index]);
     }
     mu = invert(transformation);
-    const double eps_kappa_2 = Geometry.eps_kappa_2(quadrature_points[q_index]);
+    const double kappa_2 = Geometry.kappa_2();
     if (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])) {
       epsilon = transformation * eps_in;
     } else {
@@ -242,7 +242,7 @@ struct CellwiseAssemblyDataNP {
                 Tensor<1, 3, ComplexNumber> J_Val;
                 J_Curl = fe_values[fe_field].curl(j, q_index);
                 J_Val = fe_values[fe_field].value(j, q_index);
-                cell_rhs[i] += incoming_wave_field[dof_indices[j]] * (I_Curl * Conjugate_Vector(J_Curl) * JxW - (eps_kappa_2 * ( I_Val * Conjugate_Vector(J_Val)) * JxW));
+                cell_rhs[i] += incoming_wave_field[dof_indices[j]] * (I_Curl * mu * Conjugate_Vector(J_Curl) * JxW - (kappa_2 * ( epsilon * I_Val * Conjugate_Vector(J_Val)) * JxW));
               }
             }
           }
@@ -253,7 +253,7 @@ struct CellwiseAssemblyDataNP {
         Tensor<1, 3, ComplexNumber> J_Val;
         J_Curl = fe_values[fe_field].curl(j, q_index);
         J_Val = fe_values[fe_field].value(j, q_index);
-        cell_matrix[i][j] += I_Curl * Conjugate_Vector(J_Curl) * JxW - (eps_kappa_2 * ( I_Val * Conjugate_Vector(J_Val)) * JxW);
+        cell_matrix[i][j] += I_Curl * (mu * Conjugate_Vector(J_Curl)) * JxW - (kappa_2 * ( (epsilon * I_Val) * Conjugate_Vector(J_Val)) * JxW);
       }
     }
   }

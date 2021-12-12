@@ -5,6 +5,15 @@
 #include <deal.II/fe/fe_nedelec_sz.h>
 #include <deal.II/lac/affine_constraints.h>
 
+/** 
+ * \class EmptySurface
+ * 
+ * \brief This boundary condition implements a zero surface. It is required for the sweeping scheme where the upper boundary in sweeping-direction has 0-values.
+ * 
+ * The implementation is the same as the dirichlet surface but for a predefined zero function.
+ * 
+ */
+
 class EmptySurface : public BoundaryCondition {
   public: 
 

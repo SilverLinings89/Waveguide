@@ -5,6 +5,16 @@
 #include <deal.II/fe/fe_nedelec_sz.h>
 #include <deal.II/lac/affine_constraints.h>
 
+/**
+ * \class DirichletSurface
+ * 
+ * \brief This class implements dirichlet data on the given surface.
+ * 
+ * This class is a simple derived function from the boundary condition base class. Since dirichlet constraints introduce no new degrees of freedom, the functions like fill_matrix don't do anything.
+ * 
+ * The only relevant function here is the make_constraints function which writes the dirichlet constraints into the given constraints object.
+ * 
+ */
 class DirichletSurface : public BoundaryCondition {
   public: 
 

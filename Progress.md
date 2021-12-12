@@ -777,4 +777,14 @@ As another step today, I will implement the dynamic convergence control for high
 
 # Tuesday, 7th of December
 
-Today I will fix the Tensor computation. The coordinate computation doesn't work currently. I have implemented the computation of sector length again but there seams to be another error.
+Today I will fix the Tensor computation. The coordinate computation doesn't work currently. I have implemented the computation of sector length again but there seams to be another error. After fixing the reading function for parameterizations, I added the epsilon back into the computation to compute with actual values for epsilon again.
+
+# Wednesday, 8th of December
+
+Today I ran the first tests with the new shapes fully included in the code. The important detail was, that the shapes are still shifted to be centered at 0. The code runs well so far.
+
+# Thursday, 9th of December
+
+I switched to predefined case number 30 and fixed the shift problem mentioned yesterday. I expect stronger signal drop-off in the solutions since this waveguide is heavily bent.
+
+

@@ -69,22 +69,6 @@ void GeometryManager::initialize() {
   print_info("GeometryManager::initialize", "End");
 }
 
-Position GeometryManager::get_local_center() {
-  Position ret;
-  ret[0] = (local_x_range.first + local_x_range.second) / 2.0;
-  ret[1] = (local_y_range.first + local_y_range.second) / 2.0;
-  ret[2] = (local_z_range.first + local_z_range.second) / 2.0;
-  return ret;
-}
-
-Position GeometryManager::get_global_center() {
-  Position ret;
-  ret[0] = (global_x_range.first + global_x_range.second) / 2.0;
-  ret[1] = (global_y_range.first + global_y_range.second) / 2.0;
-  ret[2] = (global_z_range.first + global_z_range.second) / 2.0;
-  return ret;
-}
-
 void GeometryManager::initialize_inner_domain(unsigned int in_level) {
   levels[in_level].inner_domain = new InnerDomain(in_level);
   levels[in_level].inner_domain->make_grid();
@@ -203,6 +187,10 @@ double GeometryManager::get_epsilon_for_point(const Position & in_p) {
 
 double GeometryManager::eps_kappa_2(Position in_p) {
   return (math_coordinate_in_waveguide(in_p)? GlobalParams.Epsilon_R_in_waveguide : GlobalParams.Epsilon_R_outside_waveguide) * GlobalParams.Omega * GlobalParams.Omega;
+}
+
+double GeometryManager::kappa_2() {
+  return GlobalParams.Omega * GlobalParams.Omega;
 }
 
 void GeometryManager::set_x_range(std::pair<double, double> in_range) {
