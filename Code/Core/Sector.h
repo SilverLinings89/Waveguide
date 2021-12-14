@@ -64,8 +64,7 @@ class Sector {
    * point, for which the Tensor should be calculated. \param in_z z-coordinate
    * of the point, for which the Tensor should be calculated.
    */
-  dealii::Tensor<2, 3, double> TransformationTensorInternal(double in_x, double in_y,
-                                                    double in_z) const;
+  dealii::Tensor<2, 3, double> TransformationTensorInternal(double in_x, double in_y, double in_z) const;
 
   /**
    * This function is used during the optimization-operation to update the

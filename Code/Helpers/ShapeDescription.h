@@ -12,5 +12,6 @@ class ShapeDescription {
   void SetByString(std::string);
 
   int Sectors;
+  
   std::vector<double> m, v, z;
 };

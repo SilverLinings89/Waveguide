@@ -53,8 +53,7 @@ class SpaceTransformation {
 
   virtual Tensor<2, 3, double> get_Space_Transformation_Tensor(Position &coordinate) const = 0;
 
-  virtual Tensor<2, 3, ComplexNumber> get_Tensor_for_step(
-      Position &coordinate, unsigned int dof, double step_width);
+  virtual Tensor<2, 3, ComplexNumber> get_Tensor_for_step(Position &coordinate, unsigned int dof, double step_width);
 
   /**
    * The material-property \f$\epsilon_r\f$ has a different value inside and
