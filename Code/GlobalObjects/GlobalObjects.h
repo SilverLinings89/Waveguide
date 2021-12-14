@@ -9,7 +9,7 @@
 
 class SpaceTransformation;
 
-extern Parameters GlobalParams;
+extern Parameters GlobalParams; // 
 extern GeometryManager Geometry;
 extern MPICommunicator GlobalMPI;
 extern ModeManager GlobalModeManager;

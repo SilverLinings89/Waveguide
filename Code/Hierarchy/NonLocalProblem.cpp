@@ -677,3 +677,9 @@ void NonLocalProblem::perform_upward_sweep(NumericVectorDistributed * in_u) {
     in_u->compress(VectorOperation::insert);
   }
 }
+
+NonLocalProblem::compute_signal_strength_of_solution() {
+  ComplexNumber integral = Geometry.levels[level].inner_domain->compute_signal_strength(& solution);
+  double sum_integral_real = dealii::Utilities::MPI::sum(integral.real());
+  double sum_integral_imag = dealii::Utilities::MPI::sum(integral.imag());
+}

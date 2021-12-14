@@ -108,4 +108,6 @@ class InnerDomain: public FEDomain {
   DofCount compute_n_locally_owned_dofs() override;
   DofCount compute_n_locally_active_dofs() override;
   void determine_non_owned_dofs() override;
+
+  ComplexNumber compute_signal_strength(NumericVectorDistributed * in_solution);
 };

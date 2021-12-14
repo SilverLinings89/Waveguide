@@ -392,3 +392,4 @@ void InnerDomain::determine_non_owned_dofs() {
     }
   }
 }
+

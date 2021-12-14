@@ -50,8 +50,7 @@ class SpaceTransformation {
 
   bool is_identity(Position coord) const;
 
-  virtual Tensor<2, 3, ComplexNumber> get_Tensor(
-      Position &coordinate) const = 0;
+  virtual Tensor<2, 3, ComplexNumber> get_Tensor(Position &coordinate) const = 0;
 
   virtual Tensor<2, 3, double> get_Space_Transformation_Tensor(Position &coordinate) const = 0;
 

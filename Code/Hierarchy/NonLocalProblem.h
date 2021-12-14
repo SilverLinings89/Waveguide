@@ -88,4 +88,6 @@ private:
   void complex_pml_domain_matching(BoundaryId in_bid);
 
   void register_dof_copy_pair(DofNumber own_index, DofNumber child_index);
+
+  double compute_signal_strength_of_solution();
 };
