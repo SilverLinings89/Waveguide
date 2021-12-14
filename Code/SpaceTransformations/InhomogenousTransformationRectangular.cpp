@@ -11,8 +11,6 @@ using namespace dealii;
 
 InhomogenousTransformationRectangular::InhomogenousTransformationRectangular()
     : SpaceTransformation(3),
-      epsilon_K(GlobalParams.Epsilon_R_in_waveguide),
-      epsilon_M(GlobalParams.Epsilon_R_outside_waveguide),
       sectors(GlobalParams.Number_of_sectors),
       deltaY(GlobalParams.Vertical_displacement_of_waveguide) {
   homogenized = false;
@@ -245,17 +243,6 @@ void InhomogenousTransformationRectangular::Print() const {
 
 unsigned int InhomogenousTransformationRectangular::NDofs() const {
   return sectors * 2 + 2;
-}
-
-Tensor<2, 3, double> InhomogenousTransformationRectangular::
-    get_Space_Transformation_Tensor_Homogenized(Position &position) const {
-  std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
-
-  Tensor<2, 3, double> transformation =
-      case_sectors[sector_z.first].TransformationTensorInternal(
-          position[0], position[1], sector_z.second);
-
-  return transformation;
 }
 
 Tensor<2, 3, double>

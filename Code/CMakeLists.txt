@@ -24,6 +24,7 @@ ADD_LIBRARY(Code
         SpaceTransformations/DualProblemTransformationWrapper.cpp
         SpaceTransformations/HomogenousTransformationRectangular.cpp
         SpaceTransformations/InhomogenousTransformationRectangular.cpp
+        SpaceTransformations/BendTransformation.cpp
         SpaceTransformations/SpaceTransformation.cpp
         BoundaryCondition/JacobianForCell.cpp
         BoundaryCondition/DofData.cpp

@@ -13,8 +13,6 @@ using namespace dealii;
 DualProblemTransformationWrapper::DualProblemTransformationWrapper(
     SpaceTransformation *in_st)
     : SpaceTransformation(3),
-      epsilon_K(GlobalParams.Epsilon_R_in_waveguide),
-      epsilon_M(GlobalParams.Epsilon_R_outside_waveguide),
       sectors(GlobalParams.Number_of_sectors),
       deltaY(GlobalParams.Vertical_displacement_of_waveguide) {
   st = in_st;
@@ -37,16 +35,6 @@ Position transform_position(Position in_position) {
 }
 
 Tensor<2, 3, double>
-DualProblemTransformationWrapper::get_Space_Transformation_Tensor_Homogenized(
-    Position &position) const {
-  std::cout << "This should never be called: "
-               "DualProblemTransformationWrapper::get_Space_Transformation_"
-               "Tensor_Homogenized"
-            << std::endl;
-  return st->get_Space_Transformation_Tensor_Homogenized(position);
-}
-
-Tensor<2, 3, double>
 DualProblemTransformationWrapper::get_Space_Transformation_Tensor(
     Position &position) const {
   std::cout
@@ -62,11 +50,7 @@ Tensor<2, 3, ComplexNumber> DualProblemTransformationWrapper::get_Tensor(
 
   Tensor<2, 3, double> transformation;
 
-  if (homogenized) {
-    transformation = st->get_Space_Transformation_Tensor_Homogenized(p);
-  } else {
-    transformation = st->get_Space_Transformation_Tensor(p);
-  }
+  transformation = st->get_Space_Transformation_Tensor(p);
 
   return transformation;
 }

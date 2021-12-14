@@ -40,27 +40,12 @@ class HomogenousTransformationRectangular : public SpaceTransformation {
   dealii::Tensor<2, 3, double> get_Space_Transformation_Tensor(
       Position &coordinate) const;
 
-  dealii::Tensor<2, 3, double> get_Space_Transformation_Tensor_Homogenized(
-      Position &coordinate) const;
-
   /**
    * This member contains all the Sectors who, as a sum, form the complete
    * Waveguide. These Sectors are a partition of the simulated domain.
    */
   std::vector<Sector<2>> case_sectors;
 
-  /**
-   * The material-property \f$\epsilon_r\f$ has a different value inside and
-   * outside of the waveguides core. This variable stores its value inside the
-   * core.
-   */
-  const double epsilon_K;
-  /**
-   *  The material-property \f$\epsilon_r\f$ has a different value inside and
-   * outside of the waveguides core. This variable stores its value outside the
-   * core.
-   */
-  const double epsilon_M;
   /**
    * Since the computational domain is split into subdomains (called sectors),
    * it is important to keep track of the amount of subdomains. This member

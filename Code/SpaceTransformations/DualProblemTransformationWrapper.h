@@ -45,26 +45,10 @@ class DualProblemTransformationWrapper : public SpaceTransformation {
    */
   Position phys_to_math(Position coord) const;
 
-  dealii::Tensor<2, 3, ComplexNumber> get_Tensor(
-      Position &coordinate) const;
-
-  dealii::Tensor<2, 3, ComplexNumber> get_Preconditioner_Tensor(
-      Position &coordinate, int block) const;
-
-  dealii::Tensor<2, 3, ComplexNumber> Apply_PML_To_Tensor(
-      Position &coordinate,
-      dealii::Tensor<2, 3, double> Tensor_input) const;
-
-  dealii::Tensor<2, 3, ComplexNumber> Apply_PML_To_Tensor_For_Preconditioner(
-      Position &coordinate, dealii::Tensor<2, 3, double> Tensor_input,
-      int block) const;
+  dealii::Tensor<2, 3, ComplexNumber> get_Tensor(Position &coordinate) const;
 
   dealii::Tensor<2, 3, double> get_Space_Transformation_Tensor(
       Position &coordinate) const;
-
-  dealii::Tensor<2, 3, double> get_Space_Transformation_Tensor_Homogenized(
-      Position &coordinate) const;
-
 
   /**
    * This member contains all the Sectors who, as a sum, form the complete
@@ -72,18 +56,6 @@ class DualProblemTransformationWrapper : public SpaceTransformation {
    */
   std::vector<Sector<3>> case_sectors;
 
-  /**
-   * The material-property \f$\epsilon_r\f$ has a different value inside and
-   * outside of the waveguides core. This variable stores its value inside the
-   * core.
-   */
-  const double epsilon_K;
-  /**
-   *  The material-property \f$\epsilon_r\f$ has a different value inside and
-   * outside of the waveguides core. This variable stores its value outside the
-   * core.
-   */
-  const double epsilon_M;
   /**
    * Since the computational domain is split into subdomains (called sectors),
    * it is important to keep track of the amount of subdomains. This member

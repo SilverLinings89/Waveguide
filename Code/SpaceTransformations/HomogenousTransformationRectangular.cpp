@@ -11,8 +11,6 @@ using namespace dealii;
 
 HomogenousTransformationRectangular::HomogenousTransformationRectangular()
     : SpaceTransformation(2),
-      epsilon_K(GlobalParams.Epsilon_R_in_waveguide),
-      epsilon_M(GlobalParams.Epsilon_R_outside_waveguide),
       sectors(GlobalParams.Number_of_sectors),
       deltaY(GlobalParams.Vertical_displacement_of_waveguide) {
   homogenized = true;
@@ -46,8 +44,7 @@ Position HomogenousTransformationRectangular::math_to_phys(
   return ret;
 }
 
-Tensor<2, 3, double> HomogenousTransformationRectangular::get_Space_Transformation_Tensor_Homogenized(
-    Position &position) const {
+Tensor<2, 3, double> HomogenousTransformationRectangular::get_Space_Transformation_Tensor(Position &position) const {
   std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
 
   Tensor<2, 3, double> transformation =
@@ -100,19 +97,7 @@ Position HomogenousTransformationRectangular::phys_to_math(
 Tensor<2, 3, ComplexNumber>
 HomogenousTransformationRectangular::get_Tensor(
     Position &position) const {
-  return get_Space_Transformation_Tensor_Homogenized(position);
-}
-
-Tensor<2, 3, double>
-HomogenousTransformationRectangular::get_Space_Transformation_Tensor(
-    Position &position) const {
-  std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
-
-  Tensor<2, 3, double> transformation =
-      case_sectors[sector_z.first].TransformationTensorInternal(
-          position[0], position[1], sector_z.second);
-
-  return transformation;
+  return get_Space_Transformation_Tensor(position);
 }
 
 double HomogenousTransformationRectangular::get_dof(int dof) const {
