@@ -393,3 +393,33 @@ void InnerDomain::determine_non_owned_dofs() {
   }
 }
 
+ComplexNumber InnerDomain::compute_signal_strength(dealii::LinearAlgebra::distributed::Vector<ComplexNumber> * in_solution) {
+  ComplexNumber ret(0,0);
+  ComplexNumber input_norm(0,0);
+  if(GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction - 1) {
+    NumericVectorLocal local_solution;
+    local_solution.reinit(n_locally_active_dofs);
+    for(unsigned int i = 0; i < n_locally_active_dofs; i++) {
+      local_solution[i] = in_solution->operator[](global_index_mapping[i]);
+    }
+    Vector<ComplexNumber> fe_evaluation(3);
+    Vector<ComplexNumber> mode(3);
+    const unsigned int n_steps_x = (GlobalParams.Cells_in_x - 1);
+    const unsigned int n_steps_y = (GlobalParams.Cells_in_y - 1);
+    const unsigned int n_quadrature_points = n_steps_x * n_steps_y;
+    const double x_step_width = (Geometry.local_x_range.second - Geometry.local_x_range.first) / GlobalParams.Cells_in_x;
+    const double y_step_width = (Geometry.local_y_range.second - Geometry.local_y_range.first) / GlobalParams.Cells_in_y;
+    ComplexNumber temp(0,0);
+    for(unsigned int x = 0; x < n_steps_x; x++) {
+      for(unsigned int y = 0; y < n_steps_y; y++) {
+        Position quadrature_point(Geometry.local_x_range.first + (0.5 + x) * x_step_width, Geometry.local_y_range.first + (0.5+y) * y_step_width, Geometry.local_z_range.second);
+        VectorTools::point_value(dof_handler, local_solution, quadrature_point, fe_evaluation);
+        GlobalParams.source_field->vector_value(quadrature_point, mode);
+        ret += std::sqrt(fe_evaluation[0]*fe_evaluation[0] + fe_evaluation[1]*fe_evaluation[1] + fe_evaluation[2] * fe_evaluation[2]);
+        input_norm += std::sqrt(mode[0]*mode[0] + mode[1]*mode[1] + mode[2]*mode[2]);
+      }
+    }
+    return ret / input_norm;
+  } 
+  return ret;
+}

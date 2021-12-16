@@ -109,5 +109,5 @@ class InnerDomain: public FEDomain {
   DofCount compute_n_locally_active_dofs() override;
   void determine_non_owned_dofs() override;
 
-  ComplexNumber compute_signal_strength(NumericVectorDistributed * in_solution);
+  ComplexNumber compute_signal_strength(dealii::LinearAlgebra::distributed::Vector<ComplexNumber> * in_solution);
 };

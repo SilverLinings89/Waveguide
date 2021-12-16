@@ -787,4 +787,16 @@ Today I ran the first tests with the new shapes fully included in the code. The 
 
 I switched to predefined case number 30 and fixed the shift problem mentioned yesterday. I expect stronger signal drop-off in the solutions since this waveguide is heavily bent.
 
+# Sunday, 12th of December
 
+I added some new code to the documentation. I will from now on continuously fill in documentation where it is missing. I have also rerun the documentation generator to check if it still works and gernerated a pdf and checked it into the repo. The document should be ready to be added to the dissertation document.
+
+# Tuesday, 14th of December
+
+First work on the computation of signal strength in the waveguide which is required for the hump examples to make sense. Also some cleanup work on the shape transformations, removing some old code that is bloating the codebase.
+
+# Wednesday, 15th of December
+
+Today I complete the signal strength computation. It is pretty fast the way it is right now. There might be some solution in dealii to evaluate the solution field at multiple quadrature points at once, which might be faster than the individual evaluations that I use now. However, this is a minimal effort after assembly and solving so it is negligible. The signal sstrength evaluation works now.
+
+Tomorrow, I will write minor testing code for mesh size and wavelength to check for appropriate mesh resolution based on the base wavelength, mesh size and epsilon. This will be usefull once I use shape optimization again. Additionally, I will need code to wrap optimization runs. I have all the optimization code already but need to work on the shape dof handling.

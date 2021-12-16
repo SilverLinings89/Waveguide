@@ -31,6 +31,7 @@ private:
   std::vector<unsigned int> vector_copy_child_indeces;
   std::vector<ComplexNumber> vector_copy_array;
   double internal_vector_norm = 0.0;
+  dealii::LinearAlgebra::distributed::Vector<ComplexNumber> shared_solution;
   
  public:
   NonLocalProblem(unsigned int);
@@ -89,5 +90,7 @@ private:
 
   void register_dof_copy_pair(DofNumber own_index, DofNumber child_index);
 
-  double compute_signal_strength_of_solution();
+  ComplexNumber compute_signal_strength_of_solution();
+
+  void update_shared_solution_vector();
 };

@@ -427,9 +427,20 @@ void NonLocalProblem::compute_solver_factorization() {
 
 std::string NonLocalProblem::output_results() {
   print_info("NonLocalProblem", "Start output results on level" + std::to_string(level));
+  update_shared_solution_vector();
   write_multifile_output("solution", solution);
+  ComplexNumber signal_strength = compute_signal_strength_of_solution();
+  std::cout << "Signal strength: " << signal_strength << " with norm " << std::abs(signal_strength)<< std::endl;
   print_info("NonLocalProblem", "End output results on level" + std::to_string(level));
   return "";
+}
+
+void NonLocalProblem::update_shared_solution_vector() {
+  shared_solution.reinit(own_dofs, locally_active_dofs, GlobalMPI.communicators_by_level[level]);
+  for(unsigned int i= 0; i < own_dofs.n_elements(); i++) {
+    shared_solution[own_dofs.nth_index_in_set(i)] = solution[own_dofs.nth_index_in_set(i)];
+  }
+  shared_solution.update_ghost_values();
 }
 
 void NonLocalProblem::write_multifile_output(const std::string & in_filename, const NumericVectorDistributed field) {
@@ -443,12 +454,7 @@ void NonLocalProblem::write_multifile_output(const std::string & in_filename, co
     }
   }
   std::vector<std::string> generated_files;
-  dealii::LinearAlgebra::distributed::Vector<ComplexNumber> shared_solution;
-  shared_solution.reinit(own_dofs, locally_active_dofs, GlobalMPI.communicators_by_level[level]);
-  for(unsigned int i= 0; i < own_dofs.n_elements(); i++) {
-    shared_solution[own_dofs.nth_index_in_set(i)] = field[own_dofs.nth_index_in_set(i)];
-  }
-  shared_solution.update_ghost_values();
+    
   NumericVectorLocal local_solution(Geometry.levels[level].inner_domain->n_locally_active_dofs);
   
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
@@ -678,8 +684,11 @@ void NonLocalProblem::perform_upward_sweep(NumericVectorDistributed * in_u) {
   }
 }
 
-NonLocalProblem::compute_signal_strength_of_solution() {
-  ComplexNumber integral = Geometry.levels[level].inner_domain->compute_signal_strength(& solution);
-  double sum_integral_real = dealii::Utilities::MPI::sum(integral.real());
-  double sum_integral_imag = dealii::Utilities::MPI::sum(integral.imag());
+ComplexNumber NonLocalProblem::compute_signal_strength_of_solution() {
+  print_info("NonLocalProblem::compute_signal_strength_of_solution", "Start");
+  ComplexNumber integral = Geometry.levels[level].inner_domain->compute_signal_strength(& shared_solution);
+  double sum_integral_real = dealii::Utilities::MPI::sum(integral.real(), GlobalMPI.communicators_by_level[level]);
+  double sum_integral_imag = dealii::Utilities::MPI::sum(integral.imag(), GlobalMPI.communicators_by_level[level]);
+  return ComplexNumber(sum_integral_real / (GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction), sum_integral_imag / (GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction));
+  print_info("NonLocalProblem::compute_signal_strength_of_solution", "End");
 }
