@@ -45,9 +45,9 @@ auto Parameters::complete_data() -> void {
   if(Use_Predefined_Shape) {
     std::ifstream input( "../Modes/test.csv" );
     std::string line;
-    int counter = 0;
+    unsigned int counter = 0;
     bool case_found = false;
-    if(Number_of_Predefined_Shape >= 0 && Number_of_Predefined_Shape < 36){
+    if( Number_of_Predefined_Shape < 36){
         while(std::getline( input, line ) && counter < 36){
           if(counter == Number_of_Predefined_Shape) {
             sd.SetByString(line);
@@ -60,8 +60,6 @@ auto Parameters::complete_data() -> void {
           std::cout << "There was a severe error. The case was not found therefore not initialized." << std::endl;
         }
     }
-  } else {
-    std::cout << "Not using case." << std::endl;
   }
 }
 
@@ -71,9 +69,37 @@ auto Parameters::check_validity() -> bool {
     // prescribing zero on the input interface should only be used with tapered input. Otherewise there are two Dirichlet constraints on the same interface
     if(prescribe_0_on_input_side && !use_tapered_input_signal) valid = false;
 
-    // check if the waveguide edges are resolved
-    // TODO.
+    const double x_step = (Geometry.global_x_range.second - Geometry.global_x_range.first)
+                          /(GlobalParams.Blocks_in_x_direction * GlobalParams.Cells_in_x);
+    const double y_step = (Geometry.global_y_range.second - Geometry.global_y_range.first)
+                          /(GlobalParams.Blocks_in_y_direction * GlobalParams.Cells_in_y);
+    bool x_lower = false;
+    bool x_upper = false; 
+    bool y_lower = false;
+    bool y_upper = false; 
+    for(unsigned int x = Geometry.global_x_range.first; x < Geometry.global_x_range.second; x+= x_step) {
+      for(unsigned int y = Geometry.global_y_range.first; y < Geometry.global_y_range.second; y += y_step) {
+        if(x == GlobalParams.Width_of_waveguide / 2.0) {
+          x_upper = true;
+        }
+        if(x == - GlobalParams.Width_of_waveguide / 2.0) {
+          x_lower = true;
+        }
+        if(y == GlobalParams.Height_of_waveguide / 2.0) {
+          y_upper = true;
+        }
+        if(y == - GlobalParams.Height_of_waveguide / 2.0) {
+          y_lower = true;
+        }
+      }   
+    }
 
+    bool found_all = x_lower && x_upper && y_lower && y_upper;
+    if(found_all) {
+      print_info("Parameters::check_validity", "All edges of the waveguide are resolved.");
+    } else {
+      print_info("Parameters::check_validity", "Warning: The waveguide is not resolved correctly in this setup.");
+    }
 
     return valid;
 }

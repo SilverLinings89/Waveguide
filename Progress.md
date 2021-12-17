@@ -797,6 +797,32 @@ First work on the computation of signal strength in the waveguide which is requi
 
 # Wednesday, 15th of December
 
-Today I complete the signal strength computation. It is pretty fast the way it is right now. There might be some solution in dealii to evaluate the solution field at multiple quadrature points at once, which might be faster than the individual evaluations that I use now. However, this is a minimal effort after assembly and solving so it is negligible. The signal sstrength evaluation works now.
+Today I complete the signal strength computation. It is pretty fast the way it is right now. There might be some solution in dealii to evaluate the solution field at multiple quadrature points at once, which might be faster than the individual evaluations that I use now. However, this is a minimal effort after assembly and solving so it is negligible. The signal strength evaluation works now.
 
 Tomorrow, I will write minor testing code for mesh size and wavelength to check for appropriate mesh resolution based on the base wavelength, mesh size and epsilon. This will be usefull once I use shape optimization again. Additionally, I will need code to wrap optimization runs. I have all the optimization code already but need to work on the shape dof handling.
+
+# Tuesday, 16th of December
+
+As described above I will first implement some code for the evaluation of the mesh. There are 2 main criteria:
+- that the surface of the waveguide is resolved
+- that the cells length in z-direction is 1/10th of the wavelength or less (local wavelength that is).
+
+I also fixed the pase error of the exact solution (it was propagating in the wrong direction).
+
+Fixed some compiler warnings and implemented L2 and Linfty error compuatation.
+
+I ran the small example case and collected number of dofs, L2_error, Linfty_error and number of dofs. Commit ID: eeeb8ed9cbf05bc71ceff6b6fa75e055f84d49b2. 
+
+| Case | L_infty | L_2 | N | Signal strength | Run |
+|---|---|---|---|---|---|
+| [10x10x10] | 0.220291 | 1.23368 | 103788 | 0.991449 | 186 |
+| [10x10x40] | 0.221401 | 1.20634 | 359748 | 0.992181 | 185 |
+| [20x20x20] | 0.24882  | 1.15171 | 357538 | 0.972194 | 187 |
+| [15x15x15] | 0.242563 | 1.14653 | 357538 | 0.991208 | 188 |
+
+These results are inconclusive considering that the signal on the input side is also computed numerically and therefore most likely causes all the error I see.
+
+I guess the error terms against the "exact solution" are just dominating the system, making this difficult. I need to write a function that will turn the evaluation of the finest solution into a function I can use in later runs. Will figure this out tomorrow.
+
+Also: For higher order elements I see no more coupling. Will  need to evaluate what the issue is here and if I only do lower order elements somewhere. Could also be an issue with system size etc. Will quickly go over code tomorrow to check.
+

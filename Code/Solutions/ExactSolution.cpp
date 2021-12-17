@@ -108,7 +108,7 @@ void ExactSolution::vector_value(const Position &in_p, Vector<ComplexNumber> &va
                     p1m1 * vals[ix]   [iy-1].Ez +
                     m1m1 * vals[ix-1] [iy-1].Ez +
                     m1p1 * vals[ix-1] [iy].Ez;
-        const double z = -p[2] + Geometry.global_z_range.first;
+        const double z = p[2];
         const double phi = 2.0 * GlobalParams.Pi * z / Lambda_eff;
         const ComplexNumber phase = std::exp(phi * imag);
         for (unsigned int komp = 0; komp < 3; komp++) {

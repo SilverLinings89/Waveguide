@@ -93,4 +93,6 @@ private:
   ComplexNumber compute_signal_strength_of_solution();
 
   void update_shared_solution_vector();
+
+  FEErrorStruct compute_global_errors(dealii::LinearAlgebra::distributed::Vector<ComplexNumber> * in_solution);
 };

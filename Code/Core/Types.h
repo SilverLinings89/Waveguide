@@ -214,3 +214,8 @@ struct DataSeries {
   bool is_closed;
   std::string name;
 };
+
+struct FEErrorStruct {
+  double L2 = 0;
+  double Linfty = 0;
+};

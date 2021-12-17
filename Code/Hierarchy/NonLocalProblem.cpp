@@ -428,6 +428,8 @@ void NonLocalProblem::compute_solver_factorization() {
 std::string NonLocalProblem::output_results() {
   print_info("NonLocalProblem", "Start output results on level" + std::to_string(level));
   update_shared_solution_vector();
+  FEErrorStruct errors = compute_global_errors(&shared_solution);
+  std::cout << "Errors: L2 = " << errors.L2 << " and Linfty  = " << errors.Linfty <<std::endl;
   write_multifile_output("solution", solution);
   ComplexNumber signal_strength = compute_signal_strength_of_solution();
   std::cout << "Signal strength: " << signal_strength << " with norm " << std::abs(signal_strength)<< std::endl;
@@ -691,4 +693,12 @@ ComplexNumber NonLocalProblem::compute_signal_strength_of_solution() {
   double sum_integral_imag = dealii::Utilities::MPI::sum(integral.imag(), GlobalMPI.communicators_by_level[level]);
   return ComplexNumber(sum_integral_real / (GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction), sum_integral_imag / (GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction));
   print_info("NonLocalProblem::compute_signal_strength_of_solution", "End");
+}
+
+FEErrorStruct NonLocalProblem::compute_global_errors(dealii::LinearAlgebra::distributed::Vector<ComplexNumber> * in_solution) {
+  FEErrorStruct errors = Geometry.levels[level].inner_domain->compute_errors(in_solution);
+  FEErrorStruct ret;
+  ret.L2 = Utilities::MPI::sum(errors.L2, GlobalMPI.communicators_by_level[level]);
+  ret.Linfty = Utilities::MPI::max(errors.Linfty, GlobalMPI.communicators_by_level[level]);
+  return ret;
 }

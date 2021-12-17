@@ -67,8 +67,7 @@ void InnerDomain::make_grid() {
   print_info("InnerDomain::make_grid", "end");
 }
 
-bool compareIndexCenterPairs(std::pair<int, double> c1,
-                             std::pair<int, double> c2) {
+bool compareIndexCenterPairs(std::pair<int, double> c1, std::pair<int, double> c2) {
   return c1.second < c2.second;
 }
 
@@ -359,7 +358,6 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
   return filename;
 }
 
-
 DofCount InnerDomain::compute_n_locally_owned_dofs() {
   IndexSet set_of_locally_owned_dofs(dof_handler.n_dofs());
   set_of_locally_owned_dofs.add_range(0,dof_handler.n_dofs());
@@ -406,7 +404,6 @@ ComplexNumber InnerDomain::compute_signal_strength(dealii::LinearAlgebra::distri
     Vector<ComplexNumber> mode(3);
     const unsigned int n_steps_x = (GlobalParams.Cells_in_x - 1);
     const unsigned int n_steps_y = (GlobalParams.Cells_in_y - 1);
-    const unsigned int n_quadrature_points = n_steps_x * n_steps_y;
     const double x_step_width = (Geometry.local_x_range.second - Geometry.local_x_range.first) / GlobalParams.Cells_in_x;
     const double y_step_width = (Geometry.local_y_range.second - Geometry.local_y_range.first) / GlobalParams.Cells_in_y;
     ComplexNumber temp(0,0);
@@ -421,5 +418,20 @@ ComplexNumber InnerDomain::compute_signal_strength(dealii::LinearAlgebra::distri
     }
     return ret / input_norm;
   } 
+  return ret;
+}
+
+FEErrorStruct InnerDomain::compute_errors(dealii::LinearAlgebra::distributed::Vector<ComplexNumber> * in_solution) {
+  FEErrorStruct ret;
+  dealii::Vector<double> cell_vector (triangulation.n_active_cells());
+  QGauss<3> q(GlobalParams.Nedelec_element_order + 2);
+  NumericVectorLocal local_solution(n_locally_active_dofs);
+  for(unsigned int i =0 ; i < n_locally_active_dofs; i++) {
+    local_solution[i] = in_solution->operator[](global_index_mapping[i]);
+  }
+  VectorTools::integrate_difference(dof_handler, local_solution, *GlobalParams.source_field, cell_vector, q, dealii::VectorTools::NormType::L2_norm);
+  ret.L2 = VectorTools::compute_global_error(triangulation, cell_vector, dealii::VectorTools::NormType::L2_norm);
+  VectorTools::integrate_difference(dof_handler, local_solution, *GlobalParams.source_field, cell_vector, q, dealii::VectorTools::NormType::Linfty_norm);
+  ret.Linfty = VectorTools::compute_global_error(triangulation, cell_vector, dealii::VectorTools::NormType::Linfty_norm);
   return ret;
 }
