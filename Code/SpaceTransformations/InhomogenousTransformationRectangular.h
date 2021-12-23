@@ -51,11 +51,6 @@ class InhomogenousTransformationRectangular : public SpaceTransformation {
   const int sectors;
 
   /**
-   * This value is initialized with the value Delta from the input-file.
-   */
-  const double deltaY;
-
-  /**
    * At the beginning (before the first solution of a system) only the boundary
    * conditions for the shape of the waveguide are known. Therefore the values
    * for the degrees of freedom need to be estimated. This function sets all

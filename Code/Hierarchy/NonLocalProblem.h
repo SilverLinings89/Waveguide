@@ -95,4 +95,7 @@ private:
   void update_shared_solution_vector();
 
   FEErrorStruct compute_global_errors(dealii::LinearAlgebra::distributed::Vector<ComplexNumber> * in_solution);
+
+  void update_convergence_criterion(double last_residual) override;
+
 };

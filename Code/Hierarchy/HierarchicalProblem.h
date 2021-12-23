@@ -58,6 +58,7 @@ class HierarchicalProblem {
   virtual void reinit_rhs() = 0;
   virtual void make_sparsity_pattern();
   void initialize_dof_counts();
+  virtual void update_convergence_criterion(double) {}
 };
 
 typedef struct {

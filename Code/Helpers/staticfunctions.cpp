@@ -753,4 +753,5 @@ SweepingDirection get_sweeping_direction_for_level(unsigned int in_level) {
       return SweepingDirection::Z;
     }
   }
+  return SweepingDirection::Z;
 }

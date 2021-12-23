@@ -164,6 +164,12 @@ void NonLocalProblem::init_solver_and_preconditioner() {
   PCShellSetApply(pc,pc_apply);
   PCShellSetContext(pc, (void*) &shell);
   KSPSetPC(ksp, pc);
+  // KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc), nullptr);
+  KSPSetPCSide(ksp, PCSide::PC_RIGHT);
+  KSPGMRESSetRestart(ksp, GlobalParams.GMRES_max_steps);
+  KSPMonitorSet(ksp, MonitorError, residual_output, nullptr);
+  KSPSetUp(ksp);
+  KSPSetTolerances(ksp, 1e-10, GlobalParams.absolute_convergence_criterion, 1000, GlobalParams.GMRES_max_steps);
 }
 
 void NonLocalProblem::reinit_rhs() {
@@ -238,12 +244,7 @@ void NonLocalProblem::solve() {
   if(run_itterative_solver) {
     residual_output->new_series("Run " + std::to_string(solve_counter + 1));
     // Solve with sweeping
-    KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc), nullptr);
-    KSPSetPCSide(ksp, PCSide::PC_RIGHT);
-    KSPGMRESSetRestart(ksp, GlobalParams.GMRES_max_steps);
-    KSPSetTolerances(ksp, 0.0001, 1.0, 1000, GlobalParams.GMRES_max_steps);
-    KSPMonitorSet(ksp, MonitorError, residual_output, nullptr);
-    KSPSetUp(ksp);
+    
     PetscErrorCode ierr = KSPSolve(ksp, rhs, solution);
     residual_output->close_current_series();
     if(ierr != 0) {
@@ -701,4 +702,12 @@ FEErrorStruct NonLocalProblem::compute_global_errors(dealii::LinearAlgebra::dist
   ret.L2 = Utilities::MPI::sum(errors.L2, GlobalMPI.communicators_by_level[level]);
   ret.Linfty = Utilities::MPI::max(errors.Linfty, GlobalMPI.communicators_by_level[level]);
   return ret;
+}
+
+void NonLocalProblem::update_convergence_criterion(double last_residual) {
+  if(GlobalParams.use_relative_convergence_criterion) {
+    double new_abort_limit = last_residual * GlobalParams.relative_convergence_criterion;
+    new_abort_limit = std::max(new_abort_limit, GlobalParams.absolute_convergence_criterion);
+    KSPSetTolerances(ksp, new_abort_limit, 1.0, 1000, GlobalParams.GMRES_max_steps);
+  }
 }

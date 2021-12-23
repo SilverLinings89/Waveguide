@@ -26,26 +26,7 @@ Position BendTransformation::math_to_phys(Position coord) const {
 Position BendTransformation::phys_to_math(
     Position coord) const {
   Position ret;
-  if (coord[2] < GlobalParams.Geometry_Size_Z / (-2.0)) {
-    ret[0] = (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide) * coord[0] /
-             (2 * GlobalParams.Width_of_waveguide);
-    ret[1] = (GlobalParams.Height_of_waveguide + GlobalParams.Height_of_waveguide) * coord[1] /
-             (2 * GlobalParams.Height_of_waveguide);
-    ret[2] = coord[2];
-  } else if (coord[2] >= GlobalParams.Geometry_Size_Z / (-2.0) &&
-             coord[2] < GlobalParams.Geometry_Size_Z / (2.0)) {
-    std::pair<int, double> sec = Z_to_Sector_and_local_z(coord[2]);
-    double m = case_sectors[sec.first].get_m(sec.second);
-    ret[0] = coord[0];
-    ret[1] = coord[1] - m;
-    ret[2] = coord[2];
-  } else {
-    ret[0] = (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide) * coord[0] /
-             (2 * GlobalParams.Width_of_waveguide);
-    ret[1] = (GlobalParams.Height_of_waveguide + GlobalParams.Height_of_waveguide) * coord[1] /
-             (2 * GlobalParams.Height_of_waveguide);
-    ret[2] = coord[2];
-  }
+
   return ret;
 }
 

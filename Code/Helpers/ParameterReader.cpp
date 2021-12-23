@@ -56,6 +56,7 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("Prescribe input zero", "false", Patterns::Bool(), "If this is set to true, there will be a dirichlet zero condition enforced on the global input interface (Process index z: 0, boundary id: 4).");
         case_prm.declare_entry("Predefined case number", "1", Patterns::Integer(), "Number in [1,35] that describes the predefined shape to use.");
         case_prm.declare_entry("Use predefined shape", "false", Patterns::Bool(), "If set to true, the geometry for the predefined case from 'Predefined case number' will be used.");
+        case_prm.declare_entry("Number of shape sectors", "5", Patterns::Integer(), "Number of sectors for the shape approximation");
     }
     case_prm.leave_subsection();
 }
@@ -133,6 +134,7 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.prescribe_0_on_input_side = case_prm.get_bool("Prescribe input zero");
         ret.Use_Predefined_Shape = case_prm.get_bool("Use predefined shape");
         ret.Number_of_Predefined_Shape = case_prm.get_integer("Predefined case number");
+        ret.Number_of_sectors = case_prm.get_integer("Number of shape sectors");
     }
     return ret;
 }

@@ -11,8 +11,7 @@ using namespace dealii;
 
 InhomogenousTransformationRectangular::InhomogenousTransformationRectangular()
     : SpaceTransformation(3),
-      sectors(GlobalParams.Number_of_sectors),
-      deltaY(GlobalParams.Vertical_displacement_of_waveguide) {
+      sectors(GlobalParams.Number_of_sectors) {
   homogenized = false;
 }
 
@@ -157,9 +156,7 @@ void InhomogenousTransformationRectangular::estimate_and_initialize() {
       Sector<2> temp12(true, true, -GlobalParams.Geometry_Size_Z / 2.0,
                        GlobalParams.Geometry_Size_Z / 2.0);
       case_sectors.push_back(temp12);
-      case_sectors[0].set_properties_force(
-          GlobalParams.Vertical_displacement_of_waveguide / 2.0, -GlobalParams.Vertical_displacement_of_waveguide / 2.0,
-          GlobalParams.Width_of_waveguide, GlobalParams.Width_of_waveguide, 0, 0);
+      case_sectors[0].set_properties_force(m_0, m_1, GlobalParams.Width_of_waveguide, GlobalParams.Width_of_waveguide, 0, 0);
     } else {
       double length = Sector_Length();
       Sector<2> temp(true, false, -GlobalParams.Geometry_Size_Z / (2.0),

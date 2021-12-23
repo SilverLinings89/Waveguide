@@ -801,7 +801,7 @@ Today I complete the signal strength computation. It is pretty fast the way it i
 
 Tomorrow, I will write minor testing code for mesh size and wavelength to check for appropriate mesh resolution based on the base wavelength, mesh size and epsilon. This will be usefull once I use shape optimization again. Additionally, I will need code to wrap optimization runs. I have all the optimization code already but need to work on the shape dof handling.
 
-# Tuesday, 16th of December
+# Thursday, 16th of December
 
 As described above I will first implement some code for the evaluation of the mesh. There are 2 main criteria:
 - that the surface of the waveguide is resolved
@@ -826,3 +826,10 @@ I guess the error terms against the "exact solution" are just dominating the sys
 
 Also: For higher order elements I see no more coupling. Will  need to evaluate what the issue is here and if I only do lower order elements somewhere. Could also be an issue with system size etc. Will quickly go over code tomorrow to check.
 
+# Friday, 17th of December
+
+I have prepared the BWUniCluster to run my examples. Only my own code missing but up to dealii, everything is setup
+
+# Wednesday, 22nd of December
+
+I have implemented relative convergence control and setting the number of sectors for a simulation that doesn't use a predefined scheme. I found what was blocking my convergence control and have fixed it.

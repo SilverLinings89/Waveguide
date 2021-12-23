@@ -84,7 +84,7 @@ struct Parameters {
 
     double Geometry_Size_Z = 5;
 
-    unsigned int Number_of_sectors;
+    unsigned int Number_of_sectors = 1;
 
     double Sector_thickness;
 
@@ -142,6 +142,12 @@ struct Parameters {
     SignalCouplingMethod Signal_coupling_method = SignalCouplingMethod::Jump;
 
     bool prescribe_0_on_input_side = false;
+
+    bool use_relative_convergence_criterion = false;
+
+    double relative_convergence_criterion = 0.01;
+
+    double absolute_convergence_criterion = 1e-6;
 
     bool solve_directly = false;
     
