@@ -1,8 +1,8 @@
 subsection Case parameters
     set source type = 3
     set fem order = 0
-    set geometry size x = 4.0
-    set geometry size y = 3.6
+    set geometry size x = 6.0
+    set geometry size y = 5.4
     set geometry size z = 40
     set epsilon in = 2.3409
     set epsilon out = 1.8496

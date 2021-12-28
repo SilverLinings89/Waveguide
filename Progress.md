@@ -833,3 +833,7 @@ I have prepared the BWUniCluster to run my examples. Only my own code missing bu
 # Wednesday, 22nd of December
 
 I have implemented relative convergence control and setting the number of sectors for a simulation that doesn't use a predefined scheme. I found what was blocking my convergence control and have fixed it.
+
+# Tuesday, 28th of December
+
+The current version of the code should have all requirements for the large scale runs of the hump-examples. I am preparing parameter files and launcing the runs on the HPC systems I have access to. I also want to work out a scheme to handle GSP requirements for the processing of these runs. I added the run script for sbatch to the code repo.
