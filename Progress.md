@@ -836,4 +836,4 @@ I have implemented relative convergence control and setting the number of sector
 
 # Tuesday, 28th of December
 
-The current version of the code should have all requirements for the large scale runs of the hump-examples. I am preparing parameter files and launcing the runs on the HPC systems I have access to. I also want to work out a scheme to handle GSP requirements for the processing of these runs. I added the run script for sbatch to the code repo.
+The current version of the code should have all requirements for the large scale runs of the hump-examples. I am preparing parameter files and launcing the runs on the HPC systems I have access to. I also want to work out a scheme to handle GSP requirements for the processing of these runs. I added the run script for sbatch to the code repo. Also added a small runfile to have a testcase before I run the big examples.
