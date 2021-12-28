@@ -25,14 +25,11 @@ class HierarchicalProblem {
   bool has_child;
   HierarchicalProblem* child;
   dealii:: SparsityPattern sp;
-  DofIndexData indices;
   NumericVectorDistributed solution;
   NumericVectorDistributed direct_solution;
   NumericVectorDistributed solution_error;
   NumericVectorDistributed rhs;
   dealii::IndexSet own_dofs;
-  dealii::IndexSet current_upper_sweeping_dofs;
-  dealii::IndexSet current_lower_sweeping_dofs;
   std::array<std::vector<InterfaceDofData>, 6> surface_dof_associations;
   dealii::PETScWrappers::MPI::SparseMatrix * matrix;
   std::vector<std::string> filenames;
