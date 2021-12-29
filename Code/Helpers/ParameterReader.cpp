@@ -12,6 +12,8 @@ void ParameterReader::declare_parameters() {
         run_prm.declare_entry("solver precision" , "1e-6", Patterns::Double(), "Absolute precision for solver convergence.");
         run_prm.declare_entry("GMRES restart after" , "30", Patterns::Integer(), "Number of steps until GMRES restarts.");
         run_prm.declare_entry("GMRES maximum steps" , "30", Patterns::Integer(), "Number of maximum GMRES steps until failure.");
+        run_prm.declare_entry("use relative convergence criterion", "true", Patterns::Bool(), "If this is set to false, lower level sweeping will ignore higher level current residual.");
+        run_prm.declare_entry("relative convergence criterion", "1e-2", Patterns::Double(), "The factor by which a lower level convergence criterion is computed.");
         run_prm.declare_entry("solve directly", "false", Patterns::Bool(), "If this is set to true, GMRES will be replaced by a direct solver.");
         run_prm.declare_entry("kappa angle" , "1.0", Patterns::Double(), "Phase of the complex value kappa with norm 1 that is used in HSIEs.");
         run_prm.declare_entry("processes in x" , "1", Patterns::Integer(), "Number of processes in x-direction.");
@@ -73,6 +75,8 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.Solver_Precision = run_prm.get_double("solver precision");
         ret.GMRES_Steps_before_restart = run_prm.get_integer("GMRES restart after");
         ret.GMRES_max_steps = run_prm.get_integer("GMRES maximum steps");
+        ret.use_relative_convergence_criterion = run_prm.get_bool("use relative convergence criterion");
+        ret.relative_convergence_criterion = run_prm.get_double("relative convergence criterion");
         ret.solve_directly = run_prm.get_bool("solve directly");
         ret.Blocks_in_x_direction = run_prm.get_integer("processes in x");
         ret.Blocks_in_y_direction = run_prm.get_integer("processes in y");

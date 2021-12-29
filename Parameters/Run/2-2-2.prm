@@ -2,6 +2,8 @@ subsection Run parameters
   set GMRES maximum steps    = 10
   set solve directly         = false
   set sweeping level         = 3
+  set use relative convergence criterion = true
+  set relative convergence criterion = 1e-2
   set processes in x         = 2
   set processes in y         = 2
   set processes in z         = 2

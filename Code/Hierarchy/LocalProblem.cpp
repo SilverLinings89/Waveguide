@@ -259,3 +259,7 @@ double LocalProblem::compute_L2_error() {
     dealii::VectorTools::NormType::L2_norm );
   return dealii::VectorTools::compute_global_error(Geometry.levels[level].inner_domain->triangulation, cellwise_error, dealii::VectorTools::NormType::L2_norm);
 }
+
+unsigned int LocalProblem::compute_global_solve_counter() {
+  return Utilities::MPI::sum(solve_counter, MPI_COMM_WORLD);
+}

@@ -9,15 +9,17 @@ ResidualOutputGenerator::ResidualOutputGenerator():
 
 }   
 
-ResidualOutputGenerator::ResidualOutputGenerator(std::string in_name, std::string plot_title, bool in_print_to_console, unsigned int in_level):
+ResidualOutputGenerator::ResidualOutputGenerator(std::string in_name, std::string plot_title, unsigned int in_rank, unsigned int in_level, int in_parent_sweeping_rank):
     name(in_name),
-    print_to_console(in_print_to_console),
+    print_to_console(in_rank == 0),
     level(in_level) {
     fname = GlobalOutputManager.get_numbered_filename(name, GlobalParams.MPI_Rank, "plt");
     ofname = GlobalOutputManager.get_numbered_filename(name, GlobalParams.MPI_Rank, "png");
     for(unsigned int i = 0; i < GlobalParams.Sweeping_Level - level; i++) {
         spacing += "\t";
     }
+    rank_in_sweep = in_rank;
+    parent_sweeping_rank = in_parent_sweeping_rank;
 }
     
 void ResidualOutputGenerator::push_value(double value) {
@@ -29,14 +31,18 @@ void ResidualOutputGenerator::push_value(double value) {
 void ResidualOutputGenerator::write_residual_statement_to_console() {
     if (print_to_console) {
         if(data_series.size() > 0) {
+            std::cout << spacing;
+            if(parent_sweeping_rank != -1) {
+                std::cout << "[" << parent_sweeping_rank << "]: ";
+            }
             if(data_series[data_series.size() - 1].values.size() > 1) {
                 const unsigned step = data_series[data_series.size() - 1].values.size();
                 const double residual = data_series[data_series.size() - 1].values[step - 1];
                 const double fraction = residual / data_series[data_series.size() - 1].values[step - 2];
-                std::cout << spacing << "Residual in step " << step << " : " << residual << " Factor: " << fraction << std::endl;
+                std::cout << "Residual in step " << step << " : " << residual << " Factor: " << fraction << std::endl;
             } else {
                 if(data_series[data_series.size() - 1].values.size() == 1) {
-                    std::cout << spacing << "Residual in step 1 : " << std::to_string(data_series[data_series.size() - 1].values[0]) << std::endl;
+                    std::cout << "Residual in step 1 : " << std::to_string(data_series[data_series.size() - 1].values[0]) << std::endl;
                 } else {
                     std::cout << "No residuals passed so far. Error!" << std::endl;
                 }

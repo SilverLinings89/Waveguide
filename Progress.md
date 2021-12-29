@@ -836,4 +836,18 @@ I have implemented relative convergence control and setting the number of sector
 
 # Tuesday, 28th of December
 
-The current version of the code should have all requirements for the large scale runs of the hump-examples. I am preparing parameter files and launcing the runs on the HPC systems I have access to. I also want to work out a scheme to handle GSP requirements for the processing of these runs. I added the run script for sbatch to the code repo. Also added a small runfile to have a testcase before I run the big examples.
+The current version of the code should have all requirements for the large scale runs of the hump-examples. I am preparing parameter files and launcing the runs on the HPC systems I have access to. I also want to work out a scheme to handle GSP requirements for the processing of these runs. I added the run script for sbatch to the code repo. Also added a small runfile to have a testcase before I run the big examples. I am now running a case with 225 processes and level 3 sweeping on BW Uni Cluster 2. Additionally, I have now enabled relative convergence criterion by default and am testing that part locally.
+
+# Wednesday, 29th of December
+
+There was a minor bug in the implementation of the relative convergence criterion. I have added a function to write output about the number of global solves to evaluate if the relative convergence criterion creates sufficcient benefits. I will now run the algorithm with several relative convergence criteria and list the result data. The example in use is that of a short waveguide section running with 8 processes in level 3 sweeping. The run file now supports the parameters "use relative convergence criterion" and "relative convergence criterion". For the computation of the lower-level residual, I have added the logic, that if the residual is greater than 1, 1 is used as a base value. This counteracts the issue of premature convergence, which happens because the residual on the top level is 30 at the beginning. that leads to a convergence criterion of 3 for relative convergence of 1e-01. As a consequence, the solver doesn't even call the preconditioner or child solver.
+
+| Using relative criterion | Relative Criterion | Level 3 Solves | Level 2 Solves | Level 1 Solves | Level 0 Solves | Walltime | Run Number |
+|---|---|---|---|---|---|---|---|
+| No  |  -   | 1 | 15 | 192 | 2304 | 1.56e+03 | 202 |
+| Yes | 1e-01 | 1 | 18 | 198 | 1854 | 1.53e+03 | 200 |
+| Yes | 1e-02 | 1 | 15 | 171 | 1692 | 1.11e+03 | 198 |
+| Yes | 1e-03 | 1 | 15 | 192 | 2241 | 1.63e+03s | 201 |
+
+These results look really good and express the properties expected for this mechanism really well. 1e-02 appears to be the sweetspot in this setup between reducing the strength of the preconditioner and reducing the amount of unrequired precision.
+

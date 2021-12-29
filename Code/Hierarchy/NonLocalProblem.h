@@ -98,4 +98,5 @@ private:
 
   void update_convergence_criterion(double last_residual) override;
 
+  unsigned int compute_global_solve_counter() override;
 };

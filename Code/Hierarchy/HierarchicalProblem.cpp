@@ -145,3 +145,13 @@ void HierarchicalProblem::solve_with_timers_and_count() {
   t.stop();
   GlobalTimerManager.leave_context(level);
 }
+
+void HierarchicalProblem::print_solve_counter_list() {
+  unsigned int n_solves_on_level = compute_global_solve_counter();
+  if(GlobalParams.MPI_Rank == 0) {
+    std::cout << "On level " << level << " there were " << n_solves_on_level << " solves." << std::endl;
+  }
+  if(level != 0) {
+    child->print_solve_counter_list();
+  }
+}

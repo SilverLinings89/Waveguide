@@ -22,10 +22,11 @@
 #include <string>
 #include <vector>
 
-static PetscErrorCode MonitorError(KSP , PetscInt its, PetscReal rnorm, void * outputter)
+static PetscErrorCode MonitorError(KSP , PetscInt its, PetscReal rnorm, void * problem)
 {
-  ((ResidualOutputGenerator *)outputter)->push_value(rnorm);
-  ((ResidualOutputGenerator *)outputter)->write_residual_statement_to_console();
+  ((NonLocalProblem *)problem)->residual_output->push_value(rnorm);
+  ((NonLocalProblem *)problem)->residual_output->write_residual_statement_to_console();
+  ((NonLocalProblem *)problem)->child->update_convergence_criterion(rnorm);
   return(0);
 }
 
@@ -116,7 +117,7 @@ NonLocalProblem::NonLocalProblem(unsigned int level) :
     }  
   }
   n_locally_active_dofs = locally_active_dofs.n_elements();
-  residual_output = new ResidualOutputGenerator("ConvergenceHistoryLevel"+std::to_string(level), "Convergence History on level " + std::to_string(level), total_rank_in_sweep == 0, level );
+  residual_output = new ResidualOutputGenerator("ConvergenceHistoryLevel"+std::to_string(level), "Convergence History on level " + std::to_string(level), total_rank_in_sweep, level , parent_sweeping_rank);
 }
 
 void NonLocalProblem::prepare_sweeping_data() {
@@ -128,6 +129,7 @@ void NonLocalProblem::prepare_sweeping_data() {
     index_in_sweeping_direction = GlobalParams.Index_in_x_direction;
     total_rank_in_sweep = index_in_sweeping_direction;
     n_procs_in_sweep = GlobalParams.Blocks_in_x_direction;
+    parent_sweeping_rank = GlobalParams.Index_in_y_direction;
   }
   if(sweeping_direction == SweepingDirection::Y) {
     processed = true;
@@ -138,6 +140,7 @@ void NonLocalProblem::prepare_sweeping_data() {
       total_rank_in_sweep = index_in_sweeping_direction * GlobalParams.Blocks_in_x_direction +  GlobalParams.Index_in_x_direction;
     }
     n_procs_in_sweep = GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction;
+    parent_sweeping_rank = GlobalParams.Index_in_z_direction;
   }
   if(sweeping_direction == SweepingDirection::Z) {
     processed = true;
@@ -167,7 +170,7 @@ void NonLocalProblem::init_solver_and_preconditioner() {
   // KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc), nullptr);
   KSPSetPCSide(ksp, PCSide::PC_RIGHT);
   KSPGMRESSetRestart(ksp, GlobalParams.GMRES_max_steps);
-  KSPMonitorSet(ksp, MonitorError, residual_output, nullptr);
+  KSPMonitorSet(ksp, MonitorError, this, nullptr);
   KSPSetUp(ksp);
   KSPSetTolerances(ksp, 1e-10, GlobalParams.absolute_convergence_criterion, 1000, GlobalParams.GMRES_max_steps);
 }
@@ -258,6 +261,7 @@ void NonLocalProblem::solve() {
     direct_solver.solve(*matrix, solution, rhs);
   }
   
+
 }
 
 void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
@@ -428,6 +432,7 @@ void NonLocalProblem::compute_solver_factorization() {
 
 std::string NonLocalProblem::output_results() {
   print_info("NonLocalProblem", "Start output results on level" + std::to_string(level));
+  print_solve_counter_list();
   update_shared_solution_vector();
   FEErrorStruct errors = compute_global_errors(&shared_solution);
   std::cout << "Errors: L2 = " << errors.L2 << " and Linfty  = " << errors.Linfty <<std::endl;
@@ -706,8 +711,21 @@ FEErrorStruct NonLocalProblem::compute_global_errors(dealii::LinearAlgebra::dist
 
 void NonLocalProblem::update_convergence_criterion(double last_residual) {
   if(GlobalParams.use_relative_convergence_criterion) {
-    double new_abort_limit = last_residual * GlobalParams.relative_convergence_criterion;
+    double base_value = last_residual;
+    if(last_residual > 1.0) {
+      base_value = 1.0;
+    }
+    double new_abort_limit = base_value * GlobalParams.relative_convergence_criterion;
     new_abort_limit = std::max(new_abort_limit, GlobalParams.absolute_convergence_criterion);
-    KSPSetTolerances(ksp, new_abort_limit, 1.0, 1000, GlobalParams.GMRES_max_steps);
+    KSPSetTolerances(ksp, 1e-10,new_abort_limit , 1000, GlobalParams.GMRES_max_steps);
+    // std::cout << "Setting level " << level << " convergence criterion to " << new_abort_limit << std::endl;
   }
+}
+
+unsigned int NonLocalProblem::compute_global_solve_counter() {
+  unsigned int contribution = 0;
+  if(total_rank_in_sweep == 0) {
+    contribution = solve_counter;
+  }
+  return Utilities::MPI::sum(contribution, MPI_COMM_WORLD);
 }

@@ -35,6 +35,7 @@ class HierarchicalProblem {
   std::vector<std::string> filenames;
   ResidualOutputGenerator * residual_output;
   unsigned int solve_counter;
+  int parent_sweeping_rank = -1;
 
   HierarchicalProblem(unsigned int level, SweepingDirection direction);
   virtual ~HierarchicalProblem() =0;
@@ -56,6 +57,10 @@ class HierarchicalProblem {
   virtual void make_sparsity_pattern();
   void initialize_dof_counts();
   virtual void update_convergence_criterion(double) {}
+  virtual unsigned int compute_global_solve_counter() {
+    return 0;
+  }
+  void print_solve_counter_list();
 };
 
 typedef struct {
