@@ -17,5 +17,5 @@ subsection Case parameters
     set Input Signal Method = Dirichlet
     set Prescribe input zero = false
     set Use predefined shape = true
-    set Predefined case number = 30
+    set Predefined case number = 7
 end

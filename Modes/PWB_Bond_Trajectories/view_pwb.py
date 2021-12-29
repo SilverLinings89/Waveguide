@@ -56,9 +56,7 @@ def main(filename):
     with h5py.File(filename, 'r') as f:
 
         # Read and plot the PWB mesh
-        mlab.triangular_mesh(*[f['pwb/mesh/vertices'][:, i] for i in range(3)],
-                              f['pwb/mesh/faces'],
-                             opacity=0.2)
+        mlab.triangular_mesh(*[f['pwb/mesh/vertices'][:, i] for i in range(3)], f['pwb/mesh/faces'], opacity=0.2)
 
 
         # Plot the curve
@@ -68,13 +66,12 @@ def main(filename):
 
         # Plot the coordinate system at every 10th cross section.
         # Note, that the "u" and "v" do NOT coincide the the Frenet-Serret frame!
-        mlab.quiver3d(*[f['pwb/trajectory/coordinates'][::2, i] for i in range(3)],
-                      *[f['pwb/trajectory/cs/u'][::2, i] for i in range(3)])
+        mlab.quiver3d(*[f['pwb/trajectory/coordinates'][::2, i] for i in range(3)], [f['pwb/trajectory/cs/u'][::2, i] for i in range(3)])
 
 
         # Calculate the direction of curvature ("normal" vector) based on
         # the change of the tangential vector numerically.
-        # Note the Gram–Schmidt process used here.
+        # Note the GramSchmidt process used here.
         t_vector = np.array(f['pwb/trajectory/cs/tangential'])
 
         # The derivatives are mostly not known analytically at this point anymore
@@ -90,8 +87,7 @@ def main(filename):
                      / np.apply_along_axis(np.linalg.norm, 1, d1_vector) ** 3)
 
         # Plot direction and strength of curvature
-        mlab.quiver3d(*[f['pwb/trajectory/coordinates'][::2, i] for i in range(3)],
-                      *[(normal_vector*curvature[:, None])[::2, i] for i in range(3)])
+        mlab.quiver3d(*[f['pwb/trajectory/coordinates'][::2, i] for i in range(3)], [(normal_vector*curvature[:, None])[::2, i] for i in range(3)])
 
 
         # We also are provided with polygonial cross sections
@@ -102,7 +98,7 @@ def main(filename):
                                                f['pwb/trajectory/cs/tangential'])):
             # It is not guaranteed that every position has a slice, so we need to check
             try:
-                polygon = f[f'pwb/trajectory/crosssection/pos_{i}']
+                polygon = f['pwb/trajectory/crosssection/pos_{i}']
             except KeyError:
                 continue
 
@@ -110,8 +106,7 @@ def main(filename):
             transformed_polygon = polygon[:, 0] * u[:, None] + polygon[:, 1] * v[:, None] + pos[:, None]
 
             if not i % 10:
-                mlab.plot3d(*transformed_polygon,
-                            tube_radius=None, representation='wireframe')
+                mlab.plot3d(*transformed_polygon, tube_radius=None, representation='wireframe')
 
     mlab.show()
 
