@@ -70,6 +70,49 @@ For boundary id:
 | 4 | -x | y |
 | 5 | x | y |
 
+## Predefined waveguide shapes
+
+This code comes with some example cases called the waveguide hump examples. These examples are available as hdf5 and obj files in the folder Modes -> PWB_Bond_Trajectories. The first three cases are numbered 0,1 and 2 and then continue on at 40, 41, ... , 72. In total there are 3 + 33 cases, so 36. To run these, a parameter in the case file can be used. Be carefull, however, because these numbers start at 0 and count to 35. The table below lists how these numbers correlate: 
+| PWB Bond index | Predefined case number | Approximate signal loss in % | Approximate signal loss in db |
+| --- | --- | --- | --- |
+| 0 | 0 |  |  |
+| 1 | 1 |  |  |
+| 2 | 2 |  |  |
+| 40 | 3 |  |  |
+| 41 | 4 |  |  |
+| 42 | 5 |  |  |
+| 43 | 6 |  |  |
+| 44 | 7 |  |  |
+| 45 | 8 |  |  |
+| 46 | 9 |  |  |
+| 47 | 10 |  |  |
+| 48 | 11 |  |  |
+| 49 | 12 |  |  |
+| 50 | 13 |  |  |
+| 51 | 14 |  |  |
+| 52 | 15 |  |  |
+| 53 | 16 |  |  |
+| 54 | 17 |  |  |
+| 55 | 18 |  |  |
+| 56 | 19 |  |  |
+| 57 | 20 |  |  |
+| 58 | 21 |  |  |
+| 59 | 22 |  |  |
+| 60 | 23 |  |  |
+| 61 | 24 |  |  |
+| 62 | 25 |  |  |
+| 63 | 26 |  |  |
+| 64 | 27 |  |  |
+| 65 | 28 |  |  |
+| 66 | 29 |  |  |
+| 67 | 30 |  |  |
+| 68 | 31 |  |  |
+| 69 | 32 |  |  |
+| 70 | 33 |  |  |
+| 71 | 34 |  |  |
+| 72 | 35 |  |  |
+
+
 ## Thanks
 
 My thanks go to the CRC 1173 which is funding my research. I also thank the team behind the deal.II library that has been the basis for my implementations.
