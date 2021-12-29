@@ -851,3 +851,4 @@ There was a minor bug in the implementation of the relative convergence criterio
 
 These results look really good and express the properties expected for this mechanism really well. 1e-02 appears to be the sweetspot in this setup between reducing the strength of the preconditioner and reducing the amount of unrequired precision.
 
+From now on, the output manager writes more details into the run_description.txt which is located in the solution directory. This makes it easier to understand what the content of a solution folder represents.

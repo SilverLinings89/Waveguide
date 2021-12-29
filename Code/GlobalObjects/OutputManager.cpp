@@ -38,9 +38,9 @@ void OutputManager::initialize() {
     if(GlobalParams.MPI_Rank == 0) {
         std::cout << "Solution path: " << output_folder_path << std::endl;
         mkdir(output_folder_path.c_str(), ACCESSPERMS);
-        write_run_description();
         std::string git_commit_hash = exec("git rev-parse HEAD");
         git_commit_hash.erase(std::remove(git_commit_hash.begin(), git_commit_hash.end(), '\n'), git_commit_hash.end());
+        write_run_description(git_commit_hash);
         print_info("Git status:",git_commit_hash);
     }
     log_stream.open(output_folder_path + "/main" + std::to_string(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) + ".log", std::ios::binary);
@@ -54,13 +54,31 @@ std::string OutputManager::get_full_filename(std::string filename) {
     return output_folder_path + "/" + filename;
 }
 
-void OutputManager::write_run_description() {
+void OutputManager::write_run_description(std::string git_commit_hash) {
     std::string filename = get_full_filename("run_description.txt");
     std::ofstream out(filename);
-    out << "n_procs\t" << GlobalParams.NumberProcesses << std::endl;
-    out << "trunc_method\t" << ((GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE)? "HSIE" : "PML") << std::endl;
-    out << "in_signal\t" << (GlobalParams.use_tapered_input_signal ? "Taper" : "Dirichlet") << std::endl;
-    out << "input_dirichlet_zero" << (GlobalParams.prescribe_0_on_input_side ? "true" : "false") << std::endl;
+    out << "Number of processes: \t" << GlobalParams.NumberProcesses << std::endl;
+    out << "Sweeping level: " << GlobalParams.Sweeping_Level << std::endl;
+    out << "Truncation Method: " << ((GlobalParams.BoundaryCondition == BoundaryConditionType::HSIE)? "HSIE" : "PML") << std::endl;
+    out << "Signal input method: " << (GlobalParams.use_tapered_input_signal ? "Taper" : "Dirichlet") << std::endl;
+    out << "Set 0 on input interface: " << (GlobalParams.prescribe_0_on_input_side ? "true" : "false") << std::endl;
+    out << "Use predefined shape: " << (GlobalParams.Use_Predefined_Shape ? "true" : "false") << std::endl;
+    if(GlobalParams.Use_Predefined_Shape) {
+        out << "Predefined Shape Number: " << GlobalParams.Number_of_Predefined_Shape << std::endl;
+    }
+    out << "Block Counts: [" << GlobalParams.Blocks_in_x_direction << "x" << GlobalParams.Blocks_in_y_direction << "x" << GlobalParams.Blocks_in_z_direction << "]" << std::endl;
+    out << "Global cell count x: " << GlobalParams.Blocks_in_x_direction * GlobalParams.Cells_in_x << std::endl;
+    out << "Global cell count y: " << GlobalParams.Blocks_in_y_direction * GlobalParams.Cells_in_y << std::endl;
+    out << "Global cell count z: " << GlobalParams.Blocks_in_z_direction * GlobalParams.Cells_in_z << std::endl;
+    out << "Number of PML cell layers: " << GlobalParams.PML_N_Layers << std::endl;
+    out << "Use relative convergence limiter: " << (GlobalParams.use_relative_convergence_criterion ? "true" : "false") << std::endl;
+    if(GlobalParams.use_relative_convergence_criterion) {
+        out << "Relative convergence limit: " << GlobalParams.relative_convergence_criterion << std::endl;
+    }
+    out << "Global x range: " << Geometry.global_x_range.first << " to " << Geometry.global_x_range.second <<std::endl;
+    out << "Global y range: " << Geometry.global_y_range.first << " to " << Geometry.global_y_range.second <<std::endl;
+    out << "Global z range: " << Geometry.global_z_range.first << " to " << Geometry.global_z_range.second <<std::endl;
+    out << "Git commit hash: " << git_commit_hash << std::endl;
     out.close();
 }
 
