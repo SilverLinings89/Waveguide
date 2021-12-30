@@ -125,20 +125,26 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   n_owned_dofs += levels[in_level].inner_domain->n_locally_owned_dofs;
   for(unsigned int surf = 0; surf < 6; surf++) {
     levels[in_level].surfaces[surf]->initialize_dof_counts(levels[in_level].surfaces[surf]->compute_n_locally_active_dofs(), levels[in_level].surfaces[surf]->compute_n_locally_owned_dofs());
+    deallog << "." ;
     n_owned_dofs += levels[in_level].surfaces[surf]->n_locally_owned_dofs;
+    deallog << "." ;
   }
   levels[in_level].dof_distribution = dealii::Utilities::MPI::create_ascending_partitioning(GlobalMPI.communicators_by_level[in_level], n_owned_dofs);
   unsigned int first_dof = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].nth_index_in_set(0);
   levels[in_level].inner_domain->determine_non_owned_dofs();
+  deallog << "." ;
   for(unsigned int i = 0; i < 6; i++) {
     levels[in_level].surfaces[i]->determine_non_owned_dofs();
+    deallog << "." ;
   }
   levels[in_level].inner_domain->freeze_ownership();
   for(unsigned int i = 0; i < 6; i++) {
     levels[in_level].surfaces[i]->freeze_ownership();
+    deallog << "." ;
   }
   levels[in_level].inner_domain->finish_initialization(first_dof);
-
+  MPI_Barrier(MPI_COMM_WORLD);
+  deallog << "." ;
   if(Geometry.levels[in_level].surface_type[0] == SurfaceType::NEIGHBOR_SURFACE) {
     Geometry.levels[in_level].surfaces[0]->finish_dof_index_initialization();
   }
