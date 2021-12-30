@@ -64,7 +64,6 @@ void InnerDomain::make_grid() {
   triangulation = reforge_triangulation(&temp_tria);
   dof_handler.distribute_dofs(fe);
   print_info("InnerDomain::make_grid", "Mesh Preparation finished. System has " + std::to_string(dof_handler.n_dofs()) + " degrees of freedom.", false, LoggingLevel::PRODUCTION_ONE);
-  print_info("InnerDomain::make_grid", "end");
 }
 
 bool compareIndexCenterPairs(std::pair<int, double> c1, std::pair<int, double> c2) {

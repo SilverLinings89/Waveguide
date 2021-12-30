@@ -157,3 +157,34 @@ void BoundaryCondition::print_dof_validation() {
     }
   }
 }
+
+void BoundaryCondition::force_validation() {
+  if(Geometry.levels[level].surface_type[b_id] != SurfaceType::NEIGHBOR_SURFACE) {
+
+    
+    for(unsigned int surf = 0; surf < 6; surf++) {
+        if(surf != b_id && !are_opposing_sites(b_id, surf)) {
+   //       std::cout << "A" << std::endl;
+          std::vector<InterfaceDofData> d = get_dof_association_by_boundary_id(surf);
+     //     std::cout << "B" << std::endl;
+          bool one_is_invalid = false;
+          for(unsigned int index = 0; index < d.size(); index++) {
+            if(!is_dof_owned[d[index].index]) {
+              if(global_index_mapping[d[index].index] >= Geometry.levels[level].n_total_level_dofs) {
+                one_is_invalid = true;
+              }
+            }
+          }
+       //   std::cout << "C" << std::endl;
+          if(one_is_invalid) {
+            std::cout << "Forcing validation on " << b_id << " for " << surf << std::endl;
+            std::vector<unsigned int> local_indices;
+            for(unsigned int i = 0; i < d.size(); i++) {
+              local_indices.push_back(d[i].index);
+            }
+            set_non_local_dof_indices(local_indices, Geometry.levels[level].surfaces[surf]->get_global_dof_indices_by_boundary_id(b_id));
+          }
+        }
+    }
+  }
+}

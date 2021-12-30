@@ -185,9 +185,14 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   if(Geometry.levels[in_level].surface_type[5] == SurfaceType::NEIGHBOR_SURFACE) {
       Geometry.levels[in_level].surfaces[5]->finish_dof_index_initialization();
   }
+
   deallog << std::endl;
   levels[in_level].n_local_dofs = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].n_elements();
   levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution[0].size();
+  
+  for(unsigned int surf = 0; surf < 6; surf++) {
+    levels[in_level].surfaces[surf]->force_validation();
+  }
 }
 
 dealii::Tensor<2,3> GeometryManager::get_epsilon_tensor(const Position & in_p) {

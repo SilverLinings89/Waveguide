@@ -78,4 +78,6 @@ public:
   virtual unsigned int cells_for_boundary_id(unsigned int boundary_id); // Counts the number of cells associated with the boundary passed in as an argument.
 
   void print_dof_validation();
+
+  void force_validation();
 };
