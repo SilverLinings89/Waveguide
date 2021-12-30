@@ -20,7 +20,7 @@ ENDIF()
 
 enable_testing()
 
-set (CMAKE_CXX_STANDARD 20)
+set (CMAKE_CXX_STANDARD 14)
 set (gtest_force_shared_crt ON CACHE BOOL "MSVC defaults to shared CRT" FORCE)
 
 add_subdirectory(third_party/googletest)

@@ -592,11 +592,13 @@ void shift_interface_dof_data(std::vector<InterfaceDofData> * dofs_interface, un
 
 dealii::Triangulation<3> reforge_triangulation(dealii::Triangulation<3> * original_triangulation) {
   const unsigned int n_vertices = original_triangulation->n_vertices();
+  const unsigned int n_faces = original_triangulation->n_faces();
+  const unsigned int n_lines = original_triangulation->n_lines();
   SubCellData sub_cell_data;
   std::vector<std::pair<unsigned int, Position>> old_vertices;
   std::vector<Position> new_vertex_list(n_vertices);
-  std::set<unsigned int> boundary_lines_handled;
-  std::set<unsigned int> boundary_faces_handled;
+  dealii::IndexSet boundary_lines_handled(n_lines);
+  dealii::IndexSet boundary_faces_handled(n_faces);
   std::vector<bool> vertex_handled(n_vertices);
   std::vector<CellData<3>> cell_data;
   for(unsigned int i = 0; i < n_vertices; i++){
@@ -605,25 +607,25 @@ dealii::Triangulation<3> reforge_triangulation(dealii::Triangulation<3> * origin
   std::vector<CellData<3>> old_cell_data(original_triangulation->n_cells());
   for(auto cell = original_triangulation->begin(); cell != original_triangulation->end(); cell++) {
     for(unsigned int face_index = 0; face_index < GeometryInfo<3>::faces_per_cell; face_index++) {
-      if(!boundary_faces_handled.contains(cell->face_index(face_index))){
+      if(!boundary_faces_handled.is_element(cell->face_index(face_index))){
         CellData<2> new_surface_cell;
         for(unsigned int i = 0; i < 4; i++) {
           new_surface_cell.vertices[i] = cell->face(face_index)->vertex_index(i);
         }
         new_surface_cell.boundary_id = cell->face(face_index)->boundary_id();
         sub_cell_data.boundary_quads.push_back(new_surface_cell);
-        boundary_faces_handled.insert(cell->face_index(face_index));
+        boundary_faces_handled.add_index(cell->face_index(face_index));
       }
     }
     for(unsigned int line_index = 0; line_index < GeometryInfo<3>::lines_per_cell; line_index++) {
-      if(!boundary_lines_handled.contains(cell->line_index(line_index))) {
+      if(!boundary_lines_handled.is_element(cell->line_index(line_index))) {
         CellData<1> new_surface_line;
         for(unsigned int i = 0; i < 2; i++) {
           new_surface_line.vertices[i] = cell->line(line_index)->vertex_index(i);
         }
         new_surface_line.boundary_id = cell->line(line_index)->boundary_id();
         sub_cell_data.boundary_lines.push_back(new_surface_line);
-        boundary_lines_handled.insert(cell->line_index(line_index));
+        boundary_lines_handled.add_index(cell->line_index(line_index));
       }
     }
     for(unsigned int vertex_index = 0;  vertex_index < GeometryInfo<3>::vertices_per_cell; vertex_index++) {
