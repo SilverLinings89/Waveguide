@@ -143,7 +143,7 @@ void NeighborSurface::receive_from_below_dofs() {
 	DofIndexVector local_indices(n_dofs);
 	for(unsigned int i = 0; i < n_dofs; i++){
 		local_indices[i] = dofs[i].index;
-	} 
+	}
 	unsigned int * dof_indices = new unsigned int[n_dofs];
 	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, GlobalParams.MPI_Rank, MPI_COMM_WORLD, 0);
 	DofIndexVector global_indices(n_dofs);
