@@ -136,7 +136,8 @@ void NeighborSurface::send_up_inner_dofs() {
 		local_indices_buffer[i] = local_indices[i];
 	}
 	int tag = generate_tag(GlobalParams.MPI_Rank, global_partner_mpi_rank);
-	MPI_Ssend(local_indices_buffer, n_dofs, MPI_UNSIGNED, local_partner_mpi_rank, tag, GlobalMPI.communicators_by_level[level]);
+	std::cout << "Send chose tag " << tag << std::endl;
+	MPI_Send(local_indices_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD);
 }
 
 int NeighborSurface::generate_tag(unsigned int global_rank_sender, unsigned int receiver) {
@@ -157,7 +158,8 @@ void NeighborSurface::receive_from_below_dofs() {
 	}
 	unsigned int * dof_indices = new unsigned int[n_dofs];
 	int tag = generate_tag(global_partner_mpi_rank, GlobalParams.MPI_Rank );
-	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, local_partner_mpi_rank, tag, GlobalMPI.communicators_by_level[level], 0);
+	std::cout << "Receive chose tag " << tag << std::endl;
+	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD, 0);
 	DofIndexVector global_indices(n_dofs);
 	for(unsigned int i = 0; i < n_dofs; i++){
 		global_indices[i] = dof_indices[i];
@@ -191,7 +193,7 @@ void NeighborSurface::send_up_boundary_dofs(unsigned int other_bid) {
 				std::cout << "On " << GlobalParams.MPI_Rank << " surface " << b_id << " there were " << faulty_sends << " wrong values sent." << std::endl; 
 			}
 			int tag = generate_tag(GlobalParams.MPI_Rank, global_partner_mpi_rank);
-			MPI_Ssend(global_indices, n_dofs, MPI_UNSIGNED, local_partner_mpi_rank, tag, GlobalMPI.communicators_by_level[level]);
+			MPI_Send(global_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD);
 		}
 	}
 }
@@ -201,7 +203,7 @@ std::vector<DofNumber> NeighborSurface::receive_boundary_dofs(unsigned int other
 	std::vector<DofNumber> ret(n_dofs);
 	unsigned int * dof_indices = new unsigned int [n_dofs];
 	int tag = generate_tag(global_partner_mpi_rank, GlobalParams.MPI_Rank);
-	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, local_partner_mpi_rank, tag, GlobalMPI.communicators_by_level[level], 0);
+	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD, 0);
 	unsigned int faulty_receives = 0;
 	for(unsigned int i = 0; i < n_dofs; i++) {
 		std::cout << "Received." << std::endl;
@@ -220,21 +222,26 @@ std::vector<DofNumber> NeighborSurface::receive_boundary_dofs(unsigned int other
 void NeighborSurface::finish_dof_index_initialization() {
 	if(is_lower_interface) {
 		// this interface does not own, so it receives
+		std::cout << "Receive started." << std::endl;
 		receive_from_below_dofs();
+		std::cout << "Receive done for inner" << std::endl;
 		for(unsigned int surf = 0; surf < 6; surf++) {
 			if(surf != b_id && !are_opposing_sites(surf, b_id)) {
 				if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
 					boundary_dofs[surf] = receive_boundary_dofs(surf);
+					std::cout << "Receive done for surf " << surf << std::endl;
 				}
 			}
 		}
 	} else {
 		// this interface does own, so it sends
 		send_up_inner_dofs();
+		std::cout << "Send done for inner" << std::endl;
 		for(unsigned int surf = 0; surf < 6; surf++) {
 			if(surf != b_id && !are_opposing_sites(surf, b_id)) {
 				if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
 					send_up_boundary_dofs(surf);
+					std::cout << "Send done for surf " << surf << std::endl;
 				}
 			}
 		}

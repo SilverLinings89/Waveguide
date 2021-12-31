@@ -585,6 +585,10 @@ void PMLSurface::set_boundary_ids() {
   }
 
   // then check all of the other boundary ids.
+  std::array<unsigned int, 6> boundary_counts;
+  for(unsigned int i = 0; i< 6; i++) {
+    boundary_counts[i] = 0;
+  }
   for(auto it = triangulation.begin(); it != triangulation.end(); it++) {
     for(unsigned int face = 0; face < 6; face ++) {
       if(it->face(face)->at_boundary()) {
@@ -599,6 +603,7 @@ void PMLSurface::set_boundary_ids() {
             }
             if(is_at_boundary) {
               it->face(face)->set_all_boundary_ids(i);
+              boundary_counts[i]++;
             }
           }
         }
