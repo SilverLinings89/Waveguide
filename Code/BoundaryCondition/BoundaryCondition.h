@@ -37,7 +37,8 @@ public:
   bool boundary_coordinates_computed = false;
   std::array<double, 6> boundary_vertex_coordinates;
   DofCount dof_counter; // This value stores the number of owned dofs of this boundary condition. It is 0 for boundary types like neighbor, empty or dirichlet, but non-zero for pml and hsie, where the boundary condition introduces additional dofs.
-  unsigned int global_partner_mpi_rank; // This value is only relevant for neighbors but stored on the base type for convenience. It determines the MPI rank of the neighbor associated with this surface on the level communicator.
+  int global_partner_mpi_rank; // This value is only relevant for neighbors but stored on the base type for convenience. It determines the MPI rank of the neighbor associated with this surface on the level communicator.
+  int local_partner_mpi_rank;
   const std::vector<BoundaryId> adjacent_boundaries; // For more performant implementation, I have stored this value. It is the set of boundary indices excluding the own boundary id and the boundary that is opposed to this one from the inner domain, since there is no coupling between the domain and itself and no domain intersection with the opposing side.
   std::array<bool, 6> are_edge_dofs_owned; // If the i-th value of this array is set to true, the surface dofs on that boundary surface are locally owned.
   DofHandler3D dof_handler;

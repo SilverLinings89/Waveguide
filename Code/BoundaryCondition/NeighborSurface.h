@@ -46,4 +46,5 @@ class NeighborSurface : public BoundaryCondition {
     std::vector<DofNumber> receive_boundary_dofs(unsigned int other_bid) override;
     void finish_dof_index_initialization() override;
     void distribute_dof_indices();
+    int generate_tag(unsigned int global_rank_sender, unsigned int receiver);
 };

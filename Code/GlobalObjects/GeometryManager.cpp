@@ -124,13 +124,19 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   levels[in_level].inner_domain->initialize_dof_counts(levels[in_level].inner_domain->compute_n_locally_active_dofs(), levels[in_level].inner_domain->compute_n_locally_owned_dofs());
   n_owned_dofs += levels[in_level].inner_domain->n_locally_owned_dofs;
   for(unsigned int surf = 0; surf < 6; surf++) {
-    levels[in_level].surfaces[surf]->initialize_dof_counts(levels[in_level].surfaces[surf]->compute_n_locally_active_dofs(), levels[in_level].surfaces[surf]->compute_n_locally_owned_dofs());
+    unsigned int surf_active = levels[in_level].surfaces[surf]->compute_n_locally_active_dofs();
+    unsigned int surf_owned = levels[in_level].surfaces[surf]->compute_n_locally_owned_dofs();
+    std::cout << "For surface " << surf << " I found " << surf_active << " and " << surf_owned << " dofs." <<std::endl;
+    levels[in_level].surfaces[surf]->initialize_dof_counts(surf_active, surf_owned);
     deallog << "." ;
     n_owned_dofs += levels[in_level].surfaces[surf]->n_locally_owned_dofs;
     deallog << "." ;
   }
   levels[in_level].dof_distribution = dealii::Utilities::MPI::create_ascending_partitioning(GlobalMPI.communicators_by_level[in_level], n_owned_dofs);
   unsigned int first_dof = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].nth_index_in_set(0);
+  levels[in_level].n_local_dofs = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].n_elements();
+  levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution[0].size();
+  MPI_Barrier(MPI_COMM_WORLD);
   levels[in_level].inner_domain->determine_non_owned_dofs();
   deallog << "." ;
   for(unsigned int i = 0; i < 6; i++) {
@@ -144,7 +150,31 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   }
   levels[in_level].inner_domain->finish_initialization(first_dof);
   MPI_Barrier(MPI_COMM_WORLD);
+  std::cout << "A" << std::endl;
   deallog << "." ;
+  
+  deallog << "." ;
+  first_dof += levels[in_level].inner_domain->n_locally_owned_dofs;
+
+  deallog << "." ;
+  for(unsigned int i = 0; i < 6; i++) {
+    std::cout << "Surf: "  << i << std::endl;
+    if(Geometry.levels[in_level].surface_type[i] != SurfaceType::NEIGHBOR_SURFACE) {
+      levels[in_level].surfaces[i]->finish_initialization(first_dof);
+      first_dof += levels[in_level].surfaces[i]->n_locally_owned_dofs;
+      deallog << "." ;
+    }
+  }  
+  std::cout << "B" << std::endl;
+  for(unsigned int i = 0; i < 6; i++) {
+    if(Geometry.levels[in_level].surface_type[i] != SurfaceType::NEIGHBOR_SURFACE) {
+      Geometry.levels[in_level].surfaces[i]->finish_dof_index_initialization();
+    }
+    deallog << "." ;
+  }
+  
+  std::cout << "C" << std::endl;
+
   if(Geometry.levels[in_level].surface_type[0] == SurfaceType::NEIGHBOR_SURFACE) {
     Geometry.levels[in_level].surfaces[0]->finish_dof_index_initialization();
   }
@@ -156,23 +186,8 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   if(Geometry.levels[in_level].surface_type[4] == SurfaceType::NEIGHBOR_SURFACE) {
     Geometry.levels[in_level].surfaces[4]->finish_dof_index_initialization();
   }
-  deallog << "." ;
-
-  first_dof += levels[in_level].inner_domain->n_locally_owned_dofs;
-
-  deallog << "." ;
-  for(unsigned int i = 0; i < 6; i++) {
-    levels[in_level].surfaces[i]->finish_initialization(first_dof);
-    first_dof += levels[in_level].surfaces[i]->n_locally_owned_dofs;
-    deallog << "." ;
-  }  
-
-  for(unsigned int i = 0; i < 6; i++) {
-    if(Geometry.levels[in_level].surface_type[i] != SurfaceType::NEIGHBOR_SURFACE) {
-      Geometry.levels[in_level].surfaces[i]->finish_dof_index_initialization();
-    }
-    deallog << "." ;
-  }
+    
+  std::cout << "D" << std::endl;
   
   if(Geometry.levels[in_level].surface_type[1] == SurfaceType::NEIGHBOR_SURFACE) {
       Geometry.levels[in_level].surfaces[1]->finish_dof_index_initialization();
@@ -185,10 +200,9 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   if(Geometry.levels[in_level].surface_type[5] == SurfaceType::NEIGHBOR_SURFACE) {
       Geometry.levels[in_level].surfaces[5]->finish_dof_index_initialization();
   }
-
+  std::cout << "E" << std::endl;
   deallog << std::endl;
-  levels[in_level].n_local_dofs = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].n_elements();
-  levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution[0].size();
+
   
   for(unsigned int surf = 0; surf < 6; surf++) {
     levels[in_level].surfaces[surf]->force_validation();

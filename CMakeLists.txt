@@ -2,13 +2,13 @@ SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Set the name of the project and target:
 SET(TARGET "WaveguideProblem")
-SET(DEAL_II_DIR "/home/kraft/libs")
+SET(DEAL_II_DIR "/home/kit/ianm/mx3529/libs2")
 SET(VERSION "")
 CMAKE_MINIMUM_REQUIRED(VERSION 3.15.0)
 project(waveguide)
 
 FIND_PACKAGE(deal.II 9.2 QUIET
-        HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ ../../libs $ENV{DEAL_II_DIR}
+        HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ ../../libs2 $ENV{DEAL_II_DIR}
         )
 IF(NOT ${deal.II_FOUND})
     MESSAGE(FATAL_ERROR "\n"
@@ -21,6 +21,8 @@ ENDIF()
 enable_testing()
 
 set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_FLAGS_RELEASE "-O2 -w")
+
 set (gtest_force_shared_crt ON CACHE BOOL "MSVC defaults to shared CRT" FORCE)
 
 add_subdirectory(third_party/googletest)

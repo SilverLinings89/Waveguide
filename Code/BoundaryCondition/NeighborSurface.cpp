@@ -20,7 +20,8 @@
 NeighborSurface::NeighborSurface(unsigned int in_surface, unsigned int in_level)
     : BoundaryCondition(in_surface, in_level, Geometry.surface_extremal_coordinate[in_surface]),
     is_lower_interface(in_surface % 2 == 0) {
-    global_partner_mpi_rank = Geometry.get_global_neighbor_for_interface(Geometry.get_direction_for_boundary_id(in_surface)).second;
+    global_partner_mpi_rank = (int)Geometry.get_global_neighbor_for_interface(Geometry.get_direction_for_boundary_id(in_surface)).second;
+	local_partner_mpi_rank = (int)Geometry.get_global_neighbor_for_interface(Geometry.get_direction_for_boundary_id(in_surface)).first;
     dof_counter = 0;
 }
 
@@ -134,7 +135,17 @@ void NeighborSurface::send_up_inner_dofs() {
 	for(unsigned int i = 0; i < n_dofs; i++) {
 		local_indices_buffer[i] = local_indices[i];
 	}
-	MPI_Send(local_indices_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, global_partner_mpi_rank, MPI_COMM_WORLD);
+	int tag = generate_tag(GlobalParams.MPI_Rank, global_partner_mpi_rank);
+	MPI_Ssend(local_indices_buffer, n_dofs, MPI_UNSIGNED, local_partner_mpi_rank, tag, GlobalMPI.communicators_by_level[level]);
+}
+
+int NeighborSurface::generate_tag(unsigned int global_rank_sender, unsigned int receiver) {
+	int ret = 0;
+	srand(global_rank_sender);
+	for(unsigned int i = 0; i < receiver; i++) {
+		ret = rand()%Geometry.levels[level].n_total_level_dofs;
+	}
+	return ret;
 }
 
 void NeighborSurface::receive_from_below_dofs() {
@@ -145,7 +156,8 @@ void NeighborSurface::receive_from_below_dofs() {
 		local_indices[i] = dofs[i].index;
 	}
 	unsigned int * dof_indices = new unsigned int[n_dofs];
-	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, GlobalParams.MPI_Rank, MPI_COMM_WORLD, 0);
+	int tag = generate_tag(global_partner_mpi_rank, GlobalParams.MPI_Rank );
+	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, local_partner_mpi_rank, tag, GlobalMPI.communicators_by_level[level], 0);
 	DofIndexVector global_indices(n_dofs);
 	for(unsigned int i = 0; i < n_dofs; i++){
 		global_indices[i] = dof_indices[i];
@@ -168,22 +180,39 @@ void NeighborSurface::send_up_boundary_dofs(unsigned int other_bid) {
 			}
 			indices = Geometry.levels[level].surfaces[other_bid]->transform_local_to_global_dofs(indices);
 			unsigned int * global_indices = new unsigned int [n_dofs];
+			unsigned int faulty_sends = 0;
 			for(unsigned int i = 0; i < n_dofs; i++) {
 				global_indices[i] = indices[i];
+				if(indices[i] >= Geometry.levels[level].n_total_level_dofs) {
+					faulty_sends++;
+				}
 			}
-			MPI_Send(global_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, global_partner_mpi_rank, MPI_COMM_WORLD);
+			if(faulty_sends > 0) {
+				std::cout << "On " << GlobalParams.MPI_Rank << " surface " << b_id << " there were " << faulty_sends << " wrong values sent." << std::endl; 
+			}
+			int tag = generate_tag(GlobalParams.MPI_Rank, global_partner_mpi_rank);
+			MPI_Ssend(global_indices, n_dofs, MPI_UNSIGNED, local_partner_mpi_rank, tag, GlobalMPI.communicators_by_level[level]);
 		}
 	}
 }
 
 std::vector<DofNumber> NeighborSurface::receive_boundary_dofs(unsigned int other_bid) {
-	std::vector<DofNumber> ret;
 	const unsigned int n_dofs = Geometry.levels[level].surfaces[other_bid]->get_dof_association_by_boundary_id(b_id).size();
+	std::vector<DofNumber> ret(n_dofs);
 	unsigned int * dof_indices = new unsigned int [n_dofs];
-	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, GlobalParams.MPI_Rank, MPI_COMM_WORLD, 0);
-	ret.resize(n_dofs);
+	int tag = generate_tag(global_partner_mpi_rank, GlobalParams.MPI_Rank);
+	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, local_partner_mpi_rank, tag, GlobalMPI.communicators_by_level[level], 0);
+	unsigned int faulty_receives = 0;
 	for(unsigned int i = 0; i < n_dofs; i++) {
+		std::cout << "Received." << std::endl;
 		ret[i] = dof_indices[i];
+		if(dof_indices[i] >= Geometry.levels[level].n_total_level_dofs){
+			std::cout << "wrong value: " << dof_indices[i] << std::endl;
+			faulty_receives++;
+		}
+	}
+	if(faulty_receives > 0) {
+		std::cout << "On " << GlobalParams.MPI_Rank << " surface " << b_id << " there were " << faulty_receives << " wrong values received." << std::endl; 
 	}
 	return ret;
 }

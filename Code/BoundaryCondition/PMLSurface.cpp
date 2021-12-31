@@ -109,12 +109,12 @@ void PMLSurface::prepare_mesh() {
   set_boundary_ids();
 }
 
-unsigned int PMLSurface::cells_for_boundary_id(unsigned int boundary_id) {
+unsigned int PMLSurface::cells_for_boundary_id(unsigned int in_boundary_id) {
     unsigned int ret = 0;
     for(auto it = triangulation.begin(); it!= triangulation.end(); it++) {
       if(it->at_boundary()) {
         for(unsigned int i = 0; i < 6; i++) {
-          if(it->face(i)->boundary_id() == boundary_id) {
+          if(it->face(i)->boundary_id() == in_boundary_id) {
             ret++;
           }
         }
@@ -689,7 +689,7 @@ void PMLSurface::finish_dof_index_initialization() {
 }
 
 void PMLSurface::determine_non_owned_dofs() {
-  validate_meshes();
+  // validate_meshes();
   IndexSet non_owned_dofs = compute_non_owned_dofs();
   const unsigned int n_dofs = non_owned_dofs.n_elements();
   std::vector<unsigned int> local_dofs(n_dofs);
@@ -700,14 +700,21 @@ void PMLSurface::determine_non_owned_dofs() {
 }
 
 bool PMLSurface::finish_initialization(DofNumber index) {
+  std::cout << "inner a" << std::endl;
   std::vector<InterfaceDofData> dofs = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_boundary_id(b_id);
   std::vector<InterfaceDofData> own = get_dof_association();
   std::vector<unsigned int> local_indices, global_indices;
+  std::cout << "inner b" << std::endl;
+  if(own.size() != dofs.size()) {
+    std::cout << "Size mismatch in finish initialization: " << own.size() << " != " << dofs.size() << std::endl;
+  }
   for(unsigned int i = 0; i < dofs.size(); i++) {
     local_indices.push_back(own[i].index);
     global_indices.push_back(dofs[i].index);
   }
+  std::cout << "inner c" << std::endl;
   set_non_local_dof_indices(local_indices, global_indices);
+  std::cout << "inner e" << std::endl;
   return FEDomain::finish_initialization(index);
 }
 
