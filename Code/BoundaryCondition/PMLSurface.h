@@ -14,6 +14,7 @@ class PMLSurface : public BoundaryCondition {
     PMLMeshTransformation transformation;
     bool mesh_is_transformed;
     const double surface_coordinate;
+    std::array<std::vector<InterfaceDofData>, 6> dof_associations;
 
   public: 
     std::pair<double, double> x_range;
@@ -60,4 +61,5 @@ class PMLSurface : public BoundaryCondition {
     bool mg_process_edge(dealii::Triangulation<3> * current_list, BoundaryId b_id);
     bool mg_process_corner(dealii::Triangulation<3> * current_list, BoundaryId first_bid, BoundaryId second_bid);
     bool extend_mesh_in_direction(BoundaryId in_bid);
+    void prepare_dof_associations();
 };

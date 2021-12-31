@@ -230,9 +230,78 @@ void PMLSurface::validate_meshes() {
 void PMLSurface::initialize() {
   prepare_mesh();
   init_fe();
+  prepare_dof_associations();
+}
+
+void PMLSurface::prepare_dof_associations() {
+  std::array<IndexSet, 6> added_indices;
+  std::array<std::vector<InterfaceDofData>, 6> temp_storage;
+  unsigned int n_dofs = dof_handler.n_dofs();
+  for(unsigned int i = 0; i < 6; i++) {
+    added_indices[i].set_size(n_dofs);
+    dof_associations[i].clear();
+  }
+  
+  IndexSet face_set(n_dofs);
+  IndexSet line_set(n_dofs);
+
+  for (auto cell : dof_handler.active_cell_iterators()) {
+    if (cell->at_boundary()) {
+      for (unsigned int face = 0; face < 6; face++) {
+        for (unsigned int boundary_id = 0; boundary_id < 6; boundary_id++) {
+          if (cell->face(face)->boundary_id() == boundary_id) {
+            std::vector<DofNumber> face_dofs_indices(fe_nedelec.dofs_per_face);
+            cell->face(face)->get_dof_indices(face_dofs_indices);
+            face_set.clear();
+            line_set.clear();
+            face_set.add_indices(face_dofs_indices.begin(), face_dofs_indices.end());
+            std::vector<InterfaceDofData> cell_dofs_and_orientations_and_points;
+            for (unsigned int i = 0; i < dealii::GeometryInfo<3>::lines_per_face; i++) {
+              std::vector<DofNumber> line_dofs(fe_nedelec.dofs_per_line);
+              cell->face(face)->line(i)->get_dof_indices(line_dofs);
+              line_set.add_indices(line_dofs.begin(), line_dofs.end());
+              for (unsigned int j = 0; j < fe_nedelec.dofs_per_line; j++) {
+                InterfaceDofData new_item;
+                new_item.index = line_dofs[j];
+                new_item.base_point = cell->face(face)->line(i)->center();
+                new_item.order = j;
+                cell_dofs_and_orientations_and_points.push_back(new_item);
+              }
+            }
+            for(unsigned int i = 0; i < fe_nedelec.dofs_per_face; i++) {
+              if(!line_set.is_element(face_set.nth_index_in_set(i))) {
+                InterfaceDofData new_item;
+                new_item.index = face_set.nth_index_in_set(i);
+                new_item.base_point = cell->face(face)->center();
+                new_item.order = i;
+                cell_dofs_and_orientations_and_points.push_back(new_item);
+              }
+            }
+            for (auto item: cell_dofs_and_orientations_and_points) {
+              temp_storage[boundary_id].push_back(item);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  for(unsigned int i = 0; i < 6; i++) {
+    for(unsigned int j = 0; j < temp_storage[i].size(); j++) {
+      if(!added_indices[i].is_element(temp_storage[i][j].index)) {
+        dof_associations[i].push_back(temp_storage[i][j]);
+        added_indices[i].add_index(temp_storage[i][j].index);
+      }
+    }
+    std::sort(dof_associations[i].begin(), dof_associations[i].end(), compareDofBaseDataAndOrientation);
+  }
+
+  std::cout << "Dofs by boundary_id on surface " << b_id << ": " << dof_associations[0].size() << ", " << dof_associations[1].size() << ", " << dof_associations[2].size() << ", " << dof_associations[3].size() << ", " << dof_associations[4].size() << ", " << dof_associations[5].size() << "." <<std::endl;
 }
 
 std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(unsigned int in_bid) {
+  return dof_associations[in_bid];
+  /**
   std::vector<InterfaceDofData> ret;
   std::vector<types::global_dof_index> local_line_dofs(fe_nedelec.dofs_per_line);
   std::set<DofNumber> line_set;
@@ -284,6 +353,7 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(uns
   ret.shrink_to_fit();
   std::sort(ret.begin(), ret.end(), compareDofBaseDataAndOrientation);
   return ret;
+  **/
 }
 
 std::vector<InterfaceDofData> PMLSurface::get_dof_association() {
@@ -311,7 +381,7 @@ std::array<double, 3> PMLSurface::fraction_of_pml_direction(Position in_p) {
     }
   }
   if(in_p[2] < Geometry.local_z_range.first) {
-    ret[2] = (Geometry.local_z_range.first - in_p[0] + non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
+    ret[2] = (Geometry.local_z_range.first - in_p[2] + non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
   } else {
     if(in_p[2] > Geometry.local_z_range.second) {
       ret[2] = (in_p[2] - Geometry.local_z_range.second - non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
@@ -705,11 +775,9 @@ void PMLSurface::determine_non_owned_dofs() {
 }
 
 bool PMLSurface::finish_initialization(DofNumber index) {
-  std::cout << "inner a" << std::endl;
   std::vector<InterfaceDofData> dofs = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_boundary_id(b_id);
   std::vector<InterfaceDofData> own = get_dof_association();
   std::vector<unsigned int> local_indices, global_indices;
-  std::cout << "inner b" << std::endl;
   if(own.size() != dofs.size()) {
     std::cout << "Size mismatch in finish initialization: " << own.size() << " != " << dofs.size() << std::endl;
   }
@@ -717,9 +785,7 @@ bool PMLSurface::finish_initialization(DofNumber index) {
     local_indices.push_back(own[i].index);
     global_indices.push_back(dofs[i].index);
   }
-  std::cout << "inner c" << std::endl;
   set_non_local_dof_indices(local_indices, global_indices);
-  std::cout << "inner e" << std::endl;
   return FEDomain::finish_initialization(index);
 }
 

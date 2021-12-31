@@ -206,7 +206,6 @@ std::vector<DofNumber> NeighborSurface::receive_boundary_dofs(unsigned int other
 	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD, 0);
 	unsigned int faulty_receives = 0;
 	for(unsigned int i = 0; i < n_dofs; i++) {
-		std::cout << "Received." << std::endl;
 		ret[i] = dof_indices[i];
 		if(dof_indices[i] >= Geometry.levels[level].n_total_level_dofs){
 			std::cout << "wrong value: " << dof_indices[i] << std::endl;
@@ -222,26 +221,21 @@ std::vector<DofNumber> NeighborSurface::receive_boundary_dofs(unsigned int other
 void NeighborSurface::finish_dof_index_initialization() {
 	if(is_lower_interface) {
 		// this interface does not own, so it receives
-		std::cout << "Receive started." << std::endl;
 		receive_from_below_dofs();
-		std::cout << "Receive done for inner" << std::endl;
 		for(unsigned int surf = 0; surf < 6; surf++) {
 			if(surf != b_id && !are_opposing_sites(surf, b_id)) {
 				if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
 					boundary_dofs[surf] = receive_boundary_dofs(surf);
-					std::cout << "Receive done for surf " << surf << std::endl;
 				}
 			}
 		}
 	} else {
 		// this interface does own, so it sends
 		send_up_inner_dofs();
-		std::cout << "Send done for inner" << std::endl;
 		for(unsigned int surf = 0; surf < 6; surf++) {
 			if(surf != b_id && !are_opposing_sites(surf, b_id)) {
 				if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
 					send_up_boundary_dofs(surf);
-					std::cout << "Send done for surf " << surf << std::endl;
 				}
 			}
 		}
