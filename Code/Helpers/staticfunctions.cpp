@@ -223,7 +223,7 @@ double dotproduct(Tensor<1, 3, double> a, Tensor<1, 3, double> b) {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
-void mesh_info(Triangulation<3> * tria, std::string &filename) {
+void mesh_info(Triangulation<3> * tria, std::string filename) {
   print_info("mesh_info", "Mesh info:\ndimension: 3\nno. of cells: " + std::to_string(tria->n_active_cells()), false, LoggingLevel::PRODUCTION_ALL);
   {
     std::map<unsigned int, unsigned int> boundary_count;
@@ -240,12 +240,13 @@ void mesh_info(Triangulation<3> * tria, std::string &filename) {
     for (auto &it : boundary_count) {
       m += std::to_string(it.first) + "(" + std::to_string(it.second) + " times) ";
     }
-    print_info("mesh_info",m, false, LoggingLevel::PRODUCTION_ALL);
+    std::cout << "On " << GlobalParams.MPI_Rank << " and " << filename << " " << m << std::endl;
+    
   }
-  std::ofstream out(filename.c_str());
-  GridOut grid_out;
-  grid_out.write_vtk(*tria, out);
-  out.close();
+  // std::ofstream out(filename.c_str());
+  // GridOut grid_out;
+  // grid_out.write_vtk(*tria, out);
+  // out.close();
   print_info("mesh_info" , "written to " + filename, false, LoggingLevel::DEBUG_ONE);
 }
 

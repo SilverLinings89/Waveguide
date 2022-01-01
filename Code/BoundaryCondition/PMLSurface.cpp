@@ -295,7 +295,8 @@ void PMLSurface::prepare_dof_associations() {
     }
     std::sort(dof_associations[i].begin(), dof_associations[i].end(), compareDofBaseDataAndOrientation);
   }
-
+  std::string m = std::to_string(b_id);
+  mesh_info(&triangulation, m);
   std::cout << "Dofs by boundary_id on surface " << b_id << ": " << dof_associations[0].size() << ", " << dof_associations[1].size() << ", " << dof_associations[2].size() << ", " << dof_associations[3].size() << ", " << dof_associations[4].size() << ", " << dof_associations[5].size() << "." <<std::endl;
 }
 
