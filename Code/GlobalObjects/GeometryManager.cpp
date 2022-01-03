@@ -159,7 +159,7 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
       Geometry.levels[in_level].surfaces[i]->finish_dof_index_initialization();
     }
   }
-  
+  MPI_Barrier(MPI_COMM_WORLD);
   if(Geometry.levels[in_level].surface_type[0] == SurfaceType::NEIGHBOR_SURFACE) {
     Geometry.levels[in_level].surfaces[0]->finish_dof_index_initialization();
   }  
@@ -183,7 +183,7 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   if(Geometry.levels[in_level].surface_type[5] == SurfaceType::NEIGHBOR_SURFACE) {
       Geometry.levels[in_level].surfaces[5]->finish_dof_index_initialization();
   }
-  
+  MPI_Barrier(MPI_COMM_WORLD);
   for(unsigned int surf = 0; surf < 6; surf++) {
     levels[in_level].surfaces[surf]->force_validation();
   }
