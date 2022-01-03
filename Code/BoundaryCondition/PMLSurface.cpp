@@ -632,34 +632,35 @@ void PMLSurface::set_boundary_ids() {
       }
     }
   }
+  unsigned int countr = 0;
   // then locate all the faces connecting to the inner domain
   for(auto it = triangulation.begin(); it != triangulation.end(); it++) {
     for(unsigned int face = 0; face < 6; face ++) {
       if(it->face(face)->at_boundary()) {
         Position p = it->face(face)->center();
         // Have to use outer_boundary_id here because direction 4 of the pml (-z) is at the boundary 5 of the inner domain (+z)
-        if(p[b_id/2] == get_surface_coordinate_for_bid(outer_boundary_id)) {
-          bool is_located_properly = true;
-          is_located_properly &= p[0] > Geometry.local_x_range.first - FLOATING_PRECISION;
-          is_located_properly &= p[0] < Geometry.local_x_range.second + FLOATING_PRECISION;
-          is_located_properly &= p[1] > Geometry.local_y_range.first - FLOATING_PRECISION;
-          is_located_properly &= p[1] < Geometry.local_y_range.second + FLOATING_PRECISION;
-          is_located_properly &= p[2] > Geometry.local_z_range.first - FLOATING_PRECISION;
-          is_located_properly &= p[2] < Geometry.local_z_range.second + FLOATING_PRECISION;
-          if(is_located_properly) {
-            it->face(face)->set_all_boundary_ids(inner_boundary_id);
-          }
+        bool is_located_properly = std::abs(p[b_id/2] - get_surface_coordinate_for_bid(outer_boundary_id)) < FLOATING_PRECISION;
+        if((b_id / 2) != 0) {
+          is_located_properly &= p[0] > Geometry.local_x_range.first + FLOATING_PRECISION;
+          is_located_properly &= p[0] < Geometry.local_x_range.second - FLOATING_PRECISION;
         }
-        
+        if((b_id / 2) != 1) {
+          is_located_properly &= p[1] > Geometry.local_y_range.first + FLOATING_PRECISION;
+          is_located_properly &= p[1] < Geometry.local_y_range.second - FLOATING_PRECISION;
+        }
+        if((b_id / 2) != 2) {
+          is_located_properly &= p[2] > Geometry.local_z_range.first + FLOATING_PRECISION;
+          is_located_properly &= p[2] < Geometry.local_z_range.second - FLOATING_PRECISION;
+        }
+        if(is_located_properly) {
+          it->face(face)->set_all_boundary_ids(inner_boundary_id);
+          countr ++;
+        }
       }
     }
   }
-
+  std::cout << "On " << GlobalParams.MPI_Rank << " and " << b_id << " countr is " << std::to_string(countr) << std::endl;
   // then check all of the other boundary ids.
-  std::array<unsigned int, 6> boundary_counts;
-  for(unsigned int i = 0; i< 6; i++) {
-    boundary_counts[i] = 0;
-  }
   for(auto it = triangulation.begin(); it != triangulation.end(); it++) {
     for(unsigned int face = 0; face < 6; face ++) {
       if(it->face(face)->at_boundary()) {
@@ -674,7 +675,6 @@ void PMLSurface::set_boundary_ids() {
             }
             if(is_at_boundary) {
               it->face(face)->set_all_boundary_ids(i);
-              boundary_counts[i]++;
             }
           }
         }

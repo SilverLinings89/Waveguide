@@ -852,3 +852,11 @@ There was a minor bug in the implementation of the relative convergence criterio
 These results look really good and express the properties expected for this mechanism really well. 1e-02 appears to be the sweetspot in this setup between reducing the strength of the preconditioner and reducing the amount of unrequired precision.
 
 From now on, the output manager writes more details into the run_description.txt which is located in the solution directory. This makes it easier to understand what the content of a solution folder represents.
+
+# Thursday, 30th of December
+
+First I removed a C++20 requirement in the static helpers file because it was the only element of the code that requires more than C++14. This enables me to downgrade the standard and then use intel compilers. The code is now compatible with C++14 again and compiles and runs on a complete intel stack (IntelMPI, MKL, Intel Compilers).
+
+There was a race-condition introduced by compiler optimizations which I have fixed now. It occurs because the for-loops in GeometryManager::distribute_dofs_on_level get parallelized on intel compilers. I have expanded some of them and introduced blank outputs to disable loop parallelization and it seems to work on UC2.
+
+The fix has removed the problem for level 0 (local problem) and level 1 (lowest order sweeping). 
