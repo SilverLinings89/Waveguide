@@ -295,9 +295,9 @@ void PMLSurface::prepare_dof_associations() {
     }
     std::sort(dof_associations[i].begin(), dof_associations[i].end(), compareDofBaseDataAndOrientation);
   }
-  std::string m = std::to_string(b_id);
-  mesh_info(&triangulation, m);
-  std::cout << "Dofs by boundary_id on surface " << b_id << ": " << dof_associations[0].size() << ", " << dof_associations[1].size() << ", " << dof_associations[2].size() << ", " << dof_associations[3].size() << ", " << dof_associations[4].size() << ", " << dof_associations[5].size() << "." <<std::endl;
+  // std::string m = std::to_string(b_id);
+  // mesh_info(&triangulation, m);
+  // std::cout << "Dofs by boundary_id on surface " << b_id << ": " << dof_associations[0].size() << ", " << dof_associations[1].size() << ", " << dof_associations[2].size() << ", " << dof_associations[3].size() << ", " << dof_associations[4].size() << ", " << dof_associations[5].size() << "." <<std::endl;
 }
 
 std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(unsigned int in_bid) {
@@ -624,11 +624,16 @@ bool PMLSurface::extend_mesh_in_direction(BoundaryId in_bid) {
 }
 
 void PMLSurface::set_boundary_ids() {
+  std::array<unsigned int, 6> countrers;
+  for(unsigned int i= 0; i < 6; i++) {
+    countrers[i] = 0;
+  }
   // first set all to outer_boundary_id
   for(auto it = triangulation.begin(); it != triangulation.end(); it++) {
     for(unsigned int face = 0; face < 6; face ++) {
       if(it->face(face)->at_boundary()) {
         it->face(face)->set_all_boundary_ids(outer_boundary_id);
+        countrers[outer_boundary_id]++;
       }
     }
   }
@@ -654,12 +659,11 @@ void PMLSurface::set_boundary_ids() {
         }
         if(is_located_properly) {
           it->face(face)->set_all_boundary_ids(inner_boundary_id);
-          countr ++;
+          countrers[inner_boundary_id]++;
         }
       }
     }
   }
-  std::cout << "On " << GlobalParams.MPI_Rank << " and " << b_id << " countr is " << std::to_string(countr) << std::endl;
   // then check all of the other boundary ids.
   for(auto it = triangulation.begin(); it != triangulation.end(); it++) {
     for(unsigned int face = 0; face < 6; face ++) {
@@ -675,12 +679,14 @@ void PMLSurface::set_boundary_ids() {
             }
             if(is_at_boundary) {
               it->face(face)->set_all_boundary_ids(i);
+              countrers[i]++;
             }
           }
         }
       }
     }
   }
+  std::cout << "On " << GlobalParams.MPI_Rank << " and " << b_id << " inner " << inner_boundary_id << " and  outer " << outer_boundary_id << " and ["<<countrers[0]<<"," <<countrers[1]<<","<<countrers[2]<<","<<countrers[3]<<","<<countrers[4]<<","<<countrers[5]<<"]"<<std::endl;
 }
 
 Position invert_z(Position in_p) {
