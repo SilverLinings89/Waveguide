@@ -170,6 +170,7 @@ bool PMLSurface::is_position_at_extended_boundary(const Position in_p, const Bou
           if(in_p[0] > Geometry.local_x_range.second && in_bid == 1) {
             return true;
           }
+          return false;
         } else {
           return false;
         }
@@ -686,7 +687,7 @@ void PMLSurface::set_boundary_ids() {
       }
     }
   }
-  std::cout << "On " << GlobalParams.MPI_Rank << " and " << b_id << " inner " << inner_boundary_id << " and  outer " << outer_boundary_id << " and ["<<countrers[0]<<"," <<countrers[1]<<","<<countrers[2]<<","<<countrers[3]<<","<<countrers[4]<<","<<countrers[5]<<"]"<<std::endl;
+  std::cout << "On " << GlobalParams.MPI_Rank << " and " << b_id << " inner " << inner_boundary_id << " and  outer " << outer_boundary_id << " and ["<<countrers[0]<< (extend_mesh_in_direction(0)? "*": "")<<"," <<countrers[1]<< (extend_mesh_in_direction(1)? "*": "")<<","<<countrers[2]<< (extend_mesh_in_direction(2)? "*": "")<<","<<countrers[3]<< (extend_mesh_in_direction(3)? "*": "")<<","<<countrers[4]<<","<<countrers[5]<<"]"<<std::endl;
 }
 
 Position invert_z(Position in_p) {
