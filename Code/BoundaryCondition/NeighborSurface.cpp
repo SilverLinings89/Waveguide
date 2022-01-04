@@ -180,8 +180,14 @@ void NeighborSurface::send() {
 	for(unsigned int i =0 ; i < n_dofs; i++) {
 		send_buffer[i] = global_indices[i];
 	}
+	unsigned int count = 0; 
+	for(unsigned int i = 0; i < n_dofs; i++) {
+		if(send_buffer[i] > Geometry.levels[level].n_total_level_dofs) {
+			count++;
+		}
+	}
 	int return_value = MPI_Send(&send_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD);
-	std::cout << "Return value of send on " << GlobalParams.MPI_Rank << " is " << return_value << std::endl;
+	std::cout << "Return value of send on " << GlobalParams.MPI_Rank << " is " << return_value << " and count " << count << std::endl;
 }
 
 void NeighborSurface::receive() {
