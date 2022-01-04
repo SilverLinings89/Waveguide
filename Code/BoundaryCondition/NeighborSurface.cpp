@@ -176,14 +176,19 @@ void NeighborSurface::send() {
 		}
 	}
 	int tag = generate_tag(global_partner_mpi_rank, GlobalParams.MPI_Rank);
-	int return_value = MPI_Send(global_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD);
+	unsigned int send_buffer[n_dofs];
+	for(unsigned int i =0 ; i < n_dofs; i++) {
+		send_buffer[i] = global_indices[i];
+	}
+	int return_value = MPI_Send(&send_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD);
 	std::cout << "Return value of send on " << GlobalParams.MPI_Rank << " is " << return_value << std::endl;
 }
 
 void NeighborSurface::receive() {
 	unsigned int recv_buffer[n_dofs];
 	int tag = generate_tag(GlobalParams.MPI_Rank, global_partner_mpi_rank);
-	int status = MPI_Recv(&recv_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD, 0);
+	MPI_Status status;
+	int status = MPI_Recv(&recv_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD, &status);
 	std::cout << "Return value of recv on " << GlobalParams.MPI_Rank << " is " << status << std::endl;
 	unsigned int counter2 = 0; 
 	for(unsigned int i = 0; i< n_dofs; i++) {
