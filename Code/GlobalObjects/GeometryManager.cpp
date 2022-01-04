@@ -133,7 +133,6 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   unsigned int first_dof = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].nth_index_in_set(0);
   levels[in_level].n_local_dofs = levels[in_level].dof_distribution[GlobalMPI.rank_on_level[in_level]].n_elements();
   levels[in_level].n_total_level_dofs = levels[in_level].dof_distribution[0].size();
-  MPI_Barrier(MPI_COMM_WORLD);
   levels[in_level].inner_domain->determine_non_owned_dofs();
   for(unsigned int i = 0; i < 6; i++) {
     levels[in_level].surfaces[i]->determine_non_owned_dofs();
@@ -143,7 +142,7 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
     levels[in_level].surfaces[i]->freeze_ownership();
   }
   levels[in_level].inner_domain->finish_initialization(first_dof);
-  MPI_Barrier(MPI_COMM_WORLD);
+  
   
   first_dof += levels[in_level].inner_domain->n_locally_owned_dofs;
 
@@ -153,7 +152,8 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
       first_dof += levels[in_level].surfaces[i]->n_locally_owned_dofs;
     }
   }  
-  
+
+  MPI_Barrier(MPI_COMM_WORLD);
   for(unsigned int i = 0; i < 6; i++) {
     if(Geometry.levels[in_level].surface_type[i] != SurfaceType::NEIGHBOR_SURFACE) {
       Geometry.levels[in_level].surfaces[i]->finish_dof_index_initialization();
@@ -161,6 +161,26 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   }
   
   if(Geometry.levels[in_level].surface_type[0] == SurfaceType::NEIGHBOR_SURFACE) {
+    Geometry.levels[in_level].surfaces[0]->finish_dof_index_initialization();
+  }  
+  if(Geometry.levels[in_level].surface_type[2] == SurfaceType::NEIGHBOR_SURFACE) {
+    Geometry.levels[in_level].surfaces[2]->finish_dof_index_initialization();
+  }
+  if(Geometry.levels[in_level].surface_type[4] == SurfaceType::NEIGHBOR_SURFACE) {
+    Geometry.levels[in_level].surfaces[4]->finish_dof_index_initialization();
+  }
+
+  if(Geometry.levels[in_level].surface_type[5] == SurfaceType::NEIGHBOR_SURFACE) {
+    Geometry.levels[in_level].surfaces[5]->finish_dof_index_initialization();
+  }
+  if(Geometry.levels[in_level].surface_type[3] == SurfaceType::NEIGHBOR_SURFACE) {
+    Geometry.levels[in_level].surfaces[3]->finish_dof_index_initialization();
+  }
+  if(Geometry.levels[in_level].surface_type[1] == SurfaceType::NEIGHBOR_SURFACE) {
+    Geometry.levels[in_level].surfaces[1]->finish_dof_index_initialization();
+  }
+  
+    if(Geometry.levels[in_level].surface_type[0] == SurfaceType::NEIGHBOR_SURFACE) {
     Geometry.levels[in_level].surfaces[0]->finish_dof_index_initialization();
   }  
   if(Geometry.levels[in_level].surface_type[2] == SurfaceType::NEIGHBOR_SURFACE) {

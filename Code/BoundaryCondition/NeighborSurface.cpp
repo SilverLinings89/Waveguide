@@ -104,9 +104,6 @@ void NeighborSurface::determine_non_owned_dofs() {
 }
 
 void NeighborSurface::finish_dof_index_initialization() {
-	if(!dofs_prepared) {
-		prepare_dofs();
-	}
 	if(is_lower_interface) {
 		receive();
 	} else {
