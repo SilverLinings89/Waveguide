@@ -187,8 +187,8 @@ void NeighborSurface::send() {
 void NeighborSurface::receive() {
 	unsigned int recv_buffer[n_dofs];
 	int tag = generate_tag(GlobalParams.MPI_Rank, global_partner_mpi_rank);
-	MPI_Status status;
-	int status = MPI_Recv(&recv_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD, &status);
+	MPI_Status recv_status;
+	int status = MPI_Recv(&recv_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD, &recv_status);
 	std::cout << "Return value of recv on " << GlobalParams.MPI_Rank << " is " << status << std::endl;
 	unsigned int counter2 = 0; 
 	for(unsigned int i = 0; i< n_dofs; i++) {
