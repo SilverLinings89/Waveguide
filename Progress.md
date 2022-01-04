@@ -863,4 +863,4 @@ The fix has removed the problem for level 0 (local problem) and level 1 (lowest 
 
 # Tuesday, 4th of January
 
-Over the last days, I have experienced severe issues on the HPC system (running Intel MPI, Intel Compilers and MKL). There seemed to be some memory leak that was damaging the index arrays I exchange between processors. To fix this, I have reimplemented basically the entire NeighborSurface so it only exchanges data once. Before, the inner dofs and the adjacent boundary dofs were all communicated seperately and I believe that is where the issue arose. Tests are now running.
+Over the last days, I have experienced severe issues on the HPC system (running Intel MPI, Intel Compilers and MKL). There seemed to be some memory leak that was damaging the index arrays I exchange between processors. To fix this, I have reimplemented basically the entire NeighborSurface so it only exchanges data once. Before, the inner dofs and the adjacent boundary dofs were all communicated seperately and I believe that is where the issue arose. Tests are now running. There are still wrong indices on the cluster but everything is fine on the normal run on my PC.

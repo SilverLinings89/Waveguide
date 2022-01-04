@@ -188,10 +188,11 @@ void NeighborSurface::receive() {
 	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD, 0);
 	unsigned int counter2 = 0; 
 	for(unsigned int i = 0; i< n_dofs; i++) {
-		if(dof_indices[i] > 100000) {
+		if(dof_indices[i] > Geometry.levels[level].n_total_level_dofs) {
 			counter2++;
 		}
 	}
+	std::cout << "On " << GlobalParams.MPI_Rank << " surface " << b_id << " there were " << counter2 << " wrong dofs." << std::endl;
 	unsigned int counter = 0;
 	for(unsigned int i = 0; i < inner_dofs.size(); i++) {
 		inner_dofs[i] = dof_indices[i];
