@@ -758,3 +758,12 @@ SweepingDirection get_sweeping_direction_for_level(unsigned int in_level) {
   }
   return SweepingDirection::Z;
 }
+
+int generate_tag(unsigned int global_rank_sender, unsigned int receiver, unsigned int in_level) {
+	int ret = 0;
+	srand(global_rank_sender);
+	for(unsigned int i = 0; i < receiver; i++) {
+		ret = rand()%Geometry.levels[in_level].n_total_level_dofs;
+	}
+	return ret;
+}

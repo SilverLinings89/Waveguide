@@ -89,16 +89,6 @@ DofCount NeighborSurface::compute_n_locally_active_dofs() {
 	return 0;
 }
 
-
-int NeighborSurface::generate_tag(unsigned int global_rank_sender, unsigned int receiver) {
-	int ret = 0;
-	srand(global_rank_sender);
-	for(unsigned int i = 0; i < receiver; i++) {
-		ret = rand()%Geometry.levels[level].n_total_level_dofs;
-	}
-	return ret;
-}
-
 void NeighborSurface::determine_non_owned_dofs() {
 
 }
@@ -175,7 +165,7 @@ void NeighborSurface::send() {
 			}
 		}
 	}
-	int tag = generate_tag(global_partner_mpi_rank, GlobalParams.MPI_Rank);
+	int tag = generate_tag(global_partner_mpi_rank, GlobalParams.MPI_Rank, level);
 	unsigned int send_buffer[n_dofs];
 	for(unsigned int i =0 ; i < n_dofs; i++) {
 		send_buffer[i] = global_indices[i];
@@ -187,22 +177,13 @@ void NeighborSurface::send() {
 		}
 	}
 	int return_value = MPI_Send(&send_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD);
-	std::cout << "Return value of send on " << GlobalParams.MPI_Rank << " is " << return_value << " and count " << count << std::endl;
 }
 
 void NeighborSurface::receive() {
 	unsigned int recv_buffer[n_dofs];
-	int tag = generate_tag(GlobalParams.MPI_Rank, global_partner_mpi_rank);
+	int tag = generate_tag(GlobalParams.MPI_Rank, global_partner_mpi_rank, level);
 	MPI_Status recv_status;
 	int status = MPI_Recv(&recv_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD, &recv_status);
-	std::cout << "Return value of recv on " << GlobalParams.MPI_Rank << " is " << status << std::endl;
-	unsigned int counter2 = 0; 
-	for(unsigned int i = 0; i< n_dofs; i++) {
-		if(recv_buffer[i] > Geometry.levels[level].n_total_level_dofs) {
-			counter2++;
-		}
-	}
-	std::cout << "On " << GlobalParams.MPI_Rank << " surface " << b_id << " there were " << counter2 << " wrong dofs." << std::endl;
 	unsigned int counter = 0;
 	for(unsigned int i = 0; i < inner_dofs.size(); i++) {
 		inner_dofs[i] = recv_buffer[i];
