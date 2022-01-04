@@ -181,26 +181,27 @@ void NeighborSurface::send() {
 }
 
 void NeighborSurface::receive() {
+	unsigned int recv_buffer[n_dofs];
 	int tag = generate_tag(GlobalParams.MPI_Rank, global_partner_mpi_rank);
-	int status = MPI_Recv(global_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD, 0);
+	int status = MPI_Recv(recv_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD, 0);
 	std::cout << "Return value of recv on " << GlobalParams.MPI_Rank << " is " << status << std::endl;
 	unsigned int counter2 = 0; 
 	for(unsigned int i = 0; i< n_dofs; i++) {
-		if(global_indices[i] > Geometry.levels[level].n_total_level_dofs) {
+		if(recv_buffer[i] > Geometry.levels[level].n_total_level_dofs) {
 			counter2++;
 		}
 	}
 	std::cout << "On " << GlobalParams.MPI_Rank << " surface " << b_id << " there were " << counter2 << " wrong dofs." << std::endl;
 	unsigned int counter = 0;
 	for(unsigned int i = 0; i < inner_dofs.size(); i++) {
-		inner_dofs[i] = global_indices[i];
+		inner_dofs[i] = recv_buffer[i];
 		counter ++;
 	}
 	for(unsigned int surf = 0; surf < 6; surf++) {
 		if(surf != b_id && !are_opposing_sites(surf, b_id)) {
 			if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
 				for(unsigned int i = 0; i < boundary_dofs[surf].size(); i++) {
-					boundary_dofs[surf][i] = global_indices[counter];
+					boundary_dofs[surf][i] = recv_buffer[counter];
 					counter ++;
 				}
 			}
