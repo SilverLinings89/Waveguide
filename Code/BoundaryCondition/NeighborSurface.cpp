@@ -104,6 +104,7 @@ void NeighborSurface::determine_non_owned_dofs() {
 }
 
 void NeighborSurface::finish_dof_index_initialization() {
+	prepare_dofs();
 	if(is_lower_interface) {
 		receive();
 	} else {
@@ -175,7 +176,7 @@ void NeighborSurface::send() {
 		}
 	}
 	int tag = generate_tag(global_partner_mpi_rank, GlobalParams.MPI_Rank);
-	MPI_Send(global_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD);
+	MPI_Ssend(global_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD);
 	delete[] global_indices;
 }
 
