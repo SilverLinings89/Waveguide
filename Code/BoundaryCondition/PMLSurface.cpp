@@ -84,7 +84,6 @@ void PMLSurface::prepare_mesh() {
   }
   
   dealii::GridGenerator::subdivided_hyper_rectangle(tria, repetitions, lower_ranges , higher_ranges ,true);
-  CubeSurfaceTruncationState truncation_state;
 
   compute_coordinate_ranges(&tria);
   for(unsigned int i = 0; i < adjacent_boundaries.size(); i++) {
@@ -200,6 +199,7 @@ bool PMLSurface::is_position_at_extended_boundary(const Position in_p, const Bou
         }
         break;
     }
+    return false;
   } else {
     return b_id == in_bid;
   }
@@ -638,7 +638,6 @@ void PMLSurface::set_boundary_ids() {
       }
     }
   }
-  unsigned int countr = 0;
   // then locate all the faces connecting to the inner domain
   for(auto it = triangulation.begin(); it != triangulation.end(); it++) {
     for(unsigned int face = 0; face < 6; face ++) {

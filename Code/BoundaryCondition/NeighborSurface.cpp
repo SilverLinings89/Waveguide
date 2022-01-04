@@ -145,19 +145,15 @@ void NeighborSurface::prepare_dofs() {
 	n_dofs = 0;
 	inner_dofs.resize(temp.size());
 	for(unsigned int i = 0; i < temp.size(); i++) {
-		inner_dofs[i] = temp[i].index;
+		inner_dofs[i] = Geometry.levels[level].inner_domain->global_index_mapping[temp[i].index];
 	}
 	n_dofs += temp.size();
 	for(unsigned int surf = 0; surf < 6; surf++) {
 		boundary_dofs[surf].resize(0);
 		if(surf != b_id && !are_opposing_sites(surf, b_id)) {
 			if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
-				std::vector<InterfaceDofData> dof_data = Geometry.levels[level].surfaces[surf]->get_dof_association_by_boundary_id(b_id);
-				boundary_dofs[surf].resize(dof_data.size());
-				for(unsigned int i = 0; i < dof_data.size(); i++) {
-					boundary_dofs[surf][i] = dof_data[i].index;
-				}
-				n_dofs += dof_data.size();
+				boundary_dofs[surf] = Geometry.levels[level].surfaces[surf]->get_global_dof_indices_by_boundary_id(b_id);
+				n_dofs += boundary_dofs[surf].size();
 			}
 		}
 	}

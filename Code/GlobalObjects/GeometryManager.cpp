@@ -171,13 +171,13 @@ void GeometryManager::distribute_dofs_on_level(unsigned int in_level) {
   }
 
   if(Geometry.levels[in_level].surface_type[5] == SurfaceType::NEIGHBOR_SURFACE) {
-      Geometry.levels[in_level].surfaces[5]->finish_dof_index_initialization();
+    Geometry.levels[in_level].surfaces[5]->finish_dof_index_initialization();
   }
   if(Geometry.levels[in_level].surface_type[3] == SurfaceType::NEIGHBOR_SURFACE) {
-      Geometry.levels[in_level].surfaces[3]->finish_dof_index_initialization();
+    Geometry.levels[in_level].surfaces[3]->finish_dof_index_initialization();
   }
   if(Geometry.levels[in_level].surface_type[1] == SurfaceType::NEIGHBOR_SURFACE) {
-      Geometry.levels[in_level].surfaces[1]->finish_dof_index_initialization();
+    Geometry.levels[in_level].surfaces[1]->finish_dof_index_initialization();
   }
   
   
@@ -487,6 +487,7 @@ SurfaceType get_surf_type_for_level_1(BoundaryId b_id) {
     }
     return SurfaceType::ABC_SURFACE;
   }
+  return SurfaceType::ABC_SURFACE;
 }
 
 SurfaceType get_surf_type_for_level_2(BoundaryId b_id) {
@@ -506,9 +507,10 @@ SurfaceType get_surf_type_for_level_2(BoundaryId b_id) {
     }
     return SurfaceType::ABC_SURFACE;
   }
+  return SurfaceType::ABC_SURFACE;
 }
 
-SurfaceType get_surf_type_for_level_3(BoundaryId b_id) {
+SurfaceType get_surf_type_for_level_3(BoundaryId ) {
   return SurfaceType::NEIGHBOR_SURFACE;
 }
 
@@ -546,7 +548,6 @@ std::pair<bool, SurfaceType> handle_exterior_boundaries(BoundaryId b_id) {
 }
 
 SurfaceType GeometryManager::get_surface_type(BoundaryId b_id, unsigned int in_level) {
-  unsigned int level_difference = GlobalParams.Sweeping_Level - in_level;
   std::pair<bool, SurfaceType> exterior_boundary = handle_exterior_boundaries(b_id);
   if(exterior_boundary.first) return exterior_boundary.second;
   switch(in_level) {

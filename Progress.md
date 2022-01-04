@@ -860,3 +860,7 @@ First I removed a C++20 requirement in the static helpers file because it was th
 There was a race-condition introduced by compiler optimizations which I have fixed now. It occurs because the for-loops in GeometryManager::distribute_dofs_on_level get parallelized on intel compilers. I have expanded some of them and introduced blank outputs to disable loop parallelization and it seems to work on UC2.
 
 The fix has removed the problem for level 0 (local problem) and level 1 (lowest order sweeping). 
+
+# Tuesday, 4th of January
+
+Over the last days, I have experienced severe issues on the HPC system (running Intel MPI, Intel Compilers and MKL). There seemed to be some memory leak that was damaging the index arrays I exchange between processors. To fix this, I have reimplemented basically the entire NeighborSurface so it only exchanges data once. Before, the inner dofs and the adjacent boundary dofs were all communicated seperately and I believe that is where the issue arose. Tests are now running.
