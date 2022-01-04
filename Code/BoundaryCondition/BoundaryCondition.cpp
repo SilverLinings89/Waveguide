@@ -84,22 +84,8 @@ std::vector<DofNumber> BoundaryCondition::get_global_dof_indices_by_boundary_id(
   return ret;
 }
 
-void BoundaryCondition::send_up_inner_dofs() {
-  std::cout << "BoundaryCondition::send_up_inner_dofs() should not be called. It should only be called in derived classes!" << std::endl; 
-}
-
-void BoundaryCondition::receive_from_below_dofs() {
-  std::cout << "BoundaryCondition::receive_from_below_dofs() should not be called. It should only be called in derived classes!" << std::endl;
-}
-
 void BoundaryCondition::finish_dof_index_initialization() {
 
-}
-
-std::vector<DofNumber> BoundaryCondition::receive_boundary_dofs(unsigned int) {
-  std::vector<DofNumber> ret;
-  std::cout << "BoundaryCondition::receive_boundary_dofs got called but never should." << std::endl;
-  return ret;
 }
 
 Constraints BoundaryCondition::make_constraints() {

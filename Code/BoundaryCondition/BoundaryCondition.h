@@ -66,11 +66,8 @@ public:
   virtual void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) = 0; // Same as the first version of this function but for a distributed matrix type.
   virtual void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) = 0; // Same as the second version of this function but for a distributed matrix type.
 
-  virtual void send_up_inner_dofs(); // This function is only required on neighbor surfaces but made available on this interface for code convenience. Find details in the neighbor surface documentation.
-  virtual void receive_from_below_dofs(); // This function is only required on neighbor surfaces but made available on this interface for code convenience. Find details in the neighbor surface documentation.
   virtual void finish_dof_index_initialization(); // In cases where not all locally active dofs are locally owned (for example for two pml domains, the dofs on the shared surface are only owned by one of two processes) this function handles the numbering of the dofs once the non-owned dofs have been communicated.
-  virtual std::vector<DofNumber> receive_boundary_dofs(unsigned int other_bid);
-
+  
   virtual auto make_constraints() -> Constraints; // This is one of the core functions. Most boundary conditions come with some constraints on dofs (except the neighbor surface). For example in the derived DirichletSurface type, this function adds the dirichlet constraints to the constraints object passed in as an argument.
 
   double boundary_norm(NumericVectorDistributed *); // Computes the L2-norm of the solution passed in on the shared interface with the interior domain.
