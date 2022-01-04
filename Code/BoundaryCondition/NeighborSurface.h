@@ -14,6 +14,7 @@ class NeighborSurface : public BoundaryCondition {
     std::array<std::vector<InterfaceDofData>, 6> dof_indices_by_boundary_id;
     std::array<std::vector<unsigned int>, 6> boundary_dofs;
     std::vector<unsigned int> inner_dofs;
+    unsigned int * global_indices;
     unsigned int n_dofs;
     bool dofs_prepared;
 

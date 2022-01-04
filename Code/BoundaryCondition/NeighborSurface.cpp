@@ -26,7 +26,7 @@ NeighborSurface::NeighborSurface(unsigned int in_surface, unsigned int in_level)
 }
 
 NeighborSurface::~NeighborSurface() {
-
+	delete[] global_indices;
 }
 
 void NeighborSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, NumericVectorDistributed*, Constraints *) {
@@ -155,11 +155,11 @@ void NeighborSurface::prepare_dofs() {
 			}
 		}
 	}
+	global_indices = new DofNumber[n_dofs];
 	dofs_prepared = true;
 }
 
 void NeighborSurface::send() {
-	DofNumber * global_indices = new DofNumber[n_dofs];
 	unsigned int counter = 0; 
 	for(unsigned int i = 0; i < inner_dofs.size(); i++) {
 		global_indices[counter] = inner_dofs[i];
@@ -176,31 +176,31 @@ void NeighborSurface::send() {
 		}
 	}
 	int tag = generate_tag(global_partner_mpi_rank, GlobalParams.MPI_Rank);
-	MPI_Ssend(global_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD);
-	delete[] global_indices;
+	int return_value = MPI_Send(global_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD);
+	std::cout << "Return value of send on " << GlobalParams.MPI_Rank << " is " << return_value << std::endl;
 }
 
 void NeighborSurface::receive() {
-	unsigned int * dof_indices = new unsigned int [n_dofs];
 	int tag = generate_tag(GlobalParams.MPI_Rank, global_partner_mpi_rank);
-	MPI_Recv(dof_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD, 0);
+	int status = MPI_Recv(global_indices, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD, 0);
+	std::cout << "Return value of recv on " << GlobalParams.MPI_Rank << " is " << status << std::endl;
 	unsigned int counter2 = 0; 
 	for(unsigned int i = 0; i< n_dofs; i++) {
-		if(dof_indices[i] > Geometry.levels[level].n_total_level_dofs) {
+		if(global_indices[i] > Geometry.levels[level].n_total_level_dofs) {
 			counter2++;
 		}
 	}
 	std::cout << "On " << GlobalParams.MPI_Rank << " surface " << b_id << " there were " << counter2 << " wrong dofs." << std::endl;
 	unsigned int counter = 0;
 	for(unsigned int i = 0; i < inner_dofs.size(); i++) {
-		inner_dofs[i] = dof_indices[i];
+		inner_dofs[i] = global_indices[i];
 		counter ++;
 	}
 	for(unsigned int surf = 0; surf < 6; surf++) {
 		if(surf != b_id && !are_opposing_sites(surf, b_id)) {
 			if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
 				for(unsigned int i = 0; i < boundary_dofs[surf].size(); i++) {
-					boundary_dofs[surf][i] = dof_indices[counter];
+					boundary_dofs[surf][i] = global_indices[counter];
 					counter ++;
 				}
 			}
