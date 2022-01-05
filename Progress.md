@@ -873,4 +873,4 @@ I have also run the 2-2-2 (8 process level 3 sweeping) example on both UC2 and m
 
 Result storage: From now on, I will begin generating outputs, that are relevant for my dissertation. To that end, I will introduce a storage system. It is a folder with subfolders. The folders are called artifacts. Everytime I produce some result, the artifact gets put in a new folder and numbered. I can then reference the generated data as an artifact id. For example, the performance differences on the two systems are artifact 1. I store these locally and sometimes back them up in the data archive and cloud storage.
 
-The jobs crashed again. As a mitigation, I will now replace MPI_COMM_WORLD on the neighborsurfaces with the smaller communicators, which is better anyway.
+The jobs crashed again. As a mitigation, I will now replace MPI_COMM_WORLD on the neighborsurfaces with the smaller communicators, which is better anyway. I just noticed, however, that the MPI failures only occur on level three and there, the local communicator is MPI_COMM_WORLD because everyone contributes ...

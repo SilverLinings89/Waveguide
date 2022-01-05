@@ -90,4 +90,5 @@ class GeometryManager {
   void initialize_surfaces_on_level(unsigned int level);
   void initialize_level(unsigned int level);
   void print_level_dof_counts(unsigned int level);
+  void perform_mpi_dof_exchange(unsigned int level);
 };
