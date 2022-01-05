@@ -176,7 +176,9 @@ void NonLocalProblem::init_solver_and_preconditioner() {
 }
 
 void NonLocalProblem::reinit_rhs() {
-  reinit_vector(&rhs);
+  rhs = 0;
+  rhs.compress(VectorOperation::insert);
+  // reinit_vector(&rhs);
 }
 
 NonLocalProblem::~NonLocalProblem() {
@@ -265,17 +267,16 @@ void NonLocalProblem::solve() {
 }
 
 void NonLocalProblem::apply_sweep(Vec b_in, Vec u_out) {
-  NumericVectorDistributed u = vector_from_vec_obj(b_in);
-  // constraints.distribute(u);
-  perform_downward_sweep( &u );
-  perform_upward_sweep( &u );
-  set_x_out_from_u(u_out, &u);
+  set_u_from_vec_object(b_in);
+  perform_downward_sweep();
+  perform_upward_sweep();
+  set_x_out_from_u(u_out);
 }
 
-void NonLocalProblem::set_x_out_from_u(Vec x_out, NumericVectorDistributed * in_u) {
+void NonLocalProblem::set_x_out_from_u(Vec x_out) {
   ComplexNumber * values = new ComplexNumber[own_dofs.n_elements()];
   
-  in_u->extract_subvector_to(vector_copy_own_indices, vector_copy_array);
+  u.extract_subvector_to(vector_copy_own_indices, vector_copy_array);
 
   for(unsigned int i = 0; i < own_dofs.n_elements(); i++) {
     values[i] = vector_copy_array[i];
@@ -300,13 +301,11 @@ void NonLocalProblem::set_vector_from_child_solution(NumericVectorDistributed * 
 }
 
 void NonLocalProblem::set_child_rhs_from_vector(NumericVectorDistributed * in_u) {
-  child->reinit_rhs();
+  child->rhs = 0;
+  child->rhs.compress(VectorOperation::insert);
   in_u->extract_subvector_to(vector_copy_own_indices, vector_copy_array);
   child->rhs.set(vector_copy_child_indeces, vector_copy_array);
   child->rhs.compress(VectorOperation::insert);
-  if(GlobalParams.Index_in_z_direction && level == 1) {
-    // child->constraints.distribute(child->rhs);
-  }
 }
 
 void NonLocalProblem::reinit() {
@@ -323,11 +322,7 @@ void NonLocalProblem::reinit() {
   for(unsigned int p = 0; p < Geometry.levels[level].dof_distribution.size(); p++) {
     local_rows.push_back(Geometry.levels[level].dof_distribution[p].n_elements());
   }
-  reinit_vector(&solution);
-  reinit_vector(&direct_solution);
-  reinit_vector(&solution_error);
-  IndexSet all_dofs(Geometry.levels[level].n_total_level_dofs);
-  all_dofs.add_range(0,Geometry.levels[level].n_total_level_dofs);
+  
   matrix->reinit(Geometry.levels[level].dof_distribution[total_rank_in_sweep], Geometry.levels[level].dof_distribution[total_rank_in_sweep], sp, GlobalMPI.communicators_by_level[level]);
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     if(Geometry.levels[level].inner_domain->is_dof_owned[i] && Geometry.levels[level-1].inner_domain->is_dof_owned[i]) {
@@ -351,6 +346,17 @@ void NonLocalProblem::reinit() {
   }
   GlobalTimerManager.leave_context(level);
   print_info("Nonlocal reinit", "Reinit done for level " + std::to_string(level));
+}
+
+void NonLocalProblem::reinit_all_vectors() {
+  solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  direct_solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  solution_error.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  rhs.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  u.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  dist_vector_1.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  dist_vector_2.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  dist_vector_3.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
 }
 
 void NonLocalProblem::register_dof_copy_pair(DofNumber own_index, DofNumber child_index) {
@@ -414,6 +420,7 @@ void NonLocalProblem::initialize() {
   GlobalTimerManager.switch_context("Initialize", level);
   child->initialize();
   initialize_index_sets();
+  reinit_all_vectors();
   reinit();
   init_solver_and_preconditioner();
   GlobalTimerManager.leave_context(level);
@@ -423,6 +430,7 @@ void NonLocalProblem::initialize_index_sets() {
   own_dofs = Geometry.levels[level].dof_distribution[total_rank_in_sweep];
   locally_owned_dofs_index_array = new PetscInt[own_dofs.n_elements()];
   get_petsc_index_array_from_index_set(locally_owned_dofs_index_array, own_dofs);
+
 }
 
 void NonLocalProblem::compute_solver_factorization() {
@@ -603,19 +611,16 @@ void NonLocalProblem::make_sparsity_pattern() {
   print_info("NonLocalProblem::make_sparsity_pattern", "End on level "  + std::to_string(level));
 }
 
-NumericVectorDistributed NonLocalProblem::vector_from_vec_obj(Vec in_v) {
-  NumericVectorDistributed ret;
-  reinit_vector(&ret);
+void NonLocalProblem::set_u_from_vec_object(Vec in_v) {
   const unsigned int n_loc_dofs = own_dofs.n_elements();
   const ComplexNumber * pointer;
   VecGetArrayRead(in_v, &pointer);
   for(unsigned int i = 0; i < n_loc_dofs; i++) {
-    ret[own_dofs.nth_index_in_set(i)] = *pointer;
+    u[own_dofs.nth_index_in_set(i)] = *pointer;
     pointer++;
   }
   VecRestoreArrayRead(in_v, &pointer);
-  ret.compress(dealii::VectorOperation::insert);
-  return ret;
+  u.compress(dealii::VectorOperation::insert);
 }
 
 void NonLocalProblem::print_vector_norm(NumericVectorDistributed * in_v, std::string marker) {
@@ -635,62 +640,60 @@ void NonLocalProblem::print_vector_norm(NumericVectorDistributed * in_v, std::st
   }
 }
 
-void NonLocalProblem::reinit_vector(NumericVectorDistributed * in_v) {
-  in_v->reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
-}
-
-void NonLocalProblem::perform_downward_sweep(NumericVectorDistributed * u) {
+void NonLocalProblem::perform_downward_sweep() {
   for(int i = n_blocks_in_sweeping_direction - 1; i >= 0; i--) {
-    NumericVectorDistributed temp1, temp2;
-    reinit_vector(&temp1);
-    reinit_vector(&temp2);
+    
     if(index_in_sweeping_direction == i) {
-      S_inv(u, &temp1);
+      S_inv(&u, &dist_vector_1);
+    } else {
+      for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
+        dist_vector_1[own_dofs.nth_index_in_set(j)] = 0;
+      }
     }
-    temp1.compress(VectorOperation::insert);
-    matrix->vmult(temp2, temp1);
+    dist_vector_1.compress(VectorOperation::insert);
+    matrix->vmult(dist_vector_2, dist_vector_1);
     if(index_in_sweeping_direction == i-1) {
       for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
         const unsigned int index = own_dofs.nth_index_in_set(j);
-        ComplexNumber current_value((*u)(index).real(), (*u)(index).imag());
-        ComplexNumber delta(temp2[index].real(), temp2[index].imag());
-        (*u)[index] = current_value - delta;
+        ComplexNumber current_value(u(index).real(), u(index).imag());
+        ComplexNumber delta(dist_vector_2[index].real(), dist_vector_2[index].imag());
+        u[index] = current_value - delta;
       }
     }
     if(index_in_sweeping_direction == i) {
       for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
         const unsigned int index = own_dofs.nth_index_in_set(j);
-        (*u)[index] = (ComplexNumber) temp1[index];
+        u[index] = (ComplexNumber) dist_vector_1[index];
       }
     }
-    u->compress(VectorOperation::insert);
+    u.compress(VectorOperation::insert);
   }
 }
 
-void NonLocalProblem::perform_upward_sweep(NumericVectorDistributed * in_u) {
+void NonLocalProblem::perform_upward_sweep() {
   for(unsigned int i = 0; i < n_blocks_in_sweeping_direction-1; i++) {
-    NumericVectorDistributed temp1, temp2, temp3;
-    reinit_vector(&temp1);
-    reinit_vector(&temp2);
-    reinit_vector(&temp3);
     if(index_in_sweeping_direction == i) {
       for(unsigned int index = 0; index < own_dofs.n_elements(); index++) {
-        temp1[own_dofs.nth_index_in_set(index)] = (ComplexNumber)((*in_u)[own_dofs.nth_index_in_set(index)]);
+        dist_vector_1[own_dofs.nth_index_in_set(index)] = (ComplexNumber) u[own_dofs.nth_index_in_set(index)];
+      }
+    } else {
+      for(unsigned int index = 0; index < own_dofs.n_elements(); index++) {
+        dist_vector_1[own_dofs.nth_index_in_set(index)] = 0;
       }
     }
-    temp1.compress(VectorOperation::insert);
-    matrix->Tvmult(temp2, temp1);
+    dist_vector_1.compress(VectorOperation::insert);
+    matrix->Tvmult(dist_vector_2, dist_vector_1);
     
     if(index_in_sweeping_direction == i+1) {
-      S_inv(&temp2, &temp3);
+      S_inv(&dist_vector_2, &dist_vector_3);
       for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
         const unsigned int index = own_dofs.nth_index_in_set(j);
-        ComplexNumber current_value = (*in_u)(index);
-        ComplexNumber delta = temp3[index];
-        (*in_u)[index] = current_value - delta;
+        ComplexNumber current_value = u(index);
+        ComplexNumber delta = dist_vector_3[index];
+        u[index] = current_value - delta;
       }   
     }
-    in_u->compress(VectorOperation::insert);
+    u.compress(VectorOperation::insert);
   }
 }
 

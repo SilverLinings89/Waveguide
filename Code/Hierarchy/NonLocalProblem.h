@@ -18,6 +18,7 @@ private:
   unsigned int index_in_sweeping_direction;
   unsigned int total_rank_in_sweep;
   unsigned int n_procs_in_sweep;
+  NumericVectorDistributed dist_vector_1, dist_vector_2, dist_vector_3, u;
 
   dealii::IndexSet locally_active_dofs;
   KSP ksp;
@@ -58,13 +59,9 @@ private:
 
   void reinit_rhs() override;
   
-  void reinit_vector(NumericVectorDistributed *);
-
   void S_inv(NumericVectorDistributed * src, NumericVectorDistributed * dst);
 
-  auto set_x_out_from_u(Vec x_out, NumericVectorDistributed * u_in) -> void;
-
-  auto set_u_from_child_solution(NumericVectorDistributed * u)-> void;
+  auto set_x_out_from_u(Vec x_out) -> void;
 
   std::string output_results();
 
@@ -74,7 +71,7 @@ private:
 
   void make_sparsity_pattern() override;
 
-  NumericVectorDistributed vector_from_vec_obj(Vec in_v);
+  void set_u_from_vec_object(Vec in_v);
 
   void set_vector_from_child_solution(NumericVectorDistributed *);
 
@@ -82,9 +79,9 @@ private:
 
   void print_vector_norm(NumericVectorDistributed * , std::string marker);
 
-  void perform_downward_sweep(NumericVectorDistributed *);
+  void perform_downward_sweep();
 
-  void perform_upward_sweep(NumericVectorDistributed *);
+  void perform_upward_sweep();
 
   void complex_pml_domain_matching(BoundaryId in_bid);
 
@@ -99,4 +96,6 @@ private:
   void update_convergence_criterion(double last_residual) override;
 
   unsigned int compute_global_solve_counter() override;
+
+  void reinit_all_vectors();
 };
