@@ -864,3 +864,13 @@ The fix has removed the problem for level 0 (local problem) and level 1 (lowest 
 # Tuesday, 4th of January
 
 Over the last days, I have experienced severe issues on the HPC system (running Intel MPI, Intel Compilers and MKL). There seemed to be some memory leak that was damaging the index arrays I exchange between processors. To fix this, I have reimplemented basically the entire NeighborSurface so it only exchanges data once. Before, the inner dofs and the adjacent boundary dofs were all communicated seperately and I believe that is where the issue arose. Tests are now running. There are still wrong indices on the cluster but everything is fine on the normal run on my PC.
+
+# Wednesday, 5th of January
+
+I have now basically reimplemented all MPI code and the entire memory management of the non-local problem. This brings minor performance improvements but mainly stops reallocation of memory which had triggered bus errors. The dof communication is now (from what I can tell so far) stable across all levels and vectors in the preconditioners are being stored in the preconditioner and only zeroed instead of deleted and reallocated. I have not performed explicit comparisons for perfomance data, but the performance improvement is visible in the speed at which itterations are being done.
+
+I have also run the 2-2-2 (8 process level 3 sweeping) example on both UC2 and my local computer to compare the time it takes to complete. For UC2 on the complete Intel stack, the code computed a walltime of 1.69e+03s, for my desktop at home 1.65e+03s, but parts were a lot faster here. An important visible difference is, that CPU cores idle on my local machine, with the consequence, that core times are a lot lower than on the UC2, where the cores busy-wait.
+
+Result storage: From now on, I will begin generating outputs, that are relevant for my dissertation. To that end, I will introduce a storage system. It is a folder with subfolders. The folders are called artifacts. Everytime I produce some result, the artifact gets put in a new folder and numbered. I can then reference the generated data as an artifact id. For example, the performance differences on the two systems are artifact 1. I store these locally and sometimes back them up in the data archive and cloud storage.
+
+The jobs crashed again. As a mitigation, I will now replace MPI_COMM_WORLD on the neighborsurfaces with the smaller communicators, which is better anyway.
