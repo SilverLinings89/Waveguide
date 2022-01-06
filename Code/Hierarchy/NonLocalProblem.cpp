@@ -534,13 +534,6 @@ void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) 
   MPI_Status recv_status;
   for(unsigned int other_proc = 0; other_proc < n_procs_in_sweep; other_proc++) {
     if(other_proc != total_rank_in_sweep) {
-      int tag = 0;
-      if(other_proc > total_rank_in_sweep) {
-        tag = generate_tag(other_proc, total_rank_in_sweep, level);
-      } else {
-        tag = generate_tag(total_rank_in_sweep, other_proc, level);
-      }
-      
       if(recv_buffer[other_proc] != 0 || entries_by_proc[other_proc] != 0) {
         if(total_rank_in_sweep < other_proc) {
           // Send then receive
@@ -553,8 +546,8 @@ void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) 
               sent_rows[i] = rows[other_proc][i];
               sent_cols[i] = cols[other_proc][i];
             }
-            MPI_Ssend(sent_rows.data(), n_loc_dofs, MPI_UNSIGNED, other_proc, tag, GlobalMPI.communicators_by_level[level]);
-            MPI_Ssend(sent_cols.data(), n_loc_dofs, MPI_UNSIGNED, other_proc, tag+1, GlobalMPI.communicators_by_level[level]);
+            MPI_Send(sent_rows.data(), n_loc_dofs, MPI_UNSIGNED, other_proc, GlobalParams.MPI_Rank, GlobalMPI.communicators_by_level[level]);
+            MPI_Send(sent_cols.data(), n_loc_dofs, MPI_UNSIGNED, other_proc, GlobalParams.MPI_Rank, GlobalMPI.communicators_by_level[level]);
           }
           // receive part
           if(recv_buffer[other_proc] > 0) {
@@ -563,8 +556,8 @@ void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) 
             std::vector<unsigned int> received_rows, received_cols;
             received_rows.resize(n_loc_dofs);
             received_cols.resize(n_loc_dofs);
-            MPI_Recv(received_rows.data(), n_loc_dofs, MPI_UNSIGNED, other_proc, tag, GlobalMPI.communicators_by_level[level], &recv_status);
-            MPI_Recv(received_cols.data(), n_loc_dofs, MPI_UNSIGNED, other_proc, tag+1, GlobalMPI.communicators_by_level[level], &recv_status);
+            MPI_Recv(received_rows.data(), n_loc_dofs, MPI_UNSIGNED, other_proc, MPI_ANY_TAG, GlobalMPI.communicators_by_level[level], &recv_status);
+            MPI_Recv(received_cols.data(), n_loc_dofs, MPI_UNSIGNED, other_proc, MPI_ANY_TAG, GlobalMPI.communicators_by_level[level], &recv_status);
             for(unsigned int i = 0; i < n_loc_dofs; i++) {
               in_dsp->add(received_rows[i], received_cols[i]);
             }
@@ -577,8 +570,8 @@ void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) 
             std::vector<unsigned int> received_rows, received_cols;
             received_rows.resize(n_loc_dofs);
             received_cols.resize(n_loc_dofs);
-            MPI_Recv(received_rows.data(), n_loc_dofs, MPI_UNSIGNED, other_proc, tag, GlobalMPI.communicators_by_level[level], &recv_status);
-            MPI_Recv(received_cols.data(), n_loc_dofs, MPI_UNSIGNED, other_proc, tag+1, GlobalMPI.communicators_by_level[level], &recv_status);
+            MPI_Recv(received_rows.data(), n_loc_dofs, MPI_UNSIGNED, other_proc, MPI_ANY_TAG, GlobalMPI.communicators_by_level[level], &recv_status);
+            MPI_Recv(received_cols.data(), n_loc_dofs, MPI_UNSIGNED, other_proc, MPI_ANY_TAG, GlobalMPI.communicators_by_level[level], &recv_status);
             for(unsigned int i = 0; i < n_loc_dofs; i++) {
               in_dsp->add(received_rows[i], received_cols[i]);
             }
@@ -593,8 +586,8 @@ void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) 
               sent_rows[i] = rows[other_proc][i];
               sent_cols[i] = cols[other_proc][i];
             }
-            MPI_Ssend(sent_rows.data(), n_loc_dofs, MPI_UNSIGNED, other_proc, tag, GlobalMPI.communicators_by_level[level]);
-            MPI_Ssend(sent_cols.data(), n_loc_dofs, MPI_UNSIGNED, other_proc, tag+1, GlobalMPI.communicators_by_level[level]);
+            MPI_Send(sent_rows.data(), n_loc_dofs, MPI_UNSIGNED, other_proc, GlobalParams.MPI_Rank, GlobalMPI.communicators_by_level[level]);
+            MPI_Send(sent_cols.data(), n_loc_dofs, MPI_UNSIGNED, other_proc, GlobalParams.MPI_Rank, GlobalMPI.communicators_by_level[level]);
           }
         }
       }

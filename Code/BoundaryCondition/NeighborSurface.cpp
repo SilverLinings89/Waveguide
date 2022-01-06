@@ -136,7 +136,6 @@ void NeighborSurface::prepare_dofs() {
 	}
 	n_dofs += temp.size();
 	for(unsigned int surf = 0; surf < 6; surf++) {
-		boundary_dofs[surf].resize(0);
 		if(surf != b_id && !are_opposing_sites(surf, b_id)) {
 			if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
 				boundary_dofs[surf] = Geometry.levels[level].surfaces[surf]->get_global_dof_indices_by_boundary_id(b_id);
@@ -181,7 +180,7 @@ void NeighborSurface::send() {
 	}
 	std::cout << "Sending " << n_dofs << " to " << global_partner_mpi_rank << " via " << b_id << std::endl;
 	const int send_count = (int) n_dofs;
-	int return_value = MPI_Ssend(send_buffer.data(), send_count, MPI_UNSIGNED, global_partner_mpi_rank, b_id, MPI_COMM_WORLD);
+	int return_value = MPI_Send(send_buffer.data(), send_count, MPI_UNSIGNED, global_partner_mpi_rank, b_id, MPI_COMM_WORLD);
 	if(return_value != 0) {
 		std::cout << "MPI Send returned " << return_value << " on " << GlobalParams.MPI_Rank << " and surface " << b_id << " sending to " << global_partner_mpi_rank << " a total of " << n_dofs << " values." << std::endl;
 	}
