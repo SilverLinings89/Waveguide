@@ -874,3 +874,11 @@ I have also run the 2-2-2 (8 process level 3 sweeping) example on both UC2 and m
 Result storage: From now on, I will begin generating outputs, that are relevant for my dissertation. To that end, I will introduce a storage system. It is a folder with subfolders. The folders are called artifacts. Everytime I produce some result, the artifact gets put in a new folder and numbered. I can then reference the generated data as an artifact id. For example, the performance differences on the two systems are artifact 1. I store these locally and sometimes back them up in the data archive and cloud storage.
 
 The jobs crashed again. As a mitigation, I will now replace MPI_COMM_WORLD on the neighborsurfaces with the smaller communicators, which is better anyway. I just noticed, however, that the MPI failures only occur on level three and there, the local communicator is MPI_COMM_WORLD because everyone contributes ...
+
+# Thursday, 6th of January
+
+Today, I will implement all I need for convergence analysis. There is not much I need here. Basically, it is a new runner that builds multiple nonlocal problems, some output for the convergence graph and new parameters, that control the run. At the same time, the MPI level 3 issue on the HPC system has persisted. I have made a minor change to determine if that was the error. Tests are running now.
+
+The latest push seems to have fixed the issue on the hpc system. Started all the example cases. Will see soon if it's actually stable or not.
+
+I have implemented all the parts required for convergence runs and mentioned above except for the automatic generation of convergence plots. Also: All the large examples have launched correctly and some have been running for 12 hours now. The MPI appears to be stable now.

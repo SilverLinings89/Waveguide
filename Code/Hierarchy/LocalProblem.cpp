@@ -263,3 +263,8 @@ double LocalProblem::compute_L2_error() {
 unsigned int LocalProblem::compute_global_solve_counter() {
   return Utilities::MPI::sum(solve_counter, MPI_COMM_WORLD);
 }
+
+void LocalProblem::empty_memory() {
+  matrix->clear();
+  solver.reset();
+}

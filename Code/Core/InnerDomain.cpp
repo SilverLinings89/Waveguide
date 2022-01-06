@@ -434,3 +434,18 @@ FEErrorStruct InnerDomain::compute_errors(dealii::LinearAlgebra::distributed::Ve
   ret.Linfty = VectorTools::compute_global_error(triangulation, cell_vector, dealii::VectorTools::NormType::Linfty_norm);
   return ret;
 }
+
+std::vector<std::vector<ComplexNumber>> InnerDomain::evaluate_at_positions(std::vector<Position> in_positions, NumericVectorLocal in_solution) {
+  std::vector<std::vector<ComplexNumber>> ret;
+  QGauss<3> q(GlobalParams.Nedelec_element_order + 2);
+  for(unsigned int i = 0; i < in_positions.size(); i++) {
+    Vector<ComplexNumber> fe_evaluation(3);
+    VectorTools::point_value(dof_handler, in_solution, in_positions[i], fe_evaluation);
+    std::vector<ComplexNumber> point_val;
+    point_val.push_back(fe_evaluation[0]);
+    point_val.push_back(fe_evaluation[1]);
+    point_val.push_back(fe_evaluation[2]);
+    ret.push_back(point_val);
+  }
+  return ret;
+}

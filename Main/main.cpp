@@ -21,6 +21,7 @@
 #include "../Code/MeshGenerators/SquareMeshGenerator.h"
 #include "../Code/Helpers/ShapeDescription.h"
 #include "../Code/Runners/Simulation.h"
+#include "../Code/Runners/ConvergenceRun.h"
 #include "../Code/Runners/ParameterSweep.h"
 #include "../Code/Runners/SingleCoreRun.h"
 #include "../Code/Runners/SweepingRun.h"
@@ -73,13 +74,17 @@ int main(int argc, char *argv[]) {
 
   initialize_global_variables(run_file, case_file);
   Simulation * simulation;
-  if (GlobalParams.Enable_Parameter_Run) {
-    simulation = new ParameterSweep();
+  if (GlobalParams.Perform_Convergence_Test) {
+    simulation = new ConvergenceRun();
   } else {
-    if (GlobalParams.NumberProcesses == 1) {
-      simulation = new SingleCoreRun();
+    if (GlobalParams.Enable_Parameter_Run) {
+      simulation = new ParameterSweep();
     } else {
-      simulation = new SweepingRun();
+      if (GlobalParams.NumberProcesses == 1) {
+        simulation = new SingleCoreRun();
+      } else {
+        simulation = new SweepingRun();
+      }
     }
   }
   

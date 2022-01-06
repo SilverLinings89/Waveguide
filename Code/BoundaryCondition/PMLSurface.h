@@ -62,4 +62,5 @@ class PMLSurface : public BoundaryCondition {
     bool mg_process_corner(dealii::Triangulation<3> * current_list, BoundaryId first_bid, BoundaryId second_bid);
     bool extend_mesh_in_direction(BoundaryId in_bid);
     void prepare_dof_associations();
+    unsigned int n_cells() override;
 };

@@ -185,3 +185,7 @@ void BoundaryCondition::force_validation() {
     }
   }
 }
+
+unsigned int BoundaryCondition::n_cells() {
+  return 0;
+}

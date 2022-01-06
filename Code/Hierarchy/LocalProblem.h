@@ -43,4 +43,6 @@ public:
   double compute_error(dealii::VectorTools::NormType, Function<3,ComplexNumber> *, dealii::Vector<ComplexNumber> & , dealii::DataOut<3> *);
 
   unsigned int compute_global_solve_counter() override;
+
+  void empty_memory() override;
 };

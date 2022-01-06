@@ -208,7 +208,7 @@ void GeometryManager::set_y_range(std::pair<double, double> in_range) {
 
 void GeometryManager::set_z_range(std::pair<double, double> in_range) {
   this->local_z_range = in_range;
-  global_z_range = std::pair<double, double>(0.0, GlobalParams.Geometry_Size_Z);
+  global_z_range = std::pair<double, double>(0.0 + GlobalParams.global_z_shift , GlobalParams.Geometry_Size_Z + GlobalParams.global_z_shift);
 }
 
 std::pair<double, double> GeometryManager::compute_x_range() {
@@ -236,13 +236,13 @@ std::pair<double, double> GeometryManager::compute_y_range() {
 
 std::pair<double, double> GeometryManager::compute_z_range() {
   if (GlobalParams.Blocks_in_z_direction == 1) {
-    return std::pair<double, double>(0, GlobalParams.Geometry_Size_Z);
+    return std::pair<double, double>(0 + GlobalParams.global_z_shift, GlobalParams.Geometry_Size_Z + GlobalParams.global_z_shift);
   } else {
     double length = GlobalParams.Geometry_Size_Z / ((double) GlobalParams.Blocks_in_z_direction);
     int block_processor_count = GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction;
     int block_index = GlobalParams.MPI_Rank / block_processor_count;
     double min = block_index * length;
-    return std::pair<double, double>(min, min + length);
+    return std::pair<double, double>(min + GlobalParams.global_z_shift, min + GlobalParams.global_z_shift + length);
   }
 }
 

@@ -78,4 +78,6 @@ public:
   void print_dof_validation();
 
   void force_validation();
+
+  virtual unsigned int n_cells();
 };

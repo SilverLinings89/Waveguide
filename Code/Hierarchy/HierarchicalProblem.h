@@ -61,6 +61,7 @@ class HierarchicalProblem {
     return 0;
   }
   void print_solve_counter_list();
+  virtual void empty_memory();
 };
 
 typedef struct {

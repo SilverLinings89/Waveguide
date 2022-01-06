@@ -4,16 +4,19 @@
 #include "../Helpers/Parameters.h"
 #include "../Hierarchy/NonLocalProblem.h"
 #include "../ModalComputations/RectangularMode.h"
+#include "../OutputGenerators/Images/ConvergenceOutputGenerator.h"
 
 class ConvergenceRun: public Simulation {
   NonLocalProblem *mainProblem;
-  RectangularMode * rmProblem;
   NonLocalProblem *otherProblem;
+  std::vector<Position> evaluation_positions;
+  std::vector<std::vector<ComplexNumber>> evaluation_base_problem;
+  ConvergenceOutputGenerator output;
   
  public:
   ConvergenceRun();
 
-  virtual ~ConvergenceRun();
+  ~ConvergenceRun();
 
   void prepare() override;
 
@@ -21,4 +24,5 @@ class ConvergenceRun: public Simulation {
 
   void prepare_transformed_geometry() override;
 
+  double compute_error_for_run();
 };

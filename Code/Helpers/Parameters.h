@@ -149,8 +149,17 @@ struct Parameters {
 
     double absolute_convergence_criterion = 1e-6;
 
+    bool Perform_Convergence_Test = false;
+
+    unsigned int convergence_max_cells = 20;
+
+    std::vector<unsigned int> convergence_cell_counts;
+
+    double global_z_shift = 0;
+
     bool solve_directly = false;
     
     auto complete_data() -> void;
+
     auto check_validity() -> bool;
 };

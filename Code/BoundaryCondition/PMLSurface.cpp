@@ -931,3 +931,7 @@ bool PMLSurface::mg_process_corner(dealii::Triangulation<3> * tria, BoundaryId f
   }
   return false;
 }
+
+unsigned int PMLSurface::n_cells() {
+  return triangulation.n_active_cells();
+}

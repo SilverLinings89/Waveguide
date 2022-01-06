@@ -155,3 +155,7 @@ void HierarchicalProblem::print_solve_counter_list() {
     child->print_solve_counter_list();
   }
 }
+
+void HierarchicalProblem::empty_memory() {
+
+}

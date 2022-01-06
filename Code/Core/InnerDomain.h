@@ -110,4 +110,5 @@ class InnerDomain: public FEDomain {
   void determine_non_owned_dofs() override;
   ComplexNumber compute_signal_strength(dealii::LinearAlgebra::distributed::Vector<ComplexNumber> * in_solution);
   FEErrorStruct compute_errors(dealii::LinearAlgebra::distributed::Vector<ComplexNumber> * in_solution);
+  std::vector<std::vector<ComplexNumber>> evaluate_at_positions(std::vector<Position> in_positions, NumericVectorLocal in_solution);
 };

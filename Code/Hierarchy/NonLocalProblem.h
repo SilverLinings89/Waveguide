@@ -98,4 +98,14 @@ private:
   unsigned int compute_global_solve_counter() override;
 
   void reinit_all_vectors();
+
+  unsigned int n_total_cells();
+
+  double compute_h();
+
+  unsigned int compute_total_number_of_dofs();
+
+  std::vector<std::vector<ComplexNumber>> evaluate_solution_at(std::vector<Position>);
+
+  void empty_memory() override;
 };

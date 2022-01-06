@@ -6,6 +6,7 @@ ADD_LIBRARY(Code
         Core/InnerDomain.cpp
         Core/Types.h
         Runners/Simulation.cpp
+        Runners/ConvergenceRun.cpp
         Runners/ParameterSweep.cpp
         Runners/SingleCoreRun.cpp
         Runners/SweepingRun.cpp
@@ -51,6 +52,7 @@ ADD_LIBRARY(Code
         GlobalObjects/ModeManager.cpp
         GlobalObjects/OutputManager.cpp
         OutputGenerators/Images/ResidualOutputGenerator.cpp
+        OutputGenerators/Images/ConvergenceOutputGenerator.cpp
         )
 
 DEAL_II_SETUP_TARGET(Code)

@@ -5,6 +5,21 @@ using namespace dealii;
 
 ParameterReader::ParameterReader() { }
 
+std::vector<std::string> split (std::string s, std::string delimiter) {
+    size_t pos_start = 0, pos_end, delim_len = delimiter.length();
+    std::string token;
+    std::vector<std::string> res;
+
+    while ((pos_end = s.find (delimiter, pos_start)) != std::string::npos) {
+        token = s.substr (pos_start, pos_end - pos_start);
+        pos_start = pos_end + delim_len;
+        res.push_back (token);
+    }
+
+    res.push_back (s.substr (pos_start));
+    return res;
+}
+
 void ParameterReader::declare_parameters() {
     run_prm.enter_subsection("Run parameters");
     {
@@ -59,6 +74,9 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("Predefined case number", "1", Patterns::Integer(), "Number in [1,35] that describes the predefined shape to use.");
         case_prm.declare_entry("Use predefined shape", "false", Patterns::Bool(), "If set to true, the geometry for the predefined case from 'Predefined case number' will be used.");
         case_prm.declare_entry("Number of shape sectors", "5", Patterns::Integer(), "Number of sectors for the shape approximation");
+        case_prm.declare_entry("perform convergence test", "false", Patterns::Bool(), "If true, the code will perform a cnovergence run on a sequence of meshes.");
+        case_prm.declare_entry("convergence sequence cell count", "1,2,4,8,10,14,16,20", Patterns::List(Patterns::Integer()), "The sequence of cell counts in each direction to be used for convergence analysis.");
+        case_prm.declare_entry("global z shift", "0", Patterns::Double(), "Shifts the global geometry to remove the center of the dipole for convergence studies.");
     }
     case_prm.leave_subsection();
 }
@@ -86,6 +104,7 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.Cells_in_y = run_prm.get_integer("cell count y");
         ret.Cells_in_z = run_prm.get_integer("cell count z");
         std::string logging = run_prm.get("Logging Level");
+        
         if(logging == "Debug One") ret.Logging_Level = LoggingLevel::DEBUG_ONE;
         if(logging == "Debug All") ret.Logging_Level = LoggingLevel::DEBUG_ALL;
         if(logging == "Production One") ret.Logging_Level = LoggingLevel::PRODUCTION_ONE;
@@ -135,10 +154,20 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         if(case_prm.get("Signal tapering type") == "C0") {
             ret.Signal_tapering_type = SignalTaperingType::C0;
         }
+        ret.Perform_Convergence_Test = case_prm.get_bool("perform convergence test");
+        if(ret.Perform_Convergence_Test) {
+            std::string cell_counts = case_prm.get("convergence sequence cell count");
+            std::vector<std::string> parts = split(cell_counts, ",");
+            for(unsigned int i = 0; i < parts.size(); i++) {
+                ret.convergence_cell_counts.push_back(std::stoi(parts[i]));
+            }
+            ret.convergence_max_cells = ret.convergence_cell_counts[ret.convergence_cell_counts.size() -1];
+        }
         ret.prescribe_0_on_input_side = case_prm.get_bool("Prescribe input zero");
         ret.Use_Predefined_Shape = case_prm.get_bool("Use predefined shape");
         ret.Number_of_Predefined_Shape = case_prm.get_integer("Predefined case number");
         ret.Number_of_sectors = case_prm.get_integer("Number of shape sectors");
+        ret.global_z_shift = case_prm.get_double("global z shift");
     }
     return ret;
 }

@@ -733,3 +733,37 @@ unsigned int NonLocalProblem::compute_global_solve_counter() {
   }
   return Utilities::MPI::sum(contribution, MPI_COMM_WORLD);
 }
+
+unsigned int NonLocalProblem::n_total_cells() {
+  unsigned int local = Geometry.levels[level].inner_domain->triangulation.n_active_cells();
+  for(unsigned int i = 0; i < 6; i++) {
+    local += Geometry.levels[level].surfaces[i]->n_cells();
+  }
+  unsigned int ret = dealii::Utilities::MPI::sum(local, MPI_COMM_WORLD);
+}
+
+double NonLocalProblem::compute_h() {
+  double temp = Geometry.h_x;
+  temp = std::max(temp, Geometry.h_y);
+  temp = std::max(temp, Geometry.h_z);
+  return temp;
+}
+
+unsigned int NonLocalProblem::compute_total_number_of_dofs() {
+  return Geometry.levels[level].n_total_level_dofs;
+}
+
+std::vector<std::vector<ComplexNumber>> NonLocalProblem::evaluate_solution_at(std::vector<Position> positions) {
+  NumericVectorLocal local_solution(Geometry.levels[level].inner_domain->n_locally_active_dofs);
+  update_shared_solution_vector();
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
+    local_solution[i] = shared_solution[Geometry.levels[level].inner_domain->global_index_mapping[i]];
+  }
+  return Geometry.levels[level].inner_domain->evaluate_at_positions(positions, local_solution);
+}
+
+void NonLocalProblem::empty_memory() {
+  matrix->clear();
+  KSPReset(ksp);
+  child->empty_memory();
+}
