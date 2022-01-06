@@ -190,7 +190,7 @@ void NeighborSurface::receive() {
 	recv_buffer.resize(n_dofs);
 	int tag = generate_tag(GlobalParams.MPI_Rank, global_partner_mpi_rank, level);
 	MPI_Status recv_status;
-	int status = MPI_Recv(recv_buffer.data(), n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, b_id - 1, MPI_COMM_WORLD, &recv_status);
+	int status = MPI_Recv(recv_buffer.data(), n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, b_id + 1, MPI_COMM_WORLD, &recv_status);
 	unsigned int counter = 0;
 	unsigned int wrong_values = 0;
 	for(unsigned int i = 0; i < n_dofs; i++) {
