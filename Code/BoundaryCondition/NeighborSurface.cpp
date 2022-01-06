@@ -179,7 +179,7 @@ void NeighborSurface::send() {
 	if(count > 0) {
 		std::cout << "In Send there were " << count << " wrong values on " << GlobalParams.MPI_Rank << " and surface " << b_id << std::endl;
 	}
-	int return_value = MPI_Send(&send_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD);
+	int return_value = MPI_Send(send_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD);
 	if(return_value != 0) {
 		std::cout << "MPI Send returned " << return_value << " on " << GlobalParams.MPI_Rank << " and surface " << b_id << std::endl;
 	}
@@ -189,7 +189,7 @@ void NeighborSurface::receive() {
 	unsigned int recv_buffer[n_dofs];
 	int tag = generate_tag(GlobalParams.MPI_Rank, global_partner_mpi_rank, level);
 	MPI_Status recv_status;
-	int status = MPI_Recv(&recv_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD, &recv_status);
+	int status = MPI_Recv(recv_buffer, n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, tag, MPI_COMM_WORLD, &recv_status);
 	if(status != 0) {
 		std::cout << "MPI Receive returned " << status << " on " << GlobalParams.MPI_Rank << " and surface " << b_id << std::endl;
 	}
