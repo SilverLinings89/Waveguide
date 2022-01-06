@@ -179,7 +179,9 @@ void NeighborSurface::send() {
 	if(count > 0) {
 		std::cout << "In Send there were " << count << " wrong values on " << GlobalParams.MPI_Rank << " and surface " << b_id << std::endl;
 	}
-	int return_value = MPI_Ssend(send_buffer.data(), n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, b_id, MPI_COMM_WORLD);
+	std::cout << "Sending " << n_dofs << " to " << global_partner_mpi_rank << " via " << b_id << std::endl;
+	const int send_count = (int) n_dofs;
+	int return_value = MPI_Ssend(send_buffer.data(), send_count, MPI_UNSIGNED, global_partner_mpi_rank, b_id, MPI_COMM_WORLD);
 	if(return_value != 0) {
 		std::cout << "MPI Send returned " << return_value << " on " << GlobalParams.MPI_Rank << " and surface " << b_id << " sending to " << global_partner_mpi_rank << " a total of " << n_dofs << " values." << std::endl;
 	}
@@ -190,7 +192,10 @@ void NeighborSurface::receive() {
 	recv_buffer.resize(n_dofs);
 	int tag = generate_tag(GlobalParams.MPI_Rank, global_partner_mpi_rank, level);
 	MPI_Status recv_status;
-	int status = MPI_Recv(recv_buffer.data(), n_dofs, MPI_UNSIGNED, global_partner_mpi_rank, b_id + 1, MPI_COMM_WORLD, &recv_status);
+	const int recv_count = (int) n_dofs;
+	int status = MPI_Recv(recv_buffer.data(), recv_count, MPI_UNSIGNED, global_partner_mpi_rank, b_id + 1, MPI_COMM_WORLD, &recv_status);
+	int actual_receive;
+	MPI_Get_count(&recv_status, MPI_UNSIGNED, &actual_receive);
 	unsigned int counter = 0;
 	unsigned int wrong_values = 0;
 	for(unsigned int i = 0; i < n_dofs; i++) {
@@ -198,7 +203,7 @@ void NeighborSurface::receive() {
 			wrong_values++;
 		}
 	}
-	printf("MPI process %d received %d wrong values of a total of %d from rank %d, with tag %d and error code %d.\n", GlobalParams.MPI_Rank, wrong_values, n_dofs,  recv_status.MPI_SOURCE, recv_status.MPI_TAG, recv_status.MPI_ERROR);
+	printf("MPI process %d received %d wrong values of a total of %d / %d from rank %d, with tag %d and error code %d.\n", GlobalParams.MPI_Rank, wrong_values, recv_count, actual_receive, recv_status.MPI_SOURCE, recv_status.MPI_TAG, recv_status.MPI_ERROR);
 	for(unsigned int i = 0; i < inner_dofs.size(); i++) {
 		inner_dofs[i] = recv_buffer[i];
 		counter ++;

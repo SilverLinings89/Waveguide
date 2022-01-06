@@ -622,16 +622,13 @@ void GeometryManager::print_level_dof_counts(unsigned int level) {
 
 void GeometryManager::perform_mpi_dof_exchange(unsigned int level) {
   for(unsigned int i = 0; i < GlobalParams.NumberProcesses; i++) {
-    MPI_Barrier(MPI_COMM_WORLD);
     if(i == GlobalParams.MPI_Rank) {
       if(levels[level].surface_type[1] == SurfaceType::NEIGHBOR_SURFACE) {
         levels[level].surfaces[1]->finish_dof_index_initialization();
       }
-      MPI_Barrier(MPI_COMM_WORLD);
       if(levels[level].surface_type[3] == SurfaceType::NEIGHBOR_SURFACE) {
         levels[level].surfaces[3]->finish_dof_index_initialization();
       }
-      MPI_Barrier(MPI_COMM_WORLD);
       if(levels[level].surface_type[5] == SurfaceType::NEIGHBOR_SURFACE) {
         levels[level].surfaces[5]->finish_dof_index_initialization();
       }
@@ -641,13 +638,11 @@ void GeometryManager::perform_mpi_dof_exchange(unsigned int level) {
           levels[level].surfaces[0]->finish_dof_index_initialization();
         }
       }
-      MPI_Barrier(MPI_COMM_WORLD);
       if(levels[level].surface_type[2] == SurfaceType::NEIGHBOR_SURFACE) {
         if(levels[level].surfaces[2]->global_partner_mpi_rank == i) {
           levels[level].surfaces[2]->finish_dof_index_initialization();
         }
       }
-      MPI_Barrier(MPI_COMM_WORLD);
       if(levels[level].surface_type[4] == SurfaceType::NEIGHBOR_SURFACE) {
         if(levels[level].surfaces[4]->global_partner_mpi_rank == i) {
           levels[level].surfaces[4]->finish_dof_index_initialization();
