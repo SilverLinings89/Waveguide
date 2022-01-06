@@ -649,5 +649,6 @@ void GeometryManager::perform_mpi_dof_exchange(unsigned int level) {
         }
       }
     }
+    MPI_Barrier(MPI_COMM_WORLD);
   }
 }
