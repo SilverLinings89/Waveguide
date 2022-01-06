@@ -46,7 +46,7 @@ void SweepingRun::run() {
     mainProblem->solve_with_timers_and_count();
     GlobalTimerManager.write_output();
     mainProblem->output_results();
-    print_info("SweepingRun::run", "End", true, LoggingLevel::PRODUCTION_ONE);
+    print_info("Simulation::run", "End", true, LoggingLevel::PRODUCTION_ONE);
 }
 
 void SweepingRun::prepare_transformed_geometry() {
