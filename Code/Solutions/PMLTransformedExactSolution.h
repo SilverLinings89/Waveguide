@@ -11,7 +11,7 @@
 
 class PMLTransformedExactSolution: public dealii::Function<3, ComplexNumber> {
  private:
-  ExactSolution * base_solution;
+  dealii::Function<3, ComplexNumber> * base_solution;
   BoundaryId main_boundary;
   double additional_coordinate;
   double non_pml_layer_thickness;

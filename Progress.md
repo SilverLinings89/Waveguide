@@ -881,4 +881,8 @@ Today, I will implement all I need for convergence analysis. There is not much I
 
 The latest push seems to have fixed the issue on the hpc system. Started all the example cases. Will see soon if it's actually stable or not.
 
-I have implemented all the parts required for convergence runs and mentioned above except for the automatic generation of convergence plots. Also: All the large examples have launched correctly and some have been running for 12 hours now. The MPI appears to be stable now.
+I have implemented all the parts required for convergence runs and mentioned above except for the automatic generation of convergence plots. Also: All the large examples have launched correctly and some have been running for 12 hours now. The MPI appears to be stable now. This version of the gnuplot output generator also sets the title and generates a log-log plot instead of the log-plot it generates for the residual.
+
+# Friday, 7th of January
+
+Today, I am fixing the last details about the convergence runs and I will prepare both adjoint shape optimization as well as the case study run for 8x8x8 processes and maximum local size. This will serve as an example of the scale that my solvers can still handle. The current plan is 30x30x30 cells on 8x8x8 processes for boundary values of a dirichlet problem with a dipole boundary value.

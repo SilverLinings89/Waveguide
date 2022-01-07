@@ -4,7 +4,7 @@ PMLTransformedExactSolution::PMLTransformedExactSolution(BoundaryId in_main_id, 
     main_boundary = in_main_id;
     additional_coordinate = in_additional_coordinate;
     non_pml_layer_thickness = GlobalParams.PML_thickness / GlobalParams.PML_N_Layers;
-    base_solution = new ExactSolution(true, false);
+    base_solution = GlobalParams.source_field;
 
 }
 
@@ -46,19 +46,24 @@ void PMLTransformedExactSolution::vector_value(const Position &p, dealii::Vector
 }
 
 dealii::Tensor<1, 3, ComplexNumber> PMLTransformedExactSolution::curl(const Position &in_p) const {
-  dealii::Tensor<1, 3, ComplexNumber> ret = base_solution->curl(in_p);
+  dealii::Tensor<1, 3, ComplexNumber> ret;
+  /** 
+  NumericVectorLocal curls = base_solution->curl(in_p);
   double scaling_factor = compute_scaling_factor(in_p);
   for(unsigned int i = 0; i < 3; i++) {
     ret[i] *= scaling_factor;
   }
+  **/
   return ret;
 }
 
 dealii::Tensor<1, 3, ComplexNumber> PMLTransformedExactSolution::val(const Position &in_p) const {
-  dealii::Tensor<1, 3, ComplexNumber> ret = base_solution->val(in_p);
+  dealii::Tensor<1, 3, ComplexNumber> ret;
+  NumericVectorLocal vals;
+  base_solution->vector_value(in_p, vals);
   double scaling_factor = compute_scaling_factor(in_p);
   for(unsigned int i = 0; i < 3; i++) {
-    ret[i] *= scaling_factor;
+    ret[i] = vals[i] * scaling_factor;
   }
   return ret;
 }

@@ -14,9 +14,10 @@ void ConvergenceOutputGenerator::set_title(std::string in_title) {
     title = in_title;
 }
 
-void ConvergenceOutputGenerator::push_values(double in_x, double in_y) {
+void ConvergenceOutputGenerator::push_values(double in_x, double in_y_num, double in_y_theo) {
     x.push_back(in_x);
-    y.push_back(in_y);
+    y_numerical.push_back(in_y_num);
+    y_theoretical.push_back(in_y_theo);
 }
   
 void ConvergenceOutputGenerator::write_gnuplot_file() {
@@ -30,12 +31,16 @@ void ConvergenceOutputGenerator::write_gnuplot_file() {
     for(unsigned int val = 0; val < x.size(); val++) {
         out << "xvals["<< val + 1 << "] = " << x[val] << std::endl;
     }
-    out << "array yvals[" << y.size() << "]" << std::endl;
-    for(unsigned int val = 0; val < y.size(); val++) {
-        out << "yvals["<< val + 1 << "] = " << y[val] << std::endl;
+    out << "array yvalsnum[" << y_numerical.size() << "]" << std::endl;
+    for(unsigned int val = 0; val < y_numerical.size(); val++) {
+        out << "yvalsnum["<< val + 1 << "] = " << y_numerical[val] << std::endl;
+    }
+    out << "array yvalstheo[" << y_numerical.size() << "]" << std::endl;
+    for(unsigned int val = 0; val < y_theoretical.size(); val++) {
+        out << "yvalstheo["<< val + 1 << "] = " << y_theoretical[val] << std::endl;
     }
     out << "set logscale y" << std::endl << "set logscale x" << std::endl << "set xlabel '" << x_label << "'" << std::endl << "set ylabel '" << y_label<< "'" << std::endl <<  "set format y \"%.1e\"" << std::endl;
-    out << "plot sample [i=1:" << x.size() +1<< "] '+' using (xvals[i]):(yvals[i]) with linespoints" << std::endl;
+    out << "plot sample [i=1:" << x.size() +1<< "] '+' using (xvals[i]):(yvalsnum[i]) with linespoints title \"numerical error\", [j=1:" << x.size() +1<< "] '+' using (xvals[j]):(yvalstheo[j]) with linespoints title \"theoretical error\"" << std::endl;
     out.close();
 
 }

@@ -1,9 +1,9 @@
 subsection Case parameters
     set source type = 2
     set fem order = 0
-    set geometry size x = 2.0
-    set geometry size y = 2.0
-    set geometry size z = 2.0
+    set geometry size x = 0.2
+    set geometry size y = 0.2
+    set geometry size z = 0.2
     set epsilon in = 1
     set epsilon out = 1
     set mu in = 1.0
@@ -11,11 +11,11 @@ subsection Case parameters
     set signal amplitude = 1.0
     set Boundary Method = PML
     set PML n layers = 8
-    set PML thickness = 0.5
+    set PML thickness = 0.05
     set PML sigma max = 4
     set PML skaling order = 3
     set Input Signal Method = Dirichlet
     set Prescribe input zero = false
     set perform convergence test = true
-    set global z shift = 1.1
+    set global z shift = 0.05
 end

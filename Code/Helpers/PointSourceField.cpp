@@ -60,8 +60,7 @@ ComplexNumber PointSourceFieldHertz::value(
   return ret[component];
 }
 
-void PointSourceFieldHertz::vector_value(const Position &in_p,
-    NumericVectorLocal &vec) const {
+void PointSourceFieldHertz::vector_value(const Position &in_p, NumericVectorLocal &vec) const {
   NumericVectorLocal x(3);
   NumericVectorLocal x_normed(3);
   NumericVectorLocal p(3);
@@ -78,9 +77,9 @@ void PointSourceFieldHertz::vector_value(const Position &in_p,
     x[i] = {p_temp[i], 0};
     x_normed[i] = x[i] / norm_x;
   }
-  p[0] = {1.0, 0};
+  p[0] = {0, 0};
   p[1] = {0, 0};
-  p[2] = {0, 0};
+  p[2] = {1.0, 0};
   ComplexNumber k_squared = {k * k, 0.0};
   ComplexNumber factor_2 = ComplexNumber(1.0/(norm_x*norm_x), 0) - ik/norm_x;
   ComplexNumber x_times_p = x[0] * p[0] + x[1] * p[1] + x[2] * p[2];
@@ -95,8 +94,7 @@ void PointSourceFieldHertz::vector_value(const Position &in_p,
   multiply_in_place(factor_2, term_2);
 
   term_1 += term_2;
-  multiply_in_place(
-      ComplexNumber(0, 0.25 / PI) * std::exp(ik * norm_x) / norm_x, term_1);
+  multiply_in_place(ComplexNumber(0, 0.25 / PI) * std::exp(ik * norm_x) / norm_x, term_1);
   vec = term_1;
 }
 

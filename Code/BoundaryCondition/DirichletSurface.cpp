@@ -87,8 +87,7 @@ Constraints DirichletSurface::make_constraints() {
 	dealii::IndexSet local_dof_set(Geometry.levels[level].inner_domain->n_locally_active_dofs);
 	local_dof_set.add_range(0,Geometry.levels[level].inner_domain->n_locally_active_dofs);
 	AffineConstraints<ComplexNumber> constraints_local(local_dof_set);
-	ExactSolution es(true, false);
-	VectorTools::project_boundary_values_curl_conforming_l2(Geometry.levels[level].inner_domain->dof_handler, 0, es, b_id, constraints_local);
+	VectorTools::project_boundary_values_curl_conforming_l2(Geometry.levels[level].inner_domain->dof_handler, 0, *GlobalParams.source_field, b_id, constraints_local);
 	for(auto line : constraints_local.get_lines()) {
 		const unsigned int local_index = line.index;
 		const unsigned int global_index = Geometry.levels[level].inner_domain->global_index_mapping[local_index];
