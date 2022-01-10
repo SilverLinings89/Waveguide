@@ -1,0 +1,34 @@
+For 3 got id Submitted batch job 20339264
+For 5 got id Submitted batch job 20339384
+For 7 got id Submitted batch job 20339385
+For 9 got id Submitted batch job 20339386
+For 11 got id Submitted batch job 20339387
+For 13 got id Submitted batch job 20339388
+For 15 got id Submitted batch job 20339389
+For 17 got id Submitted batch job 20339390
+For 19 got id Submitted batch job 20339391
+For 21 got id Submitted batch job 20339392
+For 23 got id Submitted batch job 20339393
+For 25 got id Submitted batch job 20339394
+For 27 got id Submitted batch job 20339395
+For 29 got id Submitted batch job 20339396
+For 31 got id Submitted batch job 20339397
+For 33 got id Submitted batch job 20339398
+
+Rebuilt all the code with MKL support and ran them all again with 72 hours:
+For 3 got id Submitted batch job 20347883
+For 5 got id Submitted batch job 20347884
+For 7 got id Submitted batch job 20347885
+For 9 got id Submitted batch job 20347886
+For 11 got id Submitted batch job 20347887
+For 13 got id Submitted batch job 20347888
+For 15 got id Submitted batch job 20347889
+For 17 got id Submitted batch job 20347890
+For 19 got id Submitted batch job 20347891
+For 21 got id Submitted batch job 20347892
+For 23 got id Submitted batch job 20347893
+For 25 got id Submitted batch job 20347894
+For 27 got id Submitted batch job 20347895
+For 29 got id Submitted batch job 20347896
+For 31 got id Submitted batch job 20347897
+For 33 got id Submitted batch job 20347898

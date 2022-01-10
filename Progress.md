@@ -885,4 +885,8 @@ I have implemented all the parts required for convergence runs and mentioned abo
 
 # Friday, 7th of January
 
-Today, I am fixing the last details about the convergence runs and I will prepare both adjoint shape optimization as well as the case study run for 8x8x8 processes and maximum local size. This will serve as an example of the scale that my solvers can still handle. The current plan is 30x30x30 cells on 8x8x8 processes for boundary values of a dirichlet problem with a dipole boundary value.
+Today, I am fixing the last details about the convergence runs and I will prepare both adjoint shape optimization as well as the case study run for 8x8x8 processes and maximum local size. This will serve as an example of the scale that my solvers can still handle. The current plan is 30x30x30 cells on 8x8x8 processes for boundary values of a dirichlet problem with a dipole boundary value. 
+
+# Saturday, 8th of January
+
+I ran a comparison and MUMPS appears to be slightly faster than UMFPACK, so I will not change the localproblem implementation to use the dealii-interface for UMFPACK. Next I will try the flag for symmetry.

@@ -42,6 +42,7 @@ LocalProblem::LocalProblem() :
   HierarchicalProblem(0, SweepingDirection::Z), 
   sc(), 
   solver(sc, MPI_COMM_SELF) {
+    solver.set_symmetric_mode(true);
     print_info("Local Problem", "Done building base problem. Preparing matrix.");
     matrix = new dealii::PETScWrappers::MPI::SparseMatrix();
     for(unsigned int i = 0; i < 6; i++) Geometry.levels[0].is_surface_truncated[i] = true;
@@ -132,6 +133,7 @@ void LocalProblem::reinit() {
 void LocalProblem::solve() {
   
   rhs.compress(dealii::VectorOperation::insert);
+  
   solver.solve(*matrix, solution, rhs);
   
 }
