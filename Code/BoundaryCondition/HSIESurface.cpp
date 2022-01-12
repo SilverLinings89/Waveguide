@@ -132,8 +132,7 @@ DofDataVector HSIESurface::get_dof_data_for_base_dof_q(unsigned int in_index) {
   return ret;
 }
 
-void HSIESurface::fill_matrix(
-    dealii::PETScWrappers::SparseMatrix *matrix, NumericVectorDistributed* rhs, Constraints *constraints) {
+void HSIESurface::fill_matrix(dealii::PETScWrappers::SparseMatrix *matrix, NumericVectorDistributed* rhs, Constraints *constraints) {
     HSIEPolynomial::computeDandI(order + 2, k0);
     auto it = dof_h_nedelec.begin();
     auto end = dof_h_nedelec.end();
@@ -195,31 +194,20 @@ void HSIESurface::fill_matrix(
         C_G_J = jacobian_for_cell.get_C_G_and_J(quadrature_points[q_point]);
         for (unsigned int i = 0; i < cell_dofs.size(); i++) {
           DofData &u = cell_dofs[i];
-          if (cell_dofs[i].type == DofType::RAY
-              || cell_dofs[i].type == DofType::IFFb) {
-            contribution_curl.push_back(
-                build_curl_term_q(u.hsie_order,
-                    fe_q_values.shape_grad(local_related_fe_index[i], q_point)));
-            contribution_value.push_back(
-                build_non_curl_term_q(u.hsie_order,
-                    fe_q_values.shape_value(local_related_fe_index[i], q_point)));
+          if (cell_dofs[i].type == DofType::RAY || cell_dofs[i].type == DofType::IFFb) {
+            contribution_curl.push_back (build_curl_term_q    (u.hsie_order, fe_q_values.shape_grad (local_related_fe_index[i], q_point)));
+            contribution_value.push_back(build_non_curl_term_q(u.hsie_order, fe_q_values.shape_value(local_related_fe_index[i], q_point)));
           } else {
             contribution_curl.push_back(
                 build_curl_term_nedelec(u.hsie_order,
-                    fe_n_values.shape_grad_component(local_related_fe_index[i],
-                        q_point, 0),
-                    fe_n_values.shape_grad_component(local_related_fe_index[i],
-                        q_point, 1),
-                    fe_n_values.shape_value_component(local_related_fe_index[i],
-                        q_point, 0),
-                    fe_n_values.shape_value_component(local_related_fe_index[i],
-                        q_point, 1)));
+                    fe_n_values.shape_grad_component( local_related_fe_index[i], q_point, 0),
+                    fe_n_values.shape_grad_component( local_related_fe_index[i], q_point, 1),
+                    fe_n_values.shape_value_component(local_related_fe_index[i], q_point, 0),
+                    fe_n_values.shape_value_component(local_related_fe_index[i], q_point, 1)));
             contribution_value.push_back(
                 build_non_curl_term_nedelec(u.hsie_order,
-                    fe_n_values.shape_value_component(local_related_fe_index[i],
-                        q_point, 0),
-                    fe_n_values.shape_value_component(local_related_fe_index[i],
-                        q_point, 1)));
+                    fe_n_values.shape_value_component(local_related_fe_index[i], q_point, 0),
+                    fe_n_values.shape_value_component(local_related_fe_index[i], q_point, 1)));
           }
         }
 
@@ -227,11 +215,8 @@ void HSIESurface::fill_matrix(
         const double eps_kappa_2 = Geometry.eps_kappa_2(undo_transform(quadrature_points[q_point]));
         for (unsigned int i = 0; i < cell_dofs.size(); i++) {
           for (unsigned int j = 0; j < cell_dofs.size(); j++) {
-            ComplexNumber part =
-                (evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C)
-                + eps_kappa_2 * evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
-                JxW;
-              cell_matrix[i][j] += part;
+            ComplexNumber part = (evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C) + eps_kappa_2 * evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) * JxW;
+            cell_matrix[i][j] += part;
           }
         }
       }
@@ -550,8 +535,7 @@ void HSIESurface::fill_matrix(
       std::vector<std::vector<HSIEPolynomial>> contribution_value;
       std::vector<std::vector<HSIEPolynomial>> contribution_curl;
       JacobianAndTensorData C_G_J;
-      for (unsigned int q_point = 0; q_point < quadrature_points.size();
-          q_point++) {
+      for (unsigned int q_point = 0; q_point < quadrature_points.size(); q_point++) {
         C_G_J = jacobian_for_cell.get_C_G_and_J(quadrature_points[q_point]);
         for (unsigned int i = 0; i < cell_dofs.size(); i++) {
           DofData &u = cell_dofs[i];
@@ -578,11 +562,8 @@ void HSIESurface::fill_matrix(
         const double eps_kappa_2 = Geometry.eps_kappa_2(undo_transform(quadrature_points[q_point]));
         for (unsigned int i = 0; i < cell_dofs.size(); i++) {
           for (unsigned int j = 0; j < cell_dofs.size(); j++) {
-            ComplexNumber part =
-                (evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C)
-                - eps_kappa_2 * evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) *
-                JxW;
-              cell_matrix[i][j] += part;
+            ComplexNumber part = (evaluate_a(contribution_curl[i], contribution_curl[j], C_G_J.C) - eps_kappa_2 * evaluate_a(contribution_value[i], contribution_value[j], C_G_J.G)) * JxW;
+            cell_matrix[i][j] += part;
           }
         }
       }

@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-static PetscErrorCode MonitorError(KSP , PetscInt its, PetscReal rnorm, void * problem)
+static PetscErrorCode MonitorError(KSP , PetscInt, PetscReal rnorm, void * problem)
 {
   ((NonLocalProblem *)problem)->residual_output->push_value(rnorm);
   ((NonLocalProblem *)problem)->residual_output->write_residual_statement_to_console();
@@ -369,7 +369,6 @@ void NonLocalProblem::complex_pml_domain_matching(BoundaryId in_bid) {
   // always more dofs on the lower level
   dealii::IndexSet lower_is (Geometry.levels[level-1].n_total_level_dofs);
   dealii::IndexSet upper_is (Geometry.levels[level].n_total_level_dofs);
-  unsigned int counter = 0;
   auto higher_cell = Geometry.levels[level].surfaces[in_bid]->dof_handler.begin();
   auto lower_cell = Geometry.levels[level-1].surfaces[in_bid]->dof_handler.begin();
   auto higher_end = Geometry.levels[level].surfaces[in_bid]->dof_handler.end();
@@ -444,7 +443,7 @@ std::string NonLocalProblem::output_results() {
   update_shared_solution_vector();
   FEErrorStruct errors = compute_global_errors(&shared_solution);
   std::cout << "Errors: L2 = " << errors.L2 << " and Linfty  = " << errors.Linfty <<std::endl;
-  write_multifile_output("solution", solution);
+  write_multifile_output("solution");
   ComplexNumber signal_strength = compute_signal_strength_of_solution();
   std::cout << "Signal strength: " << signal_strength << " with norm " << std::abs(signal_strength)<< std::endl;
   print_info("NonLocalProblem", "End output results on level" + std::to_string(level));
@@ -459,7 +458,7 @@ void NonLocalProblem::update_shared_solution_vector() {
   shared_solution.update_ghost_values();
 }
 
-void NonLocalProblem::write_multifile_output(const std::string & in_filename, const NumericVectorDistributed field) {
+void NonLocalProblem::write_multifile_output(const std::string & in_filename) {
   if(GlobalParams.MPI_Rank == 0 && !GlobalParams.solve_directly) {
     residual_output->run_gnuplot();
     if(level > 1) {
@@ -699,10 +698,11 @@ void NonLocalProblem::perform_upward_sweep() {
 ComplexNumber NonLocalProblem::compute_signal_strength_of_solution() {
   print_info("NonLocalProblem::compute_signal_strength_of_solution", "Start");
   ComplexNumber integral = Geometry.levels[level].inner_domain->compute_signal_strength(& shared_solution);
-  double sum_integral_real = dealii::Utilities::MPI::sum(integral.real(), GlobalMPI.communicators_by_level[level]);
-  double sum_integral_imag = dealii::Utilities::MPI::sum(integral.imag(), GlobalMPI.communicators_by_level[level]);
-  return ComplexNumber(sum_integral_real / (GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction), sum_integral_imag / (GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction));
+  ComplexNumber base = Geometry.levels[level].inner_domain->compute_mode_strength(); 
+  ComplexNumber integral_sum = dealii::Utilities::MPI::sum(integral, GlobalMPI.communicators_by_level[level]);
+  ComplexNumber mode_sum = dealii::Utilities::MPI::sum(base, GlobalMPI.communicators_by_level[level]);
   print_info("NonLocalProblem::compute_signal_strength_of_solution", "End");
+  return integral_sum / mode_sum;
 }
 
 FEErrorStruct NonLocalProblem::compute_global_errors(dealii::LinearAlgebra::distributed::Vector<ComplexNumber> * in_solution) {

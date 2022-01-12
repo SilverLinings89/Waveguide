@@ -12,7 +12,7 @@
 
 HierarchicalProblem::~HierarchicalProblem() { }
 
-HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level, SweepingDirection in_direction) :
+HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level, SweepingDirection ) :
   level(in_own_level) {
   
   sweeping_direction = get_sweeping_direction_for_level(in_own_level);

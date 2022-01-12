@@ -34,7 +34,6 @@ void JacobianForCell::reinit(FaceAngelingData &in_fad, const BoundaryId &in_bid,
     F[1]                   = y;
     F[2]                   = (z-z0);
   } else {
-    // TODO: This needs to be implemented for PSE-103 
     F[0]                   = x;
     F[1]                   = y;
     F[2]                   = (z-z0);

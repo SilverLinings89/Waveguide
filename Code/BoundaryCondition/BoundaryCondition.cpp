@@ -110,7 +110,7 @@ double BoundaryCondition::boundary_surface_norm(NumericVectorDistributed * in_v,
   return std::sqrt(ret);
 }
 
-unsigned int BoundaryCondition::cells_for_boundary_id(unsigned int boundary_id) {
+unsigned int BoundaryCondition::cells_for_boundary_id(unsigned int) {
   return 0;
 }
 

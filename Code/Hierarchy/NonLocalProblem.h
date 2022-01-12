@@ -65,7 +65,7 @@ private:
 
   std::string output_results();
 
-  void write_multifile_output(const std::string & filename, const NumericVectorDistributed field);
+  void write_multifile_output(const std::string & filename);
 
   void communicate_external_dsp(DynamicSparsityPattern * in_dsp);
 

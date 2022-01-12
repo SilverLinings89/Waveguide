@@ -163,7 +163,6 @@ void NeighborSurface::send() {
 			}
 		}
 	}
-	int tag = generate_tag(global_partner_mpi_rank, GlobalParams.MPI_Rank, level);
 	std::vector<unsigned int> send_buffer;
 	send_buffer.resize(n_dofs);
 	for(unsigned int i =0 ; i < n_dofs; i++) {
@@ -189,10 +188,9 @@ void NeighborSurface::send() {
 void NeighborSurface::receive() {
 	std::vector<unsigned int> recv_buffer;
 	recv_buffer.resize(n_dofs);
-	int tag = generate_tag(GlobalParams.MPI_Rank, global_partner_mpi_rank, level);
 	MPI_Status recv_status;
 	const int recv_count = (int) n_dofs;
-	int status = MPI_Recv(recv_buffer.data(), recv_count, MPI_UNSIGNED, global_partner_mpi_rank, b_id + 1, MPI_COMM_WORLD, &recv_status);
+	MPI_Recv(recv_buffer.data(), recv_count, MPI_UNSIGNED, global_partner_mpi_rank, b_id + 1, MPI_COMM_WORLD, &recv_status);
 	int actual_receive;
 	MPI_Get_count(&recv_status, MPI_UNSIGNED, &actual_receive);
 	unsigned int counter = 0;
