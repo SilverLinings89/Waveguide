@@ -345,7 +345,6 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
     Position p = it->center();
     MaterialTensor transformation;
     if(apply_transformation) {
-      transformation = 0;
       for(unsigned int i = 0 ; i < 3; i++) {
         for(unsigned int j = 0; j < 3; j++) {
           if(i == j) {
