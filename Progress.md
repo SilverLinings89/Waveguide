@@ -890,3 +890,7 @@ Today, I am fixing the last details about the convergence runs and I will prepar
 # Saturday, 8th of January
 
 I ran a comparison and MUMPS appears to be slightly faster than UMFPACK, so I will not change the localproblem implementation to use the dealii-interface for UMFPACK. Next I will try the flag for symmetry.
+
+# Thursday, 13th of January
+
+After working on the dissertation for some days, I have come back to the code to work on evaluating the results of the large computations. The outcome is, that the results show a too low resolution in z-direction, which will make more computations necessary. I will switch to 10x10x60 cells instead of 10x10x40 and reduce the convergence criterion to 1e-04 rather than 1e-06 to speed things up.
