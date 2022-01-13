@@ -443,7 +443,10 @@ std::string NonLocalProblem::output_results() {
   update_shared_solution_vector();
   FEErrorStruct errors = compute_global_errors(&shared_solution);
   std::cout << "Errors: L2 = " << errors.L2 << " and Linfty  = " << errors.Linfty <<std::endl;
-  write_multifile_output("solution");
+  write_multifile_output("solution", false);
+  if(GlobalParams.Output_transformed_solution) {
+    write_multifile_output("transformed_solution", true);
+  }
   ComplexNumber signal_strength = compute_signal_strength_of_solution();
   std::cout << "Signal strength: " << signal_strength << " with norm " << std::abs(signal_strength)<< std::endl;
   print_info("NonLocalProblem", "End output results on level" + std::to_string(level));
@@ -458,7 +461,9 @@ void NonLocalProblem::update_shared_solution_vector() {
   shared_solution.update_ghost_values();
 }
 
-void NonLocalProblem::write_multifile_output(const std::string & in_filename) {
+
+
+void NonLocalProblem::write_multifile_output(const std::string & in_filename, bool transform) {
   if(GlobalParams.MPI_Rank == 0 && !GlobalParams.solve_directly) {
     residual_output->run_gnuplot();
     if(level > 1) {
@@ -475,9 +480,10 @@ void NonLocalProblem::write_multifile_output(const std::string & in_filename) {
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     local_solution[i] = shared_solution[Geometry.levels[level].inner_domain->global_index_mapping[i]];
   }
-  std::string file_1 = Geometry.levels[level].inner_domain->output_results(in_filename + std::to_string(level) , local_solution);
+
+  std::string file_1 = Geometry.levels[level].inner_domain->output_results(in_filename + std::to_string(level) , local_solution, transform);
   generated_files.push_back(file_1);
-  if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML) {
+  if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML && !transform) {
     for (unsigned int surf = 0; surf < 6; surf++) {
       if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE){
         dealii::Vector<ComplexNumber> ds (Geometry.levels[level].surfaces[surf]->n_locally_active_dofs);

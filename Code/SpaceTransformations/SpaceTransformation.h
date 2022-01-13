@@ -42,6 +42,8 @@ class SpaceTransformation {
 
   const unsigned int boundary_dofs_out;
 
+  bool apply_math_to_phys = true;
+
   SpaceTransformation(int);
 
   virtual Position math_to_phys(Position coord) const = 0;
@@ -56,6 +58,7 @@ class SpaceTransformation {
 
   virtual Tensor<2, 3, ComplexNumber> get_Tensor_for_step(Position &coordinate, unsigned int dof, double step_width);
 
+  void switch_application_mode(bool apply_math_to_physical);
   /**
    * The material-property \f$\epsilon_r\f$ has a different value inside and
    * outside of the waveguides core. This variable stores its value inside the
@@ -238,5 +241,7 @@ class SpaceTransformation {
    * Console output of the current Waveguide Structure.
    */
   virtual void Print() const = 0;
+
+  Position operator()(Position ) const;
 
 };

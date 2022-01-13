@@ -86,4 +86,13 @@ Tensor<2, 3, ComplexNumber> SpaceTransformation::get_Tensor_for_step(
 
   set_dof(dof, old_value);
   return trafo2 - trafo1;
+
+}
+
+Position SpaceTransformation::operator()(Position in_p) const {
+  return math_to_phys(in_p);
+}
+
+void SpaceTransformation::switch_application_mode(bool appl_math_to_phys) {
+  apply_math_to_phys = appl_math_to_phys;
 }

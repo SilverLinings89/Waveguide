@@ -9,4 +9,5 @@ subsection Run parameters
   set cell count y           = 10
   set cell count z           = 10
   set Logging Level          = Debug One
+  set output transformed solution = true
 end

@@ -336,8 +336,36 @@ void InnerDomain::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase
   print_info("InnerDomain::write_matrix_and_rhs_metrics", "End");
 }
 
-std::string InnerDomain::output_results(std::string in_filename, NumericVectorLocal in_solution) {
+std::string InnerDomain::output_results(std::string in_filename, NumericVectorLocal in_solution, bool apply_transformation) {
   print_info("InnerDomain::output_results()", "Start");
+  const unsigned int n_cells = dof_handler.get_triangulation().n_active_cells();
+  dealii::Vector<double> eps_abs(n_cells);
+  unsigned int counter = 0; 
+  for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
+    Position p = it->center();
+    MaterialTensor transformation;
+    if(apply_transformation) {
+      transformation = 0;
+      for(unsigned int i = 0 ; i < 3; i++) {
+        transformation[i][i] = 1;
+      }
+    } else {
+      transformation = GlobalSpaceTransformation->get_Space_Transformation_Tensor(p);
+    }
+    MaterialTensor epsilon;
+    const double kappa_2 = Geometry.kappa_2();
+    if (Geometry.math_coordinate_in_waveguide(p)) {
+      epsilon = transformation * GlobalParams.Epsilon_R_in_waveguide;
+    } else {
+      epsilon = transformation * GlobalParams.Epsilon_R_outside_waveguide;
+    }
+    eps_abs[counter] = epsilon.norm();
+    counter++;
+  }
+  if(apply_transformation) {
+    GlobalSpaceTransformation->switch_application_mode(true);
+    dealii::GridTools::transform(*GlobalSpaceTransformation, triangulation);
+  }
   data_out.clear();
   data_out.attach_dof_handler(dof_handler);
   data_out.add_data_vector(in_solution, "Solution");
@@ -352,12 +380,15 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
   local_constraints.close();
   dealii::Vector<ComplexNumber> interpolated_exact_solution(in_solution.size());
   VectorTools::project(dof_handler, local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *esc, interpolated_exact_solution);
-  
+  data_out.add_data_vector(eps_abs, "Epsilon");
   data_out.add_data_vector(interpolated_exact_solution, "Exact_Solution");
   
   data_out.build_patches();
   data_out.write_vtu(outputvtu);
-
+  if(apply_transformation) {
+    GlobalSpaceTransformation->switch_application_mode(false);
+    dealii::GridTools::transform(*GlobalSpaceTransformation, triangulation);
+  }
   print_info("InnerDomain::output_results()", "End");
   return filename;
 }

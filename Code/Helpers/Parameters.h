@@ -30,6 +30,8 @@ struct Parameters {
 
     double Amplitude_of_input_signal = 1.0;
 
+    bool Output_transformed_solution = false;
+
     double Width_of_waveguide = 2.0; // x-direction
 
     double Height_of_waveguide = 1.8; // y-direction

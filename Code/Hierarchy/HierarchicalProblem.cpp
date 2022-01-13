@@ -106,7 +106,7 @@ std::string HierarchicalProblem::output_results(std::string in_fname_part) {
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->dof_handler.n_dofs(); i++) {
     in_solution[i] = solution[Geometry.levels[level].inner_domain->global_index_mapping[i]];
   }
-  std::string file_1 = Geometry.levels[level].inner_domain->output_results(in_fname_part + std::to_string(level) , in_solution);
+  std::string file_1 = Geometry.levels[level].inner_domain->output_results(in_fname_part + std::to_string(level) , in_solution, false);
   ret = file_1;
   filenames.clear();
   filenames.push_back(file_1);

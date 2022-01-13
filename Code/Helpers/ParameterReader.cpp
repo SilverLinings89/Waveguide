@@ -38,6 +38,7 @@ void ParameterReader::declare_parameters() {
         run_prm.declare_entry("cell count x" , "20", Patterns::Integer(), "Number of cells a single process has in x-direction.");
         run_prm.declare_entry("cell count y" , "20", Patterns::Integer(), "Number of cells a single process has in y-direction.");
         run_prm.declare_entry("cell count z" , "20", Patterns::Integer(), "Number of cells a single process has in z-direction.");
+        run_prm.declare_entry("output transformed solution", "false", Patterns::Bool(), "If set to true, both the solution in mathematical and in physical coordinates will be written as outputs.");
         run_prm.declare_entry("Logging Level", "Production One", Patterns::Selection("Production One|Production All|Debug One|Debug All"), "Specifies which messages should be printed and by whom.");
     }
     run_prm.leave_subsection();
@@ -104,7 +105,7 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.Cells_in_y = run_prm.get_integer("cell count y");
         ret.Cells_in_z = run_prm.get_integer("cell count z");
         std::string logging = run_prm.get("Logging Level");
-        
+        ret.Output_transformed_solution = run_prm.get_bool("output transformed solution");
         if(logging == "Debug One") ret.Logging_Level = LoggingLevel::DEBUG_ONE;
         if(logging == "Debug All") ret.Logging_Level = LoggingLevel::DEBUG_ALL;
         if(logging == "Production One") ret.Logging_Level = LoggingLevel::PRODUCTION_ONE;

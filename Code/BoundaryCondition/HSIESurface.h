@@ -51,6 +51,7 @@ public:
   void fill_matrix(dealii::SparseMatrix<ComplexNumber>*,  Constraints *constraints) override;
   void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;
   void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;
+  void fill_matrix_for_edge(BoundaryId other_bid, dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints);
   void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constriants) override;
   bool is_point_at_boundary(Position2D in_p, BoundaryId in_bid) override;
   auto get_vertices_for_boundary_id(BoundaryId) -> std::vector<unsigned int>;

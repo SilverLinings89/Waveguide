@@ -103,7 +103,7 @@ class InnerDomain: public FEDomain {
   std::vector<InterfaceDofData> get_surface_dof_vector_for_boundary_id(BoundaryId b_id);
   void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_pattern, Constraints *constraints);
   void write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs);
-  std::string output_results(std::string in_filename, NumericVectorLocal in_solution);
+  std::string output_results(std::string in_filename, NumericVectorLocal in_solution, bool apply_space_transformation);
   void fill_rhs_vector(NumericVectorDistributed in_vec, unsigned int level);
   DofCount compute_n_locally_owned_dofs() override;
   DofCount compute_n_locally_active_dofs() override;
