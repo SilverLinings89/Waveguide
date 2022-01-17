@@ -32,3 +32,21 @@ For 27 got id Submitted batch job 20347895
 For 29 got id Submitted batch job 20347896
 For 31 got id Submitted batch job 20347897
 For 33 got id Submitted batch job 20347898
+
+Cases with output of epsilon, more cells in direction z and transformed geometry solution output:
+For 3 got id Submitted batch job 20367991
+For 5 got id Submitted batch job 20367992
+For 7 got id Submitted batch job 20367993
+For 9 got id Submitted batch job 20367994
+For 11 got id Submitted batch job 20367995
+For 13 got id Submitted batch job 20367996
+For 15 got id Submitted batch job 20367997
+For 17 got id Submitted batch job 20367998
+For 19 got id Submitted batch job 20367999
+For 21 got id Submitted batch job 20368000
+For 23 got id Submitted batch job 20368001
+For 25 got id Submitted batch job 20368002
+For 27 got id Submitted batch job 20368003
+For 29 got id Submitted batch job 20368004
+For 31 got id Submitted batch job 20368005
+For 33 got id Submitted batch job 20368006

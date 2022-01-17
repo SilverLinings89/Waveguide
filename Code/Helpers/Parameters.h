@@ -149,8 +149,6 @@ struct Parameters {
 
     double relative_convergence_criterion = 0.01;
 
-    double absolute_convergence_criterion = 1e-6;
-
     bool Perform_Convergence_Test = false;
 
     unsigned int convergence_max_cells = 20;

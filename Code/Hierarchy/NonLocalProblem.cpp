@@ -172,7 +172,7 @@ void NonLocalProblem::init_solver_and_preconditioner() {
   KSPGMRESSetRestart(ksp, GlobalParams.GMRES_max_steps);
   KSPMonitorSet(ksp, MonitorError, this, nullptr);
   KSPSetUp(ksp);
-  KSPSetTolerances(ksp, 1e-10, GlobalParams.absolute_convergence_criterion, 1000, GlobalParams.GMRES_max_steps);
+  KSPSetTolerances(ksp, 1e-10, GlobalParams.Solver_Precision, 1000, GlobalParams.GMRES_max_steps);
 }
 
 void NonLocalProblem::reinit_rhs() {
@@ -726,7 +726,7 @@ void NonLocalProblem::update_convergence_criterion(double last_residual) {
       base_value = 1.0;
     }
     double new_abort_limit = base_value * GlobalParams.relative_convergence_criterion;
-    new_abort_limit = std::max(new_abort_limit, GlobalParams.absolute_convergence_criterion);
+    new_abort_limit = std::max(new_abort_limit, GlobalParams.Solver_Precision);
     KSPSetTolerances(ksp, 1e-10,new_abort_limit , 1000, GlobalParams.GMRES_max_steps);
     // std::cout << "Setting level " << level << " convergence criterion to " << new_abort_limit << std::endl;
   }
