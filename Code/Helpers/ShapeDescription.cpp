@@ -10,8 +10,14 @@ ShapeDescription::ShapeDescription() {}
 
 ShapeDescription::~ShapeDescription() {}
 
+void ShapeDescription::SetStraight() {
+  z.push_back(GlobalParams.global_z_shift);
+  z.push_back(GlobalParams.Geometry_Size_Z + GlobalParams.global_z_shift);
+  m.push_back(0);
+  m.push_back(0);
+}
+
 void ShapeDescription::SetByString(std::string str) {
-  std::vector<std::string> ret;
   std::istringstream iss(str);
   std::string token;
   std::getline(iss, token, ',');

@@ -21,9 +21,6 @@ Simulation::Simulation() {
 }
 
 Simulation::~Simulation() {
-  MPI_Barrier(MPI_COMM_WORLD);
-  delete rmProblem;
-  delete mainProblem;
 }
 
 void Simulation::create_output_directory() {

@@ -449,7 +449,7 @@ double ModeManager::get_u0(double v) {
   }
 
   for (unsigned int i = 0; i < locations.size(); i++) {
-    print_info("ModeManager::get_u0", "sign change near " + std::to_string(locations[i]), false, LoggingLevel::DEBUG_ALL);
+    print_info("ModeManager::get_u0", "sign change near " + std::to_string(locations[i]), LoggingLevel::DEBUG_ALL);
   }
 
   std::vector<double> us;
@@ -478,7 +478,7 @@ double ModeManager::get_u0(double v) {
   }
 
   for (unsigned int i = 0; i < us.size(); i++) {
-    print_info("ModeManager::get_u0", "intersection at " + std::to_string(us[i]), false, LoggingLevel::DEBUG_ALL);
+    print_info("ModeManager::get_u0", "intersection at " + std::to_string(us[i]), LoggingLevel::DEBUG_ALL);
   }
 
   if (us.size() > 0) {

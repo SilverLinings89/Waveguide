@@ -29,7 +29,7 @@ void HierarchicalProblem::constrain_identical_dof_sets(
     Constraints *affine_constraints) {
   const unsigned int n_entries = set_one->size();
   if (n_entries != set_two->size()) {
-    print_info("HierarchicalProblem::constrain_identical_dof_sets", "There was an error in constrain_identical_dof_sets. No changes made.", false, LoggingLevel::PRODUCTION_ALL);
+    print_info("HierarchicalProblem::constrain_identical_dof_sets", "There was an error in constrain_identical_dof_sets. No changes made.", LoggingLevel::PRODUCTION_ALL);
   }
 
   for (unsigned int index = 0; index < n_entries; index++) {

@@ -91,11 +91,15 @@ int main(int argc, char *argv[]) {
   simulation->create_output_directory();
   simulation->prepare_transformed_geometry();
 
-  print_info("Main", "Prepare Simulation", true);
+  print_info("Main", "Prepare Simulation");
   simulation->prepare();
 
-  print_info("Main", "Run Simulation", true);
+  print_info("Main", "Run Simulation");
   simulation->run();
+  
+  MPI_Barrier(MPI_COMM_WORLD);
+  print_info("Main", "Shutting down");
+  delete simulation;
 
   MPI_Barrier(MPI_COMM_WORLD);
   return 0;

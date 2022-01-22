@@ -57,13 +57,13 @@ void InnerDomain::make_grid() {
   repetitions.push_back(GlobalParams.Cells_in_z);
   std::string m = "Cells: " + std::to_string(GlobalParams.Cells_in_x) + " x " + std::to_string(GlobalParams.Cells_in_y) + " x " + std::to_string(GlobalParams.Cells_in_z) + " Geometry: [" + std::to_string(Geometry.local_x_range.first) + "," + std::to_string(Geometry.local_x_range.second);
   m += "] x [" + std::to_string(Geometry.local_y_range.first) + "," + std::to_string(Geometry.local_y_range.second) + "] x [" + std::to_string(Geometry.local_z_range.first) + "," + std::to_string(Geometry.local_z_range.second) + "]";
-  print_info("InnerDomain::make_grid", m, false, LoggingLevel::PRODUCTION_ALL);
+  print_info("InnerDomain::make_grid", m, LoggingLevel::PRODUCTION_ALL);
   Position lower(Geometry.local_x_range.first, Geometry.local_y_range.first, Geometry.local_z_range.first);
   Position upper(Geometry.local_x_range.second, Geometry.local_y_range.second, Geometry.local_z_range.second);
   dealii::GridGenerator::subdivided_hyper_rectangle(temp_tria, repetitions, lower, upper, true);
   triangulation = reforge_triangulation(&temp_tria);
   dof_handler.distribute_dofs(fe);
-  print_info("InnerDomain::make_grid", "Mesh Preparation finished. System has " + std::to_string(dof_handler.n_dofs()) + " degrees of freedom.", false, LoggingLevel::PRODUCTION_ONE);
+  print_info("InnerDomain::make_grid", "Mesh Preparation finished. System has " + std::to_string(dof_handler.n_dofs()) + " degrees of freedom.", LoggingLevel::PRODUCTION_ONE);
 }
 
 bool compareIndexCenterPairs(std::pair<int, double> c1, std::pair<int, double> c2) {
@@ -92,7 +92,7 @@ std::vector<InterfaceDofData> InnerDomain::get_surface_dof_vector_for_boundary_i
       bool found_one = false;
       for (unsigned int face = 0; face < 6; face++) {
         if (cell->face(face)->boundary_id() == b_id && found_one) {
-          print_info("InnerDomain::get_surface_dof_vector_for_boundary_id", "There was an error!", false, LoggingLevel::PRODUCTION_ALL);
+          print_info("InnerDomain::get_surface_dof_vector_for_boundary_id", "There was an error!", LoggingLevel::PRODUCTION_ALL);
         }
         if (cell->face(face)->boundary_id() == b_id) {
           found_one = true;
@@ -331,8 +331,8 @@ void InnerDomain::assemble_system(Constraints * constraints,
 
 void InnerDomain::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs) {
   print_info("InnerDomain::write_matrix_and_rhs_metrics", "Start", LoggingLevel::DEBUG_ALL);
-  print_info("InnerDomain::write_matrix_and_rhs", "System Matrix l_1 norm: " + std::to_string(matrix->l1_norm()), false, LoggingLevel::PRODUCTION_ALL);
-  print_info("InnerDomain::write_matrix_and_rhs", "RHS L_2 norm:  " + std::to_string(rhs->l2_norm()), false, LoggingLevel::PRODUCTION_ALL);
+  print_info("InnerDomain::write_matrix_and_rhs", "System Matrix l_1 norm: " + std::to_string(matrix->l1_norm()), LoggingLevel::PRODUCTION_ALL);
+  print_info("InnerDomain::write_matrix_and_rhs", "RHS L_2 norm:  " + std::to_string(rhs->l2_norm()), LoggingLevel::PRODUCTION_ALL);
   print_info("InnerDomain::write_matrix_and_rhs_metrics", "End");
 }
 
@@ -358,7 +358,6 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
       transformation = GlobalSpaceTransformation->get_Space_Transformation_Tensor(p);
     }
     MaterialTensor epsilon;
-    const double kappa_2 = Geometry.kappa_2();
     if (Geometry.math_coordinate_in_waveguide(p)) {
       epsilon = transformation * GlobalParams.Epsilon_R_in_waveguide;
     } else {
@@ -441,23 +440,28 @@ ComplexNumber InnerDomain::compute_signal_strength(dealii::LinearAlgebra::distri
     }
     Vector<ComplexNumber> fe_evaluation(3);
     Vector<ComplexNumber> mode(3);
-    const unsigned int n_steps_x = (GlobalParams.Cells_in_x - 1);
-    const unsigned int n_steps_y = (GlobalParams.Cells_in_y - 1);
-    const double x_step_width = (Geometry.local_x_range.second - Geometry.local_x_range.first) / GlobalParams.Cells_in_x;
-    const double y_step_width = (Geometry.local_y_range.second - Geometry.local_y_range.first) / GlobalParams.Cells_in_y;
-    ComplexNumber temp(0,0);
-    for(unsigned int x = 0; x < n_steps_x; x++) {
-      for(unsigned int y = 0; y < n_steps_y; y++) {
-        Position quadrature_point(Geometry.local_x_range.first + (0.5 + x) * x_step_width, Geometry.local_y_range.first + (0.5+y) * y_step_width, Geometry.local_z_range.second);
-        VectorTools::point_value(dof_handler, local_solution, quadrature_point, fe_evaluation);
-        GlobalParams.source_field->vector_value(quadrature_point, mode);
-        for(unsigned int comp = 0; comp < 3; comp++) {
-          mode[comp] = conjugate(mode[comp]);
-        }
-        ret += fe_evaluation[0]*mode[0] + fe_evaluation[1]*mode[1] + fe_evaluation[2] * mode[2];
+    std::vector<Position> quadrature_points;
+    for(auto cell : triangulation) {
+      if(cell.at_boundary()) {
+        for(unsigned int i = 0; i < 6; i++) {
+          if(cell.face(i)->boundary_id() == 5) {
+            quadrature_points.push_back(cell.face(i)->center());
+          }
+        } 
       }
     }
-    ret /= (n_steps_x * n_steps_y);
+    for(unsigned int index = 0; index < quadrature_points.size(); index++) {
+      quadrature_points[index][2] = quadrature_points[index][2] - 2 * FLOATING_PRECISION; // This is only to make sure that even on large mesges, there are no rounding errors that lead the code to throw an error because the position isnt "inside" the mesh.
+    }
+    for(unsigned int index = 0; index < quadrature_points.size(); index++) {
+      VectorTools::point_value(dof_handler, local_solution, quadrature_points[index], fe_evaluation);
+      GlobalParams.source_field->vector_value(quadrature_points[index], mode);
+      for(unsigned int comp = 0; comp < 3; comp++) {
+        mode[comp] = conjugate(mode[comp]);
+      }
+      ret += fe_evaluation[0]*mode[0] + fe_evaluation[1]*mode[1] + fe_evaluation[2] * mode[2];
+    }
+    ret /= (quadrature_points.size());
     return ret;
   } 
   return ret;
@@ -467,22 +471,27 @@ ComplexNumber InnerDomain::compute_mode_strength() {
   ComplexNumber ret(0,0);
   if(GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction - 1) {
     Vector<ComplexNumber> mode_a(3), mode_b(3);
-    const unsigned int n_steps_x = (GlobalParams.Cells_in_x - 1);
-    const unsigned int n_steps_y = (GlobalParams.Cells_in_y - 1);
-    const double x_step_width = (Geometry.local_x_range.second - Geometry.local_x_range.first) / GlobalParams.Cells_in_x;
-    const double y_step_width = (Geometry.local_y_range.second - Geometry.local_y_range.first) / GlobalParams.Cells_in_y;
-    ComplexNumber temp(0,0);
-    for(unsigned int x = 0; x < n_steps_x; x++) {
-      for(unsigned int y = 0; y < n_steps_y; y++) {
-        Position quadrature_point(Geometry.local_x_range.first + (0.5 + x) * x_step_width, Geometry.local_y_range.first + (0.5+y) * y_step_width, Geometry.local_z_range.second);
-        GlobalParams.source_field->vector_value(quadrature_point, mode_a);
-        for(unsigned int comp = 0; comp < 3; comp++) {
-          mode_b[comp] = conjugate(mode_a[comp]);
-        }
-        ret += mode_a[0]*mode_b[0] + mode_a[1]*mode_b[1] + mode_a[2] * mode_b[2];
+    std::vector<Position> quadrature_points;
+    for(auto cell : triangulation) {
+      if(cell.at_boundary()) {
+        for(unsigned int i = 0; i < 6; i++) {
+          if(cell.face(i)->boundary_id() == 5) {
+            quadrature_points.push_back(cell.face(i)->center());
+          }
+        } 
       }
     }
-    ret /= (n_steps_x * n_steps_y);
+    for(unsigned int index = 0; index < quadrature_points.size(); index++) {
+      quadrature_points[index][2] = quadrature_points[index][2] - 2 * FLOATING_PRECISION;
+    }
+    for(unsigned int index = 0; index < quadrature_points.size(); index++) {
+      GlobalParams.source_field->vector_value(quadrature_points[index], mode_a);
+      for(unsigned int comp = 0; comp < 3; comp++) {
+        mode_b[comp] = conjugate(mode_a[comp]);
+      }
+      ret += mode_a[0]*mode_b[0] + mode_a[1]*mode_b[1] + mode_a[2] * mode_b[2];
+    }
+    ret /= (quadrature_points.size());
     return ret;
   } 
   return ret;

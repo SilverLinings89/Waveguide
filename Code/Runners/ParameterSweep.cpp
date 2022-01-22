@@ -23,15 +23,15 @@ ParameterSweep::~ParameterSweep() {
 }
 
 void ParameterSweep::prepare() {
-  print_info("ParameterSweep::prepare", "Start", true, LoggingLevel::DEBUG_ONE);
+  print_info("ParameterSweep::prepare", "Start", LoggingLevel::DEBUG_ONE);
   if(GlobalParams.Point_Source_Type == 0) {
     rmProblem = new RectangularMode();
   } 
-  print_info("ParameterSweep::prepare", "End", true, LoggingLevel::DEBUG_ONE);
+  print_info("ParameterSweep::prepare", "End", LoggingLevel::DEBUG_ONE);
 }
 
 void ParameterSweep::run() {
-  print_info("ParameterSweep::run", "Start", true, LoggingLevel::PRODUCTION_ONE);
+  print_info("ParameterSweep::run", "Start", LoggingLevel::PRODUCTION_ONE);
   const unsigned int n_order_steps = (GlobalParams.Max_HSIE_Order - GlobalParams.Min_HSIE_Order) / 3;
   double ** errors = new double*[GlobalParams.N_Kappa_0_Steps];
   for(unsigned int i = 0; i < GlobalParams.N_Kappa_0_Steps; i++) {
@@ -54,7 +54,7 @@ void ParameterSweep::run() {
                       std::to_string(GlobalParams.kappa_0.real()) + " + " +
                       std::to_string(GlobalParams.kappa_0.imag()) +
                       ") and order " + std::to_string(order),
-                  false, LoggingLevel::PRODUCTION_ALL);
+                  LoggingLevel::PRODUCTION_ALL);
         mainProblem = new LocalProblem();
 
         mainProblem->initialize();
@@ -101,7 +101,7 @@ void ParameterSweep::run() {
     myfile.close();
   }
   
-  print_info("ParameterSweep::run", "End", true, LoggingLevel::PRODUCTION_ONE);
+  print_info("ParameterSweep::run", "End", LoggingLevel::PRODUCTION_ONE);
 }
 
 void ParameterSweep::prepare_transformed_geometry() { }

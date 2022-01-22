@@ -80,7 +80,7 @@ dealii::IndexSet LocalProblem::compute_interface_dof_set(BoundaryId interface_id
 void LocalProblem::initialize() {
   print_info("LocalProblem::initialize", "Start");
   GlobalTimerManager.switch_context("Initialize", 0);
-  print_info("LocalProblem::initialize", "Number of local dofs: " + std::to_string(Geometry.levels[0].n_local_dofs) , false, LoggingLevel::DEBUG_ALL);
+  print_info("LocalProblem::initialize", "Number of local dofs: " + std::to_string(Geometry.levels[0].n_local_dofs), LoggingLevel::DEBUG_ALL);
   reinit();
   GlobalTimerManager.leave_context(0);
   print_info("LocalProblem::initialize", "End");
@@ -88,7 +88,7 @@ void LocalProblem::initialize() {
 
 void LocalProblem::validate() {
   print_info("LocalProblem::validate", "Start");
-  print_info("LocalProblem::validate", "Matrix size: (" + std::to_string(matrix->m()) + " x "  + std::to_string(matrix->n()) + ") and l1-norm " + std::to_string(matrix->l1_norm()), false, LoggingLevel::PRODUCTION_ONE);
+  print_info("LocalProblem::validate", "Matrix size: (" + std::to_string(matrix->m()) + " x "  + std::to_string(matrix->n()) + ") and l1-norm " + std::to_string(matrix->l1_norm()), LoggingLevel::PRODUCTION_ONE);
   print_info("LocalProblem::validate", "End");
 }
 
@@ -204,12 +204,12 @@ auto LocalProblem::compare_to_exact_solution() -> void {
 
 void LocalProblem::compute_solver_factorization() {
   Timer timer1;
-  // print_info("LocalProblem::compute_solver_factorization", "Begin solver factorization: ", true, LoggingLevel::PRODUCTION_ONE);
+  print_info("LocalProblem::compute_solver_factorization", "Begin solver factorization: ", LoggingLevel::PRODUCTION_ONE);
   timer1.start();
   solve();
   timer1.stop();
   solution = 0;
-  // print_info("LocalProblem::compute_solver_factorization", "Walltime: " + std::to_string(timer1.wall_time()) , true, LoggingLevel::PRODUCTION_ONE);
+  print_info("LocalProblem::compute_solver_factorization", "Walltime: " + std::to_string(timer1.wall_time()) , LoggingLevel::PRODUCTION_ONE);
 }
 
 double LocalProblem::compute_error(dealii::VectorTools::NormType in_norm, Function<3,ComplexNumber> * in_exact, dealii::Vector<ComplexNumber> & in_solution, dealii::DataOut<3> * in_data_out) {

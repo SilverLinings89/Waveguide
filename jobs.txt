@@ -50,3 +50,39 @@ For 27 got id Submitted batch job 20368003
 For 29 got id Submitted batch job 20368004
 For 31 got id Submitted batch job 20368005
 For 33 got id Submitted batch job 20368006
+
+Rerun with higher time limits:
+For 3 got id Submitted batch job 20379790
+For 5 got id Submitted batch job 20379791
+For 7 got id Submitted batch job 20379792
+For 9 got id Submitted batch job 20379793
+For 11 got id Submitted batch job 20379794
+For 13 got id Submitted batch job 20379795
+For 15 got id Submitted batch job 20379796
+For 17 got id Submitted batch job 20379797
+For 19 got id Submitted batch job 20379798
+For 21 got id Submitted batch job 20379799
+For 23 got id Submitted batch job 20379800
+For 25 got id Submitted batch job 20379801
+For 27 got id Submitted batch job 20379802
+For 29 got id Submitted batch job 20379803
+For 31 got id Submitted batch job 20379804
+For 33 got id Submitted batch job 20379805
+
+Final relaunch: 
+For 3 got id Submitted batch job 20379807
+For 5 got id Submitted batch job 20379808
+For 7 got id Submitted batch job 20379809
+For 9 got id Submitted batch job 20379810
+For 11 got id Submitted batch job 20379811
+For 13 got id Submitted batch job 20379812
+For 15 got id Submitted batch job 20379813
+For 17 got id Submitted batch job 20379814
+For 19 got id Submitted batch job 20379815
+For 21 got id Submitted batch job 20379816
+For 23 got id Submitted batch job 20379817
+For 25 got id Submitted batch job 20379818
+For 27 got id Submitted batch job 20379819
+For 29 got id Submitted batch job 20379820
+For 31 got id Submitted batch job 20379821
+For 33 got id Submitted batch job 20379822

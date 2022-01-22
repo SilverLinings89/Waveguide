@@ -37,7 +37,7 @@ void ConvergenceRun::set_norming_factor() {
 }
 
 void ConvergenceRun::prepare() {
-  print_info("ConvergenceRun::prepare", "Start", true, LoggingLevel::DEBUG_ONE);
+  print_info("ConvergenceRun::prepare", "Start", LoggingLevel::DEBUG_ONE);
   GlobalParams.Cells_in_x = GlobalParams.convergence_max_cells;
   GlobalParams.Cells_in_y = GlobalParams.convergence_max_cells;
   GlobalParams.Cells_in_z = GlobalParams.convergence_max_cells;
@@ -67,11 +67,11 @@ void ConvergenceRun::prepare() {
   evaluation_base_problem = mainProblem->evaluate_solution_at(evaluation_positions);
   base_problem_theoretical_error = compute_error_for_two_eval_vectors(evaluation_base_problem, evaluation_exact_solution);
   delete mainProblem;
-  print_info("ConvergenceRun::prepare", "End", true, LoggingLevel::DEBUG_ONE);
+  print_info("ConvergenceRun::prepare", "End", LoggingLevel::DEBUG_ONE);
 }
 
 void ConvergenceRun::run() {
-    print_info("ConvergenceRun::run", "Start", true, LoggingLevel::PRODUCTION_ONE);
+    print_info("ConvergenceRun::run", "Start", LoggingLevel::PRODUCTION_ONE);
     for(unsigned int run_index = 0; run_index < GlobalParams.convergence_cell_counts.size()-1; run_index++) {
       GlobalParams.Cells_in_x = GlobalParams.convergence_cell_counts[run_index];
       GlobalParams.Cells_in_y = GlobalParams.convergence_cell_counts[run_index];
@@ -88,7 +88,7 @@ void ConvergenceRun::run() {
       numerical_errors.push_back(numerical_error);
       theoretical_errors.push_back(theoretical_error);
       std::string msg = "Result: " + std::to_string(GlobalParams.convergence_cell_counts[run_index]) + " found numerical error " + std::to_string(numerical_error) + "and theoretical error " + std::to_string(theoretical_error);
-      print_info("ConvergenceRun::run", msg , true, LoggingLevel::PRODUCTION_ONE);
+      print_info("ConvergenceRun::run", msg , LoggingLevel::PRODUCTION_ONE);
       unsigned int temp_ndofs = otherProblem->compute_total_number_of_dofs();
       n_dofs_for_cases.push_back(temp_ndofs);
       h_values.push_back(otherProblem->compute_h());
@@ -98,7 +98,7 @@ void ConvergenceRun::run() {
     }
     write_outputs();
 
-    print_info("ConvergenceRun::run", "End", true, LoggingLevel::PRODUCTION_ONE);
+    print_info("ConvergenceRun::run", "End", LoggingLevel::PRODUCTION_ONE);
 }
 
 void ConvergenceRun::prepare_transformed_geometry() {
@@ -106,32 +106,32 @@ void ConvergenceRun::prepare_transformed_geometry() {
 
 void ConvergenceRun::write_outputs() {
     std::string msg = "The base problem had " + std::to_string(base_problem_n_dofs) + " dofs, " + std::to_string(base_problem_n_cells) + " cells, h was " + std::to_string(base_problem_h) + " and a theoretical error of "+ std::to_string(base_problem_theoretical_error);
-    print_info("ConvergenceRun::results", msg, true, LoggingLevel::PRODUCTION_ONE);
+    print_info("ConvergenceRun::results", msg, LoggingLevel::PRODUCTION_ONE);
     msg =  "The computed numerical errors were: ";
     for(unsigned int i = 0; i < GlobalParams.convergence_cell_counts.size()-1; i++) {
       msg += std::to_string(numerical_errors[i]) + " ";
     }
-    print_info("ConvergenceRun::results", msg, true, LoggingLevel::PRODUCTION_ONE);
+    print_info("ConvergenceRun::results", msg, LoggingLevel::PRODUCTION_ONE);
     msg = "The computed theoretical errors were: ";
     for(unsigned int i = 0; i < GlobalParams.convergence_cell_counts.size()-1; i++) {
       msg += std::to_string(theoretical_errors[i]) + " ";
     }
-    print_info("ConvergenceRun::results", msg, true, LoggingLevel::PRODUCTION_ONE);
+    print_info("ConvergenceRun::results", msg, LoggingLevel::PRODUCTION_ONE);
     msg = "The cell counts were: ";
     for(unsigned int i = 0; i < GlobalParams.convergence_cell_counts.size()-1; i++) {
       msg += std::to_string(total_cells[i]) + " ";
     }
-    print_info("ConvergenceRun::results", msg, true, LoggingLevel::PRODUCTION_ONE);
+    print_info("ConvergenceRun::results", msg, LoggingLevel::PRODUCTION_ONE);
     msg = "The number of dofs were: ";
     for(unsigned int i = 0; i < GlobalParams.convergence_cell_counts.size()-1; i++) {
       msg += std::to_string(n_dofs_for_cases[i]) + " ";
     }
-    print_info("ConvergenceRun::results", msg, true, LoggingLevel::PRODUCTION_ONE);
+    print_info("ConvergenceRun::results", msg, LoggingLevel::PRODUCTION_ONE);
     msg = "The maximal values of h were: ";
     for(unsigned int i = 0; i < GlobalParams.convergence_cell_counts.size()-1; i++) {
       msg += std::to_string(h_values[i]) + " ";
     }
-    print_info("ConvergenceRun::results", msg, true, LoggingLevel::PRODUCTION_ONE);
+    print_info("ConvergenceRun::results", msg, LoggingLevel::PRODUCTION_ONE);
 
     output.set_title("Convergence History");
     output.write_gnuplot_file();

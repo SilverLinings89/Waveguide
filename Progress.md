@@ -894,3 +894,11 @@ I ran a comparison and MUMPS appears to be slightly faster than UMFPACK, so I wi
 # Thursday, 13th of January
 
 After working on the dissertation for some days, I have come back to the code to work on evaluating the results of the large computations. The outcome is, that the results show a too low resolution in z-direction, which will make more computations necessary. I will switch to 10x10x60 cells instead of 10x10x40 and reduce the convergence criterion to 1e-04 rather than 1e-06 to speed things up. I have done some additional work: There is now an input parameter, that enables output of the solution in physical coordinates. The norm of the epsilon at the cell center is now also written to the output. If the transformed solution is written, this is simply epsilon inside or outside the waveguide (the physical property epsilon_r). Otherwise, this also includes the material tensor from transformation optics. The jobs have been re-submitted and the ids included in the jobs file.
+
+# Friday, 21st of January
+
+Lately I have been focussing on writing my dissertation which is stored in another repository. However, running my jobs on a cluster has caused errors in the evaluation of the solution. 
+
+# Saturday, 22nd of January
+
+I have implemented a fix for the issue concerning the issues on the cluster about evaluation positions of the solution not being locally owned. I also deactivated some of the older, diagnostic output. I also removed the option of makeing logging-statements blocking. That is a bad code design and the feature had been deactivated in the code for a while. Also removed some compiler warnings.

@@ -24,21 +24,21 @@ SingleCoreRun::~SingleCoreRun() {
 }
 
 void SingleCoreRun::prepare() {
-  print_info("SingleCoreRun::prepare", "Start", false, LoggingLevel::DEBUG_ONE);
+  print_info("SingleCoreRun::prepare", "Start", LoggingLevel::DEBUG_ONE);
   
   mainProblem = new LocalProblem();
 
   mainProblem->initialize();
 
-  print_info("SingleCoreRun::prepare", "End", false, LoggingLevel::DEBUG_ONE);
+  print_info("SingleCoreRun::prepare", "End", LoggingLevel::DEBUG_ONE);
 }
 
 void SingleCoreRun::run() {
-  print_info("SingleCoreRun::run", "Start", false, LoggingLevel::PRODUCTION_ONE);
+  print_info("SingleCoreRun::run", "Start", LoggingLevel::PRODUCTION_ONE);
 
   mainProblem->assemble();
 
-  print_info("SingleCoreRun::run", "Assembling completed", false, LoggingLevel::PRODUCTION_ONE);
+  print_info("SingleCoreRun::run", "Assembling completed", LoggingLevel::PRODUCTION_ONE);
   
   // mainProblem->compute_solver_factorization();
   
@@ -46,7 +46,7 @@ void SingleCoreRun::run() {
   
   mainProblem->output_results();
   GlobalTimerManager.write_output();
-  print_info("SingleCoreRun::run", "End", false, LoggingLevel::PRODUCTION_ONE);
+  print_info("SingleCoreRun::run", "End", LoggingLevel::PRODUCTION_ONE);
 }
 
 void SingleCoreRun::prepare_transformed_geometry() {

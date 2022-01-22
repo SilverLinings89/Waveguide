@@ -53,12 +53,12 @@ Sector<Dofs_Per_Sector>::Sector(bool in_left, bool in_right, double in_z_0,
 
 template <>
 void Sector<2>::set_properties(double, double, double, double, double, double) {
-  print_info("Sector<2>::set_properties", "Wrong call in Sector.", false, LoggingLevel::PRODUCTION_ALL);
+  print_info("Sector<2>::set_properties", "Wrong call in Sector.", LoggingLevel::PRODUCTION_ALL);
 }
 
 template <>
 void Sector<3>::set_properties(double, double, double, double) {
-  print_info("Sector<3>::set_properties", "Wrong call in Sector.", false, LoggingLevel::PRODUCTION_ALL);
+  print_info("Sector<3>::set_properties", "Wrong call in Sector.", LoggingLevel::PRODUCTION_ALL);
 }
 
 template <>
@@ -92,12 +92,12 @@ void Sector<3>::set_properties(double in_m_0, double in_m_1, double in_r_0,
 template <>
 void Sector<2>::set_properties_force(double, double, double, double, double,
                                      double) {
-  print_info("Sector<2>::set_properties_force", "Wrong call in Sector.", false, LoggingLevel::PRODUCTION_ALL);
+  print_info("Sector<2>::set_properties_force", "Wrong call in Sector.", LoggingLevel::PRODUCTION_ALL);
 }
 
 template <>
 void Sector<3>::set_properties_force(double, double, double, double) {
-  print_info("Sector<3>::set_properties_force", "Wrong call in Sector.", false, LoggingLevel::PRODUCTION_ALL);
+  print_info("Sector<3>::set_properties_force", "Wrong call in Sector.", LoggingLevel::PRODUCTION_ALL);
 }
 
 template <>
@@ -123,28 +123,28 @@ void Sector<3>::set_properties_force(double in_m_0, double in_m_1,
 
 template <unsigned int Dofs_Per_Sector>
 void Sector<Dofs_Per_Sector>::set_properties(double, double, double, double) {
-  print_info("Sector<Dofs_Per_Sector>::set_properties", "The code does not work for this number of dofs per Sector.", false, LoggingLevel::PRODUCTION_ALL);
+  print_info("Sector<Dofs_Per_Sector>::set_properties", "The code does not work for this number of dofs per Sector.", LoggingLevel::PRODUCTION_ALL);
   return;
 }
 
 template <unsigned int Dofs_Per_Sector>
 void Sector<Dofs_Per_Sector>::set_properties(double, double, double, double,
                                              double, double) {
-  print_info("Sector<Dofs_Per_Sector>::set_properties", "The code does not work for this number of dofs per Sector.", false, LoggingLevel::PRODUCTION_ALL);
+  print_info("Sector<Dofs_Per_Sector>::set_properties", "The code does not work for this number of dofs per Sector.", LoggingLevel::PRODUCTION_ALL);
   return;
 }
 
 template <unsigned int Dofs_Per_Sector>
 void Sector<Dofs_Per_Sector>::set_properties_force(double, double, double,
                                                    double) {
-  print_info("Sector<Dofs_Per_Sector>::set_properties", "The code does not work for this number of dofs per Sector.", false, LoggingLevel::PRODUCTION_ALL);
+  print_info("Sector<Dofs_Per_Sector>::set_properties", "The code does not work for this number of dofs per Sector.", LoggingLevel::PRODUCTION_ALL);
   return;
 }
 
 template <unsigned int Dofs_Per_Sector>
 void Sector<Dofs_Per_Sector>::set_properties_force(double, double, double,
                                                    double, double, double) {
-  print_info("Sector<Dofs_Per_Sector>::set_properties", "The code does not work for this number of dofs per Sector.", false, LoggingLevel::PRODUCTION_ALL);
+  print_info("Sector<Dofs_Per_Sector>::set_properties", "The code does not work for this number of dofs per Sector.", LoggingLevel::PRODUCTION_ALL);
   return;
 }
 
@@ -161,7 +161,7 @@ double Sector<Dofs_Per_Sector>::get_dof(unsigned int i, double z) const {
                                      dofs_r[derivative[i]]);
     }
   } else {
-    print_info("Sector<Dofs_Per_Sector>::get_dof", "There seems to be an error in Sector::get_dof. i > 0 && i < dofs_per_sector false.", false, LoggingLevel::PRODUCTION_ALL);
+    print_info("Sector<Dofs_Per_Sector>::get_dof", "There seems to be an error in Sector::get_dof. i > 0 && i < dofs_per_sector false.", LoggingLevel::PRODUCTION_ALL);
     return 0;
   }
 }
@@ -171,7 +171,7 @@ double Sector<Dofs_Per_Sector>::get_r(double z) const {
   if (z < 0.0) z = 0.0;
   if (z > 1.0) z = 1.0;
   if (Dofs_Per_Sector < 3) {
-    print_info("Sector<Dofs_Per_Sector>::get_r", "Error in Sector: Access to radius dof without existence.", false, LoggingLevel::PRODUCTION_ALL);
+    print_info("Sector<Dofs_Per_Sector>::get_r", "Error in Sector: Access to radius dof without existence.", LoggingLevel::PRODUCTION_ALL);
     return 0;
   }
   return InterpolationPolynomialZeroDerivative(z, dofs_l[0], dofs_r[0]);
@@ -223,7 +223,7 @@ Tensor<2, 3, double> Sector<3>::TransformationTensorInternal(double in_x,
                                                              double in_y,
                                                              double z) const {
   if (z < 0 || z > 1){
-    print_info("Sector<3>::TransformationTensorInternal", "Faulty implementation of internal Tensor calculation: z: " + std::to_string(z), false, LoggingLevel::PRODUCTION_ALL);
+    print_info("Sector<3>::TransformationTensorInternal", "Faulty implementation of internal Tensor calculation: z: " + std::to_string(z), LoggingLevel::PRODUCTION_ALL);
   }
   double RadiusInFactor =
       (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide) / (2 * dofs_l[0]);
@@ -343,7 +343,7 @@ template <>
 Tensor<2, 3, double> Sector<2>::TransformationTensorInternal(double, double,
                                                              double z) const {
   if (z < 0 || z > 1){
-    print_info("Sector<3>::TransformationTensorInternal", "Faulty implementation of internal Tensor calculation: z: " + std::to_string(z), false, LoggingLevel::PRODUCTION_ALL);
+    print_info("Sector<3>::TransformationTensorInternal", "Faulty implementation of internal Tensor calculation: z: " + std::to_string(z), LoggingLevel::PRODUCTION_ALL);
   }
   double zz = z * z;
 
@@ -395,7 +395,7 @@ template <unsigned int Dimension>
 Tensor<2, 3, double> Sector<Dimension>::TransformationTensorInternal(
     double, double, double) const {
   Tensor<2, 3, double> ret;
-  print_info("Sector<Dimension>::TransformationTensorInternal", "The code does not work for you Sector specification." + std::to_string(Dimension), false, LoggingLevel::PRODUCTION_ALL);
+  print_info("Sector<Dimension>::TransformationTensorInternal", "The code does not work for you Sector specification." + std::to_string(Dimension), LoggingLevel::PRODUCTION_ALL);
   return ret;
 }
 

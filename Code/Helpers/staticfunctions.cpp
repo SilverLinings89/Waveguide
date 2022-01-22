@@ -224,7 +224,7 @@ double dotproduct(Tensor<1, 3, double> a, Tensor<1, 3, double> b) {
 }
 
 void mesh_info(Triangulation<3> * tria, std::string filename) {
-  print_info("mesh_info", "Mesh info:\ndimension: 3\nno. of cells: " + std::to_string(tria->n_active_cells()), false, LoggingLevel::PRODUCTION_ALL);
+  print_info("mesh_info", "Mesh info:\ndimension: 3\nno. of cells: " + std::to_string(tria->n_active_cells()), LoggingLevel::PRODUCTION_ALL);
   {
     std::map<unsigned int, unsigned int> boundary_count;
     typename Triangulation<3>::active_cell_iterator cell = tria->begin_active();
@@ -247,12 +247,12 @@ void mesh_info(Triangulation<3> * tria, std::string filename) {
   // GridOut grid_out;
   // grid_out.write_vtk(*tria, out);
   // out.close();
-  print_info("mesh_info" , "written to " + filename, false, LoggingLevel::DEBUG_ONE);
+  print_info("mesh_info" , "written to " + filename, LoggingLevel::DEBUG_ONE);
 }
 
 template <int dim>
 void mesh_info(const Triangulation<dim> &tria) {
-  print_info("mesh_info", "Mesh info:\ndimension: " + std::to_string(dim) + "\nno. of cells: " + std::to_string(tria.n_active_cells()), false, LoggingLevel::PRODUCTION_ALL);
+  print_info("mesh_info", "Mesh info:\ndimension: " + std::to_string(dim) + "\nno. of cells: " + std::to_string(tria.n_active_cells()), LoggingLevel::PRODUCTION_ALL);
   {
     std::map<unsigned int, unsigned int> boundary_count;
     typename Triangulation<dim>::active_cell_iterator cell =
@@ -269,7 +269,7 @@ void mesh_info(const Triangulation<dim> &tria) {
     for (auto &it : boundary_count) {
       m += std::to_string(it.first) + "(" + std::to_string(it.second) + " times) ";
     }
-    print_info("mesh_info",m, false, LoggingLevel::PRODUCTION_ALL);
+    print_info("mesh_info",m, LoggingLevel::PRODUCTION_ALL);
   }
 }
 
@@ -471,24 +471,23 @@ void multiply_in_place(const ComplexNumber factor_1, NumericVectorLocal &factor_
   }
 }
 
-void print_info(const std::string &label, const std::string &message, bool , LoggingLevel logging_level) {
-  // if(blocking) MPI_Barrier(MPI_COMM_WORLD);
+void print_info(const std::string &label, const std::string &message,  LoggingLevel logging_level) {
   if(is_visible_message_in_current_logging_level(logging_level)) {
     write_print_message(label, message);
   }
 }
 
-void print_info(const std::string &label, const unsigned int message, bool blocking, LoggingLevel logging_level) {
-  print_info(label, std::to_string(message), blocking, logging_level);
+void print_info(const std::string &label, const unsigned int message, LoggingLevel logging_level) {
+  print_info(label, std::to_string(message),  logging_level);
 }
 
-void print_info(const std::string &label, const std::vector<unsigned int> &message, bool blocking, LoggingLevel logging_level) {
+void print_info(const std::string &label, const std::vector<unsigned int> &message, LoggingLevel logging_level) {
   std::string message_string = "";
   for(unsigned int i = 0; i < message.size(); i++) message_string += std::to_string(message[i]) + " ";
-  print_info(label, message_string, blocking, logging_level);
+  print_info(label, message_string, logging_level);
 }
 
-void print_info(const std::string &label, const std::array<bool,6> &message, bool blocking, LoggingLevel logging_level) {
+void print_info(const std::string &label, const std::array<bool,6> &message, LoggingLevel logging_level) {
   std::string m = "";
   for(unsigned int i = 0; i < message.size(); i++) {
     if(message[i]) {
@@ -497,7 +496,7 @@ void print_info(const std::string &label, const std::array<bool,6> &message, boo
       m += std::to_string(i) + " false ";
     }
   }
-  print_info(label, m, blocking, logging_level);  
+  print_info(label, m, logging_level);  
 }
 
 bool is_visible_message_in_current_logging_level(LoggingLevel level) {

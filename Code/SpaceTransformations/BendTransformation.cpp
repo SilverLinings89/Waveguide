@@ -17,14 +17,13 @@ BendTransformation::BendTransformation()
 
 BendTransformation::~BendTransformation() {}
 
-Position BendTransformation::math_to_phys(Position coord) const {
+Position BendTransformation::math_to_phys(Position ) const {
   Position ret;
   
   return ret;
 }
 
-Position BendTransformation::phys_to_math(
-    Position coord) const {
+Position BendTransformation::phys_to_math(Position ) const {
   Position ret;
 
   return ret;

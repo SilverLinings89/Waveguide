@@ -24,7 +24,7 @@ SweepingRun::~SweepingRun() {
 }
 
 void SweepingRun::prepare() {
-  print_info("SweepingRun::prepare", "Start", true, LoggingLevel::DEBUG_ONE);
+  print_info("SweepingRun::prepare", "Start", LoggingLevel::DEBUG_ONE);
   if(GlobalParams.Point_Source_Type == 0) {
     rmProblem = new RectangularMode();
   } 
@@ -32,11 +32,11 @@ void SweepingRun::prepare() {
   mainProblem = new NonLocalProblem(GlobalParams.Sweeping_Level);
   mainProblem->initialize();
   
-  print_info("SweepingRun::prepare", "End", true, LoggingLevel::DEBUG_ONE);
+  print_info("SweepingRun::prepare", "End", LoggingLevel::DEBUG_ONE);
 }
 
 void SweepingRun::run() {
-    print_info("SweepingRun::run", "Start", true, LoggingLevel::PRODUCTION_ONE);
+    print_info("SweepingRun::run", "Start", LoggingLevel::PRODUCTION_ONE);
     if(GlobalParams.Point_Source_Type == 0) {
         rmProblem->run();
     }
@@ -46,7 +46,7 @@ void SweepingRun::run() {
     mainProblem->solve_with_timers_and_count();
     GlobalTimerManager.write_output();
     mainProblem->output_results();
-    print_info("SweepingRun::run", "End", true, LoggingLevel::PRODUCTION_ONE);
+    print_info("SweepingRun::run", "End", LoggingLevel::PRODUCTION_ONE);
 }
 
 void SweepingRun::prepare_transformed_geometry() {

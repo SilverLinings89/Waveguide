@@ -116,7 +116,7 @@ std::vector<InterfaceDofData> RectangularMode::get_surface_dof_vector_for_bounda
       bool found_one = false;
       for (unsigned int face = 0; face < 6; face++) {
         if (cell->face(face)->boundary_id() == b_id && found_one) {
-          print_info("InnerDomain::get_surface_dof_vector_for_boundary_id", "There was an error!", false, LoggingLevel::PRODUCTION_ALL);
+          print_info("InnerDomain::get_surface_dof_vector_for_boundary_id", "There was an error!", LoggingLevel::PRODUCTION_ALL);
         }
         if (cell->face(face)->boundary_id() == b_id) {
           found_one = true;

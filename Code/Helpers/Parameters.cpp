@@ -12,7 +12,7 @@ auto Parameters::complete_data() -> void {
       kappa_0 = { std::sin(kappa_0_angle), std::cos(kappa_0_angle) };
       unsigned int required_procs = Blocks_in_x_direction * Blocks_in_y_direction * Blocks_in_z_direction;
       if(required_procs != NumberProcesses) {
-          print_info("Parameters::complete_data", "The number of mpi processes does not match the required processes", false, LoggingLevel::DEBUG_ALL);
+          print_info("Parameters::complete_data", "The number of mpi processes does not match the required processes", LoggingLevel::DEBUG_ALL);
           exit(0);
       }
       Index_in_z_direction = MPI_Rank / (Blocks_in_x_direction*Blocks_in_y_direction);
@@ -27,19 +27,19 @@ auto Parameters::complete_data() -> void {
   }
   if(Point_Source_Type == 2) {
       source_field = new PointSourceFieldHertz(0.5);
-      if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using Hertz-type point source.", false, LoggingLevel::PRODUCTION_ONE);
+      if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using Hertz-type point source.", LoggingLevel::PRODUCTION_ONE);
   }
   if(Point_Source_Type == 1) {
       source_field = new PointSourceFieldCosCos();
-      if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using Cos-Cos-type point source.", false, LoggingLevel::PRODUCTION_ONE);
+      if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using Cos-Cos-type point source.", LoggingLevel::PRODUCTION_ONE);
   }
   if(Point_Source_Type == 0) {
       source_field = new ExactSolution(true, false);
-      if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using mode for rectangular waveguide.", false, LoggingLevel::PRODUCTION_ONE);
+      if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using mode for rectangular waveguide.", LoggingLevel::PRODUCTION_ONE);
   }
   if(Point_Source_Type == 3) {
       source_field = new ExactSolution(true, false);
-      if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using mode for rectangular waveguide.", false, LoggingLevel::PRODUCTION_ONE);
+      if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using mode for rectangular waveguide.", LoggingLevel::PRODUCTION_ONE);
   }
   Omega = 2.0 * Pi / Lambda;
   if(Use_Predefined_Shape) {
@@ -60,6 +60,9 @@ auto Parameters::complete_data() -> void {
           std::cout << "There was a severe error. The case was not found therefore not initialized." << std::endl;
         }
     }
+  } else {
+    Sector_thickness = Geometry_Size_Z;
+    sd.SetStraight();
   }
 }
 

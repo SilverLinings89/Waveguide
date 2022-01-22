@@ -9,7 +9,7 @@ ResidualOutputGenerator::ResidualOutputGenerator():
 
 }   
 
-ResidualOutputGenerator::ResidualOutputGenerator(std::string in_name, std::string plot_title, unsigned int in_rank, unsigned int in_level, int in_parent_sweeping_rank):
+ResidualOutputGenerator::ResidualOutputGenerator(std::string in_name, std::string in_plot_title, unsigned int in_rank, unsigned int in_level, int in_parent_sweeping_rank):
     name(in_name),
     print_to_console(in_rank == 0),
     level(in_level) {
@@ -18,6 +18,7 @@ ResidualOutputGenerator::ResidualOutputGenerator(std::string in_name, std::strin
     for(unsigned int i = 0; i < GlobalParams.Sweeping_Level - level; i++) {
         spacing += "\t";
     }
+    plot_title = in_plot_title;
     rank_in_sweep = in_rank;
     parent_sweeping_rank = in_parent_sweeping_rank;
 }
@@ -75,6 +76,7 @@ void ResidualOutputGenerator::write_gnuplot_file() {
                 out << "series" << i << "["<< val + 1 << "] = " << data_series[i].values[val] << std::endl;
             }
         }
+        out << "set title \"" << plot_title << "\"" << std::endl;
         out << "set logscale y" << std::endl << "set xlabel 'Step'" << std::endl << "set ylabel 'Residual'" << std::endl <<  "set format y \"%.1e\"" << std::endl;
         out << "plot ";
         for(unsigned int i = 0; i < data_series.size(); i++) {

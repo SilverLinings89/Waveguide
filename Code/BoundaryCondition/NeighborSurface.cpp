@@ -177,7 +177,6 @@ void NeighborSurface::send() {
 	if(count > 0) {
 		std::cout << "In Send there were " << count << " wrong values on " << GlobalParams.MPI_Rank << " and surface " << b_id << std::endl;
 	}
-	std::cout << "Sending " << n_dofs << " to " << global_partner_mpi_rank << " via " << b_id << std::endl;
 	const int send_count = (int) n_dofs;
 	int return_value = MPI_Send(send_buffer.data(), send_count, MPI_UNSIGNED, global_partner_mpi_rank, b_id, MPI_COMM_WORLD);
 	if(return_value != 0) {
@@ -200,7 +199,9 @@ void NeighborSurface::receive() {
 			wrong_values++;
 		}
 	}
-	printf("MPI process %d received %d wrong values of a total of %d / %d from rank %d, with tag %d and error code %d.\n", GlobalParams.MPI_Rank, wrong_values, recv_count, actual_receive, recv_status.MPI_SOURCE, recv_status.MPI_TAG, recv_status.MPI_ERROR);
+	if(wrong_values > 0) {
+		printf("MPI process %d received %d wrong values of a total of %d / %d from rank %d, with tag %d and error code %d.\n", GlobalParams.MPI_Rank, wrong_values, recv_count, actual_receive, recv_status.MPI_SOURCE, recv_status.MPI_TAG, recv_status.MPI_ERROR);
+	}
 	for(unsigned int i = 0; i < inner_dofs.size(); i++) {
 		inner_dofs[i] = recv_buffer[i];
 		counter ++;
