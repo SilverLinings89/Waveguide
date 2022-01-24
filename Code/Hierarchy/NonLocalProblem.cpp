@@ -746,6 +746,7 @@ unsigned int NonLocalProblem::n_total_cells() {
     local += Geometry.levels[level].surfaces[i]->n_cells();
   }
   unsigned int ret = dealii::Utilities::MPI::sum(local, MPI_COMM_WORLD);
+  return ret;
 }
 
 double NonLocalProblem::compute_h() {
