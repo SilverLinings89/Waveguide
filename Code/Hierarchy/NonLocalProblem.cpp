@@ -444,11 +444,11 @@ std::string NonLocalProblem::output_results() {
   FEErrorStruct errors = compute_global_errors(&shared_solution);
   std::cout << "Errors: L2 = " << errors.L2 << " and Linfty  = " << errors.Linfty <<std::endl;
   write_multifile_output("solution", false);
+  ComplexNumber signal_strength = compute_signal_strength_of_solution();
+  std::cout << "Signal strength: " << signal_strength << " with norm " << std::abs(signal_strength)<< std::endl;
   if(GlobalParams.Output_transformed_solution) {
     write_multifile_output("transformed_solution", true);
   }
-  ComplexNumber signal_strength = compute_signal_strength_of_solution();
-  std::cout << "Signal strength: " << signal_strength << " with norm " << std::abs(signal_strength)<< std::endl;
   print_info("NonLocalProblem", "End output results on level" + std::to_string(level));
   return "";
 }

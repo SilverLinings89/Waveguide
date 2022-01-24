@@ -1,0 +1,14 @@
+subsection Run parameters
+  set GMRES maximum steps    = 15
+  set solve directly         = false
+  set solver precision       = 1e-4
+  set sweeping level         = 3
+  set processes in x         = 3
+  set processes in y         = 3
+  set processes in z         = 24
+  set cell count x           = 10
+  set cell count y           = 10
+  set cell count z           = 62
+  set Logging Level          = Debug One
+  set output transformed solution = true
+end

@@ -69,7 +69,7 @@ For 29 got id Submitted batch job 20379803
 For 31 got id Submitted batch job 20379804
 For 33 got id Submitted batch job 20379805
 
-Final relaunch: 
+Next relaunch: 
 For 3 got id Submitted batch job 20379807
 For 5 got id Submitted batch job 20379808
 For 7 got id Submitted batch job 20379809
@@ -86,3 +86,21 @@ For 27 got id Submitted batch job 20379819
 For 29 got id Submitted batch job 20379820
 For 31 got id Submitted batch job 20379821
 For 33 got id Submitted batch job 20379822
+
+Compressed relaunch with more jobs per node and hopefully signal strength computation
+For 3 got id Submitted batch job 20397115
+For 5 got id Submitted batch job 20397116
+For 7 got id Submitted batch job 20397117
+For 9 got id Submitted batch job 20397118
+For 11 got id Submitted batch job 20397119
+For 13 got id Submitted batch job 20397120
+For 15 got id Submitted batch job 20397121
+For 17 got id Submitted batch job 20397122
+For 19 got id Submitted batch job 20397123
+For 21 got id Submitted batch job 20397124
+For 23 got id Submitted batch job 20397125
+For 25 got id Submitted batch job 20397126
+For 27 got id Submitted batch job 20397127
+For 29 got id Submitted batch job 20397128
+For 31 got id Submitted batch job 20397129
+For 33 got id Submitted batch job 20397130

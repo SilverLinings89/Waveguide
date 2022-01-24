@@ -902,3 +902,7 @@ Lately I have been focussing on writing my dissertation which is stored in anoth
 # Saturday, 22nd of January
 
 I have implemented a fix for the issue concerning the issues on the cluster about evaluation positions of the solution not being locally owned. I also deactivated some of the older, diagnostic output. I also removed the option of makeing logging-statements blocking. That is a bad code design and the feature had been deactivated in the code for a while. Also removed some compiler warnings.
+
+# Sunday, 23rd of January
+
+I also swapped the order of the signal evaluation and the transformed output because the transformation might not work precisely right and I want to make sure that the evaluation happens.
