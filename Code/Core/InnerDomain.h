@@ -95,8 +95,6 @@ class InnerDomain: public FEDomain {
   void make_grid();
   void setup_system();
   void assemble_system(Constraints *constraints, dealii::PETScWrappers::MPI::SparseMatrix *matrix, NumericVectorDistributed *rhs);
-  void assemble_system(Constraints *constraints, dealii::SparseMatrix<ComplexNumber> *matrix);
-  void assemble_system(Constraints *constraints, dealii::PETScWrappers::SparseMatrix *matrix, NumericVectorDistributed *rhs);
   void Compute_Dof_Numbers();
   void solution_evaluation(Position position, double *solution) const;
   void adjoint_solution_evaluation(Position position, double *solution) const;

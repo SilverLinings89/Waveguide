@@ -87,3 +87,7 @@ enum PreconditionerOptions {
 enum SteppingMethod {
   Steepest, CG, LineSearch
 };
+
+enum TransformationType {
+  InhomogenousWavegeuideTransformationType, AngleWaveguideTransformationType, BendTransformationType
+};

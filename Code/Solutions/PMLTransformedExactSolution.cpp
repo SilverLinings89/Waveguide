@@ -45,7 +45,7 @@ void PMLTransformedExactSolution::vector_value(const Position &p, dealii::Vector
   value = ret;
 }
 
-dealii::Tensor<1, 3, ComplexNumber> PMLTransformedExactSolution::curl(const Position &in_p) const {
+dealii::Tensor<1, 3, ComplexNumber> PMLTransformedExactSolution::curl(const Position &) const {
   dealii::Tensor<1, 3, ComplexNumber> ret;
   /** 
   NumericVectorLocal curls = base_solution->curl(in_p);

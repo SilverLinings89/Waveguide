@@ -104,3 +104,21 @@ For 27 got id Submitted batch job 20397127
 For 29 got id Submitted batch job 20397128
 For 31 got id Submitted batch job 20397129
 For 33 got id Submitted batch job 20397130
+
+I restarted the jobs with the new 3x3x24 distribution
+For 3 got id Submitted batch job 20400629
+For 5 got id Submitted batch job 20400630
+For 7 got id Submitted batch job 20400631
+For 9 got id Submitted batch job 20400632
+For 11 got id Submitted batch job 20400633
+For 13 got id Submitted batch job 20400634
+For 15 got id Submitted batch job 20400635
+For 17 got id Submitted batch job 20400636
+For 19 got id Submitted batch job 20400637
+For 21 got id Submitted batch job 20400638
+For 23 got id Submitted batch job 20400639
+For 25 got id Submitted batch job 20400640
+For 27 got id Submitted batch job 20400641
+For 29 got id Submitted batch job 20400642
+For 31 got id Submitted batch job 20400643
+For 33 got id Submitted batch job 20400644

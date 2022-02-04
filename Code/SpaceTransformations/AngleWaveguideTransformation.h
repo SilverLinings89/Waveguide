@@ -1,4 +1,4 @@
-#pragma once
+#pragma once 
 
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
@@ -8,27 +8,20 @@
 
 #include "../Core/InnerDomain.h"
 #include "../Core/Sector.h"
-#include "./SpaceTransformation.h"
+#include "SpaceTransformation.h"
 
 /**
- * \class BendTransformation
- * \brief This transformation maps a 90-degree bend of a waveguide to a straight waveguide.
- *
- * This transformation determines the full arch-length of the 90-degree bend as the length given as the global-z-length of the system. 
- * It can then determine all properties of the transformation. The computation of the material tensors is performed via symbolic differentiation
- * instead of the version chosen in other transformations. This ansatz is therefore the one most easy to use for a new transformation.
+ * \class AngleWaveguideTransformation
+ * \brief 
  * 
- * The bend transformation also has internal sectors for the option of shape transformation. The y-shifts represent an inward or outward shift in radial direction, the width remains the same.
- * 
- * \author Pascal Kraft 
- * \date 14.12.2021
+ * \author Pascal Kraft \date 28.11.2016
  */
 
-class BendTransformation : public SpaceTransformation {
+class AngleWaveguideTransformation : public SpaceTransformation {
  public:
-  BendTransformation();
+  AngleWaveguideTransformation();
 
-  virtual ~BendTransformation();
+  virtual ~AngleWaveguideTransformation();
 
   Position math_to_phys(Position coord) const;
 
@@ -142,6 +135,11 @@ class BendTransformation : public SpaceTransformation {
   double Sector_Length() const;
 
   /**
+   * Returns the length of one layer
+   */
+  double Layer_Length() const;
+
+  /**
    * Returns the radius for a system-coordinate;
    */
   double get_r(double in_z) const;
@@ -198,4 +196,8 @@ class BendTransformation : public SpaceTransformation {
   void Print() const;
 
   ComplexNumber evaluate_for_z_with_sum(double, double, InnerDomain *);
+
+  ComplexNumber evaluate_for_z(double z_in, InnerDomain *);
+
+  Tensor<2, 3, double> transformation_tensor;
 };

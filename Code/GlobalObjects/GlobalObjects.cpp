@@ -1,6 +1,8 @@
 #include "../Helpers/Parameters.h"
 #include "GeometryManager.h"
 #include "../SpaceTransformations/InhomogenousTransformationRectangular.h"
+#include "../SpaceTransformations/BendTransformation.h"
+#include "../SpaceTransformations/AngleWaveguideTransformation.h"
 #include "../Hierarchy/MPICommunicator.h"
 #include "../Helpers/staticfunctions.h"
 #include "ModeManager.h"
@@ -23,7 +25,15 @@ void initialize_global_variables(const std::string run_file, const std::string c
 
   GlobalTimerManager.initialize();
 
-  GlobalSpaceTransformation = new InhomogenousTransformationRectangular();
+  if(GlobalParams.transformation_type == TransformationType::InhomogenousWavegeuideTransformationType) {
+    GlobalSpaceTransformation = new InhomogenousTransformationRectangular();
+  }
+  if(GlobalParams.transformation_type == TransformationType::BendTransformationType) {
+    GlobalSpaceTransformation = new BendTransformation();
+  }
+  if(GlobalParams.transformation_type == TransformationType::AngleWaveguideTransformationType) {
+    GlobalSpaceTransformation = new AngleWaveguideTransformation();
+  }
 
   GlobalSpaceTransformation->estimate_and_initialize();
   

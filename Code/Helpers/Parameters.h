@@ -153,6 +153,8 @@ struct Parameters {
 
     unsigned int convergence_max_cells = 20;
 
+    TransformationType transformation_type = TransformationType::InhomogenousWavegeuideTransformationType;
+
     std::vector<unsigned int> convergence_cell_counts;
 
     double global_z_shift = 0;

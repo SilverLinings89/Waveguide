@@ -6,8 +6,7 @@
 #include "ModeManager.h"
 #include "OutputManager.h"
 #include "TimerManager.h"
-
-class SpaceTransformation;
+#include "../SpaceTransformations/SpaceTransformation.h"
 
 extern Parameters GlobalParams; // 
 extern GeometryManager Geometry;

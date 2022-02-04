@@ -18,6 +18,7 @@ ADD_LIBRARY(Code
         Helpers/staticfunctions.cpp
         Helpers/ShapeDescription.cpp
         Solutions/ExactSolution.cpp
+        Solutions/AngledExactSolution.cpp
         Solutions/ExactSolutionRamped.cpp
         Solutions/ExactSolutionConjugate.cpp
         Solutions/PMLTransformedExactSolution.cpp
@@ -26,6 +27,7 @@ ADD_LIBRARY(Code
         SpaceTransformations/HomogenousTransformationRectangular.cpp
         SpaceTransformations/InhomogenousTransformationRectangular.cpp
         SpaceTransformations/BendTransformation.cpp
+        SpaceTransformations/AngleWaveguideTransformation.cpp
         SpaceTransformations/SpaceTransformation.cpp
         BoundaryCondition/JacobianForCell.cpp
         BoundaryCondition/DofData.cpp

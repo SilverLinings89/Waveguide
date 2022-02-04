@@ -128,8 +128,7 @@ void ExactSolution::vector_value(const Position &in_p, Vector<ComplexNumber> &va
   }
 }
 
-Tensor<1, 3, ComplexNumber> ExactSolution::curl(
-    const Position &in_p) const {
+Tensor<1, 3, ComplexNumber> ExactSolution::curl(const Position &in_p) const {
   const double h = 0.0001;
   Tensor<1, 3, ComplexNumber> ret;
   if (is_rectangular) {

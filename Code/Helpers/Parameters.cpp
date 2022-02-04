@@ -3,6 +3,7 @@
 #include "Parameters.h"
 #include "../Helpers/staticfunctions.h"
 #include "../Solutions/ExactSolution.h"
+#include "../Solutions/AngledExactSolution.h"
 #include "../Solutions/ExactSolutionRamped.h"
 #include "PointSourceField.h"
 
@@ -38,7 +39,11 @@ auto Parameters::complete_data() -> void {
       if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using mode for rectangular waveguide.", LoggingLevel::PRODUCTION_ONE);
   }
   if(Point_Source_Type == 3) {
-      source_field = new ExactSolution(true, false);
+      if(transformation_type == TransformationType::AngleWaveguideTransformationType) {
+        source_field = new AngledExactSolution();
+      } else {
+        source_field = new ExactSolution(true, false);
+      }
       if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using mode for rectangular waveguide.", LoggingLevel::PRODUCTION_ONE);
   }
   Omega = 2.0 * Pi / Lambda;

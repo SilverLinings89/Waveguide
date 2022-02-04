@@ -470,8 +470,7 @@ struct CellwiseAssemblyDataPML {
         J_Curl = fe_values[fe_field].curl(j, q_index);
         J_Val = fe_values[fe_field].value(j, q_index);
 
-        cell_matrix[i][j] += I_Curl * (mu_inverse * Conjugate_Vector(J_Curl))* JxW
-            - ( ( epsilon *  I_Val * Conjugate_Vector(J_Val)) * JxW);
+        cell_matrix[i][j] += I_Curl * (mu_inverse * Conjugate_Vector(J_Curl))* JxW - ( ( epsilon *  I_Val * Conjugate_Vector(J_Val)) * JxW);
       }
     }
   }
@@ -517,8 +516,9 @@ void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, Numeri
       cell_data.cell_matrix = 0;
       for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
           Position pos = cell_data.get_position_for_q_index(q_index);
-          dealii::Tensor<2,3,ComplexNumber> epsilon = get_pml_tensor_epsilon(pos);
-          dealii::Tensor<2,3,ComplexNumber> mu = get_pml_tensor_mu(pos);
+          dealii::Tensor<2,3,ComplexNumber> trafo = GlobalSpaceTransformation->get_Space_Transformation_Tensor(pos);
+          dealii::Tensor<2,3,ComplexNumber> epsilon = get_pml_tensor_epsilon(pos) * trafo;
+          dealii::Tensor<2,3,ComplexNumber> mu = get_pml_tensor_mu(pos) * trafo;
           cell_data.prepare_for_current_q_index(q_index, epsilon, mu);
       }
       constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, true);

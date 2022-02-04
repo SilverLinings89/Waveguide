@@ -178,11 +178,6 @@ struct CellwiseAssemblyDataNP {
   exact_solution_ramped(true, false),
   fe_field(0)
   { 
-    if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Jump) {
-      has_input_interface = GlobalParams.Index_in_z_direction == 0;
-    } else {
-      has_input_interface = false;
-    }
     cell_rhs = 0;
     for (unsigned int i = 0; i < 3; i++) {
       for (unsigned int j = 0; j < 3; j++) {
@@ -195,23 +190,6 @@ struct CellwiseAssemblyDataNP {
     }
     cell = dof_handler->begin_active();
     end_cell = dof_handler->end();
-    if(has_input_interface) {
-      ExactSolution es(true, false);
-      IndexSet owned_dofs(dof_handler->n_dofs());
-      owned_dofs.add_range(0, dof_handler->n_dofs());
-      AffineConstraints<ComplexNumber> constraints_local(owned_dofs);
-      VectorTools::project_boundary_values_curl_conforming_l2(*dof_handler, 0, es, 4, constraints_local);
-      incoming_wave_field.reinit(owned_dofs.size());
-      constrained_dofs.set_size(dof_handler->n_dofs());
-      for(unsigned int i = 0; i < owned_dofs.size(); i++) {
-        if(constraints_local.is_constrained(i)) {
-          incoming_wave_field[i] = constraints_local.get_inhomogeneity(i);
-          constrained_dofs.add_index(i);
-        } else {
-          incoming_wave_field[i] = 0;
-        }
-      }
-    }
   };
 
   void prepare_for_current_q_index(unsigned int q_index) {
@@ -234,23 +212,6 @@ struct CellwiseAssemblyDataNP {
       Tensor<1, 3, ComplexNumber> I_Val;
       I_Curl = fe_values[fe_field].curl(i, q_index);
       I_Val = fe_values[fe_field].value(i, q_index);
-      if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Jump) {
-        if(cell->at_boundary(4) && has_input_interface) {
-          if(!constrained_dofs.is_element(dof_indices[i])) {
-            for(unsigned int j = 0; j < dofs_per_cell; j++) {
-              if(constrained_dofs.is_element(dof_indices[j])) {
-                Tensor<1, 3, ComplexNumber> J_Curl;
-                Tensor<1, 3, ComplexNumber> J_Val;
-                J_Curl = fe_values[fe_field].curl(j, q_index);
-                J_Val = fe_values[fe_field].value(j, q_index);
-                cell_rhs[i] -= incoming_wave_field[dof_indices[j]] * (I_Curl * mu * Conjugate_Vector(J_Curl) * JxW - (kappa_2 * ( epsilon * I_Val * Conjugate_Vector(J_Val)) * JxW));
-              }
-            }
-          } else {
-            cell_rhs[i] += incoming_wave_field[dof_indices[i]];
-          }
-        }
-      }
       for (unsigned int j = 0; j < dofs_per_cell; j++) {
         Tensor<1, 3, ComplexNumber> J_Curl;
         Tensor<1, 3, ComplexNumber> J_Val;
@@ -269,12 +230,9 @@ struct CellwiseAssemblyDataNP {
     }
     return ret;
   }
-
 };
 
-void InnerDomain::assemble_system(Constraints * constraints,
-    dealii::PETScWrappers::SparseMatrix *matrix,
-    NumericVectorDistributed *rhs) {
+void InnerDomain::assemble_system(Constraints * constraints, dealii::PETScWrappers::MPI::SparseMatrix * matrix, NumericVectorDistributed *rhs) {
   CellwiseAssemblyDataNP cell_data(&fe, &dof_handler);
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
     cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
@@ -289,44 +247,41 @@ void InnerDomain::assemble_system(Constraints * constraints,
     constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, true);
   }
   matrix->compress(dealii::VectorOperation::add);
-  rhs->compress(dealii::VectorOperation::add);
-}
-
-void InnerDomain::assemble_system(Constraints * constraints,
-    dealii::SparseMatrix<ComplexNumber> *matrix) {
-  CellwiseAssemblyDataNP cell_data(&fe, &dof_handler);
-  for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
-    cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
-    cell_data.cell_matrix = 0;
-    cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
-    cell_data.fe_values.reinit(cell_data.cell);
-    cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
-    for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
-      cell_data.prepare_for_current_q_index(q_index);
+  if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Jump) {
+    rhs->compress(dealii::VectorOperation::add);
+    NumericVectorDistributed second(*rhs);
+    NumericVectorDistributed third(*rhs);
+    if(GlobalParams.Index_in_z_direction == 0) {
+      Constraints ret(global_dof_indices);
+      dealii::IndexSet local_dof_set(n_locally_active_dofs);
+      local_dof_set.add_range(0,n_locally_active_dofs);
+      AffineConstraints<ComplexNumber> constraints_local(local_dof_set);
+      VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, *GlobalParams.source_field, 4, constraints_local);
+      for(auto line : constraints_local.get_lines()) {
+        const unsigned int local_index = line.index;
+        const unsigned int global_index = global_index_mapping[local_index];
+        ret.add_line(global_index);
+        second[global_index] = line.inhomogeneity;
+	    }
     }
-    constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.local_dof_indices, *matrix);
-  }
-  matrix->compress(dealii::VectorOperation::add);
-}
-
-void InnerDomain::assemble_system(Constraints * constraints,
-    dealii::PETScWrappers::MPI::SparseMatrix * matrix,
-    NumericVectorDistributed *rhs) {
-  CellwiseAssemblyDataNP cell_data(&fe, &dof_handler);
-  for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
-    cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
-    cell_data.local_dof_indices = transform_local_to_global_dofs(cell_data.local_dof_indices);
-    cell_data.cell_matrix = 0;
-    cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
-    cell_data.fe_values.reinit(cell_data.cell);
-    cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
-    for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
-      cell_data.prepare_for_current_q_index(q_index);
+    matrix->vmult(third, second);
+    if(GlobalParams.Index_in_z_direction == 0) {
+      for(unsigned comp = 0; comp < global_index_mapping.size(); comp++) {
+        if(second[global_index_mapping[comp]] == 0) {
+          if(third[global_index_mapping[comp]] != 0 ) {
+            rhs->operator[](global_index_mapping[comp]) = third[global_index_mapping[comp]];
+          } 
+        } else {
+          if(third[global_index_mapping[comp]] != 0 ) {
+            rhs->operator[](global_index_mapping[comp]) = ComplexNumber((-1.0) * third[global_index_mapping[comp]].real(), (-1.0) * third[global_index_mapping[comp]].imag());
+          }
+        }
+      }
     }
-    constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, true);
+    rhs->compress(dealii::VectorOperation::insert);
+  } else {
+    rhs->compress(dealii::VectorOperation::add);
   }
-  matrix->compress(dealii::VectorOperation::add);
-  rhs->compress(dealii::VectorOperation::add);
 }
 
 void InnerDomain::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs) {
@@ -377,7 +332,11 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
   std::ofstream outputvtu(filename);
   
   Function<3,ComplexNumber> * esc;
-  esc = GlobalParams.source_field;
+  if(apply_transformation) {
+    esc = new ExactSolution(true, false);
+  } else {
+    esc = GlobalParams.source_field;
+  }
   dealii::IndexSet local_indices(n_locally_active_dofs);
   local_indices.add_range(0,n_locally_active_dofs);
   Constraints local_constraints(local_indices);
@@ -390,6 +349,7 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
   data_out.build_patches();
   data_out.write_vtu(outputvtu);
   if(apply_transformation) {
+    delete esc;
     GlobalSpaceTransformation->switch_application_mode(false);
     dealii::GridTools::transform(*GlobalSpaceTransformation, triangulation);
   }
