@@ -1,0 +1,9 @@
+subsection Run parameters
+  set sweeping level    = 1
+  set processes in x         = 1
+  set processes in y         = 1
+  set processes in z         = 15
+  set cell count x           = 20
+  set cell count y           = 20
+  set cell count z           = 20
+end
