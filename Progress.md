@@ -906,3 +906,10 @@ I have implemented a fix for the issue concerning the issues on the cluster abou
 # Sunday, 23rd of January
 
 I also swapped the order of the signal evaluation and the transformed output because the transformation might not work precisely right and I want to make sure that the evaluation happens.
+
+# Tuesday, 8th of February
+
+In recent days I have added an implementation of an angled waveguide geometry and performed some cleanup. Also, I have moved all the run-scripts to a folder called run instead of build, since build is normally excluded from git and should only contain the build artifacts. 
+There are now parameter files for a straight waveguide geometry of variable length that serves as an example for the deterioration of sweeping preconditioners if the number of subdomains increases.
+The evaluation of these results will be performed today and stored in the new Artifacts folder.
+I have added a description for the pml scaling runs and evaluated the runs that are done. However, there are some large runs still waiting.

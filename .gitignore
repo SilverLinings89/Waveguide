@@ -65,6 +65,7 @@ Waveguide
 temp
 Solutions/
 Efficiency/
+run/slurm-*
 
 .settings/language.settings.xml
 Performance_Results/
