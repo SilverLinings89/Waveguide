@@ -55,16 +55,23 @@ int main(int argc, char *argv[]) {
   }
   bool arg1 = false;
   bool arg2 = false;
+  bool arg3 = false;
+  std::string override_data = "";
   if (argc >= 3) {
     if(all_args[1] == "--case") {
       arg1 = true;
       case_file = all_args[2];
-      argc_stripped--;
+      argc_stripped -= 2;
     }
     if(all_args[1] == "--run") {
       arg1 = true;
       run_file = all_args[2];
-      argc_stripped--;
+      argc_stripped -= 2;
+    }
+    if(all_args[1] == "--override") {
+      arg1 = true;
+      override_data = all_args[2];
+      argc_stripped -= 2;
     }
   }
 
@@ -72,19 +79,45 @@ int main(int argc, char *argv[]) {
     if(all_args[3] == "--case") {
       arg2 = true;
       case_file = all_args[4];
-      argc_stripped--;
+      argc_stripped -= 2;
     }
     if(all_args[3] == "--run") {
       arg2 = true;
       run_file = all_args[4];
-      argc_stripped--;
+      argc_stripped -=2;
+    }
+    if(all_args[3] == "--override") {
+      arg2 = true;
+      override_data = all_args[4];
+      argc_stripped -= 2;
+    }
+  }
+
+  if (argc >= 7) {
+    if(all_args[5] == "--case") {
+      arg3 = true;
+      case_file = all_args[6];
+      argc_stripped -= 2;
+    }
+    if(all_args[5] == "--run") {
+      arg3 = true;
+      run_file = all_args[6];
+      argc_stripped -= 2;
+    }
+    if(all_args[5] == "--override") {
+      arg3 = true;
+      override_data = all_args[6];
+      argc_stripped -= 2;
     }
   }
 
   char** argv_stripped = new char*[argc_stripped];
   unsigned int counter = 0;
   for( int i = 0; i < argc; i++) {
-    if(! (((i == 3 || i == 4) && arg2) ||( (i == 1 || i == 2) && arg1))) {
+    bool is_processed_argument = (i == 1 || i == 2) && arg1;
+    is_processed_argument = is_processed_argument || ((i == 3 || i == 4) && arg2);
+    is_processed_argument = is_processed_argument || ( (i == 5 || i == 6) && arg3);
+    if(! is_processed_argument) {
       argv_stripped[counter] = argv[i];
       counter++;
     }
@@ -93,7 +126,7 @@ int main(int argc, char *argv[]) {
   {
     Utilities::MPI::MPI_InitFinalize mpi_initialization(argc_stripped, argv_stripped, 1);
     rank_temp = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
-    initialize_global_variables(run_file, case_file);
+    initialize_global_variables(run_file, case_file, override_data);
     Simulation * simulation;
     if (GlobalParams.Perform_Convergence_Test) {
       simulation = new ConvergenceRun();

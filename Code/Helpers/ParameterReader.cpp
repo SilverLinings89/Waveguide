@@ -5,21 +5,6 @@ using namespace dealii;
 
 ParameterReader::ParameterReader() { }
 
-std::vector<std::string> split (std::string s, std::string delimiter) {
-    size_t pos_start = 0, pos_end, delim_len = delimiter.length();
-    std::string token;
-    std::vector<std::string> res;
-
-    while ((pos_end = s.find (delimiter, pos_start)) != std::string::npos) {
-        token = s.substr (pos_start, pos_end - pos_start);
-        pos_start = pos_end + delim_len;
-        res.push_back (token);
-    }
-
-    res.push_back (s.substr (pos_start));
-    return res;
-}
-
 void ParameterReader::declare_parameters() {
     run_prm.enter_subsection("Run parameters");
     {
@@ -113,21 +98,7 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         if(logging == "Production One") ret.Logging_Level = LoggingLevel::PRODUCTION_ONE;
         if(logging == "Production All") ret.Logging_Level = LoggingLevel::PRODUCTION_ALL;
         std::string solver_t = run_prm.get("solver type");
-        if(solver_t == "MINRES") {
-            ret.solver_type = SolverOptions::MINRES;
-        }
-        if(solver_t == "TFQMR") {
-            ret.solver_type = SolverOptions::TFQMR;
-        }
-        if(solver_t == "BICGS") {
-            ret.solver_type = SolverOptions::BICGS;
-        }
-        if(solver_t == "PCONLY") {
-            ret.solver_type = SolverOptions::PCONLY;
-        }
-        if(solver_t == "CG") {
-            ret.solver_type = SolverOptions::S_CG;
-        }
+        ret.solver_type = solver_option(solver_t);
     }
     case_prm.parse_input(case_file_stream);
     case_prm.enter_subsection("Case parameters");

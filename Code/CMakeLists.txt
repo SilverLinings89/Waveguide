@@ -10,6 +10,7 @@ ADD_LIBRARY(Code
         Runners/ParameterSweep.cpp
         Runners/SingleCoreRun.cpp
         Runners/SweepingRun.cpp
+        Helpers/ParameterOverride.cpp
         Helpers/ParameterReader.cpp
         Helpers/PointSourceField.cpp
         Helpers/Parameters.cpp

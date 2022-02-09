@@ -16,4 +16,4 @@ extern OutputManager GlobalOutputManager;
 extern TimerManager GlobalTimerManager;
 extern SpaceTransformation * GlobalSpaceTransformation;
 
-void initialize_global_variables(const std::string run_file,const std::string case_file);
+void initialize_global_variables(const std::string run_file,const std::string case_file, std::string override_data = "");

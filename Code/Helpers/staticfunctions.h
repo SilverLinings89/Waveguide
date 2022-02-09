@@ -146,3 +146,7 @@ std::vector<BoundaryId> get_adjacent_boundary_ids(BoundaryId self);
 SweepingDirection get_sweeping_direction_for_level(unsigned int in_level);
 
 int generate_tag(unsigned int global_rank_sender, unsigned int receiver, unsigned int level);
+
+std::vector<std::string> split(std::string str, std::string token);
+
+SolverOptions solver_option(std::string in_name);

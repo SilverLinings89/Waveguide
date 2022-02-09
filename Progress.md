@@ -924,3 +924,8 @@ I returned to the work on other iterative solvers:
 - GMRES: 6 Steps. Convergence.
 - PCONLY (Richardson): 8 Steps. Convergence.
 - TFQMR: 6 Steps. Convergence. -> 8 applications of pc.
+- CG: 12 Steps. Convergence but slower than Richardson.
+
+# Wednesday, 9th of February
+
+I implemented an override interface for the parameters, which makes it easier to script comparative runs. I also improved some details in the implementation.

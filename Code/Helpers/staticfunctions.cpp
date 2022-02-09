@@ -765,3 +765,38 @@ int generate_tag(unsigned int global_rank_sender, unsigned int receiver, unsigne
 	}
 	return ret;
 }
+
+std::vector<std::string> split (std::string s, std::string delimiter) {
+    size_t pos_start = 0, pos_end, delim_len = delimiter.length();
+    std::string token;
+    std::vector<std::string> res;
+
+    while ((pos_end = s.find (delimiter, pos_start)) != std::string::npos) {
+        token = s.substr (pos_start, pos_end - pos_start);
+        pos_start = pos_end + delim_len;
+        res.push_back (token);
+    }
+
+    res.push_back (s.substr (pos_start));
+    return res;
+}
+
+SolverOptions solver_option(std::string solver_t) {
+  SolverOptions ret = SolverOptions::GMRES;
+  if(solver_t == "MINRES") {
+      ret = SolverOptions::MINRES;
+  }
+  if(solver_t == "TFQMR") {
+      ret = SolverOptions::TFQMR;
+  }
+  if(solver_t == "BICGS") {
+      ret = SolverOptions::BICGS;
+  }
+  if(solver_t == "PCONLY") {
+      ret = SolverOptions::PCONLY;
+  }
+  if(solver_t == "CG") {
+      ret = SolverOptions::S_CG;
+  }
+  return ret;
+}
