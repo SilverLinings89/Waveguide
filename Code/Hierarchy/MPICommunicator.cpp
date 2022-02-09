@@ -19,6 +19,15 @@ inline unsigned int get_index_for_direction_index(int in_direction) {
 MPICommunicator::MPICommunicator() {
 }
 
+MPICommunicator::~MPICommunicator() {
+}
+
+void MPICommunicator::destroy_comms() {
+  for(unsigned int i = 1; i < communicators_by_level.size(); i++) {
+    MPI_Comm_free(&communicators_by_level[i]);
+  }
+}
+
 void MPICommunicator::initialize() {
   // start with MPI Comm world and work the way down.
   unsigned local_level = 1;
@@ -31,6 +40,7 @@ void MPICommunicator::initialize() {
     local = new_com;
     local_level++;
     communicators_by_level.push_back(new_com);
+    std::cout << "h" <<std::endl;
     rank_on_level.push_back(dealii::Utilities::MPI::this_mpi_process(new_com));
   }
   communicators_by_level.push_back(MPI_COMM_SELF);
@@ -92,8 +102,3 @@ std::pair<bool, unsigned int> MPICommunicator::get_neighbor_for_interface(
   }
   return ret;
 }
-
-MPICommunicator::~MPICommunicator() {
-  // Nothing to do here.
-}
-

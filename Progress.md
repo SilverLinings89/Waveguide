@@ -913,3 +913,14 @@ In recent days I have added an implementation of an angled waveguide geometry an
 There are now parameter files for a straight waveguide geometry of variable length that serves as an example for the deterioration of sweeping preconditioners if the number of subdomains increases.
 The evaluation of these results will be performed today and stored in the new Artifacts folder.
 I have added a description for the pml scaling runs and evaluated the runs that are done. However, there are some large runs still waiting.
+
+I implemented the functionality to choose between GMRES, MINRES, TQRF, BiCGS and Richardson (basically preconditioner only) for the iterative solver. For Minres, no convergence can be expected because it assumes symmetry. What I would expect is that all other solvers converge at the same speed (except for maybe Richardson because it is pure sweeping which might somehow be unstable). The ideal outcome would be, if they were all equally as fast as Richardson, which would mean, that all the actual improvement comes from the application of the sweeping preconditioner and the choice of solver is irelevant as long as the solver does not deteriorate the quality of the solution.
+
+I have also updated the way I pass the original input arguments to the MPI initialization call. This should remove the PETSC warning about unused arguments at the end of the output and thus the errors for running MPI Code after finalization of the MPI structure. Testing now. That did not fix the problem. To make sure it is not caused by a non-destroyed communicator, I have added logic to the destructor of the GlobalMPI object which handles the level-communicators. That was not the issue either.
+
+I returned to the work on other iterative solvers: 
+- BICGS: 4 Steps. Convergence. -> 8 applications of pc.
+- Minres: Max Steps. No Convergence. -> Not symetric.
+- GMRES: 6 Steps. Convergence.
+- PCONLY (Richardson): 8 Steps. Convergence.
+- TFQMR: 6 Steps. Convergence. -> 8 applications of pc.

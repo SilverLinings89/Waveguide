@@ -48,59 +48,80 @@ int main(int argc, char *argv[]) {
   std::string run_file = "../Parameters/Run/base.prm";
   std::string case_file = "../Parameters/Case/base.prm";
   std::vector<std::string> all_args;
-
+  int argc_stripped;
+  argc_stripped = argc;
   if (argc > 1) {
     all_args.assign(argv, argv + argc);
   }
+  bool arg1 = false;
+  bool arg2 = false;
   if (argc >= 3) {
     if(all_args[1] == "--case") {
+      arg1 = true;
       case_file = all_args[2];
+      argc_stripped--;
     }
     if(all_args[1] == "--run") {
+      arg1 = true;
       run_file = all_args[2];
+      argc_stripped--;
     }
   }
 
   if (argc >= 5) {
     if(all_args[3] == "--case") {
+      arg2 = true;
       case_file = all_args[4];
+      argc_stripped--;
     }
     if(all_args[3] == "--run") {
+      arg2 = true;
       run_file = all_args[4];
+      argc_stripped--;
     }
   }
 
-  Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
-
-  initialize_global_variables(run_file, case_file);
-  Simulation * simulation;
-  if (GlobalParams.Perform_Convergence_Test) {
-    simulation = new ConvergenceRun();
-  } else {
-    if (GlobalParams.Enable_Parameter_Run) {
-      simulation = new ParameterSweep();
+  char** argv_stripped = new char*[argc_stripped];
+  unsigned int counter = 0;
+  for( int i = 0; i < argc; i++) {
+    if(! (((i == 3 || i == 4) && arg2) ||( (i == 1 || i == 2) && arg1))) {
+      argv_stripped[counter] = argv[i];
+      counter++;
+    }
+  }
+  unsigned int rank_temp = 0;
+  {
+    Utilities::MPI::MPI_InitFinalize mpi_initialization(argc_stripped, argv_stripped, 1);
+    rank_temp = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
+    initialize_global_variables(run_file, case_file);
+    Simulation * simulation;
+    if (GlobalParams.Perform_Convergence_Test) {
+      simulation = new ConvergenceRun();
     } else {
-      if (GlobalParams.NumberProcesses == 1) {
-        simulation = new SingleCoreRun();
+      if (GlobalParams.Enable_Parameter_Run) {
+        simulation = new ParameterSweep();
       } else {
-        simulation = new SweepingRun();
+        if (GlobalParams.NumberProcesses == 1) {
+          simulation = new SingleCoreRun();
+        } else {
+          simulation = new SweepingRun();
+        }
       }
     }
+    
+    simulation->create_output_directory();
+    simulation->prepare_transformed_geometry();
+
+    print_info("Main", "Prepare Simulation");
+    simulation->prepare();
+
+    print_info("Main", "Run Simulation");
+    simulation->run();
+    
+    print_info("Main", "Shutting down");
+    delete simulation;
+    GlobalMPI.destroy_comms();
+    delete GlobalSpaceTransformation;
   }
-  
-  simulation->create_output_directory();
-  simulation->prepare_transformed_geometry();
-
-  print_info("Main", "Prepare Simulation");
-  simulation->prepare();
-
-  print_info("Main", "Run Simulation");
-  simulation->run();
-  
-  MPI_Barrier(MPI_COMM_WORLD);
-  print_info("Main", "Shutting down");
-  delete simulation;
-
-  MPI_Barrier(MPI_COMM_WORLD);
   return 0;
 }

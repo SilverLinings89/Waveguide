@@ -8,7 +8,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.15.0)
 project(waveguide)
 
 FIND_PACKAGE(deal.II 9.2 QUIET
-        HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ ../../libs2 $ENV{DEAL_II_DIR}
+        HINTS ${deal.II_DIR} ${DEAL_II_DIR} ~/libs ../ ../../ ../../libs2 ../../libs $ENV{DEAL_II_DIR}
         )
 IF(NOT ${deal.II_FOUND})
     MESSAGE(FATAL_ERROR "\n"

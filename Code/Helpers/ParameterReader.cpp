@@ -40,6 +40,7 @@ void ParameterReader::declare_parameters() {
         run_prm.declare_entry("cell count z" , "20", Patterns::Integer(), "Number of cells a single process has in z-direction.");
         run_prm.declare_entry("output transformed solution", "false", Patterns::Bool(), "If set to true, both the solution in mathematical and in physical coordinates will be written as outputs.");
         run_prm.declare_entry("Logging Level", "Production One", Patterns::Selection("Production One|Production All|Debug One|Debug All"), "Specifies which messages should be printed and by whom.");
+        run_prm.declare_entry("solver type", "GMRES", Patterns::Selection("GMRES|MINRES|TFQMR|BICGS|CG|PCONLY"), "Choose the itterative solver to use.");
     }
     run_prm.leave_subsection();
 
@@ -111,6 +112,22 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         if(logging == "Debug All") ret.Logging_Level = LoggingLevel::DEBUG_ALL;
         if(logging == "Production One") ret.Logging_Level = LoggingLevel::PRODUCTION_ONE;
         if(logging == "Production All") ret.Logging_Level = LoggingLevel::PRODUCTION_ALL;
+        std::string solver_t = run_prm.get("solver type");
+        if(solver_t == "MINRES") {
+            ret.solver_type = SolverOptions::MINRES;
+        }
+        if(solver_t == "TFQMR") {
+            ret.solver_type = SolverOptions::TFQMR;
+        }
+        if(solver_t == "BICGS") {
+            ret.solver_type = SolverOptions::BICGS;
+        }
+        if(solver_t == "PCONLY") {
+            ret.solver_type = SolverOptions::PCONLY;
+        }
+        if(solver_t == "CG") {
+            ret.solver_type = SolverOptions::S_CG;
+        }
     }
     case_prm.parse_input(case_file_stream);
     case_prm.enter_subsection("Case parameters");

@@ -197,7 +197,6 @@ Parameters GetParameters(std::string run_filename, std::string case_filename) {
   pr.declare_parameters();
   
   struct Parameters ret = pr.read_parameters(run_filename, case_filename);
-  
   ret.MPI_Rank = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
   ret.NumberProcesses = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
 

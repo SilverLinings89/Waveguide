@@ -10,7 +10,9 @@
 #include "../Core/Enums.h"
 #include "../BoundaryCondition/NeighborSurface.h"
 
-HierarchicalProblem::~HierarchicalProblem() { }
+HierarchicalProblem::~HierarchicalProblem() { 
+  delete residual_output;
+}
 
 HierarchicalProblem::HierarchicalProblem(unsigned int in_own_level, SweepingDirection ) :
   level(in_own_level) {

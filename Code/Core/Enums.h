@@ -77,7 +77,7 @@ enum OptimizationSchema {
 };
 
 enum SolverOptions {
-  GMRES, MINRES, UMFPACK
+  GMRES, MINRES, BICGS, TFQMR, PCONLY, S_CG
 };
 
 enum PreconditionerOptions {

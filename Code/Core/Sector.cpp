@@ -6,13 +6,7 @@
 using namespace dealii;
 
 template <unsigned int Dofs_Per_Sector>
-Sector<Dofs_Per_Sector>::~Sector() {}
-
-template <>
-Sector<3>::~Sector() {}
-
-template <>
-Sector<2>::~Sector() {}
+Sector<Dofs_Per_Sector>::~Sector() { }
 
 template <unsigned int Dofs_Per_Sector>
 Sector<Dofs_Per_Sector>::Sector(bool in_left, bool in_right, double in_z_0,
@@ -22,10 +16,10 @@ Sector<Dofs_Per_Sector>::Sector(bool in_left, bool in_right, double in_z_0,
       boundary(in_left && in_right),
       z_0(in_z_0),
       z_1(in_z_1) {
-  dofs_l = new double[Dofs_Per_Sector];
-  dofs_r = new double[Dofs_Per_Sector];
-  derivative = new unsigned int[Dofs_Per_Sector];
-  zero_derivative = new bool[Dofs_Per_Sector];
+  dofs_l.resize(Dofs_Per_Sector);
+  dofs_r.resize(Dofs_Per_Sector);
+  derivative.resize(Dofs_Per_Sector);
+  zero_derivative.resize(Dofs_Per_Sector);
   if (Dofs_Per_Sector == 3) {
     zero_derivative[0] = true;
     zero_derivative[1] = false;

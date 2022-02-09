@@ -139,6 +139,8 @@ struct Parameters {
 
     double tapering_max_z = 1.0;
 
+    SolverOptions solver_type = SolverOptions::GMRES;
+
     SignalTaperingType Signal_tapering_type = SignalTaperingType::C1;
 
     SignalCouplingMethod Signal_coupling_method = SignalCouplingMethod::Jump;

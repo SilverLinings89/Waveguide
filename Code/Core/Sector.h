@@ -200,19 +200,19 @@ class Sector {
 
   // Stores the values of the left degrees of freedom. These are the values of
   // the dofs on the surface of the sector towards z--> -\infty.
-  double *dofs_l;
+  std::vector<double> dofs_l;
 
   // Stores the values of the right degrees of freedom. These are the values of
   // the dofs on the surface of the sector towards z--> \infty.
-  double *dofs_r;
+  std::vector<double> dofs_r;
 
   //  This stores the indices for derivative dpendence. For example: If the
   //  third dof is the dof type 'm' (in former nomenclature) and the second is
   //  of type 'v' so v should be the derivative of 'm' then the derivative[3]=2.
   //  This is used in the function get_dof.
-  unsigned int *derivative;
+  std::vector<unsigned int> derivative;
 
   // this stores for any dof if it has zero_derivative (at sector interfaces) or
   // not.
-  bool *zero_derivative;
+  std::vector<bool> zero_derivative;
 };

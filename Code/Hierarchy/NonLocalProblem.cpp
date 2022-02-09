@@ -9,6 +9,7 @@
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/petsc_solver.h>
 #include <deal.II/lac/solver_gmres.h>
+#include <deal.II/lac/solver_minres.h>
 #include <deal.II/lac/sparsity_pattern.h>
 #include <deal.II/lac/petsc_precondition.h>
 #include <mpi.h>
@@ -161,15 +162,34 @@ void NonLocalProblem::init_solver_and_preconditioner() {
   KSPCreate(GlobalMPI.communicators_by_level[level], &ksp);
   KSPGetPC(ksp, &pc);
   KSPSetOperators(ksp, *matrix, *matrix);
-  KSPSetType(ksp, KSPGMRES);
+  if(GlobalParams.solver_type == SolverOptions::MINRES) {
+    KSPSetType(ksp, KSPMINRES);
+  }
+  if(GlobalParams.solver_type == SolverOptions::GMRES) {
+    KSPSetType(ksp, KSPGMRES);
+    KSPGMRESSetRestart(ksp, GlobalParams.GMRES_max_steps);
+    KSPSetPCSide(ksp, PCSide::PC_RIGHT);
+  }
+  if(GlobalParams.solver_type == SolverOptions::TFQMR) {
+    KSPSetType(ksp, KSPTFQMR);
+  }
+  if(GlobalParams.solver_type == SolverOptions::BICGS) {
+    KSPSetType(ksp, KSPBCGS);
+  }
+  if(GlobalParams.solver_type == SolverOptions::PCONLY) {
+    KSPSetType(ksp, KSPRICHARDSON);
+  }
+  if(GlobalParams.solver_type == SolverOptions::S_CG) {
+    KSPSetType(ksp, KSPCG);
+  }
+
   PCSetType(pc, PCSHELL);
   pc_create(&shell, this);
   PCShellSetApply(pc,pc_apply);
   PCShellSetContext(pc, (void*) &shell);
   KSPSetPC(ksp, pc);
   // KSPSetConvergenceTest(ksp, &convergence_test, reinterpret_cast<void *>(&sc), nullptr);
-  KSPSetPCSide(ksp, PCSide::PC_RIGHT);
-  KSPGMRESSetRestart(ksp, GlobalParams.GMRES_max_steps);
+  
   KSPMonitorSet(ksp, MonitorError, this, nullptr);
   KSPSetUp(ksp);
   KSPSetTolerances(ksp, 1e-10, GlobalParams.Solver_Precision, 1000, GlobalParams.GMRES_max_steps);
@@ -183,6 +203,8 @@ void NonLocalProblem::reinit_rhs() {
 
 NonLocalProblem::~NonLocalProblem() {
   delete matrix;
+  delete[] locally_owned_dofs_index_array;
+  KSPDestroy(&ksp);
 }
 
 Direction get_direction_for_boundary_id(BoundaryId bid) {
