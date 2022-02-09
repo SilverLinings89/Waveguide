@@ -11,17 +11,17 @@
 
 void initialize_global_variables(const std::string run_file, const std::string case_file, std::string override_data) {
   // Read parameters into Parameter Object
-  GlobalParams = GetParameters(run_file, case_file);
   
+  ParameterOverride po;
   if(override_data.size() != 0) {
-    ParameterOverride po;
     bool success = po.read(override_data);
     if(!success) {
       std::cout << "The override data was incorrect. Usage: Seperate overrides by \";\" and pass key-value-pairs like \"pml_order=4;pml_sigma_max=10\". Also, spaces are not allowed. Use \"_\" instead. Also, remember to wrap the list in \"...\" in case you have multiple statements because the \";\" will otherwise be interpreted by the shell." <<std::endl;
       exit(0);
     }
-    po.perform_on(GlobalParams);
   }
+  
+  GlobalParams = GetParameters(run_file, case_file, po);
 
   // Build MPI Communicator
   GlobalMPI.initialize();

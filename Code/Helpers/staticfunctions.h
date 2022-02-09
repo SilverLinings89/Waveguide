@@ -8,6 +8,7 @@
 #include <deal.II/lac/affine_constraints.h>
 #include <fstream>
 #include "./Parameters.h"
+#include "./ParameterOverride.h"
 #include "../Core/Types.h"
 
 extern std::string solutionpath;
@@ -57,7 +58,7 @@ void mesh_info(Triangulation<3> *, std::string);
 template <int dim>
 void mesh_info(const Triangulation<dim>);
 
-Parameters GetParameters(const std::string run_file,const std::string case_file);
+Parameters GetParameters(const std::string run_file,const std::string case_file, ParameterOverride& in_po);
 
 Position Triangulation_Shit_To_Local_Geometry(const Position &p);
 

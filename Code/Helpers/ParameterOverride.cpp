@@ -53,5 +53,13 @@ void ParameterOverride::perform_on(Parameters& in_parameters) {
             print_info("ParameterOverride", "Replacing iterative solver with " + overrides[i].second);
             in_parameters.solver_type = solver_option(overrides[i].second);
         }
+        if(overrides[i].first == "geometry_size_z") {
+            print_info("ParameterOverride", "Replacing geometry size z with " + overrides[i].second);
+            in_parameters.Geometry_Size_Z = stod(overrides[i].second);
+        }
+        if(overrides[i].first == "processes_in_z") {
+            print_info("ParameterOverride", "Replacing number of processes in z with " + overrides[i].second);
+            in_parameters.Blocks_in_z_direction = stoi(overrides[i].second);
+        }
     }
 }

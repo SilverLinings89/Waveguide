@@ -22,6 +22,7 @@
 #include <ratio>
 #include <string>
 #include <vector>
+#include <chrono>
 
 static PetscErrorCode MonitorError(KSP , PetscInt, PetscReal rnorm, void * problem)
 {
@@ -261,9 +262,11 @@ void NonLocalProblem::assemble() {
 }
 
 void NonLocalProblem::solve() {
-  
+  std::chrono::steady_clock::time_point time_begin;
+  std::chrono::steady_clock::time_point time_end;
   if(level == GlobalParams.Sweeping_Level) {
     print_vector_norm(&rhs, "RHS");
+    time_begin = std::chrono::steady_clock::now();
   }
 
   bool run_itterative_solver = !GlobalParams.solve_directly;
@@ -285,6 +288,10 @@ void NonLocalProblem::solve() {
     direct_solver.solve(*matrix, solution, rhs);
   }
   
+  if(level == GlobalParams.Sweeping_Level) {
+    time_end = std::chrono::steady_clock::now();
+    print_info("NonlocalProblem::solve", "Solving took " + std::to_string(std::chrono::duration_cast<std::chrono::seconds>(time_end - time_begin).count()) + "[s]");
+  }
 
 }
 
