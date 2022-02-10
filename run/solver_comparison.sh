@@ -3,7 +3,7 @@
 declare -a arr=("GMRES" "MINRES" "TFQMR" "BICGS" "CG" "PCONLY");
 
 truncate_output=true;
-hide_errors=true;
+hide_errors=false;
 domainlength=$((2*$1));
 echo "Running for $1 processes.";
 echo "Using domain length $domainlength.";
