@@ -10,7 +10,6 @@ subsection Case parameters
     set mu out = 1.0
     set signal amplitude = 1.0
     set Boundary Method = PML
-    set HSIE polynomial degree = 15
     set PML n layers = 8
     set PML thickness = 0.5
     set Input Signal Method = Dirichlet
