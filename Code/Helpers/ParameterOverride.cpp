@@ -46,7 +46,7 @@ void ParameterOverride::perform_on(Parameters& in_parameters) {
             in_parameters.PML_Sigma_Max = std::stod(overrides[i].second);
         }
         if(overrides[i].first == "pml_order") {
-            print_info("ParameterOverride", "Replacing pml_prder with " + overrides[i].second);
+            print_info("ParameterOverride", "Replacing pml_order with " + overrides[i].second);
             in_parameters.PML_skaling_order = std::stoi(overrides[i].second);
         }
         if(overrides[i].first == "solver_type") {
