@@ -4,11 +4,8 @@ declare -A l2errors
 declare -A linftyerrors
 
 # declare -a sigmas=(5 10 20 35 50 70 90)
-# declare -a ncells=(5 8 11 13 16)
-
-declare -a sigmas=(5 10)
-declare -a ncells=(5 8)
-
+declare -a sigmas=(30 60 90)
+declare -a ncells=(6 11 16)
 order=$1
 num_sigmas=${#sigmas[@]}
 num_cell_opts=${#ncells[@]}

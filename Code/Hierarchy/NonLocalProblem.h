@@ -65,7 +65,7 @@ private:
 
   std::string output_results();
 
-  void write_multifile_output(const std::string & filename, bool apply_coordinate_transform);
+  void write_multifile_output(const std::string & filename, bool apply_coordinate_transform) override;
 
   void communicate_external_dsp(DynamicSparsityPattern * in_dsp);
 

@@ -36,12 +36,12 @@ void OutputManager::initialize() {
     out << "../Solutions/run" << i;
     output_folder_path = out.str();
     if(GlobalParams.MPI_Rank == 0) {
-        std::cout << "Solution path: " << output_folder_path << std::endl;
+        print_info("OutputManager::initialize", "Solution path: " + output_folder_path);
         mkdir(output_folder_path.c_str(), ACCESSPERMS);
         std::string git_commit_hash = exec("git rev-parse HEAD");
         git_commit_hash.erase(std::remove(git_commit_hash.begin(), git_commit_hash.end(), '\n'), git_commit_hash.end());
         write_run_description(git_commit_hash);
-        print_info("Git status:",git_commit_hash);
+        print_info("OutputManager::initialize","Git status: " + git_commit_hash);
     }
     log_stream.open(output_folder_path + "/main" + std::to_string(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) + ".log", std::ios::binary);
 }

@@ -131,75 +131,12 @@ void LocalProblem::reinit() {
 }
 
 void LocalProblem::solve() {
-  
   rhs.compress(dealii::VectorOperation::insert);
-  
   solver.solve(*matrix, solution, rhs);
-  
 }
 
 void LocalProblem::initialize_index_sets() {
   
-}
-
-auto LocalProblem::compare_to_exact_solution() -> void {
-  NumericVectorLocal solution_inner(Geometry.levels[level].inner_domain->n_locally_active_dofs);
-  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
-    solution_inner[i] = solution(i);
-  }
-
-  std::ofstream myfile ("output_z.dat");
-  for(unsigned int i = 0; i < 100; i++) {
-    double z = -GlobalParams.Geometry_Size_X/2.0 + i*GlobalParams.Geometry_Size_X/99.0;
-    Position p = {0,0, z};
-    NumericVectorLocal local_solution(3);
-    NumericVectorLocal exact_solution(3);
-    VectorTools::point_value(Geometry.levels[level].inner_domain->dof_handler, solution_inner, p, local_solution);
-    GlobalParams.source_field->vector_value(p, exact_solution);
-    myfile << "0\t0\t" << z << "\t" << local_solution[0].real()<< "\t" << local_solution[0].imag() ;
-    myfile << "\t" << local_solution[1].real()<< "\t"<< local_solution[1].imag();
-    myfile << "\t" << local_solution[2].real()<< "\t"<< local_solution[2].imag();
-    myfile << "\t" << exact_solution[0].real()<< "\t"<< exact_solution[0].imag() ;
-    myfile << "\t" << exact_solution[1].real()<< "\t"<< exact_solution[1].imag();
-    myfile << "\t" << exact_solution[2].real()<< "\t"<< exact_solution[2].imag();
-    myfile << std::endl;
-  }
-  myfile.close();
-  myfile.open("output_y.dat");
-  for(unsigned int i = 0; i < 100; i++) {
-    double y = -GlobalParams.Geometry_Size_X/2.0 + i*GlobalParams.Geometry_Size_X/99.0;
-    Position p = {0,y,0};
-    NumericVectorLocal local_solution(3);
-    NumericVectorLocal exact_solution(3);
-    VectorTools::point_value(Geometry.levels[level].inner_domain->dof_handler, solution_inner, p, local_solution);
-    GlobalParams.source_field->vector_value(p, exact_solution);
-    myfile <<"0\t" << y << "\t0\t"<< local_solution[0].real()<< "\t"<< local_solution[0].imag() ;
-    myfile << "\t" << local_solution[1].real()<< "\t"<< local_solution[1].imag();
-    myfile << "\t" << local_solution[2].real()<< "\t"<< local_solution[2].imag();
-    myfile << "\t" << exact_solution[0].real()<< "\t"<< exact_solution[0].imag() ;
-    myfile << "\t" << exact_solution[1].real()<< "\t"<< exact_solution[1].imag();
-    myfile << "\t" << exact_solution[2].real()<< "\t"<< exact_solution[2].imag();
-    myfile << std::endl;
-  }
-  myfile.close();
-  myfile.open("output_x.dat");
-  for(unsigned int i = 0; i < 100; i++) {
-    double x = -GlobalParams.Geometry_Size_X/2.0 + i*GlobalParams.Geometry_Size_X/99.0;
-    Position p = {x,0,0};
-    NumericVectorLocal local_solution(3);
-    NumericVectorLocal exact_solution(3);
-    VectorTools::point_value(Geometry.levels[level].inner_domain->dof_handler, solution_inner, p, local_solution);
-    GlobalParams.source_field->vector_value(p, exact_solution);
-    myfile << x << "\t0\t0";
-    myfile << "\t" << local_solution[0].real()<< "\t"<< local_solution[0].imag() ;
-    myfile << "\t" << local_solution[1].real()<< "\t"<< local_solution[1].imag();
-    myfile << "\t" << local_solution[2].real()<< "\t"<< local_solution[2].imag();
-    myfile << "\t" << exact_solution[0].real()<< "\t"<< exact_solution[0].imag() ;
-    myfile << "\t" << exact_solution[1].real()<< "\t"<< exact_solution[1].imag();
-    myfile << "\t" << exact_solution[2].real()<< "\t"<< exact_solution[2].imag();
-    myfile << std::endl;
-  }
-  myfile.close();
 }
 
 void LocalProblem::compute_solver_factorization() {
@@ -212,36 +149,12 @@ void LocalProblem::compute_solver_factorization() {
   print_info("LocalProblem::compute_solver_factorization", "Walltime: " + std::to_string(timer1.wall_time()) , LoggingLevel::PRODUCTION_ONE);
 }
 
-double LocalProblem::compute_error(dealii::VectorTools::NormType in_norm, Function<3,ComplexNumber> * in_exact, dealii::Vector<ComplexNumber> & in_solution, dealii::DataOut<3> * in_data_out) {
+double LocalProblem::compute_error() {
   Timer timer;
   timer.start ();
-  double error = 0;
-  dealii::Vector<double> cellwise_error(Geometry.levels[level].inner_domain->triangulation.n_active_cells());
-  dealii::VectorTools::integrate_difference(Geometry.levels[level].inner_domain->dof_handler, in_solution, *in_exact, cellwise_error, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), in_norm);
-  unsigned int idx = 0;
-  for(auto it = Geometry.levels[level].inner_domain->dof_handler.begin_active(); it != Geometry.levels[level].inner_domain->dof_handler.end(); it++) {
-    bool zero_component = false;
-    if(GlobalParams.use_tapered_input_signal) {
-      const double z = it->center()[2];
-      if(z >= GlobalParams.tapering_min_z && z < GlobalParams.tapering_max_z) {
-        zero_component = true;
-      }
-    }
-    if(zero_component) {
-      cellwise_error[idx] = 0;
-    }
-    idx++;
-  }
-  error = dealii::VectorTools::compute_global_error(Geometry.levels[level].inner_domain->triangulation, cellwise_error, in_norm);
+  double error = compute_L2_error();
   timer.stop ();
-  std::string error_name ="";
-  if(in_norm == dealii::VectorTools::NormType::H1_norm) {
-    error_name = "H1";
-  } else {
-    error_name = "L2";
-  }
-  in_data_out->add_data_vector(cellwise_error, "Cellwise_" + error_name + "_error");
-  print_info("LocalProblem::compute_error", error_name + " Error: " + std::to_string(error) + " ( computed in " + std::to_string(timer.cpu_time()) + "s)");
+  print_info("LocalProblem::compute_error", "L2 Error: " + std::to_string(error) + " (computed in " + std::to_string(timer.cpu_time()) + "s)");
   return error;
 }
 
@@ -269,4 +182,34 @@ unsigned int LocalProblem::compute_global_solve_counter() {
 void LocalProblem::empty_memory() {
   matrix->clear();
   solver.reset();
+}
+
+void LocalProblem::write_multifile_output(const std::string & in_filename, bool) {
+  NumericVectorLocal local_solution(Geometry.levels[0].inner_domain->n_locally_active_dofs);
+  std::vector<std::string> generated_files;
+  for(unsigned int i = 0; i < Geometry.levels[0].inner_domain->n_locally_active_dofs; i++) {
+    local_solution[i] = solution[i];
+  }
+
+  std::string file_1 = Geometry.levels[0].inner_domain->output_results(in_filename + "0" , local_solution, false);
+  generated_files.push_back(file_1);
+  if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML) {
+    for (unsigned int surf = 0; surf < 6; surf++) {
+      if(Geometry.levels[0].surface_type[surf] == SurfaceType::ABC_SURFACE){
+        dealii::Vector<ComplexNumber> ds (Geometry.levels[0].surfaces[surf]->n_locally_active_dofs);
+        for(unsigned int index = 0; index < Geometry.levels[0].surfaces[surf]->n_locally_active_dofs; index++) {
+          ds[index] = solution[Geometry.levels[0].surfaces[surf]->global_index_mapping[index]];
+        }
+        std::string file_2 = Geometry.levels[0].surfaces[surf]->output_results(ds, in_filename + "_pml0");
+        generated_files.push_back(file_2);
+      }
+    }
+  }
+
+  std::string filename = GlobalOutputManager.get_full_filename("_" + in_filename + ".pvtu");
+  std::ofstream outputvtu(filename);
+  for(unsigned int i = 0; i < generated_files.size(); i++) {
+    generated_files[i] = "../" + generated_files[i];
+  }
+  Geometry.levels[0].inner_domain->data_out.write_pvtu_record(outputvtu, generated_files);
 }

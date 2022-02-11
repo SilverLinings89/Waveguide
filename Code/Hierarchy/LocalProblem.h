@@ -31,8 +31,6 @@ public:
   auto reinit() -> void override;
 
   auto reinit_rhs() -> void override;
-
-  auto compare_to_exact_solution() -> void;
   
   dealii::IndexSet compute_interface_dof_set(BoundaryId interface_id);
 
@@ -40,9 +38,11 @@ public:
 
   double compute_L2_error();
 
-  double compute_error(dealii::VectorTools::NormType, Function<3,ComplexNumber> *, dealii::Vector<ComplexNumber> & , dealii::DataOut<3> *);
+  double compute_error();
 
   unsigned int compute_global_solve_counter() override;
 
   void empty_memory() override;
+
+  void write_multifile_output(const std::string & in_filename, bool transform = false) override;
 };

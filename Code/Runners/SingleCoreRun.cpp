@@ -42,9 +42,9 @@ void SingleCoreRun::run() {
   
   // mainProblem->compute_solver_factorization();
   
-  mainProblem->solve();
-  
-  mainProblem->output_results();
+  mainProblem->solve(); 
+  mainProblem->compute_error();
+  mainProblem->write_multifile_output("solution");
   GlobalTimerManager.write_output();
   print_info("SingleCoreRun::run", "End", LoggingLevel::PRODUCTION_ONE);
 }

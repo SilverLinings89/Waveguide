@@ -153,8 +153,12 @@ int main(int argc, char *argv[]) {
     
     print_info("Main", "Shutting down");
     delete simulation;
+    std::cout << "A" << std::endl;
     GlobalMPI.destroy_comms();
+    std::cout << "B" << std::endl;
     delete GlobalSpaceTransformation;
+    std::cout << "C" << std::endl;
+    print_info("Main", "End");
   }
   return 0;
 }

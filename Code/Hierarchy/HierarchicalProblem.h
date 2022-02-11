@@ -62,6 +62,7 @@ class HierarchicalProblem {
   }
   void print_solve_counter_list();
   virtual void empty_memory();
+  virtual void write_multifile_output(const std::string & filename, bool apply_coordinate_transform) =0;
 };
 
 typedef struct {
