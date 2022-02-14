@@ -13,7 +13,7 @@ subsection Case parameters
     set HSIE polynomial degree = 15
     set PML n layers = 10
     set PML thickness = 0.5
-    set PML sigma max = 50
+    set PML sigma max = 20
     set PML skaling order = 3
     set Input Signal Method = Dirichlet
 end

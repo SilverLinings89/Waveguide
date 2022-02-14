@@ -295,7 +295,7 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
   print_info("InnerDomain::output_results()", "Start");
   const unsigned int n_cells = dof_handler.get_triangulation().n_active_cells();
   dealii::Vector<double> eps_abs(n_cells);
-  unsigned int counter = 0; 
+  unsigned int counter = 0;
   for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
     Position p = it->center();
     MaterialTensor transformation;
@@ -343,6 +343,10 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
   local_constraints.close();
   dealii::Vector<ComplexNumber> interpolated_exact_solution(in_solution.size());
   VectorTools::project(dof_handler, local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *esc, interpolated_exact_solution);
+  
+  for(unsigned int i = 0; i < in_solution.size(); i++) {
+    interpolated_exact_solution[i] -= in_solution[i];
+  }
   data_out.add_data_vector(eps_abs, "Epsilon");
   data_out.add_data_vector(interpolated_exact_solution, "Exact_Solution");
   

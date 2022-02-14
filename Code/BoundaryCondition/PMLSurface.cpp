@@ -303,59 +303,6 @@ void PMLSurface::prepare_dof_associations() {
 
 std::vector<InterfaceDofData> PMLSurface::get_dof_association_by_boundary_id(unsigned int in_bid) {
   return dof_associations[in_bid];
-  /**
-  std::vector<InterfaceDofData> ret;
-  std::vector<types::global_dof_index> local_line_dofs(fe_nedelec.dofs_per_line);
-  std::set<DofNumber> line_set;
-  std::vector<DofNumber> local_face_dofs(fe_nedelec.dofs_per_face);
-  std::set<DofNumber> face_set;
-  triangulation.clear_user_flags();
-  for (auto cell : dof_handler.active_cell_iterators()) {
-    if (cell->at_boundary()) {
-      for (unsigned int face = 0; face < 6; face++) {
-        if (cell->face(face)->boundary_id() == in_bid) {
-          std::vector<DofNumber> face_dofs_indices(fe_nedelec.dofs_per_face);
-          cell->face(face)->get_dof_indices(face_dofs_indices);
-          face_set.clear();
-          face_set.insert(face_dofs_indices.begin(), face_dofs_indices.end());
-          std::vector<InterfaceDofData> cell_dofs_and_orientations_and_points;
-          for (unsigned int i = 0; i < dealii::GeometryInfo<3>::lines_per_face; i++) {
-            std::vector<DofNumber> line_dofs(fe_nedelec.dofs_per_line);
-            cell->face(face)->line(i)->get_dof_indices(line_dofs);
-            line_set.clear();
-            line_set.insert(line_dofs.begin(), line_dofs.end());
-            for(auto erase_it: line_set) {
-              face_set.erase(erase_it);
-            }
-            if(!cell->face(face)->line(i)->user_flag_set()) {
-              for (unsigned int j = 0; j < fe_nedelec.dofs_per_line; j++) {
-                InterfaceDofData new_item;
-                new_item.index = line_dofs[j];
-                new_item.base_point = cell->face(face)->line(i)->center();
-                new_item.order = j;
-                cell_dofs_and_orientations_and_points.push_back(new_item);
-              }
-              cell->face(face)->line(i)->set_user_flag();
-            }
-          }
-          for (auto item: face_set) {
-            InterfaceDofData new_item;
-            new_item.index = item;
-            new_item.base_point = cell->face(face)->center();
-            new_item.order = 0;
-            cell_dofs_and_orientations_and_points.push_back(new_item);
-          }
-          for (auto item: cell_dofs_and_orientations_and_points) {
-            ret.push_back(item);
-          }
-        }
-      }
-    }
-  }
-  ret.shrink_to_fit();
-  std::sort(ret.begin(), ret.end(), compareDofBaseDataAndOrientation);
-  return ret;
-  **/
 }
 
 std::vector<InterfaceDofData> PMLSurface::get_dof_association() {
@@ -469,8 +416,7 @@ struct CellwiseAssemblyDataPML {
         Tensor<1, 3, ComplexNumber> J_Val;
         J_Curl = fe_values[fe_field].curl(j, q_index);
         J_Val = fe_values[fe_field].value(j, q_index);
-
-        cell_matrix[i][j] += I_Curl * (mu_inverse * Conjugate_Vector(J_Curl))* JxW - ( ( epsilon *  I_Val * Conjugate_Vector(J_Val)) * JxW);
+        cell_matrix[i][j] += I_Curl * (mu_inverse * Conjugate_Vector(J_Curl))* JxW - ( ( (epsilon * I_Val) * Conjugate_Vector(J_Val)) * JxW);
       }
     }
   }
@@ -488,9 +434,6 @@ struct CellwiseAssemblyDataPML {
 
 };
 
-void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* , Constraints *){
-    // NOT IMPLEMENTED
-}
 
 void PMLSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constraints) {
   std::vector<unsigned int> local_indices(fe_nedelec.dofs_per_cell);
@@ -499,55 +442,6 @@ void PMLSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, C
     local_indices = transform_local_to_global_dofs(local_indices);
     in_constraints->add_entries_local_to_global(local_indices, *in_dsp);
   }
-}
-
-void PMLSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, NumericVectorDistributed* rhs, Constraints *constraints){
-  CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_handler);
-  for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
-      cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
-      cell_data.local_dof_indices = transform_local_to_global_dofs(cell_data.local_dof_indices);
-      cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
-      cell_data.fe_values.reinit(cell_data.cell);
-      cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
-      std::vector<types::global_dof_index> input_dofs(fe_nedelec.dofs_per_line);
-      IndexSet input_dofs_local_set(fe_nedelec.dofs_per_cell);
-      std::vector<Position> input_dof_centers(fe_nedelec.dofs_per_cell);
-      std::vector<Tensor<1, 3, double>> input_dof_dirs(fe_nedelec.dofs_per_cell);
-      cell_data.cell_matrix = 0;
-      for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
-          Position pos = cell_data.get_position_for_q_index(q_index);
-          dealii::Tensor<2,3,ComplexNumber> trafo = GlobalSpaceTransformation->get_Space_Transformation_Tensor(pos);
-          dealii::Tensor<2,3,ComplexNumber> epsilon = get_pml_tensor_epsilon(pos) * trafo;
-          dealii::Tensor<2,3,ComplexNumber> mu = get_pml_tensor_mu(pos) * trafo;
-          cell_data.prepare_for_current_q_index(q_index, epsilon, mu);
-      }
-      constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, true);
-  }
-  matrix->compress(dealii::VectorOperation::add);
-}
-
-void PMLSurface::fill_matrix(dealii::SparseMatrix<ComplexNumber> * matrix, Constraints *constraints){
-  CellwiseAssemblyDataPML cell_data(&fe_nedelec, &dof_handler);
-  for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
-      cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
-      cell_data.local_dof_indices = transform_local_to_global_dofs(cell_data.local_dof_indices);
-      cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
-      cell_data.fe_values.reinit(cell_data.cell);
-      cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
-      std::vector<types::global_dof_index> input_dofs(fe_nedelec.dofs_per_line);
-      IndexSet input_dofs_local_set(fe_nedelec.dofs_per_cell);
-      std::vector<Position> input_dof_centers(fe_nedelec.dofs_per_cell);
-      std::vector<Tensor<1, 3, double>> input_dof_dirs(fe_nedelec.dofs_per_cell);
-      cell_data.cell_matrix = 0;
-      for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
-          Position pos = cell_data.get_position_for_q_index(q_index);
-          dealii::Tensor<2,3,ComplexNumber> epsilon = get_pml_tensor_epsilon(pos);
-          dealii::Tensor<2,3,ComplexNumber> mu = get_pml_tensor_mu(pos);
-          cell_data.prepare_for_current_q_index(q_index, epsilon, mu);
-      }
-      constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.local_dof_indices,*matrix);
-  }
-  matrix->compress(dealii::VectorOperation::add);
 }
 
 void PMLSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, NumericVectorDistributed* rhs, Constraints *constraints){

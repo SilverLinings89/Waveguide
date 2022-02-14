@@ -372,7 +372,9 @@ std::pair<bool, unsigned int> GeometryManager::get_level_neighbor_for_interface(
 }
 
 bool GeometryManager::math_coordinate_in_waveguide(Position in_position) const {
-  return (std::abs(in_position[0]) < (GlobalParams.Width_of_waveguide  / 2.0)) && (std::abs(in_position[1]) < (GlobalParams.Height_of_waveguide / 2.0));
+  bool in_x = std::abs(in_position[0]) <= (GlobalParams.Width_of_waveguide  / 2.0);
+  bool in_y = std::abs(in_position[1]) <= (GlobalParams.Height_of_waveguide / 2.0);
+  return in_x && in_y;
 }
 
 BoundaryId GeometryManager::get_boundary_for_direction(Direction in_direction) {

@@ -491,8 +491,6 @@ void NonLocalProblem::update_shared_solution_vector() {
   shared_solution.update_ghost_values();
 }
 
-
-
 void NonLocalProblem::write_multifile_output(const std::string & in_filename, bool transform) {
   if(GlobalParams.MPI_Rank == 0 && !GlobalParams.solve_directly) {
     residual_output->run_gnuplot();

@@ -47,9 +47,6 @@ public:
   std::vector<HSIEPolynomial> build_non_curl_term_nedelec(unsigned int, const double, const double);
   void set_V0(Position);
   auto get_dof_data_for_cell(CellIterator2D, CellIterator2D) -> DofDataVector;
-  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;
-  void fill_matrix(dealii::SparseMatrix<ComplexNumber>*,  Constraints *constraints) override;
-  void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;
   void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;
   void fill_matrix_for_edge(BoundaryId other_bid, dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints);
   void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constriants) override;

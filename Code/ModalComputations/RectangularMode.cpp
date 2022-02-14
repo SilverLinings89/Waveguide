@@ -270,7 +270,7 @@ void RectangularMode::assemble_system() {
     constraints.distribute_local_to_global(cell_data.cell_stiffness_matrix, cell_data.local_dof_indices, stiffness_matrix);
   }
   for(unsigned int surf = 0; surf < 4; surf++) {
-    surfaces[surf]->fill_matrix(&mass_matrix, &stiffness_matrix, &rhs, &constraints);
+    // surfaces[surf]->fill_matrix(&mass_matrix, &stiffness_matrix, &rhs, &constraints);
   }
   mass_matrix.compress(dealii::VectorOperation::add);
   stiffness_matrix.compress(dealii::VectorOperation::add);

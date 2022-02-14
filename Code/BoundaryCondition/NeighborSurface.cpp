@@ -28,18 +28,6 @@ NeighborSurface::NeighborSurface(unsigned int in_surface, unsigned int in_level)
 NeighborSurface::~NeighborSurface() {
 }
 
-void NeighborSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix* matrix, NumericVectorDistributed*, Constraints *) {
-    matrix->compress(dealii::VectorOperation::add); // <-- this operation is collective and therefore required.
-}
-
-void NeighborSurface::fill_matrix(dealii::SparseMatrix<ComplexNumber> * matrix, Constraints *) {
-	matrix->compress(dealii::VectorOperation::add); // <-- this operation is collective and therefore required.
-}
-
-void NeighborSurface::fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix *, NumericVectorDistributed *, Constraints *) {
-	// Nothing to do here, work happens on neighbor process.
-}
-
 void NeighborSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, NumericVectorDistributed *, Constraints *) {
 	matrix->compress(dealii::VectorOperation::add); // <-- this operation is collective and therefore required.
 	// Nothing to do here, work happens on neighbor process.

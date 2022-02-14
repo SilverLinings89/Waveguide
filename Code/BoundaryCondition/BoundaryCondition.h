@@ -61,10 +61,7 @@ public:
   virtual void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints *constraints) = 0; // Implementation happens in the derived classes and fills the sparsity pattern. Sometime these sparsity patterns depend on constraints as well, therefore constraints get passed aswell. The dealii documentation has more details on this topic.
   
   // Fill the system matrix
-  virtual void fill_matrix(dealii::PETScWrappers::SparseMatrix*,      NumericVectorDistributed* rhs, Constraints *constraints) = 0; // For a given constraints object, this function writes all contributions from this boundary condition into the matrix (if any). Additionally, it assembles the right-hand-side vector associated with this boundary condition.
-  virtual void fill_matrix(dealii::SparseMatrix<ComplexNumber> *, Constraints *constraints) = 0; // Similar to the function above, but it only assembles the matrix contributions.
   virtual void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) = 0; // Same as the first version of this function but for a distributed matrix type.
-  virtual void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) = 0; // Same as the second version of this function but for a distributed matrix type.
 
   virtual void finish_dof_index_initialization(); // In cases where not all locally active dofs are locally owned (for example for two pml domains, the dofs on the shared surface are only owned by one of two processes) this function handles the numbering of the dofs once the non-owned dofs have been communicated.
   

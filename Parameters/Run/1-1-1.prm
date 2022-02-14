@@ -5,6 +5,6 @@ subsection Run parameters
   set processes in z         = 1
   set cell count x           = 20
   set cell count y           = 20
-  set cell count z           = 20
+  set cell count z           = 40
   set Logging Level          = Debug One
 end

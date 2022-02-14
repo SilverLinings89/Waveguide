@@ -32,9 +32,9 @@ struct Parameters {
 
     bool Output_transformed_solution = false;
 
-    double Width_of_waveguide = 2.0; // x-direction
+    double Width_of_waveguide = 1.8; // x-direction
 
-    double Height_of_waveguide = 1.8; // y-direction
+    double Height_of_waveguide = 2.0; // y-direction
 
     double Horizontal_displacement_of_waveguide = 0; // x-direction
 

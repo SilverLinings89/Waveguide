@@ -220,9 +220,9 @@ Tensor<2, 3, double> Sector<3>::TransformationTensorInternal(double in_x,
     print_info("Sector<3>::TransformationTensorInternal", "Faulty implementation of internal Tensor calculation: z: " + std::to_string(z), LoggingLevel::PRODUCTION_ALL);
   }
   double RadiusInFactor =
-      (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide) / (2 * dofs_l[0]);
+      (2 * GlobalParams.Width_of_waveguide) / (2 * dofs_l[0]);
   double RadiusOutFactor =
-      (GlobalParams.Width_of_waveguide + GlobalParams.Width_of_waveguide) / (2 * dofs_r[0]);
+      (2 * GlobalParams.Width_of_waveguide) / (2 * dofs_r[0]);
 
   double temp =
       1 / (RadiusInFactor - 3 * RadiusInFactor * z * z +

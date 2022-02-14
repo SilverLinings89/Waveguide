@@ -128,7 +128,7 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.Amplitude_of_input_signal = case_prm.get_double("signal amplitude");
         ret.Nedelec_element_order = case_prm.get_integer("fem order");
         ret.Width_of_waveguide = case_prm.get_double("width of waveguide");
-        ret.Width_of_waveguide = case_prm.get_double("height of waveguide");
+        ret.Height_of_waveguide = case_prm.get_double("height of waveguide");
         ret.Enable_Parameter_Run = case_prm.get_bool("Enable Parameter Run");
         ret.Min_HSIE_Order = case_prm.get_integer("Min HSIE Order");
         ret.Max_HSIE_Order = case_prm.get_integer("Max HSIE Order");

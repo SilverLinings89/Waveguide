@@ -28,9 +28,6 @@ class PMLSurface : public BoundaryCondition {
     
     bool is_point_at_boundary(Position, BoundaryId);
     auto make_constraints() -> Constraints override;
-    void fill_matrix(dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;
-    void fill_matrix(dealii::SparseMatrix<ComplexNumber>*,  Constraints *constraints) override;
-    void fill_matrix(dealii::PETScWrappers::SparseMatrix*, dealii::PETScWrappers::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;
     void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix*, NumericVectorDistributed* rhs, Constraints *constraints) override;
     void fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constriants) override;
     bool is_point_at_boundary(Position2D in_p, BoundaryId in_bid) override;
