@@ -311,28 +311,28 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association() {
 
 std::array<double, 3> PMLSurface::fraction_of_pml_direction(Position in_p) {
   std::array<double, 3> ret;
-  if(in_p[0] < Geometry.local_x_range.first) {
+  if(in_p[0] < Geometry.local_x_range.first - non_pml_layer_thickness) {
     ret[0] = (Geometry.local_x_range.first - in_p[0] + non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
   } else {
-    if(in_p[0] > Geometry.local_x_range.second) {
+    if(in_p[0] > Geometry.local_x_range.second + non_pml_layer_thickness) {
       ret[0] = (in_p[0] - Geometry.local_x_range.second - non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
     } else {
       ret[0] = 0.0;
     }
   }
-  if(in_p[1] < Geometry.local_y_range.first) {
+  if(in_p[1] < Geometry.local_y_range.first - non_pml_layer_thickness) {
     ret[1] = (Geometry.local_y_range.first - in_p[1] + non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
   } else {
-    if(in_p[1] > Geometry.local_y_range.second) {
+    if(in_p[1] > Geometry.local_y_range.second + non_pml_layer_thickness) {
       ret[1] = (in_p[1] - Geometry.local_y_range.second - non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
     } else {
       ret[1] = 0.0;
     }
   }
-  if(in_p[2] < Geometry.local_z_range.first) {
+  if(in_p[2] < Geometry.local_z_range.first - non_pml_layer_thickness) {
     ret[2] = (Geometry.local_z_range.first - in_p[2] + non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
   } else {
-    if(in_p[2] > Geometry.local_z_range.second) {
+    if(in_p[2] > Geometry.local_z_range.second + non_pml_layer_thickness) {
       ret[2] = (in_p[2] - Geometry.local_z_range.second - non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
     } else {
       ret[2] = 0.0;

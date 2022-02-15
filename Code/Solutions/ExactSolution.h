@@ -7,6 +7,7 @@
 #include <vector>
 #include "../Helpers/PointVal.h"
 #include "../GlobalObjects/GlobalObjects.h"
+#include <deal.II/base/function_lib.h>
 
 /**
  * \class ExactSolution
@@ -33,21 +34,33 @@
 
 class ExactSolution: public dealii::Function<3, ComplexNumber> {
  private:
-  bool is_rectangular;
   bool is_dual;
   std::vector<float> mesh_points;
   PointVal **vals;
+  const ComplexNumber imaginary_unit;
 
  public:
+  dealii::Functions::InterpolatedUniformGridData<2> component_x;
+  dealii::Functions::InterpolatedUniformGridData<2> component_y;
+  dealii::Functions::InterpolatedUniformGridData<2> component_z;
+  static dealii::Table<2,double> data_table_x;
+  static dealii::Table<2,double> data_table_y;
+  static dealii::Table<2,double> data_table_z;
+  static std::array<std::pair<double, double>, 2> ranges;
+  static std::array<unsigned int, 2> n_intervals;
   ExactSolution(bool in_rectangular = false, bool in_dual = false);
+
+  static void load_data(std::string fname);
 
   ComplexNumber value(const Position &p, const unsigned int component) const;
 
   void vector_value(const Position &p, dealii::Vector<ComplexNumber> &value) const;
 
-  std::vector<std::string> split(std::string) const;
-
   dealii::Tensor<1, 3, ComplexNumber> curl(const Position &in_p) const;
 
   dealii::Tensor<1, 3, ComplexNumber> val(const Position &in_p) const;
+  
+  ComplexNumber compute_phase_for_position(const Position &in_p) const;
+
+  Position2D get_2D_position_from_3d(const Position & in_p) const;
 };

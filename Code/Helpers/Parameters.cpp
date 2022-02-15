@@ -35,10 +35,12 @@ auto Parameters::complete_data() -> void {
       if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using Cos-Cos-type point source.", LoggingLevel::PRODUCTION_ONE);
   }
   if(Point_Source_Type == 0) {
+      ExactSolution::load_data("../Modes/output_mode.dat");
       source_field = new ExactSolution(true, false);
       if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using mode for rectangular waveguide.", LoggingLevel::PRODUCTION_ONE);
   }
   if(Point_Source_Type == 3) {
+    ExactSolution::load_data("../Modes/output_mode.dat");
       if(transformation_type == TransformationType::AngleWaveguideTransformationType) {
         source_field = new AngledExactSolution();
       } else {
