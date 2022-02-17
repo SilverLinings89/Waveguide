@@ -158,7 +158,6 @@ struct CellwiseAssemblyDataNP {
   std::vector<DofNumber> local_dof_indices;
   DofHandler3D::active_cell_iterator cell;
   DofHandler3D::active_cell_iterator end_cell;
-  ExactSolutionRamped exact_solution_ramped;
   bool has_input_interface = false;
   const FEValuesExtractors::Vector fe_field;
   Vector<ComplexNumber> incoming_wave_field;
@@ -175,7 +174,6 @@ struct CellwiseAssemblyDataNP {
   mu_zero(1.0),
   cell_rhs(dofs_per_cell),
   local_dof_indices(dofs_per_cell),
-  exact_solution_ramped(true, false),
   fe_field(0)
   { 
     cell_rhs = 0;
@@ -294,6 +292,7 @@ void InnerDomain::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase
 std::string InnerDomain::output_results(std::string in_filename, NumericVectorLocal in_solution, bool apply_transformation) {
   print_info("InnerDomain::output_results()", "Start");
   const unsigned int n_cells = dof_handler.get_triangulation().n_active_cells();
+  dealii::Vector<ComplexNumber> interpolated_exact_solution(in_solution.size());
   dealii::Vector<double> eps_abs(n_cells);
   unsigned int counter = 0;
   for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
@@ -341,14 +340,15 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
   local_indices.add_range(0,n_locally_active_dofs);
   Constraints local_constraints(local_indices);
   local_constraints.close();
-  dealii::Vector<ComplexNumber> interpolated_exact_solution(in_solution.size());
-  VectorTools::project(dof_handler, local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *esc, interpolated_exact_solution);
-  
-  for(unsigned int i = 0; i < in_solution.size(); i++) {
-    interpolated_exact_solution[i] -= in_solution[i];
+  if(GlobalParams.Point_Source_Type == 0 || GlobalParams.Point_Source_Type == 3) {
+    
+    VectorTools::project(dof_handler, local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *esc, interpolated_exact_solution);
+    data_out.add_data_vector(interpolated_exact_solution, "Exact_Solution");
   }
+  // for(unsigned int i = 0; i < in_solution.size(); i++) {
+  //  interpolated_exact_solution[i] -= in_solution[i];
+  // }
   data_out.add_data_vector(eps_abs, "Epsilon");
-  data_out.add_data_vector(interpolated_exact_solution, "Exact_Solution");
   
   data_out.build_patches();
   data_out.write_vtu(outputvtu);
@@ -471,8 +471,10 @@ FEErrorStruct InnerDomain::compute_errors(dealii::LinearAlgebra::distributed::Ve
   }
   VectorTools::integrate_difference(dof_handler, local_solution, *GlobalParams.source_field, cell_vector, q, dealii::VectorTools::NormType::L2_norm);
   ret.L2 = VectorTools::compute_global_error(triangulation, cell_vector, dealii::VectorTools::NormType::L2_norm);
+  ret.L2 /= in_solution->l2_norm();
   VectorTools::integrate_difference(dof_handler, local_solution, *GlobalParams.source_field, cell_vector, q, dealii::VectorTools::NormType::Linfty_norm);
   ret.Linfty = VectorTools::compute_global_error(triangulation, cell_vector, dealii::VectorTools::NormType::Linfty_norm);
+  ret.Linfty /= in_solution->linfty_norm();
   return ret;
 }
 

@@ -55,6 +55,22 @@ PMLSurface::PMLSurface(unsigned int surface, unsigned int in_level)
      } else {
        inner_boundary_id = surface - 1;
      }
+     effective_pml_thickness = GlobalParams.PML_thickness - non_pml_layer_thickness;
+
+     lower_pml_ranges[0].first  = Geometry.local_x_range.first - non_pml_layer_thickness;
+     lower_pml_ranges[0].second = Geometry.local_x_range.first - GlobalParams.PML_thickness;
+     lower_pml_ranges[1].first  = Geometry.local_y_range.first - non_pml_layer_thickness;
+     lower_pml_ranges[1].second = Geometry.local_y_range.first - GlobalParams.PML_thickness;
+     lower_pml_ranges[2].first  = Geometry.local_z_range.first - non_pml_layer_thickness;
+     lower_pml_ranges[2].second = Geometry.local_z_range.first - GlobalParams.PML_thickness;
+
+     upper_pml_ranges[0].first  = Geometry.local_x_range.second + non_pml_layer_thickness;
+     upper_pml_ranges[0].second = Geometry.local_x_range.second + GlobalParams.PML_thickness;
+     upper_pml_ranges[1].first  = Geometry.local_y_range.second + non_pml_layer_thickness;
+     upper_pml_ranges[1].second = Geometry.local_y_range.second + GlobalParams.PML_thickness;
+     upper_pml_ranges[2].first  = Geometry.local_z_range.second + non_pml_layer_thickness;
+     upper_pml_ranges[2].second = Geometry.local_z_range.second + GlobalParams.PML_thickness;
+
 }
 
 PMLSurface::~PMLSurface() {}
@@ -311,31 +327,28 @@ std::vector<InterfaceDofData> PMLSurface::get_dof_association() {
 
 std::array<double, 3> PMLSurface::fraction_of_pml_direction(Position in_p) {
   std::array<double, 3> ret;
-  if(in_p[0] < Geometry.local_x_range.first - non_pml_layer_thickness) {
-    ret[0] = (Geometry.local_x_range.first - in_p[0] + non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
-  } else {
-    if(in_p[0] > Geometry.local_x_range.second + non_pml_layer_thickness) {
-      ret[0] = (in_p[0] - Geometry.local_x_range.second - non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
-    } else {
-      ret[0] = 0.0;
+  for(unsigned int i = 0; i < 3; i++) {
+    std::pair<double, double> range;
+    switch (i)
+    {
+      case 0:
+        range = Geometry.local_x_range;
+        break;
+      case 1:
+        range = Geometry.local_y_range;
+        break;
+      case 2:
+        range = Geometry.local_z_range;
+        break;
+      default:
+        break;
     }
-  }
-  if(in_p[1] < Geometry.local_y_range.first - non_pml_layer_thickness) {
-    ret[1] = (Geometry.local_y_range.first - in_p[1] + non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
-  } else {
-    if(in_p[1] > Geometry.local_y_range.second + non_pml_layer_thickness) {
-      ret[1] = (in_p[1] - Geometry.local_y_range.second - non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
-    } else {
-      ret[1] = 0.0;
-    }
-  }
-  if(in_p[2] < Geometry.local_z_range.first - non_pml_layer_thickness) {
-    ret[2] = (Geometry.local_z_range.first - in_p[2] + non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
-  } else {
-    if(in_p[2] > Geometry.local_z_range.second + non_pml_layer_thickness) {
-      ret[2] = (in_p[2] - Geometry.local_z_range.second - non_pml_layer_thickness) / (GlobalParams.PML_thickness - non_pml_layer_thickness);
-    } else {
-      ret[2] = 0.0;
+    ret[i] = 0;
+    if(in_p[i] < lower_pml_ranges[i].first) {
+      ret[i] = std::abs(in_p[i] - lower_pml_ranges[i].first) / effective_pml_thickness;
+    } 
+    if(in_p[i] > upper_pml_ranges[i].first) {
+      ret[i] = std::abs(in_p[i] - upper_pml_ranges[i].first) / effective_pml_thickness;
     }
   }
   return ret;
@@ -344,7 +357,6 @@ std::array<double, 3> PMLSurface::fraction_of_pml_direction(Position in_p) {
 dealii::Tensor<2,3,ComplexNumber> PMLSurface::get_pml_tensor_epsilon(Position in_p) {
     dealii::Tensor<2,3,ComplexNumber> ret = get_pml_tensor(in_p);
     ret *= Geometry.get_epsilon_for_point(in_p);
-    ret *= GlobalParams.Omega * GlobalParams.Omega;
     return ret;
 }
 
@@ -416,7 +428,7 @@ struct CellwiseAssemblyDataPML {
         Tensor<1, 3, ComplexNumber> J_Val;
         J_Curl = fe_values[fe_field].curl(j, q_index);
         J_Val = fe_values[fe_field].value(j, q_index);
-        cell_matrix[i][j] += I_Curl * (mu_inverse * Conjugate_Vector(J_Curl))* JxW - ( ( (epsilon * I_Val) * Conjugate_Vector(J_Val)) * JxW);
+        cell_matrix[i][j] += I_Curl * (mu_inverse * Conjugate_Vector(J_Curl))* JxW - ( ( ((epsilon * GlobalParams.Omega * GlobalParams.Omega) * I_Val) * Conjugate_Vector(J_Val)) * JxW);
       }
     }
   }
@@ -621,6 +633,16 @@ std::string PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_
     zero[i] = 0;
   }
   data_out.add_data_vector(zero, "Exact_Solution");
+  const unsigned int n_cells = dof_handler.get_triangulation().n_active_cells();
+  dealii::Vector<double> eps_abs(n_cells);
+  unsigned int counter = 0;
+  for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
+    Position p = it->center();
+    MaterialTensor epsilon = get_pml_tensor_epsilon(p);
+    eps_abs[counter] = epsilon.norm();
+    counter++;
+  }
+  data_out.add_data_vector(eps_abs, "Epsilon");
   const std::string filename = GlobalOutputManager.get_numbered_filename(in_filename + "-" + std::to_string(b_id) + "-", GlobalParams.MPI_Rank, "vtu");
   std::ofstream outputvtu(filename);
   data_out.build_patches();

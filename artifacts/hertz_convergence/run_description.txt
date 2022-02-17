@@ -1,0 +1,17 @@
+Number of processes: 	4
+Sweeping level: 1
+Truncation Method: PML
+Signal input method: Dirichlet
+Set 0 on input interface: false
+Use predefined shape: false
+Block Counts: [1x1x4]
+Global cell count x: 16
+Global cell count y: 16
+Global cell count z: 64
+Number of PML cell layers: 8
+Use relative convergence limiter: true
+Relative convergence limit: 0.01
+Global x range: -0.1 to 0.1
+Global y range: -0.1 to 0.1
+Global z range: 0.05 to 0.25
+Git commit hash: 48cf361e5f70e1dec755d622ea049b851c6a44fe

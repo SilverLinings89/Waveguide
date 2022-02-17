@@ -4,8 +4,8 @@ declare -A l2errors
 declare -A linftyerrors
 
 # declare -a sigmas=(5 10 20 35 50 70 90)
-declare -a sigmas=(30 60 90)
-declare -a ncells=(6 11 16)
+declare -a sigmas=(1 2 5 10 30 90)
+declare -a ncells=(2 6 10 14)
 order=$1
 num_sigmas=${#sigmas[@]}
 num_cell_opts=${#ncells[@]}
@@ -38,11 +38,3 @@ for ((i=0;i<num_sigmas;i++)) do
 done
 echo
 
-echo "L_infty errors:"
-for ((i=0;i<num_sigmas;i++)) do
-    for ((j=0;j<num_cell_opts;j++)) do
-        printf "$f2" ${linftyerrors[$i,$j]}
-    done
-    echo
-done
-echo

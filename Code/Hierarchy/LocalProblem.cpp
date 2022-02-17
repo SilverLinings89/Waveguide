@@ -79,10 +79,10 @@ dealii::IndexSet LocalProblem::compute_interface_dof_set(BoundaryId interface_id
 
 void LocalProblem::initialize() {
   print_info("LocalProblem::initialize", "Start");
-  GlobalTimerManager.switch_context("Initialize", 0);
+  // GlobalTimerManager.switch_context("Initialize", 0);
   print_info("LocalProblem::initialize", "Number of local dofs: " + std::to_string(Geometry.levels[0].n_local_dofs), LoggingLevel::DEBUG_ALL);
   reinit();
-  GlobalTimerManager.leave_context(0);
+  // GlobalTimerManager.leave_context(0);
   print_info("LocalProblem::initialize", "End");
 }
 

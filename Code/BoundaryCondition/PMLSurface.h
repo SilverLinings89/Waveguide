@@ -15,6 +15,9 @@ class PMLSurface : public BoundaryCondition {
     bool mesh_is_transformed;
     const double surface_coordinate;
     std::array<std::vector<InterfaceDofData>, 6> dof_associations;
+    std::array<std::pair<double,double>, 3> lower_pml_ranges;
+    std::array<std::pair<double,double>, 3> upper_pml_ranges;
+    double effective_pml_thickness;
 
   public: 
     std::pair<double, double> x_range;

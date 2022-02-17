@@ -48,7 +48,7 @@ ComplexNumber ExactSolution::value(const Position &in_p, const unsigned int comp
 
 ComplexNumber ExactSolution::compute_phase_for_position(const Position &in_p) const {
   const double Lambda_eff = (GlobalParams.Lambda / std::sqrt(GlobalParams.Epsilon_R_effective));
-  const double z =  -in_p[2] + Geometry.global_z_range.first;
+  const double z =  in_p[2] - Geometry.global_z_range.first;
   const double phi = 2.0 * GlobalParams.Pi * z / Lambda_eff;
   return std::exp(phi * imaginary_unit);
   
@@ -146,7 +146,7 @@ void ExactSolution::load_data(std::string fname) {
   std::pair<double, double> x_range, y_range;
   x_range.first = x_vals[0];
   x_range.second = x_vals[x_vals.size() - 1];
-  y_range.first = x_vals[0];
+  y_range.first = y_vals[0];
   y_range.second = y_vals[y_vals.size() - 1];
   ExactSolution::ranges[0] = x_range;
   ExactSolution::ranges[1] = y_range;
@@ -157,15 +157,18 @@ void ExactSolution::load_data(std::string fname) {
   data_table_z.reinit(x_vals.size(), y_vals.size());
   input.close();
   input.open(fname);
-  unsigned int counter = 0;
+  unsigned int i = 0;
+  unsigned int j = 0;
   while (std::getline(input, line)) {
-    unsigned int i = counter % y_vals.size();
-    unsigned int j = counter / x_vals.size();
     entries = split(line, " ");
-    data_table_x[i][j] = stod(entries[2]);
-    data_table_y[i][j] = stod(entries[3]);
-    data_table_z[i][j] = stod(entries[4]);
-    counter++;
+    data_table_x[i][j] = stod(entries[2]) / norm;
+    data_table_y[i][j] = stod(entries[3]) / norm;
+    data_table_z[i][j] = stod(entries[4]) / norm;
+    i++;
+    if(i == x_vals.size()) {
+      i = 0;
+      j++;
+    }
   }
   
 }
