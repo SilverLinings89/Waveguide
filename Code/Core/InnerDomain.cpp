@@ -34,6 +34,9 @@
 #include "../Solutions/ExactSolutionConjugate.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
 
+NumericVectorLocal InnerDomain::exact_solution_interpolated;
+bool InnerDomain::exact_solution_is_initialized = false;
+
 InnerDomain::InnerDomain(unsigned int in_level)
     :
       mesh_generator{},
@@ -44,6 +47,19 @@ InnerDomain::InnerDomain(unsigned int in_level)
 }
 
 InnerDomain::~InnerDomain() {}
+
+void InnerDomain::load_exact_solution() {
+  if(!InnerDomain::exact_solution_is_initialized) {
+    dealii::IndexSet local_indices(n_locally_active_dofs);
+    local_indices.add_range(0,n_locally_active_dofs);
+    Constraints local_constraints(local_indices);
+    local_constraints.close();
+    InnerDomain::exact_solution_interpolated.reinit(n_locally_active_dofs);
+    VectorTools::project(dof_handler, local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *GlobalParams.source_field, InnerDomain::exact_solution_interpolated);
+    InnerDomain::exact_solution_is_initialized = true;
+    print_info("InnerDomain::load_exact_solution", "Norm of interpolated mode signal is " + std::to_string(InnerDomain::exact_solution_interpolated.l2_norm()));
+  }
+}
 
 bool compareConstraintPairs(ConstraintPair v1, ConstraintPair v2) {
   return (v1.left < v2.left);
@@ -232,6 +248,7 @@ struct CellwiseAssemblyDataNP {
 
 void InnerDomain::assemble_system(Constraints * constraints, dealii::PETScWrappers::MPI::SparseMatrix * matrix, NumericVectorDistributed *rhs) {
   CellwiseAssemblyDataNP cell_data(&fe, &dof_handler);
+  load_exact_solution();
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
     cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
     cell_data.local_dof_indices = transform_local_to_global_dofs(cell_data.local_dof_indices);
@@ -291,10 +308,17 @@ void InnerDomain::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase
 
 std::string InnerDomain::output_results(std::string in_filename, NumericVectorLocal in_solution, bool apply_transformation) {
   print_info("InnerDomain::output_results()", "Start");
+  if(apply_transformation) {
+    GlobalSpaceTransformation->switch_application_mode(true);
+    dealii::GridTools::transform(*GlobalSpaceTransformation, triangulation);
+  }
   const unsigned int n_cells = dof_handler.get_triangulation().n_active_cells();
   dealii::Vector<ComplexNumber> interpolated_exact_solution(in_solution.size());
   dealii::Vector<double> eps_abs(n_cells);
   unsigned int counter = 0;
+  data_out.clear();
+  data_out.attach_dof_handler(dof_handler);
+  data_out.add_data_vector(in_solution, "Solution");
   for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
     Position p = it->center();
     MaterialTensor transformation;
@@ -320,36 +344,33 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
     eps_abs[counter] = epsilon.norm();
     counter++;
   }
-  if(apply_transformation) {
-    GlobalSpaceTransformation->switch_application_mode(true);
-    dealii::GridTools::transform(*GlobalSpaceTransformation, triangulation);
-  }
-  data_out.clear();
-  data_out.attach_dof_handler(dof_handler);
-  data_out.add_data_vector(in_solution, "Solution");
+  data_out.add_data_vector(eps_abs, "Epsilon");
+  
+
   std::string filename = GlobalOutputManager.get_numbered_filename(in_filename, GlobalParams.MPI_Rank, "vtu");
   std::ofstream outputvtu(filename);
   
   Function<3,ComplexNumber> * esc;
   if(apply_transformation) {
-    esc = new ExactSolution(true, false);
+    data_out.add_data_vector(InnerDomain::exact_solution_interpolated, "Exact_Solution");
   } else {
     esc = GlobalParams.source_field;
+    dealii::IndexSet local_indices(n_locally_active_dofs);
+    local_indices.add_range(0,n_locally_active_dofs);
+    Constraints local_constraints(local_indices);
+    local_constraints.close();
+    if(GlobalParams.Point_Source_Type == 0 || GlobalParams.Point_Source_Type == 3) {
+      VectorTools::project(dof_handler, local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *esc, interpolated_exact_solution);
+      data_out.add_data_vector(interpolated_exact_solution, "Exact_Solution");
+    }
   }
-  dealii::IndexSet local_indices(n_locally_active_dofs);
-  local_indices.add_range(0,n_locally_active_dofs);
-  Constraints local_constraints(local_indices);
-  local_constraints.close();
-  if(GlobalParams.Point_Source_Type == 0 || GlobalParams.Point_Source_Type == 3) {
-    
-    VectorTools::project(dof_handler, local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *esc, interpolated_exact_solution);
-    data_out.add_data_vector(interpolated_exact_solution, "Exact_Solution");
-  }
-  // for(unsigned int i = 0; i < in_solution.size(); i++) {
-  //  interpolated_exact_solution[i] -= in_solution[i];
-  // }
-  data_out.add_data_vector(eps_abs, "Epsilon");
   
+  dealii::Vector<ComplexNumber> error_vector(in_solution.size());
+  for(unsigned int i = 0; i < in_solution.size(); i++) {
+    error_vector[i] = in_solution[i] - InnerDomain::exact_solution_interpolated[i];
+  }
+  data_out.add_data_vector(error_vector, "SolutionError");
+
   data_out.build_patches();
   data_out.write_vtu(outputvtu);
   if(apply_transformation) {

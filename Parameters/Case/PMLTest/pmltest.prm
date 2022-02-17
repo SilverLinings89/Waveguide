@@ -4,7 +4,7 @@ subsection Case parameters
   set epsilon out      = 1.8496
   set geometry size x = 4.0
   set geometry size y = 3.6
-  set geometry size z  = 5.0
+  set geometry size z  = 2.0
   set mu in            = 1.0
   set mu out           = 1.0
   set signal amplitude = 1.0
