@@ -34,9 +34,9 @@ class BendTransformation : public SpaceTransformation {
 
   Position phys_to_math(Position coord) const;
 
-  dealii::Tensor<2, 3, ComplexNumber> get_Tensor(Position &coordinate) const;
+  dealii::Tensor<2, 3, ComplexNumber> get_Tensor(Position &coordinate);
 
-  dealii::Tensor<2, 3, double> get_Space_Transformation_Tensor(Position &coordinate) const;
+  dealii::Tensor<2, 3, double> get_Space_Transformation_Tensor(Position &coordinate);
 
   /**
    * This member contains all the Sectors who, as a sum, form the complete

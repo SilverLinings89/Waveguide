@@ -30,14 +30,12 @@ Position BendTransformation::phys_to_math(Position ) const {
 }
 
 Tensor<2, 3, ComplexNumber>
-BendTransformation::get_Tensor(
-    Position &position) const {
+BendTransformation::get_Tensor(Position &position) {
   return get_Space_Transformation_Tensor(position);
 }
 
 Tensor<2, 3, double>
-BendTransformation::get_Space_Transformation_Tensor(
-    Position &position) const {
+BendTransformation::get_Space_Transformation_Tensor(Position &position)  {
   std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
 
   Tensor<2, 3, double> transformation =

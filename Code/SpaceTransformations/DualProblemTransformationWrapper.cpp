@@ -34,8 +34,7 @@ Position transform_position(Position in_position) {
 }
 
 Tensor<2, 3, double>
-DualProblemTransformationWrapper::get_Space_Transformation_Tensor(
-    Position &position) const {
+DualProblemTransformationWrapper::get_Space_Transformation_Tensor(Position &position) {
   std::cout
       << "This should never be called: "
          "DualProblemTransformationWrapper::get_Space_Transformation_Tensor"
@@ -43,8 +42,7 @@ DualProblemTransformationWrapper::get_Space_Transformation_Tensor(
   return st->get_Space_Transformation_Tensor(position);
 }
 
-Tensor<2, 3, ComplexNumber> DualProblemTransformationWrapper::get_Tensor(
-    Position &position) const {
+Tensor<2, 3, ComplexNumber> DualProblemTransformationWrapper::get_Tensor(Position &position) {
   Position p = transform_position(position);
 
   Tensor<2, 3, double> transformation;

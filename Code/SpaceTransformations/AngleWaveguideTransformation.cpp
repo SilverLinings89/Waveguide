@@ -13,28 +13,38 @@ AngleWaveguideTransformation::AngleWaveguideTransformation()
     : SpaceTransformation(3),
       sectors(GlobalParams.Number_of_sectors) {
   homogenized = false;
-  transformation_tensor[0][0] = 1;
-  transformation_tensor[0][1] = 0;
-  transformation_tensor[0][2] = 0;
-
-  transformation_tensor[1][0] = 0;
-  transformation_tensor[1][1] = 2;
-  transformation_tensor[1][2] = -1;
-
-  transformation_tensor[2][0] = 0;
-  transformation_tensor[2][1] = -1;
-  transformation_tensor[2][2] = 1;
   
-  std::vector<double> qs;
-  qs.push_back(1);
-  qs.push_back(std::sqrt(2));
-  qs.push_back(1);
+}
 
-  for(unsigned int i = 0; i < 3; i++) {
-    for(unsigned int j = 0; j < 3; j++) {
-        transformation_tensor[i][j] *= std::sqrt(2) / (qs[i]*qs[j]);
-    }
+dealii::Tensor<2, 3, double> AngleWaveguideTransformation::get_J(Position &coordinate) {
+  if(!is_constant || !is_J_prepared) {
+    dealii::Tensor<2, 3, double> ret;
+    ret[0][0] = 1;
+    ret[1][1] = 1;
+    ret[2][2] = 1;
+    ret[2][1] = -0.2;
+    J_perm = ret;
+    is_J_prepared = true;
   }
+  return J_perm;
+}
+
+dealii::Tensor<2, 3, double> AngleWaveguideTransformation::get_J_inverse(Position &c) {
+  if(!is_constant || !is_J_inv_prepared) {
+    dealii::Tensor<2, 3, double> ret = get_J(c);
+    ret = invert(ret);
+    J_inv_perm = ret;
+    is_J_inv_prepared = true;
+  }
+  return J_inv_perm;
+}
+
+double AngleWaveguideTransformation::get_det(Position c) {
+  if(!is_constant || !is_det_prepared) {
+    det = determinant(get_J(c));
+    is_det_prepared = true;
+  }
+  return det;
 }
 
 AngleWaveguideTransformation::~AngleWaveguideTransformation() {}
@@ -43,7 +53,7 @@ Position AngleWaveguideTransformation::math_to_phys(Position coord) const {
   Position ret;
   ret[0] = coord[0];
   ret[1] = coord[1];
-  ret[2] = coord[2] - coord[1];
+  ret[2] = coord[2] + 0.2*coord[1];
   return ret;
 }
 
@@ -51,12 +61,12 @@ Position AngleWaveguideTransformation::phys_to_math(Position coord) const {
   Position ret;
   ret[0] = coord[0];
   ret[1] = coord[1];
-  ret[2] = coord[2] + coord[1];
+  ret[2] = coord[2] - 0.2*coord[1];
   return ret;
 }
 
 Tensor<2, 3, ComplexNumber>
-AngleWaveguideTransformation::get_Tensor(Position &position) const {
+AngleWaveguideTransformation::get_Tensor(Position &position) {
   return get_Space_Transformation_Tensor(position);
 }
 
@@ -133,6 +143,10 @@ unsigned int AngleWaveguideTransformation::NDofs() const {
 }
 
 Tensor<2, 3, double>
-AngleWaveguideTransformation::get_Space_Transformation_Tensor(Position &) const {
-  return transformation_tensor;
+AngleWaveguideTransformation::get_Space_Transformation_Tensor(Position &p) {
+  Tensor<2, 3, double> ret;
+  ret[0][0] = 1;
+  ret[1][1] = 1;
+  ret[2][2] = 1;
+  return (get_J(p) * ret * transpose(get_J(p))) / get_det(p);
 }

@@ -18,6 +18,14 @@
  */
 
 class AngleWaveguideTransformation : public SpaceTransformation {
+  bool is_constant = true;
+  dealii::Tensor<2, 3, double> J_perm;
+  dealii::Tensor<2, 3, double> J_inv_perm;
+  double det;
+  bool is_J_prepared = false;
+  bool is_J_inv_prepared = false;
+  bool is_det_prepared = false;
+
  public:
   AngleWaveguideTransformation();
 
@@ -27,9 +35,15 @@ class AngleWaveguideTransformation : public SpaceTransformation {
 
   Position phys_to_math(Position coord) const;
 
-  dealii::Tensor<2, 3, ComplexNumber> get_Tensor(Position &coordinate) const;
+  dealii::Tensor<2, 3, double> get_J(Position &coordinate) override;
 
-  dealii::Tensor<2, 3, double> get_Space_Transformation_Tensor(Position &coordinate) const;
+  dealii::Tensor<2, 3, double> get_J_inverse(Position &coordinate) override;
+
+  double get_det(Position coord) override;
+
+  dealii::Tensor<2, 3, ComplexNumber> get_Tensor(Position &coordinate) override;
+
+  dealii::Tensor<2, 3, double> get_Space_Transformation_Tensor(Position &coordinate) override;
 
   /**
    * This member contains all the Sectors who, as a sum, form the complete
@@ -198,6 +212,4 @@ class AngleWaveguideTransformation : public SpaceTransformation {
   ComplexNumber evaluate_for_z_with_sum(double, double, InnerDomain *);
 
   ComplexNumber evaluate_for_z(double z_in, InnerDomain *);
-
-  Tensor<2, 3, double> transformation_tensor;
 };

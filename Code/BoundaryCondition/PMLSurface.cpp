@@ -472,7 +472,11 @@ void PMLSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, N
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
       Position pos = cell_data.get_position_for_q_index(q_index);
       dealii::Tensor<2,3,ComplexNumber> epsilon = get_pml_tensor_epsilon(pos);
+      dealii::Tensor<2,3,double> J = GlobalSpaceTransformation->get_J(pos);
+
+      epsilon = J * epsilon * transpose(J) / GlobalSpaceTransformation->get_det(pos);
       dealii::Tensor<2,3,ComplexNumber> mu = get_pml_tensor_mu(pos);
+      mu = J * mu * transpose(J) / GlobalSpaceTransformation->get_det(pos);
       cell_data.prepare_for_current_q_index(q_index, epsilon, mu);
     }
     constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, true);

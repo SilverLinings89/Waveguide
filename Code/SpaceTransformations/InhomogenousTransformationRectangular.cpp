@@ -39,7 +39,7 @@ Position InhomogenousTransformationRectangular::phys_to_math(Position coord) con
 }
 
 Tensor<2, 3, ComplexNumber>
-InhomogenousTransformationRectangular::get_Tensor(Position &position) const {
+InhomogenousTransformationRectangular::get_Tensor(Position &position) {
   return get_Space_Transformation_Tensor(position);
 }
 
@@ -243,8 +243,7 @@ unsigned int InhomogenousTransformationRectangular::NDofs() const {
 }
 
 Tensor<2, 3, double>
-InhomogenousTransformationRectangular::get_Space_Transformation_Tensor(
-    Position &position) const {
+InhomogenousTransformationRectangular::get_Space_Transformation_Tensor(Position &position) {
   std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
 
   Tensor<2, 3, double> transformation =

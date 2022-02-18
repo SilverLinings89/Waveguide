@@ -18,8 +18,7 @@ HomogenousTransformationRectangular::HomogenousTransformationRectangular()
 
 HomogenousTransformationRectangular::~HomogenousTransformationRectangular() {}
 
-Position HomogenousTransformationRectangular::math_to_phys(
-    Position coord) const {
+Position HomogenousTransformationRectangular::math_to_phys(Position coord) const {
   Position ret;
   if (coord[2] < GlobalParams.Geometry_Size_Z / (-2.0)) {
     ret[0] = (2 * GlobalParams.Width_of_waveguide) * coord[0] /
@@ -44,7 +43,7 @@ Position HomogenousTransformationRectangular::math_to_phys(
   return ret;
 }
 
-Tensor<2, 3, double> HomogenousTransformationRectangular::get_Space_Transformation_Tensor(Position &position) const {
+Tensor<2, 3, double> HomogenousTransformationRectangular::get_Space_Transformation_Tensor(Position &position) {
   std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
 
   Tensor<2, 3, double> transformation =
@@ -94,8 +93,7 @@ Position HomogenousTransformationRectangular::phys_to_math(Position coord) const
 }
 
 Tensor<2, 3, ComplexNumber>
-HomogenousTransformationRectangular::get_Tensor(
-    Position &position) const {
+HomogenousTransformationRectangular::get_Tensor(Position &position) {
   return get_Space_Transformation_Tensor(position);
 }
 
