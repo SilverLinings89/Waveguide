@@ -11,4 +11,5 @@ subsection Case parameters
   set Boundary Method = PML
   set Input Signal Method = Dirichlet
   set source type = 3
+  set PML Test Angle = 0.2
 end
