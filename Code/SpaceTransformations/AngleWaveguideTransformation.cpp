@@ -43,7 +43,7 @@ Position AngleWaveguideTransformation::math_to_phys(Position coord) const {
   Position ret;
   ret[0] = coord[0];
   ret[1] = coord[1];
-  ret[2] = coord[2] + coord[1];
+  ret[2] = coord[2] - coord[1];
   return ret;
 }
 
@@ -51,7 +51,7 @@ Position AngleWaveguideTransformation::phys_to_math(Position coord) const {
   Position ret;
   ret[0] = coord[0];
   ret[1] = coord[1];
-  ret[2] = coord[2] - coord[1];
+  ret[2] = coord[2] + coord[1];
   return ret;
 }
 

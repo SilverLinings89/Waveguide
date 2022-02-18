@@ -351,7 +351,7 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
   std::ofstream outputvtu(filename);
   
   Function<3,ComplexNumber> * esc;
-  if(apply_transformation) {
+  if(!apply_transformation) {
     data_out.add_data_vector(InnerDomain::exact_solution_interpolated, "Exact_Solution");
   } else {
     esc = GlobalParams.source_field;

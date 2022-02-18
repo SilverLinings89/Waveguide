@@ -24,7 +24,7 @@ AngledExactSolution::AngledExactSolution(): Function<3, ComplexNumber>(3) {
 
 Position AngledExactSolution::transform_position(const Position &in_p) const {
   Position ret = in_p;
-  ret[2] = in_p[2] + in_p[1];
+  ret[2] = in_p[2] - in_p[1];
   return ret;
 }
 
