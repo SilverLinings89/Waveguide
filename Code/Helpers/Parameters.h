@@ -129,6 +129,8 @@ struct Parameters {
 
     double PML_thickness = 1.0;
 
+    double PML_Angle_Test = 0.2;
+
     unsigned int PML_skaling_order = 3;
 
     BoundaryConditionType BoundaryCondition = BoundaryConditionType::HSIE;

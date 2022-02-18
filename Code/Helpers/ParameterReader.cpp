@@ -56,6 +56,7 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("PML thickness", "1.0", Patterns::Double(), "Thickness of PML layers.");
         case_prm.declare_entry("PML skaling order", "3", Patterns::Integer(), "PML skaling order is the exponent with wich the imaginary part grows towards the outer boundary.");
         case_prm.declare_entry("PML n layers", "8", Patterns::Integer(), "Number of cell layers used in the PML medium.");
+        case_prm.declare_entry("PML Test Angle", "0.2", Patterns::Double(), "For the angeling test, this is a in z' = z - a * y.");
         case_prm.declare_entry("Input Signal Method", "Dirichlet", Patterns::Selection("Dirichlet|Taper|Jump"), "Taper uses a tapered exact solution to build a right hand side. Dirichlet applies dirichlet boundary values.");
         case_prm.declare_entry("Signal tapering type", "C1", Patterns::Selection("C0|C1"), "Tapering type for signal input");
         case_prm.declare_entry("Prescribe input zero", "false", Patterns::Bool(), "If this is set to true, there will be a dirichlet zero condition enforced on the global input interface (Process index z: 0, boundary id: 4).");
@@ -140,6 +141,7 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.PML_N_Layers = case_prm.get_integer("PML n layers");
         ret.PML_skaling_order = case_prm.get_integer("PML skaling order");
         ret.PML_thickness = case_prm.get_double("PML thickness");
+        ret.PML_Angle_Test = case_prm.get_double("PML Test Angle");
         ret.HSIE_polynomial_degree = case_prm.get_integer("HSIE polynomial degree");
         ret.Signal_coupling_method = SignalCouplingMethod::Tapering;
         std::string method = case_prm.get("Input Signal Method");
