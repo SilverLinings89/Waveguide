@@ -979,3 +979,7 @@ I added a new parameter called "PML Test Angle" which describes the angle for th
 ## Friday, 18th of February
 
 Today, I implemented adjoint base optimization and BFGS as a stepping method.
+
+## Saturday, 19th of February
+
+Now compiles again without warnings. Function handle for optimization also working.

@@ -635,18 +635,19 @@ void GeometryManager::perform_mpi_dof_exchange(unsigned int level) {
         levels[level].surfaces[5]->finish_dof_index_initialization();
       }
     } else {
+      int target_rank = (int) i;
       if(levels[level].surface_type[0] == SurfaceType::NEIGHBOR_SURFACE) {
-        if(levels[level].surfaces[0]->global_partner_mpi_rank == i) {
+        if(levels[level].surfaces[0]->global_partner_mpi_rank == target_rank) {
           levels[level].surfaces[0]->finish_dof_index_initialization();
         }
       }
       if(levels[level].surface_type[2] == SurfaceType::NEIGHBOR_SURFACE) {
-        if(levels[level].surfaces[2]->global_partner_mpi_rank == i) {
+        if(levels[level].surfaces[2]->global_partner_mpi_rank == target_rank) {
           levels[level].surfaces[2]->finish_dof_index_initialization();
         }
       }
       if(levels[level].surface_type[4] == SurfaceType::NEIGHBOR_SURFACE) {
-        if(levels[level].surfaces[4]->global_partner_mpi_rank == i) {
+        if(levels[level].surfaces[4]->global_partner_mpi_rank == target_rank) {
           levels[level].surfaces[4]->finish_dof_index_initialization();
         }
       }

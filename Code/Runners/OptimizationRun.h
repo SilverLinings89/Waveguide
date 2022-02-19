@@ -3,13 +3,15 @@
 #include "../GlobalObjects/GeometryManager.h"
 #include "../Helpers/Parameters.h"
 #include "../Hierarchy/NonLocalProblem.h"
+#include <functional>
 
 class OptimizationRun: public Simulation {
-  NonLocalProblem *mainProblem;
-  std::vector<std::vector<double>> shape_dofs;
-  std::vector<std::vector<double>> shape_gradients;
-  unsigned int step_counter = 0;
-
+  static NonLocalProblem *mainProblem;
+  static std::vector<std::vector<double>> shape_dofs;
+  static std::vector<std::vector<double>> shape_gradients;
+  static unsigned int step_counter;
+  std::function< double(const dealii::Vector<double> &x, dealii::Vector<double> &g)> function_pointer;
+ 
  public:
   OptimizationRun();
 
@@ -23,9 +25,9 @@ class OptimizationRun: public Simulation {
 
   double compute_step();
 
-  std::pair<double, std::vector<double>> OptimizationRun::perform_step(std::vector<double> x);
+  static double perform_step(const dealii::Vector<double> &x, dealii::Vector<double> &g);
 
-  void solve_main_problem();
+  static void solve_main_problem();
 
-  void set_shape_dofs(std::vector<double> in_shape_dofs);
+  static void set_shape_dofs(const dealii::Vector<double> in_shape_dofs);
 };

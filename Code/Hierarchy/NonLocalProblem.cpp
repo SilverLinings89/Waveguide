@@ -674,8 +674,7 @@ void NonLocalProblem::print_vector_norm(NumericVectorDistributed * in_v, std::st
 
 void NonLocalProblem::perform_downward_sweep() {
   for(int i = n_blocks_in_sweeping_direction - 1; i >= 0; i--) {
-    
-    if(index_in_sweeping_direction == i) {
+    if((int)index_in_sweeping_direction == i) {
       S_inv(&u, &dist_vector_1);
     } else {
       for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
@@ -684,7 +683,7 @@ void NonLocalProblem::perform_downward_sweep() {
     }
     dist_vector_1.compress(VectorOperation::insert);
     matrix->vmult(dist_vector_2, dist_vector_1);
-    if(index_in_sweeping_direction == i-1) {
+    if((int)index_in_sweeping_direction == i-1) {
       for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
         const unsigned int index = own_dofs.nth_index_in_set(j);
         ComplexNumber current_value(u(index).real(), u(index).imag());
@@ -692,7 +691,7 @@ void NonLocalProblem::perform_downward_sweep() {
         u[index] = current_value - delta;
       }
     }
-    if(index_in_sweeping_direction == i) {
+    if((int)index_in_sweeping_direction == i) {
       for(unsigned int j = 0; j < own_dofs.n_elements(); j++) {
         const unsigned int index = own_dofs.nth_index_in_set(j);
         u[index] = (ComplexNumber) dist_vector_1[index];

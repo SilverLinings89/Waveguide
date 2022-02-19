@@ -25,6 +25,7 @@
 #include "../Code/Runners/ParameterSweep.h"
 #include "../Code/Runners/SingleCoreRun.h"
 #include "../Code/Runners/SweepingRun.h"
+#include "../Code/Runners/OptimizationRun.h"
 
 std::string solutionpath = "";
 std::ofstream log_stream;
@@ -128,7 +129,10 @@ int main(int argc, char *argv[]) {
     rank_temp = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
     initialize_global_variables(run_file, case_file, override_data);
     Simulation * simulation;
-    if (GlobalParams.Perform_Convergence_Test) {
+    if(GlobalParams.Perform_Optimization) {
+      simulation = new OptimizationRun();
+    }
+    if(GlobalParams.Perform_Convergence_Test) {
       simulation = new ConvergenceRun();
     } else {
       if (GlobalParams.Enable_Parameter_Run) {

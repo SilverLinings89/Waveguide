@@ -16,7 +16,7 @@ AngleWaveguideTransformation::AngleWaveguideTransformation()
   
 }
 
-dealii::Tensor<2, 3, double> AngleWaveguideTransformation::get_J(Position &coordinate) {
+dealii::Tensor<2, 3, double> AngleWaveguideTransformation::get_J(Position &) {
   if(!is_constant || !is_J_prepared) {
     dealii::Tensor<2, 3, double> ret;
     ret[0][0] = 1;

@@ -9,6 +9,7 @@ ADD_LIBRARY(Code
         Runners/ConvergenceRun.cpp
         Runners/ParameterSweep.cpp
         Runners/SingleCoreRun.cpp
+        Runners/OptimizationRun.cpp
         Runners/SweepingRun.cpp
         Helpers/ParameterOverride.cpp
         Helpers/ParameterReader.cpp

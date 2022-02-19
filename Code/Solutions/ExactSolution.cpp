@@ -110,10 +110,10 @@ Tensor<1, 3, ComplexNumber> ExactSolution::val(const Position &in_p) const {
 
 ExactSolution::ExactSolution(bool , bool in_dual)
     : Function<3, ComplexNumber>(3),
+  imaginary_unit(0,1),
   component_x(ranges, n_intervals, data_table_x),
   component_y(ranges, n_intervals, data_table_y),
-  component_z(ranges, n_intervals, data_table_z),
-  imaginary_unit(0,1)
+  component_z(ranges, n_intervals, data_table_z)
      {
   is_dual = in_dual;
 }
