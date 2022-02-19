@@ -973,3 +973,9 @@ I found a core bug in the PML implementation which should improve the quality of
 Today, I want to finish some final building blocks for my code. I want to update the way I compute errors by providing a global instance of an exact solution and and additionally, I want to focus on the implementation of the adjoint-based gradient computation.
 
 Once the first part is done, I will be able to restart the large runs for my disseratation and finish the introductory work on PML by providing the outcomes of the parameter studies.
+
+I added a new parameter called "PML Test Angle" which describes the angle for the angeling test for PML. I will explore this in further detail later. I have also entirely re-implemented the angeling space transformation based on the Jacobian formulation rather than the Ward-Pendry formulation which is much more straigh-forward.
+
+## Friday, 18th of February
+
+Today, I implemented adjoint base optimization and BFGS as a stepping method.

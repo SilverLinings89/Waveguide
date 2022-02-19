@@ -802,3 +802,76 @@ void NonLocalProblem::empty_memory() {
   KSPReset(ksp);
   child->empty_memory();
 }
+
+
+std::vector<double> NonLocalProblem::compute_shape_gradient() {
+  const unsigned int n_shape_dofs = GlobalSpaceTransformation->NFreeDofs();
+  std::vector<double> ret(n_shape_dofs);
+  for(unsigned int i = 0; i < n_shape_dofs; i++) {
+    ret[i] = 0;
+  }
+
+  std::pair<unsigned int, unsigned int> communication_pair;
+  unsigned int blocks_per_layer = GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction;
+  const unsigned int other_index_in_z = GlobalParams.Blocks_in_z_direction - 1 - GlobalParams.Index_in_z_direction;
+  const unsigned int other = GlobalParams.MPI_Rank + (other_index_in_z - GlobalParams.Index_in_z_direction) * blocks_per_layer;
+  if(GlobalParams.Blocks_in_z_direction % 2 == 1 && GlobalParams.Index_in_z_direction % 2 == 1 && (GlobalParams.Index_in_z_direction) * 2  + 1 == GlobalParams.Blocks_in_z_direction) {
+    communication_pair.first = GlobalParams.MPI_Rank;
+    communication_pair.second = GlobalParams.MPI_Rank;
+  } else {
+    if(GlobalParams.Index_in_z_direction < GlobalParams.Blocks_in_z_direction/2) {
+      communication_pair.first = GlobalParams.MPI_Rank;
+      communication_pair.second = other;
+    } else {
+      communication_pair.first = other;
+      communication_pair.second = GlobalParams.MPI_Rank;
+    }
+  }
+
+  std::vector<FEAdjointEvaluation> field_evaluations(Geometry.levels[level].inner_domain->dof_handler.get_triangulation().n_active_cells());
+  std::vector<Position> positions;
+  for(auto it : Geometry.levels[level].inner_domain->dof_handler.get_triangulation()) {
+    positions.push_back(it.center());
+  }
+  std::vector<std::vector<ComplexNumber>> values = evaluate_solution_at(positions);
+  
+  if(communication_pair.first == communication_pair.second) {
+    std::cout << "This case is currently not implemented." << std::endl;
+  } else {
+    for(unsigned int i = 0; i < positions.size(); i++) {
+      field_evaluations[i].x = positions[i];
+      field_evaluations[i].primal_field[0] = values[i][0];
+      field_evaluations[i].primal_field[1] = values[i][1];
+      field_evaluations[i].primal_field[2] = values[i][2];
+    }
+    std::vector<double> serialized_data = fe_evals_to_double(field_evaluations);
+    MPI_Status stat;
+    MPI_Sendrecv_replace(serialized_data.data(), serialized_data.size(), MPI_DOUBLE, other, 0, other, 0, MPI_COMM_WORLD, &stat);
+    std::vector<FEAdjointEvaluation> received_data = fe_evals_from_double(serialized_data);
+    std::sort(received_data.begin(), received_data.end(), compareFEAdjointEvals);
+    std::sort(field_evaluations.begin(), field_evaluations.end(), compareFEAdjointEvals);
+
+    for(unsigned int i = 0; i < field_evaluations.size(); i++) {
+      double distance = Distance3D(received_data[i].x, field_evaluations[i].x);
+      if(distance > 0.001) {
+        std::cout << "There was an error matching evaluation positions." << std::endl;
+      } else {
+        field_evaluations[i].adjoint_field = received_data[i].adjoint_field;
+      }
+    }
+    ComplexNumber current_field_orientation = compute_signal_strength_of_solution();
+    // Now, I have the evalaution and the adjoint field stored for a set of positions in the array field_evaluations.
+    for(unsigned int i = 0; i < field_evaluations.size(); i++) {
+      for(unsigned int j = 0; j < n_shape_dofs; j++) {
+        Tensor<2, 3, ComplexNumber> local_step_tensor = GlobalSpaceTransformation->get_Tensor_for_step(field_evaluations[i].x, j, 0.01);
+        ComplexNumber change = (field_evaluations[i].primal_field * local_step_tensor) * field_evaluations[i].adjoint_field;
+        const double delta = std::abs(current_field_orientation + change) - std::abs(current_field_orientation);
+        ret[j] += delta;
+      }
+    }
+  }
+  for(unsigned int i = 0; i <n_shape_dofs; i++) {
+    ret[i] = dealii::Utilities::MPI::sum(ret[i], MPI_COMM_WORLD);
+  }
+  return ret;
+}

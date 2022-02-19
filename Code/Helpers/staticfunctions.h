@@ -51,6 +51,8 @@ bool compareDofDataByGlobalIndex(InterfaceDofData, InterfaceDofData);
 
 bool areDofsClose(const InterfaceDofData &a, const InterfaceDofData &b);
 
+bool compareFEAdjointEvals(const FEAdjointEvaluation field_a,const FEAdjointEvaluation field_b);
+
 double dotproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 
 void mesh_info(Triangulation<3> *, std::string);
@@ -84,7 +86,9 @@ Position Transform_5_to_0(const Position &p);
 
 inline bool file_exists(const std::string &name);
 
-double Distance2D(Position, Position = Position());
+double Distance2D(const Position &, const Position & = Position());
+
+double Distance3D(const Position &, const Position & = Position());
 
 std::vector<types::global_dof_index> Add_Zero_Restraint(
     AffineConstraints<double> *, DoFHandler<3>::active_cell_iterator &,
@@ -151,3 +155,11 @@ int generate_tag(unsigned int global_rank_sender, unsigned int receiver, unsigne
 std::vector<std::string> split(std::string str, std::string token);
 
 SolverOptions solver_option(std::string in_name);
+
+std::vector<double> fe_evals_to_double(const std::vector<FEAdjointEvaluation>& inp);
+
+std::vector<FEAdjointEvaluation> fe_evals_from_double(const std::vector<double>& inp);
+
+Position adjoint_position_transformation(const Position in_p);
+
+dealii::Tensor<1,3,ComplexNumber> adjoint_field_transformation(const dealii::Tensor<1,3,ComplexNumber> in_field);

@@ -151,6 +151,10 @@ bool compareDofDataByGlobalIndex(InterfaceDofData c1, InterfaceDofData c2) {
   return c1.index < c2.index;
 }
 
+bool compareFEAdjointEvals(const FEAdjointEvaluation field_a,const FEAdjointEvaluation field_b) {
+  return comparePositions(field_a.x, field_b.x);
+}
+
 void alert() {
   MPI_Barrier(MPI_COMM_WORLD);
   if (dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0) {
@@ -206,9 +210,15 @@ Parameters GetParameters(std::string run_filename, std::string case_filename, Pa
   return ret;
 }
 
-double Distance2D(Position position, Position to) {
+double Distance2D(const Position & position, const Position  & to) {
   return sqrt((position(0) - to(0)) * (position(0) - to(0)) +
               (position(1) - to(1)) * (position(1) - to(1)));
+}
+
+double Distance3D(const Position & position, const Position & to) {
+  return sqrt((position(0) - to(0)) * (position(0) - to(0)) +
+              (position(1) - to(1)) * (position(1) - to(1)) +
+              (position(2) - to(2)) * (position(2) - to(2)));
 }
 
 Tensor<1, 3, double> crossproduct(Tensor<1, 3, double> a,
@@ -800,5 +810,63 @@ SolverOptions solver_option(std::string solver_t) {
   if(solver_t == "CG") {
       ret = SolverOptions::S_CG;
   }
+  return ret;
+}
+
+std::vector<double> fe_evals_to_double(const std::vector<FEAdjointEvaluation>& inp) {
+  std::vector<double> ret(9 * inp.size());
+  for(unsigned int i = 0; i < inp.size(); i++) {
+    unsigned int base_index = 9*i;
+    ret[base_index] = inp[i].x[0];
+    ret[base_index+1] = inp[i].x[1];
+    ret[base_index+2] = inp[i].x[2];
+    ret[base_index+3] = inp[i].primal_field[0].real();
+    ret[base_index+4] = inp[i].primal_field[0].imag();
+    ret[base_index+5] = inp[i].primal_field[1].real();
+    ret[base_index+6] = inp[i].primal_field[1].imag();
+    ret[base_index+7] = inp[i].primal_field[2].real();
+    ret[base_index+8] = inp[i].primal_field[2].imag();
+  }
+  return ret;
+}
+
+std::vector<FEAdjointEvaluation> fe_evals_from_double(const std::vector<double>& inp) {
+  std::vector<FEAdjointEvaluation> ret;
+  if(inp.size() % 9 != 0) {
+    std::cout << "Internal error in translating fe evals to doubles" << std::endl;
+  }
+  for(unsigned int i = 0; i < inp.size()/9; i++) {
+    FEAdjointEvaluation elem;
+    Position temp_pos;
+    temp_pos[0] = inp[i*9];
+    temp_pos[1] = inp[i*9 + 1];
+    temp_pos[2] = inp[i*9 + 2];
+    dealii::Tensor<1,3,ComplexNumber> temp_field;
+    temp_field[0].real(inp[i*9 + 3]);
+    temp_field[0].imag(inp[i*9 + 4]);
+    temp_field[1].real(inp[i*9 + 5]);
+    temp_field[1].imag(inp[i*9 + 6]);
+    temp_field[2].real(inp[i*9 + 7]);
+    temp_field[2].imag(inp[i*9 + 8]);
+    elem.x = adjoint_position_transformation(temp_pos);
+    elem.adjoint_field = adjoint_field_transformation(temp_field);
+    ret.push_back(elem);
+  }
+  return ret;
+}
+
+Position adjoint_position_transformation(const Position in_p) {
+  Position ret = in_p;
+  const double old_z = in_p[2];
+  const double new_z = Geometry.global_z_range.second - (old_z - Geometry.global_z_range.first);
+  ret[2] = new_z;
+  return ret;
+}
+
+dealii::Tensor<1,3,ComplexNumber> adjoint_field_transformation(const dealii::Tensor<1,3,ComplexNumber> in_field) {
+  dealii::Tensor<1,3,ComplexNumber> ret;
+  ret[0] = - in_field[0];
+  ret[1] = in_field[1];
+  ret[2] = - in_field[2];
   return ret;
 }

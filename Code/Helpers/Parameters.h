@@ -54,6 +54,10 @@ struct Parameters {
 
     bool Perform_Optimization = false;
 
+    unsigned int optimization_n_shape_steps = 15;
+
+    double optimization_residual_tolerance = 1.e-10;
+
     double kappa_0_angle = 1.0; // For HSIE-Elements. kappa_0 is a complex number with absolute value 1. This is the angle against the real axis.
 
     ComplexNumber kappa_0; // For HSIE-Elements
@@ -164,6 +168,8 @@ struct Parameters {
     double global_z_shift = 0;
 
     bool solve_directly = false;
+
+    SteppingMethod optimization_stepping_method = SteppingMethod::BFGS;
     
     auto complete_data() -> void;
 

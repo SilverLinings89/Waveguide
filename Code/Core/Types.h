@@ -219,3 +219,9 @@ struct FEErrorStruct {
   double L2 = 0;
   double Linfty = 0;
 };
+
+struct FEAdjointEvaluation {
+  Position x;
+  dealii::Tensor<1,3,ComplexNumber> primal_field;
+  dealii::Tensor<1,3,ComplexNumber> adjoint_field;
+};

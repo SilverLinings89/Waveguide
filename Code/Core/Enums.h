@@ -85,7 +85,7 @@ enum PreconditionerOptions {
 };
 
 enum SteppingMethod {
-  Steepest, CG, LineSearch
+  Steepest, BFGS
 };
 
 enum TransformationType {

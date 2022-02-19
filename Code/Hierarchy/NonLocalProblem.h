@@ -108,4 +108,6 @@ private:
   std::vector<std::vector<ComplexNumber>> evaluate_solution_at(std::vector<Position>);
 
   void empty_memory() override;
+
+  std::vector<double> compute_shape_gradient() override;
 };

@@ -50,13 +50,13 @@ class SpaceTransformation {
 
   virtual Position phys_to_math(Position coord) const = 0;
 
-  virtual double get_det(Position coord) {
+  virtual double get_det(Position ) {
     return 1.0;
   }
 
   bool is_identity(Position coord) const;
 
-  virtual Tensor<2,3,double> get_J(Position &coordinate) {
+  virtual Tensor<2,3,double> get_J(Position &) {
     Tensor<2,3,double> ret;
     ret[0][0] = 1;
     ret[1][1] = 1;
@@ -64,7 +64,7 @@ class SpaceTransformation {
     return ret;
   }
 
-  virtual Tensor<2,3,double> get_J_inverse(Position &coordinate) {
+  virtual Tensor<2,3,double> get_J_inverse(Position &) {
     Tensor<2,3,double> ret;
     ret[0][0] = 1;
     ret[1][1] = 1;
@@ -72,9 +72,9 @@ class SpaceTransformation {
     return ret;
   }
 
-  virtual Tensor<2, 3, ComplexNumber> get_Tensor(Position &coordinate) = 0;
+  virtual Tensor<2, 3, ComplexNumber> get_Tensor(Position &) = 0;
 
-  virtual Tensor<2, 3, double> get_Space_Transformation_Tensor(Position &coordinate) = 0;
+  virtual Tensor<2, 3, double> get_Space_Transformation_Tensor(Position &) = 0;
 
   virtual Tensor<2, 3, ComplexNumber> get_Tensor_for_step(Position &coordinate, unsigned int dof, double step_width);
 

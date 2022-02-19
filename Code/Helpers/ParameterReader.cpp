@@ -66,6 +66,7 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("perform convergence test", "false", Patterns::Bool(), "If true, the code will perform a cnovergence run on a sequence of meshes.");
         case_prm.declare_entry("convergence sequence cell count", "1,2,4,8,10,14,16,20", Patterns::List(Patterns::Integer()), "The sequence of cell counts in each direction to be used for convergence analysis.");
         case_prm.declare_entry("global z shift", "0", Patterns::Double(), "Shifts the global geometry to remove the center of the dipole for convergence studies.");
+        case_prm.declare_entry("Optimization Algorithm", "BFGS", Patterns::Selection("BFGS|Steepest"), "The algorithm to compute the next parametrization in an optimization run.");
     }
     case_prm.leave_subsection();
 }
@@ -170,6 +171,10 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.Number_of_Predefined_Shape = case_prm.get_integer("Predefined case number");
         ret.Number_of_sectors = case_prm.get_integer("Number of shape sectors");
         ret.global_z_shift = case_prm.get_double("global z shift");
+        std::string optimization_algorithm = case_prm.get("Optimization Algorithm");
+        if(optimization_algorithm == "Steepest") {
+            ret.optimization_stepping_method = SteppingMethod::Steepest;
+        }
     }
     return ret;
 }
