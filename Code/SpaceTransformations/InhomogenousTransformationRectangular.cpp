@@ -13,10 +13,18 @@ InhomogenousTransformationRectangular::InhomogenousTransformationRectangular()
     : SpaceTransformation(3),
       sectors(GlobalParams.Number_of_sectors) {
   homogenized = false;
+  for(unsigned int i = 0; i < 3; i++) {
+    for(unsigned int j = 0; j < 3; j++) {
+      if(i == j) {
+        I[i][j] = 1;
+      } else {
+        I[i][j] = 0;
+      }
+    }
+  }
 }
 
-InhomogenousTransformationRectangular::
-    ~InhomogenousTransformationRectangular() {}
+InhomogenousTransformationRectangular::~InhomogenousTransformationRectangular() {}
 
 Position InhomogenousTransformationRectangular::math_to_phys(Position coord) const {
   Position ret;
@@ -201,21 +209,6 @@ double InhomogenousTransformationRectangular::get_v(double z_in) const {
   return case_sectors[two.first].get_v(two.second);
 }
 
-double InhomogenousTransformationRectangular::get_Q1(double z_in) const {
-  std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
-  return case_sectors[two.first].getQ1(two.second);
-}
-
-double InhomogenousTransformationRectangular::get_Q2(double z_in) const {
-  std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
-  return case_sectors[two.first].getQ2(two.second);
-}
-
-double InhomogenousTransformationRectangular::get_Q3(double z_in) const {
-  std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
-  return case_sectors[two.first].getQ3(two.second);
-}
-
 Vector<double> InhomogenousTransformationRectangular::Dofs() const {
   Vector<double> ret;
   const int total = NDofs();
@@ -244,10 +237,21 @@ unsigned int InhomogenousTransformationRectangular::NDofs() const {
 
 Tensor<2, 3, double>
 InhomogenousTransformationRectangular::get_Space_Transformation_Tensor(Position &position) {
-  std::pair<int, double> sector_z = Z_to_Sector_and_local_z(position[2]);
+  Tensor<2, 3, double> J_loc = get_J(position);
+  Tensor<2, 3, double> ret;
+  ret[0][0] = 1;
+  ret[1][1] = 1;
+  ret[2][2] = 1;
+  return (J_loc * ret * transpose(J_loc)) / determinant(J_loc);
+}
 
-  Tensor<2, 3, double> transformation =
-      case_sectors[sector_z.first].TransformationTensorInternal(position[0], position[1], sector_z.second);
+Tensor<2,3,double> InhomogenousTransformationRectangular::get_J(Position &in__p) {
+  Tensor<2,3,double> ret = I;
+  ret[1][2] = get_v(in__p[2]);
+  return ret;
+}
 
-  return transformation;
+Tensor<2,3,double> InhomogenousTransformationRectangular::get_J_inverse(Position &in_p) {
+  Tensor<2,3,double> ret = get_J(in_p);
+  return invert(ret);
 }

@@ -982,4 +982,4 @@ Today, I implemented adjoint base optimization and BFGS as a stepping method.
 
 ## Saturday, 19th of February
 
-Now compiles again without warnings. Function handle for optimization also working.
+Now compiles again without warnings. Function handle for optimization also working. I have also reimplemented the computation of the material tensors in the inhomogenous rectangle translateion, which makes it easier to read and less prone to errors.

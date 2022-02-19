@@ -57,18 +57,6 @@ void DualProblemTransformationWrapper::estimate_and_initialize() {
   return;
 }
 
-double DualProblemTransformationWrapper::get_Q1(double z) const {
-  return st->get_Q1(z);
-}
-
-double DualProblemTransformationWrapper::get_Q2(double z) const {
-  return st->get_Q2(z);
-}
-
-double DualProblemTransformationWrapper::get_Q3(double z) const {
-  return st->get_Q3(z);
-}
-
 double DualProblemTransformationWrapper::get_dof(int dof) const {
   return st->get_dof(dof);
 }

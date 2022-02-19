@@ -149,11 +149,6 @@ class AngleWaveguideTransformation : public SpaceTransformation {
   double Sector_Length() const;
 
   /**
-   * Returns the length of one layer
-   */
-  double Layer_Length() const;
-
-  /**
    * Returns the radius for a system-coordinate;
    */
   double get_r(double in_z) const;

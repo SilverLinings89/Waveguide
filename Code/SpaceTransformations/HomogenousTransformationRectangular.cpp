@@ -258,21 +258,6 @@ double HomogenousTransformationRectangular::get_v(double z_in) const {
   return case_sectors[two.first].get_v(two.second);
 }
 
-double HomogenousTransformationRectangular::get_Q1(double z_in) const {
-  std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
-  return case_sectors[two.first].getQ1(two.second);
-}
-
-double HomogenousTransformationRectangular::get_Q2(double z_in) const {
-  std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
-  return case_sectors[two.first].getQ2(two.second);
-}
-
-double HomogenousTransformationRectangular::get_Q3(double z_in) const {
-  std::pair<int, double> two = Z_to_Sector_and_local_z(z_in);
-  return case_sectors[two.first].getQ3(two.second);
-}
-
 Vector<double> HomogenousTransformationRectangular::Dofs() const {
   Vector<double> ret;
   const int total = NDofs();

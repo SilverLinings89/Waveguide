@@ -78,36 +78,6 @@ class DualProblemTransformationWrapper : public SpaceTransformation {
   void estimate_and_initialize();
 
   /**
-   * This member calculates the value of Q1 for a provided \f$z\f$-coordinate.
-   * This value is used in the transformation of the solution-vector in
-   * transformed coordinates (solution of the system-matrix) to real coordinates
-   * (physical field). \param z The value of Q1 is independent of \f$x\f$ and
-   * \f$y\f$. Therefore only a \f$z\f$-coordinate is provided in a call to the
-   * function.
-   */
-  double get_Q1(double z) const;
-
-  /**
-   * This member calculates the value of Q2 for a provided \f$z\f$-coordinate.
-   * This value is used in the transformation of the solution-vector in
-   * transformed coordinates (solution of the system-matrix) to real coordinates
-   * (physical field). \param z The value of Q2 is independent of \f$x\f$ and
-   * \f$y\f$. Therefore only a \f$z\f$-coordinate is provided in a call to the
-   * function.
-   */
-  double get_Q2(double z) const;
-
-  /**
-   * This member calculates the value of Q3 for a provided \f$z\f$-coordinate.
-   * This value is used in the transformation of the solution-vector in
-   * transformed coordinates (solution of the system-matrix) to real coordinates
-   * (physical field). \param z The value of Q3 is independent of \f$x\f$ and
-   * \f$y\f$. Therefore only a \f$z\f$-coordinate is provided in a call to the
-   * function.
-   */
-  double get_Q3(double z) const;
-
-  /**
    * This is a getter for the values of degrees of freedom. A getter-setter
    * interface was introduced since the values are estimated automatically
    * during the optimization and non-physical systems should be excluded from
@@ -165,11 +135,6 @@ class DualProblemTransformationWrapper : public SpaceTransformation {
    * Returns the length of one sector
    */
   double Sector_Length() const;
-
-  /**
-   * Returns the length of one layer
-   */
-  double Layer_Length() const;
 
   /**
    * Returns the radius for a system-coordinate;
