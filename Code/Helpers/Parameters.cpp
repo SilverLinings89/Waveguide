@@ -66,7 +66,7 @@ auto Parameters::complete_data() -> void {
         }
     }
   } else {
-    Sector_thickness = Geometry_Size_Z;
+    Sector_thickness = Geometry_Size_Z / Number_of_sectors;
     sd.SetStraight();
   }
 }

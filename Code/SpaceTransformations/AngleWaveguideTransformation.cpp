@@ -88,10 +88,6 @@ void AngleWaveguideTransformation::set_free_dof(int ,double) {
   std::cout << "Setting dof of transformation that has no dofs." << std::endl;
 }
 
-double AngleWaveguideTransformation::Sector_Length() const {
-  return GlobalParams.Sector_thickness;
-}
-
 void AngleWaveguideTransformation::estimate_and_initialize() {
   
 }

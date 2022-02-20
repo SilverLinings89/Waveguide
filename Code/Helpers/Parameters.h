@@ -170,6 +170,8 @@ struct Parameters {
     bool solve_directly = false;
 
     SteppingMethod optimization_stepping_method = SteppingMethod::BFGS;
+
+    bool randomly_initialize_shape_dofs = false;
     
     auto complete_data() -> void;
 

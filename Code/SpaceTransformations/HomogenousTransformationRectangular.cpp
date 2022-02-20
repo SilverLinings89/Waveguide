@@ -168,10 +168,6 @@ void HomogenousTransformationRectangular::set_free_dof(int in_dof,
   }
 }
 
-double HomogenousTransformationRectangular::Sector_Length() const {
-  return GlobalParams.Sector_thickness;
-}
-
 void HomogenousTransformationRectangular::estimate_and_initialize() {
   if (GlobalParams.Use_Predefined_Shape) {
     Sector<2> the_first(true, false, GlobalParams.sd.z[0], GlobalParams.sd.z[1]);
@@ -206,6 +202,7 @@ void HomogenousTransformationRectangular::estimate_and_initialize() {
     case_sectors.reserve(sectors);
     double m_0 = GlobalParams.Vertical_displacement_of_waveguide / 2.0;
     double m_1 = -GlobalParams.Vertical_displacement_of_waveguide / 2.0;
+    const double length = GlobalParams.Sector_thickness;
     if (sectors == 1) {
       Sector<2> temp12(true, true, -GlobalParams.Geometry_Size_Z / 2.0,
                        GlobalParams.Geometry_Size_Z / 2.0);
@@ -214,7 +211,7 @@ void HomogenousTransformationRectangular::estimate_and_initialize() {
           GlobalParams.Vertical_displacement_of_waveguide / 2.0, -GlobalParams.Vertical_displacement_of_waveguide / 2.0,
           GlobalParams.Width_of_waveguide, GlobalParams.Width_of_waveguide, 0, 0);
     } else {
-      double length = Sector_Length();
+      
       Sector<2> temp(true, false, -GlobalParams.Geometry_Size_Z / (2.0),
                      -GlobalParams.Geometry_Size_Z / 2.0 + length);
       case_sectors.push_back(temp);

@@ -167,11 +167,6 @@ class SpaceTransformation {
   virtual std::pair<int, double> Z_to_Sector_and_local_z(double in_z) const;
 
   /**
-   * Returns the length of one sector
-   */
-  double Sector_Length() const;
-
-  /**
    * Returns the radius for a system-coordinate;
    */
   virtual double get_r(double in_z) const = 0;

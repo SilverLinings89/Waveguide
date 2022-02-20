@@ -78,10 +78,6 @@ DualProblemTransformationWrapper::Z_to_Sector_and_local_z(double in_z) const {
   return st->Z_to_Sector_and_local_z(in_z);
 }
 
-double DualProblemTransformationWrapper::Sector_Length() const {
-  return st->Sector_Length();
-}
-
 double DualProblemTransformationWrapper::get_r(double in_z) const {
   return st->get_r(in_z);
 }

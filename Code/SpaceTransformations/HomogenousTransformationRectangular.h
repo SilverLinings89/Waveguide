@@ -108,16 +108,6 @@ class HomogenousTransformationRectangular : public SpaceTransformation {
   void set_free_dof(int dof, double value);
 
   /**
-   * Returns the complete length of the computational domain.
-   */
-  double System_Length() const;
-
-  /**
-   * Returns the length of one sector
-   */
-  double Sector_Length() const;
-
-  /**
    * Returns the radius for a system-coordinate;
    */
   double get_r(double in_z) const;

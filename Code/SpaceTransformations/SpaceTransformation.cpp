@@ -41,10 +41,6 @@ SpaceTransformation::SpaceTransformation(int in_dofs_per_layer)
   InitialQuality = 0;
 }
 
-double SpaceTransformation::Sector_Length() const {
-  return GlobalParams.Sector_thickness;
-}
-
 bool SpaceTransformation::is_identity(Position coord) const {
   double sum = 0.0;
   Position temp = math_to_phys(coord);
@@ -54,22 +50,19 @@ bool SpaceTransformation::is_identity(Position coord) const {
   return sum < 0.0001;
 }
 
-std::pair<double, double> SpaceTransformation::dof_support(
-    unsigned int index) const {
+std::pair<double, double> SpaceTransformation::dof_support(unsigned int index) const {
   std::pair<double, double> ret;
   ret.first = 0.0;
   ret.second = 0.0;
   int boundary = index / dofs_per_layer;
-  ret.first =
-      -GlobalParams.Geometry_Size_Z / 2.0 + (boundary - 1) * Sector_Length();
-  ret.second = ret.first + 2 * Sector_Length();
+  ret.first = (boundary - 1) * GlobalParams.Sector_thickness;
+  ret.second = ret.first + 2 * GlobalParams.Sector_thickness;
   return ret;
 }
 
-bool SpaceTransformation::point_in_dof_support(Position location,
-                                               unsigned int dof_index) const {
+bool SpaceTransformation::point_in_dof_support(Position location, unsigned int dof_index) const {
   std::pair<double, double> temp = dof_support(dof_index);
-  if (std::abs(location[2]) > GlobalParams.Geometry_Size_Z / 2.0) {
+  if (std::abs(location[2]) > GlobalParams.Geometry_Size_Z) {
     return false;
   } else {
     return (temp.first <= location[2] && temp.second >= location[2]);

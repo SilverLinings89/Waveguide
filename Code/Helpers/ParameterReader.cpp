@@ -67,6 +67,7 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("convergence sequence cell count", "1,2,4,8,10,14,16,20", Patterns::List(Patterns::Integer()), "The sequence of cell counts in each direction to be used for convergence analysis.");
         case_prm.declare_entry("global z shift", "0", Patterns::Double(), "Shifts the global geometry to remove the center of the dipole for convergence studies.");
         case_prm.declare_entry("Optimization Algorithm", "BFGS", Patterns::Selection("BFGS|Steepest"), "The algorithm to compute the next parametrization in an optimization run.");
+        case_prm.declare_entry("Initialize Shape Dofs Randomly", "false", Patterns::Bool(), "If set to true, the shape dofs are initialized to random values.");
     }
     case_prm.leave_subsection();
 }
@@ -175,6 +176,7 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         if(optimization_algorithm == "Steepest") {
             ret.optimization_stepping_method = SteppingMethod::Steepest;
         }
+        ret.randomly_initialize_shape_dofs = case_prm.get_bool("Initialize Shape Dofs Randomly");
     }
     return ret;
 }

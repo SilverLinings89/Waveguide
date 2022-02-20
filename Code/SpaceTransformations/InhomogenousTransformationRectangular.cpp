@@ -122,10 +122,6 @@ void InhomogenousTransformationRectangular::set_free_dof(int in_dof,
   }
 }
 
-double InhomogenousTransformationRectangular::Sector_Length() const {
-  return GlobalParams.Sector_thickness;
-}
-
 void InhomogenousTransformationRectangular::estimate_and_initialize() {
   if (GlobalParams.Use_Predefined_Shape) {
     Sector<2> the_first(true, false, GlobalParams.sd.z[0], GlobalParams.sd.z[1]);
@@ -158,29 +154,28 @@ void InhomogenousTransformationRectangular::estimate_and_initialize() {
     }
   } else {
     case_sectors.reserve(sectors);
-    double m_0 = GlobalParams.Vertical_displacement_of_waveguide / 2.0;
-    double m_1 = -GlobalParams.Vertical_displacement_of_waveguide / 2.0;
+    double m_0 = 0;
+    double m_1 = GlobalParams.Vertical_displacement_of_waveguide;
+    double z_start = 0;
+    double z_end = GlobalParams.Geometry_Size_Z;
+    double v_0 = 0;
+    double v_1 = 0;
+    const double length = GlobalParams.Sector_thickness;
     if (sectors == 1) {
-      Sector<2> temp12(true, true, -GlobalParams.Geometry_Size_Z / 2.0,
-                       GlobalParams.Geometry_Size_Z / 2.0);
+      Sector<2> temp12(true, true, z_start, z_end);
       case_sectors.push_back(temp12);
-      case_sectors[0].set_properties_force(m_0, m_1, GlobalParams.Width_of_waveguide, GlobalParams.Width_of_waveguide, 0, 0);
+      case_sectors[0].set_properties_force(m_0, m_1, GlobalParams.Height_of_waveguide, GlobalParams.Height_of_waveguide, v_0, v_1);
     } else {
-      double length = Sector_Length();
-      Sector<2> temp(true, false, -GlobalParams.Geometry_Size_Z / (2.0),
-                     -GlobalParams.Geometry_Size_Z / 2.0 + length);
+      
+      Sector<2> temp(true, false, z_start, z_start + length);
       case_sectors.push_back(temp);
       for (int i = 1; i < sectors; i++) {
-        Sector<2> temp2(false, false,
-                        -GlobalParams.Geometry_Size_Z / (2.0) + length * (1.0 * i),
-                        -GlobalParams.Geometry_Size_Z / (2.0) + length * (i + 1.0));
+        Sector<2> temp2(false, false,z_start + length * (1.0 * i), z_start + length * (i + 1.0));
         case_sectors.push_back(temp2);
       }
 
       double length_rel = 1.0 / ((double)(sectors));
-      case_sectors[0].set_properties_force(
-          m_0, InterpolationPolynomialZeroDerivative(length_rel, m_0, m_1), 0,
-          InterpolationPolynomialDerivative(length_rel, m_0, m_1, 0, 0));
+      case_sectors[0].set_properties_force(m_0, InterpolationPolynomialZeroDerivative(length_rel, m_0, m_1), 0, InterpolationPolynomialDerivative(length_rel, m_0, m_1, 0, 0));
       for (int i = 1; i < sectors; i++) {
         double z_l = i * length_rel;
         double z_r = (i + 1) * length_rel;
@@ -245,9 +240,9 @@ InhomogenousTransformationRectangular::get_Space_Transformation_Tensor(Position 
   return (J_loc * ret * transpose(J_loc)) / determinant(J_loc);
 }
 
-Tensor<2,3,double> InhomogenousTransformationRectangular::get_J(Position &in__p) {
+Tensor<2,3,double> InhomogenousTransformationRectangular::get_J(Position &in_p) {
   Tensor<2,3,double> ret = I;
-  ret[1][2] = get_v(in__p[2]);
+  ret[1][2] = get_v(in_p[2]);
   return ret;
 }
 

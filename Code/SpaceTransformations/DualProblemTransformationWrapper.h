@@ -132,11 +132,6 @@ class DualProblemTransformationWrapper : public SpaceTransformation {
   double System_Length() const;
 
   /**
-   * Returns the length of one sector
-   */
-  double Sector_Length() const;
-
-  /**
    * Returns the radius for a system-coordinate;
    */
   double get_r(double in_z) const;

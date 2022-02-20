@@ -70,20 +70,20 @@ class Sector {
    * This function is used during the optimization-operation to update the
    * properties of the space-transformation. However, to ensure, that the
    * boundary-conditions remain intact, this function cannot edit the left
-   * defrees of freedom if left is true and it cannot edit the right degrees of
+   * degrees of freedom if left is true and it cannot edit the right degrees of
    * freedom if right is true
    */
-  void set_properties(double, double, double, double);
+  void set_properties(double m_0, double m_1, double r_0, double r_1);
 
-  void set_properties(double, double, double, double, double, double);
+  void set_properties(double m_0, double m_1, double r_0, double r_1, double v_0, double v_1);
 
   /**
    * This function is the same as set_properties with the difference of being
    * able to change the values of the input- and output boundary.
    */
-  void set_properties_force(double, double, double, double);
+  void set_properties_force(double m_0, double m_1, double r_0, double r_1);
 
-  void set_properties_force(double, double, double, double, double, double);
+  void set_properties_force(double m_0, double m_1, double r_0, double r_1, double v_0, double v_1);
 
   /**
    * The values of Q1, Q2 and Q3 are needed to compute the solution in real
