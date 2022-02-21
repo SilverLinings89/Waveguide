@@ -631,22 +631,26 @@ void PMLSurface::fix_apply_negative_Jacobian_transformation(dealii::Triangulatio
 std::string PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_data, std::string in_filename) {
   dealii::DataOut<3> data_out;
   data_out.attach_dof_handler(dof_handler);
-  data_out.add_data_vector(in_data, "Solution");
+  
   dealii::Vector<ComplexNumber> zero = dealii::Vector<ComplexNumber>(in_data.size());
   for(unsigned int i = 0; i < in_data.size(); i++) {
     zero[i] = 0;
   }
-  data_out.add_data_vector(zero, "Exact_Solution");
-  const unsigned int n_cells = dof_handler.get_triangulation().n_active_cells();
+  
+  const unsigned int n_cells = dof_handler.get_triangulation().n_cells();
   dealii::Vector<double> eps_abs(n_cells);
   unsigned int counter = 0;
-  for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
+  for(auto it = dof_handler.begin(); it != dof_handler.end(); it++) {
     Position p = it->center();
     MaterialTensor epsilon = get_pml_tensor_epsilon(p);
     eps_abs[counter] = epsilon.norm();
     counter++;
   }
+  
+  data_out.add_data_vector(in_data, "Solution");
   data_out.add_data_vector(eps_abs, "Epsilon");
+  data_out.add_data_vector(zero, "Exact_Solution");
+  data_out.add_data_vector(zero, "SolutionError");
   const std::string filename = GlobalOutputManager.get_numbered_filename(in_filename + "-" + std::to_string(b_id) + "-", GlobalParams.MPI_Rank, "vtu");
   std::ofstream outputvtu(filename);
   data_out.build_patches();

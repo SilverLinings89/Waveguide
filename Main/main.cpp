@@ -131,21 +131,21 @@ int main(int argc, char *argv[]) {
     Simulation * simulation;
     if(GlobalParams.Perform_Optimization) {
       simulation = new OptimizationRun();
-    }
-    if(GlobalParams.Perform_Convergence_Test) {
-      simulation = new ConvergenceRun();
     } else {
-      if (GlobalParams.Enable_Parameter_Run) {
-        simulation = new ParameterSweep();
+      if(GlobalParams.Perform_Convergence_Test) {
+        simulation = new ConvergenceRun();
       } else {
-        if (GlobalParams.NumberProcesses == 1) {
-          simulation = new SingleCoreRun();
+        if (GlobalParams.Enable_Parameter_Run) {
+          simulation = new ParameterSweep();
         } else {
-          simulation = new SweepingRun();
+          if (GlobalParams.NumberProcesses == 1) {
+            simulation = new SingleCoreRun();
+          } else {
+            simulation = new SweepingRun();
+          }
         }
       }
     }
-    
     simulation->create_output_directory();
     simulation->prepare_transformed_geometry();
 
