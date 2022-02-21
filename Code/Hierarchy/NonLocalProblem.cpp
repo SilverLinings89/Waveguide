@@ -111,11 +111,7 @@ NonLocalProblem::NonLocalProblem(unsigned int level) :
   for(unsigned int surf = 0; surf < 6; surf++) {
     for(unsigned int i = 0; i < Geometry.levels[level].surfaces[surf]->global_index_mapping.size(); i++) {
       unsigned int global_index = Geometry.levels[level].surfaces[surf]->global_index_mapping[i];
-      if(global_index > Geometry.levels[level].n_total_level_dofs) {
-        
-      } else {
-        locally_active_dofs.add_index(global_index);
-      }
+      locally_active_dofs.add_index(global_index);
     }  
   }
   n_locally_active_dofs = locally_active_dofs.n_elements();
@@ -810,12 +806,12 @@ void NonLocalProblem::empty_memory() {
 
 
 std::vector<double> NonLocalProblem::compute_shape_gradient() {
+  print_info("NonLocalProblem::compute_shape_gradient", "Start");
   const unsigned int n_shape_dofs = GlobalSpaceTransformation->NFreeDofs();
   std::vector<double> ret(n_shape_dofs);
   for(unsigned int i = 0; i < n_shape_dofs; i++) {
     ret[i] = 0;
   }
-
   std::pair<unsigned int, unsigned int> communication_pair;
   unsigned int blocks_per_layer = GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction;
   const unsigned int other_index_in_z = GlobalParams.Blocks_in_z_direction - 1 - GlobalParams.Index_in_z_direction;
@@ -832,14 +828,12 @@ std::vector<double> NonLocalProblem::compute_shape_gradient() {
       communication_pair.second = GlobalParams.MPI_Rank;
     }
   }
-
   std::vector<FEAdjointEvaluation> field_evaluations(Geometry.levels[level].inner_domain->dof_handler.get_triangulation().n_active_cells());
   std::vector<Position> positions;
   for(auto it : Geometry.levels[level].inner_domain->dof_handler.get_triangulation()) {
     positions.push_back(it.center());
   }
   std::vector<std::vector<ComplexNumber>> values = evaluate_solution_at(positions);
-  
   if(communication_pair.first == communication_pair.second) {
     std::cout << "This case is currently not implemented." << std::endl;
   } else {
@@ -878,5 +872,6 @@ std::vector<double> NonLocalProblem::compute_shape_gradient() {
   for(unsigned int i = 0; i <n_shape_dofs; i++) {
     ret[i] = dealii::Utilities::MPI::sum(ret[i], MPI_COMM_WORLD);
   }
+  print_info("NonLocalProblem::compute_shape_gradient", "End");
   return ret;
 }
