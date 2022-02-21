@@ -33,6 +33,7 @@ private:
   std::vector<ComplexNumber> vector_copy_array;
   double internal_vector_norm = 0.0;
   dealii::LinearAlgebra::distributed::Vector<ComplexNumber> shared_solution;
+  bool is_shared_solution_up_to_date = false;
   
  public:
   NonLocalProblem(unsigned int);

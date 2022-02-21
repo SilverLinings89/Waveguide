@@ -16,6 +16,6 @@ subsection Case parameters
   set PML skaling order = 3
   set Input Signal Method = Dirichlet
   set perform optimization = true
-  set vertical waveguide displacement = 2.0
+  set vertical waveguide displacement = 0.0
   set Prescribe input zero = false
 end

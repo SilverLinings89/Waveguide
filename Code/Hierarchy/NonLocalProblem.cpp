@@ -262,6 +262,7 @@ void NonLocalProblem::assemble() {
 }
 
 void NonLocalProblem::solve() {
+  is_shared_solution_up_to_date = false;
   std::cout << "Sigma: " << GlobalParams.PML_Sigma_Max << " PML Order: " << GlobalParams.PML_skaling_order << " and  n_cells: " << GlobalParams.PML_N_Layers<<std::endl;
   std::chrono::steady_clock::time_point time_begin;
   std::chrono::steady_clock::time_point time_end;
@@ -484,14 +485,18 @@ std::string NonLocalProblem::output_results() {
 }
 
 void NonLocalProblem::update_shared_solution_vector() {
-  shared_solution.reinit(own_dofs, locally_active_dofs, GlobalMPI.communicators_by_level[level]);
-  for(unsigned int i= 0; i < own_dofs.n_elements(); i++) {
-    shared_solution[own_dofs.nth_index_in_set(i)] = solution[own_dofs.nth_index_in_set(i)];
+  if(! is_shared_solution_up_to_date) {
+    shared_solution.reinit(own_dofs, locally_active_dofs, GlobalMPI.communicators_by_level[level]);
+    for(unsigned int i= 0; i < own_dofs.n_elements(); i++) {
+      shared_solution[own_dofs.nth_index_in_set(i)] = solution[own_dofs.nth_index_in_set(i)];
+    }
+    shared_solution.update_ghost_values();
+    is_shared_solution_up_to_date = true;
   }
-  shared_solution.update_ghost_values();
 }
 
 void NonLocalProblem::write_multifile_output(const std::string & in_filename, bool transform) {
+  update_shared_solution_vector();
   if(GlobalParams.MPI_Rank == 0 && !GlobalParams.solve_directly) {
     residual_output->run_gnuplot();
     if(level > 1) {
@@ -730,6 +735,7 @@ void NonLocalProblem::perform_upward_sweep() {
 
 ComplexNumber NonLocalProblem::compute_signal_strength_of_solution() {
   print_info("NonLocalProblem::compute_signal_strength_of_solution", "Start");
+  update_shared_solution_vector();
   ComplexNumber integral = Geometry.levels[level].inner_domain->compute_signal_strength(& shared_solution);
   ComplexNumber base = Geometry.levels[level].inner_domain->compute_mode_strength(); 
   ComplexNumber integral_sum = dealii::Utilities::MPI::sum(integral, GlobalMPI.communicators_by_level[level]);

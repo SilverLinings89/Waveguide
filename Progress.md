@@ -986,4 +986,4 @@ Now compiles again without warnings. Function handle for optimization also worki
 
 ## Sunday, 20th of February
 
-Implementing random shape dof initialization. Also switched parametrization to [0, z_length] rather than [-z_length/2, z_length/2].
+Implementing random shape dof initialization. Also switched parametrization to [0, z_length] rather than [-z_length/2, z_length/2]. The optimization parameters seem to be fine now for first test runs but the distribution of the solution vector was not invoked. Fixing. Introduced a variable on the non-local problem that tracks if the shared solution is up to date and updates the shared solution wherever it is required if it isnt up to date.
