@@ -73,18 +73,26 @@ double OptimizationRun::perform_step(const dealii::Vector<double> & x, dealii::V
   OptimizationRun::set_shape_dofs(x);
   OptimizationRun::solve_main_problem();
   ret.first = GlobalParams.Amplitude_of_input_signal - std::abs(mainProblem->compute_signal_strength_of_solution());
-  print_info("OptimizationRun::perform_step", "Loss functional in step " + std::to_string(OptimizationRun::step_counter) + " is " + std::to_string(ret.first))
+  print_info("OptimizationRun::perform_step", "Loss functional in step " + std::to_string(OptimizationRun::step_counter) + ": " + std::to_string(ret.first));
   ret.second = mainProblem->compute_shape_gradient();
+  std::string msg = "Shape gradient: ( ";
   for(unsigned int i = 0; i < g.size(); i++) {
     g[i] = ret.second[i];
+    msg += std::to_string(g[i]);
+    if(i < g.size() -1) {
+      msg += ", ";
+    } else {
+      msg += ")";
+    }
   }
+  print_info("OptimizationRun::perform_step", msg);
   OptimizationRun::step_counter += 1;
   return ret.first;
 }
 
 void OptimizationRun::set_shape_dofs(const dealii::Vector<double> in_shape_dofs) {
   std::string msg = "( ";
-  for(unsigend int i = 0; i < in_shape_dofs.size(); i++) {
+  for(unsigned int i = 0; i < in_shape_dofs.size(); i++) {
     msg += std::to_string(in_shape_dofs[i]);
     if(i != in_shape_dofs.size() - 1) {
       msg += ", ";
