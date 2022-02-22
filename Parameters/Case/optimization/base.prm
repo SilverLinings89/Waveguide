@@ -4,20 +4,20 @@ subsection Case parameters
   set epsilon out      = 1.8496
   set geometry size x  = 4.0
   set geometry size y  = 3.6
-  set geometry size z  = 10.0
+  set geometry size z  = 8
   set mu in            = 1.0
   set mu out           = 1.0
   set signal amplitude = 1.0
   set source type      = 3
   set Boundary Method = PML
-  set PML n layers = 6
+  set PML n layers = 5
   set PML thickness = 0.5
   set PML sigma max = 20
   set PML skaling order = 3
   set Input Signal Method = Dirichlet
   set perform optimization = true
-  set vertical waveguide displacement = 0.5
+  set vertical waveguide displacement = 1.5
   set Prescribe input zero = false
-  set constant waveguide width = true
-  set constant waveguide height = true
+  set constant waveguide width = false
+  set constant waveguide height = false
 end

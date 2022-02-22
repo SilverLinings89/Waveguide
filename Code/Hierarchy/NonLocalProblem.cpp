@@ -461,7 +461,6 @@ void NonLocalProblem::initialize_index_sets() {
 
 void NonLocalProblem::compute_solver_factorization() {
   child->compute_solver_factorization();
-  // child->output_results();
 }
 
 std::string NonLocalProblem::output_results() {

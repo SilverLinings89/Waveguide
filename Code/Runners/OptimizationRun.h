@@ -11,6 +11,8 @@ class OptimizationRun: public Simulation {
   static std::vector<std::vector<double>> shape_gradients;
   static unsigned int step_counter;
   std::function< double(const dealii::Vector<double> &x, dealii::Vector<double> &g)> function_pointer;
+  const unsigned int n_free_dofs;
+  
  
  public:
   OptimizationRun();

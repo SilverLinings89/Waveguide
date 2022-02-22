@@ -131,11 +131,11 @@ void WaveguideTransformation::estimate_and_initialize() {
   vertical_shift.set_constraints(0, GlobalParams.Vertical_displacement_of_waveguide, 0,0);
   vertical_shift.initialize();
   if(!GlobalParams.keep_waveguide_height_constant) {
-    waveguide_height.set_constraints(GlobalParams.Height_of_waveguide, GlobalParams.Height_of_waveguide, 0,0);
+    waveguide_height.set_constraints(1, 1, 0,0);
     waveguide_height.initialize();
   }
   if(!GlobalParams.keep_waveguide_width_constant) {
-    waveguide_width.set_constraints(GlobalParams.Width_of_waveguide, GlobalParams.Width_of_waveguide, 0,0);
+    waveguide_width.set_constraints(1, 1, 0,0);
     waveguide_height.initialize();
   }
 }
@@ -198,22 +198,6 @@ WaveguideTransformation::get_Space_Transformation_Tensor(Position &position) {
   ret[2][2] = 1;
   return (J_loc * ret * transpose(J_loc)) / determinant(J_loc);
 }
-
-/**
- * Position ret;
-  if(GlobalParams.keep_waveguide_width_constant) {
-    ret[0] = coord[0];
-  } else {
-    ret[0] = coord[0] / waveguide_width.evaluate_at(coord[2]);
-  }
-  if(GlobalParams.keep_waveguide_height_constant) {
-    ret[1] = coord[1] - vertical_shift.evaluate_at(coord[2]);
-  } else {
-    ret[1] = (coord[1] / waveguide_height.evaluate_at(coord[2])) - vertical_shift.evaluate_at(coord[2]);
-  }
-  ret[2] = coord[2];
-  return ret;
-  */
 
 Tensor<2,3,double> WaveguideTransformation::get_J(Position &in_p) {
   Tensor<2,3,double> ret = I;

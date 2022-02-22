@@ -57,7 +57,7 @@ void OptimizationRun::run() {
     try{
       solver.solve(function_pointer, shape_dofs);
     } catch(dealii::StandardExceptions::ExcMessage & e) {
-      print_info("OptimizationRun::run", "Shape optimization aborted because of " + e.what());
+      print_info("OptimizationRun::run", "Shape optimization aborted with error");
     }
 
     GlobalTimerManager.write_output();
@@ -75,12 +75,17 @@ void OptimizationRun::solve_main_problem() {
 }
 
 double OptimizationRun::perform_step(const dealii::Vector<double> & x, dealii::Vector<double> & g) {
-  std::pair<double, std::vector<double>> ret;
+  std::vector<double> x_vec(x.size());
+  for(unsigned int i = 0; i < x.size(); i++) {
+    x_vec[i] = x[i];
+  }
+  OptimizationRun::shape_dofs.push_back(x_vec);
   OptimizationRun::set_shape_dofs(x);
   OptimizationRun::solve_main_problem();
-  ret.first = GlobalParams.Amplitude_of_input_signal - std::abs(mainProblem->compute_signal_strength_of_solution());
+  double loss_functional_evaluation = GlobalParams.Amplitude_of_input_signal - std::abs(mainProblem->compute_signal_strength_of_solution());
   print_info("OptimizationRun::perform_step", "Loss functional in step " + std::to_string(OptimizationRun::step_counter) + ": " + std::to_string(ret.first));
-  ret.second = mainProblem->compute_shape_gradient();
+  std::vector<double> shape_grad = mainProblem->compute_shape_gradient();
+  OptimizationRun::shape_gradients.push_back(shape_grad);
   std::string msg = "Shape gradient: ( ";
   for(unsigned int i = 0; i < g.size(); i++) {
     g[i] = ret.second[i];
@@ -93,7 +98,7 @@ double OptimizationRun::perform_step(const dealii::Vector<double> & x, dealii::V
   }
   print_info("OptimizationRun::perform_step", msg);
   OptimizationRun::step_counter += 1;
-  return ret.first;
+  return loss_functional_evaluation;
 }
 
 void OptimizationRun::set_shape_dofs(const dealii::Vector<double> in_shape_dofs) {
