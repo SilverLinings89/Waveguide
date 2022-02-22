@@ -61,5 +61,9 @@ void ParameterOverride::perform_on(Parameters& in_parameters) {
             print_info("ParameterOverride", "Replacing number of processes in z with " + overrides[i].second);
             in_parameters.Blocks_in_z_direction = stoi(overrides[i].second);
         }
+        if(overrides[i].first == "Predefined case number") {
+            print_info("ParameterOverride", "Replacing predefined case number with " + overriedes[i].second);
+            in_parameters.Number_of_Predefined_Shape = stoi(overrides[i].second);
+        }
     }
 }
