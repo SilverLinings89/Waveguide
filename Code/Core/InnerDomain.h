@@ -85,8 +85,8 @@ class InnerDomain: public FEDomain {
   DofHandler3D dof_handler;
   dealii::SparsityPattern sp;
   dealii::DataOut<3> data_out;
-  static bool exact_solution_is_initialized;
-  static NumericVectorLocal exact_solution_interpolated;
+  bool exact_solution_is_initialized;
+  NumericVectorLocal exact_solution_interpolated;
   unsigned int level;
 
   InnerDomain(unsigned int level);

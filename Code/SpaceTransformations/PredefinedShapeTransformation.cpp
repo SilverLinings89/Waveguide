@@ -51,34 +51,36 @@ PredefinedShapeTransformation::get_Tensor(Position &position) {
 
 
 void PredefinedShapeTransformation::estimate_and_initialize() {
-    Sector<2> the_first(true, false, GlobalParams.sd.z[0], GlobalParams.sd.z[1]);
-    the_first.set_properties_force(GlobalParams.sd.m[0], GlobalParams.sd.m[1],
-                                    GlobalParams.sd.v[0], GlobalParams.sd.v[1]);
-    case_sectors.push_back(the_first);
-    for (int i = 1; i < GlobalParams.sd.Sectors - 2; i++) {
-        Sector<2> intermediate(false, false, GlobalParams.sd.z[i], GlobalParams.sd.z[i + 1]);
-        intermediate.set_properties_force(
-            GlobalParams.sd.m[i], GlobalParams.sd.m[i + 1], GlobalParams.sd.v[i],
-            GlobalParams.sd.v[i + 1]);
-        case_sectors.push_back(intermediate);
-    }
-    Sector<2> the_last(false, true,
-                        GlobalParams.sd.z[GlobalParams.sd.Sectors - 2],
-                        GlobalParams.sd.z[GlobalParams.sd.Sectors - 1]);
-    the_last.set_properties_force(
-        GlobalParams.sd.m[GlobalParams.sd.Sectors - 2],
-        GlobalParams.sd.m[GlobalParams.sd.Sectors - 1],
-        GlobalParams.sd.v[GlobalParams.sd.Sectors - 2],
-        GlobalParams.sd.v[GlobalParams.sd.Sectors - 1]);
-    case_sectors.push_back(the_last);
+  print_info("PredefinedShapeTransformation::estimate_and_initialize", "Start");
+  Sector<2> the_first(true, false, GlobalParams.sd.z[0], GlobalParams.sd.z[1]);
+  the_first.set_properties_force(GlobalParams.sd.m[0], GlobalParams.sd.m[1],
+                                  GlobalParams.sd.v[0], GlobalParams.sd.v[1]);
+  case_sectors.push_back(the_first);
+  for (int i = 1; i < GlobalParams.sd.Sectors - 2; i++) {
+      Sector<2> intermediate(false, false, GlobalParams.sd.z[i], GlobalParams.sd.z[i + 1]);
+      intermediate.set_properties_force(
+          GlobalParams.sd.m[i], GlobalParams.sd.m[i + 1], GlobalParams.sd.v[i],
+          GlobalParams.sd.v[i + 1]);
+      case_sectors.push_back(intermediate);
+  }
+  Sector<2> the_last(false, true,
+                      GlobalParams.sd.z[GlobalParams.sd.Sectors - 2],
+                      GlobalParams.sd.z[GlobalParams.sd.Sectors - 1]);
+  the_last.set_properties_force(
+      GlobalParams.sd.m[GlobalParams.sd.Sectors - 2],
+      GlobalParams.sd.m[GlobalParams.sd.Sectors - 1],
+      GlobalParams.sd.v[GlobalParams.sd.Sectors - 2],
+      GlobalParams.sd.v[GlobalParams.sd.Sectors - 1]);
+  case_sectors.push_back(the_last);
+  if(GlobalParams.MPI_Rank == 0) {
     for (unsigned int i = 0; i < case_sectors.size(); i++) {
-        deallog << "From z: " << case_sectors[i].z_0
-                << "(m: " << case_sectors[i].get_m(0.0)
-                << " v: " << case_sectors[i].get_v(0.0) << ")" << std::endl;
-        deallog << "  To z: " << case_sectors[i].z_1
-                << "(m: " << case_sectors[i].get_m(1.0)
-                << " v: " << case_sectors[i].get_v(1.0) << ")" << std::endl;
+      std::string msg_lower = "Layer at z: " + std::to_string(case_sectors[i].z_0) + "(m: " + std::to_string(case_sectors[i].get_m(0.0)) + " v: " + std::to_string(case_sectors[i].get_v(0.0)) + ")";
+      print_info("PredefinedShapeTransformation::estimate_and_initialize", msg_lower);
     }
+    std::string msg_last = "Layer at z: " + std::to_string(case_sectors[case_sectors.size()-1].z_1) + "(m: " + std::to_string(case_sectors[case_sectors.size()-1].get_m(1.0)) + " v: " + std::to_string(case_sectors[case_sectors.size()-1].get_v(1.0)) + ")";
+    
+  }
+  print_info("PredefinedShapeTransformation::estimate_and_initialize", "End");
 }
 
 double PredefinedShapeTransformation::get_m(double z_in) const {

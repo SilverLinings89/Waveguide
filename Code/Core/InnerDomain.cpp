@@ -34,9 +34,6 @@
 #include "../Solutions/ExactSolutionConjugate.h"
 #include "../SpaceTransformations/SpaceTransformation.h"
 
-NumericVectorLocal InnerDomain::exact_solution_interpolated;
-bool InnerDomain::exact_solution_is_initialized = false;
-
 InnerDomain::InnerDomain(unsigned int in_level)
     :
       mesh_generator{},
@@ -44,20 +41,21 @@ InnerDomain::InnerDomain(unsigned int in_level)
       triangulation(Triangulation<3>::MeshSmoothing(Triangulation<3>::none)),
       dof_handler(triangulation){
   level = in_level;
+  exact_solution_is_initialized = false;
 }
 
 InnerDomain::~InnerDomain() {}
 
 void InnerDomain::load_exact_solution() {
-  if(!InnerDomain::exact_solution_is_initialized) {
+  if(!exact_solution_is_initialized) {
     dealii::IndexSet local_indices(n_locally_active_dofs);
     local_indices.add_range(0,n_locally_active_dofs);
     Constraints local_constraints(local_indices);
     local_constraints.close();
-    InnerDomain::exact_solution_interpolated.reinit(n_locally_active_dofs);
-    VectorTools::project(dof_handler, local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *GlobalParams.source_field, InnerDomain::exact_solution_interpolated);
-    InnerDomain::exact_solution_is_initialized = true;
-    print_info("InnerDomain::load_exact_solution", "Norm of interpolated mode signal is " + std::to_string(InnerDomain::exact_solution_interpolated.l2_norm()));
+    exact_solution_interpolated.reinit(n_locally_active_dofs);
+    VectorTools::project(dof_handler, local_constraints, dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2), *GlobalParams.source_field, exact_solution_interpolated);
+    exact_solution_is_initialized = true;
+    print_info("InnerDomain::load_exact_solution", "Norm of interpolated mode signal is " + std::to_string(exact_solution_interpolated.l2_norm()));
   }
 }
 
@@ -352,7 +350,7 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
   
   Function<3,ComplexNumber> * esc;
   if(!apply_transformation) {
-    data_out.add_data_vector(InnerDomain::exact_solution_interpolated, "Exact_Solution");
+    data_out.add_data_vector(exact_solution_interpolated, "Exact_Solution");
   } else {
     esc = GlobalParams.source_field;
     dealii::IndexSet local_indices(n_locally_active_dofs);
@@ -367,7 +365,7 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
   
   dealii::Vector<ComplexNumber> error_vector(in_solution.size());
   for(unsigned int i = 0; i < in_solution.size(); i++) {
-    error_vector[i] = in_solution[i] - InnerDomain::exact_solution_interpolated[i];
+    error_vector[i] = in_solution[i] - exact_solution_interpolated[i];
   }
   data_out.add_data_vector(error_vector, "SolutionError");
 

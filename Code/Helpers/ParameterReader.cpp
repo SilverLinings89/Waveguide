@@ -110,20 +110,6 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
     case_prm.enter_subsection("Case parameters");
     {
         ret.Point_Source_Type = case_prm.get_integer("source type");
-        std::string trafo_t = case_prm.get("transformation type");
-        if(ret.Use_Predefined_Shape || trafo_t == "Predefined Shape Transformation") {
-            ret.transformation_type = TransformationType::PredefinedShapeTransformationType;
-        } else {
-            if(trafo_t == "Waveguide Transformation") {
-                ret.transformation_type = TransformationType::WavegeuideTransformationType;
-            }
-            if(trafo_t == "Angle Waveguide Transformation") {
-                ret.transformation_type = TransformationType::AngleWaveguideTransformationType;
-            }
-            if(trafo_t == "Bend Transformation") {
-                ret.transformation_type = TransformationType::BendTransformationType;
-            }
-        }
         ret.Geometry_Size_X = case_prm.get_double("geometry size x");
         ret.Geometry_Size_Y = case_prm.get_double("geometry size y");
         ret.Geometry_Size_Z = case_prm.get_double("geometry size z");
@@ -188,6 +174,20 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.Vertical_displacement_of_waveguide = case_prm.get_double("vertical waveguide displacement");
         ret.keep_waveguide_height_constant = case_prm.get_bool("constant waveguide height");
         ret.keep_waveguide_width_constant = case_prm.get_bool("constant waveguide width");
+        std::string trafo_t = case_prm.get("transformation type");
+        if(ret.Use_Predefined_Shape || trafo_t == "Predefined Shape Transformation") {
+            ret.transformation_type = TransformationType::PredefinedShapeTransformationType;
+        } else {
+            if(trafo_t == "Waveguide Transformation") {
+                ret.transformation_type = TransformationType::WavegeuideTransformationType;
+            }
+            if(trafo_t == "Angle Waveguide Transformation") {
+                ret.transformation_type = TransformationType::AngleWaveguideTransformationType;
+            }
+            if(trafo_t == "Bend Transformation") {
+                ret.transformation_type = TransformationType::BendTransformationType;
+            }
+        }
     }
     return ret;
 }

@@ -42,7 +42,6 @@ void MPICommunicator::initialize() {
     local = new_com;
     local_level++;
     communicators_by_level.push_back(new_com);
-    std::cout << "h" <<std::endl;
     rank_on_level.push_back(dealii::Utilities::MPI::this_mpi_process(new_com));
   }
   communicators_by_level.push_back(MPI_COMM_SELF);
