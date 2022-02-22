@@ -8,7 +8,7 @@ subsection Run parameters
   set processes in z         = 39
   set cell count x           = 20
   set cell count y           = 20
-  set cell count z           = 40
+  set cell count z           = 50
   set Logging Level          = Debug One
   set output transformed solution = true
 end

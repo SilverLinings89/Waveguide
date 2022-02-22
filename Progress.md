@@ -996,3 +996,7 @@ I added the ShapeFunction class to use in the coordinate transformations. It ena
 Additionally, tests have been added to ensure these functions deliver correct results and the old test have been reworked to build and run again. The code is now free of compiler errors (obviously) and warnings. The next step is to rewrite the inhomogenous space transformation, to work with this implementation and also delete the old homogenous transformation.
 
 There are now two new parameters: One for keeping the waveguide width constant and one to do the same with the height. I can run shape optimization with the vertical displacement, height or width. This now needs to be included in the space transformation. The space transformations have been refactored and the former InhomogenousRectangularWaveguideTransformation is now simply the WaveguideTransformation since the code no longer supports round waveguides or homogenous transformations. I have to split it up in two however: One for the predefined shapes and one for actual waveguides. New Waveguide implementation is done. Testing.
+
+## Tuesday, 22st of February
+
+There was a bug in the loader of the predefined shapes which is now fixed. Will restart cluster jobs.
