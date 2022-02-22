@@ -15,6 +15,7 @@
 #include <deal.II/base/mpi.h>
 #include <deal.II/optimization/solver_bfgs.h>
 #include <deal.II/lac/solver_control.h>
+#include <deal.II/base/exceptions.h>
 #include "../Helpers/staticfunctions.h"
 #include "../GlobalObjects/GlobalObjects.h"
 #include "../ModalComputations/RectangularMode.h"
@@ -53,7 +54,12 @@ void OptimizationRun::run() {
     }
     dealii::SolverControl sc(GlobalParams.optimization_n_shape_steps, GlobalParams.optimization_residual_tolerance, true, true);
     dealii::SolverBFGS<dealii::Vector<double>> solver(sc);
-    solver.solve(function_pointer, shape_dofs);
+    try{
+      solver.solve(function_pointer, shape_dofs);
+    } catch(dealii::StandardExceptions::ExcMessage & e) {
+      print_info("OptimizationRun::run", "Shape optimization aborted because of " + e.what());
+    }
+
     GlobalTimerManager.write_output();
     OptimizationRun::mainProblem->output_results();
     print_info("OptimizationRun::run", "End", LoggingLevel::PRODUCTION_ONE);
