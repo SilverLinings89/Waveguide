@@ -807,7 +807,7 @@ void NonLocalProblem::empty_memory() {
 
 std::vector<double> NonLocalProblem::compute_shape_gradient() {
   print_info("NonLocalProblem::compute_shape_gradient", "Start");
-  const unsigned int n_shape_dofs = GlobalSpaceTransformation->NFreeDofs();
+  const unsigned int n_shape_dofs = GlobalSpaceTransformation->n_free_dofs();
   std::vector<double> ret(n_shape_dofs);
   for(unsigned int i = 0; i < n_shape_dofs; i++) {
     ret[i] = 0;

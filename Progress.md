@@ -989,3 +989,10 @@ Now compiles again without warnings. Function handle for optimization also worki
 Implementing random shape dof initialization. Also switched parametrization to [0, z_length] rather than [-z_length/2, z_length/2]. The optimization parameters seem to be fine now for first test runs but the distribution of the solution vector was not invoked. Fixing. Introduced a variable on the non-local problem that tracks if the shared solution is up to date and updates the shared solution wherever it is required if it isnt up to date.
 
 Optimization launches now. The computation of shape gradients and the loss functional also terminate. I added logic to print some values to the console so I can qualitatively evaluate the performance.
+
+## Monday, 21st of February
+
+I added the ShapeFunction class to use in the coordinate transformations. It enables me to build function objects that I can use in the coordinate transformations. I can prescribe constraints and evaluate both function and derivative, as well as computing the number of dofs arising from a discretization on number-of-sectors sectors.
+Additionally, tests have been added to ensure these functions deliver correct results and the old test have been reworked to build and run again. The code is now free of compiler errors (obviously) and warnings. The next step is to rewrite the inhomogenous space transformation, to work with this implementation and also delete the old homogenous transformation.
+
+There are now two new parameters: One for keeping the waveguide width constant and one to do the same with the height. I can run shape optimization with the vertical displacement, height or width. This now needs to be included in the space transformation. The space transformations have been refactored and the former InhomogenousRectangularWaveguideTransformation is now simply the WaveguideTransformation since the code no longer supports round waveguides or homogenous transformations. I have to split it up in two however: One for the predefined shapes and one for actual waveguides.

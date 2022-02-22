@@ -45,7 +45,7 @@ void OptimizationRun::prepare() {
 
 void OptimizationRun::run() {
     print_info("OptimizationRun::run", "Start", LoggingLevel::PRODUCTION_ONE);
-    const unsigned int n_shape_dofs = GlobalSpaceTransformation->NFreeDofs();
+    const unsigned int n_shape_dofs = GlobalSpaceTransformation->n_free_dofs();
     dealii::Vector<double> shape_dofs(n_shape_dofs);
     OptimizationRun::step_counter = 0;
     for(unsigned int i = 0; i < n_shape_dofs; i++) {
@@ -101,7 +101,7 @@ void OptimizationRun::set_shape_dofs(const dealii::Vector<double> in_shape_dofs)
     }
   }
   print_info("OptimizationRun::set_shape_dofs", msg);
-  if(in_shape_dofs.size() == GlobalSpaceTransformation->NFreeDofs()) {
+  if(in_shape_dofs.size() == GlobalSpaceTransformation->n_free_dofs()) {
     for(unsigned int i = 0; i < in_shape_dofs.size(); i++) {
       GlobalSpaceTransformation->set_free_dof(i, in_shape_dofs[i]);
     }

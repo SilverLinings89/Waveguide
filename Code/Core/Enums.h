@@ -89,5 +89,5 @@ enum SteppingMethod {
 };
 
 enum TransformationType {
-  InhomogenousWavegeuideTransformationType, AngleWaveguideTransformationType, BendTransformationType
+  WavegeuideTransformationType, AngleWaveguideTransformationType, BendTransformationType, PredefinedShapeTransformationType
 };

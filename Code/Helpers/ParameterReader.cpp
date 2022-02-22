@@ -31,7 +31,7 @@ void ParameterReader::declare_parameters() {
     case_prm.enter_subsection("Case parameters");
     {
         case_prm.declare_entry("source type", "0", Patterns::Integer(), "PointSourceField is 0: empty, 1: cos()cos(), 2: Hertz Dipole, 3: Waveguide");
-        case_prm.declare_entry("transformation type", "Inhomogenous Waveguide Transformation", Patterns::Selection("Inhomogenous Waveguide Transformation|Angle Waveguide Transformation|Bend Transformation"), "Inhomogenous Waveguide Transformation is used for straight waveguide cases and the predefined cases. Angle Waveguide Transformation is a PML test. Bend Transformation is an example for a 90 degree bend.");
+        case_prm.declare_entry("transformation type", "Waveguide Transformation", Patterns::Selection("Waveguide Transformation|Angle Waveguide Transformation|Bend Transformation"), "Inhomogenous Waveguide Transformation is used for straight waveguide cases and the predefined cases. Angle Waveguide Transformation is a PML test. Bend Transformation is an example for a 90 degree bend.");
         case_prm.declare_entry("geometry size x", "5.0", Patterns::Double(), "Size of the computational domain in x-direction.");
         case_prm.declare_entry("geometry size y", "5.0", Patterns::Double(), "Size of the computational domain in y-direction.");
         case_prm.declare_entry("geometry size z", "5.0", Patterns::Double(), "Size of the computational domain in z-direction.");
@@ -69,6 +69,8 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("Initialize Shape Dofs Randomly", "false", Patterns::Bool(), "If set to true, the shape dofs are initialized to random values.");
         case_prm.declare_entry("perform optimization", "false", Patterns::Bool(), "If true, the code will perform shape optimization.");
         case_prm.declare_entry("vertical waveguide displacement", "0", Patterns::Double(), "The delta of the waveguide core at the input and output interfaces.");
+        case_prm.declare_entry("constant waveguide height", "true", Patterns::Bool(), "If false, the waveguide shape will be subject to optimization in the y direction.");
+        case_prm.declare_entry("constant waveguide width", "true", Patterns::Bool(), "If false, the waveguide shape will be subject to optimization in the x direction.");
     }
     case_prm.leave_subsection();
 }
@@ -109,14 +111,18 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
     {
         ret.Point_Source_Type = case_prm.get_integer("source type");
         std::string trafo_t = case_prm.get("transformation type");
-        if(trafo_t == "Inhomogenous Waveguide Transformation") {
-            ret.transformation_type = TransformationType::InhomogenousWavegeuideTransformationType;
-        }
-        if(trafo_t == "Angle Waveguide Transformation") {
-            ret.transformation_type = TransformationType::AngleWaveguideTransformationType;
-        }
-        if(trafo_t == "Bend Transformation") {
-            ret.transformation_type = TransformationType::BendTransformationType;
+        if(ret.Use_Predefined_Shape || trafo_t == "Predefined Shape Transformation") {
+            ret.transformation_type = TransformationType::PredefinedShapeTransformationType;
+        } else {
+            if(trafo_t == "Waveguide Transformation") {
+                ret.transformation_type = TransformationType::WavegeuideTransformationType;
+            }
+            if(trafo_t == "Angle Waveguide Transformation") {
+                ret.transformation_type = TransformationType::AngleWaveguideTransformationType;
+            }
+            if(trafo_t == "Bend Transformation") {
+                ret.transformation_type = TransformationType::BendTransformationType;
+            }
         }
         ret.Geometry_Size_X = case_prm.get_double("geometry size x");
         ret.Geometry_Size_Y = case_prm.get_double("geometry size y");
@@ -180,6 +186,8 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.randomly_initialize_shape_dofs = case_prm.get_bool("Initialize Shape Dofs Randomly");
         ret.Perform_Optimization = case_prm.get_bool("perform optimization");
         ret.Vertical_displacement_of_waveguide = case_prm.get_double("vertical waveguide displacement");
+        ret.keep_waveguide_height_constant = case_prm.get_bool("constant waveguide height");
+        ret.keep_waveguide_width_constant = case_prm.get_bool("constant waveguide width");
     }
     return ret;
 }

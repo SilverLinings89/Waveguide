@@ -92,7 +92,6 @@ class InnerDomain: public FEDomain {
   InnerDomain(unsigned int level);
   ~InnerDomain();
   void load_exact_solution();
-  double evaluate_for_z(double);
   void evaluate();
   void store();
   void make_grid();

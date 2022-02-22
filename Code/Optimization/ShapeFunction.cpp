@@ -47,7 +47,7 @@ n_dofs(ShapeFunction::compute_n_dofs(in_n_sectors))
     z_max = in_z_max;
 }
 
-double ShapeFunction::evaluate_at(double z) {
+double ShapeFunction::evaluate_at(double z) const {
     if(z <= z_min) {
         return dof_values[0];
     }
@@ -72,7 +72,7 @@ double ShapeFunction::evaluate_at(double z) {
     return ret;
 }
 
-double ShapeFunction::evaluate_derivative_at(double z) {
+double ShapeFunction::evaluate_derivative_at(double z) const {
     if(z <= z_min) {
         return dof_values[1];
     }
@@ -153,4 +153,48 @@ void ShapeFunction::set_free_values(std::vector<double> in_dof_values) {
         dof_values[dof_values.size() - 2] = in_dof_values[in_dof_values.size() - 1 - down_shift];
     }
     update_constrained_values();
+}
+
+void ShapeFunction::initialize() {
+    std::vector<double> initial_values;
+    initial_values.resize(n_free_dofs);
+    for(unsigned int i = 0; i < n_free_dofs; i++) {
+        initial_values[i] = dof_values[1+i] + i*(dof_values[dof_values.size()-2] - dof_values[1])/(n_sectors);
+    }
+    set_free_values(initial_values);
+}
+
+unsigned int ShapeFunction::get_n_dofs() const {
+    return n_dofs;
+}
+unsigned int ShapeFunction::get_n_free_dofs() const {
+    return n_free_dofs;
+}
+double ShapeFunction::get_dof_value(unsigned int index) const {
+    return dof_values[index];
+}
+double ShapeFunction::get_free_dof_value(unsigned int index) const {
+    unsigned int free_index = index;
+    if(is_lower_derivative_constrained) {
+        free_index++;
+    }
+    if(is_lower_value_constrained) {
+        free_index++;
+    }
+}
+
+void ShapeFunction::set_free_dof_value(unsigned int index, double value) {
+    unsigned int local_index = index;
+    if(index < n_free_dofs) {
+        if(is_lower_derivative_constrained) {
+            local_index++;
+        }
+        if(is_lower_value_constrained) {
+            local_index++;
+        }
+        dof_values[local_index] = value;
+        update_constrained_values();
+    } else {
+        std::cout << "You tried to write to a constrained dof of a shape function." << std::endl;
+    }
 }

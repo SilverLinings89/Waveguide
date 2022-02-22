@@ -34,17 +34,10 @@ class Sector;
 
 class SpaceTransformation {
  public:
-  bool homogenized = false;
-
-  const unsigned int dofs_per_layer;
-
-  const unsigned int boundary_dofs_in;
-
-  const unsigned int boundary_dofs_out;
 
   bool apply_math_to_phys = true;
 
-  SpaceTransformation(int);
+  SpaceTransformation();
 
   virtual Position math_to_phys(Position coord) const = 0;
 
@@ -53,8 +46,6 @@ class SpaceTransformation {
   virtual double get_det(Position ) {
     return 1.0;
   }
-
-  bool is_identity(Position coord) const;
 
   virtual Tensor<2,3,double> get_J(Position &) {
     Tensor<2,3,double> ret;
@@ -79,29 +70,6 @@ class SpaceTransformation {
   virtual Tensor<2, 3, ComplexNumber> get_Tensor_for_step(Position &coordinate, unsigned int dof, double step_width);
 
   void switch_application_mode(bool apply_math_to_physical);
-  /**
-   * The material-property \f$\epsilon_r\f$ has a different value inside and
-   * outside of the waveguides core. This variable stores its value inside the
-   * core.
-   */
-  const double epsilon_K;
-  /**
-   *  The material-property \f$\epsilon_r\f$ has a different value inside and
-   * outside of the waveguides core. This variable stores its value outside the
-   * core.
-   */
-  const double epsilon_M;
-  /**
-   * Since the computational domain is split into subdomains (called sectors),
-   * it is important to keep track of the amount of subdomains. This member
-   * stores the number of Sectors the computational domain has been split into.
-   */
-  const int sectors;
-
-  /**
-   * This value is initialized with the value Delta from the input-file.
-   */
-  const double deltaY;
 
   /**
    * At the beginning (before the first solution of a system) only the boundary
@@ -122,20 +90,9 @@ class SpaceTransformation {
    * function returns the value of the requested degree of freedom. Should this
    * dof not exist, 0 will be returned.
    */
-  virtual double get_dof(int dof) const = 0;
-
-  /**
-   * This function sets the value of the dof provided to the given value. It is
-   * important to consider, that some dofs are non-writable (i.e. the values of
-   * the degrees of freedom on the boundary, like the radius of the
-   * input-connector cannot be changed). \param dof The index of the parameter
-   * to be changed. \param value The value, the dof should be set to.
-   */
-  virtual void set_dof(int dof, double value) = 0;
-
-  virtual std::pair<double, double> dof_support(unsigned int index) const;
-
-  bool point_in_dof_support(Position location, unsigned int dof_index) const;
+  virtual double get_dof(int) const {
+    return 0;
+  };
 
   /**
    * This is a getter for the values of degrees of freedom. A getter-setter
@@ -146,7 +103,7 @@ class SpaceTransformation {
    * function returns the value of the requested degree of freedom. Should this
    * dof not exist, 0 will be returnd.
    */
-  virtual double get_free_dof(int dof) const = 0;
+  virtual double get_free_dof(int) const { return 0.0; };
 
   /**
    * This function sets the value of the dof provided to the given value. It is
@@ -155,7 +112,7 @@ class SpaceTransformation {
    * input-connector cannot be changed). \param dof The index of the parameter
    * to be changed. \param value The value, the dof should be set to.
    */
-  virtual void set_free_dof(int dof, double value) = 0;
+  virtual void set_free_dof(int , double ){return;};
 
   /**
    * Using this method unifies the usage of coordinates. This function takes a
@@ -167,31 +124,6 @@ class SpaceTransformation {
   virtual std::pair<int, double> Z_to_Sector_and_local_z(double in_z) const;
 
   /**
-   * Returns the radius for a system-coordinate;
-   */
-  virtual double get_r(double in_z) const = 0;
-
-  /**
-   * Returns the shift for a system-coordinate;
-   */
-  virtual double get_m(double in_z) const = 0;
-
-  /**
-   * Returns the tilt for a system-coordinate;
-   */
-  virtual double get_v(double in_z) const = 0;
-
-  /**
-   * This vector of values saves the initial configuration
-   */
-  Vector<double> InitialDofs;
-
-  /**
-   * This vector of values saves the initial configuration
-   */
-  double InitialQuality;
-
-  /**
    * Other objects can use this function to retrieve an array of the current
    * values of the degrees of freedom of the functional we are optimizing. This
    * also includes restrained degrees of freedom and other functions can be used
@@ -199,28 +131,26 @@ class SpaceTransformation {
    * the number of restrained degrees of freedom can vary and we want no logic
    * about this in other functions.
    */
-  virtual Vector<double> Dofs() const = 0;
+  virtual Vector<double> get_dof_values() const {
+    Vector<double> ret;
+    return ret;
+  };
 
   /**
    * This function returns the number of unrestrained degrees of freedom of the
    * current optimization run.
    */
-  virtual unsigned int NFreeDofs() const = 0;
+  virtual unsigned int n_free_dofs() const {
+    return 0;
+  }
 
   /**
    * This function returns the total number of DOFs including restrained ones.
    * This is the lenght of the array returned by Dofs().
    */
-  virtual unsigned int NDofs() const = 0;
-
-  /**
-   * Since Dofs() also returns restrained degrees of freedom, this function can
-   * be applied to determine if a degree of freedom is indeed free or
-   * restrained. "restrained" means that for example the DOF represents the
-   * radius at one of the connectors (input or output) and therefore we forbid
-   * the optimization scheme to vary this value.
-   */
-  virtual bool IsDofFree(int) const = 0;
+  virtual unsigned int n_dofs() const  {
+    return 0;
+  }
 
   /**
    * Console output of the current Waveguide Structure.

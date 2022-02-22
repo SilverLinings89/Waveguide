@@ -7,51 +7,45 @@
 #include <vector>
 
 #include "../Core/InnerDomain.h"
+#include "../Optimization/ShapeFunction.h"
 #include "../Core/Sector.h"
 #include "SpaceTransformation.h"
 
+enum ResponsibleComponent {
+  VerticalDisplacementComponent, WaveguideHeightComponent, WaveguideWidthComponent
+};
+
 /**
- * \class InhomogenousTransformationRectangle
+ * \class WaveguideTransformation
  * \brief In this case we regard a rectangular waveguide and the effects on the
  * material tensor by the space transformation and the boundary condition PML
- * may overlap (hence inhomogenous space transformation)
+ * may overlap.
  *
  * If this kind of boundary condition works stably we will also be able to  deal
  * with more general settings (which might for example incorporate angles in
  * between the output and input connector. \author Pascal Kraft \date 28.11.2016
  */
 
-class InhomogenousTransformationRectangular : public SpaceTransformation {
+class WaveguideTransformation : public SpaceTransformation {
   dealii::Tensor<2,3,double> I;
+  ShapeFunction waveguide_width, waveguide_height, vertical_shift;
+
  public:
-  InhomogenousTransformationRectangular();
+  WaveguideTransformation();
 
-  virtual ~InhomogenousTransformationRectangular();
+  virtual ~WaveguideTransformation();
 
-  Position math_to_phys(Position coord) const;
+  Position math_to_phys(Position coord) const override;
 
-  Position phys_to_math(Position coord) const;
+  Position phys_to_math(Position coord) const override;
 
-  dealii::Tensor<2, 3, ComplexNumber> get_Tensor(Position &coordinate) ;
+  dealii::Tensor<2, 3, ComplexNumber> get_Tensor(Position &coordinate) override;
 
-  dealii::Tensor<2, 3, double> get_Space_Transformation_Tensor(Position &coordinate);
+  dealii::Tensor<2, 3, double> get_Space_Transformation_Tensor(Position &coordinate) override;
 
   Tensor<2,3,double> get_J(Position &) override;
 
   Tensor<2,3,double> get_J_inverse(Position &) override;
-
-  /**
-   * This member contains all the Sectors who, as a sum, form the complete
-   * Waveguide. These Sectors are a partition of the simulated domain.
-   */
-  std::vector<Sector<2>> case_sectors;
-
-  /**
-   * Since the computational domain is split into subdomains (called sectors),
-   * it is important to keep track of the amount of subdomains. This member
-   * stores the number of Sectors the computational domain has been split into.
-   */
-  const int sectors;
 
   /**
    * At the beginning (before the first solution of a system) only the boundary
@@ -61,7 +55,7 @@ class InhomogenousTransformationRectangular : public SpaceTransformation {
    * averages and a polynomial interpolation of the boundary conditions on the
    * shape.
    */
-  void estimate_and_initialize();
+  void estimate_and_initialize() override;
 
   /**
    * This is a getter for the values of degrees of freedom. A getter-setter
@@ -72,16 +66,7 @@ class InhomogenousTransformationRectangular : public SpaceTransformation {
    * function returns the value of the requested degree of freedom. Should this
    * dof not exist, 0 will be returnd.
    */
-  double get_dof(int dof) const;
-
-  /**
-   * This function sets the value of the dof provided to the given value. It is
-   * important to consider, that some dofs are non-writable (i.e. the values of
-   * the degrees of freedom on the boundary, like the radius of the
-   * input-connector cannot be changed). \param dof The index of the parameter
-   * to be changed. \param value The value, the dof should be set to.
-   */
-  void set_dof(int dof, double value);
+  double get_dof(int dof) const override;
 
   /**
    * This is a getter for the values of degrees of freedom. A getter-setter
@@ -92,7 +77,7 @@ class InhomogenousTransformationRectangular : public SpaceTransformation {
    * function returns the value of the requested degree of freedom. Should this
    * dof not exist, 0 will be returnd.
    */
-  double get_free_dof(int dof) const;
+  double get_free_dof(int dof) const override;
 
   /**
    * This function sets the value of the dof provided to the given value. It is
@@ -101,32 +86,7 @@ class InhomogenousTransformationRectangular : public SpaceTransformation {
    * input-connector cannot be changed). \param dof The index of the parameter
    * to be changed. \param value The value, the dof should be set to.
    */
-  void set_free_dof(int dof, double value);
-
-  /**
-   * Returns the complete length of the computational domain.
-   */
-  double System_Length() const;
-
-  /**
-   * Returns the radius for a system-coordinate;
-   */
-  double get_r(double in_z) const;
-
-  /**
-   * Returns the shift for a system-coordinate;
-   */
-  double get_m(double in_z) const;
-
-  /**
-   * Returns the tilt for a system-coordinate;
-   */
-  double get_v(double in_z) const;
-
-  /**
-   * This vector of values saves the initial configuration
-   */
-  Vector<double> InitialDofs;
+  void set_free_dof(int dof, double value) override;
 
   /**
    * Other objects can use this function to retrieve an array of the current
@@ -136,36 +96,26 @@ class InhomogenousTransformationRectangular : public SpaceTransformation {
    * the number of restrained degrees of freedom can vary and we want no logic
    * about this in other functions.
    */
-  Vector<double> Dofs() const;
+  Vector<double> get_dof_values() const override;
 
   /**
    * This function returns the number of unrestrained degrees of freedom of the
    * current optimization run.
    */
-  unsigned int NFreeDofs() const;
+  unsigned int n_free_dofs() const override;
 
   /**
    * This function returns the total number of DOFs including restrained ones.
    * This is the lenght of the array returned by Dofs().
    */
-  unsigned int NDofs() const;
-
-  /**
-   * Since Dofs() also returns restrained degrees of freedom, this function can
-   * be applied to determine if a degree of freedom is indeed free or
-   * restrained. "restrained" means that for example the DOF represents the
-   * radius at one of the connectors (input or output) and therefore we forbid
-   * the optimization scheme to vary this value.
-   */
-  bool IsDofFree(int) const;
+  unsigned int n_dofs() const override;
 
   /**
    * Console output of the current Waveguide Structure.
    */
-  void Print() const;
+  void Print() const override;
 
-  ComplexNumber evaluate_for_z_with_sum(double, double,
-                                               InnerDomain *);
+  std::pair<ResponsibleComponent, unsigned int> map_free_dof_index(unsigned int) const;
 
-  ComplexNumber evaluate_for_z(double z_in, InnerDomain *);
+  std::pair<ResponsibleComponent, unsigned int> map_dof_index(unsigned int) const;
 };

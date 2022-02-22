@@ -10,9 +10,7 @@
 using namespace dealii;
 
 AngleWaveguideTransformation::AngleWaveguideTransformation()
-    : SpaceTransformation(3),
-      sectors(GlobalParams.Number_of_sectors) {
-  homogenized = false;
+    : SpaceTransformation() {
   
 }
 
@@ -70,71 +68,24 @@ AngleWaveguideTransformation::get_Tensor(Position &position) {
   return get_Space_Transformation_Tensor(position);
 }
 
-double AngleWaveguideTransformation::get_dof(int) const {
-  std::cout << "Getting dof of transformation that has no dofs." << std::endl;
-  return 0.0;
-}
-
-double AngleWaveguideTransformation::get_free_dof(int) const {
-  std::cout << "Getting dof of transformation that has no dofs." << std::endl;
-  return 0.0;
-}
-
-void AngleWaveguideTransformation::set_dof(int , double) {
-  std::cout << "Setting dof of transformation that has no dofs." << std::endl;
-}
-
-void AngleWaveguideTransformation::set_free_dof(int ,double) {
-  std::cout << "Setting dof of transformation that has no dofs." << std::endl;
-}
-
 void AngleWaveguideTransformation::estimate_and_initialize() {
   
 }
 
-double AngleWaveguideTransformation::get_r(double) const {
-  std::cout << "Asking for Radius of rectangular Waveguide." << std::endl;
-  return 0;
-}
-
-double AngleWaveguideTransformation::get_m(double) const {
-  return 0;
-}
-
-double AngleWaveguideTransformation::get_v(double) const {
-  return 0;
-}
-
-double AngleWaveguideTransformation::get_Q1(double) const {
-  return 1.0;
-}
-
-double AngleWaveguideTransformation::get_Q2(double) const {
-  return std::sqrt(2);
-}
-
-double AngleWaveguideTransformation::get_Q3(double) const {
-  return 1;
-}
-
-Vector<double> AngleWaveguideTransformation::Dofs() const {
+Vector<double> AngleWaveguideTransformation::get_dof_values() const {
   Vector<double> ret;
   return ret;
 }
 
-unsigned int AngleWaveguideTransformation::NFreeDofs() const {
+unsigned int AngleWaveguideTransformation::n_free_dofs() const {
   return 0;
-}
-
-bool AngleWaveguideTransformation::IsDofFree(int) const {
-  return false;
 }
 
 void AngleWaveguideTransformation::Print() const {
   std::cout << "Printing is not yet implemented." << std::endl;
 }
 
-unsigned int AngleWaveguideTransformation::NDofs() const {
+unsigned int AngleWaveguideTransformation::n_dofs() const {
   return 0;
 }
 

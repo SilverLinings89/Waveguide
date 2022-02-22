@@ -1,8 +1,9 @@
 #include "../Helpers/Parameters.h"
 #include "GeometryManager.h"
-#include "../SpaceTransformations/InhomogenousTransformationRectangular.h"
+#include "../SpaceTransformations/WaveguideTransformation.h"
 #include "../SpaceTransformations/BendTransformation.h"
 #include "../SpaceTransformations/AngleWaveguideTransformation.h"
+#include "../SpaceTransformations/PredefinedShapeTransformation.h"
 #include "../Hierarchy/MPICommunicator.h"
 #include "../Helpers/staticfunctions.h"
 #include "ModeManager.h"
@@ -35,9 +36,12 @@ void initialize_global_variables(const std::string run_file, const std::string c
   GlobalOutputManager.initialize();
 
   GlobalTimerManager.initialize();
-
-  if(GlobalParams.transformation_type == TransformationType::InhomogenousWavegeuideTransformationType) {
-    GlobalSpaceTransformation = new InhomogenousTransformationRectangular();
+  
+  if(GlobalParams.transformation_type == TransformationType::PredefinedShapeTransformationType) {
+    GlobalSpaceTransformation = new PredefinedShapeTransformation();
+  }
+  if(GlobalParams.transformation_type == TransformationType::WavegeuideTransformationType) {
+    GlobalSpaceTransformation = new WaveguideTransformation();
   }
   if(GlobalParams.transformation_type == TransformationType::BendTransformationType) {
     GlobalSpaceTransformation = new BendTransformation();

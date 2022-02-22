@@ -45,23 +45,23 @@ TEST(LAGUERRE_FUNCTION_TESTS, LAGUERRE_EVALUATION_5) {
 }
 
 TEST(LAGUERRE_FUNCTION_TESTS, BINOMIAL_COEFFICIENTS_1) {
-  ASSERT_EQ(LaguerreFunction::binomial_coefficient(5, 2), 10);
+  ASSERT_EQ((int)LaguerreFunction::binomial_coefficient(5, 2), 10);
 }
 
 TEST(LAGUERRE_FUNCTION_TESTS, BINOMIAL_COEFFICIENTS_2) {
-  ASSERT_EQ(LaguerreFunction::binomial_coefficient(0, 0), 1);
+  ASSERT_EQ((int)LaguerreFunction::binomial_coefficient(0, 0), 1);
 }
 
 TEST(LAGUERRE_FUNCTION_TESTS, BINOMIAL_COEFFICIENTS_3) {
-  ASSERT_EQ(LaguerreFunction::binomial_coefficient(1, 0), 1);
+  ASSERT_EQ((int)LaguerreFunction::binomial_coefficient(1, 0), 1);
 }
 
 TEST(LAGUERRE_FUNCTION_TESTS, BINOMIAL_COEFFICIENTS_4) {
-  ASSERT_EQ(LaguerreFunction::binomial_coefficient(1, 1), 1);
+  ASSERT_EQ((int)LaguerreFunction::binomial_coefficient(1, 1), 1);
 }
 
 TEST(LAGUERRE_FUNCTION_TESTS, BINOMIAL_COEFFICIENTS_5) {
-  ASSERT_EQ(LaguerreFunction::binomial_coefficient(15, 5), 3003);
+  ASSERT_EQ((int)LaguerreFunction::binomial_coefficient(15, 5), 3003);
 }
 
 TEST(LAGUERRE_FUNCTION_TESTS, FACTORIAL_1) {

@@ -25,9 +25,8 @@ ADD_LIBRARY(Code
         Solutions/ExactSolutionConjugate.cpp
         Solutions/PMLTransformedExactSolution.cpp
         MeshGenerators/SquareMeshGenerator.cpp
-        SpaceTransformations/DualProblemTransformationWrapper.cpp
-        SpaceTransformations/HomogenousTransformationRectangular.cpp
-        SpaceTransformations/InhomogenousTransformationRectangular.cpp
+        SpaceTransformations/PredefinedShapeTransformation.cpp
+        SpaceTransformations/WaveguideTransformation.cpp
         SpaceTransformations/BendTransformation.cpp
         SpaceTransformations/AngleWaveguideTransformation.cpp
         SpaceTransformations/SpaceTransformation.cpp

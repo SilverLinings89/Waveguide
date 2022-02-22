@@ -161,7 +161,7 @@ struct Parameters {
 
     unsigned int convergence_max_cells = 20;
 
-    TransformationType transformation_type = TransformationType::InhomogenousWavegeuideTransformationType;
+    TransformationType transformation_type = TransformationType::WavegeuideTransformationType;
 
     std::vector<unsigned int> convergence_cell_counts;
 
@@ -170,6 +170,10 @@ struct Parameters {
     bool solve_directly = false;
 
     SteppingMethod optimization_stepping_method = SteppingMethod::BFGS;
+
+    bool keep_waveguide_height_constant = true;
+
+    bool keep_waveguide_width_constant = true;
 
     bool randomly_initialize_shape_dofs = false;
     
