@@ -13,40 +13,6 @@
 #include "./TestData.h"
 
 
-TEST_F(HSIECubeFixture, BoundaryCouplingTest1) {
-  for(unsigned int i = 0; i < 6; i++) {
-    for(unsigned int j = 0; j < 6; j++) {
-      if(! are_opposing_sites(i,j)) {
-        std::vector<InterfaceDofData> first_dofs = Geometry.levels[0].surfaces[i]->get_dof_association_by_boundary_id(j);
-        std::vector<InterfaceDofData> second_dofs = Geometry.levels[0].surfaces[j]->get_dof_association_by_boundary_id(i);
-        ASSERT_TRUE(first_dofs.size() ==  second_dofs.size());
-        ASSERT_TRUE(first_dofs.size() > 0 );
-        for(unsigned int dof = 0; dof < first_dofs.size(); dof++) {
-          ASSERT_EQ(first_dofs[dof].base_point, second_dofs[dof].base_point);
-        }
-      }
-    }  
-  }
-}
-
-TEST_F(HSIECubeFixture, BoundaryCouplingTest2) {
-  for(unsigned int i = 0; i < 6; i++) {
-    for(unsigned int j = 0; j < 6; j++) {
-      if(! are_opposing_sites(i,j)) {
-        std::vector<InterfaceDofData> first_dofs = Geometry.levels[0].surfaces[i]->get_dof_association_by_boundary_id(j);
-        ASSERT_TRUE(first_dofs.size() > 0 );
-        for(unsigned int dof = 0; dof < first_dofs.size(); dof++) {
-          ASSERT_TRUE(first_dofs[dof].base_point[0] >= -1);
-          ASSERT_TRUE(first_dofs[dof].base_point[0] <= 1);
-          ASSERT_TRUE(first_dofs[dof].base_point[1] >= -1);
-          ASSERT_TRUE(first_dofs[dof].base_point[1] <= 1);
-          ASSERT_TRUE(first_dofs[dof].base_point[2] >= -1);
-          ASSERT_TRUE(first_dofs[dof].base_point[2] <= 1);
-        }
-      }
-    }  
-  }
-}
 
 TEST(LAGUERRE_FUNCTION_TESTS, LAGUERRE_EVALUATION_1) {
   ASSERT_EQ(LaguerreFunction::evaluate(0, 13, 2), 1);

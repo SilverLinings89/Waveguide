@@ -44,6 +44,7 @@ target_sources(waveguide_tests
         tests/ExactSolutionTests.cpp
         tests/HardyPolynomialTests.cpp
         tests/MeshTests.cpp
+        tests/ShapeFunctionTests.cpp
 )
 set_target_properties(waveguide_tests PROPERTIES
     COMPILE_FLAGS "${cxx_strict}"

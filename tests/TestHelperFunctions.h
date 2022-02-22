@@ -50,19 +50,3 @@ static void setup_GlobalParams_for_tests(unsigned int n_cells_x, unsigned int n_
   GlobalParams.BoundaryCondition = b_type;
 }
 
-static unsigned int third_number_in_zero_one_two(unsigned int first, unsigned int second) {
-  for(unsigned int i = 0; i < 3; i++) {
-    if(first != i && second != i) {
-      return i;
-    }
-  }
-  return 3;
-}
-
-static HSIEPolynomial random_poly(unsigned int Order, ComplexNumber k0) {
-  std::vector<ComplexNumber> a;
-  for (unsigned int i = 0; i < Order; i++) {
-    a.emplace_back(rand() % 10, rand() % 10);
-  }
-  return HSIEPolynomial(a, k0);
-}

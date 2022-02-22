@@ -13,15 +13,6 @@
 #include <deal.II/grid/grid_tools.h>
 #include "./TestHelperFunctions.h"
 
-class HSIECubeFixture: public ::testing::Test {
-public:
-protected:
-  void SetUp() override {
-    setup_GlobalParams_for_tests(5,5,5,BoundaryConditionType::HSIE,1,1,1);
-    Geometry.initialize();
-  }
-};
-
 class PMLCubeFixture: public ::testing::Test {
 public:
  

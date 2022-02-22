@@ -5,6 +5,7 @@
 
 TEST(ExactSolutionRampedTests, RampingTestsC0) {
     GlobalParams.Signal_tapering_type = SignalTaperingType::C0;
+    ExactSolution::load_data("../Modes/output_mode.dat");
     ExactSolutionRamped sol = {true,false};
     Position p = {0,0,0};
     ASSERT_EQ(sol.get_ramping_factor_for_position(p),1);
@@ -16,6 +17,7 @@ TEST(ExactSolutionRampedTests, RampingTestsC0) {
 
 TEST(ExactSolutionRampedTests, RampingTestsC1) {
     GlobalParams.Signal_tapering_type = SignalTaperingType::C1;
+    ExactSolution::load_data("../Modes/output_mode.dat");
     ExactSolutionRamped sol = {true,false};
     Position p = {0,0,0};
     ASSERT_EQ(sol.get_ramping_factor_for_position(p),1);
@@ -26,6 +28,7 @@ TEST(ExactSolutionRampedTests, RampingTestsC1) {
 }
 
 TEST(ExactSolutionTests, PhaseTest) {
+    ExactSolution::load_data("../Modes/output_mode.dat");
     ExactSolution es = {true,false};
     Position p = {0,0,0};
     ASSERT_NEAR(es.value(p,0).imag(), 0.0, 0.001);

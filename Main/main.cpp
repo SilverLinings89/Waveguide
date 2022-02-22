@@ -123,10 +123,9 @@ int main(int argc, char *argv[]) {
       counter++;
     }
   }
-  unsigned int rank_temp = 0;
+  
   {
     Utilities::MPI::MPI_InitFinalize mpi_initialization(argc_stripped, argv_stripped, 1);
-    rank_temp = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
     initialize_global_variables(run_file, case_file, override_data);
     Simulation * simulation;
     if(GlobalParams.Perform_Optimization) {
@@ -158,7 +157,6 @@ int main(int argc, char *argv[]) {
     print_info("Main", "Shutting down");
     delete simulation;
     GlobalMPI.destroy_comms();
-    delete GlobalSpaceTransformation;
     print_info("Main", "End");
   }
   return 0;

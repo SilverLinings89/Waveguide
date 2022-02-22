@@ -57,6 +57,7 @@ ADD_LIBRARY(Code
         GlobalObjects/OutputManager.cpp
         OutputGenerators/Images/ResidualOutputGenerator.cpp
         OutputGenerators/Images/ConvergenceOutputGenerator.cpp
+        Optimization/ShapeFunction.cpp
         )
 
 DEAL_II_SETUP_TARGET(Code)
