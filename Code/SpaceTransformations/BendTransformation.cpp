@@ -33,7 +33,7 @@ BendTransformation::get_Tensor(Position &position) {
 }
 
 Tensor<2, 3, double>
-BendTransformation::get_Space_Transformation_Tensor(Position &position)  {
+BendTransformation::get_Space_Transformation_Tensor(Position &)  {
   Tensor<2, 3, double> transformation;
   return transformation;
 }
