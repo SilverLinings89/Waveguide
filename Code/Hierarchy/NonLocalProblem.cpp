@@ -12,6 +12,7 @@
 #include <deal.II/lac/solver_minres.h>
 #include <deal.II/lac/sparsity_pattern.h>
 #include <deal.II/lac/petsc_precondition.h>
+
 #include <mpi.h>
 #include <petscksp.h>
 #include <petscsystypes.h>
@@ -827,21 +828,25 @@ std::vector<double> NonLocalProblem::compute_shape_gradient() {
       communication_pair.second = GlobalParams.MPI_Rank;
     }
   }
-  std::vector<FEAdjointEvaluation> field_evaluations(Geometry.levels[level].inner_domain->dof_handler.get_triangulation().n_active_cells());
-  std::vector<Position> positions;
-  for(auto it : Geometry.levels[level].inner_domain->dof_handler.get_triangulation()) {
-    positions.push_back(it.center());
+  std::vector<FEAdjointEvaluation> field_evaluations;
+
+  Timer timer1;
+  timer1.start();
+  
+  NumericVectorLocal local_solution(Geometry.levels[level].inner_domain->n_locally_active_dofs);
+  
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
+    local_solution[i] = shared_solution[Geometry.levels[level].inner_domain->global_index_mapping[i]];
   }
-  std::vector<std::vector<ComplexNumber>> values = evaluate_solution_at(positions);
+
+  field_evaluations = Geometry.levels[level].inner_domain->compute_local_shape_gradient_data(local_solution);
+
+  timer1.stop();
+  print_info("NonLocalProblem::compute_shape_gradient", "Walltime: " + std::to_string(timer1.wall_time()) , LoggingLevel::PRODUCTION_ONE);
+
   if(communication_pair.first == communication_pair.second) {
-    std::cout << "This case is currently not implemented." << std::endl;
+    std::cout << "This case is currently not implemented. Use an even block count in propagation direction (for an odd number, the blocks in the middle are not implemented. " << std::endl;
   } else {
-    for(unsigned int i = 0; i < positions.size(); i++) {
-      field_evaluations[i].x = positions[i];
-      field_evaluations[i].primal_field[0] = values[i][0];
-      field_evaluations[i].primal_field[1] = values[i][1];
-      field_evaluations[i].primal_field[2] = values[i][2];
-    }
     std::vector<double> serialized_data = fe_evals_to_double(field_evaluations);
     MPI_Status stat;
     MPI_Sendrecv_replace(serialized_data.data(), serialized_data.size(), MPI_DOUBLE, other, 0, other, 0, MPI_COMM_WORLD, &stat);

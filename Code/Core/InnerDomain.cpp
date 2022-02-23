@@ -19,6 +19,8 @@
 #include <deal.II/numerics/vector_tools_interpolate.h>
 #include <deal.II/numerics/data_out_dof_data.h>
 #include <deal.II/numerics/vector_tools.h>
+#include <deal.II/matrix_free/fe_evaluation.h>
+#include <deal.II/matrix_free/matrix_free.h>
 #include <algorithm>
 #include <ctime>
 #include <string>
@@ -508,6 +510,34 @@ std::vector<std::vector<ComplexNumber>> InnerDomain::evaluate_at_positions(std::
     point_val.push_back(fe_evaluation[1]);
     point_val.push_back(fe_evaluation[2]);
     ret.push_back(point_val);
+  }
+  return ret;
+}
+
+std::vector<FEAdjointEvaluation> InnerDomain::compute_local_shape_gradient_data(NumericVectorLocal & in_solution) {
+  std::vector<FEAdjointEvaluation> ret;
+  QGauss<3> quadrature_formula(1); 
+  const FEValuesExtractors::Vector fe_field(0);
+  FEValues<3> fe_values(fe, quadrature_formula, update_values | update_quadrature_points);
+  std::vector<unsigned int> local_dof_indices(fe.n_dofs_per_cell());
+  for (DofHandler3D::active_cell_iterator cell = dof_handler.begin_active(); cell != dof_handler.end(); ++cell) {
+    fe_values.reinit(cell);
+    auto q_points = fe_values.get_quadrature_points();
+    for(unsigned int q_index = 0; q_index < quadrature_formula.size(); q_index++) {
+      cell->get_dof_indices(local_dof_indices);
+      Position p = q_points[q_index];
+      FEAdjointEvaluation item;
+      item.x = p;
+      for(unsigned int i = 0; i < 3; i++) {
+        item.primal_field[i] = 0;
+      }
+      for(unsigned int i = 0; i < fe.n_dofs_per_cell(); i++) {
+        Tensor<1, 3, ComplexNumber> I_Val;
+        I_Val = fe_values[fe_field].value(i, q_index);
+        item.primal_field += I_Val * in_solution[local_dof_indices[i]];
+      }
+      ret.push_back(item);
+    }
   }
   return ret;
 }
