@@ -2,13 +2,13 @@
 #include "../Code/Optimization/ShapeFunction.h"
 
 TEST(SHAPE_FUNCTION_TESTS, NDOFS) {
-    ShapeFunction sf(0.0, 1.0, 2, true, true, true, true);
+    ShapeFunction sf(0.0, 1.0, 2);
     ASSERT_EQ(sf.n_dofs, 5);
     ASSERT_EQ(sf.n_free_dofs, 0);
 }
 
 TEST(SHAPE_FUNCTION_TESTS, EVAL) {
-    ShapeFunction sf(0.0, 1.0, 2, true, true, true, true);
+    ShapeFunction sf(0.0, 1.0, 2);
     ASSERT_EQ(sf.n_free_dofs, 0);
     sf.set_constraints(0,1,0,0);
     std::vector<double> dof_values_initial;
@@ -18,7 +18,7 @@ TEST(SHAPE_FUNCTION_TESTS, EVAL) {
 }
 
 TEST(SHAPE_FUNCTION_TESTS, SET_AND_EVAL) {
-    ShapeFunction sf(0.0, 3.0, 3, true, true, true, true);
+    ShapeFunction sf(0.0, 3.0, 3);
     ASSERT_EQ(sf.n_dofs, 6);
     ASSERT_EQ(sf.n_free_dofs, 1);
     sf.set_constraints(0,4,0,0);

@@ -26,9 +26,11 @@ std::vector<std::vector<double>> OptimizationRun::shape_dofs;
 std::vector<std::vector<double>> OptimizationRun::shape_gradients;
 unsigned int OptimizationRun::step_counter;
 
-OptimizationRun::OptimizationRun() {
+OptimizationRun::OptimizationRun():
+  n_free_dofs(GlobalSpaceTransformation->n_free_dofs())
+  {
   function_pointer = &OptimizationRun::perform_step;
-  OptimizationRun::step_counter = 0;
+  OptimizationRun::step_counter = 0; 
 }
 
 OptimizationRun::~OptimizationRun() {
@@ -45,24 +47,27 @@ void OptimizationRun::prepare() {
 }
 
 void OptimizationRun::run() {
-    print_info("OptimizationRun::run", "Start", LoggingLevel::PRODUCTION_ONE);
-    const unsigned int n_shape_dofs = GlobalSpaceTransformation->n_free_dofs();
-    dealii::Vector<double> shape_dofs(n_shape_dofs);
-    OptimizationRun::step_counter = 0;
-    for(unsigned int i = 0; i < n_shape_dofs; i++) {
-      shape_dofs[i] = GlobalSpaceTransformation->get_free_dof(i);
+  print_info("OptimizationRun::run", "Start", LoggingLevel::PRODUCTION_ONE);
+  const unsigned int n_shape_dofs = n_free_dofs;
+  dealii::Vector<double> shape_dofs(n_shape_dofs);
+  OptimizationRun::step_counter = 0;
+  for(unsigned int i = 0; i < n_shape_dofs; i++) {
+    shape_dofs[i] = GlobalSpaceTransformation->get_free_dof(i);
+    if(GlobalParams.MPI_Rank == 0) {
+      std::cout << "Shape dof " << i << ": " << shape_dofs[i] << std::endl; 
     }
-    dealii::SolverControl sc(GlobalParams.optimization_n_shape_steps, GlobalParams.optimization_residual_tolerance, true, true);
-    dealii::SolverBFGS<dealii::Vector<double>> solver(sc);
-    try{
-      solver.solve(function_pointer, shape_dofs);
-    } catch(dealii::StandardExceptions::ExcMessage & e) {
-      print_info("OptimizationRun::run", "Shape optimization aborted with error");
-    }
+  }
+  dealii::SolverControl sc(GlobalParams.optimization_n_shape_steps, GlobalParams.optimization_residual_tolerance, true, true);
+  dealii::SolverBFGS<dealii::Vector<double>> solver(sc);
+  try{
+    solver.solve(function_pointer, shape_dofs);
+  } catch(dealii::StandardExceptions::ExcMessage & e) {
+    print_info("OptimizationRun::run", "Shape optimization aborted with error");
+  }
 
-    GlobalTimerManager.write_output();
-    OptimizationRun::mainProblem->output_results();
-    print_info("OptimizationRun::run", "End", LoggingLevel::PRODUCTION_ONE);
+  GlobalTimerManager.write_output();
+  OptimizationRun::mainProblem->output_results();
+  print_info("OptimizationRun::run", "End", LoggingLevel::PRODUCTION_ONE);
 }
 
 void OptimizationRun::prepare_transformed_geometry() {
@@ -83,12 +88,12 @@ double OptimizationRun::perform_step(const dealii::Vector<double> & x, dealii::V
   OptimizationRun::set_shape_dofs(x);
   OptimizationRun::solve_main_problem();
   double loss_functional_evaluation = GlobalParams.Amplitude_of_input_signal - std::abs(mainProblem->compute_signal_strength_of_solution());
-  print_info("OptimizationRun::perform_step", "Loss functional in step " + std::to_string(OptimizationRun::step_counter) + ": " + std::to_string(ret.first));
+  print_info("OptimizationRun::perform_step", "Loss functional in step " + std::to_string(OptimizationRun::step_counter) + ": " + std::to_string(loss_functional_evaluation));
   std::vector<double> shape_grad = mainProblem->compute_shape_gradient();
   OptimizationRun::shape_gradients.push_back(shape_grad);
   std::string msg = "Shape gradient: ( ";
   for(unsigned int i = 0; i < g.size(); i++) {
-    g[i] = ret.second[i];
+    g[i] = shape_grad[i];
     msg += std::to_string(g[i]);
     if(i < g.size() -1) {
       msg += ", ";
@@ -112,12 +117,10 @@ void OptimizationRun::set_shape_dofs(const dealii::Vector<double> in_shape_dofs)
     }
   }
   print_info("OptimizationRun::set_shape_dofs", msg);
-  if(in_shape_dofs.size() == GlobalSpaceTransformation->n_free_dofs()) {
-    for(unsigned int i = 0; i < in_shape_dofs.size(); i++) {
-      GlobalSpaceTransformation->set_free_dof(i, in_shape_dofs[i]);
-    }
-  } else {
-    std::cout << "There was an error setting the dofs. Size mismatch of shape update."<< std::endl; 
+
+  for(unsigned int i = 0; i < in_shape_dofs.size(); i++) {
+    GlobalSpaceTransformation->set_free_dof(i, in_shape_dofs[i]);
   }
+
 }
 

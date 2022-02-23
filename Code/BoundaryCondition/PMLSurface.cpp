@@ -361,7 +361,7 @@ dealii::Tensor<2,3,ComplexNumber> PMLSurface::get_pml_tensor_epsilon(Position in
 }
 
 dealii::Tensor<2,3,ComplexNumber> PMLSurface::get_pml_tensor_mu(Position in_p) {
-    dealii::Tensor<2,3,ComplexNumber> ret = invert(get_pml_tensor(in_p));
+    dealii::Tensor<2,3,ComplexNumber> ret = get_pml_tensor(in_p);
     return ret;
 }
 
@@ -446,7 +446,6 @@ struct CellwiseAssemblyDataPML {
 
 };
 
-
 void PMLSurface::fill_sparsity_pattern(dealii::DynamicSparsityPattern *in_dsp, Constraints * in_constraints) {
   std::vector<unsigned int> local_indices(fe_nedelec.dofs_per_cell);
   for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
@@ -476,7 +475,7 @@ void PMLSurface::fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, N
 
       epsilon = J * epsilon * transpose(J) / GlobalSpaceTransformation->get_det(pos);
       dealii::Tensor<2,3,ComplexNumber> mu = get_pml_tensor_mu(pos);
-      mu = J * mu * transpose(J) / GlobalSpaceTransformation->get_det(pos);
+      mu = invert(J * mu * transpose(J) / GlobalSpaceTransformation->get_det(pos));
       cell_data.prepare_for_current_q_index(q_index, epsilon, mu);
     }
     constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, true);

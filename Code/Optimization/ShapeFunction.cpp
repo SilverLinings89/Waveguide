@@ -4,21 +4,9 @@
 #include "./ShapeFunction.h"
 #include "../Core/Types.h"
 
-unsigned int ShapeFunction::compute_n_free_dofs(unsigned int in_n_sectors, bool in_is_lower_value_constrained, bool in_is_upper_value_constrained, bool in_is_lower_derivative_constrained, bool in_is_upper_derivative_constrained) {
+unsigned int ShapeFunction::compute_n_free_dofs(unsigned int in_n_sectors) {
     int ret = ShapeFunction::compute_n_dofs(in_n_sectors);
-    ret -= 1;
-    if(in_is_lower_derivative_constrained) {
-        ret -= 1;
-    }
-    if(in_is_upper_derivative_constrained) {
-        ret -= 1;
-    }
-    if(in_is_lower_value_constrained) {
-        ret -= 1;
-    }
-    if(in_is_upper_value_constrained) {
-        ret -= 1;
-    }
+    ret -= 5;
     if(ret < 0) {
         std::cout << "The shape function is underdetermined. Add more sectors." << std::endl;
     }
@@ -30,13 +18,9 @@ unsigned int ShapeFunction::compute_n_dofs(unsigned int in_n_sectors) {
 }
 
 
-ShapeFunction::ShapeFunction(double in_z_min, double in_z_max, unsigned int in_n_sectors,bool in_is_lower_value_constrained, bool in_is_upper_value_constrained, bool in_is_lower_derivative_constrained, bool in_is_upper_derivative_constrained):
-is_lower_derivative_constrained(in_is_lower_derivative_constrained),
-is_upper_derivative_constrained(in_is_upper_derivative_constrained),
-is_lower_value_constrained(in_is_lower_value_constrained),
-is_upper_value_constrained(in_is_upper_value_constrained),
+ShapeFunction::ShapeFunction(double in_z_min, double in_z_max, unsigned int in_n_sectors):
 sector_length((in_z_max - in_z_min) / (double)in_n_sectors),
-n_free_dofs(ShapeFunction::compute_n_free_dofs(in_n_sectors, in_is_lower_value_constrained, in_is_upper_value_constrained, in_is_lower_derivative_constrained, in_is_upper_derivative_constrained)),
+n_free_dofs(ShapeFunction::compute_n_free_dofs(in_n_sectors)),
 n_dofs(ShapeFunction::compute_n_dofs(in_n_sectors))
 {
     dof_values.resize(n_dofs);
@@ -94,63 +78,28 @@ double ShapeFunction::evaluate_derivative_at(double z) const {
 }
 
 void ShapeFunction::set_constraints(double in_f_0, double in_f_1, double in_df_0, double in_df_1) {
-    if(is_lower_value_constrained) {
-        f_0 = in_f_0;
-    }
-    if(is_lower_derivative_constrained) {
-        df_0 = in_df_0;
-    }
-    if(is_upper_value_constrained) {
-        f_1 = in_f_1;
-    }
-    if(is_upper_derivative_constrained) {
-        df_1 = in_df_1;
-    }
+    f_0 = in_f_0;
+    df_0 = in_df_0;
+    f_1 = in_f_1;
+    df_1 = in_df_1;
+    update_constrained_values();
 }
 
 void ShapeFunction::update_constrained_values() {
-    if(is_lower_value_constrained) {
-        dof_values[0] = f_0;
-    }
-    if(is_lower_derivative_constrained) {
-        dof_values[1] = df_0;
-    }
-    if(is_upper_derivative_constrained) {
-        dof_values[n_dofs-2] = df_1;
-    }
-    if(is_upper_value_constrained) {
-        dof_values[n_dofs-1] = f_1;
-    }
-    if(is_upper_value_constrained && is_lower_value_constrained && is_upper_derivative_constrained && is_lower_derivative_constrained) {
-        double f_y_min2 = evaluate_at(z_max - sector_length - sector_length);
-        dof_values[n_dofs-3] = (dof_values[n_dofs - 1] - f_y_min2) / sector_length - (0.5 * (dof_values[n_dofs - 4] + dof_values[n_dofs - 2]));
-    }
+    dof_values[0] = f_0;
+    dof_values[1] = df_0;
+    dof_values[n_dofs-2] = df_1;
+    dof_values[n_dofs-1] = f_1;
+    double f_y_min2 = evaluate_at(z_max - sector_length - sector_length);
+    dof_values[n_dofs-3] = (dof_values[n_dofs - 1] - f_y_min2) / sector_length - (0.5 * (dof_values[n_dofs - 4] + dof_values[n_dofs - 2]));
 }
 
 void ShapeFunction::set_free_values(std::vector<double> in_dof_values) {
     if(in_dof_values.size() != n_free_dofs) {
         std::cout << "Provided wrong number of degrees of freedom." << std::endl;
     }
-    unsigned int shift = 0;
-    if(!is_lower_value_constrained) {
-        shift += 1;
-        dof_values[0] = in_dof_values[0];
-    }
-    if(!is_lower_derivative_constrained) {
-        dof_values[1] = in_dof_values[shift];
-        shift += 1;
-    }
-
-    for(unsigned int i = 2; i < dof_values.size()-3; i++) {
-        dof_values[i] = in_dof_values[shift+i-2];
-    }
-    int down_shift = 0;
-    if(!is_upper_value_constrained) {
-        down_shift = 1;
-        dof_values[dof_values.size() - 1] = in_dof_values[in_dof_values.size() - 1];
-    }
-    if(!is_upper_derivative_constrained) {
-        dof_values[dof_values.size() - 2] = in_dof_values[in_dof_values.size() - 1 - down_shift];
+    for(unsigned int i = 0; i < in_dof_values.size(); i++) {
+        dof_values[2 + i] = in_dof_values[i];
     }
     update_constrained_values();
 }
@@ -159,7 +108,7 @@ void ShapeFunction::initialize() {
     std::vector<double> initial_values;
     initial_values.resize(n_free_dofs);
     for(unsigned int i = 0; i < n_free_dofs; i++) {
-        initial_values[i] = dof_values[1+i] + i*(dof_values[dof_values.size()-2] - dof_values[1])/(n_sectors);
+        initial_values[i] = (dof_values[dof_values.size()-1] - dof_values[0])/(z_max - z_min);
     }
     set_free_values(initial_values);
 }
@@ -174,25 +123,12 @@ double ShapeFunction::get_dof_value(unsigned int index) const {
     return dof_values[index];
 }
 double ShapeFunction::get_free_dof_value(unsigned int index) const {
-    unsigned int free_index = index;
-    if(is_lower_derivative_constrained) {
-        free_index++;
-    }
-    if(is_lower_value_constrained) {
-        free_index++;
-    }
+    return dof_values[index + 2];
 }
 
 void ShapeFunction::set_free_dof_value(unsigned int index, double value) {
-    unsigned int local_index = index;
     if(index < n_free_dofs) {
-        if(is_lower_derivative_constrained) {
-            local_index++;
-        }
-        if(is_lower_value_constrained) {
-            local_index++;
-        }
-        dof_values[local_index] = value;
+        dof_values[index + 2] = value;
         update_constrained_values();
     } else {
         std::cout << "You tried to write to a constrained dof of a shape function." << std::endl;

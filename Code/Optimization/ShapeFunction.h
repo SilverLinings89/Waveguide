@@ -3,10 +3,7 @@
 #include <vector>
 
 class ShapeFunction {
-    const bool is_lower_derivative_constrained;
-    const bool is_upper_derivative_constrained;
-    const bool is_lower_value_constrained;
-    const bool is_upper_value_constrained;
+
     const double sector_length = 0;
     unsigned int n_sectors;
     std::vector<double> dof_values;
@@ -20,8 +17,8 @@ class ShapeFunction {
     const unsigned int n_free_dofs;
     const unsigned int n_dofs;
     static unsigned int compute_n_dofs(unsigned int in_n_sectors);
-    static unsigned int compute_n_free_dofs(unsigned int in_n_sectors, bool in_is_lower_value_constrained, bool in_is_upper_value_constrained, bool in_is_lower_derivative_constrained, bool in_is_upper_derivative_constrained);
-    ShapeFunction(double in_z_min, double in_z_max, unsigned int in_n_sectors, bool in_is_lower_value_constrained, bool in_is_upper_value_constrained, bool in_is_lower_derivative_constrained, bool in_is_upper_derivative_constrained);
+    static unsigned int compute_n_free_dofs(unsigned int in_n_sectors);
+    ShapeFunction(double in_z_min, double in_z_max, unsigned int in_n_sectors );
     double evaluate_at(double z) const;
     double evaluate_derivative_at(double z) const;
     void set_constraints(double in_f_0, double in_f_1, double in_df_0, double in_df_1);
