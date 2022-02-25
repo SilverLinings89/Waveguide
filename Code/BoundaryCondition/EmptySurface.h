@@ -8,9 +8,11 @@
 /** 
  * \class EmptySurface
  * 
- * \brief This boundary condition implements a zero surface. It is required for the sweeping scheme where the upper boundary in sweeping-direction has 0-values.
+ * \brief A surface with tangential component of the solution equals zero, i.e. specialization of the dirichlet surface
  * 
- * The implementation is the same as the dirichlet surface but for a predefined zero function.
+ * \details This is a DirichletSurface with a predefined soltuion to enforce - namely zero. It is used in the sweeping preconditioning scheme where the lower boundary dofs of all domains except the lowest in sweeping direction are set to zero to compute the rhs that acurately describes the signal propagating across the interface.
+ * The implementation is extremely simple because most functions perform no tasks at all and the make_constraints() function is a simplified version of the version in DirichletSurface. The members of this class are therefore not documented. See the documentation in the base class for more details.
+ * \see DirichletSurface, BoundaeyCondition
  * 
  */
 

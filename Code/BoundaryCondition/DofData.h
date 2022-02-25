@@ -6,22 +6,21 @@
 /**
  * \struct DofData
  * 
- * \brief This is only for the storage of basic data. 
+ * \brief This struct is used to store data about degrees of freedom for Hardy space infinite elements.
  * 
  */
 
 struct DofData {
-  DofType type;
-  int hsie_order;
-  int inner_order;
-  bool nodal_basis;
-  unsigned int global_index;
-  bool got_base_dof_index;
-  unsigned int
-      base_dof_index;
-  std::string base_structure_id_face;
-  unsigned int base_structure_id_non_face;
-  bool orientation = true; 
+  DofType type; // The type of degree of freedom.
+  int hsie_order; // The Hardy space polynomial degree.
+  int inner_order; // The degree of the Nedelec-Part of the element.
+  bool nodal_basis; // Indicates thst the dof uses the nodal basis (i.e. is a Qlinear element on the surface)
+  unsigned int global_index; // The number of this degree in global numbering
+  bool got_base_dof_index; // Indicates of the dof of the dof base has been set.
+  unsigned int base_dof_index; // Index of the base dof that is being used (The HSIE dofs are all either Q or Nedelec elements on the surface. If this index is set, it references the dof of the referred type)
+  std::string base_structure_id_face; // For face dofs, the id is a string
+  unsigned int base_structure_id_non_face;  // For other dofs the id is an unsigned int
+  bool orientation = true; // defines if the dof is orientet positively.
 
   DofData() {
     base_structure_id_face = "";

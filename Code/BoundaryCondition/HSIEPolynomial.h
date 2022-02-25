@@ -9,10 +9,12 @@
  * 
  * \brief This class basically represents a polynomial and its derivative. It is required for the HSIE implementation.
  * 
- * The core data in this class is a vector a, which stores the coefficients of the polynomials and a vector da, which stores the coefficients of the derivative. Both can be evaluated for a given x with the respective functions.
+ * \details The core data in this class is a vector a, which stores the coefficients of the polynomials and a vector da, which stores the coefficients of the derivative. Both can be evaluated for a given x with the respective functions.
  * Additionally, there are functions to initialize a polynomial that are required by the hardy space infinite elements and some operators can be applied (like T_plus and T_minus).
  * As an important remark: The value kappa_0 used in HSIE is also kept in these values because we want to be able to apply the operators D and I to one a polynomial. Since they aren't cheap to compute, I precomute them once as static members of this class.
  * If you only intend to use evaluation, evaluation of the derivative, summation and multiplication with constants, then that value is not relevant.
+ * 
+ * \see HSIESurface
  */
 
 class HSIEPolynomial {
