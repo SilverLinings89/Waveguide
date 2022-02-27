@@ -512,7 +512,7 @@ void print_info(const std::string &label, const std::array<bool,6> &message, Log
 
 bool is_visible_message_in_current_logging_level(LoggingLevel level) {
   if(GlobalParams.Logging_Level == LoggingLevel::DEBUG_ONE || GlobalParams.Logging_Level == LoggingLevel::PRODUCTION_ONE) {
-    if(GlobalParams.MPI_Rank != 0) return false;
+    if(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) != 0) return false;
   }
   return level >= GlobalParams.Logging_Level;
 }

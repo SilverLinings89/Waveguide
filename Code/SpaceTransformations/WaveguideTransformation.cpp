@@ -192,6 +192,7 @@ unsigned int WaveguideTransformation::n_dofs() const {
 Tensor<2, 3, double>
 WaveguideTransformation::get_Space_Transformation_Tensor(Position &position) {
   Tensor<2, 3, double> J_loc = get_J(position);
+  
   Tensor<2, 3, double> ret;
   ret[0][0] = 1;
   ret[1][1] = 1;
