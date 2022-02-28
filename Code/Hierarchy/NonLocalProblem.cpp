@@ -260,7 +260,6 @@ void NonLocalProblem::assemble() {
 
 void NonLocalProblem::solve() {
   is_shared_solution_up_to_date = false;
-  std::cout << "Sigma: " << GlobalParams.PML_Sigma_Max << " PML Order: " << GlobalParams.PML_skaling_order << " and  n_cells: " << GlobalParams.PML_N_Layers<<std::endl;
   std::chrono::steady_clock::time_point time_begin;
   std::chrono::steady_clock::time_point time_end;
   if(level == GlobalParams.Sweeping_Level) {
