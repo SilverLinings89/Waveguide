@@ -340,7 +340,6 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
     GlobalSpaceTransformation->switch_application_mode(true);
     dealii::GridTools::transform(*GlobalSpaceTransformation, triangulation);
   }
-  const unsigned int n_cells = dof_handler.get_triangulation().n_active_cells();
   dealii::Vector<ComplexNumber> interpolated_exact_solution(in_solution.size());
   
   data_out.clear();
