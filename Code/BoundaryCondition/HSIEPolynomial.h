@@ -22,6 +22,7 @@ class HSIEPolynomial {
   std::vector<ComplexNumber> a; // This array stores the coefficients.
   std::vector<ComplexNumber> da; // This array stores the coefficients of the the derivative.
   ComplexNumber k0;
+  
   ComplexNumber evaluate(ComplexNumber x);
   ComplexNumber evaluate_dx(ComplexNumber x);
   void update_derivative();

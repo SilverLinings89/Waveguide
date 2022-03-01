@@ -308,17 +308,9 @@ void InnerDomain::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase
 
 std::string InnerDomain::output_results(std::string in_filename, NumericVectorLocal in_solution, bool apply_transformation) {
   print_info("InnerDomain::output_results()", "Start");
-  if(apply_transformation) {
-    GlobalSpaceTransformation->switch_application_mode(true);
-    dealii::GridTools::transform(*GlobalSpaceTransformation, triangulation);
-  }
   const unsigned int n_cells = dof_handler.get_triangulation().n_active_cells();
-  dealii::Vector<ComplexNumber> interpolated_exact_solution(in_solution.size());
-  dealii::Vector<double> eps_abs(n_cells);
   unsigned int counter = 0;
-  data_out.clear();
-  data_out.attach_dof_handler(dof_handler);
-  data_out.add_data_vector(in_solution, "Solution");
+  dealii::Vector<double> eps_abs(n_cells);
   for(auto it = dof_handler.begin_active(); it != dof_handler.end(); it++) {
     Position p = it->center();
     MaterialTensor transformation;
@@ -344,9 +336,27 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
     eps_abs[counter] = epsilon.norm();
     counter++;
   }
-  data_out.add_data_vector(eps_abs, "Epsilon");
+  if(apply_transformation) {
+    GlobalSpaceTransformation->switch_application_mode(true);
+    dealii::GridTools::transform(*GlobalSpaceTransformation, triangulation);
+  }
+  const unsigned int n_cells = dof_handler.get_triangulation().n_active_cells();
+  dealii::Vector<ComplexNumber> interpolated_exact_solution(in_solution.size());
   
-
+  data_out.clear();
+  data_out.attach_dof_handler(dof_handler);
+  data_out.add_data_vector(in_solution, "Solution");
+  
+  data_out.add_data_vector(eps_abs, "Epsilon");
+  dealii::Vector<double> index_x(n_cells), index_y(n_cells), index_z(n_cells);
+  for(unsigned int i = 0; i < n_cells; i++) {
+    index_x[i] = GlobalParams.Index_in_x_direction;
+    index_y[i] = GlobalParams.Index_in_y_direction;
+    index_z[i] = GlobalParams.Index_in_z_direction;
+  }
+  data_out.add_data_vector(index_x, "IndexX");
+  data_out.add_data_vector(index_y, "IndexY");
+  data_out.add_data_vector(index_z, "IndexZ");
   std::string filename = GlobalOutputManager.get_numbered_filename(in_filename, GlobalParams.MPI_Rank, "vtu");
   std::ofstream outputvtu(filename);
   

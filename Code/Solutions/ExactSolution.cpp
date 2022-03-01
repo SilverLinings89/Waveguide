@@ -17,6 +17,7 @@ dealii::Table<2,double> ExactSolution::data_table_y;
 dealii::Table<2,double> ExactSolution::data_table_z;
 std::array<std::pair<double, double>, 2> ExactSolution::ranges;
 std::array<unsigned int, 2> ExactSolution::n_intervals;
+const ComplexNumber imaginary_unit(0,1);
 
 Position2D ExactSolution::get_2D_position_from_3d(const Position & in_p) const {
   Position2D p2d;
@@ -38,7 +39,7 @@ ComplexNumber ExactSolution::value(const Position &in_p, const unsigned int comp
       ret_val = component_y.value(p2d,0);
       break;
     case 2:
-      ret_val = component_z.value(p2d,0);
+      ret_val = imaginary_unit * component_z.value(p2d,0);
       break;
     default:
       std::cout << "Error in call to ExactSolution::value. Invalid component requested." << std::endl;
@@ -61,7 +62,7 @@ void ExactSolution::vector_value(const Position &in_p, Vector<ComplexNumber> &va
   Position2D p2d = get_2D_position_from_3d(in_p);
   values[0] = component_x.value(p2d,0) * phase;
   values[1] = component_y.value(p2d,0) * phase;
-  values[2] = component_z.value(p2d,0) * phase;
+  values[2] = imaginary_unit * component_z.value(p2d,0) * phase;
   return;
 }
 

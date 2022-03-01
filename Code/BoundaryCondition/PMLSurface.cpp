@@ -648,6 +648,15 @@ std::string PMLSurface::output_results(const dealii::Vector<ComplexNumber> & in_
   
   data_out.add_data_vector(in_data, "Solution");
   data_out.add_data_vector(eps_abs, "Epsilon");
+   dealii::Vector<double> index_x(n_cells), index_y(n_cells), index_z(n_cells);
+  for(unsigned int i = 0; i < n_cells; i++) {
+    index_x[i] = GlobalParams.Index_in_x_direction;
+    index_y[i] = GlobalParams.Index_in_y_direction;
+    index_z[i] = GlobalParams.Index_in_z_direction;
+  }
+  data_out.add_data_vector(index_x, "IndexX");
+  data_out.add_data_vector(index_y, "IndexY");
+  data_out.add_data_vector(index_z, "IndexZ");
   data_out.add_data_vector(zero, "Exact_Solution");
   data_out.add_data_vector(zero, "SolutionError");
   const std::string filename = GlobalOutputManager.get_numbered_filename(in_filename + "-" + std::to_string(b_id) + "-", GlobalParams.MPI_Rank, "vtu");

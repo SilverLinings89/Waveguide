@@ -6,7 +6,7 @@
 /**
  * \struct DofData
  * 
- * \brief This struct is used to store data about degrees of freedom for Hardy space infinite elements.
+ * \brief This struct is used to store data about degrees of freedom for Hardy space infinite elements. This datatype is somewhat internal and should not require additional work.
  * 
  */
 
