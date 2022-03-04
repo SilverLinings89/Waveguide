@@ -592,8 +592,7 @@ std::vector<HSIEPolynomial> HSIESurface::build_non_curl_term_nedelec(
   return ret;
 }
 
-std::vector<HSIEPolynomial> HSIESurface::build_curl_term_q(
-    const unsigned int dof_hsie_order, const Tensor<1, 2> fe_gradient) {
+std::vector<HSIEPolynomial> HSIESurface::build_curl_term_q(const unsigned int dof_hsie_order, const Tensor<1, 2> fe_gradient) {
   std::vector<HSIEPolynomial> ret;
   ret.push_back(HSIEPolynomial::ZeroPolynomial());
   HSIEPolynomial temp = HSIEPolynomial::PhiJ(dof_hsie_order, k0);
@@ -619,8 +618,7 @@ std::vector<HSIEPolynomial> HSIESurface::build_non_curl_term_q(
   return ret;
 }
 
-void HSIESurface::transform_coordinates_in_place(
-    std::vector<HSIEPolynomial> *vector) {
+void HSIESurface::transform_coordinates_in_place(std::vector<HSIEPolynomial> *vector) {
   // The ray direction before transformation is x. This has to be adapted.
   HSIEPolynomial temp = (*vector)[0];
   switch (b_id) {

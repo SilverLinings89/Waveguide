@@ -1,7 +1,3 @@
-//
-// Created by pascal on 11.09.19.
-//
-
 #include "LaguerreFunction.h"
 #include <cmath>
 
