@@ -41,7 +41,7 @@ void ConvergenceRun::prepare() {
   GlobalParams.Cells_in_x = GlobalParams.convergence_max_cells;
   GlobalParams.Cells_in_y = GlobalParams.convergence_max_cells;
   GlobalParams.Cells_in_z = GlobalParams.convergence_max_cells;
-  
+  Geometry.initialize();
   mainProblem = new NonLocalProblem(GlobalParams.Sweeping_Level);
   mainProblem->initialize();
   for(auto it = Geometry.levels[0].inner_domain->triangulation.begin_active(); it != Geometry.levels[0].inner_domain->triangulation.end(); it++) {
