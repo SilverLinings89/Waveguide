@@ -1,5 +1,5 @@
 subsection Run parameters
-  set GMRES maximum steps    = 10
+  set GMRES maximum steps    = 15
   set solve directly         = false
   set sweeping level         = 3
   set use relative convergence criterion = true
@@ -7,8 +7,8 @@ subsection Run parameters
   set processes in x         = 2
   set processes in y         = 2
   set processes in z         = 2
-  set cell count x           = 20
-  set cell count y           = 20
-  set cell count z           = 20
+  set cell count x           = 16
+  set cell count y           = 16
+  set cell count z           = 16
   set Logging Level          = Debug One
 end

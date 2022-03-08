@@ -15,7 +15,7 @@ subsection Case parameters
     set PML sigma max = 4
     set PML skaling order = 3
     set Input Signal Method = Dirichlet
-    set convergence sequence cell count = 1,2,4,8,10,14
+    set convergence sequence cell count = 2,4,8,16
     set Prescribe input zero = false
     set perform convergence test = true
     set global z shift = 0.05

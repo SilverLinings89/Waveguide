@@ -17,6 +17,6 @@ subsection Case parameters
     set Input Signal Method = Dirichlet
     set Prescribe input zero = false
     set perform convergence test = true
-    set convergence sequence cell count = 1,2,4,8,10,14,20
+    set convergence sequence cell count = 2,4,8,16
     set global z shift = 0.05
 end
