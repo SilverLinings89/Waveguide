@@ -109,7 +109,7 @@ PredefinedShapeTransformation::get_Space_Transformation_Tensor(Position &positio
 
 Tensor<2,3,double> PredefinedShapeTransformation::get_J(Position &in_p) {
   Tensor<2,3,double> ret = I;
-  ret[1][2] = get_v(in_p[2]);
+  ret[1][2] = - get_v(in_p[2]);
   return ret;
 }
 

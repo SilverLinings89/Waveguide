@@ -345,12 +345,10 @@ void NonLocalProblem::reinit() {
   make_sparsity_pattern();
 
   reinit_rhs();
-  std::vector<unsigned int> local_rows;
-  for(unsigned int p = 0; p < Geometry.levels[level].dof_distribution.size(); p++) {
-    local_rows.push_back(Geometry.levels[level].dof_distribution[p].n_elements());
-  }
   
   matrix->reinit(Geometry.levels[level].dof_distribution[total_rank_in_sweep], Geometry.levels[level].dof_distribution[total_rank_in_sweep], sp, GlobalMPI.communicators_by_level[level]);
+  print_info("Nonlocal reinit", "Matrix initialized");
+  
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     if(Geometry.levels[level].inner_domain->is_dof_owned[i] && Geometry.levels[level-1].inner_domain->is_dof_owned[i]) {
       vector_copy_own_indices.push_back(Geometry.levels[level].inner_domain->global_index_mapping[i]);
