@@ -28,15 +28,15 @@ n_dofs(ShapeFunction::compute_n_dofs(in_n_sectors))
         dof_values[i] = 0;
     }
     z_min = in_z_min;
-    z_max = in_z_max;
+    z_max = in_z_max/2.0;
 }
 
 double ShapeFunction::evaluate_at(double z) const {
     if(z <= z_min) {
         return dof_values[0];
     }
-    if(z >= z_max) {
-        return dof_values[n_dofs-1];
+    if(z > z_max) {
+        return evaluate_at(2*z_max - z);
     }
     double ret = dof_values[0];
     double z_temp = z_min;
@@ -60,8 +60,8 @@ double ShapeFunction::evaluate_derivative_at(double z) const {
     if(z <= z_min) {
         return dof_values[1];
     }
-    if(z >= z_max) {
-        return dof_values[n_dofs-2];
+    if(z > z_max) {
+        return - evaluate_derivative_at(2*z_max - z);
     }
     unsigned int index = 1;
     double z_temp = z_min;

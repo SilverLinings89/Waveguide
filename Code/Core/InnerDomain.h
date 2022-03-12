@@ -113,4 +113,6 @@ class InnerDomain: public FEDomain {
   FEErrorStruct compute_errors(dealii::LinearAlgebra::distributed::Vector<ComplexNumber> * in_solution);
   std::vector<std::vector<ComplexNumber>> evaluate_at_positions(std::vector<Position> in_positions, NumericVectorLocal in_solution);
   std::vector<FEAdjointEvaluation> compute_local_shape_gradient_data(NumericVectorLocal & in_solution);
+  void compte_rhs_for_tapering();
+  Tensor<1,3,ComplexNumber> evaluate_J_at(Position);
 };
