@@ -10,7 +10,7 @@ subsection Case parameters
   set signal amplitude = 1.0
   set source type      = 3
   set Boundary Method = PML
-  set PML n layers = 5
+  set PML n layers = 10
   set PML thickness = 0.5
   set PML sigma max = 20
   set PML skaling order = 3
@@ -18,6 +18,6 @@ subsection Case parameters
   set perform optimization = true
   set vertical waveguide displacement = 1.5
   set Prescribe input zero = false
-  set constant waveguide width = false
-  set constant waveguide height = false
+  set constant waveguide width = true
+  set constant waveguide height = true
 end
