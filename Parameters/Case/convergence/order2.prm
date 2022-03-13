@@ -1,6 +1,6 @@
 subsection Case parameters
     set source type = 2
-    set fem order = 0
+    set fem order = 2
     set geometry size x = 0.2
     set geometry size y = 0.2
     set geometry size z = 0.2
