@@ -12,11 +12,7 @@ subsection Case parameters
     set Boundary Method = PML
     set PML n layers = 8
     set PML thickness = 0.05
-<<<<<<< HEAD
-    set PML sigma max = 20
-=======
     set PML sigma max = 10
->>>>>>> Some changes to parameter files.
     set PML skaling order = 3
     set Input Signal Method = Dirichlet
     set convergence sequence cell count = 2,4,8,16
