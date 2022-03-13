@@ -35,14 +35,14 @@ auto Parameters::complete_data() -> void {
       if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using Cos-Cos-type point source.", LoggingLevel::PRODUCTION_ONE);
   }
   if(Point_Source_Type == 0) {
-      source_field = new ExactSolution(true, false);
+      source_field = new ExactSolution();
       if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using mode for rectangular waveguide.", LoggingLevel::PRODUCTION_ONE);
   }
   if(Point_Source_Type == 3) {
       if(transformation_type == TransformationType::AngleWaveguideTransformationType) {
         source_field = new AngledExactSolution();
       } else {
-        source_field = new ExactSolution(true, false);
+        source_field = new ExactSolution();
       }
       if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using mode for rectangular waveguide.", LoggingLevel::PRODUCTION_ONE);
   }
@@ -73,9 +73,6 @@ auto Parameters::complete_data() -> void {
 
 auto Parameters::check_validity() -> bool {
     bool valid = true;
-
-    // prescribing zero on the input interface should only be used with tapered input. Otherewise there are two Dirichlet constraints on the same interface
-    if(prescribe_0_on_input_side && !use_tapered_input_signal) valid = false;
 
     const double x_step = (Geometry.global_x_range.second - Geometry.global_x_range.first)
                           /(GlobalParams.Blocks_in_x_direction * GlobalParams.Cells_in_x);

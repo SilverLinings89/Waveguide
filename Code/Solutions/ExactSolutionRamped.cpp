@@ -61,9 +61,9 @@ dealii::Tensor<1, 3, ComplexNumber> ExactSolutionRamped::val(const Position &in_
   return ret;
 }
 
-ExactSolutionRamped::ExactSolutionRamped(bool in_rectangular, bool in_dual):
+ExactSolutionRamped::ExactSolutionRamped():
   dealii::Function<3, ComplexNumber>(3),
-  inner_field(in_rectangular, in_dual),
+  inner_field(),
   min_z(GlobalParams.tapering_min_z),
   max_z(GlobalParams.tapering_max_z),
   do_c0(GlobalParams.Signal_tapering_type == SignalTaperingType::C0) { }

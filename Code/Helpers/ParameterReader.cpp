@@ -56,7 +56,7 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("PML skaling order", "3", Patterns::Integer(), "PML skaling order is the exponent with wich the imaginary part grows towards the outer boundary.");
         case_prm.declare_entry("PML n layers", "8", Patterns::Integer(), "Number of cell layers used in the PML medium.");
         case_prm.declare_entry("PML Test Angle", "0.2", Patterns::Double(), "For the angeling test, this is a in z' = z - a * y.");
-        case_prm.declare_entry("Input Signal Method", "Dirichlet", Patterns::Selection("Dirichlet|Taper|Jump"), "Taper uses a tapered exact solution to build a right hand side. Dirichlet applies dirichlet boundary values.");
+        case_prm.declare_entry("Input Signal Method", "Dirichlet", Patterns::Selection("Dirichlet|Taper"), "Taper uses a tapered exact solution to build a right hand side. Dirichlet applies dirichlet boundary values.");
         case_prm.declare_entry("Signal tapering type", "C1", Patterns::Selection("C0|C1"), "Tapering type for signal input");
         case_prm.declare_entry("Prescribe input zero", "false", Patterns::Bool(), "If this is set to true, there will be a dirichlet zero condition enforced on the global input interface (Process index z: 0, boundary id: 4).");
         case_prm.declare_entry("Predefined case number", "1", Patterns::Integer(), "Number in [1,35] that describes the predefined shape to use.");
@@ -143,8 +143,8 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         if(method == "Dirichlet") {
             ret.Signal_coupling_method = SignalCouplingMethod::Dirichlet;
         }
-        if(method == "Jump") {
-            ret.Signal_coupling_method = SignalCouplingMethod::Jump;
+        if(method == "Taper") {
+            ret.Signal_coupling_method = SignalCouplingMethod::Tapering;
         }
         ret.use_tapered_input_signal = case_prm.get("Input Signal Method") == "Taper";
         ret.PML_Sigma_Max = case_prm.get_double("PML sigma max");

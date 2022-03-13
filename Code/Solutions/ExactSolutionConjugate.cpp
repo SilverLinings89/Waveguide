@@ -42,8 +42,8 @@ dealii::Tensor<1, 3, ComplexNumber> ExactSolutionConjugate::val(const Position &
   return ret;
 }
 
-ExactSolutionConjugate::ExactSolutionConjugate(bool in_rectangular, bool in_dual):
+ExactSolutionConjugate::ExactSolutionConjugate():
   dealii::Function<3, ComplexNumber>(3),
-  inner_field(in_rectangular, in_dual)
+  inner_field()
 { }
 

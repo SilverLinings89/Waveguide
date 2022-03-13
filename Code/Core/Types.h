@@ -89,7 +89,7 @@ enum SignalTaperingType {
 };
 
 enum SignalCouplingMethod {
-  Jump, Tapering, Dirichlet
+  Tapering, Dirichlet
 };
 
 enum FileType {
@@ -224,4 +224,10 @@ struct FEAdjointEvaluation {
   Position x;
   dealii::Tensor<1,3,ComplexNumber> primal_field;
   dealii::Tensor<1,3,ComplexNumber> adjoint_field;
+};
+
+struct J_derivative_terms {
+  ComplexNumber f, d_f_dyy, d_f_dxy, d_f_dx;
+  ComplexNumber h, d_h_dx, d_h_dy, d_h_dxx, d_h_dyy;
+  double beta;
 };

@@ -17,7 +17,7 @@ class ExactSolutionRamped: public dealii::Function<3, ComplexNumber> {
     const bool do_c0;
 
   public:
-    ExactSolutionRamped( bool in_rectangular = false, bool in_dual = false);
+    ExactSolutionRamped();
     double get_ramping_factor_for_position(const Position &) const;
     ComplexNumber value(const Position &p, const unsigned int component) const;
     void vector_value(const Position &p, dealii::Vector<ComplexNumber> &value) const;

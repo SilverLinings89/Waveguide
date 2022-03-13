@@ -34,7 +34,6 @@
 
 class ExactSolution: public dealii::Function<3, ComplexNumber> {
  private:
-  bool is_dual;
   std::vector<float> mesh_points;
   PointVal **vals;
   const ComplexNumber imaginary_unit;
@@ -48,7 +47,7 @@ class ExactSolution: public dealii::Function<3, ComplexNumber> {
   static dealii::Table<2,double> data_table_z;
   static std::array<std::pair<double, double>, 2> ranges;
   static std::array<unsigned int, 2> n_intervals;
-  ExactSolution(bool in_rectangular = false, bool in_dual = false);
+  ExactSolution();
 
   static void load_data(std::string fname);
 
@@ -63,4 +62,6 @@ class ExactSolution: public dealii::Function<3, ComplexNumber> {
   ComplexNumber compute_phase_for_position(const Position &in_p) const;
 
   Position2D get_2D_position_from_3d(const Position & in_p) const;
+
+  J_derivative_terms get_derivative_terms(const Position2D & in_p) const;
 };

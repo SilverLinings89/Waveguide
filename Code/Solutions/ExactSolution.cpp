@@ -27,8 +27,6 @@ Position2D ExactSolution::get_2D_position_from_3d(const Position & in_p) const {
 }
 
 ComplexNumber ExactSolution::value(const Position &in_p, const unsigned int component) const {
-  Position p = in_p;
-  if (is_dual) p[2] = -in_p[2];
   Position2D p2d = get_2D_position_from_3d(in_p);
   ComplexNumber ret_val(0.0, 0.0);
   switch(component) {
@@ -52,12 +50,10 @@ ComplexNumber ExactSolution::compute_phase_for_position(const Position &in_p) co
   const double z =  in_p[2] - Geometry.global_z_range.first;
   const double phi = 2.0 * GlobalParams.Pi * z / Lambda_eff;
   return std::exp(phi * imaginary_unit);
-  
 }
 
 void ExactSolution::vector_value(const Position &in_p, Vector<ComplexNumber> &values) const {
   Position p = in_p;
-  if (is_dual) p[2] = -in_p[2];
   ComplexNumber phase = compute_phase_for_position(p);
   Position2D p2d = get_2D_position_from_3d(in_p);
   values[0] = component_x.value(p2d,0) * phase;
@@ -67,7 +63,7 @@ void ExactSolution::vector_value(const Position &in_p, Vector<ComplexNumber> &va
 }
 
 Tensor<1, 3, ComplexNumber> ExactSolution::curl(const Position &in_p) const {
-  const double h = 0.0001;
+  const double h = 0.01;
   Tensor<1, 3, ComplexNumber> ret;
   Vector<ComplexNumber> dxF;
   Vector<ComplexNumber> dyF;
@@ -109,14 +105,12 @@ Tensor<1, 3, ComplexNumber> ExactSolution::val(const Position &in_p) const {
   return ret;
 }
 
-ExactSolution::ExactSolution(bool , bool in_dual)
-    : Function<3, ComplexNumber>(3),
+ExactSolution::ExactSolution() : Function<3, ComplexNumber>(3),
   imaginary_unit(0,1),
   component_x(ranges, n_intervals, data_table_x),
   component_y(ranges, n_intervals, data_table_y),
   component_z(ranges, n_intervals, data_table_z)
      {
-  is_dual = in_dual;
 }
 
 void ExactSolution::load_data(std::string fname) {
@@ -172,4 +166,45 @@ void ExactSolution::load_data(std::string fname) {
     }
   }
   
+}
+
+J_derivative_terms ExactSolution::get_derivative_terms(const Position2D & in_p) const {
+  J_derivative_terms ret;
+  const double h = 0.01;
+  const double Lambda_eff = (GlobalParams.Lambda / std::sqrt(GlobalParams.Epsilon_R_effective));
+  Position2D plus_plus = in_p;
+  plus_plus[0] += h;
+  plus_plus[1] += h;
+  Position2D plus_minus = in_p;
+  plus_plus[0] += h;
+  plus_plus[1] -= h;
+  Position2D minus_plus = in_p;
+  plus_plus[0] -= h;
+  plus_plus[1] += h;
+  Position2D minus_minus = in_p;
+  plus_plus[0] -= h;
+  plus_plus[1] -= h;
+  Position2D minus_y = in_p;
+  plus_plus[1] -= h;
+  Position2D plus_y = in_p;
+  plus_plus[1] += h;
+  Position2D minus_x = in_p;
+  plus_plus[0] -= h;
+  Position2D plus_x = in_p;
+  plus_plus[0] += h;
+
+  double central_value_z = component_z.value(in_p);
+  ret.d_f_dxy = (component_x.value(plus_plus) - component_x.value(plus_minus) - component_x.value(minus_plus) + component_x.value(minus_minus)) / (4*h*h);
+  ret.d_f_dyy = (component_x.value(plus_y) - 2*component_x.value(in_p) + component_x.value(minus_y)) / (h*h);
+  ret.d_f_dx = component_x.gradient(in_p)[0];
+
+  ret.d_h_dxx = imaginary_unit * (component_z.value(plus_x) - 2*central_value_z + component_z.value(minus_x)) / (h*h);
+  ret.d_h_dyy = imaginary_unit * (component_z.value(plus_y) - 2*central_value_z + component_z.value(minus_y)) / (h*h);
+  ret.d_h_dx = imaginary_unit * component_z.gradient(in_p)[0];
+  ret.d_h_dy = imaginary_unit * component_z.gradient(in_p)[1];
+
+  ret.f = component_x.value(in_p);
+  ret.h = imaginary_unit * component_z.value(in_p);
+  ret.beta = 2.0 * GlobalParams.Pi / Lambda_eff;
+  return ret;
 }

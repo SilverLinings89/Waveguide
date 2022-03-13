@@ -149,7 +149,11 @@ struct Parameters {
 
     SignalTaperingType Signal_tapering_type = SignalTaperingType::C1;
 
-    SignalCouplingMethod Signal_coupling_method = SignalCouplingMethod::Jump;
+    SignalCouplingMethod Signal_coupling_method = SignalCouplingMethod::Tapering;
+
+    double tapering_z_min = 0;
+
+    double tapering_t_max = 1;
 
     bool prescribe_0_on_input_side = false;
 

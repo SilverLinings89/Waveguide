@@ -19,7 +19,7 @@ unsigned int ShapeFunction::compute_n_dofs(unsigned int in_n_sectors) {
 
 
 ShapeFunction::ShapeFunction(double in_z_min, double in_z_max, unsigned int in_n_sectors):
-sector_length((in_z_max - in_z_min) / (double)in_n_sectors),
+sector_length((in_z_max - in_z_min) / (2*(double)in_n_sectors)),
 n_free_dofs(ShapeFunction::compute_n_free_dofs(in_n_sectors)),
 n_dofs(ShapeFunction::compute_n_dofs(in_n_sectors))
 {

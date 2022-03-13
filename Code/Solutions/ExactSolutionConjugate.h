@@ -14,7 +14,7 @@ class ExactSolutionConjugate: public dealii::Function<3, ComplexNumber> {
     ExactSolution inner_field;
 
   public:
-    ExactSolutionConjugate( bool in_rectangular = false, bool in_dual = false);
+    ExactSolutionConjugate();
     ComplexNumber value(const Position &p, const unsigned int component) const;
     void vector_value(const Position &p, dealii::Vector<ComplexNumber> &value) const;
     dealii::Tensor<1, 3, ComplexNumber> curl(const Position &in_p) const;

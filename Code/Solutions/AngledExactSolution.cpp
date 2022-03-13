@@ -6,7 +6,7 @@
 #include <vector>
 
 AngledExactSolution::AngledExactSolution(): Function<3, ComplexNumber>(3) {
-    base_solution = new ExactSolution(true, false);
+    base_solution = new ExactSolution();
     
 }
 

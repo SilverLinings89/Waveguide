@@ -178,6 +178,8 @@ struct CellwiseAssemblyDataNP {
   const FEValuesExtractors::Vector fe_field;
   Vector<ComplexNumber> incoming_wave_field;
   IndexSet constrained_dofs;
+  Tensor<1,3,ComplexNumber> J;
+  ExactSolution * es_for_j;
 
   CellwiseAssemblyDataNP(dealii::FE_NedelecSZ<3> * fe, DofHandler3D * dof_handler):
   quadrature_formula(GlobalParams.Nedelec_element_order + 2),
@@ -206,6 +208,10 @@ struct CellwiseAssemblyDataNP {
     end_cell = dof_handler->end();
   };
 
+  void set_es_pointer(ExactSolution * in_es) {
+    es_for_j = in_es;
+  }
+
   void prepare_for_current_q_index(unsigned int q_index) {
     if(GlobalParams.Use_Predefined_Shape) {
       transformation = GlobalSpaceTransformation->get_Space_Transformation_Tensor(quadrature_points[q_index]);
@@ -217,7 +223,13 @@ struct CellwiseAssemblyDataNP {
     } else {
       epsilon = transformation * eps_out;
     }
-    
+    bool compute_rhs = false;
+    if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Tapering && GlobalParams.Index_in_z_direction == 0 && quadrature_points[q_index][2] < GlobalParams.tapering_max_z && quadrature_points[q_index][2] >= GlobalParams.tapering_min_z ) {
+      compute_rhs = true;
+    }
+    if(compute_rhs) {
+      J = evaluate_J_at(quadrature_points[q_index]);
+    }
     std::vector<unsigned int> dof_indices(dofs_per_cell);
     cell->get_dof_indices(dof_indices);
     const double JxW = fe_values.JxW(q_index);
@@ -233,6 +245,9 @@ struct CellwiseAssemblyDataNP {
         J_Val = fe_values[fe_field].value(j, q_index);
         cell_matrix[i][j] += I_Curl * (mu * Conjugate_Vector(J_Curl)) * JxW - (kappa_2 * ( (epsilon * I_Val) * Conjugate_Vector(J_Val)) * JxW);
       }
+      if(compute_rhs) {
+        cell_rhs[i] += JxW * J * Conjugate_Vector(I_Val);
+      }
     }
   }
 
@@ -244,16 +259,55 @@ struct CellwiseAssemblyDataNP {
     }
     return ret;
   }
+
+  Tensor<1,3,ComplexNumber> evaluate_J_at(Position p) {
+    Tensor<1,3,ComplexNumber> ret;
+    const ComplexNumber im(0,1);
+    ComplexNumber phi, d_phi_dz, d_phi_dzz;
+    const double omega_sq_eps = Geometry.eps_kappa_2(p);
+    for(unsigned int i = 0; i < 3; i++) {
+      ret[i] = 0;
+    }
+    if(p[2] < GlobalParams.tapering_min_z || p[2] >= GlobalParams.tapering_max_z) {
+      return ret;
+    }
+    Position2D p2d;
+    p2d[0] = p[0];
+    p2d[1] = p[1];
+    J_derivative_terms f_and_h_terms = es_for_j->get_derivative_terms(p2d);
+    const double phi_coord_z = (p[2] - GlobalParams.tapering_min_z)/(GlobalParams.tapering_max_z - GlobalParams.tapering_min_z);
+    phi = 2*(phi_coord_z*phi_coord_z*phi_coord_z) - 3*(phi_coord_z*phi_coord_z) + 1;
+    const double zmax_minus_zmin = (GlobalParams.tapering_max_z - GlobalParams.tapering_min_z);
+    d_phi_dz = 6 * (p[2] - GlobalParams.tapering_min_z) * (p[2] - GlobalParams.tapering_max_z) / (zmax_minus_zmin * zmax_minus_zmin * zmax_minus_zmin);
+    d_phi_dzz = 12 * (p[2] - GlobalParams.tapering_min_z) / (zmax_minus_zmin * zmax_minus_zmin * zmax_minus_zmin) - 6/(zmax_minus_zmin * zmax_minus_zmin);
+    ret[0] = phi * ( - f_and_h_terms.d_f_dyy + f_and_h_terms.beta * f_and_h_terms.beta * f_and_h_terms.f + im*f_and_h_terms.beta*f_and_h_terms.d_h_dx) 
+      - f_and_h_terms.f*(d_phi_dzz + 2.0 * im * f_and_h_terms.beta * d_phi_dz) + d_phi_dz * f_and_h_terms.d_h_dx +  omega_sq_eps * f_and_h_terms.f;
+    ret[1] = phi * (f_and_h_terms.d_f_dxy + im*f_and_h_terms.beta*f_and_h_terms.d_h_dy) + d_phi_dz * f_and_h_terms.d_h_dy ;
+    ret[2] = phi * (im*f_and_h_terms.beta*f_and_h_terms.d_f_dx - f_and_h_terms.d_h_dxx - f_and_h_terms.d_h_dyy) + d_phi_dz*f_and_h_terms.d_f_dx + omega_sq_eps*f_and_h_terms.h;
+    
+    const ComplexNumber phase = std::exp(im * f_and_h_terms.beta * p[2]);
+    for(unsigned int i = 0; i < 3; i++) {
+      ret[i] *= -phase;
+    }
+    
+    return ret;
+  }
 };
 
 void InnerDomain::assemble_system(Constraints * constraints, dealii::PETScWrappers::MPI::SparseMatrix * matrix, NumericVectorDistributed *rhs) {
   CellwiseAssemblyDataNP cell_data(&fe, &dof_handler);
   load_exact_solution();
+  ExactSolution * esp;
+  if(GlobalParams.Index_in_z_direction == 0 && GlobalParams.Signal_coupling_method == SignalCouplingMethod::Tapering) {
+      esp = new ExactSolution();
+      cell_data.set_es_pointer(esp);
+  }
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
     cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
     cell_data.local_dof_indices = transform_local_to_global_dofs(cell_data.local_dof_indices);
     cell_data.cell_matrix = 0;
-    cell_data.cell_rhs.reinit(cell_data.dofs_per_cell, false);
+    cell_data.cell_rhs.reinit(cell_data.dofs_per_cell);
+    cell_data.cell_rhs = 0;
     cell_data.fe_values.reinit(cell_data.cell);
     cell_data.quadrature_points = cell_data.fe_values.get_quadrature_points();
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
@@ -262,40 +316,9 @@ void InnerDomain::assemble_system(Constraints * constraints, dealii::PETScWrappe
     constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, true);
   }
   matrix->compress(dealii::VectorOperation::add);
-  if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Jump) {
-    rhs->compress(dealii::VectorOperation::add);
-    NumericVectorDistributed second(*rhs);
-    NumericVectorDistributed third(*rhs);
-    if(GlobalParams.Index_in_z_direction == 0) {
-      Constraints ret(global_dof_indices);
-      dealii::IndexSet local_dof_set(n_locally_active_dofs);
-      local_dof_set.add_range(0,n_locally_active_dofs);
-      AffineConstraints<ComplexNumber> constraints_local(local_dof_set);
-      VectorTools::project_boundary_values_curl_conforming_l2(dof_handler, 0, *GlobalParams.source_field, 4, constraints_local);
-      for(auto line : constraints_local.get_lines()) {
-        const unsigned int local_index = line.index;
-        const unsigned int global_index = global_index_mapping[local_index];
-        ret.add_line(global_index);
-        second[global_index] = line.inhomogeneity;
-	    }
-    }
-    matrix->vmult(third, second);
-    if(GlobalParams.Index_in_z_direction == 0) {
-      for(unsigned comp = 0; comp < global_index_mapping.size(); comp++) {
-        if(second[global_index_mapping[comp]] == 0) {
-          if(third[global_index_mapping[comp]] != 0 ) {
-            rhs->operator[](global_index_mapping[comp]) = third[global_index_mapping[comp]];
-          } 
-        } else {
-          if(third[global_index_mapping[comp]] != 0 ) {
-            rhs->operator[](global_index_mapping[comp]) = ComplexNumber((-1.0) * third[global_index_mapping[comp]].real(), (-1.0) * third[global_index_mapping[comp]].imag());
-          }
-        }
-      }
-    }
-    rhs->compress(dealii::VectorOperation::insert);
-  } else {
-    rhs->compress(dealii::VectorOperation::add);
+  rhs->compress(dealii::VectorOperation::add);
+  if(GlobalParams.Index_in_z_direction == 0 && GlobalParams.Signal_coupling_method == SignalCouplingMethod::Tapering) {
+    delete esp;
   }
 }
 
