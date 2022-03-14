@@ -10,7 +10,7 @@ subsection Case parameters
     set mu out = 1.0
     set signal amplitude = 1.0
     set Boundary Method = PML
-    set PML n layers = 8
+    set PML n layers = 4
     set PML thickness = 0.05
     set PML sigma max = 10
     set PML skaling order = 3
