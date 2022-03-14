@@ -65,5 +65,9 @@ void ParameterOverride::perform_on(Parameters& in_parameters) {
             print_info("ParameterOverride", "Replacing predefined case number with " + overrides[i].second);
             in_parameters.Number_of_Predefined_Shape = stoi(overrides[i].second);
         }
+        if(overrides[i].first == "system_length") {
+            print_info("ParameterOverride", "Replacing system length with " + overrides[i].second);
+            in_parameters.Geometry_Size_Z = std::stod(overrides[i].second);
+        }
     }
 }

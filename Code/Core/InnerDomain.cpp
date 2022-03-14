@@ -268,7 +268,7 @@ struct CellwiseAssemblyDataNP {
     for(unsigned int i = 0; i < 3; i++) {
       ret[i] = 0;
     }
-    if(p[2] < GlobalParams.tapering_min_z || p[2] >= GlobalParams.tapering_max_z) {
+    if(p[2] < GlobalParams.tapering_min_z - FLOATING_PRECISION || p[2] >= GlobalParams.tapering_max_z) {
       return ret;
     }
     Position2D p2d;
