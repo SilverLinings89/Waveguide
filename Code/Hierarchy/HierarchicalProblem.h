@@ -41,6 +41,7 @@ class HierarchicalProblem {
   virtual ~HierarchicalProblem() =0;
 
   virtual void solve()=0;
+  virtual void solve_adjoint() {};
   void solve_with_timers_and_count();
   virtual void initialize()=0;
   void make_constraints();

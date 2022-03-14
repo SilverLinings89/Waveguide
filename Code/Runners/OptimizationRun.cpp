@@ -77,6 +77,8 @@ void OptimizationRun::solve_main_problem() {
   OptimizationRun::mainProblem->assemble();
   OptimizationRun::mainProblem->compute_solver_factorization();
   OptimizationRun::mainProblem->solve_with_timers_and_count();
+  OptimizationRun::mainProblem->set_rhs_for_adjoint_problem();
+  OptimizationRun::mainProblem->solve_adjoint();
 }
 
 double OptimizationRun::perform_step(const dealii::Vector<double> & x, dealii::Vector<double> & g) {

@@ -1,13 +1,13 @@
 subsection Run parameters
-  set GMRES maximum steps    = 15
+  set GMRES maximum steps    = 20
   set solve directly         = false
   set sweeping level         = 1
   set processes in x         = 1
   set processes in y         = 1
-  set processes in z         = 4
-  set cell count x           = 12
-  set cell count y           = 12
-  set cell count z           = 12
+  set processes in z         = 10
+  set cell count x           = 20
+  set cell count y           = 20
+  set cell count z           = 20
   set Logging Level          = Debug One
   set output transformed solution = true
 end

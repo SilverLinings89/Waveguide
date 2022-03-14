@@ -91,6 +91,11 @@ void LocalProblem::validate() {
 
 void LocalProblem::assemble() {
   GlobalTimerManager.switch_context("Assemble", level);
+  matrix->operator=(0);
+  rhs = 0;
+  matrix->compress(dealii::VectorOperation::insert);
+  rhs.compress(dealii::VectorOperation::insert);
+  reinit_rhs();
   Timer timer;
   timer.start();
   Geometry.levels[level].inner_domain->assemble_system(&constraints, matrix, &rhs);

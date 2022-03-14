@@ -12,6 +12,7 @@ class OptimizationRun: public Simulation {
   static unsigned int step_counter;
   std::function< double(const dealii::Vector<double> &x, dealii::Vector<double> &g)> function_pointer;
   const unsigned int n_free_dofs;
+  static double loss_functional_evaluation;
   
  
  public:

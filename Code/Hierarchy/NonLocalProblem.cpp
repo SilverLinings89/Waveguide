@@ -194,8 +194,9 @@ void NonLocalProblem::init_solver_and_preconditioner() {
 }
 
 void NonLocalProblem::reinit_rhs() {
-  rhs = 0;
-  rhs.compress(VectorOperation::insert);
+  rhs.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  // rhs = 0;
+  // rhs.compress(VectorOperation::insert);
   // reinit_vector(&rhs);
 }
 
@@ -235,6 +236,10 @@ Direction get_direction_for_boundary_id(BoundaryId bid) {
 }
 
 void NonLocalProblem::assemble() {
+  matrix->operator=(0);
+  rhs = 0;
+  matrix->compress(dealii::VectorOperation::insert);
+  rhs.compress(dealii::VectorOperation::insert);
   print_info("NonLocalProblem::assemble", "Begin assembly");
   GlobalTimerManager.switch_context("Assemble", level);
   Timer timer;
@@ -255,7 +260,19 @@ void NonLocalProblem::assemble() {
   rhs.compress(VectorOperation::add);
   // constraints.distribute(solution);
   print_info("NonLocalProblem::assemble", "End assembly.");
+  KSPSetOperators(ksp, *matrix, *matrix);
   GlobalTimerManager.leave_context(level);
+}
+
+void NonLocalProblem::solve_adjoint() {
+  residual_output->new_series("Run " + std::to_string(solve_counter + 1));
+  // Solve with sweeping
+  
+  PetscErrorCode ierr = KSPSolve(ksp, rhs, adjoint_state);
+  residual_output->close_current_series();
+  if(ierr != 0) {
+    std::cout << "Error code from Petsc: " << std::to_string(ierr) << std::endl;
+  }
 }
 
 void NonLocalProblem::solve() {
@@ -375,7 +392,6 @@ void NonLocalProblem::reinit() {
 
 void NonLocalProblem::reinit_all_vectors() {
   solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
-  direct_solution.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   solution_error.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   rhs.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   u.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
@@ -486,6 +502,13 @@ void NonLocalProblem::update_shared_solution_vector() {
     shared_solution.update_ghost_values();
     is_shared_solution_up_to_date = true;
   }
+  if(has_adjoint) {
+    shared_adjoint.reinit(own_dofs, locally_active_dofs, GlobalMPI.communicators_by_level[level]);
+    for(unsigned int i= 0; i < own_dofs.n_elements(); i++) {
+      shared_adjoint[own_dofs.nth_index_in_set(i)] = adjoint_state[own_dofs.nth_index_in_set(i)];
+    }
+    shared_adjoint.update_ghost_values();
+  }
 }
 
 void NonLocalProblem::write_multifile_output(const std::string & in_filename, bool transform) {
@@ -506,7 +529,7 @@ void NonLocalProblem::write_multifile_output(const std::string & in_filename, bo
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     local_solution[i] = shared_solution[Geometry.levels[level].inner_domain->global_index_mapping[i]];
   }
-
+  
   std::string file_1 = Geometry.levels[level].inner_domain->output_results(in_filename + std::to_string(level) , local_solution, transform);
   generated_files.push_back(file_1);
   if(GlobalParams.BoundaryCondition == BoundaryConditionType::PML && !transform) {
@@ -536,6 +559,22 @@ void NonLocalProblem::write_multifile_output(const std::string & in_filename, bo
     }
     Geometry.levels[level].inner_domain->data_out.write_pvtu_record(outputvtu, flattened_filenames);
   }
+}
+
+void NonLocalProblem::set_rhs_for_adjoint_problem() {
+  has_adjoint = true;
+  reinit_rhs();
+  adjoint_state.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  if(GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction-1) {
+    auto vec = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_boundary_id(5);
+    for(unsigned int i = 0; i < vec.size(); i++) {
+      if(Geometry.levels[level].inner_domain->is_dof_owned[vec[i].index]) {
+        const unsigned int global_ind = Geometry.levels[level].inner_domain->global_index_mapping[vec[i].index];
+        rhs[global_ind] = solution[global_ind];
+      }
+    }
+  }
+  rhs.compress(VectorOperation::insert);
 }
 
 void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) {
@@ -809,65 +848,38 @@ std::vector<double> NonLocalProblem::compute_shape_gradient() {
   for(unsigned int i = 0; i < n_shape_dofs; i++) {
     ret[i] = 0;
   }
-  std::pair<unsigned int, unsigned int> communication_pair;
-  unsigned int blocks_per_layer = GlobalParams.Blocks_in_x_direction * GlobalParams.Blocks_in_y_direction;
-  const unsigned int other_index_in_z = GlobalParams.Blocks_in_z_direction - 1 - GlobalParams.Index_in_z_direction;
-  const unsigned int other = GlobalParams.MPI_Rank + (other_index_in_z - GlobalParams.Index_in_z_direction) * blocks_per_layer;
-  if(GlobalParams.Blocks_in_z_direction % 2 == 1 && GlobalParams.Index_in_z_direction % 2 == 1 && (GlobalParams.Index_in_z_direction) * 2  + 1 == GlobalParams.Blocks_in_z_direction) {
-    communication_pair.first = GlobalParams.MPI_Rank;
-    communication_pair.second = GlobalParams.MPI_Rank;
-  } else {
-    if(GlobalParams.Index_in_z_direction < GlobalParams.Blocks_in_z_direction/2) {
-      communication_pair.first = GlobalParams.MPI_Rank;
-      communication_pair.second = other;
-    } else {
-      communication_pair.first = other;
-      communication_pair.second = GlobalParams.MPI_Rank;
-    }
-  }
+
   std::vector<FEAdjointEvaluation> field_evaluations;
 
   Timer timer1;
   timer1.start();
   
   NumericVectorLocal local_solution(Geometry.levels[level].inner_domain->n_locally_active_dofs);
-  
+  NumericVectorLocal local_adjoint(Geometry.levels[level].inner_domain->n_locally_active_dofs);
+  update_shared_solution_vector();
+
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     local_solution[i] = shared_solution[Geometry.levels[level].inner_domain->global_index_mapping[i]];
+    local_adjoint[i] = shared_adjoint[Geometry.levels[level].inner_domain->global_index_mapping[i]];
   }
 
-  field_evaluations = Geometry.levels[level].inner_domain->compute_local_shape_gradient_data(local_solution);
+  field_evaluations = Geometry.levels[level].inner_domain->compute_local_shape_gradient_data(local_solution, local_adjoint);
 
   timer1.stop();
   print_info("NonLocalProblem::compute_shape_gradient", "Walltime: " + std::to_string(timer1.wall_time()) , LoggingLevel::PRODUCTION_ONE);
 
-  if(communication_pair.first == communication_pair.second) {
-    std::cout << "This case is currently not implemented. Use an even block count in propagation direction (for an odd number, the blocks in the middle are not implemented. " << std::endl;
-  } else {
-    std::vector<double> serialized_data = fe_evals_to_double(field_evaluations);
-    MPI_Status stat;
-    MPI_Sendrecv_replace(serialized_data.data(), serialized_data.size(), MPI_DOUBLE, other, 0, other, 0, MPI_COMM_WORLD, &stat);
-    std::vector<FEAdjointEvaluation> received_data = fe_evals_from_double(serialized_data);
-    std::sort(received_data.begin(), received_data.end(), compareFEAdjointEvals);
-    std::sort(field_evaluations.begin(), field_evaluations.end(), compareFEAdjointEvals);
-
-    for(unsigned int i = 0; i < field_evaluations.size(); i++) {
-      double distance = Distance3D(received_data[i].x, field_evaluations[i].x);
-      if(distance > 0.001) {
-        std::cout << "There was an error matching evaluation positions." << std::endl;
-      } else {
-        field_evaluations[i].adjoint_field = received_data[i].adjoint_field;
+  ComplexNumber current_field_orientation = compute_signal_strength_of_solution();
+  // Now, I have the evalaution and the adjoint field stored for a set of positions in the array field_evaluations.
+  for(unsigned int i = 0; i < field_evaluations.size(); i++) {
+    for(unsigned int j = 0; j < n_shape_dofs; j++) {
+      Tensor<2, 3, ComplexNumber> local_step_tensor = GlobalSpaceTransformation->get_Tensor_for_step(field_evaluations[i].x, j, 0.01);
+      Tensor<1,3,ComplexNumber> local_adj = field_evaluations[i].adjoint_field;
+      for(unsigned int k = 0; k < 3; k++) {
+        local_adj[k].imag(- local_adj[k].imag());
       }
-    }
-    ComplexNumber current_field_orientation = compute_signal_strength_of_solution();
-    // Now, I have the evalaution and the adjoint field stored for a set of positions in the array field_evaluations.
-    for(unsigned int i = 0; i < field_evaluations.size(); i++) {
-      for(unsigned int j = 0; j < n_shape_dofs; j++) {
-        Tensor<2, 3, ComplexNumber> local_step_tensor = GlobalSpaceTransformation->get_Tensor_for_step(field_evaluations[i].x, j, 0.01);
-        ComplexNumber change = (field_evaluations[i].primal_field * local_step_tensor) * field_evaluations[i].adjoint_field;
-        const double delta = std::abs(current_field_orientation + change) - std::abs(current_field_orientation);
-        ret[j] += delta;
-      }
+      ComplexNumber change = (field_evaluations[i].primal_field * local_step_tensor) * field_evaluations[i].adjoint_field;
+      const double delta = change.real();
+      ret[j] += delta;
     }
   }
   for(unsigned int i = 0; i <n_shape_dofs; i++) {

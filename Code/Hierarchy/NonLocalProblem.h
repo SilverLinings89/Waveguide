@@ -19,6 +19,8 @@ private:
   unsigned int total_rank_in_sweep;
   unsigned int n_procs_in_sweep;
   NumericVectorDistributed dist_vector_1, dist_vector_2, dist_vector_3, u;
+  NumericVectorDistributed adjoint_state;
+  bool has_adjoint = false;
 
   dealii::IndexSet locally_active_dofs;
   KSP ksp;
@@ -33,6 +35,7 @@ private:
   std::vector<ComplexNumber> vector_copy_array;
   double internal_vector_norm = 0.0;
   dealii::LinearAlgebra::distributed::Vector<ComplexNumber> shared_solution;
+  dealii::LinearAlgebra::distributed::Vector<ComplexNumber> shared_adjoint;
   bool is_shared_solution_up_to_date = false;
   
  public:
@@ -45,6 +48,8 @@ private:
   void assemble() override;
 
   void solve() override;
+
+  void solve_adjoint() override;
 
   void apply_sweep(Vec x_in, Vec x_out);
 
@@ -111,4 +116,6 @@ private:
   void empty_memory() override;
 
   std::vector<double> compute_shape_gradient() override;
+
+  void set_rhs_for_adjoint_problem();
 };

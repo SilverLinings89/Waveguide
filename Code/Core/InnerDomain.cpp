@@ -546,7 +546,7 @@ std::vector<std::vector<ComplexNumber>> InnerDomain::evaluate_at_positions(std::
   return ret;
 }
 
-std::vector<FEAdjointEvaluation> InnerDomain::compute_local_shape_gradient_data(NumericVectorLocal & in_solution) {
+std::vector<FEAdjointEvaluation> InnerDomain::compute_local_shape_gradient_data(NumericVectorLocal & in_solution, NumericVectorLocal & in_adjoint) {
   std::vector<FEAdjointEvaluation> ret;
   QGauss<3> quadrature_formula(1); 
   const FEValuesExtractors::Vector fe_field(0);
@@ -567,6 +567,7 @@ std::vector<FEAdjointEvaluation> InnerDomain::compute_local_shape_gradient_data(
         Tensor<1, 3, ComplexNumber> I_Val;
         I_Val = fe_values[fe_field].value(i, q_index);
         item.primal_field += I_Val * in_solution[local_dof_indices[i]];
+        item.adjoint_field += I_Val * in_adjoint[local_dof_indices[i]];
       }
       ret.push_back(item);
     }
