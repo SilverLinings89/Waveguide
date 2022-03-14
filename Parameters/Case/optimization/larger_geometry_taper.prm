@@ -15,6 +15,7 @@ subsection Case parameters
   set PML sigma max = 10
   set PML skaling order = 3
   set Input Signal Method = Taper
+  set Number of shape sectors = 10
   set perform optimization = true
   set vertical waveguide displacement = 4
   set Prescribe input zero = false
