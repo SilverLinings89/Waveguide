@@ -18,7 +18,7 @@ unsigned int ShapeFunction::compute_n_dofs(unsigned int in_n_sectors) {
 }
 
 
-ShapeFunction::ShapeFunction(double in_z_min, double in_z_max, unsigned int in_n_sectors):
+ShapeFunction::ShapeFunction(double in_z_min, double in_z_max, unsigned int in_n_sectors, bool in_bad_init):
 sector_length((in_z_max - in_z_min) / (2*(double)in_n_sectors)),
 n_free_dofs(ShapeFunction::compute_n_free_dofs(in_n_sectors)),
 n_dofs(ShapeFunction::compute_n_dofs(in_n_sectors))
@@ -29,6 +29,7 @@ n_dofs(ShapeFunction::compute_n_dofs(in_n_sectors))
     }
     z_min = in_z_min;
     z_max = in_z_max/2.0;
+    bad_init = in_bad_init;
 }
 
 double ShapeFunction::evaluate_at(double z) const {
@@ -107,8 +108,14 @@ void ShapeFunction::set_free_values(std::vector<double> in_dof_values) {
 void ShapeFunction::initialize() {
     std::vector<double> initial_values;
     initial_values.resize(n_free_dofs);
-    for(unsigned int i = 0; i < n_free_dofs; i++) {
-        initial_values[i] = (dof_values[dof_values.size()-1] - dof_values[0])/(z_max - z_min);
+    if(bad_init) {
+        for(unsigned int i = 0; i < n_free_dofs; i++) {
+            initial_values[i] =0;
+        }
+    } else {
+        for(unsigned int i = 0; i < n_free_dofs; i++) {
+            initial_values[i] = (dof_values[dof_values.size()-1] - dof_values[0])/(z_max - z_min);
+        }
     }
     set_free_values(initial_values);
 }
@@ -132,5 +139,11 @@ void ShapeFunction::set_free_dof_value(unsigned int index, double value) {
         update_constrained_values();
     } else {
         std::cout << "You tried to write to a constrained dof of a shape function." << std::endl;
+    }
+}
+
+void ShapeFunction::print() {
+    for(double x = z_min; x <= 2* z_max; x += 0.1 ) {
+        std::cout << x << "\t" << evaluate_at(x)<< std::endl;
     }
 }

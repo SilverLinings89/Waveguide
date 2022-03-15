@@ -3,7 +3,7 @@ subsection Case parameters
     set fem order = 0
     set geometry size x = 4.0
     set geometry size y = 3.6
-    set geometry size z = 5.0
+    set geometry size z = 6.0
     set epsilon in = 2.3409
     set epsilon out = 1.8496
     set mu in = 1.0
@@ -15,6 +15,6 @@ subsection Case parameters
     set PML thickness = 0.5
     set PML sigma max = 10
     set PML skaling order = 2
-    set Input Signal Method = Dirichlet
+    set Input Signal Method = Taper
     set Prescribe input zero = false
 end

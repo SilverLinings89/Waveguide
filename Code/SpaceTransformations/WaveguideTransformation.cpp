@@ -13,7 +13,7 @@ WaveguideTransformation::WaveguideTransformation()
     : SpaceTransformation(),
       waveguide_width(Geometry.global_z_range.first, Geometry.global_z_range.second, GlobalParams.Number_of_sectors),
       waveguide_height(Geometry.global_z_range.first, Geometry.global_z_range.second, GlobalParams.Number_of_sectors),
-      vertical_shift(Geometry.global_z_range.first, Geometry.global_z_range.second, GlobalParams.Number_of_sectors)      
+      vertical_shift(Geometry.global_z_range.first, Geometry.global_z_range.second, GlobalParams.Number_of_sectors, true)      
        {
   for(unsigned int i = 0; i < 3; i++) {
     for(unsigned int j = 0; j < 3; j++) {
