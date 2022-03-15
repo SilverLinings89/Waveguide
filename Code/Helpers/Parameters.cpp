@@ -27,7 +27,7 @@ auto Parameters::complete_data() -> void {
       MPI_Rank = dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
   }
   if(Point_Source_Type == 2) {
-      source_field = new PointSourceFieldHertz(0.5);
+      source_field = new PointSourceFieldHertz(2* Pi);
       if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using Hertz-type point source.", LoggingLevel::PRODUCTION_ONE);
   }
   if(Point_Source_Type == 1) {

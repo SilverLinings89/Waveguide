@@ -78,8 +78,8 @@ void PointSourceFieldHertz::vector_value(const Position &in_p, NumericVectorLoca
     x_normed[i] = x[i] / norm_x;
   }
   p[0] = {0, 0};
-  p[1] = {0, 0};
-  p[2] = {1.0, 0};
+  p[1] = {0.5, 0};
+  p[2] = {0, 0};
   ComplexNumber k_squared = {k * k, 0.0};
   ComplexNumber factor_2 = ComplexNumber(1.0/(norm_x*norm_x), 0) - ik/norm_x;
   ComplexNumber x_times_p = x[0] * p[0] + x[1] * p[1] + x[2] * p[2];
