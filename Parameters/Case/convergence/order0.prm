@@ -1,5 +1,5 @@
 subsection Case parameters
-    set source type = 3
+    set source type = 2
     set fem order = 1
     set geometry size x = 4.0
     set geometry size y = 3.6
@@ -18,5 +18,5 @@ subsection Case parameters
     set convergence sequence cell count = 2,4,8,16
     set Prescribe input zero = false
     set perform convergence test = true
-    set global z shift = 0
+    set global z shift = 5
 end

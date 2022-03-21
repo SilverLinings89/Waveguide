@@ -5,9 +5,9 @@ TEST(SHAPE_FUNCTION_OUTPUT, TEMP) {
     ShapeFunction sf(0,6,5);
     sf.set_constraints(0,1.5,0,0);
     std::vector<double> dof_values_initial(3);
-    dof_values_initial[0] = 0.2081;
-    dof_values_initial[1] = 0.727566;
-    dof_values_initial[2] = 00.619589;
+    dof_values_initial[0] = 0.34053;
+    dof_values_initial[1] = 1.191676;
+    dof_values_initial[2] = 1.015602;
     sf.set_free_values(dof_values_initial);
     sf.print();
 }
