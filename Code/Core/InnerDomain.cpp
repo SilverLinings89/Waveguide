@@ -550,7 +550,7 @@ std::vector<FEAdjointEvaluation> InnerDomain::compute_local_shape_gradient_data(
   std::vector<FEAdjointEvaluation> ret;
   QGauss<3> quadrature_formula(1); 
   const FEValuesExtractors::Vector fe_field(0);
-  FEValues<3> fe_values(fe, quadrature_formula, update_values | update_quadrature_points);
+  FEValues<3> fe_values(fe, quadrature_formula, update_values | update_gradients | update_quadrature_points);
   std::vector<unsigned int> local_dof_indices(fe.n_dofs_per_cell());
   for (DofHandler3D::active_cell_iterator cell = dof_handler.begin_active(); cell != dof_handler.end(); ++cell) {
     fe_values.reinit(cell);
@@ -562,12 +562,19 @@ std::vector<FEAdjointEvaluation> InnerDomain::compute_local_shape_gradient_data(
       item.x = p;
       for(unsigned int i = 0; i < 3; i++) {
         item.primal_field[i] = 0;
+        item.adjoint_field[i] = 0;
+        item.primal_field_curl[i] = 0;
+        item.adjoint_field_curl[i] = 0;
       }
       for(unsigned int i = 0; i < fe.n_dofs_per_cell(); i++) {
         Tensor<1, 3, ComplexNumber> I_Val;
         I_Val = fe_values[fe_field].value(i, q_index);
+        Tensor<1, 3, ComplexNumber> I_Curl;
+        I_Curl = fe_values[fe_field].curl(i, q_index);
         item.primal_field += I_Val * in_solution[local_dof_indices[i]];
         item.adjoint_field += I_Val * in_adjoint[local_dof_indices[i]];
+        item.primal_field_curl += I_Curl * in_solution[local_dof_indices[i]];
+        item.adjoint_field_curl += I_Curl * in_adjoint[local_dof_indices[i]];
       }
       ret.push_back(item);
     }

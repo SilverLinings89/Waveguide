@@ -224,6 +224,8 @@ struct FEAdjointEvaluation {
   Position x;
   dealii::Tensor<1,3,ComplexNumber> primal_field;
   dealii::Tensor<1,3,ComplexNumber> adjoint_field;
+  dealii::Tensor<1,3,ComplexNumber> primal_field_curl;
+  dealii::Tensor<1,3,ComplexNumber> adjoint_field_curl;
 };
 
 struct J_derivative_terms {
