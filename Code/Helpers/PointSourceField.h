@@ -1,5 +1,16 @@
 #pragma once 
 
+/**
+ * @file PointSourceField.h
+ * @author your name (you@domain.com)
+ * @brief Some implementations of fields that can be used in the code for forcing or error computation.
+ * @version 0.1
+ * @date 2022-03-22
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include <deal.II/base/function.h>
 #include "../Core/Types.h"
 

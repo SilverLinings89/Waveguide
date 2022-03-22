@@ -1,5 +1,16 @@
 #pragma once
 
+/**
+ * @file Parameters.h
+ * @author your name (you@domain.com)
+ * @brief A struct containing all provided parameter values and some computed values based on it (like MPI rank etc.)
+ * @version 0.1
+ * @date 2022-03-22
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include <mpi.h>
 #include <string>
 #include "ShapeDescription.h"

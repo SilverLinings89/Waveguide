@@ -1,5 +1,16 @@
 #pragma once
 
+/**
+ * @file ParameterReader.h
+ * @author your name (you@domain.com)
+ * @brief Contains the parameter reader header. This object parses the parameter files.
+ * @version 0.1
+ * @date 2022-03-22
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include <deal.II/base/parameter_handler.h>
 #include "../Core/InnerDomain.h"
 
