@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file PMLSurface.h
  * @author Pascal Kraft (kraft.pascal@gmail.com)

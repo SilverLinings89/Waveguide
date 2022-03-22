@@ -1,5 +1,15 @@
 #pragma once
 
+/**
+ * @file Types.h
+ * @author your name (you@domain.com)
+ * @brief This file contains all type declarations used in this project.
+ * @version 0.1
+ * @date 2022-03-22
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include <array>
 #include <vector>
 #include <complex>

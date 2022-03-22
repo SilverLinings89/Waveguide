@@ -1,14 +1,16 @@
 #pragma once
+
 /**
  * @file BoundaryCondition.h
  * @author Pascal Kraft (kraft.pascal@gmail.com)
- * @brief 
+ * @brief Contains the BoundaryCondition base type which serves as the abstract base class for all boundary conditions.
  * @version 0.1
  * @date 2022-03-22
  * 
  * @copyright Copyright (c) 2022
  * 
  */
+
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <vector>

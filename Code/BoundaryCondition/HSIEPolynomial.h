@@ -1,14 +1,16 @@
 #pragma once
+
 /**
  * @file HSIEPolynomial.h
  * @author Pascal Kraft (kraft.pascal@gmail.com)
- * @brief 
+ * @brief Contains the implementation of a Hardy polynomial which is required for the Hardy Space infinite elements.
  * @version 0.1
  * @date 2022-03-22
  * 
  * @copyright Copyright (c) 2022
  * 
  */
+
 #include <deal.II/lac/full_matrix.h>
 #include "DofData.h"
 #include "../Core/Types.h"

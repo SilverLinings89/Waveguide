@@ -1,14 +1,16 @@
 #pragma once
+
 /**
  * @file FEDomain.h
  * @author Pascal Kraft (kraft.pascal@gmail.com)
- * @brief 
+ * @brief A base class for all objects that have either locally owned or active dofs.
  * @version 0.1
  * @date 2022-03-22
  * 
  * @copyright Copyright (c) 2022
  * 
  */
+
 #include <deal.II/base/index_set.h>
 #include <climits>
 #include "../Core/Types.h"

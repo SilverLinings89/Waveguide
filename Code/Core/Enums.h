@@ -1,5 +1,16 @@
 #pragma once
 
+/**
+ * @file Enums.h
+ * @author your name (you@domain.com)
+ * @brief All the enums used in this project.
+ * @version 0.1
+ * @date 2022-03-22
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 enum SweepingDirection {
   X = 0, Y = 1, Z = 2
 };

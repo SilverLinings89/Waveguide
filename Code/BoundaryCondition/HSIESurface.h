@@ -1,14 +1,16 @@
 #pragma once
+
 /**
  * @file HSIESurface.h
  * @author Pascal Kraft (kraft.pascal@gmail.com)
- * @brief 
+ * @brief Implementation of a boundary condition based on Hardy Space infinite elements.
  * @version 0.1
  * @date 2022-03-22
  * 
  * @copyright Copyright (c) 2022
  * 
  */
+
 #include "../Core/Types.h"
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/dofs/dof_handler.h>

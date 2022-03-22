@@ -1,14 +1,16 @@
 #pragma once
+
 /**
  * @file EmptySurface.h
  * @author Pascal Kraft (kraft.pascal@gmail.com)
- * @brief 
+ * @brief Contains the implementation of an empty surface, i.e. dirichlet zero trace.
  * @version 0.1
  * @date 2022-03-22
  * 
  * @copyright Copyright (c) 2022
  * 
  */
+
 #include "../Core/Types.h"
 #include "./BoundaryCondition.h"
 #include <deal.II/fe/fe_nedelec_sz.h>

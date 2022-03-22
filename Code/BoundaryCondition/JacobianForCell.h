@@ -1,14 +1,16 @@
 #pragma once
+
 /**
  * @file JacobianForCell.h
  * @author Pascal Kraft (kraft.pascal@gmail.com)
- * @brief 
+ * @brief An internal datatype.
  * @version 0.1
  * @date 2022-03-22
  * 
  * @copyright Copyright (c) 2022
  * 
  */
+
 #include <deal.II/base/tensor.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/differentiation/sd/symengine_number_types.h>

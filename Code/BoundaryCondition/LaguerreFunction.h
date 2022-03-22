@@ -1,8 +1,9 @@
 #pragma once
+
 /**
  * @file LaguerreFunction.h
  * @author Pascal Kraft (kraft.pascal@gmail.com)
- * @brief 
+ * @brief An implementation of Laguerre functions which is not currently being used.
  * @version 0.1
  * @date 2022-03-22
  * 

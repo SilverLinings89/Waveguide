@@ -1,5 +1,16 @@
 #pragma once
 
+/**
+ * @file GeometryManager.h
+ * @author your name (you@domain.com)
+ * @brief Contains the GeometryManager header, which handles the distribution of the computational domain onto processes and most of the initialization.
+ * @version 0.1
+ * @date 2022-03-22
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include <deal.II/base/index_set.h>
 #include "../Core/Types.h"
 #include "../BoundaryCondition/BoundaryCondition.h"

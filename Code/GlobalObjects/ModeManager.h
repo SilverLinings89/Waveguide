@@ -1,5 +1,16 @@
 #pragma once
 
+/**
+ * @file ModeManager.h
+ * @author your name (you@domain.com)
+ * @brief Not currently in use.
+ * @version 0.1
+ * @date 2022-03-22
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include <deal.II/base/point.h>
 
 class ModeManager {

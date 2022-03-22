@@ -1,14 +1,16 @@
 #pragma once
+
 /**
  * @file DofData.h
  * @author Pascal Kraft (kraft.pascal@gmail.com)
- * @brief 
+ * @brief Contains an internal data type.
  * @version 0.1
  * @date 2022-03-22
  * 
  * @copyright Copyright (c) 2022
  * 
  */
+
 #include "../Core/Enums.h"
 #include <string>
 
