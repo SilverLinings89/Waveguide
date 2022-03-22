@@ -1,5 +1,16 @@
 #pragma once
 
+/**
+ * @file staticfunctions.h
+ * @author your name (you@domain.com)
+ * @brief This is an important file since it contains all the utility functions used anywhere in the code.
+ * @version 0.1
+ * @date 2022-03-22
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include <deal.II/base/index_set.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>

@@ -4,7 +4,6 @@
 #include <deal.II/base/tensor.h>
 #include <complex>
 #include "../Core/Sector.h"
-#include "../Helpers/QuadratureFormulaCircle.cpp"
 #include "../GlobalObjects/GlobalObjects.h"
 
 std::pair<int, double> SpaceTransformation::Z_to_Sector_and_local_z(double in_z) const {

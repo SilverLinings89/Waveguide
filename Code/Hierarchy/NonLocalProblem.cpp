@@ -868,8 +868,7 @@ std::vector<double> NonLocalProblem::compute_shape_gradient() {
   timer1.stop();
   print_info("NonLocalProblem::compute_shape_gradient", "Walltime: " + std::to_string(timer1.wall_time()) , LoggingLevel::PRODUCTION_ONE);
 
-  ComplexNumber current_field_orientation = compute_signal_strength_of_solution();
-  // Now, I have the evalaution and the adjoint field stored for a set of positions in the array field_evaluations.
+  #// Now, I have the evalaution and the adjoint field stored for a set of positions in the array field_evaluations.
   for(unsigned int i = 0; i < field_evaluations.size(); i++) {
     for(unsigned int j = 0; j < n_shape_dofs; j++) {
       Tensor<2, 3, ComplexNumber> local_step_tensor = GlobalSpaceTransformation->get_Tensor_for_step(field_evaluations[i].x, j, 0.01);
