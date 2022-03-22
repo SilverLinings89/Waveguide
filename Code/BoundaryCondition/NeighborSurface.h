@@ -1,5 +1,14 @@
 #pragma once
-
+/**
+ * @file NeighborSurface.h
+ * @author Pascal Kraft (kraft.pascal@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2022-03-22
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include "../Core/Types.h"
 #include "./BoundaryCondition.h"
 #include <deal.II/fe/fe_nedelec_sz.h>

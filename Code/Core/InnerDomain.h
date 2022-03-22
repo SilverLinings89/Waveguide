@@ -1,5 +1,14 @@
 #pragma once
-
+/**
+ * @file InnerDomain.h
+ * @author Pascal Kraft (kraft.pascal@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2022-03-22
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include <sys/stat.h>
 #include <cmath>
 #include <ctime>
@@ -73,9 +82,6 @@
  * assembly-process of the system-matrix begins. Following this step, the
  * user-selected preconditioner and solver are used to solve the system and
  * generate outputs. This class is the core piece of the implementation.
- *
- * \author Pascal Kraft
- * \date 03.07.2016
  */
 class InnerDomain: public FEDomain {
  public:

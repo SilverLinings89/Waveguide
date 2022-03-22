@@ -1,5 +1,14 @@
 #pragma once
-
+/**
+ * @file HSIESurface.h
+ * @author Pascal Kraft (kraft.pascal@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2022-03-22
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include "../Core/Types.h"
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/dofs/dof_handler.h>
@@ -32,6 +41,7 @@
  * 
  * There are NO 3D triangulations here! We only work with a 2D surface triangulation. Therefore, often when we talk about a cell, that has different properties then in objects like PMLSurface or InnerDomain, where the mesh is 3D.
  * 
+ * For more details on this type of intinite element, see \cref{subsec:HSIE,sub:hsieElements,sec:HSIESweeping}.
  */
 class HSIESurface : public BoundaryCondition {
   const HSIEElementOrder order;
