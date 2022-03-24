@@ -67,7 +67,9 @@ class SpaceTransformation {
 
   virtual Tensor<2, 3, double> get_Space_Transformation_Tensor(Position &) = 0;
 
-  virtual Tensor<2, 3, ComplexNumber> get_Tensor_for_step(Position &coordinate, unsigned int dof, double step_width);
+  Tensor<2, 3, ComplexNumber> get_Tensor_for_step(Position &coordinate, unsigned int dof, double step_width);
+
+  Tensor<2, 3, ComplexNumber> get_inverse_Tensor_for_step(Position &coordinate, unsigned int dof, double step_width);
 
   void switch_application_mode(bool apply_math_to_physical);
 

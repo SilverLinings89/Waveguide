@@ -42,6 +42,17 @@ Tensor<2, 3, ComplexNumber> SpaceTransformation::get_Tensor_for_step(Position &c
   return trafo2 - trafo1;
 }
 
+Tensor<2, 3, ComplexNumber> SpaceTransformation::get_inverse_Tensor_for_step(Position &coordinate, unsigned int dof, double step_width) {
+  double old_value = get_dof(dof);
+  Tensor<2, 3, double> trafo1 = invert(get_Space_Transformation_Tensor(coordinate));
+
+  set_free_dof(dof, old_value + step_width);
+  Tensor<2, 3, double> trafo2 = invert(get_Space_Transformation_Tensor(coordinate));
+
+  set_free_dof(dof, old_value);
+  return trafo2 - trafo1;
+}
+
 Position SpaceTransformation::operator()(Position in_p) const {
   return math_to_phys(in_p);
 }

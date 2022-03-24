@@ -872,13 +872,14 @@ std::vector<double> NonLocalProblem::compute_shape_gradient() {
   for(unsigned int i = 0; i < field_evaluations.size(); i++) {
     for(unsigned int j = 0; j < n_shape_dofs; j++) {
       Tensor<2, 3, ComplexNumber> local_step_tensor = GlobalSpaceTransformation->get_Tensor_for_step(field_evaluations[i].x, j, 0.01);
+      Tensor<2, 3, ComplexNumber> local_inverse_step_tensor = GlobalSpaceTransformation->get_inverse_Tensor_for_step(field_evaluations[i].x, j, 0.01);
       Tensor<1,3,ComplexNumber> local_adj = field_evaluations[i].adjoint_field;
       Tensor<1,3,ComplexNumber> local_adj_curl = field_evaluations[i].adjoint_field_curl;
       for(unsigned int k = 0; k < 3; k++) {
         local_adj[k].imag(- local_adj[k].imag());
         local_adj_curl[k].imag(- local_adj_curl[k].imag());
       }
-      ComplexNumber change = (field_evaluations[i].primal_field_curl * invert(local_step_tensor) * local_adj_curl) + Geometry.eps_kappa_2(field_evaluations[i].x) * (field_evaluations[i].primal_field * local_step_tensor) * field_evaluations[i].adjoint_field;
+      ComplexNumber change = (field_evaluations[i].primal_field_curl * local_inverse_step_tensor * local_adj_curl) + Geometry.eps_kappa_2(field_evaluations[i].x) * (field_evaluations[i].primal_field * local_step_tensor) * local_adj;
       const double delta = change.real();
       ret[j] += delta;
     }
