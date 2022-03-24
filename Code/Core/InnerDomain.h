@@ -233,4 +233,8 @@ class InnerDomain: public FEDomain {
    * @return Tensor<1,3,ComplexNumber> The complex vector containing the three components of J at the given location.
    */
   Tensor<1,3,ComplexNumber> evaluate_J_at(Position in_p);
+
+  ComplexNumber compute_kappa(NumericVectorLocal & in_solution);
+
+  void set_rhs_for_adjoint_problem(NumericVectorLocal & in_solution, NumericVectorDistributed * in_rhs);
 };

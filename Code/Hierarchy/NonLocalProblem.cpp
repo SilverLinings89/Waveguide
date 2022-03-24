@@ -564,17 +564,14 @@ void NonLocalProblem::write_multifile_output(const std::string & in_filename, bo
 void NonLocalProblem::set_rhs_for_adjoint_problem() {
   has_adjoint = true;
   reinit_rhs();
-  adjoint_state.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
-  if(GlobalParams.Index_in_z_direction == GlobalParams.Blocks_in_z_direction-1) {
-    auto vec = Geometry.levels[level].inner_domain->get_surface_dof_vector_for_boundary_id(5);
-    for(unsigned int i = 0; i < vec.size(); i++) {
-      if(Geometry.levels[level].inner_domain->is_dof_owned[vec[i].index]) {
-        const unsigned int global_ind = Geometry.levels[level].inner_domain->global_index_mapping[vec[i].index];
-        rhs[global_ind] = solution[global_ind];
-      }
-    }
+  update_shared_solution_vector();
+  NumericVectorLocal local_solution(Geometry.levels[level].inner_domain->n_locally_active_dofs);
+  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
+    local_solution[i] = shared_solution[Geometry.levels[level].inner_domain->global_index_mapping[i]];
   }
-  rhs.compress(VectorOperation::insert);
+  adjoint_state.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
+  Geometry.levels[level].inner_domain->set_rhs_for_adjoint_problem(local_solution, &rhs);
+  rhs.compress(VectorOperation::add);
 }
 
 void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) {
@@ -879,7 +876,7 @@ std::vector<double> NonLocalProblem::compute_shape_gradient() {
         local_adj[k].imag(- local_adj[k].imag());
         local_adj_curl[k].imag(- local_adj_curl[k].imag());
       }
-      ComplexNumber change = (field_evaluations[i].primal_field_curl * local_inverse_step_tensor * local_adj_curl) + Geometry.eps_kappa_2(field_evaluations[i].x) * (field_evaluations[i].primal_field * local_step_tensor) * local_adj;
+      ComplexNumber change = (field_evaluations[i].primal_field_curl * local_inverse_step_tensor * local_adj_curl) - Geometry.eps_kappa_2(field_evaluations[i].x) * (field_evaluations[i].primal_field * local_step_tensor) * local_adj;
       const double delta = change.real();
       ret[j] += delta;
     }
