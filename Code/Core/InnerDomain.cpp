@@ -281,9 +281,9 @@ struct CellwiseAssemblyDataNP {
     d_phi_dz = 6 * (p[2] - GlobalParams.tapering_min_z) * (p[2] - GlobalParams.tapering_max_z) / (zmax_minus_zmin * zmax_minus_zmin * zmax_minus_zmin);
     d_phi_dzz = 12 * (p[2] - GlobalParams.tapering_min_z) / (zmax_minus_zmin * zmax_minus_zmin * zmax_minus_zmin) - 6/(zmax_minus_zmin * zmax_minus_zmin);
     ret[0] = phi * ( - f_and_h_terms.d_f_dyy + f_and_h_terms.beta * f_and_h_terms.beta * f_and_h_terms.f + im*f_and_h_terms.beta*f_and_h_terms.d_h_dx) 
-      - f_and_h_terms.f*(d_phi_dzz + 2.0 * im * f_and_h_terms.beta * d_phi_dz) + d_phi_dz * f_and_h_terms.d_h_dx +  omega_sq_eps * f_and_h_terms.f;
+      - f_and_h_terms.f*(d_phi_dzz + 2.0 * im * f_and_h_terms.beta * d_phi_dz) + d_phi_dz * f_and_h_terms.d_h_dx -  omega_sq_eps * f_and_h_terms.f;
     ret[1] = phi * (f_and_h_terms.d_f_dxy + im*f_and_h_terms.beta*f_and_h_terms.d_h_dy) + d_phi_dz * f_and_h_terms.d_h_dy ;
-    ret[2] = phi * (im*f_and_h_terms.beta*f_and_h_terms.d_f_dx - f_and_h_terms.d_h_dxx - f_and_h_terms.d_h_dyy) + d_phi_dz*f_and_h_terms.d_f_dx + omega_sq_eps*f_and_h_terms.h;
+    ret[2] = phi * (im*f_and_h_terms.beta*f_and_h_terms.d_f_dx - f_and_h_terms.d_h_dxx - f_and_h_terms.d_h_dyy) + d_phi_dz*f_and_h_terms.d_f_dx - omega_sq_eps*f_and_h_terms.h;
     
     const ComplexNumber phase = std::exp(im * f_and_h_terms.beta * p[2]);
     for(unsigned int i = 0; i < 3; i++) {
@@ -602,7 +602,7 @@ ComplexNumber InnerDomain::compute_kappa(NumericVectorLocal & in_solution) {
           for(unsigned int i = 0; i < 3; i++) {
             E0[i] = conjugate(GlobalParams.source_field->value(p,i));
           }
-          for(unsigned int i = 0; i < fe.n_dofs_per_cell(); i++) {
+          for(unsigned int i = 0; i < fe.n_dofs_per_face(); i++) {
             ret += (in_solution[local_dof_indices[i]] * fe_values[fe_field].value(i, q_index)) * E0 * JxW;
           }
         }
@@ -632,7 +632,7 @@ void InnerDomain::set_rhs_for_adjoint_problem(NumericVectorLocal & in_solution, 
           for(unsigned int i = 0; i < 3; i++) {
             E0[i] = GlobalParams.source_field->value(p,i);
           }
-          for(unsigned int i = 0; i < fe.n_dofs_per_cell(); i++) {
+          for(unsigned int i = 0; i < fe.n_dofs_per_face(); i++) {
             Tensor<1,3,ComplexNumber> Ival = conjugate(in_solution[local_dof_indices[i]]) * fe_values[fe_field].value(i, q_index);
             (*in_rhs)[local_dof_indices[i]] -= 2 * (kappa * (E0 * Ival) * JxW).real();
           }

@@ -562,9 +562,9 @@ void NonLocalProblem::write_multifile_output(const std::string & in_filename, bo
 }
 
 void NonLocalProblem::set_rhs_for_adjoint_problem() {
-  has_adjoint = true;
   reinit_rhs();
   update_shared_solution_vector();
+  has_adjoint = true;
   NumericVectorLocal local_solution(Geometry.levels[level].inner_domain->n_locally_active_dofs);
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     local_solution[i] = shared_solution[Geometry.levels[level].inner_domain->global_index_mapping[i]];
