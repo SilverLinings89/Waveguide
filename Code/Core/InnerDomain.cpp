@@ -587,52 +587,54 @@ ComplexNumber InnerDomain::compute_kappa(NumericVectorLocal & in_solution) {
   QGauss<2> quadrature_formula(1); 
   const FEValuesExtractors::Vector fe_field(0);
   FEFaceValues<3> fe_values(fe, quadrature_formula, update_values | update_JxW_values | update_quadrature_points);
-  std::vector<unsigned int> local_dof_indices(fe.n_dofs_per_face());
+  std::vector<unsigned int> local_dof_indices(fe.n_dofs_per_cell());
   for (DofHandler3D::active_cell_iterator cell = dof_handler.begin_active(); cell != dof_handler.end(); ++cell) {
-    for(unsigned int i =0; i < 6; i++) {
-      if(std::abs(cell->face(i)->center()[2] - Geometry.local_z_range.second) < FLOATING_PRECISION) {
-        fe_values.reinit(cell,i);
+    for(unsigned int face = 0; face < 6; face++) {
+      if(std::abs(cell->face(face)->center()[2] - Geometry.global_z_range.second) < FLOATING_PRECISION) {
+        fe_values.reinit(cell,face);
         double JxW;
         auto q_points = fe_values.get_quadrature_points();
         for(unsigned int q_index = 0; q_index < quadrature_formula.size(); q_index++) {
-          cell->face(i)->get_dof_indices(local_dof_indices);
+          cell->get_dof_indices(local_dof_indices);
           JxW = fe_values.get_JxW_values()[q_index];
           Position p = q_points[q_index];
           Tensor<1,3, ComplexNumber> E0;
           for(unsigned int i = 0; i < 3; i++) {
             E0[i] = conjugate(GlobalParams.source_field->value(p,i));
           }
-          for(unsigned int i = 0; i < fe.n_dofs_per_face(); i++) {
+          for(unsigned int i = 0; i < fe.n_dofs_per_cell(); i++) {
+            // std::cout << in_solution[local_dof_indices[i]] << " and " <<JxW << " and " << E0.norm() << " and " << fe_values[fe_field].value(i, q_index).norm() << std::endl;
             ret += (in_solution[local_dof_indices[i]] * fe_values[fe_field].value(i, q_index)) * E0 * JxW;
           }
         }
       }
     }
   }
-  return ret;
+  return Utilities::MPI::sum(ret, MPI_COMM_WORLD);
 }
 
 void InnerDomain::set_rhs_for_adjoint_problem(NumericVectorLocal & in_solution, NumericVectorDistributed * in_rhs) {
   ComplexNumber kappa = compute_kappa(in_solution);
+  print_info("InnerDomain::Set_rhs_for_adjoing_problem", "Abs Kappa is " + std::to_string(std::abs(kappa)));
   QGauss<2> quadrature_formula(1); 
   const FEValuesExtractors::Vector fe_field(0);
   FEFaceValues<3> fe_values(fe, quadrature_formula, update_values | update_JxW_values  | update_quadrature_points);
-  std::vector<unsigned int> local_dof_indices(fe.n_dofs_per_face());
+  std::vector<unsigned int> local_dof_indices(fe.n_dofs_per_cell());
   for (DofHandler3D::active_cell_iterator cell = dof_handler.begin_active(); cell != dof_handler.end(); ++cell) {
-    for(unsigned int i =0; i < 6; i++) {
-      if(std::abs(cell->face(i)->center()[2] - Geometry.local_z_range.second) < FLOATING_PRECISION) {
-        fe_values.reinit(cell,i);
+    for(unsigned int face =0; face < 6; face++) {
+      if(std::abs(cell->face(face)->center()[2] - Geometry.global_z_range.second) < FLOATING_PRECISION) {
+        fe_values.reinit(cell,face);
         double JxW;
         auto q_points = fe_values.get_quadrature_points();
         for(unsigned int q_index = 0; q_index < quadrature_formula.size(); q_index++) {
-          cell->face(i)->get_dof_indices(local_dof_indices);
+          cell->get_dof_indices(local_dof_indices);
           JxW = fe_values.get_JxW_values()[q_index];
           Position p = q_points[q_index];
           Tensor<1,3, ComplexNumber> E0;
           for(unsigned int i = 0; i < 3; i++) {
             E0[i] = GlobalParams.source_field->value(p,i);
           }
-          for(unsigned int i = 0; i < fe.n_dofs_per_face(); i++) {
+          for(unsigned int i = 0; i < fe.n_dofs_per_cell(); i++) {
             Tensor<1,3,ComplexNumber> Ival = conjugate(in_solution[local_dof_indices[i]]) * fe_values[fe_field].value(i, q_index);
             (*in_rhs)[local_dof_indices[i]] -= 2 * (kappa * (E0 * Ival) * JxW).real();
           }

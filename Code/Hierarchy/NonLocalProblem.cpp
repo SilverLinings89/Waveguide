@@ -572,6 +572,7 @@ void NonLocalProblem::set_rhs_for_adjoint_problem() {
   adjoint_state.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
   Geometry.levels[level].inner_domain->set_rhs_for_adjoint_problem(local_solution, &rhs);
   rhs.compress(VectorOperation::add);
+  std::cout<<"norm of rhs" << rhs.l2_norm()<<std::endl;
 }
 
 void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) {

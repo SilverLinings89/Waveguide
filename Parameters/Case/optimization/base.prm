@@ -4,7 +4,7 @@ subsection Case parameters
   set epsilon out      = 1.8496
   set geometry size x  = 4.0
   set geometry size y  = 3.6
-  set geometry size z  = 15
+  set geometry size z  = 10
   set mu in            = 1.0
   set mu out           = 1.0
   set signal amplitude = 1.0
@@ -16,7 +16,7 @@ subsection Case parameters
   set PML skaling order = 3
   set Input Signal Method = Taper
   set perform optimization = true
-  set vertical waveguide displacement = 3
+  set vertical waveguide displacement = 2
   set Prescribe input zero = false
   set constant waveguide width = true
   set constant waveguide height = true
