@@ -234,6 +234,18 @@ class InnerDomain: public FEDomain {
    */
   Tensor<1,3,ComplexNumber> evaluate_J_at(Position in_p);
 
+  /**
+   * @brief Computes the value \f$\kappa\f$
+   * 
+   * This value is defined by 
+   * \f[ 
+   * \kappa = \int_{\Gamma_O}\overline{\boldsymbol{E}_0}\cdot \boldsymbol{E}_p \de A
+   * \f]
+   * 
+   * 
+   * @param in_solution 
+   * @return ComplexNumber 
+   */
   ComplexNumber compute_kappa(NumericVectorLocal & in_solution);
 
   void set_rhs_for_adjoint_problem(NumericVectorLocal & in_solution, NumericVectorDistributed * in_rhs);
