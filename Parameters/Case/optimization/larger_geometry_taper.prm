@@ -2,9 +2,9 @@ subsection Case parameters
   set fem order = 0
   set epsilon in       = 2.3409
   set epsilon out      = 1.8496
-  set geometry size x  = 4.0
-  set geometry size y  = 3.6
-  set geometry size z  = 15
+  set geometry size x  = 8.0
+  set geometry size y  = 7.2
+  set geometry size z  = 50
   set mu in            = 1.0
   set mu out           = 1.0
   set signal amplitude = 1.0
@@ -17,8 +17,8 @@ subsection Case parameters
   set Input Signal Method = Taper
   set Number of shape sectors = 10
   set perform optimization = true
-  set vertical waveguide displacement = 4
+  set vertical waveguide displacement = 10
   set Prescribe input zero = false
-  set constant waveguide width = false
+  set constant waveguide width = true
   set constant waveguide height = false
 end
