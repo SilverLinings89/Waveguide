@@ -10,9 +10,9 @@ subsection Case parameters
   set signal amplitude = 1.0
   set source type      = 3
   set Boundary Method = PML
-  set PML n layers = 10
+  set PML n layers = 8
   set PML thickness = 1.5
-  set PML sigma max = 10
+  set PML sigma max = 15
   set PML skaling order = 3
   set Input Signal Method = Taper
   set Number of shape sectors = 10
