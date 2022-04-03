@@ -118,7 +118,7 @@ void ShapeFunction::initialize() {
         } else {
             for(unsigned int i = 0; i < n_free_dofs; i++) {
                 double local_contribution = static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX) - 0.5;
-                initial_values[i] = dealii::Utilities::MPI::sum(local_contribution, MPI_COMM_WORLD);
+                initial_values[i] = dealii::Utilities::MPI::sum(local_contribution, MPI_COMM_WORLD) / GlobalParams.NumberProcesses;
             }
         }
     } else {
