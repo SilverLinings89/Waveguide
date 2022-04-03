@@ -3,6 +3,7 @@
 #include <cmath>
 #include "./ShapeFunction.h"
 #include "../Core/Types.h"
+#include "../GlobalObjects/GlobalObjects.h"
 
 unsigned int ShapeFunction::compute_n_free_dofs(unsigned int in_n_sectors) {
     int ret = ShapeFunction::compute_n_dofs(in_n_sectors);
@@ -106,11 +107,18 @@ void ShapeFunction::set_free_values(std::vector<double> in_dof_values) {
 }
 
 void ShapeFunction::initialize() {
+    std::srand(time(NULL));
     std::vector<double> initial_values;
     initial_values.resize(n_free_dofs);
     if(bad_init) {
-        for(unsigned int i = 0; i < n_free_dofs; i++) {
-            initial_values[i] =0;
+        if(GlobalParams.Vertical_displacement_of_waveguide > FLOATING_PRECISION) {
+            for(unsigned int i = 0; i < n_free_dofs; i++) {
+                initial_values[i] =0;
+            }
+        } else {
+            for(unsigned int i = 0; i < n_free_dofs; i++) {
+                initial_values[i] = (2.0 * static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX)) - 1.0;
+            }
         }
     } else {
         for(unsigned int i = 0; i < n_free_dofs; i++) {
