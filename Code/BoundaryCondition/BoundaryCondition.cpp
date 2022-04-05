@@ -150,9 +150,7 @@ void BoundaryCondition::force_validation() {
     
     for(unsigned int surf = 0; surf < 6; surf++) {
         if(surf != b_id && !are_opposing_sites(b_id, surf)) {
-   //       std::cout << "A" << std::endl;
           std::vector<InterfaceDofData> d = get_dof_association_by_boundary_id(surf);
-     //     std::cout << "B" << std::endl;
           bool one_is_invalid = false;
           unsigned int count_before = 0;
           unsigned int count_after = 0;
@@ -164,9 +162,7 @@ void BoundaryCondition::force_validation() {
               }
             }
           }
-       //   std::cout << "C" << std::endl;
           if(one_is_invalid) {
-            std::cout << "Forcing validation on " << b_id << " for " << surf << std::endl;
             std::vector<unsigned int> local_indices(d.size());
             for(unsigned int i = 0; i < d.size(); i++) {
               local_indices[i] = d[i].index;
@@ -179,7 +175,6 @@ void BoundaryCondition::force_validation() {
                 }
               }
             }
-            std::cout << "Count before: " << count_before << " and after: " << count_after << std::endl;
           }
         }
     }

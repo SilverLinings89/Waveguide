@@ -1,0 +1,21 @@
+subsection Case parameters
+    set source type = 3
+    set fem order = 0
+    set geometry size x = 8.0
+    set geometry size y = 7.2
+    set geometry size z = 100
+    set epsilon in = 2.3409
+    set epsilon out = 1.8496
+    set mu in = 1.0
+    set mu out = 1.0
+    set signal amplitude = 1.0
+    set Boundary Method = PML
+    set PML n layers = 10
+    set PML thickness = 1.0
+    set PML sigma max = 20
+    set PML skaling order = 3
+    set Input Signal Method = Taper
+    set Prescribe input zero = false
+    set Use predefined shape = true
+    set Predefined case number = 3
+end
