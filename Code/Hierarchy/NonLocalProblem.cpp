@@ -712,7 +712,7 @@ void NonLocalProblem::print_vector_norm(NumericVectorDistributed * in_v, std::st
     local_norm += local;
   }
   local_norm = dealii::Utilities::MPI::sum(local_norm, GlobalMPI.communicators_by_level[level]);
-  if(index_in_sweeping_direction == 0) {
+  if(GlobalParams.MPI_Rank == 0) {
     std::cout << marker << ": " << std::sqrt(local_norm) << std::endl;
   }
 }
