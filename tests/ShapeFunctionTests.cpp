@@ -24,8 +24,8 @@ TEST(SHAPE_FUNCTION_TESTS, EVAL) {
     sf.set_constraints(0,1,0,0);
     std::vector<double> dof_values_initial;
     sf.set_free_values(dof_values_initial);
-    ASSERT_EQ(sf.evaluate_at(0.5), 0.5);
-    ASSERT_EQ(sf.evaluate_derivative_at(0.5), 2.0);
+    ASSERT_EQ(sf.evaluate_at(0.25), 0.5);
+    ASSERT_EQ(sf.evaluate_derivative_at(0.25), 4.0);
 }
 
 TEST(SHAPE_FUNCTION_TESTS, SET_AND_EVAL) {
@@ -36,12 +36,12 @@ TEST(SHAPE_FUNCTION_TESTS, SET_AND_EVAL) {
     std::vector<double> dof_values_initial;
     dof_values_initial.push_back(2);
     sf.set_free_values(dof_values_initial);
-    ASSERT_EQ(sf.evaluate_derivative_at(1), 2);
-    ASSERT_EQ(sf.evaluate_derivative_at(1.5), 2);
-    ASSERT_EQ(sf.evaluate_derivative_at(2), 2);
-    ASSERT_EQ(sf.evaluate_at(1), 1);
-    ASSERT_EQ(sf.evaluate_at(1.5), 2);
-    ASSERT_EQ(sf.evaluate_at(2), 3);
+    ASSERT_EQ(sf.evaluate_derivative_at(0.5), 2);
+    ASSERT_EQ(sf.evaluate_derivative_at(0.75), 4);
+    ASSERT_EQ(sf.evaluate_derivative_at(1), 6);
+    ASSERT_EQ(sf.evaluate_at(0.5), 0.5);
+    ASSERT_EQ(sf.evaluate_at(0.75), 1.25);
+    ASSERT_EQ(sf.evaluate_at(1), 2.5);
     
     sf.set_constraints(0,0,0,0);
     dof_values_initial[0] = 0;
