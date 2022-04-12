@@ -313,6 +313,15 @@ void InnerDomain::assemble_system(Constraints * constraints, dealii::PETScWrappe
     for (unsigned int q_index = 0; q_index < cell_data.n_q_points; ++q_index) {
       cell_data.prepare_for_current_q_index(q_index);
     }
+    bool is_skeq_sym = true;
+    for(unsigned int i = 0; i < cell_data.cell_matrix.n_rows(); i++) {
+      for(unsigned int j = 0; j < i; j++) {
+        if(!(std::abs(cell_data.cell_matrix[i][j] - conjugate(cell_data.cell_matrix[j][i])) < FLOATING_PRECISION)) {
+          is_skeq_sym = false;
+        }
+      }
+    }
+    if(!is_skeq_sym) std::cout << "Not fulfilled!" << std::endl;
     constraints->distribute_local_to_global(cell_data.cell_matrix, cell_data.cell_rhs, cell_data.local_dof_indices,*matrix, *rhs, true);
   }
   matrix->compress(dealii::VectorOperation::add);
@@ -600,11 +609,13 @@ ComplexNumber InnerDomain::compute_kappa(NumericVectorLocal & in_solution) {
           Position p = q_points[q_index];
           Tensor<1,3, ComplexNumber> E0;
           for(unsigned int i = 0; i < 3; i++) {
-            E0[i] = conjugate(GlobalParams.source_field->value(p,i));
+            E0[i] = GlobalParams.source_field->value(p,i);
           }
           for(unsigned int i = 0; i < fe.n_dofs_per_cell(); i++) {
             // std::cout << in_solution[local_dof_indices[i]] << " and " <<JxW << " and " << E0.norm() << " and " << fe_values[fe_field].value(i, q_index).norm() << std::endl;
-            ret += (in_solution[local_dof_indices[i]] * fe_values[fe_field].value(i, q_index)) * E0 * JxW;
+            for(unsigned int j = 0; j < 3; j++) {
+              ret += conjugate((in_solution[local_dof_indices[i]] * fe_values[fe_field].value(i, q_index))[j]) * E0[j] * JxW;
+            }
           }
         }
       }

@@ -360,9 +360,15 @@ void NonLocalProblem::reinit() {
   make_constraints();
   
   make_sparsity_pattern();
-
+  MPI_Barrier(MPI_COMM_WORLD);
+  if(GlobalParams.MPI_Rank == 0) {
+    std::cout << "Start reinit of rhs vector." << std::endl;
+  }
   reinit_rhs();
-  
+  MPI_Barrier(MPI_COMM_WORLD);
+  if(GlobalParams.MPI_Rank == 0) {
+    std::cout << "Start reinit of system matrix." << std::endl;
+  }
   matrix->reinit(Geometry.levels[level].dof_distribution[total_rank_in_sweep], Geometry.levels[level].dof_distribution[total_rank_in_sweep], sp, GlobalMPI.communicators_by_level[level]);
   print_info("Nonlocal reinit", "Matrix initialized");
   
@@ -876,7 +882,7 @@ std::vector<double> NonLocalProblem::compute_shape_gradient() {
   timer1.stop();
   print_info("NonLocalProblem::compute_shape_gradient", "Walltime: " + std::to_string(timer1.wall_time()) , LoggingLevel::PRODUCTION_ONE);
 
-  #// Now, I have the evalaution and the adjoint field stored for a set of positions in the array field_evaluations.
+  // Now, I have the evalaution and the adjoint field stored for a set of positions in the array field_evaluations.
   for(unsigned int i = 0; i < field_evaluations.size(); i++) {
     for(unsigned int j = 0; j < n_shape_dofs; j++) {
       Tensor<2, 3, ComplexNumber> local_step_tensor = GlobalSpaceTransformation->get_Tensor_for_step(field_evaluations[i].x, j, 0.01);
