@@ -361,16 +361,19 @@ void NonLocalProblem::reinit() {
   
   make_sparsity_pattern();
   MPI_Barrier(MPI_COMM_WORLD);
-  if(GlobalParams.MPI_Rank == 0) {
-    std::cout << "Start reinit of rhs vector." << std::endl;
-  }
+  
+  if(GlobalParams.MPI_Rank == 0) std::cout << "Start reinit of rhs vector." << std::endl;
+  
   reinit_rhs();
   MPI_Barrier(MPI_COMM_WORLD);
-  if(GlobalParams.MPI_Rank == 0) {
-    std::cout << "Start reinit of system matrix." << std::endl;
-  }
+  
+  if(GlobalParams.MPI_Rank == 0) std::cout << "Start reinit of system matrix." << std::endl;
+  
   matrix->reinit(Geometry.levels[level].dof_distribution[total_rank_in_sweep], Geometry.levels[level].dof_distribution[total_rank_in_sweep], sp, GlobalMPI.communicators_by_level[level]);
-  print_info("Nonlocal reinit", "Matrix initialized");
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  if(GlobalParams.MPI_Rank == 0) print_info("Nonlocal reinit", "Matrix initialized");
   
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     if(Geometry.levels[level].inner_domain->is_dof_owned[i] && Geometry.levels[level-1].inner_domain->is_dof_owned[i]) {
