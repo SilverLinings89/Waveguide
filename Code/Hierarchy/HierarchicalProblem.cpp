@@ -84,20 +84,6 @@ void HierarchicalProblem::make_constraints() {
   print_info("HierarchicalProblem::make_constraints", "End");
 }
 
-void HierarchicalProblem::make_sparsity_pattern() {
-  print_info("HierarchicalProblem::make_sparsity_pattern", "Start on level "  + std::to_string(level));
-  dealii::DynamicSparsityPattern dsp = {Geometry.levels[level].n_total_level_dofs, Geometry.levels[level].n_total_level_dofs};
-  
-  Geometry.levels[level].inner_domain->fill_sparsity_pattern(&dsp, &constraints);
-  for (unsigned int surface = 0; surface < 6; surface++) {
-    Geometry.levels[level].surfaces[surface]->fill_sparsity_pattern(&dsp, &constraints);
-  }
-  
-  sp.copy_from(dsp);
-  sp.compress();
-  print_info("HierarchicalProblem::make_sparsity_pattern", "End on level "  + std::to_string(level));
-}
-
 std::string HierarchicalProblem::output_results(std::string in_fname_part) {
   GlobalTimerManager.switch_context("Output Results", level);
   Timer timer;

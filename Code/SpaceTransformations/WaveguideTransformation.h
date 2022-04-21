@@ -1,5 +1,14 @@
 #pragma once 
-
+/**
+ * @file WaveguideTransformation.h
+ * @author Pascal Kraft
+ * @brief Contains the implementation of the Waveguide Transformation.
+ * @version 0.1
+ * @date 2022-04-22
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/lac/vector.h>
@@ -20,10 +29,10 @@ enum ResponsibleComponent {
  * \brief In this case we regard a rectangular waveguide and the effects on the
  * material tensor by the space transformation and the boundary condition PML
  * may overlap.
- *
- * If this kind of boundary condition works stably we will also be able to  deal
- * with more general settings (which might for example incorporate angles in
- * between the output and input connector. \author Pascal Kraft \date 28.11.2016
+ * 
+ * The waveguide transformation is a variable y-shift of the coordinate system and uses a shape-function to describe the shape.
+ * 
+ * For the non-documented members see the documentation in the base class SpaceTransformation.
  */
 
 class WaveguideTransformation : public SpaceTransformation {

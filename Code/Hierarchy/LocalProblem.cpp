@@ -115,6 +115,20 @@ void LocalProblem::reinit_rhs() {
   rhs.reinit(own_dofs, MPI_COMM_SELF);
 }
 
+void LocalProblem::make_sparsity_pattern() {
+  print_info("LocalProblem::make_sparsity_pattern", "Start on the local level");
+  dealii::DynamicSparsityPattern dsp = {Geometry.levels[0].n_total_level_dofs, Geometry.levels[0].n_total_level_dofs};
+  
+  Geometry.levels[0].inner_domain->fill_sparsity_pattern(&dsp, &constraints);
+  for (unsigned int surface = 0; surface < 6; surface++) {
+    Geometry.levels[0].surfaces[surface]->fill_sparsity_pattern(&dsp, &constraints);
+  }
+  
+  sp.copy_from(dsp);
+  sp.compress();
+  print_info("LocalProblem::make_sparsity_pattern", "End on local level");
+}
+
 void LocalProblem::reinit() {
   GlobalTimerManager.switch_context("Reinit", 0);
   reinit_rhs();

@@ -26,19 +26,54 @@ class ConvergenceRun: public Simulation {
   double norming_factor = 1.0;
   
  public:
+
+ /**
+  * @brief Construct a new Convergence Run object
+  * The constructor does nothing.
+  */
   ConvergenceRun();
 
   ~ConvergenceRun();
 
+  /**
+   * @brief Solve the reference problem and setup the others.
+   * In a convergence run we have the reference solution on the finest grid and then a set of other sizes as the actual data. This function solves the reference problem and prepares the others.
+   * 
+   */
   void prepare() override;
 
+  /**
+   * @brief Solves the coarser problems and computes their theoretical and numerical error.
+   * Then calls write_outputs().
+   * 
+   */
   void run() override;
 
+  /**
+   * @brief Writes the results of the convergence study to the command line.
+   * 
+   */
   void write_outputs();
 
+  /**
+   * @brief Not implemented / not required here.
+   * 
+   */
   void prepare_transformed_geometry() override;
 
+  /**
+   * @brief Computes and stores the max vector component of the reference solutions norm.
+   * 
+   */
   void set_norming_factor();
 
+  /**
+   * @brief Computes the L2 difference of two solutions, i.e. the reference solution and another one.
+   * As a consequence the order of the provided vectors does not matter.
+   * 
+   * @param a first solution vector
+   * @param b other solution vector
+   * @return double L2 norm of the difference.
+   */
   double compute_error_for_two_eval_vectors(std::vector<std::vector<ComplexNumber>> a, std::vector<std::vector<ComplexNumber>> b);
 };

@@ -39,14 +39,36 @@ class SpaceTransformation {
 
   SpaceTransformation();
 
+  /**
+  * @brief Transforms a coordinate in the mathematical coord system to physical ones.
+  * The implementations in the derived classes are crucial to understand the transformation.
+  * @param coord Coordinate in the mathematical system
+  * @return Position Coordinate in the physical system
+  */
   virtual Position math_to_phys(Position coord) const = 0;
 
+  /**
+  * @brief Transforms a coordinate in the physical coord system to mathematical ones.
+  * The implementations in the derived classes are crucial to understand the transformation.
+  * @param coord Coordinate in the physical system
+  * @return Position Coordinate in the mathematical system
+  */  
   virtual Position phys_to_math(Position coord) const = 0;
 
+  /**
+   * @brief Get the determinant of the transformation matrix at a provided location
+   * 
+   * @return double determinant of J.
+   */
   virtual double get_det(Position ) {
     return 1.0;
   }
 
+  /**
+   * @brief Compute the Jacobian of the current transformation at a given location.
+   * 
+   * @return Tensor<2,3,double> Jacobian matrix at the given location.
+   */
   virtual Tensor<2,3,double> get_J(Position &) {
     Tensor<2,3,double> ret;
     ret[0][0] = 1;
@@ -55,6 +77,11 @@ class SpaceTransformation {
     return ret;
   }
 
+  /**
+   * @brief Compute the Jacobian of the current transformation at a given location and invert it.
+   * 
+   * @return Tensor<2,3,double> Inverse of the jacobian matrix at the given location.
+   */
   virtual Tensor<2,3,double> get_J_inverse(Position &) {
     Tensor<2,3,double> ret;
     ret[0][0] = 1;
@@ -63,14 +90,48 @@ class SpaceTransformation {
     return ret;
   }
 
+  /**
+   * @brief Get the transformation tensor at a given location.
+   * 
+   * @return Tensor<2, 3, ComplexNumber> \f$3\timesx3\f$ complex valued tensor for a given locations.
+   */
   virtual Tensor<2, 3, ComplexNumber> get_Tensor(Position &) = 0;
 
+  /**
+   * @brief Get the real part of the transformation tensor at a given location.
+   * 
+   * @return Tensor<2, 3, ComplexNumber> \f$3\timesx3\f$ real valued tensor for a given locations.
+   */
   virtual Tensor<2, 3, double> get_Space_Transformation_Tensor(Position &) = 0;
 
+  /**
+   * @brief For adjoint based optimization we require a tensor describing the change of the material tensor at a given location if the requested dof is changed by step_width.
+   * 
+   * The function basically computes the transformation tensor for the current parameter values and then updates the parametrization in the dof-th component by step_width and computes the material tensor. It then computes the difference of the two and returns it.
+   * 
+   * @param coordinate Location to compute the difference tensor.
+   * @param dof The index of the dof to be updated.
+   * @param step_width The step_width for the step.
+   * @return Tensor<2, 3, ComplexNumber> 
+   */
   Tensor<2, 3, ComplexNumber> get_Tensor_for_step(Position &coordinate, unsigned int dof, double step_width);
 
+  /**
+   * @brief Same as the function above but returns the inverse.
+   * 
+   * @param coordinate Location to compute the tensor.
+   * @param dof The index of the dof to be updated.
+   * @param step_width The step_width for the step.
+   * @return Tensor<2, 3, ComplexNumber> 
+   */
   Tensor<2, 3, ComplexNumber> get_inverse_Tensor_for_step(Position &coordinate, unsigned int dof, double step_width);
 
+  /**
+   * @brief This function can be used in the dealii::transform function by applying the operator() function.
+   * To make it possible to apply both the math_to_phys as well as the phys_to_math transformation we have this function which switches the operation mode.
+   * 
+   * @param apply_math_to_physical If this is true, the transformation will now transform from math to phys. Phys to math otherwise.
+   */
   void switch_application_mode(bool apply_math_to_physical);
 
   /**
@@ -159,6 +220,12 @@ class SpaceTransformation {
    */
   virtual void Print() const = 0;
 
+  /**
+   * @brief Applies either math_to_phys or phys_to_math depending on the current transformation mode.
+   * This can be used in the dealii::transform() function.
+   * 
+   * @return Position Location to be transformed.
+   */
   Position operator()(Position ) const;
 
 };

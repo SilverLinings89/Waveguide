@@ -1,10 +1,3 @@
-/*
- * Simulation.cpp
- *
- *  Created on: Jun 24, 2019
- *      Author: kraft
- */
-
 #include <mpi.h>
 #include <sys/stat.h>
 #include <unistd.h>

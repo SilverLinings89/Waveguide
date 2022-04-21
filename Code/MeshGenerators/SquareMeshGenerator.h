@@ -1,5 +1,13 @@
 #pragma once
-
+/**
+ * @file SquareMeshGenerator.h
+ * @author Pascal Kraft
+ * @version 0.1
+ * @date 2022-04-21
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include <deal.II/base/point.h>
 #include <deal.II/grid/tria.h>
 #include <array>
@@ -10,8 +18,10 @@
 /**
  * \class SquareMeshGenerator
  * \brief This class generates meshes, that are used to discretize a rectangular
- * Waveguide. It is derived from MeshGenerator.
+ * Waveguide. 
  *
+ * Important: This is legacy code. This is currently not required.
+ * 
  * The original intention of this project was to model tubular (or cylindrical)
  * waveguides. The motivation behind this thought was the fact, that for this
  * case the modes are known analytically. In applications however modes can be

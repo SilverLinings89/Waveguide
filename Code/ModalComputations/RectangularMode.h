@@ -1,6 +1,14 @@
-#ifndef WAVEGUIDEPROBLEM_RECTANGULARMODE_H
-#define WAVEGUIDEPROBLEM_RECTANGULARMODE_H
-
+#pragma once
+/**
+ * @file RectangularMode.h
+ * @author Pascal Kraft
+ * @brief This is no longer active code
+ * @version 0.1
+ * @date 2022-04-21
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include <deal.II/base/function.h>
 #include <deal.II/base/index_set.h>
 #include <deal.II/base/logstream.h>
@@ -44,6 +52,12 @@
 
 using namespace dealii;
 
+/**
+ * @brief Legacy code. 
+ * 
+ * This object was intended to become a mode solver but numerical results have shown that an exact computation is not required. It is simpler to use provided mode profiles that are computed offline.
+ * 
+ */
 class RectangularMode {
   public:
   double beta;
@@ -75,5 +89,3 @@ class RectangularMode {
   IndexSet get_dofs_for_boundary_id(types::boundary_id);
   std::vector<InterfaceDofData> get_surface_dof_vector_for_boundary_id(unsigned int b_id);
 };
-
-#endif  // WAVEGUIDEPROBLEM_RECTANGULARMODE_H
