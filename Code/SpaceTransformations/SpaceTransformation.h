@@ -93,14 +93,14 @@ class SpaceTransformation {
   /**
    * @brief Get the transformation tensor at a given location.
    * 
-   * @return Tensor<2, 3, ComplexNumber> \f$3\timesx3\f$ complex valued tensor for a given locations.
+   * @return Tensor<2, 3, ComplexNumber> \f$3\times 3\f$ complex valued tensor for a given locations.
    */
   virtual Tensor<2, 3, ComplexNumber> get_Tensor(Position &) = 0;
 
   /**
    * @brief Get the real part of the transformation tensor at a given location.
    * 
-   * @return Tensor<2, 3, ComplexNumber> \f$3\timesx3\f$ real valued tensor for a given locations.
+   * @return Tensor<2, 3, ComplexNumber> \f$3\times 3\f$ real valued tensor for a given locations.
    */
   virtual Tensor<2, 3, double> get_Space_Transformation_Tensor(Position &) = 0;
 

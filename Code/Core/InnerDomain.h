@@ -239,7 +239,7 @@ class InnerDomain: public FEDomain {
    * 
    * This value is defined by 
    * \f[ 
-   * \kappa = \int_{\Gamma_O}\overline{\boldsymbol{E}_0}\cdot \boldsymbol{E}_p \de A
+   * \kappa = \int_{\Gamma_O}\overline{\boldsymbol{E}_0}\cdot \boldsymbol{E}_p \mathrm{d} A
    * \f]
    * 
    * 
