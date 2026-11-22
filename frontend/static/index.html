@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Waveguide solver</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="masthead">
+  <h1>Waveguide solver</h1>
+  <p class="masthead-note">Time-harmonic Maxwell, 1550&nbsp;nm, sweeping preconditioner</p>
+  <div class="masthead-runs">
+    <label for="run-select">Runs</label>
+    <select id="run-select"><option value="">New configuration</option></select>
+    <button type="button" id="delete-run" class="quiet" hidden>Delete run</button>
+  </div>
+</header>
+
+<main class="bench">
+  <form id="config" class="settings" autocomplete="off">
+    <fieldset>
+      <legend>Waveguide</legend>
+      <div class="choice" role="radiogroup" aria-label="Shape">
+        <label><input type="radio" name="shape" value="straight"> Straight</label>
+        <label><input type="radio" name="shape" value="hump"> Hump</label>
+        <label><input type="radio" name="shape" value="predefined"> Measured shape</label>
+      </div>
+      <label class="field" data-for-shape="straight hump">Length <span class="unit">µm</span><input type="number" name="length" step="0.5"></label>
+      <label class="field" data-for-shape="hump">Height of the hump <span class="unit">µm</span><input type="number" name="hump_height" step="0.1"></label>
+      <label class="field" data-for-shape="predefined">Shape number <span class="unit">0–35, 100 µm long</span><input type="number" name="predefined_case" step="1"></label>
+      <div class="pair">
+        <label class="field">Core width <span class="unit">µm</span><input type="number" name="core_width" step="0.1"></label>
+        <label class="field">Core height <span class="unit">µm</span><input type="number" name="core_height" step="0.1"></label>
+      </div>
+      <div class="pair">
+        <label class="field">Domain width <span class="unit">µm</span><input type="number" name="domain_width" step="0.2"></label>
+        <label class="field">Domain height <span class="unit">µm</span><input type="number" name="domain_height" step="0.2"></label>
+      </div>
+      <div class="pair">
+        <label class="field">ε core<input type="number" name="epsilon_core" step="0.01"></label>
+        <label class="field">ε cladding<input type="number" name="epsilon_cladding" step="0.01"></label>
+      </div>
+      <p class="hint" id="mode-hint"></p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Resolution</legend>
+      <label class="field">Cells per wavelength <span class="unit">in the core</span>
+        <input type="range" name="cells_per_wavelength" min="3" max="24" step="1"><output id="cpw-output"></output></label>
+      <div class="choice" role="radiogroup" aria-label="Element order">
+        <label><input type="radio" name="fem_order" value="0"> Lowest order elements</label>
+        <label><input type="radio" name="fem_order" value="1"> Second order</label>
+      </div>
+      <p class="field-label">Processes in x, y and z</p>
+      <div class="triple">
+        <label class="field"><span class="visually-hidden">Processes in x</span><input type="number" name="processes_x" min="1" step="1"></label>
+        <label class="field"><span class="visually-hidden">Processes in y</span><input type="number" name="processes_y" min="1" step="1"></label>
+        <label class="field"><span class="visually-hidden">Processes in z</span><input type="number" name="processes_z" min="1" step="1"></label>
+      </div>
+      <p class="hint" id="level-hint"></p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Boundary</legend>
+      <div class="choice" role="radiogroup" aria-label="Absorbing boundary">
+        <label><input type="radio" name="boundary_method" value="PML"> Perfectly matched layer</label>
+        <label><input type="radio" name="boundary_method" value="HSIE"> Hardy space infinite elements</label>
+      </div>
+      <div data-for-boundary="PML">
+        <div class="pair">
+          <label class="field">Cell layers<input type="number" name="pml_layers" step="1"></label>
+          <label class="field">Thickness <span class="unit">µm</span><input type="number" name="pml_thickness" step="0.1"></label>
+        </div>
+        <div class="pair">
+          <label class="field">σ max<input type="number" name="pml_sigma_max" step="1"></label>
+          <label class="field">Profile exponent<input type="number" name="pml_order" step="1"></label>
+        </div>
+      </div>
+      <div data-for-boundary="HSIE">
+        <label class="field">Polynomial degree<input type="number" name="hsie_degree" step="1"></label>
+      </div>
+      <p class="field-label">Signal input</p>
+      <div class="choice" role="radiogroup" aria-label="Signal input">
+        <label><input type="radio" name="coupling" value="Dirichlet"> Prescribe the mode on the input face</label>
+        <label><input type="radio" name="coupling" value="Taper"> Taper it in, absorb reflections behind</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Solver</legend>
+      <div class="pair">
+        <label class="field">Residual tolerance<input type="text" name="solver_precision" inputmode="decimal"></label>
+        <label class="field">GMRES step limit<input type="number" name="gmres_max_steps" step="10"></label>
+      </div>
+      <label class="field">Compress subdomain factors <span class="unit">tolerance, 0 = exact</span><input type="text" name="compression_tolerance" inputmode="decimal"></label>
+      <label class="field" id="inner-tolerance-field">Inner solves stop at <span class="unit">× outer residual</span><input type="text" name="inner_relative_tolerance" inputmode="decimal"></label>
+    </fieldset>
+  </form>
+
+  <section class="stage" aria-live="polite">
+    <div class="drawing-frame">
+      <canvas id="drawing" width="1200" height="520" role="img" aria-label="Side view and cross-section of the configured waveguide"></canvas>
+      <div id="tooltip" class="tooltip" hidden></div>
+      <div class="drawing-legend" id="drawing-legend"></div>
+    </div>
+
+    <div class="view-controls" id="view-controls" hidden>
+      <div class="segmented" role="radiogroup" aria-label="View">
+        <label><input type="radio" name="plane" value="x" checked> Side view</label>
+        <label><input type="radio" name="plane" value="y"> Top view</label>
+        <label><input type="radio" name="plane" value="z"> Cross-section</label>
+      </div>
+      <label class="inline">Show
+        <select id="quantity">
+          <option value="re_x">Re Eₓ</option>
+          <option value="abs">|E|</option>
+          <option value="im_x">Im Eₓ</option>
+          <option value="re_y">Re E_y</option>
+          <option value="re_z">Re E_z</option>
+          <option value="im_z">Im E_z</option>
+        </select>
+      </label>
+      <label class="inline"><input type="checkbox" id="physical" checked> Physical shape</label>
+      <button type="button" id="show-setup" class="quiet">Show setup drawing</button>
+    </div>
+
+    <div class="status-line">
+      <div id="estimate" class="estimate"></div>
+      <div class="actions">
+        <span id="run-status" class="run-status"></span>
+        <button type="button" id="cancel" class="quiet" hidden>Stop the solver</button>
+        <button type="button" id="run" class="primary">Run solver</button>
+      </div>
+    </div>
+    <ul id="warnings" class="warnings"></ul>
+
+    <div class="results" id="results" hidden>
+      <section class="convergence">
+        <h2>Convergence</h2>
+        <p class="hint" id="convergence-note"></p>
+        <div class="chart-frame">
+          <canvas id="chart" width="900" height="360" role="img" aria-label="Residual of the GMRES solvers against the step"></canvas>
+          <div id="chart-tooltip" class="tooltip" hidden></div>
+        </div>
+        <div id="chart-legend" class="chart-legend"></div>
+      </section>
+      <section class="numbers">
+        <h2>Result</h2>
+        <table id="numbers-table"><tbody></tbody></table>
+        <details>
+          <summary>Solver log</summary>
+          <pre id="log"></pre>
+        </details>
+      </section>
+    </div>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

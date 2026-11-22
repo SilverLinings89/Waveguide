@@ -54,6 +54,10 @@ if(Python3_FOUND)
     set_tests_properties(integration_${_test} PROPERTIES
       LABELS "integration" TIMEOUT 1800 RUN_SERIAL TRUE)
   endforeach()
+  # The web frontend: configuration handling and parsing of the solver outputs (does not start the solver).
+  add_test(NAME frontend_server
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/frontend/test_server.py)
+  set_tests_properties(frontend_server PROPERTIES LABELS "unit")
 else()
   message(STATUS "Python 3 was not found. The integration tests are disabled.")
 endif()
