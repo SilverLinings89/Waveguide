@@ -11,7 +11,7 @@
 auto Parameters::complete_data() -> void {
     
   if(!Enable_Parameter_Run) {
-      kappa_0 = { std::sin(kappa_0_angle), std::cos(kappa_0_angle) };
+      // kappa_0 of the Hardy space infinite elements is taken from the case file (Kappa 0 Real / Imaginary).
       unsigned int required_procs = Blocks_in_x_direction * Blocks_in_y_direction * Blocks_in_z_direction;
       if(required_procs != NumberProcesses) {
           throw std::runtime_error("The run file requests " + std::to_string(Blocks_in_x_direction) + " x " + std::to_string(Blocks_in_y_direction) + " x " + std::to_string(Blocks_in_z_direction) + " = " + std::to_string(required_procs) + " processes (processes in x, y and z), but the program was started with " + std::to_string(NumberProcesses) + ". Start it with 'mpirun -np " + std::to_string(required_procs) + " ...'.");
@@ -27,8 +27,14 @@ auto Parameters::complete_data() -> void {
       MPI_Rank = dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
   }
   if(Point_Source_Type == 2) {
-      source_field = new PointSourceFieldHertz(2* Pi);
+      // The dipole has to radiate with the wavenumber of the medium that the system matrix is assembled for
+      // (omega = 2 pi / lambda, see below), otherwise it is not a solution of the discretized equation.
+      source_field = new PointSourceFieldHertz(2.0 * Pi / Lambda * std::sqrt(Epsilon_R_outside_waveguide));
       if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using Hertz-type point source.", LoggingLevel::PRODUCTION_ONE);
+  }
+  if(Point_Source_Type == 4) {
+      source_field = new MetallicWaveguideMode(2.0 * Pi / Lambda * std::sqrt(Epsilon_R_outside_waveguide), Geometry_Size_X);
+      if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using the TE10 mode of a waveguide with metallic walls.", LoggingLevel::PRODUCTION_ONE);
   }
   if(Point_Source_Type == 1) {
       source_field = new PointSourceFieldCosCos();

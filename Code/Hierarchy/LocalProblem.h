@@ -23,12 +23,18 @@ public:
   KSP local_ksp = nullptr;
 
   /**
+   * @brief L2 norm of the exact solution (the source field) on the interior domain. Used to normalize the error.
+   */
+  double compute_L2_norm_of_exact_solution();
+
+  /**
    * Statistics of the direct solver of this subdomain. They are collected in solve() and written to results.txt.
    */
   double time_of_factorization = 0;      // wall time of the calls that computed a factorization (includes one solve)
   double time_of_solves = 0;             // accumulated wall time of all other calls
   unsigned int n_timed_solves = 0;
   bool has_factorization = false;
+  unsigned int n_unused_dof_indices = 0;  // dof indices without any equation (see assemble())
   double factor_entries_full_rank = 0;   // MUMPS INFOG(29): entries of the factors without compression
   double factor_entries_stored = 0;      // MUMPS INFOG(35): entries that are actually stored (equal without BLR)
   double factor_memory_mb = 0;           // MUMPS INFOG(22): memory used during the factorization in megabytes

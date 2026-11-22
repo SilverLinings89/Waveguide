@@ -502,6 +502,17 @@ std::pair<bool, SurfaceType> handle_exterior_boundaries(BoundaryId b_id) {
   std::pair<bool, SurfaceType> ret;
   ret.first = true;
   ret.second = SurfaceType::ABC_SURFACE;
+  if(b_id < 4 && GlobalParams.pec_side_walls) {
+    // Side walls of the global domain as perfect electric conductors.
+    const bool is_global_boundary = (b_id == 0 && GlobalParams.Index_in_x_direction == 0)
+      || (b_id == 1 && GlobalParams.Index_in_x_direction == GlobalParams.Blocks_in_x_direction - 1)
+      || (b_id == 2 && GlobalParams.Index_in_y_direction == 0)
+      || (b_id == 3 && GlobalParams.Index_in_y_direction == GlobalParams.Blocks_in_y_direction - 1);
+    if(is_global_boundary) {
+      ret.second = SurfaceType::OPEN_SURFACE;
+      return ret;
+    }
+  }
   if(b_id == 0 && GlobalParams.Index_in_x_direction == 0) {
     return ret;
   }

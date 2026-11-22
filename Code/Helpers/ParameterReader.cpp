@@ -31,7 +31,8 @@ void ParameterReader::declare_parameters() {
 
     case_prm.enter_subsection("Case parameters");
     {
-        case_prm.declare_entry("source type", "0", Patterns::Integer(), "PointSourceField is 0: empty, 1: cos()cos(), 2: Hertz Dipole, 3: Waveguide");
+        case_prm.declare_entry("source type", "0", Patterns::Integer(), "PointSourceField is 0: empty, 1: cos()cos(), 2: Hertz Dipole, 3: Waveguide, 4: TE10 mode of a waveguide with metallic walls (use together with Lateral boundary = PEC and a homogeneous medium)");
+        case_prm.declare_entry("Lateral boundary", "Absorbing", Patterns::Selection("Absorbing|PEC"), "Boundary condition on the four side walls (x and y) of the global domain: the absorbing boundary method or a perfect electric conductor.");
         case_prm.declare_entry("transformation type", "Waveguide Transformation", Patterns::Selection("Waveguide Transformation|Angle Waveguide Transformation|Bend Transformation"), "Inhomogenous Waveguide Transformation is used for straight waveguide cases and the predefined cases. Angle Waveguide Transformation is a PML test. Bend Transformation is an example for a 90 degree bend.");
         case_prm.declare_entry("geometry size x", "5.0", Patterns::Double(), "Size of the computational domain in x-direction.");
         case_prm.declare_entry("geometry size y", "5.0", Patterns::Double(), "Size of the computational domain in y-direction.");
@@ -118,6 +119,7 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
     case_prm.enter_subsection("Case parameters");
     {
         ret.Point_Source_Type = case_prm.get_integer("source type");
+        ret.pec_side_walls = case_prm.get("Lateral boundary") == "PEC";
         ret.Geometry_Size_X = case_prm.get_double("geometry size x");
         ret.Geometry_Size_Y = case_prm.get_double("geometry size y");
         ret.Geometry_Size_Z = case_prm.get_double("geometry size z");
@@ -125,8 +127,8 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.Epsilon_R_outside_waveguide = case_prm.get_double("epsilon out");
         ret.Epsilon_R_effective = case_prm.get_double("epsilon effective");
         ret.kappa_0 = 0;
-        ret.kappa_0.real(case_prm.get_integer("Kappa 0 Real"));
-        ret.kappa_0.imag(case_prm.get_integer("Kappa 0 Imaginary"));
+        ret.kappa_0.real(case_prm.get_double("Kappa 0 Real"));
+        ret.kappa_0.imag(case_prm.get_double("Kappa 0 Imaginary"));
         ret.Mu_R_in_waveguide = case_prm.get_double("mu in");
         ret.Mu_R_outside_waveguide = case_prm.get_double("mu out");
         ret.Amplitude_of_input_signal = case_prm.get_double("signal amplitude");

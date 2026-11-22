@@ -7,8 +7,8 @@
 #include "../OutputGenerators/Images/ConvergenceOutputGenerator.h"
 
 class ConvergenceRun: public Simulation {
-  NonLocalProblem *mainProblem;
-  NonLocalProblem *otherProblem;
+  NonLocalProblem *mainProblem = nullptr;
+  NonLocalProblem *otherProblem = nullptr;
   std::vector<Position> evaluation_positions;
   std::vector<std::vector<ComplexNumber>> evaluation_base_problem;
   std::vector<std::vector<ComplexNumber>> evaluation_exact_solution;

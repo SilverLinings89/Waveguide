@@ -36,3 +36,20 @@ public:
   void vector_curl(const Position &p, NumericVectorLocal &vec);
 };
 
+
+/**
+ * @brief The TE10 mode of a rectangular waveguide with perfectly conducting walls.
+ * For a waveguide of width a in the x-direction (x in [-a/2, a/2]) filled with a homogeneous medium with wavenumber
+ * k, the field E = (0, cos(pi x / a), 0) exp(i beta z) with beta = sqrt(k^2 - (pi/a)^2) is an exact solution of the
+ * time-harmonic Maxwell equations whose tangential components vanish on all four side walls. Together with PEC
+ * side walls ("Lateral boundary = PEC") it is a test with an exact solution in which only the output side has to
+ * be truncated by an absorbing boundary condition.
+ */
+class MetallicWaveguideMode: public dealii::Function<3, ComplexNumber> {
+public:
+  const double width;
+  const double beta;
+  MetallicWaveguideMode(double in_k, double in_width);
+  ComplexNumber value(const Position &p, const unsigned int component = 0) const override;
+  void vector_value(const Position &p, NumericVectorLocal &vec) const override;
+};

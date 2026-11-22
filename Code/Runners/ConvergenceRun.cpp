@@ -20,6 +20,7 @@
 ConvergenceRun::ConvergenceRun() { }
 
 ConvergenceRun::~ConvergenceRun() {
+  // Both problems are deleted (and the pointers reset) as soon as they are no longer needed.
   delete mainProblem;
   delete otherProblem;
 }
@@ -67,6 +68,7 @@ void ConvergenceRun::prepare() {
   evaluation_base_problem = mainProblem->evaluate_solution_at(evaluation_positions);
   base_problem_theoretical_error = compute_error_for_two_eval_vectors(evaluation_base_problem, evaluation_exact_solution);
   delete mainProblem;
+  mainProblem = nullptr;
   print_info("ConvergenceRun::prepare", "End", LoggingLevel::DEBUG_ONE);
 }
 
@@ -95,6 +97,8 @@ void ConvergenceRun::run() {
       total_cells.push_back(otherProblem->n_total_cells());
       output.push_values(temp_ndofs,numerical_error,theoretical_error);
       otherProblem->empty_memory();
+      delete otherProblem;
+      otherProblem = nullptr;
     }
     write_outputs();
 

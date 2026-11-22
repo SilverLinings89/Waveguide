@@ -108,8 +108,64 @@ void LocalProblem::assemble() {
   }
   matrix->compress(dealii::VectorOperation::add);
   rhs.compress(dealii::VectorOperation::add);
+  // Hardy space infinite elements on neighboring surfaces share the dofs of their common edge. The dof counts of
+  // the surfaces include these dofs more than once, which leaves indices that belong to no element. Their rows
+  // are empty and would make the matrix singular, so they are turned into the trivial equation u_i = 0.
+  {
+    std::vector<bool> is_used(Geometry.levels[0].n_total_level_dofs, false);
+    for(auto index : Geometry.levels[0].inner_domain->global_index_mapping) is_used[index] = true;
+    for(unsigned int surface = 0; surface < 6; surface++) {
+      for(auto index : Geometry.levels[0].surfaces[surface]->global_index_mapping) {
+        if(index < is_used.size()) is_used[index] = true;
+      }
+    }
+    unsigned int n_unused = 0;
+    for(unsigned int i = 0; i < is_used.size(); i++) {
+      if(!is_used[i]) {
+        matrix->set(i, i, ComplexNumber(1.0, 0.0));
+        n_unused++;
+      }
+    }
+    matrix->compress(dealii::VectorOperation::insert);
+    n_unused_dof_indices = n_unused;
+  }
   solution_error = rhs;
   timer.stop();
+  // A matrix with invalid entries would only show up as a failed factorization later on.
+  const double matrix_norm = matrix->frobenius_norm();
+  if(!std::isfinite(matrix_norm)) {
+    throw std::runtime_error("LocalProblem::assemble: The system matrix contains entries that are not finite (NaN or infinity). This points to an error in the assembly of the interior or of a boundary method.");
+  }
+  print_info("LocalProblem::assemble", "Frobenius norm of the system matrix: " + std::to_string(matrix_norm), LoggingLevel::DEBUG_ONE);
+  if(GlobalParams.Logging_Level == LoggingLevel::DEBUG_ALL || GlobalParams.Logging_Level == LoggingLevel::DEBUG_ONE) {
+    // Rows without any entry make the matrix singular. Report to which part of the problem they belong.
+    std::vector<unsigned int> empty_rows;
+    for(PetscInt row = 0; row < (PetscInt) matrix->m(); row++) {
+      PetscInt n_columns;
+      const PetscScalar * values;
+      MatGetRow(*matrix, row, &n_columns, nullptr, &values);
+      double row_sum = 0;
+      for(PetscInt i = 0; i < n_columns; i++) row_sum += std::abs(values[i]);
+      MatRestoreRow(*matrix, row, &n_columns, nullptr, &values);
+      if(row_sum == 0) empty_rows.push_back(row);
+    }
+    if(empty_rows.size() > 0) {
+      std::string message = std::to_string(empty_rows.size()) + " of " + std::to_string(matrix->m()) + " rows of the system matrix are empty.";
+      unsigned int in_interior = 0;
+      for(auto index : Geometry.levels[0].inner_domain->global_index_mapping) {
+        if(std::binary_search(empty_rows.begin(), empty_rows.end(), index)) in_interior++;
+      }
+      message += " Interior: " + std::to_string(in_interior) + ".";
+      for(unsigned int surface = 0; surface < 6; surface++) {
+        unsigned int on_surface = 0;
+        for(auto index : Geometry.levels[0].surfaces[surface]->global_index_mapping) {
+          if(std::binary_search(empty_rows.begin(), empty_rows.end(), index)) on_surface++;
+        }
+        message += " Surface " + std::to_string(surface) + ": " + std::to_string(on_surface) + " of " + std::to_string(Geometry.levels[0].surfaces[surface]->global_index_mapping.size()) + ".";
+      }
+      print_info("LocalProblem::assemble", message, LoggingLevel::DEBUG_ONE);
+    }
+  }
   GlobalTimerManager.leave_context(0);
 }
 
@@ -126,6 +182,10 @@ void LocalProblem::make_sparsity_pattern() {
     Geometry.levels[0].surfaces[surface]->fill_sparsity_pattern(&dsp, &constraints);
   }
   
+  // Every row gets its diagonal entry, see the treatment of unused dof indices in assemble().
+  for(unsigned int i = 0; i < Geometry.levels[0].n_total_level_dofs; i++) {
+    dsp.add(i, i);
+  }
   sp.copy_from(dsp);
   sp.compress();
   print_info("LocalProblem::make_sparsity_pattern", "End on local level");
@@ -295,4 +355,18 @@ void LocalProblem::write_multifile_output(const std::string & in_filename, bool)
     generated_files[i] = generated_files[i].substr(generated_files[i].find_last_of('/') + 1);
   }
   Geometry.levels[0].inner_domain->data_out.write_pvtu_record(outputvtu, generated_files);
+}
+
+double LocalProblem::compute_L2_norm_of_exact_solution() {
+  NumericVectorLocal zero(Geometry.levels[level].inner_domain->n_locally_active_dofs);
+  dealii::Vector<double> cellwise_norm(Geometry.levels[level].inner_domain->triangulation.n_active_cells());
+  dealii::VectorTools::integrate_difference(
+    MappingQGeneric<3>(1),
+    Geometry.levels[level].inner_domain->dof_handler,
+    zero,
+    *GlobalParams.source_field,
+    cellwise_norm,
+    dealii::QGauss<3>(GlobalParams.Nedelec_element_order + 2),
+    dealii::VectorTools::NormType::L2_norm );
+  return dealii::VectorTools::compute_global_error(Geometry.levels[level].inner_domain->triangulation, cellwise_norm, dealii::VectorTools::NormType::L2_norm);
 }

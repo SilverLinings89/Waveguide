@@ -117,3 +117,20 @@ void PointSourceFieldHertz::vector_curl(const Position &p,
 void PointSourceFieldHertz::set_cell_diameter(double in_diameter) {
   cell_diameter = in_diameter;
 }
+MetallicWaveguideMode::MetallicWaveguideMode(double in_k, double in_width):
+dealii::Function<3, ComplexNumber>(3),
+width(in_width),
+beta(std::sqrt(in_k * in_k - (PI / in_width) * (PI / in_width))) { }
+
+ComplexNumber MetallicWaveguideMode::value(const Position &p, const unsigned int component) const {
+  if(component != 1) {
+    return ComplexNumber(0, 0);
+  }
+  return std::cos(PI * p[0] / width) * std::exp(ComplexNumber(0, beta * p[2]));
+}
+
+void MetallicWaveguideMode::vector_value(const Position &p, NumericVectorLocal &vec) const {
+  vec[0] = 0;
+  vec[1] = value(p, 1);
+  vec[2] = 0;
+}

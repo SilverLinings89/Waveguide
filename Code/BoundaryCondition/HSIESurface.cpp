@@ -544,6 +544,9 @@ ComplexNumber HSIESurface::evaluate_a(std::vector<HSIEPolynomial> &u, std::vecto
       }
     }
   }
+  // Note: the identity int_0^infty u v dxi = -2 i kappa_0 sum_k a_k b_k of the Hardy space method contains the
+  // factor -2 i kappa_0, which is missing here. Adding it alone does not make the method work (see
+  // MODERNIZATION.md, section 10): the infinite elements currently reflect instead of absorbing.
   return result;
 }
 

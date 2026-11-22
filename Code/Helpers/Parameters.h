@@ -196,6 +196,9 @@ struct Parameters {
 
     bool solve_directly = false;
 
+    // If true, the four side walls (x and y) are perfect electric conductors instead of absorbing boundaries.
+    bool pec_side_walls = false;
+
     // Block low rank compression of the factorizations of the subdomain solvers (MUMPS). 0 switches it off.
     double local_solver_compression_tolerance = 0.0;
 
