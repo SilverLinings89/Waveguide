@@ -28,6 +28,19 @@
 
 using namespace dealii;
 
+#ifndef WAVEGUIDE_SOURCE_DIR
+#define WAVEGUIDE_SOURCE_DIR ".."
+#endif
+
+std::string repository_path(const std::string & relative_path) {
+  const char * root = std::getenv("WAVEGUIDE_ROOT");
+  std::string base = (root != nullptr) ? std::string(root) : std::string(WAVEGUIDE_SOURCE_DIR);
+  if(base.size() > 0 && base.back() != '/') {
+    base += "/";
+  }
+  return base + relative_path;
+}
+
 std::string exec(const char* cmd) {
     std::array<char, 128> buffer;
     std::string result;

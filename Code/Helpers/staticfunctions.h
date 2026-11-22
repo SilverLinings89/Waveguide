@@ -46,6 +46,16 @@ Tensor<1, 3, double> crossproduct(Tensor<1, 3, double>, Tensor<1, 3, double>);
 
 std::string exec(const char* cmd);
 
+/**
+ * @brief Returns the absolute path of a file or folder inside the repository (i.e. "Modes/output_mode.dat").
+ * The repository root is taken from the environment variable WAVEGUIDE_ROOT if it is set and otherwise it is the
+ * source directory the code was configured from. This makes the executables independent of the working directory.
+ *
+ * @param relative_path path relative to the repository root.
+ * @return std::string the absolute path.
+ */
+std::string repository_path(const std::string & relative_path);
+
 ComplexNumber matrixD(int in_row, int in_column, ComplexNumber in_k0);
 
 std::pair<DofNumber, DofNumber> get_max_and_min_dof_for_interface_data(std::vector<InterfaceDofData> in_data);

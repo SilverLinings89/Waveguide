@@ -54,4 +54,10 @@ class TimerManager {
      * @param level The HSIE sweeping level whose timing measurements we want to switch to another context. If we get done with assembly work on level two and want to switch to solving, we would call leave_context(2) followed by enter_context("solve", 2).
      */
     void leave_context(unsigned int level);
+
+    /**
+     * @brief Destroys all timers and closes the output files. Has to be called before MPI is finalized.
+     * 
+     */
+    void finalize();
 };

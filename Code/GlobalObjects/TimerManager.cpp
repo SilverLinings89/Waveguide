@@ -22,8 +22,20 @@ void TimerManager::initialize() {
 		filenames.push_back(fname);
 		std::ofstream * filestream = new std::ofstream(fname);
 		filestreams.push_back(filestream);
-		timer_outputs.emplace_back(GlobalMPI.communicators_by_level[i], *(filestreams[i]), dealii::TimerOutput::summary, dealii::TimerOutput::cpu_and_wall_times);
+		timer_outputs.emplace_back(GlobalMPI.communicators_by_level[i], *(filestreams[i]), dealii::TimerOutput::never, dealii::TimerOutput::cpu_and_wall_times);
 	}
+}
+
+void TimerManager::finalize() {
+	// The timers hold MPI communicators and must be destroyed before MPI is finalized. Since this object is a
+	// global variable, its destructor runs too late for that.
+	timer_outputs.clear();
+	for(unsigned int i = 0; i < filestreams.size(); i++) {
+		filestreams[i]->close();
+		delete filestreams[i];
+	}
+	filestreams.clear();
+	filenames.clear();
 }
 
 void TimerManager::switch_context(std::string context, unsigned int level) {
@@ -38,5 +50,6 @@ void TimerManager::write_output() {
 	for(unsigned int i = 0; i < level_count; i++) {
 		timer_outputs[i].print_summary();
 		timer_outputs[i].print_wall_time_statistics(GlobalMPI.communicators_by_level[i]);
+		filestreams[i]->flush();
 	}
 }

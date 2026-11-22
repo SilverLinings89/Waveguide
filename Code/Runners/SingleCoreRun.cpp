@@ -43,7 +43,8 @@ void SingleCoreRun::run() {
   // mainProblem->compute_solver_factorization();
   
   mainProblem->solve(); 
-  mainProblem->compute_error();
+  const double l2_error = mainProblem->compute_error();
+  print_info("SingleCoreRun::run", "L2 error against the input signal: " + std::to_string(l2_error), LoggingLevel::PRODUCTION_ONE);
   mainProblem->write_multifile_output("solution");
   GlobalTimerManager.write_output();
   print_info("SingleCoreRun::run", "End", LoggingLevel::PRODUCTION_ONE);

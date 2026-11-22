@@ -21,7 +21,7 @@ void initialize_global_variables(const std::string run_file, const std::string c
       exit(0);
     }
   }
-  ExactSolution::load_data("../Modes/output_mode.dat");
+  ExactSolution::load_data(repository_path("Modes/output_mode.dat"));
   GlobalParams = GetParameters(run_file, case_file, po);
   
   // Build MPI Communicator

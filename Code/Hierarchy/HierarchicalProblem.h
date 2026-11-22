@@ -37,7 +37,7 @@ class HierarchicalProblem {
   std:: vector<bool> is_surface_locked;
   bool is_dof_manager_set;
   bool has_child;
-  HierarchicalProblem* child;
+  HierarchicalProblem* child = nullptr;
   dealii:: SparsityPattern sp;
   NumericVectorDistributed solution;
   NumericVectorDistributed direct_solution;
@@ -45,9 +45,9 @@ class HierarchicalProblem {
   NumericVectorDistributed rhs;
   dealii::IndexSet own_dofs;
   std::array<std::vector<InterfaceDofData>, 6> surface_dof_associations;
-  dealii::PETScWrappers::MPI::SparseMatrix * matrix;
+  dealii::PETScWrappers::MPI::SparseMatrix * matrix = nullptr;
   std::vector<std::string> filenames;
-  ResidualOutputGenerator * residual_output;
+  ResidualOutputGenerator * residual_output = nullptr; // only used by problems that are solved iteratively
   unsigned int solve_counter;
   int parent_sweeping_rank = -1;
 

@@ -1,4 +1,5 @@
 #include <cmath>
+#include <stdexcept>
 #include <iostream>
 #include "Parameters.h"
 #include "../Helpers/staticfunctions.h"
@@ -13,8 +14,7 @@ auto Parameters::complete_data() -> void {
       kappa_0 = { std::sin(kappa_0_angle), std::cos(kappa_0_angle) };
       unsigned int required_procs = Blocks_in_x_direction * Blocks_in_y_direction * Blocks_in_z_direction;
       if(required_procs != NumberProcesses) {
-          print_info("Parameters::complete_data", "The number of mpi processes does not match the required processes", LoggingLevel::DEBUG_ALL);
-          exit(0);
+          throw std::runtime_error("The run file requests " + std::to_string(Blocks_in_x_direction) + " x " + std::to_string(Blocks_in_y_direction) + " x " + std::to_string(Blocks_in_z_direction) + " = " + std::to_string(required_procs) + " processes (processes in x, y and z), but the program was started with " + std::to_string(NumberProcesses) + ". Start it with 'mpirun -np " + std::to_string(required_procs) + " ...'.");
       }
       Index_in_z_direction = MPI_Rank / (Blocks_in_x_direction*Blocks_in_y_direction);
       Index_in_y_direction = (MPI_Rank-(Index_in_z_direction * Blocks_in_x_direction*Blocks_in_y_direction)) / Blocks_in_x_direction;
@@ -48,7 +48,7 @@ auto Parameters::complete_data() -> void {
   }
   Omega = 2.0 * Pi / Lambda;
   if(Use_Predefined_Shape) {
-    std::ifstream input( "../Modes/test.csv" );
+    std::ifstream input(repository_path("Modes/test.csv"));
     std::string line;
     unsigned int counter = 0;
     bool case_found = false;

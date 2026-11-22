@@ -7,19 +7,27 @@
 OutputManager::OutputManager() { }
 
 void OutputManager::initialize() {
-    char *pPath;
-    pPath = getenv("WORK");
-    bool seperate_solutions = (pPath != NULL);
+    // The base folder for outputs is, in this order of precedence:
+    //  1. the environment variable WAVEGUIDE_OUTPUT_DIR,
+    //  2. $WORK/Solutions (HPC workspaces),
+    //  3. the folder Solutions in the repository.
+    std::string base_path = repository_path("Solutions");
+    const char * work_path = getenv("WORK");
+    const char * output_path = getenv("WAVEGUIDE_OUTPUT_DIR");
+    if (work_path != NULL) {
+        base_path = std::string(work_path) + "/Solutions";
+    }
+    if (output_path != NULL) {
+        base_path = std::string(output_path);
+    }
+    if(GlobalParams.MPI_Rank == 0) {
+        mkdir(base_path.c_str(), ACCESSPERMS);
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
     int i = 0;
     bool dir_exists = true;
     while (dir_exists) {
-        std::stringstream out;
-        if (seperate_solutions) {
-            out << pPath << "/";
-        }
-        out << "../Solutions/run";
-        out << i;
-        output_folder_path = out.str();
+        output_folder_path = base_path + "/run" + std::to_string(i);
         struct stat myStat;
         const char *myDir = output_folder_path.c_str();
         if ((stat(myDir, &myStat) == 0) && (((myStat.st_mode) & S_IFMT) == S_IFDIR)) {
@@ -29,20 +37,17 @@ void OutputManager::initialize() {
         }
     }
     i = dealii::Utilities::MPI::max(i, MPI_COMM_WORLD);
-    std::stringstream out;
-    if (seperate_solutions) {
-        out << pPath << "/";
-    }
-    out << "../Solutions/run" << i;
-    output_folder_path = out.str();
+    output_folder_path = base_path + "/run" + std::to_string(i);
     if(GlobalParams.MPI_Rank == 0) {
         print_info("OutputManager::initialize", "Solution path: " + output_folder_path);
         mkdir(output_folder_path.c_str(), ACCESSPERMS);
-        std::string git_commit_hash = exec("git rev-parse HEAD");
+        std::string git_commit_hash = exec(("git -C \"" + repository_path("") + "\" rev-parse HEAD 2>/dev/null").c_str());
         git_commit_hash.erase(std::remove(git_commit_hash.begin(), git_commit_hash.end(), '\n'), git_commit_hash.end());
         write_run_description(git_commit_hash);
         print_info("OutputManager::initialize","Git status: " + git_commit_hash);
     }
+    // All processes wait until the output folder exists before they open their log files.
+    MPI_Barrier(MPI_COMM_WORLD);
     log_stream.open(output_folder_path + "/main" + std::to_string(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) + ".log", std::ios::binary);
 }
 

@@ -45,88 +45,69 @@ OutputManager GlobalOutputManager;
 TimerManager GlobalTimerManager;
 SpaceTransformation * GlobalSpaceTransformation;
 
+void print_usage() {
+  std::cout << "Usage: mpirun -np <N> main [--case <case file>] [--run <run file>] [--override \"key=value;key=value\"] [PETSc options]\n"
+            << "\n"
+            << "  --case      Parameter file that describes WHAT is computed (geometry, materials, signal input, boundary method).\n"
+            << "              Default: Parameters/Case/base.prm\n"
+            << "  --run       Parameter file that describes HOW it is computed (process layout, cells per process, solver).\n"
+            << "              Default: Parameters/Run/base.prm\n"
+            << "  --override  Overrides single parameters, e.g. \"n_pml_cells=8;pml_sigma_max=10\". Supported keys: n_pml_cells,\n"
+            << "              pml_sigma_max, pml_order, solver_type, geometry_size_z, system_length, processes_in_z,\n"
+            << "              predefined_case_number.\n"
+            << "  --help      Prints this message.\n"
+            << "\n"
+            << "N has to be equal to (processes in x) * (processes in y) * (processes in z) of the run file.\n"
+            << "Environment variables: WAVEGUIDE_ROOT (repository root, used to locate Modes/ and Parameters/) and\n"
+            << "WAVEGUIDE_OUTPUT_DIR (folder for the outputs, default: <repository>/Solutions).\n"
+            << "Examples of case and run files can be found in the folders Parameters/Case and Parameters/Run." << std::endl;
+}
+
 int main(int argc, char *argv[]) {
-  std::string run_file = "../Parameters/Run/base.prm";
-  std::string case_file = "../Parameters/Case/base.prm";
-  std::vector<std::string> all_args;
-  int argc_stripped;
-  argc_stripped = argc;
-  if (argc > 1) {
-    all_args.assign(argv, argv + argc);
-  }
-  bool arg1 = false;
-  bool arg2 = false;
-  bool arg3 = false;
+  std::string run_file = repository_path("Parameters/Run/base.prm");
+  std::string case_file = repository_path("Parameters/Case/base.prm");
   std::string override_data = "";
-  if (argc >= 3) {
-    if(all_args[1] == "--case") {
-      arg1 = true;
-      case_file = all_args[2];
-      argc_stripped -= 2;
+  // All arguments that are not consumed here are passed on to MPI / PETSc.
+  std::vector<char *> remaining_arguments;
+  remaining_arguments.push_back(argv[0]);
+  for(int i = 1; i < argc; i++) {
+    const std::string argument = argv[i];
+    if(argument == "--help" || argument == "-h") {
+      print_usage();
+      return 0;
     }
-    if(all_args[1] == "--run") {
-      arg1 = true;
-      run_file = all_args[2];
-      argc_stripped -= 2;
-    }
-    if(all_args[1] == "--override") {
-      arg1 = true;
-      override_data = all_args[2];
-      argc_stripped -= 2;
+    const bool has_value = (i + 1 < argc);
+    if(argument == "--case" && has_value) {
+      case_file = argv[++i];
+    } else if(argument == "--run" && has_value) {
+      run_file = argv[++i];
+    } else if(argument == "--override" && has_value) {
+      override_data = argv[++i];
+    } else {
+      remaining_arguments.push_back(argv[i]);
     }
   }
+  for(const std::string & file : {case_file, run_file}) {
+    if(!std::ifstream(file).good()) {
+      std::cerr << "The parameter file '" << file << "' could not be opened.\n" << std::endl;
+      print_usage();
+      return 1;
+    }
+  }
+  int argc_stripped = remaining_arguments.size();
+  char** argv_stripped = remaining_arguments.data();
 
-  if (argc >= 5) {
-    if(all_args[3] == "--case") {
-      arg2 = true;
-      case_file = all_args[4];
-      argc_stripped -= 2;
-    }
-    if(all_args[3] == "--run") {
-      arg2 = true;
-      run_file = all_args[4];
-      argc_stripped -=2;
-    }
-    if(all_args[3] == "--override") {
-      arg2 = true;
-      override_data = all_args[4];
-      argc_stripped -= 2;
-    }
-  }
-
-  if (argc >= 7) {
-    if(all_args[5] == "--case") {
-      arg3 = true;
-      case_file = all_args[6];
-      argc_stripped -= 2;
-    }
-    if(all_args[5] == "--run") {
-      arg3 = true;
-      run_file = all_args[6];
-      argc_stripped -= 2;
-    }
-    if(all_args[5] == "--override") {
-      arg3 = true;
-      override_data = all_args[6];
-      argc_stripped -= 2;
-    }
-  }
-
-  char** argv_stripped = new char*[argc_stripped];
-  unsigned int counter = 0;
-  for( int i = 0; i < argc; i++) {
-    bool is_processed_argument = (i == 1 || i == 2) && arg1;
-    is_processed_argument = is_processed_argument || ((i == 3 || i == 4) && arg2);
-    is_processed_argument = is_processed_argument || ( (i == 5 || i == 6) && arg3);
-    if(! is_processed_argument) {
-      argv_stripped[counter] = argv[i];
-      counter++;
-    }
-  }
-  
   {
     Utilities::MPI::MPI_InitFinalize mpi_initialization(argc_stripped, argv_stripped, 1);
-    initialize_global_variables(run_file, case_file, override_data);
+    try {
+      initialize_global_variables(run_file, case_file, override_data);
+    } catch(std::exception & e) {
+      // Typically an unknown or malformed entry in one of the parameter files.
+      if(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0) {
+        std::cerr << "The simulation could not be set up with the case file '" << case_file << "' and the run file '" << run_file << "':\n" << e.what() << std::endl;
+      }
+      return 1;
+    }
     Simulation * simulation;
     if(GlobalParams.Perform_Optimization) {
       simulation = new OptimizationRun();
@@ -156,6 +137,7 @@ int main(int argc, char *argv[]) {
     
     print_info("Main", "Shutting down");
     delete simulation;
+    GlobalTimerManager.finalize();
     GlobalMPI.destroy_comms();
     print_info("Main", "End");
   }
