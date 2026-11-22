@@ -134,7 +134,8 @@ These were found but not fixed. They are ordered by importance.
 8. `Parameters::check_validity` iterates with unsigned integers over coordinates and never detects anything.
    The taper region is fixed to z in [0, 1] and cannot be set in the case file. `Kappa 0` is declared as double and
    read as integer.
-9. Not run to completion after the migration: HSIE cases, the Hertz dipole convergence study and `fem order = 1/2`.
+9. Not run to completion after the migration: the Hertz dipole convergence study and `fem order = 2`. (HSIE was
+   repaired later, see section 10.1; second order elements are covered by the HSIE tests and the study of section 10.)
    A predefined hump shape was only run on a mesh far too coarse to be meaningful (it runs and GMRES converges).
    Memory is leaked at shutdown (children of `NonLocalProblem`, geometry levels).
 
@@ -147,9 +148,10 @@ Implemented (`ctest`, 12 targets, about 4 minutes in a release build on 8 cores)
   parameters matches the profile, the analytic curl and the ramp derivative match finite differences, a straight
   waveguide is deterministic and has the identity as transformation, the Jacobian matches finite differences, and
   the neighbor ranks of a 2 x 3 x 2 layout.
-- 11 integration tests (`tests/integration/run_integration_test.py`; the last two were added with sections 8 and 9:
-  compressed subdomain factorizations reproduce the exact ones, and the adjoint gradient agrees with finite
-  differences within 1 %): transmission through a straight waveguide is
+- 13 integration tests (`tests/integration/run_integration_test.py`; four were added with sections 8, 9 and 10:
+  compressed subdomain factorizations reproduce the exact ones, the adjoint gradient agrees with finite
+  differences within 1 %, infinite elements absorb the mode of a metallic waveguide and agree with PML for the
+  dielectric waveguide): transmission through a straight waveguide is
   close to 1 for both coupling methods, refinement improves it, two identical runs give identical numbers, level 1
   sweeping with 2 and 4 subdomains, level 2 and level 3 sweeping all reproduce the direct solution of the global
   system to 1e-6, and the global system does not depend on the partition.
@@ -167,7 +169,7 @@ Recommended next, in this order:
    tells you the accuracy floor of the sweeping preconditioner.
 5. **Iteration count regression**: GMRES steps for 2, 4, 8 subdomains with fixed subdomain size must stay below a
    bound (the scaling experiment of the dissertation in small).
-6. **HSIE**: at least one single process test, since the code path is otherwise untested.
+6. **HSIE**: done, see `hsie_single_face` and `hsie_matches_pml` (section 10.1).
 7. Unit tests for `PMLSurface::get_pml_tensor` (identity at the interface, symmetric, positive imaginary part) and
    for the dof bookkeeping of `NeighborSurface` (every interface dof is owned by exactly one process).
 8. Run the unit tests and two integration tests in CI in debug mode; debug mode is where deal.II reports misuse.
@@ -445,34 +447,75 @@ Script: `examples/pml_vs_hsie.py` (data and figures in `examples/output/pml_vs_h
 
 ### 10.1 State of the HSIE implementation
 
-The comparison could not be done with the solver alone, because **the HSIE implementation does currently not
-absorb**. Findings:
+When the comparison was first made, the infinite elements of the solver did not absorb: on the test problem below
+the error was 110 to 180 %, worse than a reflecting wall. The implementation has since been repaired. The errors,
+all in the assembly of `HSIESurface` (none in the theory of the dissertation):
 
-- With HSIE on several faces the dof numbering leaves indices that belong to no element (444 of 2375 on a 4³
-  mesh); the matrix was singular. `LocalProblem::assemble` now turns such rows into `u_i = 0`.
-- With that fixed, the Hertz dipole in free space (five HSIE faces) has a relative error of 2.5 to 10 for every
-  `κ₀` and degree; PML gives 0.19 on the same mesh.
-- To separate the method from the known edge and corner problem, a test with **one** absorbing face was added: the
-  TE10 mode of a waveguide with perfectly conducting walls (`source type = 4`, `Lateral boundary = PEC`), which has
-  the exact solution `E = (0, cos(πx/a), 0) exp(iβz)`. PML: error 0.069 at 12 cells per direction, converging with
-  the mesh. HSIE: error 1.1 to 1.8, independent of the degree and of the sign of `κ₀`, i.e. worse than a fully
-  reflecting wall.
-- `HSIESurface::evaluate_a` lacks the factor `−2iκ₀` of the identity `∫ u v dξ = −2iκ₀ Σ aₖbₖ`. Adding it does not
-  repair the method, so there is at least one more error (candidates: the orientation of the Nédélec functions of
-  the 2D surface mesh relative to the 3D interior, the coupling of surface and exterior unknowns). This was not
-  pursued further. The git history has no state in which the factor was present.
+1. **Wrong volume factor.** `JacobianForCell::get_C_G_and_J` used the Frobenius norm of the Jacobian (`√3` for the
+   identity) where the transformation rules need its determinant. This scaled the curl-curl term by `1/√3` and
+   the mass term by `√3`.
+2. **Missing factor of the Hardy space identity.** `∫ u v dξ = −2iκ₀ Σ aₖbₖ`; `evaluate_a` returned only the sum.
+3. **Wrong operators.** The derivative in ray direction of a tangential function was computed by differentiating
+   the polynomial on the unit disc (`applyDerivative`) instead of replacing `T₋` by `T₊`, i.e. `Ψⱼ` by `φⱼ`.
+   In addition the matrices `D` and `D⁻¹` (multiplication by `1 + ξ`, needed for radial rays only) were applied
+   to the curl of the tangential functions and to the ray functions; for axis parallel rays they do not belong
+   there.
+4. **Quadrature.** The shape function terms of the first quadrature point were reused for all points of a cell
+   (vectors declared outside the loop and never cleared), and the rule had two points per direction regardless of
+   the element order.
+5. **Second order elements: wrong functions.** The orthogonal infinite cell functions were built from the cell
+   functions of the Nédélec element instead of those of the nodal element, which duplicated the tangential
+   functions and made the matrix singular.
+6. **Second order elements: tangential continuity.** The functions of the two-dimensional Nédélec element on the
+   surface mesh are not the traces of the interior functions they share their unknowns with: two of the four
+   face functions differ by a factor of 2, and on the side faces they are linear combinations.
+   `HSIESurface::compute_trace_coefficients` now computes, cell by cell, the trace of every interior function in
+   the basis of the surface element and the infinite elements are built from these traces. It throws if a trace
+   is not in the space of the surface element.
 
-Two more errors surfaced on the way and are fixed: the exact solution of the Hertz dipole used the wavenumber `2π`
-instead of that of the equation (`2π/λ`), so no solver could converge to it; and `κ₀` from the case file was read as
-an integer and then overwritten by a constant.
+Earlier fixes on the way: unused dof indices are turned into `u_i = 0` rows; the exact solution of the Hertz
+dipole used the wavenumber `2π` instead of `2π/λ`; `κ₀` was read as an integer and overwritten by a constant.
+
+**What works now** (tests `hsie_single_face` and `hsie_matches_pml`):
+
+| Case | PML | HSIE |
+| --- | --- | --- |
+| TE10 mode, one absorbing face, lowest order, n = 8 / 16 / 32 | 0.136 / 0.039 / 0.011 | 0.154 / 0.044 / 0.011 |
+| TE10 mode, one absorbing face, second order, n = 4 / 8 / 16 | 0.045 / 4.3e-3 / 5.1e-4 | 0.047 / 4.6e-3 / 5.2e-4 |
+| Dielectric waveguide, five absorbing faces, lowest order, 32³ cells | 0.295 (355 000 unknowns) | 0.299 (172 000) |
+| Dielectric waveguide, five absorbing faces, second order, 12³ cells | 0.136 (560 000 unknowns) | 0.142 (83 000) |
+| The same with tapered coupling, lowest order, 16³ cells | 0.796 | 0.797 |
+
+(Relative L2 errors against the exact solution; in the waveguide rows the error is that of the coarse interior
+mesh.) With `κ₀ = k` the result does not change beyond degree 1 to 2; with `κ₀ = 0.4 k` the error falls from 0.055
+(degree 0) to the 0.044 of the mesh (degree 8), i.e. the convergence in the degree is as the theory predicts.
+For the dielectric waveguide a complex `κ₀` is better, because the field in the cladding decays instead of
+propagating: second order, 12³ cells, degree 2 / 5 gives 0.140 / 0.143 with `κ₀ = k`, 0.154 / 0.145 with the former
+default `1 + i` and 0.1370 / 0.1370 with `κ₀ = k + 2i` (PML: 0.1359). `k + 2i` (`4.05 + 2i`) is now the default; the
+single face test is unaffected by the imaginary part from degree 4 on.
+
+**What does not work, and is not an implementation error:**
+
+- **Fields that leave through the edges and corners.** The rays are parallel to the axes, so the regions beyond
+  the edges and corners of the domain are not covered by infinite elements (dissertation, section "Sweeping
+  Preconditioners with HSIE"). The code identifies the unknowns on the infinite faces of two surfaces over their
+  common edge. For the Hertz dipole in free space, which radiates through all edges, the error is about 100 %
+  (PML: 19 to 26 %), with this identification as well as without it. For a guided mode the field at the edges is
+  negligible and the identification is harmless; it gave slightly better results than leaving these faces free
+  (0.142 against 0.150 to 0.160 in the second order waveguide case), so it was kept.
+- **Sweeping.** With two subdomains in z the sweeping preconditioner still reaches the PML result, but it used the
+  full 30 GMRES steps where PML needs 5; with four subdomains it did not converge within 30 steps. HSIE is therefore
+  a boundary condition for single process (direct) solves and for the outer boundary, as the dissertation
+  concluded. The frontend restricts it to one process.
 
 ### 10.2 Method of the comparison
 
 - **Memory** comes from the 3D solver: number of unknowns, matrix entries and entries of the MUMPS factors for PML
-  with 2 to 12 cell layers and for HSIE of degree 1 to 12. These depend only on the structure of the matrix, which
-  is right for HSIE even though its values are not.
+  with 2 to 12 cell layers and for HSIE of degree 1 to 12.
 - **Accuracy of PML** comes from the 3D solver as well (best `σ_max` out of 5, 10, 20, 40 for each number of
   layers, quadratic profile, PML cells of the size of the interior cells).
+- **Accuracy of HSIE** in the 3D solver is available since the repair (section 10.6). Sections 10.3 to 10.5 were
+  written before it and take the degree HSIE needs from the reference model.
 - **Accuracy of both methods** comes from a reference model (`examples/absorbing_boundary_model.py`): for one
   transverse mode the test problem is `u″ + β²u = 0` on a line, and both truncations can be written down in a few
   lines. The HSIE part was validated by its exponential convergence in the degree. The model gives the error for
@@ -536,9 +579,9 @@ Reference model, error of the boundary method alone (fine interior mesh, second 
    (n + 2L)³ − n³ cells: for n = 20 and L = 8 that is 4.8 times the interior, and it is why up to 80 % of the
    unknowns in the sweeping runs are PML unknowns. Infinite elements only add unknowns on the faces: with the
    measured 20 unknowns per face cell for degree 5, all six faces of the same block would add about 1.8 times the
-   unknowns of the interior. This saving is hypothetical as long as
-   the treatment of edges and corners is unsolved (dissertation, section on sweeping with HSIE) - and it is the
-   reason why repairing HSIE would be worth the effort for the subdomain problems.
+   unknowns of the interior. For the outer boundary of a waveguide problem this saving is real (section 10.6);
+   for the subdomain problems of the sweeping preconditioner it stays hypothetical as long as the treatment of
+   edges and corners is unsolved (dissertation, section on sweeping with HSIE).
 
 Not covered: evanescent waves and grazing incidence beyond 75°, materials that vary along the boundary (the
 waveguide core crossing the absorbing face), and `κ₀` other than `k`.
@@ -552,14 +595,41 @@ elements grow less. Factor memory at n = 16 (926 MB of it interior), for the lay
 
 | Target error | PML | HSIE | HSIE relative to PML |
 | --- | --- | --- | --- |
-| 1e-2 | 4 layers: 1084 MB | degree 3: 1033 MB | −5 % |
-| 1e-3 | 8 layers: 1380 MB | degree 5: 1134 MB | −18 % |
-| 1e-4 | 12 layers: 1671 MB | degree 8: 1372 MB | −18 % |
+| 1e-2 | 4 layers: 1084 MB | degree 3: 1017 MB | −6 % |
+| 1e-3 | 8 layers: 1380 MB | degree 5: 1100 MB | −20 % |
+| 1e-4 | 12 layers: 1671 MB | degree 8: 1245 MB | −25 % |
 
-Counted without the interior, the absorber itself costs 454 MB (PML, 8 layers) against 208 MB (HSIE, degree 5) for
-1e-3. For lowest order elements at n = 32 the numbers stay within 0 to 9 % in favor of PML (for example 1049 MB
-against 1060 MB at 1e-3), as in 10.3. So: parity for lowest order elements, roughly half the absorber memory with
-HSIE for second order elements - on one face, and for an HSIE implementation that works.
+(HSIE numbers from the repaired implementation; the earlier one had too many unknowns per cell for second order
+elements.) For lowest order elements at n = 32 the numbers stay within 0 to 9 % in favor of PML (for example
+1049 MB against 1060 MB at 1e-3), as in 10.3. So: parity for lowest order elements and a fifth to a quarter less
+memory with HSIE for second order elements, on one face, if the degree has to cover a wide range of angles.
+
+### 10.6 Measured with the repaired infinite elements
+
+With the repaired implementation both methods can be compared in the 3D solver directly. On the test problem (one
+mode with `β = 0.92 k`, `κ₀ = k`) the infinite elements reach the error of the mesh already at degree 1; higher
+degrees change nothing. Cheapest configuration of each method whose error is within 15 % of the smallest error
+reached on the mesh (`pml_vs_hsie_solver_tradeoff.txt`):
+
+| Elements | n | Error of the mesh | PML | HSIE | HSIE / PML memory |
+| --- | --- | --- | --- | --- | --- |
+| lowest order | 12 | 6.8e-2 | 4 layers, 30 MB | degree 1, 26 MB | 0.86 |
+| lowest order | 16 | 3.9e-2 | 6 layers, 72 MB | degree 1, 60 MB | 0.83 |
+| lowest order | 24 | 1.8e-2 | 8 layers, 356 MB | degree 1, 292 MB | 0.82 |
+| lowest order | 32 | 1.1e-2 | 12 layers, 1181 MB | degree 1, 894 MB | 0.76 |
+| second order | 8 | 4.3e-3 | 6 layers, 102 MB | degree 1, 61 MB | 0.60 |
+| second order | 12 | 1.2e-3 | 6 layers, 433 MB | degree 1, 302 MB | 0.70 |
+| second order | 16 | 5.1e-4 | 6 layers, 1219 MB | degree 1, 915 MB | 0.75 |
+
+Reading: for a single guided mode whose propagation constant is known (so that `κ₀` can be matched), HSIE needs
+17 to 40 % less factor memory than a PML that is just thick enough, and it has no parameters to tune. The finer
+the mesh, the more layers the PML needs to keep up with the interior accuracy, while the degree stays at 1. The
+error of HSIE itself is 5 to 10 % above that of the best PML on the lowest order meshes (0.0200 against 0.0181 at
+n = 24), which is a difference of the interior discretization, not of the absorber: it does not change with the
+degree. This is the favorable case for HSIE; for fields with a wide range of angles the degrees of section 10.3
+apply and the advantage shrinks to the numbers given there. With five absorbing faces (dielectric waveguide,
+section 10.1) the difference is much larger, because PML also fills the edges and corners: 49 600 against 181 900
+unknowns and 596 MB against 2283 MB of factors (second order, 8 × 8 × 12 cells) for the same error.
 
 ## 11. Examples and web frontend
 

@@ -3,8 +3,8 @@
 
 Not a figure of the dissertation; it answers the question raised there (section Sweeping Preconditioners with HSIE)
 which of the two methods gives the better accuracy for a given amount of memory.
-Produces: pml_vs_hsie_solver.dat, pml_vs_hsie_model.dat, pml_vs_hsie_tradeoff.txt and the figures
-          pml_vs_hsie_solver.png, pml_vs_hsie_model.png, pml_vs_hsie_memory.png
+Produces: pml_vs_hsie_solver.dat, pml_vs_hsie_model.dat, pml_vs_hsie_solver_tradeoff.txt, pml_vs_hsie_tradeoff.txt
+          and the figures pml_vs_hsie_solver.png, pml_vs_hsie_model.png, pml_vs_hsie_memory.png
 
 Test problem with an exact solution: the TE10 mode of a rectangular waveguide with perfectly conducting walls,
 E = (0, cos(pi x / a), 0) exp(i beta z), in a homogeneous medium. The domain is 2 x 1 x 2 um (a = 2 um, about 1.2
@@ -14,11 +14,11 @@ face. One process, direct solver.
 Three parts:
 1. 3D solver: relative L2 error against the exact solution and memory of the factorization for PML with 2 to 12
    cell layers (cells of the size of the interior cells; the best sigma_max of a small set is used) and for HSIE
-   of degree 1 to 12, on several meshes. The HSIE implementation of the solver does currently not absorb (see
-   MODERNIZATION.md, section 10), so only its memory is meaningful.
+   of degree 1 to 12, on several meshes. pml_vs_hsie_solver_tradeoff.txt lists for every mesh the cheapest
+   configuration of each method that reaches the accuracy the mesh allows.
 2. Reference model (absorbing_boundary_model.py): the same problem reduces to u'' + beta^2 u = 0 on a line. The
-   model implements both methods correctly and gives their error as a function of layers / degree, for the mode
-   of the test problem and for the worst case over a range of angles of incidence.
+   model gives the error of the boundary method alone (without the error of the interior mesh) as a function of
+   layers / degree, for the mode of the test problem and for the worst case over a range of angles of incidence.
 3. Trade-off: layers / degree needed for a target accuracy (part 2) and the memory this costs in 3D (part 1).
 
 laptop: lowest order elements, n = 8, 12, 16, 24 cells per direction.
@@ -88,11 +88,36 @@ def main():
         for color, n in zip(colors, sorted(set(selected[:, 2]))):
             best = best_pml(selected[selected[:, 2] == n])
             axis.loglog(megabytes(best[:, 8]), best[:, 5], "o-", color=color, label="PML, n = %d (2 to 12 layers)" % n)
+            hsie = selected[(selected[:, 2] == n) & (selected[:, 0] == 1)]
+            axis.loglog(megabytes(hsie[:, 8]), hsie[:, 5], "s--", color=color, markerfacecolor="none", label="HSIE, n = %d (degree 1 to 12)" % n)
         axis.set_xlabel("memory of the factors [MB]")
         axis.set_ylabel("relative L2 error against the exact solution")
         axis.set_title("3D solver, element order %d" % (fem_order + 1))
-        axis.legend(fontsize=8)
+        axis.legend(fontsize=8, ncol=2)
     common.save(figure, arguments, "pml_vs_hsie_solver.png")
+
+    # cheapest configuration of each method that comes within 15 % of the best error reached on the mesh
+    lines = ["3D solver: cheapest configuration within 15 % of the smallest error reached on the mesh (either method).", "",
+             "%-5s %-4s %-11s | %-26s | %-26s | %s" % ("order", "n", "error", "PML", "HSIE", "HSIE / PML memory"), "-" * 100]
+    for fem_order in fem_orders:
+        selected = rows[rows[:, 1] == fem_order]
+        for n in sorted(set(selected[:, 2])):
+            mesh = selected[selected[:, 2] == n]
+            target = 1.15 * min(mesh[:, 5])
+            entry, memory = [], []
+            for method, unit in ((0, "layers"), (1, "degree")):
+                good = [row for row in mesh[mesh[:, 0] == method] if row[5] <= target]
+                if not good:
+                    entry.append("not reached")
+                    memory.append(float("nan"))
+                    continue
+                cheapest = min(good, key=lambda row: row[8])
+                entry.append("%s %2d: %6.0f MB" % (unit, cheapest[3], megabytes(cheapest[8])))
+                memory.append(megabytes(cheapest[8]))
+            lines.append("%-5d %-4d %-11.3e | %-26s | %-26s | %.2f" % (fem_order + 1, n, min(mesh[:, 5]), entry[0], entry[1], memory[1] / memory[0]))
+    with open(os.path.join(output, "pml_vs_hsie_solver_tradeoff.txt"), "w") as f:
+        f.write("\n".join(lines) + "\n")
+    print("\n".join("  " + line for line in lines))
 
     # ---- part 1b: solver, memory of both methods ---------------------------------------------------------------------
     figure, axes = plt.subplots(1, len(fem_orders), figsize=(7.5 * len(fem_orders), 5), squeeze=False)

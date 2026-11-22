@@ -130,7 +130,7 @@ def validate(raw):
     if config["shape"] == "hump" and config["hump_height"] > 0.5 * config["length"]:
         raise ConfigurationError("The hump is too high for this length: its slope would exceed 1.")
     if config["boundary_method"] == "HSIE" and config["processes_x"] * config["processes_y"] * config["processes_z"] > 1:
-        raise ConfigurationError("Hardy space infinite elements cannot be used with more than one process (no sweeping).")
+        raise ConfigurationError("Hardy space infinite elements need a single process: the sweeping preconditioner converges poorly with them.")
     if config["coupling"] == "Taper" and config["length"] / config["processes_z"] < 1.0:
         raise ConfigurationError("With tapered coupling the first subdomain has to be at least 1 µm long (the taper region).")
     return config
@@ -177,7 +177,7 @@ def derive(config):
     if n_processes > cores:
         warnings.append("%d processes on a machine with %d cores." % (n_processes, cores))
     if config["boundary_method"] == "HSIE":
-        warnings.append("The Hardy space infinite elements of the solver do currently not absorb outgoing waves (see MODERNIZATION.md). Results will be wrong.")
+        warnings.append("Infinite elements do not cover the regions beyond the edges of the domain. This is fine as long as the field is small there, as for a guided mode; keep the cladding around the core wide enough.")
     if config["shape"] != "straight" and config["coupling"] == "Dirichlet":
         warnings.append("A bent waveguide reflects. Dirichlet coupling sends reflections back into the domain; tapered coupling absorbs them.")
     if config["boundary_method"] == "PML" and config["pml_thickness"] / config["pml_layers"] > 2.5 * max(h):

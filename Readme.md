@@ -68,6 +68,12 @@ The files are deal.II `ParameterHandler` files. All parameters, their defaults a
   `optimization maximum steps` and writes `optimization_history.txt`.
 - `Input Signal Method = Dirichlet` prescribes the mode on the input face. `Taper` uses a volume source and a PML
   behind the input, which also absorbs reflections that travel backwards.
+- `Boundary Method = HSIE` replaces the PML by Hardy space infinite elements (`HSIE polynomial degree`, typically 3
+  to 5; `Kappa 0 Real` and `Kappa 0 Imaginary` default to 4.05 + 2i, the wavenumber plus an imaginary part for the
+  decaying field in the cladding). They need far fewer unknowns than a PML and
+  reach the same accuracy for waveguides, but only with one process (`sweeping level = 0`): the sweeping
+  preconditioner converges poorly with them, and fields that radiate through the edges of the domain are not
+  absorbed (see `MODERNIZATION.md`, section 10.1).
 
 Single parameters can be changed from the command line with `--override` (see `--help` for the supported keys).
 Options that are not known to the program are passed on to PETSc. The solver of the subdomains has the option prefix
@@ -143,8 +149,8 @@ compile with a complex PETSc and two headers that are not installed. The modific
   transformation and the process layout.
 - `tests/integration/run_integration_test.py`: runs the solver with 2 to 8 MPI processes on small problems and
   checks `results.txt`: lossless transmission through a straight waveguide for both coupling methods, improvement
-  under mesh refinement, reproducibility, and agreement of level 1, 2 and 3 sweeping with a direct solve of the global
-  system. `python3 tests/integration/run_integration_test.py --list` lists them.
+  under mesh refinement, reproducibility, agreement of level 1, 2 and 3 sweeping with a direct solve of the global
+  system, and (one process) the infinite elements against an exact solution and against PML. `python3 tests/integration/run_integration_test.py --list` lists them.
 
 ## Structure of the repository
 
