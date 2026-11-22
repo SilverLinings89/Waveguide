@@ -541,8 +541,25 @@ Reference model, error of the boundary method alone (fine interior mesh, second 
    reason why repairing HSIE would be worth the effort for the subdomain problems.
 
 Not covered: evanescent waves and grazing incidence beyond 75°, materials that vary along the boundary (the
-waveguide core crossing the absorbing face), and `κ₀` other than `k`. The full-scale variant of the script
-(`--scale paper`: n = 32 and second order elements in 3D) was started but its results are not included here.
+waveguide core crossing the absorbing face), and `κ₀` other than `k`.
+
+### 10.5 Second order elements in 3D (`--scale paper`)
+
+With second order elements the interior error is small enough for the absorber to matter: the PML error against
+the exact solution reaches 4.3e-3 (n = 8), 1.2e-3 (n = 12) and 5e-4 (n = 16) with 6 to 8 layers. The memory picture
+shifts in favor of HSIE, because a PML layer of second order elements is more expensive while the infinite
+elements grow less. Factor memory at n = 16 (926 MB of it interior), for the layers / degrees of the table in 10.3:
+
+| Target error | PML | HSIE | HSIE relative to PML |
+| --- | --- | --- | --- |
+| 1e-2 | 4 layers: 1084 MB | degree 3: 1033 MB | −5 % |
+| 1e-3 | 8 layers: 1380 MB | degree 5: 1134 MB | −18 % |
+| 1e-4 | 12 layers: 1671 MB | degree 8: 1372 MB | −18 % |
+
+Counted without the interior, the absorber itself costs 454 MB (PML, 8 layers) against 208 MB (HSIE, degree 5) for
+1e-3. For lowest order elements at n = 32 the numbers stay within 0 to 9 % in favor of PML (for example 1049 MB
+against 1060 MB at 1e-3), as in 10.3. So: parity for lowest order elements, roughly half the absorber memory with
+HSIE for second order elements - on one face, and for an HSIE implementation that works.
 
 ## 11. Examples and web frontend
 
