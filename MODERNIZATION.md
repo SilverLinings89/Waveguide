@@ -141,14 +141,16 @@ These were found but not fixed. They are ordered by importance.
 
 ## 4. Tests
 
-Implemented (`ctest`, 12 targets, about 4 minutes in a release build on 8 cores):
+Implemented (`ctest`, 17 targets, about 7 minutes in a release build):
 
 - 39 unit tests. New are the tests in `tests/ModeAndGeometryTests.cpp`; each pins one of the errors above: the mode
   is divergence free in the core, it fulfills the Helmholtz equation for the configured β and ε, the core size of the
   parameters matches the profile, the analytic curl and the ramp derivative match finite differences, a straight
   waveguide is deterministic and has the identity as transformation, the Jacobian matches finite differences, and
   the neighbor ranks of a 2 x 3 x 2 layout.
-- 13 integration tests (`tests/integration/run_integration_test.py`; four were added with sections 8, 9 and 10:
+- 15 integration tests (`tests/integration/run_integration_test.py`; `run_report` checks the run report against
+  `results.txt` and the field outputs, `optimization_recovers_straight_waveguide` is the test of section 13; four
+  more were added with sections 8, 9 and 10:
   compressed subdomain factorizations reproduce the exact ones, the adjoint gradient agrees with finite
   differences within 1 %, infinite elements absorb the mode of a metallic waveguide and agree with PML for the
   dielectric waveguide): transmission through a straight waveguide is
@@ -344,7 +346,7 @@ The optimization now has stopping criteria, all set in the case file:
 | Parameter | Default | Meaning |
 | --- | --- | --- |
 | `optimization gradient tolerance` | 1e-2 | stop when the gradient norm is below this factor times its initial value |
-| `optimization loss tolerance` | 1e-5 | stop when four consecutive evaluations did not improve the best loss by more than this factor times the loss |
+| `optimization loss tolerance` | 1e-5 | stop when two consecutive BFGS steps did not improve the loss by more than this factor times the loss (until section 13: four consecutive evaluations) |
 | `optimization maximum evaluations` | 40 | forward + adjoint solves |
 | `optimization maximum steps` | 15 | BFGS steps |
 
@@ -356,7 +358,8 @@ A BFGS run on the same case reduces the loss from −0.9072 to −0.9535 in two 
 around ±1, reaches −0.9655 and stops by itself after 23 evaluations because the loss stagnates. The final shape
 was solved to tolerance (40 GMRES steps), but several evaluations of this last phase ran into the iteration limit,
 and with slopes near ±1 on this coarse mesh the gain from 0.955 to 0.965 needs confirmation on a finer mesh
-(see 8.3, item 1).
+(see 8.3, item 1). This run used the line search settings of deal.II that section 13 replaces; with the new
+settings the same case reaches −0.9559 within the 14 evaluations of the example (before: −0.9547).
 
 ### 8.3 What is still wrong or missing
 
@@ -643,3 +646,148 @@ unknowns and 596 MB against 2283 MB of factors (second order, 8 × 8 × 12 cells
 - New in the solver for these: `source type = 4` with `Lateral boundary = PEC`, `results.txt` for single process
   runs, `Kappa 0 Real / Imaginary` from the case file, a diagnostic for empty matrix rows at debug logging.
 - Fixed on the way: a double delete at the end of `ConvergenceRun`.
+
+## 12. Performance: where the time goes and what was changed
+
+Two example runs were profiled with a sampling profiler (`sample` on macOS, one process of each run).
+
+| Run | Subdomain solves (MUMPS) | Waiting for other processes | Factorization | Assembly, setup, output |
+| --- | --- | --- | --- | --- |
+| Level 1, 4 subdomains of 20³ cells, 25 s | about 15 % | about 30 % | 31 % | about 22 % |
+| Three levels, 16 processes (`hierarchical_sweeping.py`), 51 s | 6 % | 90 % | under 1 % | about 3 % |
+
+- **The solve phase is serial.** A sweep solves the subdomains one after the other. In the three level run every
+  process computes 1/16 of the time: one of 16 processes works at any moment. The wall time of the solution is the
+  number of subdomain solves times the time per solve (3870 × 0.0115 s = 44 s of 51 s).
+- **The code of the solver itself is about 1 % of the run.** The copies between the levels, the loops over single
+  vector entries in the sweeps and the global matrix products of every sweep step are hardly visible. Compiler flags
+  or small optimizations of this code gain nothing measurable.
+- Every sweep step multiplies with the global matrix, so one sweep over n subdomains costs n global products
+  (n² subdomain products). The wall time of one product is small against a subdomain solve, but it is wasted CPU
+  time and n collective operations; a product restricted to the two subdomains involved would avoid it.
+
+**Changed: flexible GMRES on level 1.** Right preconditioned GMRES applies the preconditioner once more at the end
+of every solve to compute the solution. Flexible GMRES (already used on the higher levels) stores the preconditioned
+vectors instead and gives the same iterates.
+
+| Run | Subdomain solves before | after | Wall time before | after |
+| --- | --- | --- | --- | --- |
+| Three levels, 16 processes | 3870 | 1935 | 51 s | 26 s |
+| Level 1, 8 subdomains | 90 | 75 | 44 s | 43 s |
+
+The results are identical to all printed digits. The three level run halves because its level 1 solves need one
+step, so the additional sweep was half of the work; with more subdomains per level the saving is 1 / (steps + 1).
+On the level 1 run the wall time did not improve measurably on this machine although 17 % of the solves are saved
+(the reported time per solve went up from 0.29 s to 0.34 s; the reason was not found).
+
+**A parameter with a similar effect: the number of PML layers.** With 10 layers around subdomains of 20 cells the
+absorbing layers hold about three quarters of the unknowns of a subdomain (the run report now lists this for
+every level). 8 subdomains, thickness of the PML unchanged (0.5 µm):
+
+| PML layers | Memory per process | Wall time | GMRES steps | Signal |
+| --- | --- | --- | --- | --- |
+| 10 | 1599 MB | 43 s | 5 | 0.987 |
+| 7 | 913 MB | 26 s | 7 | 0.983 |
+| 5 | 606 MB | 26 s | 13 | 0.966 |
+
+The examples use 7 layers at laptop scale since then (`--scale paper` keeps the 10 layers of the dissertation).
+This was one configuration and not a study.
+
+**Tested without gain:** a looser or tighter tolerance of the inner solves (`relative convergence criterion` 0.1 or
+0.001 instead of 0.01: 1962 and 2142 subdomain solves against 1935), and a threaded BLAS for the subdomain solves
+(39 s with one thread, 43 s with the default of Accelerate).
+
+**Not tested:** during a sweep all processes but one are idle. A MUMPS built with OpenMP could give the active
+subdomain solve several threads on a cluster node. This needs a new build of PETSc and MUMPS and an MPI library
+that does not wait actively. Together with the block low rank compression of section 9 this is the largest
+remaining lever for the time per solve.
+
+## 13. Run report, and an optimization with a known optimum
+
+### 13.1 Run report
+
+Every run now writes `run_report.txt` (for reading) and `run_report.json` (the same content plus the residual
+histories). `python3 examples/run_report.py <output folder>` adds figures and writes `report.html`, one file
+without external dependencies. The report has these parts:
+
+1. **Run, geometry, mesh:** type of run, solver, tolerances, processes, absorbing boundary, input signal; domain,
+   core, materials, shape parameters; cells, cell sizes, cells per wavelength.
+2. **Unknowns:** for every level of the hierarchy the number of problems, the processes per problem and the
+   unknowns split into interior and absorbing boundary; the unknowns of the absorbing boundary by side.
+3. **Solution process:** for every level the number of solves, the GMRES steps per solve and the mean reduction of
+   the residual per step; subdomain solves, factorization time, time per solve, memory and size of the factors.
+   Figure: the residual histories of every level.
+4. **Result:** signal transmission, difference to the straight mode. Figures: the field in the plane x = middle in
+   the computational coordinates (straight waveguide) and in physical coordinates (displaced by f(z)), a top view
+   and a cross-section, and the signal s(z) along the waveguide with the energy per cross-section.
+5. **Optimization** (optimization runs): stopping reason, all evaluations with signal, gradient and shape
+   parameters. Figures: all evaluated shapes, loss and gradient norm.
+
+The code is `Code/OutputGenerators/RunReport.{h,cpp}` (sections with entries, tables and notes; one data model for
+both files); `NonLocalProblem::fill_run_report` and `OptimizationRun::run` fill it.
+
+Two things the first reports showed:
+
+- The signal along z has to be evaluated on the cell faces z = const. At the cell centers the lowest order elements
+  average the tangential field of two faces, which lowers the amplitude of a wave by cos(βh/2): 0.75 instead of
+  0.84 in the three level example with 5 cells per wavelength. `signal_along_z` uses the faces and ends at the
+  value of `results.txt` (0.8428 against 0.8427). The field slices still contain cell center values.
+- In the three level example the absorbing boundaries hold 74 % of the unknowns of the global problem and up to
+  92 % of a subdomain problem (table "Problems of the hierarchy"). This is the background of the PML numbers in
+  section 12.
+
+### 13.2 Optimization with a known optimum (`examples/straight_recovery.py`)
+
+Input and output of a 6 µm waveguide are at the same height, so the straight waveguide is optimal. The optimization
+starts from two bumps of 0.36 µm (new case parameter `Initial shape parameters = 0.3, 0.3, 0`). 4 processes,
+16 × 16 × 12 cells each. The straight waveguide has the signal 0.9657978 on this mesh, and the shape gradient
+there is 1e-14: the optimum of the discrete problem is where it should be.
+
+**First result: the shape did not converge well.** The optimization stopped after 12 evaluations with "the loss
+did not improve in four consecutive evaluations". The signal was 0.9657793 (1.9e-5 below the optimum), but the
+largest displacement was still 0.013 µm, only a factor 27 below the start.
+
+**Analysis.**
+
+1. *The loss is flat around the optimum.* All evaluations fit a quadratic model, loss − optimum = ½ xᵀHx with the
+   optimum at x = 0 (the model reproduces the measured gaps within 3 %). H has the eigenvalues 0.005, 0.025 and
+   0.41, a condition number of 81. The steepest direction was eliminated after 2 evaluations, the second after 7.
+   In the flattest direction the parameters moved from −0.118 to −0.083 only. A displacement of 0.013 µm costs
+   2e-5 in the signal, so a criterion on the loss cannot see it.
+2. *The line search of deal.II starts with tiny steps.* `SolverBFGS` takes the first trial step of a line search
+   as min(1, 2 Δf / |g·p|) with the decrease Δf of the previous step. Close to the optimum Δf is tiny, the trial
+   step as well, and the line search then doubles it evaluation by evaluation: the steps of evaluations 8 to 11 in
+   the flat direction were 0.0006, 0.0008, 0.0018 and 0.0037. In addition the initial inverse Hessian is the
+   identity, so the directions have the wrong length until the history contains every direction.
+3. *The stagnation rule counted evaluations.* It stopped the run after four evaluations without an improvement of
+   1e-5, in the middle of this line search.
+
+With the stagnation rule switched off the old settings do converge, but they need about twice as many evaluations
+(table below; that run was continued to 29 evaluations and a gradient of 4e-6 of its initial norm).
+
+**Changes** (`OptimizationRun::run`): the line search starts with the step 1 (the natural step of a quasi-Newton
+direction), the initial inverse Hessian is scaled with (s, y) / (y, y), and stagnation is judged per BFGS step
+(two consecutive steps without improvement) instead of per evaluation.
+
+| | Old settings, no stagnation stop | New settings |
+| --- | --- | --- |
+| Evaluations until max \|f\| < 0.01 µm | 14 | 8 |
+| Evaluations until max \|f\| < 0.001 µm | 22 | 13 |
+| Evaluations until the signal is within 1e-6 of the optimum | 17 | 13 |
+| Evaluations until the gradient is below 1e-4 of its initial norm | 28 | 15 |
+| Largest displacement at that evaluation | 2e-5 µm | 1e-4 µm |
+
+The new run ends with max |f| = 9.6e-5 µm (a factor 3700 below the start), the signal 9e-10 below the optimum and
+the gradient norm 8.6e-6. The last two evaluations reduce the distance by a factor 4 and 8: the superlinear
+phase of BFGS is reached. `straight_recovery_convergence.png` shows this.
+
+**What remains.**
+
+- With the default `optimization loss tolerance = 1e-5` an optimization still stops when the signal is good, not
+  when the shape has converged. That is the intended meaning of the tolerance, but it has to be 1e-9 or smaller
+  when the shape itself is the result (as in this example).
+- Between evaluation 2 and 10 the convergence is linear and slow. The cause is the parametrization by slopes: the
+  three parameters act on the loss with very different strength (condition number 81). A parametrization by
+  displacements at the nodes, or a scaling of the parameters, would make the first steps more effective.
+- One mesh, one starting shape and three parameters were tested. The hump example (`shape_optimization.py`) is not
+  converged after its 14 evaluations with either setting.

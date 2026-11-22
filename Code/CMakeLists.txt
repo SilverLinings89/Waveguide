@@ -50,6 +50,7 @@ ADD_LIBRARY(Code
         GlobalObjects/ModeManager.cpp
         GlobalObjects/OutputManager.cpp
         OutputGenerators/Images/ResidualOutputGenerator.cpp
+        OutputGenerators/RunReport.cpp
         OutputGenerators/Images/ConvergenceOutputGenerator.cpp
         Optimization/ShapeFunction.cpp
         )

@@ -14,11 +14,14 @@
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/optimization/solver_bfgs.h>
+#include <deal.II/optimization/line_minimization.h>
+#include <deal.II/numerics/history.h>
 #include <deal.II/lac/solver_control.h>
 #include <deal.II/base/exceptions.h>
 #include "../Helpers/staticfunctions.h"
 #include "../GlobalObjects/GlobalObjects.h"
 #include "../ModalComputations/RectangularMode.h"
+#include "../OutputGenerators/RunReport.h"
 #include <functional>
 
 NonLocalProblem * OptimizationRun::mainProblem;
@@ -29,9 +32,21 @@ bool OptimizationRun::stopping_criteria_active = false;
 double OptimizationRun::initial_gradient_norm = -1;
 double OptimizationRun::best_loss = 0;
 std::vector<double> OptimizationRun::best_shape_dofs;
-unsigned int OptimizationRun::evaluations_without_improvement = 0;
 std::vector<double> OptimizationRun::loss_history;
 std::vector<double> OptimizationRun::gradient_norm_history;
+
+// The vertical displacement f(z) of every evaluated shape at equidistant z, for the outputs.
+static std::vector<std::vector<double>> sampled_shapes;
+static const unsigned int n_shape_samples = 201;
+
+static std::vector<double> sample_current_shape() {
+  std::vector<double> ret(n_shape_samples);
+  for(unsigned int i = 0; i < n_shape_samples; i++) {
+    const double z = Geometry.global_z_range.first + (Geometry.global_z_range.second - Geometry.global_z_range.first) * i / (n_shape_samples - 1.0);
+    ret[i] = GlobalSpaceTransformation->math_to_phys(Position(0, 0, z))[1];
+  }
+  return ret;
+}
 
 /**
  * Thrown by perform_step to leave the BFGS solver of deal.II once one of the stopping criteria is fulfilled.
@@ -80,11 +95,49 @@ void OptimizationRun::run() {
     print_info("OptimizationRun::run", "End", LoggingLevel::PRODUCTION_ONE);
     return;
   }
-  // The stopping criteria are evaluated in perform_step: a relative tolerance for the gradient norm, stagnation of
-  // the loss and a maximum number of evaluations. The tolerance of the solver control of deal.II is an absolute
-  // gradient norm and only serves as a fallback, its maximum number of steps limits the BFGS steps.
+  // Stopping criteria: a relative tolerance for the gradient norm and a maximum number of evaluations (both in
+  // perform_step) and stagnation of the loss (in the line search below). The tolerance of the solver control of
+  // deal.II is an absolute gradient norm and only serves as a fallback, its maximum number of steps limits the
+  // BFGS steps.
   dealii::SolverControl sc(GlobalParams.optimization_n_shape_steps, GlobalParams.optimization_residual_tolerance, false, false);
   dealii::SolverBFGS<dealii::Vector<double>> solver(sc);
+  // Two settings of deal.II's BFGS are replaced, because they made the optimization stall close to the optimum:
+  // 1. The first trial step of a line search. deal.II derives it from the decrease of the loss in the previous
+  //    step (min(1, 2 df / |g p|)). Close to the optimum this decrease is tiny, so the line search starts with a
+  //    tiny step and needs many evaluations to enlarge it. For a quasi-Newton direction the natural trial step is
+  //    1, which is exact for a quadratic loss once the curvature is known.
+  // 2. The initial approximation of the inverse Hessian. deal.II uses the identity. The usual scaling
+  //    (s, y) / (y, y) with the last step s and the last change of the gradient y gives directions of the right
+  //    length.
+  unsigned int steps_without_improvement = 0;
+  solver.connect_line_search_slot([&](double & f, dealii::Vector<double> & x, dealii::Vector<double> & g, const dealii::Vector<double> & p) -> double {
+    const double f0 = f;
+    const double g0 = g * p;
+    const dealii::Vector<double> x0 = x;
+    const auto line_function = [&](const double & step) -> std::pair<double, double> {
+      x = x0;
+      x.add(step, p);
+      f = OptimizationRun::perform_step(x, g);
+      return std::make_pair(f, g * p);
+    };
+    const auto result = dealii::LineMinimization::line_search<double>(line_function, f0, g0, dealii::LineMinimization::poly_fit<double>, 1.0, 0.9, 0.001);
+    // Stagnation is judged per BFGS step and not per evaluation, because a line search may need several
+    // evaluations before it finds a good step.
+    if(f0 - f <= GlobalParams.optimization_loss_tolerance * std::abs(f0)) {
+      steps_without_improvement++;
+    } else {
+      steps_without_improvement = 0;
+    }
+    if(steps_without_improvement >= 2) {
+      throw OptimizationFinished("Two consecutive BFGS steps improved the loss by less than " + RunReport::number(GlobalParams.optimization_loss_tolerance) + " times its value.");
+    }
+    return result.first;
+  });
+  solver.connect_preconditioner_slot([](dealii::Vector<double> & g, const dealii::FiniteSizeHistory<dealii::Vector<double>> & s, const dealii::FiniteSizeHistory<dealii::Vector<double>> & y) {
+    if(s.size() > 0) {
+      g *= (s[0] * y[0]) / (y[0] * y[0]);
+    }
+  });
   std::string reason = "The gradient norm is below the absolute tolerance.";
   OptimizationRun::stopping_criteria_active = true;
   try{
@@ -126,6 +179,65 @@ void OptimizationRun::run() {
 
   GlobalTimerManager.write_output();
   OptimizationRun::mainProblem->output_results();
+
+  if(GlobalParams.MPI_Rank == 0) {
+    // The shapes of all evaluations: first line z, then one line f(z) per evaluation.
+    std::ofstream shapes(GlobalOutputManager.get_full_filename("optimization_shapes.txt"));
+    shapes.precision(10);
+    shapes << "# vertical displacement f(z) of the waveguide axis; first line: z, then one line per evaluation" << std::endl;
+    for(unsigned int i = 0; i < n_shape_samples; i++) {
+      shapes << (i > 0 ? " " : "") << Geometry.global_z_range.first + (Geometry.global_z_range.second - Geometry.global_z_range.first) * i / (n_shape_samples - 1.0);
+    }
+    shapes << std::endl;
+    for(const std::vector<double> & one_shape : sampled_shapes) {
+      for(unsigned int i = 0; i < one_shape.size(); i++) shapes << (i > 0 ? " " : "") << one_shape[i];
+      shapes << std::endl;
+    }
+    unsigned int best_evaluation = 0;
+    for(unsigned int i = 0; i < OptimizationRun::loss_history.size(); i++) {
+      if(OptimizationRun::loss_history[i] < OptimizationRun::loss_history[best_evaluation]) best_evaluation = i;
+    }
+    RunReport & report = GlobalRunReport;
+    report.section("Optimization");
+    report.entry("Loss functional", "-|s|, the negative signal transmission");
+    report.entry("Algorithm", "BFGS (deal.II SolverBFGS), gradient from one adjoint solve per evaluation");
+    report.entry("Shape parameters", std::to_string(n_shape_dofs) + " (slopes of the vertical displacement at the inner nodes)");
+    report.entry("Evaluations", std::to_string(OptimizationRun::loss_history.size()) + " (each one forward and one adjoint solve)");
+    report.entry("Reason for stopping", reason);
+    report.entry("Signal transmission at the initial shape", RunReport::number(-OptimizationRun::loss_history[0], 8));
+    report.entry("Signal transmission at the best shape", RunReport::number(-OptimizationRun::best_loss, 8) + " (evaluation " + std::to_string(best_evaluation) + ")");
+    std::vector<std::vector<std::string>> rows;
+    for(unsigned int i = 0; i < OptimizationRun::loss_history.size(); i++) {
+      std::string parameters;
+      for(unsigned int j = 0; j < OptimizationRun::shape_dofs[i].size(); j++) {
+        parameters += (j > 0 ? ", " : "") + RunReport::number(OptimizationRun::shape_dofs[i][j], 5);
+      }
+      double largest_displacement = 0;
+      if(i < sampled_shapes.size()) {
+        for(double value : sampled_shapes[i]) largest_displacement = std::max(largest_displacement, std::abs(value));
+      }
+      std::string gradient;
+      if(i < OptimizationRun::shape_gradients.size()) {
+        for(unsigned int j = 0; j < OptimizationRun::shape_gradients[i].size(); j++) {
+          gradient += (j > 0 ? ", " : "") + RunReport::number(OptimizationRun::shape_gradients[i][j], 4);
+        }
+      }
+      rows.push_back({std::to_string(i), RunReport::number(-OptimizationRun::loss_history[i], 8), RunReport::number(OptimizationRun::gradient_norm_history[i], 4), RunReport::number(largest_displacement, 4), parameters, gradient});
+    }
+    report.table("Evaluations", {"evaluation", "signal |s|", "norm of the gradient", "largest |f(z)| [um]", "shape parameters", "gradient of the loss"}, rows);
+    std::ofstream gradients(GlobalOutputManager.get_full_filename("optimization_gradients.txt"));
+    gradients.precision(10);
+    gradients << "# evaluation gradient of the loss with respect to the shape parameters..." << std::endl;
+    for(unsigned int i = 0; i < OptimizationRun::loss_history.size() && i < OptimizationRun::shape_gradients.size(); i++) {
+      gradients << i;
+      for(double value : OptimizationRun::shape_gradients[i]) gradients << " " << value;
+      gradients << std::endl;
+    }
+    report.note("The outputs of the field (slices, signal along z, ParaView files) belong to the best shape, which is computed again at the end.");
+    report.section("Solution process");
+    report.note("In an optimization run the table of the iterative solvers covers all forward and adjoint solves of all evaluations.");
+  }
+  GlobalRunReport.write();
   print_info("OptimizationRun::run", "End", LoggingLevel::PRODUCTION_ONE);
 }
 
@@ -176,6 +288,7 @@ double OptimizationRun::perform_step(const dealii::Vector<double> & x, dealii::V
   }
   OptimizationRun::shape_dofs.push_back(x_vec);
   OptimizationRun::set_shape_dofs(x);
+  if(OptimizationRun::stopping_criteria_active) sampled_shapes.push_back(sample_current_shape());
   OptimizationRun::solve_main_problem();
   double loss_functional_evaluation = -std::abs(mainProblem->compute_signal_strength_of_solution());
   print_info("OptimizationRun::perform_step", "Loss functional in step " + std::to_string(OptimizationRun::step_counter) + ": " + std::to_string(loss_functional_evaluation));
@@ -206,22 +319,12 @@ double OptimizationRun::perform_step(const dealii::Vector<double> & x, dealii::V
     if(is_first) {
       OptimizationRun::initial_gradient_norm = gradient_norm;
     }
-    // "Improved" means: better than the best loss so far by more than the loss tolerance.
-    const bool improved = is_first || (loss_functional_evaluation < OptimizationRun::best_loss - GlobalParams.optimization_loss_tolerance * std::abs(OptimizationRun::best_loss));
     if(is_first || loss_functional_evaluation < OptimizationRun::best_loss) {
       OptimizationRun::best_loss = loss_functional_evaluation;
       OptimizationRun::best_shape_dofs = x_vec;
     }
-    if(improved) {
-      OptimizationRun::evaluations_without_improvement = 0;
-    } else {
-      OptimizationRun::evaluations_without_improvement++;
-    }
     if(gradient_norm <= GlobalParams.optimization_gradient_tolerance * OptimizationRun::initial_gradient_norm) {
       throw OptimizationFinished("The norm of the shape gradient (" + std::to_string(gradient_norm) + ") is below " + std::to_string(GlobalParams.optimization_gradient_tolerance) + " times its initial value (" + std::to_string(OptimizationRun::initial_gradient_norm) + ").");
-    }
-    if(OptimizationRun::evaluations_without_improvement >= 4) {
-      throw OptimizationFinished("The loss did not improve in four consecutive evaluations.");
     }
     if(OptimizationRun::loss_history.size() >= GlobalParams.optimization_max_evaluations) {
       throw OptimizationFinished("The maximum number of evaluations (" + std::to_string(GlobalParams.optimization_max_evaluations) + ") was reached.");

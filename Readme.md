@@ -27,7 +27,7 @@ cmake --build build
 
 # 3. Run the default case (a short straight waveguide, 2 processes) and the tests
 mpirun -np 2 build/Main/main
-ctest --test-dir build                               # all tests (about 4 minutes in a release build)
+ctest --test-dir build                               # all tests (about 7 minutes in a release build)
 ctest --test-dir build -L unit                       # only the fast unit tests
 ```
 
@@ -65,7 +65,9 @@ The files are deal.II `ParameterHandler` files. All parameters, their defaults a
 - `perform gradient check = true` (case file, together with `perform optimization = true`) compares the shape
   gradient with finite differences instead of optimizing. An optimization run stops according to
   `optimization gradient tolerance`, `optimization loss tolerance`, `optimization maximum evaluations` and
-  `optimization maximum steps` and writes `optimization_history.txt`.
+  `optimization maximum steps` and writes `optimization_history.txt`. The default loss tolerance (1e-5) stops as
+  soon as the signal is good; use 1e-9 if the shape itself has to converge. `Initial shape parameters` sets the
+  starting shape (three slopes for five shape sectors).
 - `Input Signal Method = Dirichlet` prescribes the mode on the input face. `Taper` uses a volume source and a PML
   behind the input, which also absorbs reflections that travel backwards.
 - `Boundary Method = HSIE` replaces the PML by Hardy space infinite elements (`HSIE polynomial degree`, typically 3
@@ -92,10 +94,16 @@ Every run creates a new folder `Solutions/run<i>` (or `$WAVEGUIDE_OUTPUT_DIR/run
 
 | File | Content |
 | --- | --- |
+| `run_report.txt` | **Start here.** A description of the run for reading: type of run and solver, geometry, mesh, numbers of unknowns per sweeping level (interior and absorbing boundary), statistics of the solvers on every level (solves, GMRES steps, residual reduction per step, subdomain solves, factorization time and memory), the result and, for optimization runs, all evaluations |
+| `report.html` | The same with figures. Written by `python3 examples/run_report.py <folder>` (needs matplotlib): the field in computational and in physical coordinates, the signal along the waveguide, the residual histories and, for optimization runs, the shapes and the loss |
+| `run_report.json` | The content of the report for post-processing, including the residual histories |
 | `results.txt` | Summary as `key = value`: transmitted signal strength (overlap with the mode at the output, 1 = lossless), errors against the input signal, GMRES iterations, number of unknowns and subdomain solves, factorization time, time per subdomain solve, size of the factors |
 | `run_description.txt` | The most important parameters and the git commit of the code |
 | `_solution.pvtu` | Open this in ParaView. It references the `.vtu` files of all processes (interior and PML domains) |
 | `ConvergenceHistoryLevel*.gnuplot/.dat` | Residual histories of the GMRES solvers of every level (a plot is created if `gnuplot` is installed) |
+| `field_slice_<plane><process>.txt` | The field at the cell centers of the three middle planes, with computational and physical coordinates |
+| `signal_along_z<process>.txt` | Overlap of the field with the mode on every plane of cell faces z = const; summed over the processes it gives the signal s(z) along the waveguide |
+| `optimization_history.txt`, `optimization_shapes.txt`, `optimization_gradients.txt` | Optimization runs only: loss, gradient norm and shape parameters of every evaluation, the displacement f(z) of every evaluated shape, and the gradients |
 | `timer_output*.dat`, `main<rank>.log` | Timings per level and the log of every process |
 
 ### Environment variables

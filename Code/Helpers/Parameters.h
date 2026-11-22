@@ -209,6 +209,7 @@ struct Parameters {
     bool keep_waveguide_width_constant = true;
 
     bool randomly_initialize_shape_dofs = false;
+    std::vector<double> initial_shape_parameters; // empty: default initial shape
     
     auto complete_data() -> void;
 

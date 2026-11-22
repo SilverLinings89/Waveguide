@@ -16,6 +16,7 @@
 #include "../Helpers/staticfunctions.h"
 #include "../GlobalObjects/GlobalObjects.h"
 #include "../ModalComputations/RectangularMode.h"
+#include "../OutputGenerators/RunReport.h"
 
 SweepingRun::SweepingRun() { }
 
@@ -46,6 +47,7 @@ void SweepingRun::run() {
     mainProblem->solve_with_timers_and_count();
     GlobalTimerManager.write_output();
     mainProblem->output_results();
+    GlobalRunReport.write();
     print_info("SweepingRun::run", "End", LoggingLevel::PRODUCTION_ONE);
 }
 

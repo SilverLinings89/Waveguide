@@ -62,7 +62,7 @@ def main():
         run = {"sweeping level": 1, "processes in x": 1, "processes in y": 1, "processes in z": 4,
                "cell count x": cells[0], "cell count y": cells[1], "cell count z": cells[2],
                "solver precision": 1e-8, "GMRES maximum steps": 60}
-        result = common.run_solver(arguments, arguments.scale, case, run)
+        result = common.run_solver(arguments, arguments.scale, case, run, report=True)
         shutil.copy(os.path.join(result["run_directory"], "optimization_history.txt"), history_file)
     run_directory = os.path.join(output, "runs", arguments.scale, "out", "run0")
     history = np.array(common.read_table(history_file))

@@ -36,6 +36,8 @@ Two more scripts are not tied to a figure of the dissertation:
 | --- | --- |
 | `pml_vs_hsie.py` | Accuracy against memory for PML and Hardy space infinite elements on a test problem with an exact solution (TE10 mode of a metallic waveguide): 3D solver runs, a 1D reference model of both methods (`absorbing_boundary_model.py`) and a trade-off table. Laptop scale: 120 runs of a few seconds. Results are discussed in `../MODERNIZATION.md`, section 10 |
 | `absorbing_boundary_model.py` | The 1D reference model (imported by `pml_vs_hsie.py`) |
+| `straight_recovery.py` | Shape optimization with a known optimum: the waveguide starts with two bumps of 0.36 µm and has to become straight again. Plots the distance of every evaluated shape to the straight waveguide. Laptop scale: 5 minutes. Results are discussed in `../MODERNIZATION.md`, section 13 |
+| `run_report.py` | `python3 examples/run_report.py <output folder of a run>` writes `report.html` for any run: the description of the run and of the solution process from `run_report.json` plus figures of the field (computational and physical coordinates), the signal along the waveguide, the residual histories and the optimization. `hierarchical_sweeping.py`, `shape_optimization.py` and `straight_recovery.py` call it for their run |
 
 Images of the dissertation that are not graphs (fields rendered with ParaView, sketches, mesh pictures) have no
 script. The fields can be reproduced by opening `_solution.pvtu` of the corresponding run in ParaView.
@@ -47,5 +49,7 @@ Notes:
 - The numbers of the dissertation were computed in 2022 with a version of the code that contained the errors listed
   in `../MODERNIZATION.md` (section 2). The examples run the corrected code, so their results differ from the
   printed figures: GMRES needs fewer steps, and the optimization behaves differently.
+- The laptop scale uses 7 PML layers where the dissertation used 10 (`--scale paper` keeps 10): 43 % less memory and
+  40 % less time for nearly the same result, see `../MODERNIZATION.md`, section 12.
 - `common.py` contains the shared code (writing parameter files, starting the solver, reading `results.txt` and
   the residual histories).

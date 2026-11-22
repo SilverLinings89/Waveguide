@@ -275,6 +275,18 @@ class InnerDomain: public FEDomain {
   void write_field_slices(const NumericVectorLocal & in_solution, const std::string & in_name);
 
   /**
+   * @brief Writes the overlap of the solution with the input mode for every plane of cell faces z = const.
+   *
+   * For every plane the file <name><process>.txt contains the sums over the faces (values at the face centers) of
+   * E * conj(m), |m|^2, |E|^2 in the core and |E|^2 in the whole cross-section, where m is the mode at the same
+   * point. The sums of all processes for one z give the transmitted signal s(z) = sum E conj(m) / sum |m|^2.
+   *
+   * @param in_solution The solution in local numbering.
+   * @param in_name Base name of the file.
+   */
+  void write_signal_along_z(const NumericVectorLocal & in_solution, const std::string & in_name);
+
+  /**
    * @brief Computes for every free shape parameter p_j the local part of
    *   lambda^T (dA/dp_j u - db/dp_j),
    * i.e. the integrals of (dT^-1 curl u) . curl lambda - omega^2 eps (dT u) . lambda over the cells of this

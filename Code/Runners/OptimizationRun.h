@@ -33,7 +33,6 @@ class OptimizationRun: public Simulation {
   static double initial_gradient_norm;
   static double best_loss;
   static std::vector<double> best_shape_dofs;
-  static unsigned int evaluations_without_improvement;
   static std::vector<double> loss_history;
   static std::vector<double> gradient_norm_history;
   

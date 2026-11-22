@@ -19,12 +19,15 @@ STRAIGHT_WAVEGUIDE = {
     "epsilon in": 2.3409,
     "epsilon out": 1.8496,
     "Boundary Method": "PML",
-    "PML n layers": 10,
+    "PML n layers": 7,
     "PML thickness": 0.5,
     "PML sigma max": 30,
     "PML skaling order": 3,
     "Input Signal Method": "Dirichlet",
 }
+# The dissertation used 10 PML layers. 7 layers need 43 % less memory and 40 % less time per run for nearly the same
+# result (signal 0.983 instead of 0.987 with 8 subdomains, 7 instead of 5 GMRES steps), so the laptop scale uses 7.
+PAPER_PML_LAYERS = 10
 
 
 def argument_parser(description):
@@ -64,11 +67,12 @@ def write_parameter_file(path, section, parameters):
         f.write("end\n")
 
 
-def run_solver(arguments, label, case, run):
+def run_solver(arguments, label, case, run, report=False):
     """Runs the solver for the given case and run parameters.
 
     Returns a dictionary with the entries of results.txt (if the run wrote one) and additionally
-    "wall_time" (seconds, whole run), "run_directory" and "stdout".
+    "wall_time" (seconds, whole run), "run_directory" and "stdout". With report=True the HTML report of the run
+    (report.html in the run directory, see run_report.py) is built as well.
     """
     work = os.path.join(arguments.output, "runs", label)
     shutil.rmtree(work, ignore_errors=True)
@@ -95,6 +99,10 @@ def run_solver(arguments, label, case, run):
     results_file = os.path.join(results["run_directory"], "results.txt")
     if os.path.exists(results_file):
         results.update(read_key_value_file(results_file))
+    if report and os.path.exists(os.path.join(results["run_directory"], "run_report.json")):
+        import run_report
+        results["report"] = run_report.build(results["run_directory"])
+        print("  report:", results["report"])
     print(" %.0f s" % wall_time)
     return results
 

@@ -69,11 +69,12 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("global z shift", "0", Patterns::Double(), "Shifts the global geometry to remove the center of the dipole for convergence studies.");
         case_prm.declare_entry("Optimization Algorithm", "BFGS", Patterns::Selection("BFGS|Steepest"), "The algorithm to compute the next parametrization in an optimization run.");
         case_prm.declare_entry("Initialize Shape Dofs Randomly", "false", Patterns::Bool(), "If set to true, the shape dofs are initialized to random values.");
+        case_prm.declare_entry("Initial shape parameters", "", Patterns::List(Patterns::Double()), "Initial values of the free shape parameters of the vertical displacement (comma separated). Empty: the default initial shape. This gives an optimization run a defined starting point that is not optimal.");
         case_prm.declare_entry("perform optimization", "false", Patterns::Bool(), "If true, the code will perform shape optimization.");
         case_prm.declare_entry("optimization maximum steps", "15", Patterns::Integer(1), "Maximum number of BFGS steps of an optimization run.");
         case_prm.declare_entry("optimization maximum evaluations", "40", Patterns::Integer(1), "Maximum number of evaluations of the loss functional (each one requires a forward and an adjoint solve). A BFGS step needs one or more evaluations for its line search.");
         case_prm.declare_entry("optimization gradient tolerance", "1e-2", Patterns::Double(0), "The optimization stops when the norm of the shape gradient is smaller than this factor times the norm of the gradient at the initial shape.");
-        case_prm.declare_entry("optimization loss tolerance", "1e-5", Patterns::Double(0), "The optimization stops when four consecutive evaluations did not improve the best loss by more than this factor times the absolute value of the loss.");
+        case_prm.declare_entry("optimization loss tolerance", "1e-5", Patterns::Double(0), "The optimization stops when two consecutive BFGS steps did not improve the loss by more than this factor times the absolute value of the loss.");
         case_prm.declare_entry("perform gradient check", "false", Patterns::Bool(), "Only used if perform optimization is true. Instead of running the optimization, the shape gradient at the initial shape is compared with central finite differences of the loss functional. This requires two additional field solves per shape parameter.");
         case_prm.declare_entry("gradient check step width", "0.01", Patterns::Double(0), "Step width of the finite differences of the gradient check.");
         case_prm.declare_entry("vertical waveguide displacement", "0", Patterns::Double(), "The delta of the waveguide core at the input and output interfaces.");
@@ -180,6 +181,10 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
             ret.optimization_stepping_method = SteppingMethod::Steepest;
         }
         ret.randomly_initialize_shape_dofs = case_prm.get_bool("Initialize Shape Dofs Randomly");
+        ret.initial_shape_parameters.clear();
+        for(const std::string & value : dealii::Utilities::split_string_list(case_prm.get("Initial shape parameters"))) {
+            if(value.size() > 0) ret.initial_shape_parameters.push_back(dealii::Utilities::string_to_double(value));
+        }
         ret.Perform_Optimization = case_prm.get_bool("perform optimization");
         ret.Perform_gradient_check = case_prm.get_bool("perform gradient check");
         ret.optimization_n_shape_steps = case_prm.get_integer("optimization maximum steps");

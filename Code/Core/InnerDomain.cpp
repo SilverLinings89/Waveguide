@@ -22,6 +22,9 @@
 #include <deal.II/matrix_free/fe_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
 #include <algorithm>
+#include <array>
+#include <cmath>
+#include <map>
 #include <memory>
 #include <ctime>
 #include <string>
@@ -812,5 +815,55 @@ void InnerDomain::write_field_slices(const NumericVectorLocal & in_solution, con
         files[plane] << " " << (Geometry.math_coordinate_in_waveguide(p) ? 1 : 0) << std::endl;
       }
     }
+  }
+}
+
+void InnerDomain::write_signal_along_z(const NumericVectorLocal & in_solution, const std::string & in_name) {
+  // The field is evaluated at the centers of the cell faces z = const. There the components E_x and E_y, which
+  // carry the mode, are tangential and therefore well defined. At the cell centers the lowest order elements
+  // average the values of two faces, which reduces the amplitude of a wave by cos(beta h / 2) on coarse meshes.
+  // Every face is counted once: each cell contributes its lower face, the last layer also its upper face.
+  std::map<long, std::array<double, 6>> layers; // z, Re S, Im S, |m|^2, |E|^2 in the core, |E|^2
+  const Quadrature<3> quadrature_formula(std::vector<Point<3>>{Point<3>(0.5, 0.5, 0.0), Point<3>(0.5, 0.5, 1.0)});
+  const FEValuesExtractors::Vector fe_field(0);
+  FEValues<3> fe_values(fe, quadrature_formula, update_values | update_quadrature_points);
+  std::vector<DofNumber> local_dof_indices(fe.n_dofs_per_cell());
+  Vector<ComplexNumber> mode(3);
+  for (DofHandler3D::active_cell_iterator cell = dof_handler.begin_active(); cell != dof_handler.end(); ++cell) {
+    fe_values.reinit(cell);
+    cell->get_dof_indices(local_dof_indices);
+    for(unsigned int q = 0; q < 2; q++) {
+      const Position p = fe_values.quadrature_point(q);
+      if(q == 1 && std::abs(p[2] - Geometry.global_z_range.second) > FLOATING_PRECISION) continue;
+      Tensor<1,3,ComplexNumber> value;
+      for(unsigned int i = 0; i < fe.n_dofs_per_cell(); i++) {
+        value += fe_values[fe_field].value(i, q) * in_solution[local_dof_indices[i]];
+      }
+      GlobalParams.source_field->vector_value(p, mode);
+      ComplexNumber overlap(0, 0);
+      double mode_norm = 0, energy = 0;
+      for(unsigned int component = 0; component < 3; component++) {
+        overlap += value[component] * conjugate(mode[component]);
+        mode_norm += std::norm(mode[component]);
+        energy += std::norm(value[component]);
+      }
+      const long key = std::lround(p[2] * 1e6);
+      if(layers.find(key) == layers.end()) {
+        layers[key] = {{p[2], 0, 0, 0, 0, 0}};
+      }
+      std::array<double, 6> & layer = layers[key];
+      layer[1] += overlap.real();
+      layer[2] += overlap.imag();
+      layer[3] += mode_norm;
+      if(Geometry.math_coordinate_in_waveguide(p)) layer[4] += energy;
+      layer[5] += energy;
+    }
+  }
+  std::ofstream out(GlobalOutputManager.get_numbered_filename(in_name, GlobalParams.MPI_Rank, "txt"));
+  out.precision(10);
+  out << "# z re_overlap im_overlap mode_norm energy_in_core energy_total (sums over the centers of the cell faces z = const)" << std::endl;
+  for(const auto & layer : layers) {
+    for(unsigned int i = 0; i < 6; i++) out << (i > 0 ? " " : "") << layer.second[i];
+    out << std::endl;
   }
 }

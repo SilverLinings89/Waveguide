@@ -129,6 +129,10 @@ void WaveguideTransformation::set_free_dof(int index, double value) {
 void WaveguideTransformation::estimate_and_initialize() {
   vertical_shift.set_constraints(0, GlobalParams.Vertical_displacement_of_waveguide, 0,0);
   vertical_shift.initialize();
+  if(GlobalParams.initial_shape_parameters.size() > 0) {
+    AssertThrow(GlobalParams.initial_shape_parameters.size() == vertical_shift.get_n_free_dofs(), dealii::ExcMessage("The parameter 'Initial shape parameters' needs " + std::to_string(vertical_shift.get_n_free_dofs()) + " values (number of shape sectors minus 2)."));
+    vertical_shift.set_free_values(GlobalParams.initial_shape_parameters);
+  }
   if(!GlobalParams.keep_waveguide_height_constant) {
     waveguide_height.set_constraints(1, 1, 0,0);
     waveguide_height.initialize();

@@ -3,7 +3,6 @@
 #include "../../Core/Types.h"
 
 class ResidualOutputGenerator {
-    std::vector<DataSeries> data_series;
     const std::string name;
     std::string fname, ofname;
     std::string plot_title;
@@ -17,6 +16,7 @@ class ResidualOutputGenerator {
 
 
 public:
+    std::vector<DataSeries> data_series; // one series of residuals per solve
     ResidualOutputGenerator();
     ResidualOutputGenerator(std::string in_name, std::string in_title, unsigned int in_rank_in_sweep, unsigned int in_level, int in_parent_sweeping_rank);
     

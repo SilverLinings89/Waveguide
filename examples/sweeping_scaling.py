@@ -32,6 +32,8 @@ def main():
         rows = []
         for n in SUBDOMAINS[arguments.scale]:
             case = dict(common.STRAIGHT_WAVEGUIDE, **{"geometry size z": 2.0 * n})
+            if arguments.scale == "paper":
+                case["PML n layers"] = common.PAPER_PML_LAYERS
             run = {"sweeping level": 1, "processes in x": 1, "processes in y": 1, "processes in z": n,
                    "cell count x": 20, "cell count y": 20, "cell count z": 20, "solver precision": 1e-6}
             result = common.run_solver(arguments, "subdomains_%03d" % n, case, run)

@@ -40,7 +40,7 @@ def main():
                    "cell count x": 16, "cell count y": 16, "cell count z": 40}
         run.update({"use relative convergence criterion": True, "relative convergence criterion": 1e-2,
                     "solver precision": 1e-6, "GMRES maximum steps": 30})
-        result = common.run_solver(arguments, arguments.scale, case, run)
+        result = common.run_solver(arguments, arguments.scale, case, run, report=True)
         common.write_table(marker, ["dofs", "gmres_steps_level_1", "subdomain_solves", "wall_time_s", "signal_strength"],
                            [[result["n_dofs"], result["solver_iterations"], result["n_local_solves"], result["wall_time"], result["signal_strength_abs"]]])
     run_directory = os.path.join(output, "runs", arguments.scale, "out", "run0")

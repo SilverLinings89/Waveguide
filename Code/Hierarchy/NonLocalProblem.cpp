@@ -4,6 +4,10 @@
 #include "HierarchicalProblem.h"
 #include "LocalProblem.h"
 #include "../Core/InnerDomain.h"
+#include "../OutputGenerators/RunReport.h"
+#include "../GlobalObjects/GlobalObjects.h"
+#include <array>
+#include <cmath>
 #include <deal.II/base/index_set.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
@@ -518,6 +522,7 @@ std::string NonLocalProblem::output_results() {
       slice_solution[i] = shared_solution[Geometry.levels[level].inner_domain->global_index_mapping[i]];
     }
     Geometry.levels[level].inner_domain->write_field_slices(slice_solution, "field_slice");
+    Geometry.levels[level].inner_domain->write_signal_along_z(slice_solution, "signal_along_z");
   }
   ComplexNumber signal_strength = compute_signal_strength_of_solution();
   print_info("NonLocalProblem::output_results", "Signal strength: " + std::to_string(std::abs(signal_strength)) + " (complex amplitude: " + std::to_string(signal_strength.real()) + " + " + std::to_string(signal_strength.imag()) + "i)", LoggingLevel::PRODUCTION_ONE);
@@ -544,6 +549,8 @@ std::string NonLocalProblem::output_results() {
   if(GlobalParams.Output_transformed_solution) {
     write_multifile_output("transformed_solution", true);
   }
+  fill_run_report(signal_strength, errors, {{(double) n_local_solves, local_factorization_time_max, (local_timed_solves > 0) ? local_solve_time_sum / local_timed_solves : 0.0,
+    local_factor_entries_full, local_factor_entries_stored, local_factor_memory_max}});
   print_info("NonLocalProblem", "End output results on level" + std::to_string(level));
   return "";
 }
@@ -944,4 +951,212 @@ std::vector<double> NonLocalProblem::compute_shape_gradient() {
   }
   print_info("NonLocalProblem::compute_shape_gradient", "End");
   return ret;
+}
+static std::string direction_name(SweepingDirection in_direction) {
+  if(in_direction == SweepingDirection::X) return "x";
+  if(in_direction == SweepingDirection::Y) return "y";
+  return "z";
+}
+
+void NonLocalProblem::fill_run_report(ComplexNumber signal_strength, FEErrorStruct errors, const std::array<double, 6> & local_solver_statistics) {
+  RunReport & report = GlobalRunReport;
+  const bool is_pml = GlobalParams.BoundaryCondition == BoundaryConditionType::PML;
+  const std::string boundary_method = is_pml ? "PML" : "Hardy space infinite elements";
+  const double wavelength_core = GlobalParams.Lambda / std::sqrt(GlobalParams.Epsilon_R_in_waveguide);
+
+  // ---- Numbers of unknowns. These need communication and are computed on all processes. ----
+  std::vector<std::vector<std::string>> level_rows;
+  for(int l = level; l >= 0; l--) {
+    const MPI_Comm communicator = GlobalMPI.communicators_by_level[l];
+    double interior = Geometry.levels[l].inner_domain->n_locally_owned_dofs;
+    interior = Utilities::MPI::sum(interior, communicator);
+    const double total = Geometry.levels[l].n_total_level_dofs;
+    const double processes_per_problem = Utilities::MPI::n_mpi_processes(communicator);
+    const double total_min = Utilities::MPI::min(total, MPI_COMM_WORLD);
+    const double total_max = Utilities::MPI::max(total, MPI_COMM_WORLD);
+    const double interior_min = Utilities::MPI::min(interior, MPI_COMM_WORLD);
+    const double interior_max = Utilities::MPI::max(interior, MPI_COMM_WORLD);
+    const double boundary_min = Utilities::MPI::min(total - interior, MPI_COMM_WORLD);
+    const double boundary_max = Utilities::MPI::max(total - interior, MPI_COMM_WORLD);
+    auto range = [](double low, double high) {
+      return (low == high) ? RunReport::count(low) : RunReport::count(low) + " to " + RunReport::count(high);
+    };
+    std::string role = "subdomain problem, solved directly (MUMPS)";
+    if(l == (int) level) role = "global problem, GMRES with a sweep in " + direction_name(get_sweeping_direction_for_level(l));
+    else if(l > 0) role = "subdomain of level " + std::to_string(l + 1) + ", GMRES with a sweep in " + direction_name(get_sweeping_direction_for_level(l));
+    level_rows.push_back({std::to_string(l), role, RunReport::count(GlobalParams.NumberProcesses / processes_per_problem), RunReport::count(processes_per_problem),
+      range(total_min, total_max), range(interior_min, interior_max), range(boundary_min, boundary_max)});
+  }
+  const std::string side_names[6] = {"-x", "+x", "-y", "+y", "-z (input)", "+z (output)"};
+  std::vector<std::vector<std::string>> side_rows;
+  for(unsigned int surf = 0; surf < 6; surf++) {
+    const SurfaceType type = Geometry.levels[level].surface_type[surf];
+    double dofs = (type == SurfaceType::ABC_SURFACE) ? (double) Geometry.levels[level].surfaces[surf]->n_locally_owned_dofs : 0.0;
+    dofs = Utilities::MPI::sum(dofs, MPI_COMM_WORLD);
+    const int has_abc = Utilities::MPI::max((type == SurfaceType::ABC_SURFACE) ? 1 : 0, MPI_COMM_WORLD);
+    const int has_dirichlet = Utilities::MPI::max((type == SurfaceType::DIRICHLET_SURFACE) ? 1 : 0, MPI_COMM_WORLD);
+    const int has_open = Utilities::MPI::max((type == SurfaceType::OPEN_SURFACE) ? 1 : 0, MPI_COMM_WORLD);
+    std::string condition = has_abc ? boundary_method : (has_dirichlet ? "Dirichlet values" : (has_open ? "open" : "none"));
+    side_rows.push_back({side_names[surf], condition, RunReport::count(dofs)});
+  }
+  const double n_cells_total = n_total_cells();
+
+  // ---- Statistics of the iterative solvers. Process 0 takes part in one problem on every level. ----
+  std::vector<std::vector<std::string>> solver_rows;
+  std::vector<std::pair<std::string, std::vector<double>>> residual_series;
+  {
+    HierarchicalProblem * problem = this;
+    while(problem->level > 0) {
+      const unsigned int n_solves_global = problem->compute_global_solve_counter();
+      double steps = 0, log_reduction = 0, n_series = 0;
+      unsigned int max_steps = 0;
+      for(const DataSeries & history : problem->residual_output->data_series) {
+        if(history.values.size() < 2) continue;
+        const unsigned int n_steps = history.values.size() - 1;
+        steps += n_steps;
+        max_steps = std::max(max_steps, n_steps);
+        log_reduction += std::log(history.values.back() / history.values.front());
+        n_series += 1;
+      }
+      NonLocalProblem * non_local = dynamic_cast<NonLocalProblem *>(problem);
+      const unsigned int n_slabs = non_local ? non_local->n_blocks_in_sweeping_direction : 0;
+      solver_rows.push_back({std::to_string(problem->level), direction_name(get_sweeping_direction_for_level(problem->level)), std::to_string(n_slabs),
+        RunReport::count(n_solves_global), (n_series > 0) ? RunReport::number(steps / n_series, 3) : "-", std::to_string(max_steps),
+        (steps > 0) ? RunReport::number(std::exp(log_reduction / steps), 3) : "-"});
+      // Residual histories for the plots: all of the top level, the first ones of the lower levels.
+      const unsigned int n_stored = (problem->level == level) ? 400 : 40;
+      for(unsigned int i = 0; i < problem->residual_output->data_series.size() && i < n_stored; i++) {
+        residual_series.push_back(std::make_pair("residuals_level_" + std::to_string(problem->level), problem->residual_output->data_series[i].values));
+      }
+      problem = problem->child;
+    }
+  }
+
+  if(GlobalParams.MPI_Rank != 0) return;
+
+  report.section("Run");
+  std::string run_type = "Single solve";
+  if(GlobalParams.Perform_Optimization) run_type = GlobalParams.Perform_gradient_check ? "Check of the shape gradient" : "Shape optimization (BFGS with adjoint gradients)";
+  report.entry("Type of run", run_type);
+  const char * problems[5] = {"Mode of a rectangular waveguide (computed)", "Test field cos cos", "Hertz dipole in a homogeneous medium", "Mode of a dielectric rectangular waveguide", "TE10 mode of a waveguide with metallic walls"};
+  report.entry("Problem", std::string(GlobalParams.Point_Source_Type < 5 ? problems[GlobalParams.Point_Source_Type] : "unknown"));
+  report.entry("Equation", "time harmonic Maxwell: curl(mu^-1 curl E) - omega^2 eps E = 0, vacuum wavelength " + RunReport::number(GlobalParams.Lambda) + " um");
+  report.entry("Finite elements", "Nedelec (Schoeberl-Zaglmayr) on hexahedra, order " + std::to_string(GlobalParams.Nedelec_element_order) + " (0 is the lowest order)");
+  report.entry("Iterative solver", GlobalParams.solve_directly ? std::string("none, the global system is solved directly (MUMPS)") : "flexible GMRES, right preconditioned by a sweeping preconditioner with " + std::to_string(GlobalParams.Sweeping_Level) + " level(s)");
+  report.entry("Subdomain solver", "MUMPS, LDL^T factorization" + (GlobalParams.local_solver_compression_tolerance > 0 ? ", block low rank compression with tolerance " + RunReport::number(GlobalParams.local_solver_compression_tolerance) : std::string(", no compression")));
+  report.entry("Tolerance", "absolute residual " + RunReport::number(GlobalParams.Solver_Precision) + ", at most " + std::to_string(GlobalParams.GMRES_max_steps) + " steps"
+    + (GlobalParams.Sweeping_Level > 1 && GlobalParams.use_relative_convergence_criterion ? "; lower levels stop at " + RunReport::number(GlobalParams.relative_convergence_criterion) + " times the current residual of the level above" : ""));
+  report.entry("Processes", std::to_string(GlobalParams.NumberProcesses) + " (" + std::to_string(GlobalParams.Blocks_in_x_direction) + " x " + std::to_string(GlobalParams.Blocks_in_y_direction) + " x " + std::to_string(GlobalParams.Blocks_in_z_direction) + " in x, y, z)");
+  if(is_pml) {
+    report.entry("Absorbing boundary", "PML, " + std::to_string(GlobalParams.PML_N_Layers) + " layers, thickness " + RunReport::number(GlobalParams.PML_thickness) + " um, sigma max " + RunReport::number(GlobalParams.PML_Sigma_Max) + ", profile order " + std::to_string(GlobalParams.PML_skaling_order));
+  } else {
+    report.entry("Absorbing boundary", "Hardy space infinite elements, degree " + std::to_string(GlobalParams.HSIE_polynomial_degree) + ", kappa_0 = " + RunReport::number(GlobalParams.kappa_0.real()) + " + " + RunReport::number(GlobalParams.kappa_0.imag()) + "i");
+  }
+  report.entry("Input signal", GlobalParams.use_tapered_input_signal ? std::string("tapered exact mode as right hand side (between z = ") + RunReport::number(GlobalParams.tapering_min_z) + " and " + RunReport::number(GlobalParams.tapering_max_z) + ")" : std::string("Dirichlet values of the mode on the input side (-z)"));
+  report.entry("Wall time until the outputs", RunReport::number(report.seconds_since_start(), 4) + " s");
+
+  report.section("Geometry");
+  report.entry("Computational domain x", RunReport::number(Geometry.global_x_range.first) + " to " + RunReport::number(Geometry.global_x_range.second) + " um");
+  report.entry("Computational domain y", RunReport::number(Geometry.global_y_range.first) + " to " + RunReport::number(Geometry.global_y_range.second) + " um");
+  report.entry("Computational domain z", RunReport::number(Geometry.global_z_range.first) + " to " + RunReport::number(Geometry.global_z_range.second) + " um (direction of propagation)");
+  if(GlobalParams.Point_Source_Type == 3 || GlobalParams.Point_Source_Type == 0) {
+    report.entry("Waveguide core", RunReport::number(GlobalParams.Width_of_waveguide) + " um wide (x), " + RunReport::number(GlobalParams.Height_of_waveguide) + " um high (y)");
+    report.entry("Relative permittivity", RunReport::number(GlobalParams.Epsilon_R_in_waveguide) + " in the core, " + RunReport::number(GlobalParams.Epsilon_R_outside_waveguide) + " in the cladding");
+  } else {
+    report.entry("Relative permittivity", RunReport::number(GlobalParams.Epsilon_R_outside_waveguide));
+  }
+  report.entry("Wavelength in the core", RunReport::number(wavelength_core, 4) + " um");
+  std::string shape_parameters;
+  for(unsigned int i = 0; i < GlobalSpaceTransformation->n_free_dofs(); i++) {
+    shape_parameters += (i > 0 ? ", " : "") + RunReport::number(GlobalSpaceTransformation->get_free_dof(i), 5);
+  }
+  if(GlobalParams.Use_Predefined_Shape) {
+    report.entry("Shape", "predefined shape number " + std::to_string(GlobalParams.Number_of_Predefined_Shape));
+  } else {
+    report.entry("Shape", "the axis of the waveguide is displaced vertically by f(z); f(z) = " + RunReport::number(GlobalParams.Vertical_displacement_of_waveguide) + " um in the middle of the domain, symmetric to the middle");
+    report.entry("Shape parameters", shape_parameters.size() > 0 ? shape_parameters + " (slopes of f at the inner nodes of " + std::to_string(GlobalParams.Number_of_sectors) + " sectors)" : std::string("none"));
+  }
+  report.note("The solver works in transformed coordinates, in which the waveguide is straight. The shape enters through the material tensors. Physical coordinates: y_physical = y + f(z).");
+
+  report.section("Mesh");
+  const unsigned int cells[3] = {GlobalParams.Cells_in_x, GlobalParams.Cells_in_y, GlobalParams.Cells_in_z};
+  const unsigned int blocks[3] = {GlobalParams.Blocks_in_x_direction, GlobalParams.Blocks_in_y_direction, GlobalParams.Blocks_in_z_direction};
+  const double sizes[3] = {Geometry.global_x_range.second - Geometry.global_x_range.first, Geometry.global_y_range.second - Geometry.global_y_range.first, Geometry.global_z_range.second - Geometry.global_z_range.first};
+  report.entry("Cells per process (interior)", std::to_string(cells[0]) + " x " + std::to_string(cells[1]) + " x " + std::to_string(cells[2]));
+  report.entry("Cells of the interior", std::to_string(cells[0] * blocks[0]) + " x " + std::to_string(cells[1] * blocks[1]) + " x " + std::to_string(cells[2] * blocks[2]) + " = " + RunReport::count((double) cells[0] * blocks[0] * cells[1] * blocks[1] * cells[2] * blocks[2]));
+  report.entry("Cells including the absorbing layers", RunReport::count(n_cells_total));
+  std::string cell_size, resolution;
+  for(unsigned int d = 0; d < 3; d++) {
+    const double h = sizes[d] / (cells[d] * blocks[d]);
+    cell_size += (d > 0 ? " x " : "") + RunReport::number(h, 4);
+    resolution += (d > 0 ? ", " : "") + RunReport::number(wavelength_core / h, 3);
+  }
+  report.entry("Cell size", cell_size + " um");
+  report.entry("Cells per wavelength in the core (x, y, z)", resolution);
+  if(is_pml) {
+    report.entry("Thickness of one PML cell layer", RunReport::number(GlobalParams.PML_thickness / GlobalParams.PML_N_Layers, 4) + " um");
+  }
+
+  report.section("Unknowns");
+  report.entry("Unknowns of the global problem", RunReport::count(Geometry.levels[level].n_total_level_dofs));
+  report.table("Problems of the hierarchy (ranges are over the problems of a level)",
+    {"level", "role", "problems", "processes each", "unknowns", "interior", "absorbing boundary"}, level_rows);
+  report.table("Unknowns of the absorbing boundary of the global problem by side",
+    {"side", "condition", "unknowns"}, side_rows);
+  report.note("Every problem of a level has its own absorbing boundaries on the sides where it was cut out of the level above. This is why the unknowns of the lower levels add up to more than the global problem.");
+
+  report.section("Solution process");
+  if(!GlobalParams.solve_directly) {
+    report.table("Iterative solvers (steps and reduction are from the solves that process 0 took part in)",
+      {"level", "sweep direction", "subdomains in the sweep", "solves", "GMRES steps per solve", "most steps", "mean residual reduction per step"}, solver_rows);
+    for(const auto & one_series : residual_series) {
+      report.series(one_series.first, one_series.second);
+    }
+    PetscInt n_iterations = 0;
+    KSPGetIterationNumber(ksp, &n_iterations);
+    PetscReal final_residual = 0;
+    KSPGetResidualNorm(ksp, &final_residual);
+    KSPConvergedReason reason;
+    KSPGetConvergedReason(ksp, &reason);
+    report.entry("Last global solve", std::to_string(n_iterations) + " GMRES steps, final residual " + RunReport::number(final_residual, 3) + (reason > 0 ? " (converged)" : " (NOT converged)"));
+  }
+  report.entry("Subdomain solves (direct)", RunReport::count(local_solver_statistics[0]));
+  report.entry("Factorization time (slowest process)", RunReport::number(local_solver_statistics[1], 4) + " s");
+  report.entry("Time per subdomain solve (mean)", RunReport::number(local_solver_statistics[2], 4) + " s");
+  report.entry("Memory of the factorization (largest process)", RunReport::count(local_solver_statistics[5]) + " MB");
+  report.entry("Entries of all factors", RunReport::count(local_solver_statistics[4]) + (local_solver_statistics[3] > 0 && local_solver_statistics[4] < local_solver_statistics[3] ? " (" + RunReport::number(100.0 * local_solver_statistics[4] / local_solver_statistics[3], 3) + " % of the uncompressed factors)" : ""));
+  report.note("A sweep solves the subdomains one after the other, so the wall time of the solution is roughly the number of subdomain solves times the time per solve.");
+
+  report.section("Result");
+  report.entry("Signal transmission |s|", RunReport::number(std::abs(signal_strength), 8));
+  report.entry("Complex amplitude s", RunReport::number(signal_strength.real(), 8) + (signal_strength.imag() < 0 ? " - " : " + ") + RunReport::number(std::abs(signal_strength.imag()), 8) + "i");
+  report.entry("Relative L2 difference to the mode of the straight waveguide", RunReport::number(errors.L2, 6));
+  report.entry("Largest pointwise difference", RunReport::number(errors.Linfty, 6));
+  report.note("s is the overlap of the field with the mode on the output side, divided by the overlap of the mode with itself. 1 means complete transmission. The difference to the straight mode is only an error measure if the waveguide is straight.");
+  report.table("Files in this folder", {"file", "content"}, {
+    {"run_report.txt, run_report.json", "this report as text and for post-processing"},
+    {"results.txt", "the main numbers as key = value"},
+    {"_solution.pvtu", "the field for ParaView (computational coordinates)"},
+    {"field_slice_[xyz]<process>.txt", "the field at the cell centers of the three middle planes, computational and physical coordinates"},
+    {"signal_along_z<process>.txt", "overlap of the field with the mode for every plane of cell faces z = const"},
+    {"ConvergenceHistoryLevel<level><process>.plt", "residual histories as gnuplot script"},
+    {"report.html", "this report with figures, written by examples/run_report.py"}});
+
+  report.data("source_type", (double) GlobalParams.Point_Source_Type);
+  report.data("sweeping_level", (double) GlobalParams.Sweeping_Level);
+  report.data("n_processes", (double) GlobalParams.NumberProcesses);
+  report.data("x_min", Geometry.global_x_range.first);
+  report.data("x_max", Geometry.global_x_range.second);
+  report.data("y_min", Geometry.global_y_range.first);
+  report.data("y_max", Geometry.global_y_range.second);
+  report.data("z_min", Geometry.global_z_range.first);
+  report.data("z_max", Geometry.global_z_range.second);
+  report.data("core_width", GlobalParams.Width_of_waveguide);
+  report.data("core_height", GlobalParams.Height_of_waveguide);
+  report.data("signal_strength_abs", std::abs(signal_strength));
+  report.data("tapered_input", GlobalParams.use_tapered_input_signal ? 1.0 : 0.0);
+  report.data("tapering_min_z", GlobalParams.tapering_min_z);
+  report.data("tapering_max_z", GlobalParams.tapering_max_z);
+  report.data("is_optimization", (GlobalParams.Perform_Optimization && !GlobalParams.Perform_gradient_check) ? 1.0 : 0.0);
+  report.data("solver_precision", GlobalParams.Solver_Precision);
 }

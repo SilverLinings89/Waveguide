@@ -79,6 +79,7 @@ class Runner:
             print(completed.stdout[-4000:])
             fail("The solver exited with code %d." % completed.returncode)
         results = {}
+        self.last_output = os.path.join(work, "out", "run0")
         with open(os.path.join(work, "out", "run0", results_file)) as f:
             for line in f:
                 key, value = line.split("=")
@@ -209,6 +210,73 @@ def test_shape_gradient(runner):
         adjoint, difference = r["adjoint_gradient_%d" % i], r["finite_difference_%d" % i]
         check(abs(difference) > 1e-3, "The finite difference %d is too small to be meaningful." % i)
         check(abs(adjoint / difference - 1) < 0.01, "Shape parameter %d: adjoint gradient %.5f, finite difference %.5f." % (i, adjoint, difference))
+
+
+def test_optimization_recovers_straight_waveguide(runner):
+    """Starting from a perturbed waveguide, the shape optimization has to find the straight one (the known optimum)."""
+    straight = runner.solve(coupling="Taper", processes=(1, 1, 4), cells=(12, 12, 12), precision=1e-8)
+    case = ("    set perform optimization = true\n    set vertical waveguide displacement = 0\n"
+            "    set Initial shape parameters = 0.3, 0.3, 0\n    set optimization maximum evaluations = 25\n"
+            "    set optimization maximum steps = 25\n    set optimization gradient tolerance = 1e-3\n"
+            "    set optimization loss tolerance = 1e-9\n")
+    r = runner.solve(coupling="Taper", processes=(1, 1, 4), cells=(12, 12, 12), precision=1e-8, extra_case=case)
+    with open(os.path.join(runner.last_output, "optimization_shapes.txt")) as f:
+        shapes = [[float(value) for value in line.split()] for line in f if not line.startswith("#")][1:]
+    with open(os.path.join(runner.last_output, "optimization_history.txt")) as f:
+        losses = [float(line.split()[1]) for line in f if not line.startswith("#")]
+    displacements = [max(abs(value) for value in shape) for shape in shapes]
+    best = losses.index(min(losses))
+    print("    evaluations: %d, largest displacement: initial %.3f, best shape %.2e" % (len(losses), displacements[0], displacements[best]))
+    check(abs(displacements[0] - 0.36) < 1e-6, "The initial shape is not the prescribed one (largest displacement %.4f)." % displacements[0])
+    check(len(losses) < 25, "The optimization did not converge within 25 evaluations.")
+    check(displacements[best] < 5e-3, "The best shape is %.2e um away from the straight waveguide." % displacements[best])
+    check(r["signal_strength_abs"] > straight["signal_strength_abs"] - 1e-5,
+          "Signal of the best shape %.6f, of the straight waveguide %.6f." % (r["signal_strength_abs"], straight["signal_strength_abs"]))
+    check(r["signal_strength_abs"] < straight["signal_strength_abs"] + 1e-6, "The optimized shape is better than the straight waveguide.")
+
+
+def test_run_report(runner):
+    """The run report (text and JSON) has to exist and to be consistent with results.txt and the field outputs."""
+    import glob
+    import json
+    r = runner.solve(coupling="Taper", level=2, processes=(1, 2, 2), cells=(12, 6, 8))
+    output = runner.last_output
+    with open(os.path.join(output, "run_report.txt")) as f:
+        text = f.read()
+    with open(os.path.join(output, "run_report.json")) as f:
+        report = json.load(f)
+    sections = {section["title"]: section for section in report["sections"]}
+    for title in ("Run", "Geometry", "Mesh", "Unknowns", "Solution process", "Result"):
+        check(title in sections, "The section '%s' is missing in run_report.json." % title)
+        check(title in text, "The section '%s' is missing in run_report.txt." % title)
+    # Unknowns: the table of the hierarchy has one row per level, and interior + boundary = all for the global problem.
+    levels = sections["Unknowns"]["tables"][0]["rows"]
+    check([row[0] for row in levels] == ["2", "1", "0"], "Expected the levels 2, 1, 0 in the table of unknowns.")
+    total, interior, boundary = (int(levels[0][column].replace(",", "")) for column in (4, 5, 6))
+    check(total == r["n_dofs"], "The report states %d unknowns, results.txt %d." % (total, r["n_dofs"]))
+    check(interior > 0 and boundary > 0 and interior + boundary == total, "Interior and boundary unknowns do not add up.")
+    sides = sections["Unknowns"]["tables"][1]["rows"]
+    check(sum(int(row[2].replace(",", "")) for row in sides) == boundary, "The unknowns by side do not add up to the boundary unknowns.")
+    # Solver statistics: one row per sweeping level and the residual history of the global solve.
+    solvers = sections["Solution process"]["tables"][0]["rows"]
+    check([row[0] for row in solvers] == ["2", "1"], "Expected the solver statistics of the levels 2 and 1.")
+    top = [series["values"] for series in report["series"] if series["name"] == "residuals_level_2"]
+    check(len(top) == 1 and len(top[0]) == r["solver_iterations"] + 1, "The residual history of the global solve is incomplete.")
+    check(abs(report["data"]["signal_strength_abs"] - r["signal_strength_abs"]) < 1e-9, "The signal in the report differs from results.txt.")
+    # Signal along z: summed over the processes, the value on the output side is the signal of results.txt.
+    planes = {}
+    for path in glob.glob(os.path.join(output, "signal_along_z*.txt")):
+        with open(path) as f:
+            for line in f:
+                if not line.startswith("#"):
+                    values = [float(value) for value in line.split()]
+                    sums = planes.setdefault(round(values[0], 6), [0.0, 0.0, 0.0])
+                    for i in range(3):
+                        sums[i] += values[1 + i]
+    check(len(planes) == 2 * 8 + 1, "Expected 17 planes in signal_along_z, found %d." % len(planes))
+    last = planes[max(planes)]
+    at_output = abs(complex(last[0], last[1]) / last[2])
+    check(abs(at_output - r["signal_strength_abs"]) < 2e-3, "Signal along z at the output %.5f, results.txt %.5f." % (at_output, r["signal_strength_abs"]))
 
 
 METALLIC_WAVEGUIDE = """    set source type = 4

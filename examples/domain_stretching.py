@@ -28,6 +28,8 @@ def main():
         rows = []
         for length in LENGTHS[arguments.scale]:
             case = dict(common.STRAIGHT_WAVEGUIDE, **{"geometry size z": length, "PML thickness": 1.0, "PML sigma max": 20})
+            if arguments.scale == "paper":
+                case["PML n layers"] = common.PAPER_PML_LAYERS
             run = {"sweeping level": 1, "processes in x": 1, "processes in y": 1, "processes in z": 8,
                    "cell count x": 20, "cell count y": 20, "cell count z": 20, "solver precision": 1e-6,
                    "GMRES maximum steps": 100}

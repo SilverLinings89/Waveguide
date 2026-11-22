@@ -180,6 +180,17 @@ private:
   std::string output_results();
 
   /**
+   * @brief Adds the description of the setup, the numbers of unknowns, the statistics of the solvers and the results
+   * to the run report (GlobalRunReport). Has to be called on all processes.
+   *
+   * @param signal_strength The normalized overlap of the solution with the mode at the output.
+   * @param errors Errors against the exact solution of the straight waveguide.
+   * @param local_solver_statistics Number of subdomain solves, maximal factorization time, mean time per solve,
+   * entries of the factors without and with compression and maximal memory in MB.
+   */
+  void fill_run_report(ComplexNumber signal_strength, FEErrorStruct errors, const std::array<double, 6> & local_solver_statistics);
+
+  /**
    * @brief Generates actual output files about the current levels solution.
    * For a given filename this function writes the vtu and vtk output files for the inner domain and the boundary methods (if they are PML). It keeps track of all the generated files and generates a header file for Paraview which loads all the individual files. If the input flaf transformed is true, it does the same for the solution in the physical coordinate sysytem.
    * 

@@ -48,6 +48,8 @@ if(Python3_FOUND)
     shape_gradient
     hsie_single_face
     hsie_matches_pml
+    run_report
+    optimization_recovers_straight_waveguide
   )
   foreach(_test ${_integration_tests})
     add_test(NAME integration_${_test}
