@@ -19,6 +19,18 @@ std::array<std::pair<double, double>, 2> ExactSolution::ranges;
 std::array<unsigned int, 2> ExactSolution::n_intervals;
 const ComplexNumber imaginary_unit(0,1);
 
+// The mode profiles are stored as three real numbers (E_x, E_y, E_z) per point. They were computed for the
+// convention exp(i (omega t - beta z)), in which the longitudinal component of a mode propagating in the +z
+// direction is E_z = +i * (stored value). This code uses exp(i (beta z - omega t)) (see compute_phase_for_position
+// and the sign of the PML), i.e. the complex conjugate. The longitudinal component therefore has to be imported as
+// E_z = -i * (stored value). Only with this sign the imported field is divergence free
+// (d/dx E_x + d/dy E_y + i beta E_z = 0) and therefore a mode travelling in the +z direction.
+const ComplexNumber z_component_factor(0,-1);
+
+double ExactSolution::beta() {
+  return 2.0 * GlobalParams.Pi * std::sqrt(GlobalParams.Epsilon_R_effective) / GlobalParams.Lambda;
+}
+
 Position2D ExactSolution::get_2D_position_from_3d(const Position & in_p) const {
   Position2D p2d;
   p2d[0] = in_p[0];
@@ -37,7 +49,7 @@ ComplexNumber ExactSolution::value(const Position &in_p, const unsigned int comp
       ret_val = component_y.value(p2d,0);
       break;
     case 2:
-      ret_val = imaginary_unit * component_z.value(p2d,0);
+      ret_val = z_component_factor * component_z.value(p2d,0);
       break;
     default:
       std::cout << "Error in call to ExactSolution::value. Invalid component requested." << std::endl;
@@ -46,10 +58,8 @@ ComplexNumber ExactSolution::value(const Position &in_p, const unsigned int comp
 }
 
 ComplexNumber ExactSolution::compute_phase_for_position(const Position &in_p) const {
-  const double Lambda_eff = (GlobalParams.Lambda / std::sqrt(GlobalParams.Epsilon_R_effective));
   const double z =  in_p[2] - Geometry.global_z_range.first;
-  const double phi = 2.0 * GlobalParams.Pi * z / Lambda_eff;
-  return std::exp(phi * imaginary_unit);
+  return std::exp(beta() * z * imaginary_unit);
 }
 
 void ExactSolution::vector_value(const Position &in_p, Vector<ComplexNumber> &values) const {
@@ -58,39 +68,27 @@ void ExactSolution::vector_value(const Position &in_p, Vector<ComplexNumber> &va
   Position2D p2d = get_2D_position_from_3d(in_p);
   values[0] = component_x.value(p2d,0) * phase;
   values[1] = component_y.value(p2d,0) * phase;
-  values[2] = imaginary_unit * component_z.value(p2d,0) * phase;
+  values[2] = z_component_factor * component_z.value(p2d,0) * phase;
   return;
 }
 
 Tensor<1, 3, ComplexNumber> ExactSolution::curl(const Position &in_p) const {
-  const double h = 0.01;
+  // The field has the form E = (f(x,y), g(x,y), h(x,y)) * exp(i beta z), so the derivative in the z-direction is
+  // known analytically and only the in-plane derivatives of the tabulated profile are required.
+  const Position2D p2d = get_2D_position_from_3d(in_p);
+  const ComplexNumber phase = compute_phase_for_position(in_p);
+  const ComplexNumber i_beta = imaginary_unit * beta();
+  const ComplexNumber f = component_x.value(p2d, 0);
+  const ComplexNumber g = component_y.value(p2d, 0);
+  const dealii::Tensor<1, 2> grad_f = component_x.gradient(p2d, 0);
+  const dealii::Tensor<1, 2> grad_g = component_y.gradient(p2d, 0);
+  const dealii::Tensor<1, 2> grad_h_table = component_z.gradient(p2d, 0);
+  const ComplexNumber dh_dx = z_component_factor * grad_h_table[0];
+  const ComplexNumber dh_dy = z_component_factor * grad_h_table[1];
   Tensor<1, 3, ComplexNumber> ret;
-  Vector<ComplexNumber> dxF;
-  Vector<ComplexNumber> dyF;
-  Vector<ComplexNumber> dzF;
-  Vector<ComplexNumber> val;
-  dxF.reinit(6, false);
-  dyF.reinit(6, false);
-  dzF.reinit(6, false);
-  val.reinit(6, false);
-  this->vector_value(in_p, val);
-  Position deltap = in_p;
-  deltap[0] = deltap[0] + h;
-  this->vector_value(deltap, dxF);
-  deltap = in_p;
-  deltap[1] = deltap[1] + h;
-  this->vector_value(deltap, dyF);
-  deltap = in_p;
-  deltap[2] = deltap[2] + h;
-  this->vector_value(deltap, dzF);
-  for (int i = 0; i < 3; i++) {
-    dxF[i] = (dxF[i] - val[i]) / h;
-    dyF[i] = (dyF[i] - val[i]) / h;
-    dzF[i] = (dzF[i] - val[i]) / h;
-  }
-  ret[0] = dyF[2] - dzF[1];
-  ret[1] = dzF[0] - dxF[2];
-  ret[2] = dxF[1] - dyF[0];
+  ret[0] = (dh_dy - i_beta * g) * phase;
+  ret[1] = (i_beta * f - dh_dx) * phase;
+  ret[2] = (grad_g[0] - grad_f[1]) * phase;
   return ret;
 }
 
@@ -115,6 +113,9 @@ ExactSolution::ExactSolution() : Function<3, ComplexNumber>(3),
 
 void ExactSolution::load_data(std::string fname) {
   std::ifstream input(fname);
+  if(!input.is_open()) {
+    throw std::runtime_error("ExactSolution::load_data: The mode profile '" + fname + "' could not be opened. Set the environment variable WAVEGUIDE_ROOT to the root folder of the repository.");
+  }
   std::vector<double> x_vals, y_vals;
   std::string line;
   double lx = -1000;
@@ -170,41 +171,32 @@ void ExactSolution::load_data(std::string fname) {
 
 J_derivative_terms ExactSolution::get_derivative_terms(const Position2D & in_p) const {
   J_derivative_terms ret;
-  const double h = 0.01;
-  const double Lambda_eff = (GlobalParams.Lambda / std::sqrt(GlobalParams.Epsilon_R_effective));
-  Position2D plus_plus = in_p;
-  plus_plus[0] += h;
-  plus_plus[1] += h;
-  Position2D plus_minus = in_p;
-  plus_plus[0] += h;
-  plus_plus[1] -= h;
-  Position2D minus_plus = in_p;
-  plus_plus[0] -= h;
-  plus_plus[1] += h;
-  Position2D minus_minus = in_p;
-  plus_plus[0] -= h;
-  plus_plus[1] -= h;
-  Position2D minus_y = in_p;
-  plus_plus[1] -= h;
-  Position2D plus_y = in_p;
-  plus_plus[1] += h;
-  Position2D minus_x = in_p;
-  plus_plus[0] -= h;
-  Position2D plus_x = in_p;
-  plus_plus[0] += h;
-
-  double central_value_z = component_z.value(in_p);
-  ret.d_f_dxy = (component_x.value(plus_plus) - component_x.value(plus_minus) - component_x.value(minus_plus) + component_x.value(minus_minus)) / (4*h*h);
-  ret.d_f_dyy = (component_x.value(plus_y) - 2*component_x.value(in_p) + component_x.value(minus_y)) / (h*h);
-  ret.d_f_dx = component_x.gradient(in_p)[0];
-
-  ret.d_h_dxx = imaginary_unit * (component_z.value(plus_x) - 2*central_value_z + component_z.value(minus_x)) / (h*h);
-  ret.d_h_dyy = imaginary_unit * (component_z.value(plus_y) - 2*central_value_z + component_z.value(minus_y)) / (h*h);
-  ret.d_h_dx = imaginary_unit * component_z.gradient(in_p)[0];
-  ret.d_h_dy = imaginary_unit * component_z.gradient(in_p)[1];
+  // The profile is interpolated bilinearly between the data points. Finite differences therefore have to use the
+  // spacing of the data grid as their step width - a smaller step would only measure the kinks of the interpolant.
+  const double hx = (ranges[0].second - ranges[0].first) / n_intervals[0];
+  const double hy = (ranges[1].second - ranges[1].first) / n_intervals[1];
+  auto shifted = [&](const double dx, const double dy) {
+    Position2D p = in_p;
+    p[0] += dx;
+    p[1] += dy;
+    return p;
+  };
+  const Position2D plus_x = shifted(hx, 0), minus_x = shifted(-hx, 0);
+  const Position2D plus_y = shifted(0, hy), minus_y = shifted(0, -hy);
+  const Position2D plus_plus = shifted(hx, hy), plus_minus = shifted(hx, -hy);
+  const Position2D minus_plus = shifted(-hx, hy), minus_minus = shifted(-hx, -hy);
 
   ret.f = component_x.value(in_p);
-  ret.h = imaginary_unit * component_z.value(in_p);
-  ret.beta = 2.0 * GlobalParams.Pi / Lambda_eff;
+  ret.d_f_dx = (component_x.value(plus_x) - component_x.value(minus_x)) / (2 * hx);
+  ret.d_f_dxy = (component_x.value(plus_plus) - component_x.value(plus_minus) - component_x.value(minus_plus) + component_x.value(minus_minus)) / (4 * hx * hy);
+  ret.d_f_dyy = (component_x.value(plus_y) - 2 * component_x.value(in_p) + component_x.value(minus_y)) / (hy * hy);
+
+  const double central_value_z = component_z.value(in_p);
+  ret.h = z_component_factor * central_value_z;
+  ret.d_h_dx = z_component_factor * (component_z.value(plus_x) - component_z.value(minus_x)) / (2 * hx);
+  ret.d_h_dy = z_component_factor * (component_z.value(plus_y) - component_z.value(minus_y)) / (2 * hy);
+  ret.d_h_dxx = z_component_factor * (component_z.value(plus_x) - 2 * central_value_z + component_z.value(minus_x)) / (hx * hx);
+  ret.d_h_dyy = z_component_factor * (component_z.value(plus_y) - 2 * central_value_z + component_z.value(minus_y)) / (hy * hy);
+  ret.beta = beta();
   return ret;
 }

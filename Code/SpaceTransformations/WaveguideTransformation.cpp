@@ -12,7 +12,7 @@ WaveguideTransformation::WaveguideTransformation()
     : SpaceTransformation(),
       waveguide_width(Geometry.global_z_range.first, Geometry.global_z_range.second, GlobalParams.Number_of_sectors),
       waveguide_height(Geometry.global_z_range.first, Geometry.global_z_range.second, GlobalParams.Number_of_sectors),
-      vertical_shift(Geometry.global_z_range.first, Geometry.global_z_range.second, GlobalParams.Number_of_sectors, GlobalParams.Vertical_displacement_of_waveguide < 2.0)
+      vertical_shift(Geometry.global_z_range.first, Geometry.global_z_range.second, GlobalParams.Number_of_sectors, GlobalParams.randomly_initialize_shape_dofs)
        {
   for(unsigned int i = 0; i < 3; i++) {
     for(unsigned int j = 0; j < 3; j++) {
@@ -135,7 +135,7 @@ void WaveguideTransformation::estimate_and_initialize() {
   }
   if(!GlobalParams.keep_waveguide_width_constant) {
     waveguide_width.set_constraints(1, 1, 0,0);
-    waveguide_height.initialize();
+    waveguide_width.initialize();
   }
 }
 
@@ -213,14 +213,17 @@ Tensor<2,3,double> WaveguideTransformation::get_J(Position &in_p) {
     if(GlobalParams.keep_waveguide_width_constant) {
       // Vertical shift and vertical stretching of the waveguide (variable height)
       // f(y) = (y / waveguide_height.evaluate_at(z)) - vertical_shift.evaluate_at(z);
-      ret[1][2] = - dm - y * dh / h*h;
+      ret[1][1] = 1.0 / h;
+      ret[1][2] = - dm - y * dh / (h*h);
     } else {
       // Vertical shift, vertical stretching and horizontal stretching of the waveguide (variable height and width)
       const double w = waveguide_width.evaluate_at(z);
       const double dw = waveguide_width.evaluate_derivative_at(z);
       const double x = in_p[0];
+      ret[0][0] = 1.0 / w;
       ret[0][2] = - x  * dw / (w*w); 
-      ret[1][2] = - dm - y * dh / h*h;
+      ret[1][1] = 1.0 / h;
+      ret[1][2] = - dm - y * dh / (h*h);
     }
   }
 

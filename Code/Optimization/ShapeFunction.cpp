@@ -111,15 +111,11 @@ void ShapeFunction::initialize() {
     std::vector<double> initial_values;
     initial_values.resize(n_free_dofs);
     if(bad_init) {
-        if(GlobalParams.Vertical_displacement_of_waveguide > FLOATING_PRECISION) {
-            for(unsigned int i = 0; i < n_free_dofs; i++) {
-                initial_values[i] =0;
-            }
-        } else {
-            for(unsigned int i = 0; i < n_free_dofs; i++) {
-                double local_contribution = static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX) - 0.5;
-                initial_values[i] = dealii::Utilities::MPI::sum(local_contribution, MPI_COMM_WORLD) / GlobalParams.NumberProcesses;
-            }
+        // Random initial values are only used if they are requested explicitly (parameter
+        // "Initialize Shape Dofs Randomly"), for example to give an optimization run a non-optimal starting point.
+        for(unsigned int i = 0; i < n_free_dofs; i++) {
+            double local_contribution = static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX) - 0.5;
+            initial_values[i] = dealii::Utilities::MPI::sum(local_contribution, MPI_COMM_WORLD) / GlobalParams.NumberProcesses;
         }
     } else {
         for(unsigned int i = 0; i < n_free_dofs; i++) {

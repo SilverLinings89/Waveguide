@@ -22,6 +22,7 @@
 #include <deal.II/matrix_free/fe_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
 #include <algorithm>
+#include <memory>
 #include <ctime>
 #include <string>
 #include <set>
@@ -178,8 +179,7 @@ struct CellwiseAssemblyDataNP {
   const FEValuesExtractors::Vector fe_field;
   Vector<ComplexNumber> incoming_wave_field;
   IndexSet constrained_dofs;
-  Tensor<1,3,ComplexNumber> J;
-  ExactSolution * es_for_j;
+  ExactSolution * es_for_j = nullptr;
 
   CellwiseAssemblyDataNP(dealii::FE_NedelecSZ<3> * fe, DofHandler3D * dof_handler):
   quadrature_formula(GlobalParams.Nedelec_element_order + 2),
@@ -213,9 +213,10 @@ struct CellwiseAssemblyDataNP {
   }
 
   void prepare_for_current_q_index(unsigned int q_index) {
-    if(GlobalParams.Use_Predefined_Shape) {
-      transformation = GlobalSpaceTransformation->get_Space_Transformation_Tensor(quadrature_points[q_index]);
-    }
+    // The material tensors of transformation optics. For a straight waveguide this is the identity. It has to be
+    // applied for every kind of shape (predefined shapes as well as shapes described by shape functions in
+    // optimization runs) and it has to be the same tensor the PML domains use.
+    transformation = GlobalSpaceTransformation->get_Space_Transformation_Tensor(quadrature_points[q_index]);
     mu = invert(transformation);
     const double kappa_2 = Geometry.kappa_2();
     if (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])) {
@@ -224,11 +225,12 @@ struct CellwiseAssemblyDataNP {
       epsilon = transformation * eps_out;
     }
     bool compute_rhs = false;
-    if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Tapering && GlobalParams.Index_in_z_direction == 0 && quadrature_points[q_index][2] < GlobalParams.tapering_max_z && quadrature_points[q_index][2] >= GlobalParams.tapering_min_z ) {
+    if(es_for_j != nullptr && quadrature_points[q_index][2] < GlobalParams.tapering_max_z && quadrature_points[q_index][2] >= GlobalParams.tapering_min_z ) {
       compute_rhs = true;
     }
+    Tensor<1,3,ComplexNumber> source_for_values, source_for_curls;
     if(compute_rhs) {
-      J = evaluate_J_at(quadrature_points[q_index]);
+      evaluate_taper_source_at(quadrature_points[q_index], source_for_values, source_for_curls);
     }
     std::vector<unsigned int> dof_indices(dofs_per_cell);
     cell->get_dof_indices(dof_indices);
@@ -246,7 +248,7 @@ struct CellwiseAssemblyDataNP {
         cell_matrix[i][j] += I_Curl * (mu * Conjugate_Vector(J_Curl)) * JxW - (kappa_2 * ( (epsilon * I_Val) * Conjugate_Vector(J_Val)) * JxW);
       }
       if(compute_rhs) {
-        cell_rhs[i] += JxW * J * Conjugate_Vector(I_Val);
+        cell_rhs[i] += JxW * (source_for_values * Conjugate_Vector(I_Val) + source_for_curls * Conjugate_Vector(I_Curl));
       }
     }
   }
@@ -260,47 +262,55 @@ struct CellwiseAssemblyDataNP {
     return ret;
   }
 
-  Tensor<1,3,ComplexNumber> evaluate_J_at(Position p) {
-    Tensor<1,3,ComplexNumber> ret;
-    const ComplexNumber im(0,1);
-    ComplexNumber phi, d_phi_dz, d_phi_dzz;
-    const double omega_sq_eps = Geometry.eps_kappa_2(p);
-    for(unsigned int i = 0; i < 3; i++) {
-      ret[i] = 0;
-    }
-    if(p[2] < GlobalParams.tapering_min_z - FLOATING_PRECISION || p[2] >= GlobalParams.tapering_max_z) {
-      return ret;
-    }
-    Position2D p2d;
-    p2d[0] = p[0];
-    p2d[1] = p[1];
-    J_derivative_terms f_and_h_terms = es_for_j->get_derivative_terms(p2d);
-    const double phi_coord_z = (p[2] - GlobalParams.tapering_min_z)/(GlobalParams.tapering_max_z - GlobalParams.tapering_min_z);
-    phi = 2*(phi_coord_z*phi_coord_z*phi_coord_z) - 3*(phi_coord_z*phi_coord_z) + 1;
-    const double zmax_minus_zmin = (GlobalParams.tapering_max_z - GlobalParams.tapering_min_z);
-    d_phi_dz = 6 * (p[2] - GlobalParams.tapering_min_z) * (p[2] - GlobalParams.tapering_max_z) / (zmax_minus_zmin * zmax_minus_zmin * zmax_minus_zmin);
-    d_phi_dzz = 12 * (p[2] - GlobalParams.tapering_min_z) / (zmax_minus_zmin * zmax_minus_zmin * zmax_minus_zmin) - 6/(zmax_minus_zmin * zmax_minus_zmin);
-    ret[0] = phi * ( - f_and_h_terms.d_f_dyy + f_and_h_terms.beta * f_and_h_terms.beta * f_and_h_terms.f + im*f_and_h_terms.beta*f_and_h_terms.d_h_dx) 
-      - f_and_h_terms.f*(d_phi_dzz + 2.0 * im * f_and_h_terms.beta * d_phi_dz) + d_phi_dz * f_and_h_terms.d_h_dx -  omega_sq_eps * f_and_h_terms.f;
-    ret[1] = phi * (f_and_h_terms.d_f_dxy + im*f_and_h_terms.beta*f_and_h_terms.d_h_dy) + d_phi_dz * f_and_h_terms.d_h_dy ;
-    ret[2] = phi * (im*f_and_h_terms.beta*f_and_h_terms.d_f_dx - f_and_h_terms.d_h_dxx - f_and_h_terms.d_h_dyy) + d_phi_dz*f_and_h_terms.d_f_dx - omega_sq_eps*f_and_h_terms.h;
-    
-    const ComplexNumber phase = std::exp(im * f_and_h_terms.beta * p[2]);
-    for(unsigned int i = 0; i < 3; i++) {
-      ret[i] *= -phase;
-    }
-    
-    return ret;
+  /**
+   * Tapered signal coupling. We want the solution to be u = psi(z) * E, where E is the mode of the waveguide and
+   * psi = 1 - phi ramps from 0 (z <= tapering_min_z) to 1 (z >= tapering_max_z). Below the taper only the
+   * backward travelling (scattered) field remains, which is absorbed by the PML on the input side.
+   * With the operator L u = curl(mu^-1 curl u) - omega^2 eps u and L E = 0 one finds
+   *
+   *   F = L(psi E) = grad(psi) x (mu^-1 curl E) + curl( mu^-1 (grad(psi) x E) ).
+   *
+   * Tested with a function v and integrated by parts (the boundary terms vanish because grad(psi) = 0 at both ends
+   * of the taper) this gives the right hand side
+   *
+   *   (F, v) = int [grad(psi) x (mu^-1 curl E)] . conj(v) + [mu^-1 (grad(psi) x E)] . conj(curl v) dV.
+   *
+   * Compared to evaluating F pointwise (see the chapter on tapered coupling in the dissertation) this form only
+   * requires first derivatives of the tabulated mode profile and it remains valid across the jump of the
+   * permittivity at the surface of the waveguide core.
+   *
+   * @param p The quadrature point.
+   * @param source_for_values is set to grad(psi) x (mu^-1 curl E).
+   * @param source_for_curls is set to mu^-1 (grad(psi) x E).
+   */
+  void evaluate_taper_source_at(const Position & p, Tensor<1,3,ComplexNumber> & source_for_values, Tensor<1,3,ComplexNumber> & source_for_curls) {
+    const double taper_length = GlobalParams.tapering_max_z - GlobalParams.tapering_min_z;
+    const double t = (p[2] - GlobalParams.tapering_min_z) / taper_length;
+    // psi(t) = 1 - (2t^3 - 3t^2 + 1) = 3t^2 - 2t^3
+    const double d_psi_dz = 6.0 * t * (1.0 - t) / taper_length;
+    const Tensor<1,3,ComplexNumber> E = es_for_j->val(p);
+    const Tensor<1,3,ComplexNumber> mu_inverse_curl_E = mu * es_for_j->curl(p);
+    // grad(psi) = (0, 0, d_psi_dz), so grad(psi) x a = d_psi_dz * (-a_y, a_x, 0).
+    source_for_values[0] = - d_psi_dz * mu_inverse_curl_E[1];
+    source_for_values[1] =   d_psi_dz * mu_inverse_curl_E[0];
+    source_for_values[2] = 0;
+    Tensor<1,3,ComplexNumber> grad_psi_cross_E;
+    grad_psi_cross_E[0] = - d_psi_dz * E[1];
+    grad_psi_cross_E[1] =   d_psi_dz * E[0];
+    grad_psi_cross_E[2] = 0;
+    source_for_curls = mu * grad_psi_cross_E;
   }
 };
 
 void InnerDomain::assemble_system(Constraints * constraints, dealii::PETScWrappers::MPI::SparseMatrix * matrix, NumericVectorDistributed *rhs) {
   CellwiseAssemblyDataNP cell_data(&fe, &dof_handler);
   load_exact_solution();
-  ExactSolution * esp;
-  if(GlobalParams.Index_in_z_direction == 0 && GlobalParams.Signal_coupling_method == SignalCouplingMethod::Tapering) {
-      esp = new ExactSolution();
-      cell_data.set_es_pointer(esp);
+  // The mode profile is only required if the signal is coupled in by a tapered source term. The source term is
+  // then assembled on every process whose cells intersect the taper region.
+  std::unique_ptr<ExactSolution> esp;
+  if(GlobalParams.Signal_coupling_method == SignalCouplingMethod::Tapering) {
+      esp = std::make_unique<ExactSolution>();
+      cell_data.set_es_pointer(esp.get());
   }
   for (; cell_data.cell != cell_data.end_cell; ++cell_data.cell) {
     cell_data.cell->get_dof_indices(cell_data.local_dof_indices);
@@ -326,9 +336,6 @@ void InnerDomain::assemble_system(Constraints * constraints, dealii::PETScWrappe
   }
   matrix->compress(dealii::VectorOperation::add);
   rhs->compress(dealii::VectorOperation::add);
-  if(GlobalParams.Index_in_z_direction == 0 && GlobalParams.Signal_coupling_method == SignalCouplingMethod::Tapering) {
-    delete esp;
-  }
 }
 
 void InnerDomain::write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs) {

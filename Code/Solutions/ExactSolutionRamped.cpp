@@ -80,8 +80,9 @@ double ExactSolutionRamped::get_ramping_factor_derivative_for_position(const Pos
   if(do_c0) {
     return -1.0 / std::abs(max_z-min_z);
   } else {
+    // Chain rule: the ramp is a function of x = (z - min_z) / (max_z - min_z).
     const double x = ramping_delta(in_p);
-    return 6*x*x -6*x;
+    return (6*x*x -6*x) / std::abs(max_z - min_z);
   }
 }
 

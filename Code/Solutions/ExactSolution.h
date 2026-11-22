@@ -51,15 +51,20 @@ class ExactSolution: public dealii::Function<3, ComplexNumber> {
 
   static void load_data(std::string fname);
 
-  ComplexNumber value(const Position &p, const unsigned int component) const;
+  ComplexNumber value(const Position &p, const unsigned int component) const override;
 
-  void vector_value(const Position &p, dealii::Vector<ComplexNumber> &value) const;
+  void vector_value(const Position &p, dealii::Vector<ComplexNumber> &value) const override;
 
   dealii::Tensor<1, 3, ComplexNumber> curl(const Position &in_p) const;
 
   dealii::Tensor<1, 3, ComplexNumber> val(const Position &in_p) const;
   
   ComplexNumber compute_phase_for_position(const Position &in_p) const;
+
+  /**
+   * @brief The propagation constant of the mode, computed from the effective permittivity and the wavelength.
+   */
+  static double beta();
 
   Position2D get_2D_position_from_3d(const Position & in_p) const;
 
