@@ -164,16 +164,13 @@ void NonLocalProblem::init_solver_and_preconditioner() {
     KSPSetType(ksp, KSPMINRES);
   }
   if(GlobalParams.solver_type == SolverOptions::GMRES) {
-    // On level 1 the preconditioner (a sweep with direct solvers) is a fixed linear operator and standard GMRES can
-    // be used. On higher levels the sweep contains iterative solves on the level below. The preconditioner then
-    // changes slightly in every application and GMRES loses the relation between its residual estimate and the true
-    // residual: it reports convergence while the solution is only as accurate as the inner solves. Flexible GMRES
-    // stores the preconditioned vectors and remains exact for such a variable preconditioner.
-    if(level > 1) {
-      KSPSetType(ksp, KSPFGMRES);
-    } else {
-      KSPSetType(ksp, KSPGMRES);
-    }
+    // Flexible GMRES is used on all levels. On levels above 1 the sweep contains iterative solves on the level
+    // below, so the preconditioner changes slightly in every application and standard GMRES would lose the relation
+    // between its residual estimate and the true residual. On level 1 the preconditioner is a fixed linear operator
+    // and both methods compute the same iterates, but right preconditioned GMRES applies the preconditioner once
+    // more at the end of every solve to compute the solution. Flexible GMRES stores the preconditioned vectors
+    // instead, which saves one sweep per solve (half of all subdomain solves if the level 1 solves need one step).
+    KSPSetType(ksp, KSPFGMRES);
     KSPGMRESSetRestart(ksp, GlobalParams.GMRES_max_steps);
     KSPSetPCSide(ksp, PCSide::PC_RIGHT);
   }
