@@ -90,3 +90,10 @@ GRTAGS
 GTAGS
 build/
 build-*/
+
+# outputs of the examples
+examples/output/
+__pycache__/
+
+# runs started from the web frontend
+frontend/runs/
