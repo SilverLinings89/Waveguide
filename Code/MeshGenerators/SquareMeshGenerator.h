@@ -32,8 +32,10 @@
  */
 class SquareMeshGenerator {
  public:
+  /** @brief Does nothing. */
   SquareMeshGenerator();
 
+  /** @brief Does nothing. */
   ~SquareMeshGenerator();
 
   /**
@@ -41,8 +43,8 @@ class SquareMeshGenerator {
    * not. The naming convention of physical and mathematical system find
    * application. In this version, the waveguide has been transformed and the
    * check for a tubal waveguide for example only checks if the radius of a
-   * given vector is below the average of input and output radius. \params
-   * position This value gives us the location to check for.
+   * given vector is below the average of input and output radius.
+   * \param position This value gives us the location to check for.
    */
   bool math_coordinate_in_waveguide(Position position) const;
 
@@ -51,7 +53,7 @@ class SquareMeshGenerator {
    * not. The naming convention of physical and mathematical system find
    * application. In this version, the waveguide is bent. If we are using a
    * space transformation \f$f\f$ then this function is equal to
-   * math_coordinate_in_waveguide(f(x,y,z)). \params position This value gives
+   * math_coordinate_in_waveguide(f(x,y,z)). \param position This value gives
    * us the location to check for.
    */
   bool phys_coordinate_in_waveguide(Position position) const;
@@ -65,13 +67,39 @@ class SquareMeshGenerator {
    */
   void prepare_triangulation(dealii::Triangulation<3> *in_tria);
 
+  /**
+   * @brief Determines which of the six coordinate directions a vector mainly points in.
+   * Applied to the vector from a cell center to a face center this gives the boundary id of the face.
+   *
+   * @param in_dir The vector to classify.
+   * @return unsigned int 0 = -x, 1 = +x, 2 = -y, 3 = +y, 4 = -z, 5 = +z, according to the component of largest absolute value and its sign.
+   */
   unsigned int getDominantComponentAndDirection(Position in_dir) const;
 
+  /**
+   * @brief Sets the manifold id of the whole mesh to 0 and gives every boundary face of the passed triangulation
+   * the boundary id (0 to 5) of the direction its outward normal points in.
+   */
   void set_boundary_ids(dealii::Triangulation<3> &) const;
 
+  /** @var SquareMeshGenerator::endc
+   * @brief End iterator belonging to cell. Not used either.
+   */
+  /** @brief Cell iterator. Not used: the member functions work with local iterators of the same name. */
   dealii::Triangulation<3>::active_cell_iterator cell, endc;
 
+  /**
+   * @brief Refines the passed triangulation anisotropically until check_and_mark_one_cell_for_refinement() no longer
+   * requests refinement for the last cell visited or the mesh has 100000 active cells.
+   */
   void refine_triangulation_iteratively(dealii::Triangulation<3, 3> *);
 
+  /**
+   * @brief Compares the edges of the passed cell with the maximal cell size allowed at the cell center
+   * (hmax_for_cell_center()) and sets a refinement flag that cuts the cell in the direction of a too long edge.
+   *
+   * @return true At least one edge of the cell is too long. The cell has been flagged.
+   * @return false No refinement required for this cell.
+   */
   bool check_and_mark_one_cell_for_refinement(dealii::Triangulation<3>::active_cell_iterator);
 };

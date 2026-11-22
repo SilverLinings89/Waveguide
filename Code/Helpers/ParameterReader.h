@@ -2,7 +2,7 @@
 
 /**
  * @file ParameterReader.h
- * @author your name (you@domain.com)
+ * @author Pascal Kraft
  * @brief Contains the parameter reader header. This object parses the parameter files.
  * @version 0.1
  * @date 2022-03-22
@@ -72,6 +72,8 @@ class ParameterReader {
   void declare_parameters();
 
  private:
+  /** @brief Parser of the run file (section "Run parameters": solver, parallelization, mesh size, logging). */
   ParameterHandler run_prm;
+  /** @brief Parser of the case file (section "Case parameters": geometry, materials, boundary method, optimization). */
   ParameterHandler case_prm;
 };

@@ -25,16 +25,31 @@
 class NeighborSurface : public BoundaryCondition {
     
   public: 
+    /** @brief True if b_id is even, i.e. this is the -x, -y or -z surface of the subdomain. The process on this side receives the dof indices, the process on the other side sends them. */
     const bool is_lower_interface;
+    /** @brief Not used. */
     std::array<std::set<unsigned int>, 6> edge_ids_by_boundary_id;
+    /** @brief Not used. */
     std::array<std::set<unsigned int>, 6> face_ids_by_boundary_id;
+    /** @brief Not used. */
     std::array<std::vector<InterfaceDofData>, 6> dof_indices_by_boundary_id;
+    /** @brief For every adjacent boundary id whose surface is an absorbing boundary condition (ABC_SURFACE): the indices (numbering of the level) of the dofs of that boundary condition that lie on its face towards this interface. Filled by prepare_dofs() and overwritten by receive(). */
     std::array<std::vector<unsigned int>, 6> boundary_dofs;
+    /** @brief Indices (numbering of the level) of the dofs of the inner domain on this surface, in the order of InnerDomain::get_surface_dof_vector_for_boundary_id(). Filled by prepare_dofs() and overwritten by receive(). */
     std::vector<unsigned int> inner_dofs;
+    /** @brief The indices that send() transmits: inner_dofs followed by boundary_dofs of the adjacent surfaces in ascending order of their boundary id. */
     std::vector<unsigned int> global_indices;
+    /** @brief Number of dof indices that are exchanged with the partner process (length of global_indices). */
     unsigned int n_dofs;
+    /** @brief Set to true by prepare_dofs(). Not initialized in the constructor and not read anywhere. */
     bool dofs_prepared;
 
+    /**
+     * @brief Determines the MPI rank of the process on the other side of the surface and sets the number of own dofs to zero.
+     *
+     * @param in_bid Boundary id (0 to 5) of the surface of the inner domain that is shared with the neighboring process.
+     * @param in_level Sweeping level this object is used on.
+     */
     NeighborSurface(unsigned int in_bid, unsigned int in_level);
     ~NeighborSurface();
     

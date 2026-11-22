@@ -947,7 +947,7 @@ std::vector<double> NonLocalProblem::compute_shape_gradient() {
   std::vector<double> ret(n_shape_dofs);
   for(unsigned int i = 0; i < n_shape_dofs; i++) {
     const ComplexNumber integral = dealii::Utilities::MPI::sum(local_integrals[i], MPI_COMM_WORLD);
-    ret[i] = (conjugate(signal) / std::abs(signal) * integral).real() / adjoint_mode_norm;
+    ret[i] = (std::conj(signal) / std::abs(signal) * integral).real() / adjoint_mode_norm;
   }
   print_info("NonLocalProblem::compute_shape_gradient", "End");
   return ret;

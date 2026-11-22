@@ -382,18 +382,40 @@ dealii::Tensor<2,3,ComplexNumber> PMLSurface::get_pml_tensor(Position in_p) {
   return ret;
 }
 
+/**
+ * @brief Collects the objects that are required to assemble the cell matrices of a PML domain.
+ *
+ * It is used in PMLSurface::fill_matrix(). The object also holds the cell iterator of the assembly loop.
+ */
 struct CellwiseAssemblyDataPML {
+  /** @brief Gauss quadrature with GlobalParams.Nedelec_element_order + 2 points per direction. */
   QGauss<3> quadrature_formula; 
+  /** @brief Values, gradients, weights and quadrature points of the Nedelec element on the current cell. */
   FEValues<3> fe_values;
+  /** @brief Quadrature points of the current cell in global coordinates. Set by the caller after fe_values.reinit(). */
   std::vector<Position> quadrature_points;
+  /** @brief Number of dofs of the Nedelec element per cell. */
   const unsigned int dofs_per_cell;
+  /** @brief Number of quadrature points per cell. */
   const unsigned int n_q_points;
+  /** @brief Cell matrix, indexed by the cell-local dof numbers. */
   FullMatrix<ComplexNumber> cell_matrix;
+  /** @brief Cell right-hand side. It remains zero since the PML contains no sources. */
   Vector<ComplexNumber> cell_rhs;
+  /** @brief Dof indices of the current cell. The caller stores them in the numbering of the level here. */
   std::vector<DofNumber> local_dof_indices;
+  /** @brief The cell that is currently assembled. */
   DofHandler3D::active_cell_iterator cell;
+  /** @brief End iterator of the dof handler. */
   DofHandler3D::active_cell_iterator end_cell;
+  /** @brief Extractor of the vector valued field (components 0 to 2). */
   const FEValuesExtractors::Vector fe_field;
+  /**
+   * @brief Sets up quadrature and FEValues and points the cell iterator to the first active cell.
+   *
+   * @param fe The Nedelec element of the PML domain.
+   * @param dof_handler The dof handler of the PML mesh.
+   */
   CellwiseAssemblyDataPML(dealii::FE_NedelecSZ<3> * fe, DofHandler3D * dof_handler):
   quadrature_formula(GlobalParams.Nedelec_element_order + 2),
   fe_values(*fe, quadrature_formula,
@@ -411,10 +433,26 @@ struct CellwiseAssemblyDataPML {
     end_cell = dof_handler->end();
   };
 
+  /**
+   * @brief Returns a quadrature point of the current cell.
+   *
+   * @param q_index Index of the quadrature point.
+   * @return Its position in global coordinates.
+   */
   Position get_position_for_q_index(unsigned int q_index) {
       return quadrature_points[q_index];
   }
 
+  /**
+   * @brief Adds the contribution of one quadrature point to the cell matrix.
+   *
+   * For the shape functions \f$\phi_i\f$ and \f$\phi_j\f$ it adds
+   * \f$\left(\nabla\times\phi_i \cdot \mu^{-1} \overline{\nabla\times\phi_j} - \omega^2 (\epsilon \phi_i) \cdot \overline{\phi_j}\right) JxW\f$ to the entry (i,j).
+   *
+   * @param q_index Index of the quadrature point.
+   * @param epsilon Material tensor \f$\epsilon\f$ at the quadrature point (PML tensor and space transformation).
+   * @param mu_inverse Inverse of the material tensor \f$\mu\f$ at the quadrature point.
+   */
   void prepare_for_current_q_index(unsigned int q_index, dealii::Tensor<2, 3, ComplexNumber> epsilon, dealii::Tensor<2,3,ComplexNumber> mu_inverse) {
     const double JxW = fe_values.JxW(q_index);
     for (unsigned int i = 0; i < dofs_per_cell; i++) {
@@ -433,6 +471,12 @@ struct CellwiseAssemblyDataPML {
     }
   }
 
+  /**
+   * @brief Computes the complex conjugate of a vector.
+   *
+   * @param input The vector.
+   * @return The vector whose components are the complex conjugates of the components of input.
+   */
   Tensor<1, 3, ComplexNumber> Conjugate_Vector(
       Tensor<1, 3, ComplexNumber> input) {
     Tensor<1, 3, ComplexNumber> ret;

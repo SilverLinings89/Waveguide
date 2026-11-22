@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file LocalProblem.h
+ * @author Pascal Kraft
+ * @brief Contains the class LocalProblem, the lowest level of the sweeping hierarchy.
+ */
 #include <deal.II/lac/petsc_sparse_matrix.h>
 #include "HierarchicalProblem.h"
 #include "../Core/InnerDomain.h"
@@ -10,6 +15,13 @@
 #include <array>
 #include <memory>
 
+/**
+ * @brief The problem on level 0 of the hierarchy: one subdomain on one process, solved with a direct solver.
+ *
+ * The subdomain consists of the inner domain of the process and the boundary methods on its surfaces. The matrix
+ * is factorized once (by default with MUMPS) and the factorization is reused for all solves that the sweeping
+ * preconditioners of the higher levels request.
+ */
 class LocalProblem: public HierarchicalProblem {
 public:
   /**
@@ -31,12 +43,19 @@ public:
    * Statistics of the direct solver of this subdomain. They are collected in solve() and written to results.txt.
    */
   double time_of_factorization = 0;      // wall time of the calls that computed a factorization (includes one solve)
+  /** @brief Accumulated wall time in seconds of all solves that reused an existing factorization. */
   double time_of_solves = 0;             // accumulated wall time of all other calls
+  /** @brief Number of solves that contributed to time_of_solves. */
   unsigned int n_timed_solves = 0;
+  /** @brief True if a factorization of the current matrix exists. Reset by assemble(), set by the first solve after it. */
   bool has_factorization = false;
+  /** @brief Number of dof indices of level 0 that belong to no element. assemble() gives them the equation u_i = 0. They are subtracted when the number of unknowns is reported. */
   unsigned int n_unused_dof_indices = 0;  // dof indices without any equation (see assemble())
+  /** @brief Number of entries of the factors without compression, MUMPS INFOG(29). 0 if the solver is not MUMPS. */
   double factor_entries_full_rank = 0;   // MUMPS INFOG(29): entries of the factors without compression
+  /** @brief Number of entries of the factors that are stored, MUMPS INFOG(35). Equal to factor_entries_full_rank without block low rank compression. */
   double factor_entries_stored = 0;      // MUMPS INFOG(35): entries that are actually stored (equal without BLR)
+  /** @brief Memory used during the factorization in megabytes, MUMPS INFOG(22). */
   double factor_memory_mb = 0;           // MUMPS INFOG(22): memory used during the factorization in megabytes
   
   /**
@@ -145,5 +164,6 @@ public:
    */
   void write_multifile_output(const std::string & in_filename, bool transform = false) override;
 
+  /** @brief Builds the sparsity pattern of the local system from the inner domain and the boundary methods. */
   void make_sparsity_pattern() override;
 };

@@ -29,6 +29,12 @@
 class DirichletSurface : public BoundaryCondition {
   public: 
 
+    /**
+     *  @brief Sets the number of own dofs to zero. No other data is prepared.
+     *
+     *  @param in_bid Boundary id (0 to 5) of the surface of the inner domain on which the Dirichlet data is imposed.
+     *  @param in_level Sweeping level this object is used on.
+     */
     DirichletSurface(unsigned int in_bid, unsigned int in_level);
     ~DirichletSurface();
     

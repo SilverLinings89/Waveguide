@@ -791,3 +791,186 @@ phase of BFGS is reached. `straight_recovery_convergence.png` shows this.
   displacements at the nodes, or a scaling of the parameters, would make the first steps more effective.
 - One mesh, one starting shape and three parameters were tested. The hump example (`shape_optimization.py`) is not
   converged after its 14 evaluations with either setting.
+
+## 14. Documentation level and library replacements
+
+### 14.1 Documentation
+
+Doxygen with `EXTRACT_ALL = NO` and `WARN_IF_UNDOCUMENTED = YES` reported 789 undocumented classes, members and
+functions in 52 files (131 in `Core/Types.h`, 91 in `Helpers/Parameters.h`, 77 in `Helpers/staticfunctions.h`).
+All of them are documented now and the same audit reports no warning. In addition: the placeholder authors of the
+file headers, `@param` names that did not match the signatures, LaTeX commands outside of formulas, and comments
+that Doxygen did not see (`/* */` and `//` blocks). The comments were written from the implementation and the uses
+of every item; where an item is unused or does something else than its name says, the comment says so.
+
+Reading every declaration turned up places where the code looks wrong. None of them was changed, and none was
+verified with a test. The ones that can affect results of the main code path come first.
+
+| Where | Observation |
+| --- | --- |
+| `SpaceTransformation.cpp:56` | `operator()` ignores `apply_math_to_phys`; `switch_application_mode(false)` has no effect |
+| `InnerDomain.cpp`, `output_results` | with `apply_transformation == true` the tensor is the identity, otherwise the transformation tensor: inverted relative to the name |
+| `DirichletSurface.cpp:22`, `EmptySurface.cpp:21` | `surface_extremal_coordinate` is indexed with the level instead of the boundary id |
+| `FEDomain.h`, `global_dof_indices` | never filled, but `DirichletSurface` and `EmptySurface` build their constraints from it |
+| `GeometryManager.cpp:323,330` | level 1 neighbor in y uses the number of blocks in y as offset (the global version uses x) |
+| `PMLTransformedExactSolution.cpp:92` | the lower z branch uses `in_p[0]` instead of `in_p[2]`; `curl()` always returns zero |
+| `staticfunctions.cpp`, `hmax_for_cell_center` | compares the x coordinate with the height of the core |
+| `staticfunctions.cpp`, `Triangulation_Shit_To_Local_Geometry` | writes `q[3]` of a 3D point |
+| `staticfunctions.cpp`, `get_orientation` | uses `vertex_1[1]` instead of `vertex_1[i]` (the result is never read) |
+| `staticfunctions.cpp`, `Transform_4_to_5`, `Transform_5_to_4` | only negate x |
+| `Sector.cpp:16` | `boundary(in_left && in_right)`, the comment says "either" |
+| `PointSourceField.cpp` | the Hertz dipole zeroes the field near the origin but does not return; both `vector_curl` functions are not the curl of the field |
+| `ExactSolutionRamped.cpp:79` | the derivative of the C0 ramp is nonzero outside the ramp (the class is not instantiated) |
+| `SquareMeshGenerator.cpp:106` | the refinement loop depends only on the last cell visited |
+| `Parameters.cpp`, `check_validity` | always returns true (already open issue 8) |
+| `ParameterReader.cpp:13` | "GMRES maximum steps" defaults to 30 in the reader and to 100 in the struct; "kappa angle" is declared but never read; `GMRES restart after` is read but not used |
+| `JacobianForCell.cpp:27` | both branches are identical, the Jacobian is always the identity |
+| `RectangularMode` | the eigensolver is commented out, `n_dofs_total` and `surfaces` are never set; the class is still instantiated for `source type = 0` |
+
+Dead code that the comments now mark as unused: about 20 structs and enums in `Types.h` and `Enums.h`, 22 functions
+of `staticfunctions.h`, `GradientTable`, `DofIndexData`, `LevelDofIndexData`, `LaguerreFunction`,
+`PMLMeshTransformation`, `ExactSolutionRamped`, `ExactSolutionConjugate`, `ModeManager` (only loaded), ten members
+of `Parameters`, and 15 functions that are declared but not defined. Removing them would shorten the code by an
+estimated 1500 lines; this was not done because it is a change of its own.
+
+### 14.2 Custom code replaced by library functions
+
+Replaced (results unchanged, all tests pass):
+
+| Custom code | Replacement |
+| --- | --- |
+| `crossproduct`, `dotproduct` for tensors | `dealii::cross_product_3d`, `operator*` |
+| `conjugate`, `norm_squared` | `std::conj`, `std::norm` |
+| `multiply_in_place` | `dealii::Vector::operator*=` |
+| `Distance2D`, `Distance3D`, `file_exists`, `add_vector_of_indices`, `compute_center_of_triangulation`, `deal_vector_to_position` (all unused) | removed; `Point::distance`, `std::filesystem::exists`, `IndexSet::add_indices`, `BoundingBox::center` exist for these |
+
+Candidates that are reasonable but were not done, in the order of benefit against risk:
+
+1. **Copies between the levels and inside the sweeps.** `set_u_from_vec_object`, `perform_downward_sweep` and the
+   functions around `S_inv` read and write single vector entries through the PETSc wrappers. `VecGetArray` on the
+   local part, or one `VecScatter` per pair of levels (`PETScWrappers` exposes both), is the idiomatic form. No
+   measurable gain today (section 12), but less code.
+2. **Output of residuals and convergence tables.** `ResidualOutputGenerator` and `ConvergenceOutputGenerator` write
+   gnuplot scripts and call gnuplot. The run report contains the same data; `dealii::ConvergenceTable` computes
+   and prints convergence rates for `ConvergenceRun`.
+3. **Signal and error evaluation.** `compute_signal_strength` and `compute_mode_strength` call
+   `VectorTools::point_value` for one point per face. `FEFaceValues` with a Gauss quadrature on the output faces is
+   faster, needs no point search and gives a proper surface integral (open point 3 of section 8.3).
+4. **Logging.** `print_info` with its own levels duplicates `dealii::ConditionalOStream` and `LogStream`.
+5. **String and parameter helpers.** `split` (10 uses) against `Utilities::split_string_list`, which also trims;
+   `ParameterOverride` against `ParameterHandler::set`.
+6. **The partition.** One triangulation per process with hand-made interface numbering (`NeighborSurface`,
+   `finish_dof_index_initialization`, the sorting of interface dofs by position) could be replaced by
+   `parallel::distributed::Triangulation` with `DoFTools` index sets. This is the largest block of custom code and
+   the largest risk: the PML domains are separate meshes that are glued by the same numbering, and the level
+   structure would need subdomain ids per level. Not recommended before the experiments on a cluster are done.
+
+No library equivalent exists for the Hardy space infinite elements, the PML with its own meshes, the sweeping
+preconditioner and the shape functions.
+
+## 15. Cost of the predefined shapes on a commercial cloud, and how to partition
+
+### 15.1 The problem
+
+All 36 predefined shapes (`Modes/test.csv`, "Use predefined shape") are 100 µm long with a hump between 5.5 and
+16 µm and a largest slope of 0.47. They use the same domain and mesh, so one estimate covers all of them. The run
+of the dissertation: 48 × 48 × 1560 cells, lowest order, 19.7 million unknowns, three levels with 3 × 3 × 39 = 351
+processes, 934 GB, 39.5 hours (13 900 core hours), 216 960 subdomain solves of 0.66 s.
+
+### 15.2 Fewer and larger subdomains
+
+The same problem solved with different partitions (hump of 0.5 µm, 8 µm long, this machine):
+
+| Partition | Processes | Wall time | Core seconds | Subdomain solves | Memory per process | Sum of memory |
+| --- | --- | --- | --- | --- | --- | --- |
+| 16 × 16 × 40 cells: three levels, 2 × 2 × 4 | 16 | 25.5 s | 409 | 1935 | 181 MB | 2.9 GB |
+| two levels, 1 × 2 × 4 | 8 | 18.6 s | 149 | 645 | 274 MB | 2.2 GB |
+| one level, 8 slabs | 8 | 6.6 s | 53 | 135 | 292 MB | 2.3 GB |
+| one level, 4 slabs | 4 | 5.8 s | 23 | 56 | 421 MB | 1.7 GB |
+| one level, 2 slabs | 2 | 7.0 s | 14 | 21 | 695 MB | 1.4 GB |
+| 32 × 32 × 80 cells: three levels, 2 × 2 × 4 | 16 | 243 s | 3881 | 3417 | 695 MB | 11.1 GB |
+| two levels, 1 × 2 × 4 | 8 | 89 s | 712 | 558 | 1208 MB | 9.7 GB |
+| one level, 8 slabs | 8 | 32 s | 255 | 135 | 1324 MB | 10.6 GB |
+| one level, 4 slabs | 4 | 33 s | 133 | 56 | 2231 MB | 8.9 GB |
+| one level, 2 slabs | 2 | 46 s | 93 | 21 | 4365 MB | 8.7 GB |
+
+All partitions of a mesh give the same signal (0.8427 and 0.8783).
+
+- **Every level of the hierarchy multiplies the number of subdomain solves** (by the GMRES steps of that level
+  times the sweep length) and adds absorbing layers around every subdomain. Three levels need 7 times the wall
+  time and 29 times the core seconds of one level with four slabs on the finer mesh, and more memory in total.
+- **The hierarchy lowers the memory per process, not the total.** It is needed only if a slab of the full
+  cross-section does not fit on one node.
+- **Thicker slabs cost almost nothing as long as they are thin compared with the cross-section.** Time and memory
+  of a slab grow linearly with its thickness (table below), so the time of one sweep is nearly independent of
+  the number of slabs, and fewer slabs mean fewer processes and fewer GMRES steps (7, 8, 9 for 2, 4, 8 slabs).
+  With 2 slabs the wall time goes up again because the factorization (20 s) is no longer small.
+
+So the proposal to give the subdomains more volume when memory is available is right, and it goes further than
+the choice of the slab thickness: for this cross-section the hierarchy should not be used at all.
+
+**Fewer cores than processes.** A level 1 sweep with 54 processes on the 18 cores of this machine: the time per
+subdomain solve is the same as with 16 processes on 16 cores (0.0247 s against 0.0255 s), with and without
+`--mca mpi_yield_when_idle 1`. Only the factorization, which all processes do at the same time, takes three times
+as long (3.5 s against 1.2 s). The sweep itself needs one core. This was tested up to a factor 3.
+
+### 15.3 Slabs of the real cross-section
+
+One level, 2 processes, cross-section 48 × 48 cells (6 × 5.4 µm), cell size in z as in the dissertation, 7 PML
+layers, straight waveguide:
+
+| Slab thickness | Unknowns of a slab | Memory | Time per solve | Factorization |
+| --- | --- | --- | --- | --- |
+| 10 cells | 290 000 | 3.4 GB | 0.42 s | 14 s |
+| 20 cells | 408 000 | 5.8 GB | 0.80 s | 28 s |
+| 20 cells, compression 1e-4 | 408 000 | 4.3 GB | 0.49 s | 24 s |
+| 30 cells, compression 1e-4 | 526 000 | 6.0 GB | 0.70 s | 37 s |
+
+Linear in the thickness t: 1.1 GB + 0.24 GB · t and 0.035 s + 0.038 s · t without compression, 0.7 GB + 0.18 GB · t
+and 0.085 s + 0.020 s · t with block low rank compression (section 9).
+
+### 15.4 Estimate for one predefined shape
+
+One level, 39 slabs of 40 cells (extrapolated from the table; larger slabs did not fit on this machine):
+
+| | Without compression | With compression 1e-4 |
+| --- | --- | --- |
+| Memory of the factors per slab | 10.3 GB | 7.6 GB |
+| Memory in total, with 15 % for matrices and meshes | 460 GB | 340 GB |
+| Time of one GMRES step (77 slab solves) on this machine | 120 s | 69 s |
+| Factorization (all slabs at once) | 56 s | 49 s |
+
+The number of GMRES steps is the main unknown. The run of the dissertation needed 10 applications of the
+preconditioner on the top level with 39 slabs. The corrected code has not solved a 100 µm shape. The estimate uses
+10 to 20 steps, and a core of a cloud server at half the speed of a core of this machine (an assumption).
+
+| Configuration | Instance (on demand) | Wall time | Cost per shape |
+| --- | --- | --- | --- |
+| One level, 39 slabs, compression | 1 × 512 GB, 32 cores (AWS r7i.16xlarge, 4.23 $/h) | 0.5 to 0.9 h | 2 to 4 $ |
+| One level, 39 slabs, no compression | the same | 0.7 to 1.4 h | 3 to 6 $ |
+| As in the dissertation: three levels, 351 processes, 934 GB, 39.5 h | 2 × 768 GB, 192 cores (AWS hpc7a.96xlarge, 7.2 to 9.1 $/h each) | 39.5 h | 570 to 720 $ |
+
+Prices are from price comparison sites in November 2026 and have to be checked against the provider. Other
+providers are in the same range per GB (Google n2-highmem-128 with 864 GB: 7.71 $/h, 4.39 $/h as spot instance;
+Azure HB176rs v4 with 768 GB: 7.2 $/h). Not included: start of the instance, storage, data transfer, failed runs.
+
+What limits the accuracy of the estimate: the number of GMRES steps (factor 2), the speed of the cloud cores
+(assumed), the extrapolation of the slab memory from 20 and 30 to 40 cells, 7 instead of 10 PML layers, and that
+no run of this size was made with the current code. The first run on a cluster (JURECA test project) will replace
+these numbers by measurements.
+
+### 15.5 What determines the cost
+
+- **Memory, not cores.** Cloud prices follow the memory (about 0.008 $ per GB and hour in the instances above).
+  An instance with 512 GB and 16 instead of 32 cores costs about 20 % less (AWS x2idn.8xlarge, price scaled from
+  the 32xlarge size), so
+  running fewer cores saves little, although the sweep would allow it. The product of memory and time is what
+  has to go down: one level instead of three, compression, fewer PML layers.
+- **Idle processes cost nothing extra** once the instance is chosen by its memory. Using them would shorten the
+  run: threads for the active subdomain solve (section 12), not tested.
+- **Out-of-core factors, not tested.** Only one slab is solved at a time, so the factors of the other slabs could
+  be on a local SSD (MUMPS `ICNTL(22)`). Memory would drop to a few slabs, the time per solve would grow by reading
+  7 to 10 GB per solve. Whether this is cheaper depends on the price of a small instance with a fast disk.
+- **Accuracy is not part of this estimate.** The mesh of the dissertation has 8 cells per wavelength across the
+  waveguide with lowest order elements; the straight waveguide loses 3 % on comparable meshes (section 13). A
+  service that sells results needs second order elements or a finer mesh, which changes memory and time.

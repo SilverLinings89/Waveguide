@@ -24,15 +24,25 @@
 class JacobianForCell {
 public:
   
+  /** @brief Values of the symbols that are the same on the whole surface. It maps z0 to additional_component. */
   dealii::Differentiation::SD::types::substitution_map surface_wide_substitution_map;
+  /** @brief Boundary id (0 to 5) of the surface of the inner domain the cells belong to. */
   BoundaryId boundary_id;
+  /** @brief Coordinate of the surface in its normal direction. */
   double additional_component;
+  /** @brief Intended to store which boundary ids use HSIE. Never filled or read. */
   std::vector<bool> b_ids_have_hsie;
+  /** @brief Symbol of the first coordinate of the surface triangulation. */
   MathExpression x;
+  /** @brief Symbol of the second coordinate of the surface triangulation. */
   MathExpression y;
+  /** @brief Symbol of the coordinate orthogonal to the surface (the infinite direction). */
   MathExpression z;
+  /** @brief Symbol of the position of the surface in the orthogonal direction. It is replaced by additional_component in reinit(). */
   MathExpression z0;
+  /** @brief Symbolic transformation of the infinite cell, currently (x, y, z - z0) in all cases. */
   dealii::Tensor<1, 3, MathExpression> F;
+  /** @brief Symbolic Jacobian of F, J[i][j] is the derivative of F[i] with respect to the j-th of the symbols x, y, z. */
   dealii::Tensor<2, 3, MathExpression> J;
 
   /**

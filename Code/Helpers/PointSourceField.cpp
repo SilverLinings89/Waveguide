@@ -86,15 +86,15 @@ void PointSourceFieldHertz::vector_value(const Position &in_p, NumericVectorLoca
   x_times_p *= 3.0 / norm_x;
 
   NumericVectorLocal term_1 = crossproduct(crossproduct(x_normed, p), x_normed);
-  multiply_in_place(k_squared, term_1);
+  term_1 *= k_squared;
 
   NumericVectorLocal term_2 = x_normed;
-  multiply_in_place(x_times_p, term_2);
+  term_2 *= x_times_p;
   term_2 -= p;
-  multiply_in_place(factor_2, term_2);
+  term_2 *= factor_2;
 
   term_1 += term_2;
-  multiply_in_place(ComplexNumber(0, 0.25 / PI) * std::exp(ik * norm_x) / norm_x, term_1);
+  term_1 *= ComplexNumber(0, 0.25 / PI) * std::exp(ik * norm_x) / norm_x;
   vec = term_1;
 }
 

@@ -100,21 +100,6 @@ std::pair<DofNumber, DofNumber> get_max_and_min_dof_for_interface_data(std::vect
   return ret;
 }
 
-auto compute_center_of_triangulation(const Mesh *in_mesh) -> Position {
-  double x_average = 0;
-  double y_average = 0;
-  double z_average = 0;
-  const unsigned int n_vertices = in_mesh->n_vertices();
-  for (auto &cell : in_mesh->active_cell_iterators()) {
-    for (unsigned int i = 0; i < 8; i++) {
-      Position v = cell->vertex(i);
-      x_average += v[0] / n_vertices;
-      y_average += v[1] / n_vertices;
-      z_average += v[2] / n_vertices;
-    }
-  }
-  return {x_average, y_average, z_average};
-}
 
 bool comparePositions(const Position pos_a,const Position pos_b) {
   if (std::abs(pos_a[2] - pos_b[2]) > 0.0001) {
@@ -223,29 +208,9 @@ Parameters GetParameters(std::string run_filename, std::string case_filename, Pa
   return ret;
 }
 
-double Distance2D(const Position & position, const Position  & to) {
-  return sqrt((position(0) - to(0)) * (position(0) - to(0)) +
-              (position(1) - to(1)) * (position(1) - to(1)));
-}
 
-double Distance3D(const Position & position, const Position & to) {
-  return sqrt((position(0) - to(0)) * (position(0) - to(0)) +
-              (position(1) - to(1)) * (position(1) - to(1)) +
-              (position(2) - to(2)) * (position(2) - to(2)));
-}
 
-Tensor<1, 3, double> crossproduct(Tensor<1, 3, double> a,
-                                  Tensor<1, 3, double> b) {
-  Tensor<1, 3, double> ret;
-  ret[0] = a[1] * b[2] - a[2] * b[1];
-  ret[1] = a[2] * b[0] - a[0] * b[2];
-  ret[2] = a[0] * b[1] - a[1] * b[0];
-  return ret;
-}
 
-double dotproduct(Tensor<1, 3, double> a, Tensor<1, 3, double> b) {
-  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-}
 
 void mesh_info(Triangulation<3> * tria, std::string filename) {
   print_info("mesh_info", "Mesh info:\ndimension: 3\nno. of cells: " + std::to_string(tria->n_active_cells()), LoggingLevel::PRODUCTION_ALL);
@@ -390,17 +355,7 @@ Position Transform_5_to_0(const Position &p) {
   return q;
 }
 
-inline bool file_exists(const std::string &name) {
-  struct stat buffer;
-  return (stat(name.c_str(), &buffer) == 0);
-}
 
-void add_vector_of_indices(dealii::IndexSet *in_index_set,
-                           std::vector<types::global_dof_index> in_indices) {
-  for (unsigned int i = 0; i < in_indices.size(); i++) {
-    in_index_set->add_index(in_indices[i]);
-  }
-}
 
 double hmax_for_cell_center(Position in_center) {
   double h_max_in = 0.05;
@@ -481,19 +436,7 @@ NumericVectorLocal crossproduct(const NumericVectorLocal &u,const NumericVectorL
   return ret;
 }
 
-Position crossproduct(const Position &u,const Position &v) {
-  Position ret;
-  ret[0]=(u[1]*v[2]- u[2]*v[1]);
-  ret[1]=(u[2]*v[0]- u[0]*v[2]);
-  ret[2]=(u[0]*v[1]- u[1]*v[0]);
-  return ret;
-}
 
-void multiply_in_place(const ComplexNumber factor_1, NumericVectorLocal &factor_2) {
-  for(unsigned int i = 0; i < factor_2.size(); i++) {
-    factor_2[i] *= factor_1;
-  }
-}
 
 void print_info(const std::string &label, const std::string &message,  LoggingLevel logging_level) {
   if(is_visible_message_in_current_logging_level(logging_level)) {
@@ -600,13 +543,6 @@ bool are_dofs_similar(const InterfaceDofData &dof_a, const InterfaceDofData &dof
   return true;
 }
 
-Position deal_vector_to_position(NumericVectorLocal &inp) {
-  Position ret;
-  ret[0] = inp[0].real();
-  ret[1] = inp[1].real();
-  ret[2] = inp[2].real();
-  return ret;
-}
 
 void shift_interface_dof_data(std::vector<InterfaceDofData> * dofs_interface, unsigned int shift) {
   for(unsigned int i = 0; i < dofs_interface->size(); i++) {
@@ -693,11 +629,6 @@ dealii::Triangulation<3> reforge_triangulation(dealii::Triangulation<3> * origin
   return return_triangulation;
 }
 
-ComplexNumber conjugate(const ComplexNumber & in_number) {
-  ComplexNumber ret = in_number;
-  ret.imag(- in_number.imag());
-  return ret;
-}
 
 bool is_absorbing_boundary(SurfaceType in_st) {
   if(in_st == SurfaceType::DIRICHLET_SURFACE || in_st == SurfaceType::OPEN_SURFACE) {
@@ -707,9 +638,6 @@ bool is_absorbing_boundary(SurfaceType in_st) {
   }
 }
 
-double norm_squared(const ComplexNumber in_c) {
-  return in_c.real() * in_c.real() + in_c.imag()*in_c.imag();
-}
 
 bool base_edge_ownership(BoundaryId self, BoundaryId other) {
   if(self == other) {

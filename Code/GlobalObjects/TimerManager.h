@@ -2,7 +2,7 @@
 
 /**
  * @file TimerManager.h
- * @author your name (you@domain.com)
+ * @author Pascal Kraft
  * @brief Implementation of a handler for multiple timers with names that can gernerate output.
  * @version 0.1
  * @date 2022-03-22
@@ -21,11 +21,16 @@
  */
 class TimerManager {
     public: 
+    /** @brief One timer per level, indexed by level. Each uses the communicator of its level and measures CPU and wall time. */
     std::vector<dealii::TimerOutput> timer_outputs;
+    /** @brief Names of the output files of the timers, indexed by level. The name is "timer_output" followed by the level and ".dat". */
     std::vector<std::string> filenames;
+    /** @brief Output streams of the files in filenames. Owned by this object and deleted in finalize(). */
     std::vector<std::ofstream *> filestreams;
+    /** @brief Number of levels with a timer: 1 plus the number of directions with more than one block. */
     unsigned int level_count;
 
+    /** @brief Does nothing. The object is set up in initialize(). */
     TimerManager();
 
     /**

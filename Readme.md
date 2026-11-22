@@ -57,6 +57,12 @@ The files are deal.II `ParameterHandler` files. All parameters, their defaults a
   process in total, use `sweeping level = 0`; the problem is then solved with the direct solver only.
 - The mesh has `cell count` cells **per process** in each direction; the size of the domain of interest is
   `geometry size x/y/z` (in micrometers). PML layers are added around it automatically.
+- Choosing the partition: use `sweeping level = 1` with slabs in z (`processes in x = processes in y = 1`) as long
+  as one slab of the full cross-section fits into the memory of a node, and make the slabs as thick as the memory
+  allows (up to about the width of the cross-section). Levels 2 and 3 lower the memory per process but multiply the
+  number of subdomain solves: on a test problem three levels needed 7 times the wall time and 29 times the core
+  seconds of one level (`MODERNIZATION.md`, section 15). The processes of a sweep work one after the other, so fewer
+  cores than processes cost time only in the factorization.
 - Rule of thumb for the resolution: at least 10 cells per wavelength in the material (the wavelength is fixed at
   1.55 µm, i.e. about 1 µm in the core) for lowest order elements, fewer for `fem order = 1`.
 - `local solver compression tolerance = 1e-4` (run file) compresses the subdomain factorizations (block low rank):

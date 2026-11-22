@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file SpaceTransformation.h
+ * @author Pascal Kraft
+ * @brief Contains the abstract base class of the coordinate transformations.
+ */
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/lac/vector.h>
@@ -35,8 +40,10 @@ class Sector;
 class SpaceTransformation {
  public:
 
+  /** @brief Direction in which operator() is meant to transform: true for math to phys, false for phys to math. Set by switch_application_mode(). The current operator() does not evaluate it and always applies math_to_phys(). */
   bool apply_math_to_phys = true;
 
+  /** @brief Does nothing. */
   SpaceTransformation();
 
   /**
@@ -148,7 +155,7 @@ class SpaceTransformation {
    * This is a getter for the values of degrees of freedom. A getter-setter
    * interface was introduced since the values are estimated automatically
    * during the optimization and non-physical systems should be excluded from
-   * the domain of possible cases. \param dof The index of the degree of freedom
+   * the domain of possible cases. The argument is the index of the degree of freedom
    * to be retrieved from the structure of the modelled waveguide. \return This
    * function returns the value of the requested degree of freedom. Should this
    * dof not exist, 0 will be returned.
@@ -161,7 +168,7 @@ class SpaceTransformation {
    * This is a getter for the values of degrees of freedom. A getter-setter
    * interface was introduced since the values are estimated automatically
    * during the optimization and non-physical systems should be excluded from
-   * the domain of possible cases. \param dof The index of the degree of freedom
+   * the domain of possible cases. The argument is the index of the degree of freedom
    * to be retrieved from the structure of the modelled waveguide. \return This
    * function returns the value of the requested degree of freedom. Should this
    * dof not exist, 0 will be returnd.
@@ -172,8 +179,8 @@ class SpaceTransformation {
    * This function sets the value of the dof provided to the given value. It is
    * important to consider, that some dofs are non-writable (i.e. the values of
    * the degrees of freedom on the boundary, like the radius of the
-   * input-connector cannot be changed). \param dof The index of the parameter
-   * to be changed. \param value The value, the dof should be set to.
+   * input-connector cannot be changed). The first argument is the index of the parameter
+   * to be changed. The second argument is the value, the dof should be set to.
    */
   virtual void set_free_dof(int , double ){return;};
 
@@ -182,7 +189,7 @@ class SpaceTransformation {
    * global \f$z\f$ coordinate (in the computational domain) and returns both a
    * Sector-Index and an internal \f$z\f$ coordinate indicating which sector
    * this coordinate belongs to and how far along in the sector it is located.
-   * \param double in_z global system \f$z\f$ coordinate for the transformation.
+   * \param in_z global system \f$z\f$ coordinate for the transformation.
    */
   virtual std::pair<int, double> Z_to_Sector_and_local_z(double in_z) const;
 

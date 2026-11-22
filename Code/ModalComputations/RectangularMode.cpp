@@ -163,25 +163,52 @@ std::vector<InterfaceDofData> RectangularMode::get_surface_dof_vector_for_bounda
   return ret;
 }
 
+/**
+ * @brief Data of the loop over the cells in RectangularMode::assemble_system(): finite element values, local
+ * matrices and the cell iterators.
+ */
 struct CellwiseAssemblyData {
+  /** @brief Gauss quadrature with Nedelec_element_order + 2 points per direction. */
   QGauss<3> quadrature_formula; 
+  /** @brief Shape function values, curls and JxW at the quadrature points of the current cell. */
   FEValues<3> fe_values;
+  /** @brief Quadrature points of the current cell in real coordinates. */
   std::vector<Position> quadrature_points;
+  /** @brief Number of dofs of one cell. */
   const unsigned int dofs_per_cell;
+  /** @brief Number of quadrature points of one cell. */
   const unsigned int n_q_points;
+  /** @brief Local contribution to the mass matrix, (omega^2 epsilon_r u, v). */
   FullMatrix<ComplexNumber> cell_mass_matrix;
+  /** @brief Local contribution to the stiffness matrix, (curl u, curl v). */
   FullMatrix<ComplexNumber> cell_stiffness_matrix;
+  /** @brief Local right hand side. Always zero. */
   dealii::Vector<ComplexNumber> cell_rhs;
+  /** @brief Relative permittivity of the core. Not used; see RectangularMode::compute_epsilon_for_Position(). */
   const double eps_in;
+  /** @brief Relative permittivity of the cladding. Not used; see RectangularMode::compute_epsilon_for_Position(). */
   const double eps_out;
+  /** @brief Permeability, set to 1. Not used. */
   const double mu_zero;
+  /** @brief Material tensor of the space transformation. Never set. */
   MaterialTensor transformation;
+  /** @brief transformation times the permittivity at the quadrature point. Computed but not used in the matrices. */
   MaterialTensor epsilon;
+  /** @brief Not used. */
   MaterialTensor mu;
+  /** @brief Global indices of the dofs of the current cell. */
   std::vector<DofNumber> local_dof_indices;
+  /** @brief The current cell. */
   DofHandler3D::active_cell_iterator cell;
+  /** @brief The end iterator of the loop over the cells. */
   DofHandler3D::active_cell_iterator end_cell;
+  /** @brief Selects the three vector components of the Nedelec element. */
   const FEValuesExtractors::Vector fe_field;
+  /**
+   * @brief Allocates the local objects and sets cell to the first active cell.
+   * @param fe the Nedelec element.
+   * @param dof_handler the dof handler of the mode problem.
+   */
   CellwiseAssemblyData(dealii::FE_NedelecSZ<3> * fe, DofHandler3D * dof_handler):
   quadrature_formula(GlobalParams.Nedelec_element_order + 2),
   fe_values(*fe, quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points),
@@ -200,6 +227,10 @@ struct CellwiseAssemblyData {
     end_cell = dof_handler->end();
   };
 
+  /**
+   * @brief Adds the contribution of one quadrature point of the current cell to the local matrices.
+   * @param q_index index of the quadrature point.
+   */
   void prepare_for_current_q_index(unsigned int q_index) {
     cell_rhs = 0;
     double eps_kappa_2 = 4 * GlobalParams.Pi * GlobalParams.Pi / (GlobalParams.Lambda*GlobalParams.Lambda);
@@ -224,6 +255,11 @@ struct CellwiseAssemblyData {
     }
   }
 
+  /**
+   * @brief Complex conjugate of a vector.
+   * @param input the vector.
+   * @return Tensor<1, 3, ComplexNumber> the vector with conjugated components.
+   */
   Tensor<1, 3, ComplexNumber> Conjugate_Vector(
       Tensor<1, 3, ComplexNumber> input) {
     Tensor<1, 3, ComplexNumber> ret;

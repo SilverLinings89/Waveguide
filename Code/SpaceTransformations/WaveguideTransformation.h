@@ -20,6 +20,11 @@
 #include "../Core/Sector.h"
 #include "SpaceTransformation.h"
 
+/**
+ * @brief The three shape functions of the WaveguideTransformation. The dofs of the transformation are those of
+ * the three functions in this order: VerticalDisplacementComponent (shift of the waveguide in y),
+ * WaveguideHeightComponent (height of the waveguide) and WaveguideWidthComponent (width of the waveguide).
+ */
 enum ResponsibleComponent {
   VerticalDisplacementComponent, WaveguideHeightComponent, WaveguideWidthComponent
 };
@@ -36,7 +41,9 @@ enum ResponsibleComponent {
  */
 
 class WaveguideTransformation : public SpaceTransformation {
+  /** @brief The identity matrix. */
   dealii::Tensor<2,3,double> I;
+  /** @brief The shape functions of z that describe the width of the waveguide, its height and its shift in y. */
   ShapeFunction waveguide_width, waveguide_height, vertical_shift;
 
  public:
@@ -124,7 +131,18 @@ class WaveguideTransformation : public SpaceTransformation {
    */
   void Print() const override;
 
+  /**
+   * @brief Translates an index in the numbering of the free dofs of the transformation into the shape function the
+   * dof belongs to and its free dof index in that function.
+   *
+   * @return std::pair<ResponsibleComponent, unsigned int> first: the shape function. second: the index of the free dof within it.
+   */
   std::pair<ResponsibleComponent, unsigned int> map_free_dof_index(unsigned int) const;
 
+  /**
+   * @brief Same as map_free_dof_index() for the numbering of all dofs, including the constrained ones.
+   *
+   * @return std::pair<ResponsibleComponent, unsigned int> first: the shape function. second: the index of the dof within it.
+   */
   std::pair<ResponsibleComponent, unsigned int> map_dof_index(unsigned int) const;
 };

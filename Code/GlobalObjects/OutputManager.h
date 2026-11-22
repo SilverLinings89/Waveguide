@@ -2,7 +2,7 @@
 
 /**
  * @file OutputManager.h
- * @author your name (you@domain.com)
+ * @author Pascal Kraft
  * @brief Creates filenames and manages file system paths.
  * @version 0.1
  * @date 2022-03-22
@@ -23,12 +23,18 @@
 
 class OutputManager {
     public: 
+    /** @brief Not used. initialize() works with a local variable of the same name and this member stays empty. */
     std::string base_path;
+    /** @brief Not used. It is never assigned or read. */
     unsigned int run_number;
+    /** @brief Folder that receives all output of this run: the first folder runN that does not exist yet in the base folder, where N is agreed on by all processes. The base folder is the environment variable WAVEGUIDE_OUTPUT_DIR, else $WORK/Solutions, else Solutions in the repository. */
     std::string output_folder_path;
+    /** @brief Log file of this process in the output folder. Its name is "main" followed by the MPI rank and ".log". Opened in initialize(). */
     std::ofstream log_stream;
     
+    /** @brief Does nothing. The object is set up in initialize(). */
     OutputManager();
+    /** @brief Closes the log file. */
     ~OutputManager();
 
     /**

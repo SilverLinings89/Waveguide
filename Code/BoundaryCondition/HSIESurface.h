@@ -43,28 +43,46 @@
  * 
  * There are NO 3D triangulations here! We only work with a 2D surface triangulation. Therefore, often when we talk about a cell, that has different properties then in objects like PMLSurface or InnerDomain, where the mesh is 3D.
  * 
- * For more details on this type of intinite element, see \cref{subsec:HSIE,sub:hsieElements,sec:HSIESweeping}.
+ * For more details on this type of intinite element, see the sections on Hardy space infinite elements, on their element definition and on sweeping preconditioners with HSIE in the dissertation.
  */
 class HSIESurface : public BoundaryCondition {
+  /** @brief Polynomial degree of the Hardy space functions (GlobalParams.HSIE_polynomial_degree). */
   const HSIEElementOrder order;
+  /** @brief Dof handler of the Nedelec element on the surface mesh Geometry.surface_meshes[b_id]. */
   DofHandler2D dof_h_nedelec;
+  /** @brief Dof handler of the nodal element on the same surface mesh. */
   DofHandler2D dof_h_q;
+  /** @brief Order of the Nedelec element of the inner domain (GlobalParams.Nedelec_element_order). */
   const unsigned int Inner_Element_Order;
+  /** @brief Surface Nedelec element of order Inner_Element_Order. It provides the tangential parts of the shape functions. */
   dealii::FE_NedelecSZ<2> fe_nedelec;
+  /** @brief Surface nodal element of degree Inner_Element_Order + 1. It provides the parts of the shape functions that point in the infinite direction. */
   dealii::FE_Q<2> fe_q;
+  /** @brief Parameter kappa_0 of the Hardy space method (GlobalParams.kappa_0). */
   ComplexNumber k0;
+  /** @brief Wave number 2 pi / lambda. Initialized in the constructor but not used. */
   const double kappa;
+  /** @brief Not used. The ownership of shared dofs is stored in BoundaryCondition::are_edge_dofs_owned. */
   std::array<std::array<bool,6>,4> edge_ownership_by_level_and_id;
+  /** @brief Not used. The tensors C and G are computed per quadrature point by JacobianForCell::get_C_G_and_J(). */
   dealii::Tensor<2,3,double> C;
+  /** @brief Not used, see C. */
   dealii::Tensor<2,3,double> G;
+  /** @brief Base point for non-parallel infinite directions. Set by set_V0() but not evaluated, the rays are always orthogonal to the surface. */
   Position V0;
 
 public:
+  /** @brief All dofs that belong to a cell of the surface mesh (types SURFACE, SEGMENTa and SEGMENTb). Filled by register_new_surface_dofs(). */
   DofDataVector face_dof_data;
+  /** @brief All dofs that belong to an edge of the surface mesh (types EDGE, IFFa and IFFb). Filled by register_new_edge_dofs(). */
   DofDataVector edge_dof_data;
+  /** @brief All dofs that belong to a vertex of the surface mesh (type RAY). Filled by register_new_vertex_dofs(). */
   DofDataVector vertex_dof_data;
+  /** @brief Never set or read. The counts are returned by compute_n_edge_dofs() instead. */
   DofCount n_edge_dofs;
+  /** @brief Never set or read, see n_edge_dofs. */
   DofCount n_face_dofs;
+  /** @brief Never set or read, see n_edge_dofs. */
   DofCount n_vertex_dofs;
   
   /**
@@ -114,37 +132,37 @@ public:
    */
   std::vector<HSIEPolynomial> build_non_curl_term_q(unsigned int order, const double value_component);
   
-  /*
+  /**
     *  @brief Builds a non-curl-type term required during the assembly of the system matrix for a nedelec-type dof.
     *
-    *  @details Same as above but for a nedelec dof. The computation requires two components of the gradient of the shape function and two values of the shape function. The former are provided as Tensors, the latter as individual doubles. See the description of the class.
+    *  @details Same as above but for a nedelec dof. The computation requires the two components of the value of the tangential surface function. The component in the infinite direction is zero. See the description of the class.
     * 
-    *  @param order Order of the dof we work with.
-    *  @param gradient_component_0 Shape function gradient component 0.
-    *  @param gradient_component_1 Shape function gradient component 1.
-    *  @param value_component_0 Value of shape function component 0.
-    *  @param value_component_1 Value of shape function component 1.
-    *  @return A three component vector containing the curl term required during assembly. 
+    *  @param dof_hsie_order Order of the dof we work with.
+    *  @param fe_shape_value_component_0 Value of shape function component 0.
+    *  @param fe_shape_value_component_1 Value of shape function component 1.
+    *  @return A three component vector containing the value term required during assembly. 
     */  
   std::vector<HSIEPolynomial> build_non_curl_term_nedelec(unsigned int, const double, const double);
 
-  /*
+  /**
     *  @brief Sets the internal base_point of the infinite edges.
     *
     *  @details For the construction of the infinite directions, one method is to choose a point within the interior domain. That point connected with points on the surface provides a directions, that will not cross in the exterior.
+    *  The value is stored but currently not evaluated.
     * 
     *  @param pos The Position to be used to construct the infinite directions.
     */  
   void set_V0(Position pos);
 
-  /*
+  /**
     *  @brief Collects all dofs active on a cell and returns them.
     *
     *  @details To perform the assembly on a cell we need to know which dofs are active there. This function generates that information.
     *  Internally, we use a surface triangulation with q and nedelec elements. We need a pointer from each datastructure.
-    *  @param pointer_q Pointer to the surface cell in the q-triangulation 
-    *  @param pointer_n Pointer to the surface cell in the nedelec-triangulation
-    *  @return A std::vector containing a DofData object for each dof
+    *  The names of the parameters are swapped with respect to the implementation and to all callers: the first argument is the nedelec cell.
+    *  @param pointer_q Pointer to the surface cell in the nedelec dof handler (dof_h_nedelec).
+    *  @param pointer_n Pointer to the same surface cell in the q dof handler (dof_h_q).
+    *  @return A std::vector containing a DofData object for each dof. The order is cell dofs, then edge dofs, then vertex dofs.
     */  
   auto get_dof_data_for_cell(CellIterator2D pointer_q, CellIterator2D pointer_n) -> DofDataVector;
 
@@ -308,10 +326,11 @@ public:
    * @brief When building the datastructures, this function adds a new dof to the list of all vertex dofs.
    * 
    * This is always a HSIE dof that relates to an infinite edge and therefore only needs the q type dof_handler in the surface fem.
+   * One dof of type RAY is registered for every Hardy space order from -1 to the HSIE polynomial degree.
    * 
    * @param cell The cell the dof was found in.
-   * @param edge The index of the edge it belongs to.
-   * @param vertex The index of the vertex in the edge that the dof belongs to.
+   * @param edge Despite its name this is the index of the vertex dof in the q dof handler. It is stored as the base dof index of the new dofs.
+   * @param vertex The index of the vertex in the cell that the dof belongs to.
    */
   void register_new_vertex_dofs(CellIterator2D cell, unsigned int edge, unsigned int vertex);
 
@@ -331,8 +350,7 @@ public:
    * Cells here are faces because the surface triangulation is 2D.
    * 
    * @param cell The cell the dof was found in, in the nedelec dof handler
-   * @param cell_2 The cell the dof was found in, in the q dof handler
-   * @param edge The index of the edge it belongs to.
+   * @param cell2 The cell the dof was found in, in the q dof handler
    */
   void register_new_surface_dofs(CellIterator2D cell, CellIterator2D cell2);
 
@@ -349,6 +367,7 @@ public:
    * There are several lists of the dofs that this object handles. This functions adds a single dof to those lists so it can be iterated over where necessary.
    * 
    * @param in_id The id of the base structures. For cells these have the type string.
+   * @param in_vector The list the new dof is appended to (face_dof_data).
    * @param in_hsie_order Order of the hardy space polynomial.
    * @param in_inner_order Order of the nedelec element of the dof.
    * @param in_dof_type There are several different types of dofs. See page 13 in the publication.
@@ -362,10 +381,12 @@ public:
    * There are several lists of the dofs that this object handles. This functions adds a single dof to those lists so it can be iterated over where necessary.
    * 
    * @param in_id The id of the base structures.
+   * @param in_vector The list the new dof is appended to (edge_dof_data or vertex_dof_data).
+   * @param orientation Orientation flag that is stored in the new dof (see DofData::orientation).
    * @param in_hsie_order Order of the hardy space polynomial.
    * @param in_inner_order Order of the nedelec element of the dof.
    * @param in_dof_type There are several different types of dofs. See page 13 in the publication.
-   * @param base_dof_index Index if the base dof. For example, an infinite surface dof is a combination of a hardy polynomial in the infinite direction and a surface nedelec edge dof. This number is the dof index of the nedelec edge dof.
+   * @param in_base_dof_index Index if the base dof. For example, an infinite surface dof is a combination of a hardy polynomial in the infinite direction and a surface nedelec edge dof. This number is the dof index of the nedelec edge dof.
    */
   void register_single_dof(unsigned int in_id, int in_hsie_order, int in_inner_order, DofType in_dof_type, DofDataVector &, unsigned int, bool orientation = true);
 
@@ -481,7 +502,7 @@ public:
    * @brief It is usefull to know, if a neighboring surface is also using hsie.
    * Updates the local cache with the information that the neighboring boundary index uses hsie or does not
    * 
-   * @param int index
+   * @param index Boundary id of the neighboring surface.
    * @param does if this is true, the neighbor uses hsie, if not, then not.
    */
   void set_b_id_uses_hsie(unsigned int index, bool does);

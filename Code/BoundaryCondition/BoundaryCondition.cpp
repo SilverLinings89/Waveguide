@@ -96,7 +96,7 @@ Constraints BoundaryCondition::make_constraints() {
 double BoundaryCondition::boundary_norm(NumericVectorDistributed * in_v) {
   double ret = 0;
   for(unsigned int i = 0; i < global_index_mapping.size(); i++) {
-    ret += norm_squared(in_v->operator()(global_index_mapping[i]));
+    ret += std::norm(static_cast<ComplexNumber>(in_v->operator()(global_index_mapping[i])));
   }
   return std::sqrt(ret);
 }
@@ -105,7 +105,7 @@ double BoundaryCondition::boundary_surface_norm(NumericVectorDistributed * in_v,
   double ret = 0;
   auto dofs = get_dof_association_by_boundary_id(in_bid);
   for(auto it : dofs) {
-    ret += norm_squared(in_v->operator()(it.index));
+    ret += std::norm(static_cast<ComplexNumber>(in_v->operator()(it.index)));
   }
   return std::sqrt(ret);
 }

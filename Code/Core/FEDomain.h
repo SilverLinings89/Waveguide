@@ -21,13 +21,20 @@
  */
 class FEDomain {
     public:
+    /** @brief Number of dofs with support on this domain. Local indices run from 0 to n_locally_active_dofs - 1. */
     DofCount n_locally_active_dofs;
+    /** @brief Number of locally active dofs that are owned by this domain. */
     DofCount n_locally_owned_dofs;
+    /** @brief Index set for the global indices of the dofs of this domain. It is never filled in FEDomain. */
     dealii::IndexSet global_dof_indices;
+    /** @brief For every local dof index the index of that dof in the global numbering of the sweeping level. Entries are UINT_MAX until the index has been set. */
     DofIndexVector global_index_mapping;
+    /** @brief For every local dof index: true if this domain owns the dof. */
     std::vector<bool> is_dof_owned;
+    /** @brief Set to true by freeze_ownership(). It is not initialized by the constructor. */
     bool is_ownership_ready;
     
+    /** @brief Sets both dof counts to zero. */
     FEDomain();
     
     /**

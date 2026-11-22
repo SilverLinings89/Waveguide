@@ -161,29 +161,61 @@ std::vector<InterfaceDofData> InnerDomain::get_surface_dof_vector_for_boundary_i
   return ret;
 }
 
+/**
+ * @brief Working data for the assembly of the system matrix and right-hand side of the inner domain, cell by cell.
+ *
+ * InnerDomain::assemble_system() advances the member cell, reinitializes fe_values and then calls prepare_for_current_q_index() for every quadrature point, which adds to cell_matrix and cell_rhs.
+ */
 struct CellwiseAssemblyDataNP {
+  /** @brief Gauss quadrature with Nedelec_element_order + 2 points per direction. */
   QGauss<3> quadrature_formula; 
+  /** @brief Values, gradients, JxW values and quadrature points of the shape functions on the current cell. */
   FEValues<3> fe_values;
+  /** @brief The quadrature points of the current cell in the coordinates of the mesh. Set by the assembly loop. */
   std::vector<Position> quadrature_points;
+  /** @brief Number of dofs of the finite element per cell. */
   const unsigned int dofs_per_cell;
+  /** @brief Number of quadrature points per cell. */
   const unsigned int n_q_points;
+  /** @brief Contributions of the current cell to the system matrix. */
   FullMatrix<ComplexNumber> cell_matrix;
+  /** @brief Relative permittivity inside the waveguide core. */
   const double eps_in;
+  /** @brief Relative permittivity outside the waveguide core. */
   const double eps_out;
+  /** @brief Set to 1. Not used. */
   const double mu_zero;
+  /** @brief Contributions of the current cell to the right-hand side. */
   Vector<ComplexNumber> cell_rhs;
+  /** @brief Tensor of the space transformation at the current quadrature point. */
   MaterialTensor transformation;
+  /** @brief Permittivity tensor at the current quadrature point: transformation times eps_in or eps_out. */
   MaterialTensor epsilon;
+  /** @brief Inverse of transformation. It is the tensor in the curl-curl term, i.e. the inverse permeability tensor. */
   MaterialTensor mu;
+  /** @brief Dof indices of the current cell. The assembly loop stores the indices in the global numbering of the level here. */
   std::vector<DofNumber> local_dof_indices;
+  /** @brief The current cell. */
   DofHandler3D::active_cell_iterator cell;
+  /** @brief End iterator of the cell loop. */
   DofHandler3D::active_cell_iterator end_cell;
+  /** @brief Not used. */
   bool has_input_interface = false;
+  /** @brief Extractor for the vector valued field, which starts at component 0. */
   const FEValuesExtractors::Vector fe_field;
+  /** @brief Not used. */
   Vector<ComplexNumber> incoming_wave_field;
+  /** @brief Not used. */
   IndexSet constrained_dofs;
+  /** @brief Mode profile used for the tapered source term. If it is a null pointer, no right-hand side is assembled. */
   ExactSolution * es_for_j = nullptr;
 
+  /**
+   * @brief Sets up quadrature and FEValues, sets the transformation tensor to the identity and the cell iterators to the range of active cells.
+   *
+   * @param fe The finite element of the inner domain.
+   * @param dof_handler The dof handler of the inner domain.
+   */
   CellwiseAssemblyDataNP(dealii::FE_NedelecSZ<3> * fe, DofHandler3D * dof_handler):
   quadrature_formula(GlobalParams.Nedelec_element_order + 2),
   fe_values(*fe, quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points),
@@ -211,10 +243,22 @@ struct CellwiseAssemblyDataNP {
     end_cell = dof_handler->end();
   };
 
+  /**
+   * @brief Sets the mode profile used for the tapered source term. This enables the assembly of the right-hand side.
+   *
+   * @param in_es Pointer to the mode profile. The object must outlive the assembly.
+   */
   void set_es_pointer(ExactSolution * in_es) {
     es_for_j = in_es;
   }
 
+  /**
+   * @brief Adds the contributions of one quadrature point to cell_matrix and cell_rhs.
+   *
+   * The matrix entry (i,j) receives \f$\left(\operatorname{curl}\phi_i \cdot \mu^{-1} \overline{\operatorname{curl}\phi_j} - \omega^2 (\epsilon \phi_i) \cdot \overline{\phi_j}\right) JxW\f$. If a mode profile is set and the point is inside the taper region (tapering_min_z <= z < tapering_max_z), the source term of evaluate_taper_source_at() is added to cell_rhs.
+   *
+   * @param q_index Index of the quadrature point on the current cell.
+   */
   void prepare_for_current_q_index(unsigned int q_index) {
     // The material tensors of transformation optics. For a straight waveguide this is the identity. It has to be
     // applied for every kind of shape (predefined shapes as well as shapes described by shape functions in
@@ -256,6 +300,12 @@ struct CellwiseAssemblyDataNP {
     }
   }
 
+  /**
+   * @brief Computes the complex conjugate of every component of a vector.
+   *
+   * @param input The vector.
+   * @return The conjugated vector.
+   */
   Tensor<1, 3, ComplexNumber> Conjugate_Vector(Tensor<1, 3, ComplexNumber> input) {
     Tensor<1, 3, ComplexNumber> ret;
     for (int i = 0; i < 3; i++) {
@@ -329,7 +379,7 @@ void InnerDomain::assemble_system(Constraints * constraints, dealii::PETScWrappe
     bool is_skeq_sym = true;
     for(unsigned int i = 0; i < cell_data.cell_matrix.n_rows(); i++) {
       for(unsigned int j = 0; j < i; j++) {
-        if(!(std::abs(cell_data.cell_matrix[i][j] - conjugate(cell_data.cell_matrix[j][i])) < FLOATING_PRECISION)) {
+        if(!(std::abs(cell_data.cell_matrix[i][j] - std::conj(cell_data.cell_matrix[j][i])) < FLOATING_PRECISION)) {
           is_skeq_sym = false;
         }
       }
@@ -493,7 +543,7 @@ ComplexNumber InnerDomain::compute_signal_strength(dealii::LinearAlgebra::distri
       VectorTools::point_value(dof_handler, local_solution, quadrature_points[index], fe_evaluation);
       GlobalParams.source_field->vector_value(quadrature_points[index], mode);
       for(unsigned int comp = 0; comp < 3; comp++) {
-        mode[comp] = conjugate(mode[comp]);
+        mode[comp] = std::conj(mode[comp]);
       }
       ret += fe_evaluation[0]*mode[0] + fe_evaluation[1]*mode[1] + fe_evaluation[2] * mode[2];
     }
@@ -523,7 +573,7 @@ ComplexNumber InnerDomain::compute_mode_strength() {
     for(unsigned int index = 0; index < quadrature_points.size(); index++) {
       GlobalParams.source_field->vector_value(quadrature_points[index], mode_a);
       for(unsigned int comp = 0; comp < 3; comp++) {
-        mode_b[comp] = conjugate(mode_a[comp]);
+        mode_b[comp] = std::conj(mode_a[comp]);
       }
       ret += mode_a[0]*mode_b[0] + mode_a[1]*mode_b[1] + mode_a[2] * mode_b[2];
     }
@@ -624,7 +674,7 @@ ComplexNumber InnerDomain::compute_kappa(NumericVectorLocal & in_solution) {
           for(unsigned int i = 0; i < fe.n_dofs_per_cell(); i++) {
             // std::cout << in_solution[local_dof_indices[i]] << " and " <<JxW << " and " << E0.norm() << " and " << fe_values[fe_field].value(i, q_index).norm() << std::endl;
             for(unsigned int j = 0; j < 3; j++) {
-              ret += conjugate((in_solution[local_dof_indices[i]] * fe_values[fe_field].value(i, q_index))[j]) * E0[j] * JxW;
+              ret += std::conj((in_solution[local_dof_indices[i]] * fe_values[fe_field].value(i, q_index))[j]) * E0[j] * JxW;
             }
           }
         }
@@ -656,7 +706,7 @@ void InnerDomain::set_rhs_for_adjoint_problem(NumericVectorLocal & in_solution, 
             E0[i] = GlobalParams.source_field->value(p,i);
           }
           for(unsigned int i = 0; i < fe.n_dofs_per_cell(); i++) {
-            Tensor<1,3,ComplexNumber> Ival = conjugate(in_solution[local_dof_indices[i]]) * fe_values[fe_field].value(i, q_index);
+            Tensor<1,3,ComplexNumber> Ival = std::conj(in_solution[local_dof_indices[i]]) * fe_values[fe_field].value(i, q_index);
             (*in_rhs)[local_dof_indices[i]] -= 2 * (kappa * (E0 * Ival) * JxW).real();
           }
         }
@@ -686,7 +736,7 @@ double InnerDomain::assemble_adjoint_rhs_for_signal_strength(NumericVectorDistri
           p[2] -= 2 * FLOATING_PRECISION;
           Tensor<1,3,ComplexNumber> mode_conjugate;
           for(unsigned int i = 0; i < 3; i++) {
-            mode_conjugate[i] = conjugate(GlobalParams.source_field->value(p, i));
+            mode_conjugate[i] = std::conj(GlobalParams.source_field->value(p, i));
             mode_norm += std::norm(mode_conjugate[i]) * JxW;
           }
           for(unsigned int i = 0; i < fe.n_dofs_per_cell(); i++) {
@@ -843,7 +893,7 @@ void InnerDomain::write_signal_along_z(const NumericVectorLocal & in_solution, c
       ComplexNumber overlap(0, 0);
       double mode_norm = 0, energy = 0;
       for(unsigned int component = 0; component < 3; component++) {
-        overlap += value[component] * conjugate(mode[component]);
+        overlap += value[component] * std::conj(mode[component]);
         mode_norm += std::norm(mode[component]);
         energy += std::norm(value[component]);
       }

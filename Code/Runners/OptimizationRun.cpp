@@ -53,8 +53,19 @@ static std::vector<double> sample_current_shape() {
  */
 class OptimizationFinished : public std::exception {
  public:
+  /**
+   * @brief Stores the reason.
+   *
+   * @param in_reason Text that names the stopping criterion that was fulfilled.
+   */
   explicit OptimizationFinished(const std::string & in_reason) : reason(in_reason) {}
+  /**
+   * @brief Access to the reason in the form required by std::exception.
+   *
+   * @return const char* The text passed to the constructor.
+   */
   const char * what() const noexcept override { return reason.c_str(); }
+  /** @brief Text that names the stopping criterion that was fulfilled. It is written to the console and the run report. */
   std::string reason;
 };
 

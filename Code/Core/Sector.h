@@ -2,7 +2,7 @@
 
 /**
  * @file Sector.h
- * @author your name (you@domain.com)
+ * @author Pascal Kraft
  * @brief Contains the header of the Sector class.
  * @version 0.1
  * @date 2022-03-22
@@ -36,6 +36,7 @@ class Sector {
    */
   Sector(bool in_left, bool in_right, double in_z_0, double in_z_1);
 
+  /** @brief Empty destructor. */
   ~Sector();
 
   /**
@@ -53,6 +54,7 @@ class Sector {
    */
   const bool boundary;
 
+  /** @brief The z-coordinate of the left (small z) surface of the sector. */
   const double z_0;
 
   /**
@@ -86,6 +88,18 @@ class Sector {
    */
   void set_properties(double m_0, double m_1, double r_0, double r_1);
 
+  /**
+   * @brief Sets the values of the shape parameters on both surfaces for sectors with three dofs per surface.
+   *
+   * The values of the left surface are only changed if left is false and those of the right surface only if right is false. The version with four arguments does the same for sectors with two dofs per surface (m and v). There its arguments are, in this order, m_0, m_1, v_0 and v_1. A call of the version that does not match the template argument only prints a message.
+   *
+   * @param m_0 Shift of the waveguide center on the left surface.
+   * @param m_1 Shift of the waveguide center on the right surface.
+   * @param r_0 Radius of the waveguide on the left surface.
+   * @param r_1 Radius of the waveguide on the right surface.
+   * @param v_0 Tilt, i.e. derivative of the shift by z, on the left surface.
+   * @param v_1 Tilt, i.e. derivative of the shift by z, on the right surface.
+   */
   void set_properties(double m_0, double m_1, double r_0, double r_1, double v_0, double v_1);
 
   /**
@@ -94,6 +108,16 @@ class Sector {
    */
   void set_properties_force(double m_0, double m_1, double r_0, double r_1);
 
+  /**
+   * @brief Same as set_properties() with six arguments, but the values are also set on the surfaces at the ends of the computational domain.
+   *
+   * @param m_0 Shift of the waveguide center on the left surface.
+   * @param m_1 Shift of the waveguide center on the right surface.
+   * @param r_0 Radius of the waveguide on the left surface.
+   * @param r_1 Radius of the waveguide on the right surface.
+   * @param v_0 Tilt, i.e. derivative of the shift by z, on the left surface.
+   * @param v_1 Tilt, i.e. derivative of the shift by z, on the right surface.
+   */
   void set_properties_force(double m_0, double m_1, double r_0, double r_1, double v_0, double v_1);
 
   /**
@@ -189,41 +213,48 @@ class Sector {
 
   /**
    * Get an interpolation of the radius for a coordinate z
-   * \param double z is the \f$z \in [0,1]\f$ coordinate for the interpolation.
+   * \param z is the \f$z \in [0,1]\f$ coordinate for the interpolation.
    */
   double get_r(double z) const;
 
   /**
    * Get an interpolation of the tilt for a coordinate z
-   * \param double z is the \f$z \in [0,1]\f$ coordinate for the interpolation.
+   * \param z is the \f$z \in [0,1]\f$ coordinate for the interpolation.
    */
   double get_v(double z) const;
 
   /**
    * Get an interpolation of the shift for a coordinate z
-   * \param double z is the \f$z \in [0,1]\f$ coordinate for the interpolation.
+   * \param z is the \f$z \in [0,1]\f$ coordinate for the interpolation.
    */
   double get_m(double z) const;
 
   // private:
 
+  /** @brief Value returned by getLowestDof(). */
   unsigned int LowestDof, NDofs, NInternalBoundaryDofs, NActiveCells;
+  /** @var NDofs
+   * @brief Value returned by getNDofs(). It is initialized with the number of shape dofs per sector and is used by get_dof() as upper bound of the dof index. */
+  /** @var NInternalBoundaryDofs
+   * @brief Value returned by getNInternalBoundaryDofs(). */
+  /** @var NActiveCells
+   * @brief Value returned by getNActiveCells(). */
 
-  // Stores the values of the left degrees of freedom. These are the values of
-  // the dofs on the surface of the sector towards z--> -\infty.
+  /// Stores the values of the left degrees of freedom. These are the values of
+  /// the dofs on the surface of the sector towards z--> -infinity. Order for three dofs per sector: r, m, v. For two: m, v.
   std::vector<double> dofs_l;
 
-  // Stores the values of the right degrees of freedom. These are the values of
-  // the dofs on the surface of the sector towards z--> \infty.
+  /// Stores the values of the right degrees of freedom. These are the values of
+  /// the dofs on the surface of the sector towards z--> infinity. Same order as dofs_l.
   std::vector<double> dofs_r;
 
-  //  This stores the indices for derivative dpendence. For example: If the
-  //  third dof is the dof type 'm' (in former nomenclature) and the second is
-  //  of type 'v' so v should be the derivative of 'm' then the derivative[3]=2.
-  //  This is used in the function get_dof.
+  ///  This stores the indices for derivative dpendence. For example: If the
+  ///  third dof is the dof type 'm' (in former nomenclature) and the second is
+  ///  of type 'v' so v should be the derivative of 'm' then the derivative[3]=2.
+  ///  This is used in the function get_dof.
   std::vector<unsigned int> derivative;
 
-  // this stores for any dof if it has zero_derivative (at sector interfaces) or
-  // not.
+  /// this stores for any dof if it has zero_derivative (at sector interfaces) or
+  /// not.
   std::vector<bool> zero_derivative;
 };

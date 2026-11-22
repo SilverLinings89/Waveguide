@@ -29,26 +29,47 @@ class NonLocalProblem;
  */
 class HierarchicalProblem {
  public:
+  /** @brief Direction in which this level sweeps over the problems of the level below. With three levels the levels 1, 2, 3 sweep in x, y, z; with two levels the levels 1, 2 sweep in y, z; with one level it is z. Has no meaning on level 0. */
   SweepingDirection sweeping_direction;
+  /** @brief Level of this problem in the hierarchy. 0 is the local problem with the direct solver. */
   const SweepingLevel level;
+  /** @brief Constraints of the dofs of this level in the global dof numbering of the level, built by make_constraints() and applied during assembly. */
   Constraints constraints;
+  /** @brief Not used. It is never assigned or read. */
   std::array<dealii::IndexSet, 6> surface_index_sets;
+  /** @brief Not used. It is never assigned or read. */
   std::array<bool, 6> is_hsie_surface;
+  /** @brief Six entries, set to false in the constructor. Never read. */
   std:: vector<bool> is_surface_locked;
+  /** @brief Not used. It is never assigned or read. */
   bool is_dof_manager_set;
+  /** @brief True if level > 0, i.e. if there is a problem of the level below. */
   bool has_child;
+  /** @brief The problem of the level below, which is used in the sweeping preconditioner of this level. Created by the constructor of NonLocalProblem; nullptr on level 0. */
   HierarchicalProblem* child = nullptr;
+  /** @brief Sparsity pattern of the system matrix, built by make_sparsity_pattern(). */
   dealii:: SparsityPattern sp;
+  /** @brief Solution of the last solve of this problem, in the global dof numbering of the level. */
   NumericVectorDistributed solution;
+  /** @brief Not used. It is never assigned or read. */
   NumericVectorDistributed direct_solution;
+  /** @brief Auxiliary vector with the layout of rhs. LocalProblem::assemble() stores a copy of the assembled right hand side in it. It is not read anywhere. */
   NumericVectorDistributed solution_error;
+  /** @brief Right hand side of the system, in the global dof numbering of the level. On the levels below the top level the sweep of the parent overwrites it before every solve. */
   NumericVectorDistributed rhs;
+  /** @brief Dofs of this level that are owned by this process (the entry of this process in LevelGeometry::dof_distribution). */
   dealii::IndexSet own_dofs;
+  /** @brief Not used. It is never assigned or read. */
   std::array<std::vector<InterfaceDofData>, 6> surface_dof_associations;
+  /** @brief System matrix of this level. Created in the constructors of the derived classes. */
   dealii::PETScWrappers::MPI::SparseMatrix * matrix = nullptr;
+  /** @brief Names of the files written by the last call of output_results(): first the file of the inner domain, then one file per PML domain. */
   std::vector<std::string> filenames;
+  /** @brief Stores the GMRES residuals of every solve of this problem and prints or plots them. Created by NonLocalProblem; nullptr on level 0. */
   ResidualOutputGenerator * residual_output = nullptr; // only used by problems that are solved iteratively
+  /** @brief Number of calls of solve_with_timers_and_count() on this process. */
   unsigned int solve_counter;
+  /** @brief Block index of this process in the sweeping direction of the level above. It identifies which of the problems of this level this process belongs to and is printed in front of the residuals. -1 if there is no level above. */
   int parent_sweeping_rank = -1;
 
   /**
@@ -211,6 +232,11 @@ class HierarchicalProblem {
   }
 };
 
+/**
+ * @brief Context of the PETSc shell preconditioner of a NonLocalProblem.
+ * PETSc passes it to the apply callback, which uses it to call NonLocalProblem::apply_sweep().
+ */
 typedef struct {
+  /** @brief The problem whose sweeping preconditioner this context belongs to. */
   NonLocalProblem * parent;
 } SampleShellPC;

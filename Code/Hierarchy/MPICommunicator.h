@@ -19,9 +19,13 @@
  */
 class MPICommunicator {
 public:
+  /** @brief Does nothing. The object is set up in initialize(). */
   MPICommunicator();
+  /** @brief Does nothing. The communicators are freed by destroy_comms(). */
   ~MPICommunicator();
+  /** @brief Communicators indexed by level. Entry l contains the processes that share one problem of level l: MPI_COMM_SELF for level 0, MPI_COMM_WORLD for the top level and communicators split off by block index in between. */
   std::vector<MPI_Comm> communicators_by_level;
+  /** @brief Rank of this process in each of the communicators in communicators_by_level, indexed by level. Always 0 for level 0. */
   std::vector<unsigned int> rank_on_level;
 
   /**

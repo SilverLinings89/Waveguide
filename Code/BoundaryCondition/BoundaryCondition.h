@@ -40,20 +40,31 @@
 
 class BoundaryCondition: public FEDomain {
 public:
-  const BoundaryId b_id; // This value is the boundary id as seen from the inner domain (for pml domains for example, there is a difference there. From the standpoint of the interior domain, the pml domain is boundary 0 but the interface between the boundary condition and the interior domain would be boundary 1 from the perspective of the pml domain).
-  const unsigned int level; // This value is the sweeping level. The value is required to retrieve relevant data from the global objects.
-  const double additional_coordinate; // Since all surfaces are axis-parallel and the boundary id determines the normal axis, there is only one value required to completely determine the interface plane between the inner domain and the surface domain. For example, if b_id = 0 (-x surface of the inner domain) and additional_coordinate = 1.0, then the boundary surface are all points with p[0] == 1.0.
-  std::vector<InterfaceDofData> surface_dofs; // This is a cache so I don't have to perform expensive operations over and over again during assembly.
-  bool surface_dof_sorting_done; // internal
+  const BoundaryId b_id; ///< This value is the boundary id as seen from the inner domain (for pml domains for example, there is a difference there. From the standpoint of the interior domain, the pml domain is boundary 0 but the interface between the boundary condition and the interior domain would be boundary 1 from the perspective of the pml domain).
+  const unsigned int level; ///< This value is the sweeping level. The value is required to retrieve relevant data from the global objects.
+  const double additional_coordinate; ///< Since all surfaces are axis-parallel and the boundary id determines the normal axis, there is only one value required to completely determine the interface plane between the inner domain and the surface domain. For example, if b_id = 0 (-x surface of the inner domain) and additional_coordinate = 1.0, then the boundary surface are all points with p[0] == 1.0.
+  std::vector<InterfaceDofData> surface_dofs; ///< Cache of the dofs on the interface to the inner domain (index in the local numbering of this object and base point). Only HSIESurface fills and reads it.
+  bool surface_dof_sorting_done; ///< Intended to mark surface_dofs as sorted. Not initialized and not read anywhere.
+  /** @brief True once boundary_vertex_coordinates has been filled. Only used by HSIESurface. */
   bool boundary_coordinates_computed = false;
+  /** @brief Extremal vertex coordinates of the surface mesh in 3D coordinates, indexed by boundary id (0: min x, 1: max x, 2: min y, 3: max y, 4: min z, 5: max z). Only used by HSIESurface. */
   std::array<double, 6> boundary_vertex_coordinates;
-  DofCount dof_counter; // This value stores the number of owned dofs of this boundary condition. It is 0 for boundary types like neighbor, empty or dirichlet, but non-zero for pml and hsie, where the boundary condition introduces additional dofs.
-  int global_partner_mpi_rank; // This value is only relevant for neighbors but stored on the base type for convenience. It determines the MPI rank of the neighbor associated with this surface on the level communicator.
+  DofCount dof_counter; ///< Number of dofs in the local numbering of this boundary condition (locally active dofs, including those shared with the inner domain and with other boundary conditions). It is 0 for boundary types like neighbor, empty or dirichlet, but non-zero for pml and hsie, where the boundary condition introduces additional dofs.
+  int global_partner_mpi_rank; ///< This value is only relevant for neighbors but stored on the base type for convenience. It is the MPI rank (in MPI_COMM_WORLD) of the process on the other side of this surface. Only set by NeighborSurface.
+  /** @brief Only set by NeighborSurface, which stores the flag (0 or 1) returned by GeometryManager::get_global_neighbor_for_interface() that states if a neighbor exists. Not read anywhere. */
   int local_partner_mpi_rank;
-  const std::vector<BoundaryId> adjacent_boundaries; // For more performant implementation, I have stored this value. It is the set of boundary indices excluding the own boundary id and the boundary that is opposed to this one from the inner domain, since there is no coupling between the domain and itself and no domain intersection with the opposing side.
-  std::array<bool, 6> are_edge_dofs_owned; // If the i-th value of this array is set to true, the surface dofs on that boundary surface are locally owned.
+  const std::vector<BoundaryId> adjacent_boundaries; ///< For more performant implementation, I have stored this value. It is the set of boundary indices excluding the own boundary id and the boundary that is opposed to this one from the inner domain, since there is no coupling between the domain and itself and no domain intersection with the opposing side.
+  std::array<bool, 6> are_edge_dofs_owned; ///< If the i-th value of this array is true, this object owns the dofs it shares with the boundary condition of boundary id i (see are_edge_dofs_locally_owned()). The entries of the own and of the opposing boundary id are always false.
+  /** @brief Dof handler of the 3D mesh of this boundary condition. Only PMLSurface has such a mesh, for all other types it remains empty. */
   DofHandler3D dof_handler;
 
+  /**
+   * @brief Stores the arguments and determines the adjacent boundaries and the ownership of the dofs shared with them.
+   *
+   * @param in_bid Boundary id (0 to 5) of the surface of the inner domain this object belongs to.
+   * @param in_level Sweeping level this object is used on.
+   * @param in_additional_coordinate Coordinate of the surface in its normal direction (see additional_coordinate).
+   */
   BoundaryCondition(unsigned int in_bid, unsigned int in_level, double in_additional_coordinate);
 
   /**
@@ -127,7 +138,7 @@ public:
      * 
      *  @see  PMLSurface::get_dof_association_by_boundary_id()
      * 
-     *  @param boundary_id This is the boundary id as seen from this domain.
+     *  @param in_boundary_id This is the boundary id as seen from this domain.
      *  @return InterfaceDofData always contains a reference points and index for every index found on the surface. The reference points are used for sorting, the index is the actual data used by the caller.
      */
   virtual auto get_dof_association_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<InterfaceDofData> = 0;
@@ -139,7 +150,7 @@ public:
      * 
      *  @see  get_dof_association()
      * 
-     *  @param boundary_id This is the boundary id as seen from this domain.
+     *  @param in_boundary_id This is the boundary id as seen from this domain.
      *  @return At this point, the base_points are no longer required since this function gets called later in the preparation stage. For that reason, this function does not return the base points of the dofs anymore and instead only returns the dof indices. The indices, however, are still in the same order.
      */
   virtual auto get_global_dof_indices_by_boundary_id(BoundaryId in_boundary_id) -> std::vector<DofNumber>;

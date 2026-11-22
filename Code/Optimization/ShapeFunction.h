@@ -17,18 +17,30 @@
  */
 class ShapeFunction {
 
+    /** @brief Length in z of one sector. On each sector the derivative of the function is linear. */
     const double sector_length = 0;
+    /** @brief Number of sectors. Not set by the constructor and not read. */
     unsigned int n_sectors;
+    /** @brief All dof values (length n_dofs). Entry 0 is the function value at the lower end of the z-range and the last entry the function value at the upper end. The entries in between are values of the derivative at the sector boundaries. Entries 0, 1 and the last three are constrained, the others are the free dofs. */
     std::vector<double> dof_values;
+    /** @brief Constraint: function value at the lower end of the z-range. */
     double f_0 = 0;
+    /** @brief Constraint: function value at the upper end of the z-range. */
     double f_1 = 0;
+    /** @brief Constraint: derivative at the lower end of the z-range. */
     double df_0 = 0;
+    /** @brief Constraint: derivative at the upper end of the z-range. */
     double df_1 = 0;
+    /** @brief Lower end of the z-range, as passed to the constructor. */
     double z_min = 0;
+    /** @brief Half of the upper end of the z-range passed to the constructor. For larger z the function is evaluated at the mirrored point 2 * z_max - z. */
     double z_max = 0;
+    /** @brief If true, initialize() draws the free dof values at random. Otherwise it sets all of them to the mean slope between the two end values. */
     bool bad_init = false;
     public:
+    /** @brief Number of dofs that the optimization can change: n_dofs minus the five constrained values. */
     const unsigned int n_free_dofs;
+    /** @brief Total number of dofs including the constrained ones: number of sectors plus 3. */
     const unsigned int n_dofs;
 
     /**

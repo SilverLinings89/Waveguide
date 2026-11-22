@@ -87,17 +87,32 @@
  */
 class InnerDomain: public FEDomain {
  public:
+  /** @brief Mesh generator object. It is only constructed; make_grid() builds the mesh directly. */
   SquareMeshGenerator mesh_generator;
+  /** @brief The Nedelec element of the order set in the parameters (Nedelec_element_order). */
   dealii::FE_NedelecSZ<3> fe;
+  /** @brief Mesh of the part of the inner domain owned by this process, in computational ("math") coordinates. */
   dealii::Triangulation<3> triangulation;
+  /** @brief Dof handler on triangulation. Its numbering is the local numbering of this domain. */
   DofHandler3D dof_handler;
+  /** @brief Sparsity pattern. Not used by the functions of this class. */
   dealii::SparsityPattern sp;
+  /** @brief Output object used by output_results(). */
   dealii::DataOut<3> data_out;
+  /** @brief True once load_exact_solution() has computed exact_solution_interpolated. */
   bool exact_solution_is_initialized;
+  /** @brief L2-projection of the source field (GlobalParams.source_field) onto the finite element space, in local numbering. */
   NumericVectorLocal exact_solution_interpolated;
+  /** @brief The sweeping level this object belongs to, i.e. the index into Geometry.levels. */
   unsigned int level;
 
+  /**
+   * @brief Creates the finite element and the (still empty) triangulation and dof handler.
+   *
+   * @param level The sweeping level this object belongs to.
+   */
   InnerDomain(unsigned int level);
+  /** @brief Empty destructor. */
   ~InnerDomain();
   /**
    * @brief In many places it can be useful to have an interpolated exact solution for the waveguide or Hertz case.
@@ -143,8 +158,8 @@ class InnerDomain: public FEDomain {
   /**
    * @brief Prints some diagnostic data to the console.
    * 
-   * @param matrix 
-   * @param rhs 
+   * @param matrix The matrix whose l1 norm is printed.
+   * @param rhs The vector whose l2 norm is printed.
    */
   void write_matrix_and_rhs_metrics(dealii::PETScWrappers::MatrixBase * matrix, NumericVectorDistributed *rhs);
 
@@ -243,11 +258,19 @@ class InnerDomain: public FEDomain {
    * \f]
    * 
    * 
-   * @param in_solution 
-   * @return ComplexNumber 
+   * @param in_solution The solution \f$\boldsymbol{E}_p\f$ in local numbering.
+   * @return ComplexNumber The value of the integral for the part of the output surface in this domain.
    */
   ComplexNumber compute_kappa(NumericVectorLocal & in_solution);
 
+  /**
+   * @brief Subtracts the contributions of the faces on the output surface (upper end of the global z range) to the right-hand side of an adjoint problem based on compute_kappa().
+   *
+   * For every dof i with shape function \f$\phi_i\f$ on such a face the value \f$2\,\mathrm{Re}(\kappa \, \boldsymbol{E}_0 \cdot \overline{u_i} \phi_i)\f$, integrated over the face, is subtracted, where \f$\boldsymbol{E}_0\f$ is the source field. The entries of in_rhs are addressed with the local dof indices of this domain. See assemble_adjoint_rhs_for_signal_strength() for the version that uses global indices.
+   *
+   * @param in_solution The primal solution in local numbering.
+   * @param in_rhs The right-hand side vector to modify.
+   */
   void set_rhs_for_adjoint_problem(NumericVectorLocal & in_solution, NumericVectorDistributed * in_rhs);
 
   /**
@@ -270,14 +293,14 @@ class InnerDomain: public FEDomain {
    * the three components and whether the point is inside the waveguide core. One file per plane and process.
    *
    * @param in_solution The solution in the local numbering of this domain.
-   * @param in_name Name of the output, the files are called <in_name>_<plane><process>.txt.
+   * @param in_name Name of the output, the files are called `<in_name>_<plane><process>.txt`.
    */
   void write_field_slices(const NumericVectorLocal & in_solution, const std::string & in_name);
 
   /**
    * @brief Writes the overlap of the solution with the input mode for every plane of cell faces z = const.
    *
-   * For every plane the file <name><process>.txt contains the sums over the faces (values at the face centers) of
+   * For every plane the file `<name><process>.txt` contains the sums over the faces (values at the face centers) of
    * E * conj(m), |m|^2, |E|^2 in the core and |E|^2 in the whole cross-section, where m is the mode at the same
    * point. The sums of all processes for one z give the transmitted signal s(z) = sum E conj(m) / sum |m|^2.
    *
@@ -293,6 +316,10 @@ class InnerDomain: public FEDomain {
    * domain, minus the derivative of the tapered source term. T is the tensor of the space transformation and its
    * derivative with respect to p_j is computed by central differences. There is no complex conjugation: the form
    * is bilinear.
+   *
+   * @param in_solution The primal solution u in local numbering.
+   * @param in_adjoint The adjoint solution lambda in local numbering.
+   * @return One value per free shape parameter.
    */
   std::vector<ComplexNumber> compute_shape_gradient_integrals(NumericVectorLocal & in_solution, NumericVectorLocal & in_adjoint);
 };

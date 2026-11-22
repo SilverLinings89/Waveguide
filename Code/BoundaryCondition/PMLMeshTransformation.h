@@ -23,14 +23,34 @@
  */ 
 
 struct PMLMeshTransformation {
+    /** @brief Lower and upper x coordinate of the cuboid before the transformation. */
     std::pair<double, double> default_x_range;
+    /** @brief Lower and upper y coordinate of the cuboid before the transformation. */
     std::pair<double, double> default_y_range;
+    /** @brief Lower and upper z coordinate of the cuboid before the transformation. */
     std::pair<double, double> default_z_range;
+    /** @brief Coordinate in the outward direction at which the transformation is the identity (the surface of the inner domain). */
     double base_coordinate_for_transformed_direction;
+    /** @brief Coordinate direction (0 = x, 1 = y, 2 = z) in which the PML extends away from the inner domain. */
     unsigned int outward_direction;
+    /** @brief Indexed by boundary id (0 to 5). If the entry is true, the points on that side of the cuboid are moved outward by their distance to the base coordinate. */
     std::array<bool, 6> transform_coordinate;
     
+    /**
+     * @brief Creates a transformation with empty ranges and all flags set to false. operator() is the identity for it.
+     */
     PMLMeshTransformation();
+
+    /**
+     * @brief Stores the description of the cuboid and of the sides that are to be moved.
+     *
+     * @param in_x_range Lower and upper x coordinate of the cuboid.
+     * @param in_y_range Lower and upper y coordinate of the cuboid.
+     * @param in_z_range Lower and upper z coordinate of the cuboid.
+     * @param in_base_coordinate Coordinate in the outward direction at which points are not moved.
+     * @param in_outward_direction Coordinate direction (0, 1 or 2) in which the PML extends.
+     * @param in_transform_coordinate For every boundary id: whether the points on that side of the cuboid are moved.
+     */
     PMLMeshTransformation(std::pair<double, double> in_x_range, std::pair<double, double> in_y_range, std::pair<double, double> in_z_range, double in_base_coordinate, unsigned int in_outward_direction, std::array<bool, 6> in_transform_coordinate);
 
     /**

@@ -2,7 +2,7 @@
 
 /**
  * @file ParameterOverride.h
- * @author your name (you@domain.com)
+ * @author Pascal Kraft
  * @brief A utility class that overrides certain parameters from an input file.
  * @version 0.1
  * @date 2022-03-22
@@ -20,14 +20,19 @@
  * 
  */
 class ParameterOverride {
+    /** @brief The parsed overrides as pairs of key and value (both as text). */
     std::vector<std::pair<std::string, std::string>> overrides;
     public: 
+    /** @brief True if read() has parsed at least one override. */
     bool has_overrides;
+    /** @brief Creates an object without overrides. */
     ParameterOverride();
 
     /**
      * @brief Checks if the provided override string is valid and if so parses it.
-     * 
+     * The format is "key=value;key=value". The keys known to perform_on() are n_pml_cells, pml_sigma_max, pml_order,
+     * solver_type, geometry_size_z, system_length, processes_in_z and predefined_case_number.
+     *
      * @return true The input was valid and parsing it was successful.
      * @return false There was an error
      */

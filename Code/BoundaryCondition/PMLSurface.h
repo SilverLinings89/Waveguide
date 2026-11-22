@@ -20,10 +20,10 @@
 /**
  * @brief An implementation of a UPML method.
  * 
- * This is one of the core objects in the entire implementation. For an explanation of the PML method, please read \cref{subsec:PML}.
+ * This is one of the core objects in the entire implementation. For an explanation of the PML method, please read the section on perfectly matched layers in the dissertation.
  * 
  * This object assembles matrix blocks for our system that act as an absorbing boundary condition. In essence, the object builds a mesh for the PML domain and uses Nedelec elements on it to compute the matrix entries.
- * Additionally, it can fill a sparsity pattern with the information about which dofs couple to which and it also manages its own dofs, i.e. the ones that aren't also dofs on the inner domain. The object additionally sets the PEC boundary conditions \cref{subsec:PEC} on the outside boundary of the PML domain.
+ * Additionally, it can fill a sparsity pattern with the information about which dofs couple to which and it also manages its own dofs, i.e. the ones that aren't also dofs on the inner domain. The object additionally sets the PEC boundary conditions (see the section on PEC boundary conditions in the dissertation) on the outside boundary of the PML domain.
  * If a neighboring boundary condition also uses PML, this object is capable of building a connecting mesh of the corner or edge domains to couple the systems together.
  * The method can use either a constant value for the imaginary part of the material tensor or a ramping value of arbitrary order. 
  * 
@@ -42,25 +42,46 @@
  * As a special implementation detail it should be noted, that the cell layer touching the inner domain does not use the material tensor with imaginary part. It is instead treated as normal computational domain.
  */
 class PMLSurface : public BoundaryCondition {
+    /** @brief Not used. The absorption is controlled by GlobalParams.PML_Sigma_Max and GlobalParams.PML_skaling_order. */
     ComplexNumber sigma_0;
+    /** @brief Boundary id that the faces towards the inner domain carry in the mesh of this object. It is the id opposite to b_id. */
     unsigned int inner_boundary_id;
+    /** @brief Boundary id that the outward faces (PEC condition) carry in the mesh of this object. It is equal to b_id. */
     unsigned int outer_boundary_id;
+    /** @brief Nedelec element of the same order as in the inner domain (GlobalParams.Nedelec_element_order). */
     dealii::FE_NedelecSZ<3> fe_nedelec;
+    /** @brief Not used. The mesh is built from axis-parallel blocks without transformation. */
     PMLMeshTransformation transformation;
+    /** @brief Not used. */
     bool mesh_is_transformed;
+    /** @brief Coordinate in normal direction of the surface b_id of the inner domain (taken from the local coordinate ranges in GeometryManager). */
     const double surface_coordinate;
+    /** @brief For every boundary id of the mesh of this object: the dofs on the faces with that id (index in the local numbering and base point), sorted by base point. Filled by prepare_dof_associations(). */
     std::array<std::vector<InterfaceDofData>, 6> dof_associations;
+    /** @brief For every coordinate direction, on the lower side of the inner domain: first is the coordinate at which the absorption starts, second the coordinate of the outer end of the layer. */
     std::array<std::pair<double,double>, 3> lower_pml_ranges;
+    /** @brief Same as lower_pml_ranges for the upper side of the inner domain. */
     std::array<std::pair<double,double>, 3> upper_pml_ranges;
+    /** @brief Thickness of the absorbing part of the layer: GlobalParams.PML_thickness minus non_pml_layer_thickness. */
     double effective_pml_thickness;
 
   public: 
+    /** @brief Lower and upper x coordinate of the main block of the PML mesh (without the edge and corner extensions). Set by compute_coordinate_ranges(). */
     std::pair<double, double> x_range;
+    /** @brief Lower and upper y coordinate of the main block of the PML mesh. */
     std::pair<double, double> y_range;
+    /** @brief Lower and upper z coordinate of the main block of the PML mesh. */
     std::pair<double, double> z_range;
-    double non_pml_layer_thickness; // thickness of the cell layer closest to the surface. Here I set the transformation tensor to 0 to ensure surface dofs are not damped.
+    double non_pml_layer_thickness; ///< Thickness of the cell layer closest to the surface (GlobalParams.PML_thickness / GlobalParams.PML_N_Layers). In this layer sigma is zero to ensure surface dofs are not damped.
+    /** @brief Mesh of the PML domain including the edge and corner extensions this object owns. Built by prepare_mesh(). */
     dealii::Triangulation<3> triangulation;
     
+    /**
+     * @brief Sets the boundary ids used in the PML mesh and the coordinate ranges of the absorbing layer. The mesh itself is built in initialize().
+     *
+     * @param in_bid Boundary id (0 to 5) of the surface of the inner domain this PML is attached to.
+     * @param in_level Sweeping level this object is used on.
+     */
     PMLSurface(unsigned int in_bid, unsigned int in_level);
     ~PMLSurface();
     
@@ -75,7 +96,7 @@ class PMLSurface : public BoundaryCondition {
     /**
      * @brief For this method we use PEC boundary conditions on the outside of the PML domain. This function writes the dof constraints representing those PEC constraints to an empty Affine Constraints object and returns it.
      * 
-     * As described in \cref{subsec:PML}, we apply PEC boundary conditions, i.e. dirichlet zero values for the tangential trace on the surface of the PML domain that is facing outward. The affined constraints object we build here can be used to condense the system matrix to set the constrained dofs to the right value.
+     * As described in the section on perfectly matched layers in the dissertation, we apply PEC boundary conditions, i.e. dirichlet zero values for the tangential trace on the surface of the PML domain that is facing outward. The affined constraints object we build here can be used to condense the system matrix to set the constrained dofs to the right value.
      * 
      * @return Constraints The constraint object to be used anywhere in the code to condense a system or to update vector values.
      */
@@ -191,29 +212,29 @@ class PMLSurface : public BoundaryCondition {
     /**
      * @brief Computes the fraction of the PML thickness of the provided position for the computation of sigma for all three space directions.
      * 
-     * As described in \cref{subsec:PML}, we can ramp up the value of sigma as we approach the outer boundary to reduce the effect of reflections by a profile like \cref{eqn:PMLIncrease}. In this equation, this function computes z/d for all three directions and returns them.
+     * As described in the section on perfectly matched layers in the dissertation, we can ramp up the value of sigma as we approach the outer boundary to reduce the effect of reflections by a polynomial profile \f$\sigma(z) = \sigma_{max} (z/d)^m\f$. In this equation, this function computes z/d for all three directions and returns them. Here z is the distance from the start of the absorbing part of the layer and d is its thickness (effective_pml_thickness).
      * 
      * @return std::array<double, 3> 
      */
     auto fraction_of_pml_direction(Position) -> std::array<double, 3> ;
 
     /**
-     * @brief Get the PML material tensor \epsilon_p for a given position.
+     * @brief Get the PML material tensor \f$\epsilon_p\f$ for a given position.
      * 
-     * This is \epsilon_p in \cref{sec:PML}.
+     * This is \f$\epsilon_p\f$ in the section on perfectly matched layers in the dissertation.
      * 
      * @param in_p The location to compute the material tensor at
-     * @return dealii::Tensor<2,3,ComplexNumber> The material tensor \epsilon_p for a UPML medium at a given location.
+     * @return dealii::Tensor<2,3,ComplexNumber> The material tensor \f$\epsilon_p\f$ for a UPML medium at a given location.
      */
     auto get_pml_tensor_epsilon(Position in_p) -> dealii::Tensor<2,3,ComplexNumber>;
 
     /**
-     * @brief Get the PML material tensor \mu_p for a given position.
+     * @brief Get the PML material tensor \f$\mu_p\f$ for a given position.
      * 
-     * This is \mu_p in \cref{sec:PML}.
+     * This is \f$\mu_p\f$ in the section on perfectly matched layers in the dissertation.
      * 
      * @param in_p The location to compute the material tensor at
-     * @return dealii::Tensor<2,3,ComplexNumber> The material tensor \mu_p for a UPML medium at a given location.
+     * @return dealii::Tensor<2,3,ComplexNumber> The material tensor \f$\mu_p\f$ for a UPML medium at a given location.
      */
     auto get_pml_tensor_mu(Position in_p) -> dealii::Tensor<2,3,ComplexNumber>;
 
@@ -330,11 +351,11 @@ class PMLSurface : public BoundaryCondition {
     bool mg_process_edge(dealii::Triangulation<3> * return_pointer, BoundaryId b_id);
 
     /**
-     * @brief Same as above but for edges. Therefore requires two boundary ids.
+     * @brief Same as above but for corners. Therefore requires two boundary ids.
      * 
-     * @param return_pointer The pointer to be used to store the extension triangulation in.
-     * @param first_bid 
-     * @param second_bid 
+     * @param current_list The pointer to be used to store the extension triangulation in.
+     * @param first_bid First adjacent boundary of the corner.
+     * @param second_bid Second adjacent boundary of the corner.
      * @return true This corner requires an extension domain, i.e. there are PML boundaries on the other two boundaries and the extension is locally owned.
      * @return false Either no domain is required or it is not locally owned.
      */

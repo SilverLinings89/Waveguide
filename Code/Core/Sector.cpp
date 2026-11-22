@@ -46,16 +46,28 @@ Sector<Dofs_Per_Sector>::Sector(bool in_left, bool in_right, double in_z_0,
 }
 
 template <>
+/** @brief Sectors with two dofs per surface have no radius dof. This version only prints a message. */
 void Sector<2>::set_properties(double, double, double, double, double, double) {
   print_info("Sector<2>::set_properties", "Wrong call in Sector.", LoggingLevel::PRODUCTION_ALL);
 }
 
 template <>
+/** @brief Sectors with three dofs per surface need the radius values. This version only prints a message. */
 void Sector<3>::set_properties(double, double, double, double) {
   print_info("Sector<3>::set_properties", "Wrong call in Sector.", LoggingLevel::PRODUCTION_ALL);
 }
 
 template <>
+/**
+ * @brief Sets shift and tilt on both surfaces of a sector with two dofs per surface.
+ *
+ * The left values are only set if left is false, the right values only if right is false.
+ *
+ * @param in_m_0 Shift of the waveguide center on the left surface.
+ * @param in_m_1 Shift of the waveguide center on the right surface.
+ * @param in_v_0 Tilt on the left surface.
+ * @param in_v_1 Tilt on the right surface.
+ */
 void Sector<2>::set_properties(double in_m_0, double in_m_1, double in_v_0,
                                double in_v_1) {
   if (!left) {
@@ -69,6 +81,18 @@ void Sector<2>::set_properties(double in_m_0, double in_m_1, double in_v_0,
 }
 
 template <>
+/**
+ * @brief Sets radius, shift and tilt on both surfaces of a sector with three dofs per surface.
+ *
+ * The left values are only set if left is false, the right values only if right is false.
+ *
+ * @param in_m_0 Shift of the waveguide center on the left surface.
+ * @param in_m_1 Shift of the waveguide center on the right surface.
+ * @param in_r_0 Radius of the waveguide on the left surface.
+ * @param in_r_1 Radius of the waveguide on the right surface.
+ * @param in_v_0 Tilt on the left surface.
+ * @param in_v_1 Tilt on the right surface.
+ */
 void Sector<3>::set_properties(double in_m_0, double in_m_1, double in_r_0,
                                double in_r_1, double in_v_0, double in_v_1) {
   if (!left) {
@@ -84,17 +108,27 @@ void Sector<3>::set_properties(double in_m_0, double in_m_1, double in_r_0,
 }
 
 template <>
+/** @brief Sectors with two dofs per surface have no radius dof. This version only prints a message. */
 void Sector<2>::set_properties_force(double, double, double, double, double,
                                      double) {
   print_info("Sector<2>::set_properties_force", "Wrong call in Sector.", LoggingLevel::PRODUCTION_ALL);
 }
 
 template <>
+/** @brief Sectors with three dofs per surface need the radius values. This version only prints a message. */
 void Sector<3>::set_properties_force(double, double, double, double) {
   print_info("Sector<3>::set_properties_force", "Wrong call in Sector.", LoggingLevel::PRODUCTION_ALL);
 }
 
 template <>
+/**
+ * @brief Sets shift and tilt on both surfaces of a sector with two dofs per surface, also at the ends of the computational domain.
+ *
+ * @param in_m_0 Shift of the waveguide center on the left surface.
+ * @param in_m_1 Shift of the waveguide center on the right surface.
+ * @param in_v_0 Tilt on the left surface.
+ * @param in_v_1 Tilt on the right surface.
+ */
 void Sector<2>::set_properties_force(double in_m_0, double in_m_1,
                                      double in_v_0, double in_v_1) {
   dofs_l[0] = in_m_0;
@@ -104,6 +138,16 @@ void Sector<2>::set_properties_force(double in_m_0, double in_m_1,
 }
 
 template <>
+/**
+ * @brief Sets radius, shift and tilt on both surfaces of a sector with three dofs per surface, also at the ends of the computational domain.
+ *
+ * @param in_m_0 Shift of the waveguide center on the left surface.
+ * @param in_m_1 Shift of the waveguide center on the right surface.
+ * @param in_r_0 Radius of the waveguide on the left surface.
+ * @param in_r_1 Radius of the waveguide on the right surface.
+ * @param in_v_0 Tilt on the left surface.
+ * @param in_v_1 Tilt on the right surface.
+ */
 void Sector<3>::set_properties_force(double in_m_0, double in_m_1,
                                      double in_r_0, double in_r_1,
                                      double in_v_0, double in_v_1) {
@@ -213,6 +257,16 @@ double Sector<Dofs_Per_Sector>::getQ3(double) const {
 }
 
 template <>
+/**
+ * @brief Computes the tensor of the space transformation for a sector with radius, shift and tilt.
+ *
+ * Radius and shift are interpolated along z by cubic polynomials between the values on both surfaces of the sector.
+ *
+ * @param in_x x-coordinate of the point.
+ * @param in_y y-coordinate of the point.
+ * @param z Relative z-coordinate inside the sector, between 0 (left surface) and 1 (right surface).
+ * @return The real 3x3 tensor of the transformation at that point.
+ */
 Tensor<2, 3, double> Sector<3>::TransformationTensorInternal(double in_x,
                                                              double in_y,
                                                              double z) const {
@@ -322,7 +376,7 @@ Tensor<2, 3, double> Sector<3>::TransformationTensorInternal(double in_x,
 
   g = invert(gInverse);
 
-  double sp = dotproduct(u[0], crossproduct(u[1], u[2]));
+  double sp = u[0] * cross_product_3d(u[1], u[2]);
   if (sp < 0) sp *= -1.0;
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
@@ -334,6 +388,14 @@ Tensor<2, 3, double> Sector<3>::TransformationTensorInternal(double in_x,
 }
 
 template <>
+/**
+ * @brief Computes the tensor of the space transformation for a sector with shift and tilt only.
+ *
+ * The tensor does not depend on x and y, because the cross-section is only shifted.
+ *
+ * @param z Relative z-coordinate inside the sector, between 0 (left surface) and 1 (right surface).
+ * @return The real 3x3 tensor of the transformation at that point.
+ */
 Tensor<2, 3, double> Sector<2>::TransformationTensorInternal(double, double,
                                                              double z) const {
   if (z < 0 || z > 1){
@@ -374,7 +436,7 @@ Tensor<2, 3, double> Sector<2>::TransformationTensorInternal(double, double,
 
   g = invert(gInverse);
 
-  double sp = dotproduct(u[0], crossproduct(u[1], u[2]));
+  double sp = u[0] * cross_product_3d(u[1], u[2]);
   if (sp < 0) sp *= -1.0;
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
