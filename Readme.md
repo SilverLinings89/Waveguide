@@ -99,6 +99,31 @@ Every run creates a new folder `Solutions/run<i>` (or `$WAVEGUIDE_OUTPUT_DIR/run
 | `WAVEGUIDE_ROOT` | Root of the repository (to find `Modes/` and `Parameters/`). Default: the source folder the code was configured from |
 | `WAVEGUIDE_OUTPUT_DIR` | Base folder for the outputs |
 
+## Examples: the plots of the dissertation
+
+The folder `examples/` contains one script per graph of the dissertation. Each script runs the solver with the
+parameters of the experiment, stores the plotted numbers and writes the figure; `examples/README.md` maps figures
+to scripts.
+
+```bash
+pip install -r examples/requirements.txt
+python3 examples/sweeping_scaling.py            # reduced variant for a workstation
+python3 examples/sweeping_scaling.py --help     # description of the experiment and of --scale paper
+```
+
+## Web frontend
+
+```bash
+python3 frontend/server.py          # then open http://localhost:8750
+```
+
+The page shows a drawing of the configured waveguide (core, absorbing layers, mesh, process boundaries) that follows
+every setting, an estimate of unknowns and memory, and a button to start the solver. While the solver runs, the
+residuals appear in a chart; afterwards the field can be viewed on three planes, together with the numbers of
+`results.txt`. Runs are kept in `frontend/runs/<id>/` with their parameter files, so each one can be repeated
+from the command line, and a run can be linked as `http://localhost:8750/?run=<id>`. The server needs only the
+Python standard library and listens on this machine only (use `--host` to change that).
+
 ## Dependencies
 
 | Library | Tested version | Required configuration |
@@ -135,6 +160,8 @@ compile with a complex PETSc and two headers that are not installed. The modific
 | `Code/GlobalObjects/` | Global state: parameters, geometry and process layout, output and timers |
 | `Modes/` | Mode profile of the 2.0 µm x 1.8 µm waveguide at 1550 nm (`output_mode.dat`) and the predefined shapes |
 | `Parameters/`, `run/` | Parameter files and the Slurm scripts of the numerical experiments of the dissertation |
+| `examples/` | One script per plot of the dissertation (see above) |
+| `frontend/` | Browser application to configure, run and inspect simulations |
 | `tests/`, `install_scripts/` | Tests and the installation script for the dependencies |
 
 The global objects (`GlobalParams`, `Geometry`, `GlobalMPI`, ...) are defined in `Main/main.cpp` and used everywhere.

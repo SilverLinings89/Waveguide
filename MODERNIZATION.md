@@ -438,3 +438,121 @@ Not done yet:
    relevant number for the limit on the subdomain size needs `INFOG` 36 to 39.
 5. An automatic choice: start compressed and fall back to an exact factorization if GMRES needs more than a few
    steps more than expected.
+
+## 10. PML against Hardy space infinite elements: accuracy and memory
+
+Script: `examples/pml_vs_hsie.py` (data and figures in `examples/output/pml_vs_hsie/`).
+
+### 10.1 State of the HSIE implementation
+
+The comparison could not be done with the solver alone, because **the HSIE implementation does currently not
+absorb**. Findings:
+
+- With HSIE on several faces the dof numbering leaves indices that belong to no element (444 of 2375 on a 4³
+  mesh); the matrix was singular. `LocalProblem::assemble` now turns such rows into `u_i = 0`.
+- With that fixed, the Hertz dipole in free space (five HSIE faces) has a relative error of 2.5 to 10 for every
+  `κ₀` and degree; PML gives 0.19 on the same mesh.
+- To separate the method from the known edge and corner problem, a test with **one** absorbing face was added: the
+  TE10 mode of a waveguide with perfectly conducting walls (`source type = 4`, `Lateral boundary = PEC`), which has
+  the exact solution `E = (0, cos(πx/a), 0) exp(iβz)`. PML: error 0.069 at 12 cells per direction, converging with
+  the mesh. HSIE: error 1.1 to 1.8, independent of the degree and of the sign of `κ₀`, i.e. worse than a fully
+  reflecting wall.
+- `HSIESurface::evaluate_a` lacks the factor `−2iκ₀` of the identity `∫ u v dξ = −2iκ₀ Σ aₖbₖ`. Adding it does not
+  repair the method, so there is at least one more error (candidates: the orientation of the Nédélec functions of
+  the 2D surface mesh relative to the 3D interior, the coupling of surface and exterior unknowns). This was not
+  pursued further. The git history has no state in which the factor was present.
+
+Two more errors surfaced on the way and are fixed: the exact solution of the Hertz dipole used the wavenumber `2π`
+instead of that of the equation (`2π/λ`), so no solver could converge to it; and `κ₀` from the case file was read as
+an integer and then overwritten by a constant.
+
+### 10.2 Method of the comparison
+
+- **Memory** comes from the 3D solver: number of unknowns, matrix entries and entries of the MUMPS factors for PML
+  with 2 to 12 cell layers and for HSIE of degree 1 to 12. These depend only on the structure of the matrix, which
+  is right for HSIE even though its values are not.
+- **Accuracy of PML** comes from the 3D solver as well (best `σ_max` out of 5, 10, 20, 40 for each number of
+  layers, quadratic profile, PML cells of the size of the interior cells).
+- **Accuracy of both methods** comes from a reference model (`examples/absorbing_boundary_model.py`): for one
+  transverse mode the test problem is `u″ + β²u = 0` on a line, and both truncations can be written down in a few
+  lines. The HSIE part was validated by its exponential convergence in the degree. The model gives the error for
+  the mode of the test problem (β = 0.92 k) and the worst case over angles of incidence from 0° to 75°
+  (β = k cos θ), with `κ₀ = k`.
+
+### 10.3 Results
+
+3D solver, lowest order elements, error of PML against the exact solution (best `σ_max`) and factor memory:
+
+| n (cells per direction) | 2 layers | 4 layers | 6 layers | 8 layers | 12 layers |
+| --- | --- | --- | --- | --- | --- |
+| 12 | 0.108 / 26 MB | 0.071 / 30 MB | 0.068 / 36 MB | 0.068 / 41 MB | 0.068 / 37 MB |
+| 16 | 0.101 / 57 MB | 0.057 / 64 MB | 0.040 / 72 MB | 0.039 / 80 MB | 0.039 / 98 MB |
+| 24 | 0.190 / 278 MB | 0.055 / 303 MB | 0.026 / 330 MB | 0.019 / 356 MB | 0.018 / 417 MB |
+
+With lowest order elements the error stops improving after 6 to 8 layers: what remains (0.068, 0.039, 0.018) is
+the discretization error of the interior. More absorber buys nothing there.
+
+Factor memory at n = 24 (one absorbing face of 24 × 24 cells; 278 MB of it is the interior):
+
+| PML layers | 2 | 3 | 4 | 6 | 8 | 12 |
+| --- | --- | --- | --- | --- | --- | --- |
+| MB | 278 | 291 | 303 | 330 | 356 | 417 |
+| **HSIE degree** | **1** | **2** | **3** | **5** | **8** | **12** |
+| MB | 292 | 308 | 320 | 373 | 446 | 573 |
+
+One PML layer costs about 14 MB here, one HSIE degree 14 MB at low degrees and 32 MB at high degrees: all exterior
+unknowns above one surface cell are coupled with each other, so the fronts grow with the degree, while PML layers
+only couple to their neighbors. In unknowns the two are equal (59 600 for 8 layers, 62 050 for degree 8).
+
+Reference model, error of the boundary method alone (fine interior mesh, second order elements), worst case over
+0° to 75°:
+
+| Target error | PML layers | HSIE degree | Memory PML | Memory HSIE |
+| --- | --- | --- | --- | --- |
+| 1e-1 | 3 | 1 | 291 MB | 292 MB |
+| 1e-2 | 4 | 3 | 303 MB | 320 MB |
+| 1e-3 | 8 | 5 | 356 MB | 373 MB |
+| 1e-4 | 12 | 8 | 417 MB | 446 MB |
+
+(Memory from the 3D measurements above; the PML layer counts assume second order elements in the PML.)
+
+### 10.4 Reading
+
+1. **Per unknown, HSIE is the better absorber.** Its error falls exponentially with the degree, by about a factor
+   of 3 per degree in the worst case over angles, and it is exact up to the interior discretization for waves with
+   `β ≈ κ₀` already at degree 0 or 1. PML needs about 1.5 times as many layers as HSIE needs degrees (3 against 1
+   for the loosest target).
+2. **Per megabyte, the two are close to equal for one face.** The denser coupling of HSIE costs what its faster
+   convergence gains: at equal accuracy the factor memory differed by 0 to 7 % in favor of PML.
+3. **The order of the elements matters for PML, not for HSIE.** With first order elements the PML itself is
+   discretized poorly: the model needs 16 layers for 1e-2 and does not reach 1e-3, while HSIE keeps its rate. For
+   the lowest order elements this code uses by default, HSIE of degree 3 (320 MB) replaces a PML of 16 layers
+   (more than 417 MB), provided such accuracy is needed at all (see the first table: it is not, as long
+   as the interior error is a few percent).
+4. **PML has four parameters, HSIE one.** The best `σ_max` changed with the number of layers and with the mesh
+   (5, 10, 20 and 40 all occur in the table above); a poor choice costs a factor of 2 to 10 in error. HSIE has
+   `κ₀`, and `κ₀ = k` worked throughout.
+5. **The large difference would be at edges and corners.** A PML of L layers around a block of n³ cells has
+   (n + 2L)³ − n³ cells: for n = 20 and L = 8 that is 4.8 times the interior, and it is why up to 80 % of the
+   unknowns in the sweeping runs are PML unknowns. Infinite elements only add unknowns on the faces: with the
+   measured 20 unknowns per face cell for degree 5, all six faces of the same block would add about 1.8 times the
+   unknowns of the interior. This saving is hypothetical as long as
+   the treatment of edges and corners is unsolved (dissertation, section on sweeping with HSIE) - and it is the
+   reason why repairing HSIE would be worth the effort for the subdomain problems.
+
+Not covered: evanescent waves and grazing incidence beyond 75°, materials that vary along the boundary (the
+waveguide core crossing the absorbing face), and `κ₀` other than `k`. The full-scale variant of the script
+(`--scale paper`: n = 32 and second order elements in 3D) was started but its results are not included here.
+
+## 11. Examples and web frontend
+
+- `examples/`: one script per graph of the dissertation plus the comparison of section 10; see
+  `examples/README.md`. The dissertation refers to them in the captions and in the section "Reproducing the
+  Figures".
+- `frontend/`: a browser application to configure a waveguide, start the solver and look at the result.
+  `python3 frontend/server.py`, then open http://localhost:8750. The server uses only the Python standard library;
+  the page has no external dependencies. It needs the field slices that the solver now writes
+  (`field_slice_<plane><process>.txt`: the field at the cell centers on the planes x = 0, y = 0 and z = middle).
+- New in the solver for these: `source type = 4` with `Lateral boundary = PEC`, `results.txt` for single process
+  runs, `Kappa 0 Real / Imaginary` from the case file, a diagnostic for empty matrix rows at debug logging.
+- Fixed on the way: a double delete at the end of `ConvergenceRun`.
