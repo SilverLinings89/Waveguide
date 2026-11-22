@@ -39,6 +39,7 @@ private:
   NumericVectorDistributed dist_vector_1, dist_vector_2, dist_vector_3, u;
   NumericVectorDistributed adjoint_state;
   bool has_adjoint = false;
+  double adjoint_mode_norm = 1.0; // int |m|^2 dA over the output interface, set by set_rhs_for_adjoint_problem
 
   dealii::IndexSet locally_active_dofs;
   KSP ksp;

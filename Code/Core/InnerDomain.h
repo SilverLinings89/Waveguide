@@ -249,4 +249,25 @@ class InnerDomain: public FEDomain {
   ComplexNumber compute_kappa(NumericVectorLocal & in_solution);
 
   void set_rhs_for_adjoint_problem(NumericVectorLocal & in_solution, NumericVectorDistributed * in_rhs);
+
+  /**
+   * @brief Assembles the right hand side of the adjoint problem for the signal strength functional.
+   * The signal at the output interface is S(u) = int_out u . conj(m) dA with the mode m, which is a linear
+   * functional S(u) = sum_i G_i u_i with G_i = int_out conj(m) . phi_i dA. The adjoint state lambda solves
+   * A^T lambda = G. This function adds the local part of G to the vector.
+   *
+   * @param in_rhs The (distributed) right hand side.
+   * @return double The local part of the normalization int_out |m|^2 dA.
+   */
+  double assemble_adjoint_rhs_for_signal_strength(NumericVectorDistributed * in_rhs);
+
+  /**
+   * @brief Computes for every free shape parameter p_j the local part of
+   *   lambda^T (dA/dp_j u - db/dp_j),
+   * i.e. the integrals of (dT^-1 curl u) . curl lambda - omega^2 eps (dT u) . lambda over the cells of this
+   * domain, minus the derivative of the tapered source term. T is the tensor of the space transformation and its
+   * derivative with respect to p_j is computed by central differences. There is no complex conjugation: the form
+   * is bilinear.
+   */
+  std::vector<ComplexNumber> compute_shape_gradient_integrals(NumericVectorLocal & in_solution, NumericVectorLocal & in_adjoint);
 };

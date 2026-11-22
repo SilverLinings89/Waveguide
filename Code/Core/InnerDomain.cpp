@@ -661,3 +661,110 @@ void InnerDomain::set_rhs_for_adjoint_problem(NumericVectorLocal & in_solution, 
     }
   }
 }
+double InnerDomain::assemble_adjoint_rhs_for_signal_strength(NumericVectorDistributed * in_rhs) {
+  double mode_norm = 0;
+  if(GlobalParams.Index_in_z_direction != GlobalParams.Blocks_in_z_direction - 1) {
+    return mode_norm;
+  }
+  // The same quadrature (one point at the face centers) as in compute_signal_strength.
+  QGauss<2> quadrature_formula(1);
+  const FEValuesExtractors::Vector fe_field(0);
+  FEFaceValues<3> fe_values(fe, quadrature_formula, update_values | update_JxW_values | update_quadrature_points);
+  std::vector<DofNumber> local_dof_indices(fe.n_dofs_per_cell());
+  for (DofHandler3D::active_cell_iterator cell = dof_handler.begin_active(); cell != dof_handler.end(); ++cell) {
+    for(unsigned int face = 0; face < 6; face++) {
+      if(cell->face(face)->at_boundary() && cell->face(face)->boundary_id() == 5) {
+        fe_values.reinit(cell, face);
+        cell->get_dof_indices(local_dof_indices);
+        const std::vector<DofNumber> global_dof_indices = transform_local_to_global_dofs(local_dof_indices);
+        for(unsigned int q_index = 0; q_index < quadrature_formula.size(); q_index++) {
+          const double JxW = fe_values.JxW(q_index);
+          Position p = fe_values.quadrature_point(q_index);
+          p[2] -= 2 * FLOATING_PRECISION;
+          Tensor<1,3,ComplexNumber> mode_conjugate;
+          for(unsigned int i = 0; i < 3; i++) {
+            mode_conjugate[i] = conjugate(GlobalParams.source_field->value(p, i));
+            mode_norm += std::norm(mode_conjugate[i]) * JxW;
+          }
+          for(unsigned int i = 0; i < fe.n_dofs_per_cell(); i++) {
+            const Tensor<1,3,ComplexNumber> shape_value = fe_values[fe_field].value(i, q_index);
+            const ComplexNumber entry = (mode_conjugate * shape_value) * JxW;
+            in_rhs->add(1, &global_dof_indices[i], &entry);
+          }
+        }
+      }
+    }
+  }
+  return mode_norm;
+}
+
+std::vector<ComplexNumber> InnerDomain::compute_shape_gradient_integrals(NumericVectorLocal & in_solution, NumericVectorLocal & in_adjoint) {
+  const unsigned int n_shape_dofs = GlobalSpaceTransformation->n_free_dofs();
+  std::vector<ComplexNumber> ret(n_shape_dofs, ComplexNumber(0, 0));
+  const double step = 1e-5;
+  QGauss<3> quadrature_formula(GlobalParams.Nedelec_element_order + 2);
+  const FEValuesExtractors::Vector fe_field(0);
+  FEValues<3> fe_values(fe, quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points);
+  std::vector<DofNumber> local_dof_indices(fe.n_dofs_per_cell());
+  const double kappa_2 = Geometry.kappa_2();
+  const bool has_taper = (GlobalParams.Signal_coupling_method == SignalCouplingMethod::Tapering);
+  std::unique_ptr<ExactSolution> mode;
+  if(has_taper) {
+    mode = std::make_unique<ExactSolution>();
+  }
+  for (DofHandler3D::active_cell_iterator cell = dof_handler.begin_active(); cell != dof_handler.end(); ++cell) {
+    fe_values.reinit(cell);
+    cell->get_dof_indices(local_dof_indices);
+    for(unsigned int q_index = 0; q_index < quadrature_formula.size(); q_index++) {
+      Position p = fe_values.quadrature_point(q_index);
+      const double JxW = fe_values.JxW(q_index);
+      Tensor<1,3,ComplexNumber> u, curl_u, lambda, curl_lambda;
+      for(unsigned int i = 0; i < fe.n_dofs_per_cell(); i++) {
+        const Tensor<1,3,ComplexNumber> value = fe_values[fe_field].value(i, q_index);
+        const Tensor<1,3,ComplexNumber> curl = fe_values[fe_field].curl(i, q_index);
+        u += value * in_solution[local_dof_indices[i]];
+        curl_u += curl * in_solution[local_dof_indices[i]];
+        lambda += value * in_adjoint[local_dof_indices[i]];
+        curl_lambda += curl * in_adjoint[local_dof_indices[i]];
+      }
+      const double eps = Geometry.math_coordinate_in_waveguide(p) ? GlobalParams.Epsilon_R_in_waveguide : GlobalParams.Epsilon_R_outside_waveguide;
+      const bool in_taper = has_taper && p[2] < GlobalParams.tapering_max_z && p[2] >= GlobalParams.tapering_min_z;
+      Tensor<1,3,ComplexNumber> mode_value, mode_curl;
+      double d_psi_dz = 0;
+      if(in_taper) {
+        const double taper_length = GlobalParams.tapering_max_z - GlobalParams.tapering_min_z;
+        const double t = (p[2] - GlobalParams.tapering_min_z) / taper_length;
+        d_psi_dz = 6.0 * t * (1.0 - t) / taper_length;
+        mode_value = mode->val(p);
+        mode_curl = mode->curl(p);
+      }
+      for(unsigned int j = 0; j < n_shape_dofs; j++) {
+        // Central difference of the transformation tensor and its inverse with respect to shape parameter j.
+        const double old_value = GlobalSpaceTransformation->get_free_dof(j);
+        GlobalSpaceTransformation->set_free_dof(j, old_value + step);
+        const Tensor<2,3,double> tensor_plus = GlobalSpaceTransformation->get_Space_Transformation_Tensor(p);
+        GlobalSpaceTransformation->set_free_dof(j, old_value - step);
+        const Tensor<2,3,double> tensor_minus = GlobalSpaceTransformation->get_Space_Transformation_Tensor(p);
+        GlobalSpaceTransformation->set_free_dof(j, old_value);
+        const Tensor<2,3,ComplexNumber> d_tensor = (tensor_plus - tensor_minus) / (2 * step);
+        const Tensor<2,3,ComplexNumber> d_inverse = (invert(tensor_plus) - invert(tensor_minus)) / (2 * step);
+        // lambda^T dA/dp u
+        ComplexNumber integrand = (d_inverse * curl_u) * curl_lambda - kappa_2 * eps * ((d_tensor * u) * lambda);
+        if(in_taper) {
+          // - lambda^T db/dp, see evaluate_taper_source_at in the assembly.
+          const Tensor<1,3,ComplexNumber> a = d_inverse * mode_curl;
+          Tensor<1,3,ComplexNumber> d_source_for_values;
+          d_source_for_values[0] = - d_psi_dz * a[1];
+          d_source_for_values[1] =   d_psi_dz * a[0];
+          Tensor<1,3,ComplexNumber> grad_psi_cross_E;
+          grad_psi_cross_E[0] = - d_psi_dz * mode_value[1];
+          grad_psi_cross_E[1] =   d_psi_dz * mode_value[0];
+          const Tensor<1,3,ComplexNumber> d_source_for_curls = d_inverse * grad_psi_cross_E;
+          integrand -= d_source_for_values * lambda + d_source_for_curls * curl_lambda;
+        }
+        ret[j] += integrand * JxW;
+      }
+    }
+  }
+  return ret;
+}

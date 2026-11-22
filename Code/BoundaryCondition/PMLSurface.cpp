@@ -867,3 +867,50 @@ bool PMLSurface::mg_process_corner(dealii::Triangulation<3> * tria, BoundaryId f
 unsigned int PMLSurface::n_cells() {
   return triangulation.n_active_cells();
 }
+std::vector<ComplexNumber> PMLSurface::compute_shape_gradient_integrals(const dealii::Vector<ComplexNumber> & in_solution, const dealii::Vector<ComplexNumber> & in_adjoint) {
+  const unsigned int n_shape_dofs = GlobalSpaceTransformation->n_free_dofs();
+  std::vector<ComplexNumber> ret(n_shape_dofs, ComplexNumber(0, 0));
+  const double step = 1e-5;
+  const double omega_squared = GlobalParams.Omega * GlobalParams.Omega;
+  QGauss<3> quadrature_formula(GlobalParams.Nedelec_element_order + 2);
+  const FEValuesExtractors::Vector fe_field(0);
+  FEValues<3> fe_values(fe_nedelec, quadrature_formula, update_values | update_gradients | update_JxW_values | update_quadrature_points);
+  std::vector<DofNumber> local_dof_indices(fe_nedelec.dofs_per_cell);
+  // The material tensors as they are used in fill_matrix, for the current values of the shape parameters.
+  auto transformed_tensors = [&](Position & p, dealii::Tensor<2,3,ComplexNumber> & epsilon, dealii::Tensor<2,3,ComplexNumber> & mu_inverse) {
+    const dealii::Tensor<2,3,double> J = GlobalSpaceTransformation->get_J(p);
+    const double det = GlobalSpaceTransformation->get_det(p);
+    epsilon = J * get_pml_tensor_epsilon(p) * transpose(J) / det;
+    mu_inverse = invert(J * get_pml_tensor_mu(p) * transpose(J) / det);
+  };
+  for(auto cell = dof_handler.begin_active(); cell != dof_handler.end(); cell++) {
+    fe_values.reinit(cell);
+    cell->get_dof_indices(local_dof_indices);
+    for(unsigned int q_index = 0; q_index < quadrature_formula.size(); q_index++) {
+      Position p = fe_values.quadrature_point(q_index);
+      const double JxW = fe_values.JxW(q_index);
+      Tensor<1,3,ComplexNumber> u, curl_u, lambda, curl_lambda;
+      for(unsigned int i = 0; i < fe_nedelec.dofs_per_cell; i++) {
+        const Tensor<1,3,ComplexNumber> value = fe_values[fe_field].value(i, q_index);
+        const Tensor<1,3,ComplexNumber> curl = fe_values[fe_field].curl(i, q_index);
+        u += value * in_solution[local_dof_indices[i]];
+        curl_u += curl * in_solution[local_dof_indices[i]];
+        lambda += value * in_adjoint[local_dof_indices[i]];
+        curl_lambda += curl * in_adjoint[local_dof_indices[i]];
+      }
+      for(unsigned int j = 0; j < n_shape_dofs; j++) {
+        dealii::Tensor<2,3,ComplexNumber> epsilon_plus, epsilon_minus, mu_inverse_plus, mu_inverse_minus;
+        const double old_value = GlobalSpaceTransformation->get_free_dof(j);
+        GlobalSpaceTransformation->set_free_dof(j, old_value + step);
+        transformed_tensors(p, epsilon_plus, mu_inverse_plus);
+        GlobalSpaceTransformation->set_free_dof(j, old_value - step);
+        transformed_tensors(p, epsilon_minus, mu_inverse_minus);
+        GlobalSpaceTransformation->set_free_dof(j, old_value);
+        const dealii::Tensor<2,3,ComplexNumber> d_epsilon = (epsilon_plus - epsilon_minus) / (2 * step);
+        const dealii::Tensor<2,3,ComplexNumber> d_mu_inverse = (mu_inverse_plus - mu_inverse_minus) / (2 * step);
+        ret[j] += ((d_mu_inverse * curl_u) * curl_lambda - omega_squared * ((d_epsilon * u) * lambda)) * JxW;
+      }
+    }
+  }
+  return ret;
+}

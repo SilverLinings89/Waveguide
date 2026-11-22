@@ -615,16 +615,11 @@ void NonLocalProblem::write_multifile_output(const std::string & in_filename, bo
 
 void NonLocalProblem::set_rhs_for_adjoint_problem() {
   reinit_rhs();
-  update_shared_solution_vector();
   has_adjoint = true;
-  NumericVectorLocal local_solution(Geometry.levels[level].inner_domain->n_locally_active_dofs);
-  for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
-    local_solution[i] = shared_solution[Geometry.levels[level].inner_domain->global_index_mapping[i]];
-  }
   adjoint_state.reinit(own_dofs, GlobalMPI.communicators_by_level[level]);
-  Geometry.levels[level].inner_domain->set_rhs_for_adjoint_problem(local_solution, &rhs);
+  const double local_mode_norm = Geometry.levels[level].inner_domain->assemble_adjoint_rhs_for_signal_strength(&rhs);
   rhs.compress(VectorOperation::add);
-  std::cout<<"norm of rhs" << rhs.l2_norm()<<std::endl;
+  adjoint_mode_norm = dealii::Utilities::MPI::sum(local_mode_norm, GlobalMPI.communicators_by_level[level]);
 }
 
 void NonLocalProblem::communicate_external_dsp(DynamicSparsityPattern * in_dsp) {
@@ -904,50 +899,44 @@ void NonLocalProblem::empty_memory() {
 
 
 std::vector<double> NonLocalProblem::compute_shape_gradient() {
+  // The loss functional is J = -|s| with the normalized signal s = S / N, S = G^T u and N = int |m|^2 dA.
+  // With the adjoint state lambda (A^T lambda = G, and A is complex symmetric) the derivative of S with respect to
+  // a shape parameter p is dS/dp = -lambda^T (dA/dp u - db/dp), and therefore
+  //   dJ/dp = Re( conj(s) / |s| * lambda^T (dA/dp u - db/dp) ) / N.
+  // The cells of the PML domains contribute to dA/dp as well, because their material tensors contain the space
+  // transformation.
   print_info("NonLocalProblem::compute_shape_gradient", "Start");
   const unsigned int n_shape_dofs = GlobalSpaceTransformation->n_free_dofs();
-  std::vector<double> ret(n_shape_dofs);
-  for(unsigned int i = 0; i < n_shape_dofs; i++) {
-    ret[i] = 0;
-  }
-
-  std::vector<FEAdjointEvaluation> field_evaluations;
-
-  Timer timer1;
-  timer1.start();
-  
   NumericVectorLocal local_solution(Geometry.levels[level].inner_domain->n_locally_active_dofs);
   NumericVectorLocal local_adjoint(Geometry.levels[level].inner_domain->n_locally_active_dofs);
   update_shared_solution_vector();
-
   for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
     local_solution[i] = shared_solution[Geometry.levels[level].inner_domain->global_index_mapping[i]];
     local_adjoint[i] = shared_adjoint[Geometry.levels[level].inner_domain->global_index_mapping[i]];
   }
-
-  field_evaluations = Geometry.levels[level].inner_domain->compute_local_shape_gradient_data(local_solution, local_adjoint);
-
-  timer1.stop();
-  print_info("NonLocalProblem::compute_shape_gradient", "Walltime: " + std::to_string(timer1.wall_time()) , LoggingLevel::PRODUCTION_ONE);
-
-  // Now, I have the evalaution and the adjoint field stored for a set of positions in the array field_evaluations.
-  for(unsigned int i = 0; i < field_evaluations.size(); i++) {
-    for(unsigned int j = 0; j < n_shape_dofs; j++) {
-      Tensor<2, 3, ComplexNumber> local_step_tensor = GlobalSpaceTransformation->get_Tensor_for_step(field_evaluations[i].x, j, 0.01);
-      Tensor<2, 3, ComplexNumber> local_inverse_step_tensor = GlobalSpaceTransformation->get_inverse_Tensor_for_step(field_evaluations[i].x, j, 0.01);
-      Tensor<1,3,ComplexNumber> local_adj = field_evaluations[i].adjoint_field;
-      Tensor<1,3,ComplexNumber> local_adj_curl = field_evaluations[i].adjoint_field_curl;
-      for(unsigned int k = 0; k < 3; k++) {
-        local_adj[k].imag(- local_adj[k].imag());
-        local_adj_curl[k].imag(- local_adj_curl[k].imag());
+  std::vector<ComplexNumber> local_integrals = Geometry.levels[level].inner_domain->compute_shape_gradient_integrals(local_solution, local_adjoint);
+  for(unsigned int surf = 0; surf < 6; surf++) {
+    if(Geometry.levels[level].surface_type[surf] == SurfaceType::ABC_SURFACE) {
+      std::shared_ptr<PMLSurface> pml = std::dynamic_pointer_cast<PMLSurface>(Geometry.levels[level].surfaces[surf]);
+      if(pml) {
+        dealii::Vector<ComplexNumber> pml_solution(pml->n_locally_active_dofs);
+        dealii::Vector<ComplexNumber> pml_adjoint(pml->n_locally_active_dofs);
+        for(unsigned int i = 0; i < pml->n_locally_active_dofs; i++) {
+          pml_solution[i] = shared_solution[pml->global_index_mapping[i]];
+          pml_adjoint[i] = shared_adjoint[pml->global_index_mapping[i]];
+        }
+        const std::vector<ComplexNumber> pml_integrals = pml->compute_shape_gradient_integrals(pml_solution, pml_adjoint);
+        for(unsigned int i = 0; i < n_shape_dofs; i++) {
+          local_integrals[i] += pml_integrals[i];
+        }
       }
-      ComplexNumber change = (field_evaluations[i].primal_field_curl * local_inverse_step_tensor * local_adj_curl) - Geometry.eps_kappa_2(field_evaluations[i].x) * (field_evaluations[i].primal_field * local_step_tensor) * local_adj;
-      const double delta = change.real();
-      ret[j] += delta;
     }
   }
-  for(unsigned int i = 0; i <n_shape_dofs; i++) {
-    ret[i] = dealii::Utilities::MPI::sum(ret[i], MPI_COMM_WORLD);
+  const ComplexNumber signal = compute_signal_strength_of_solution();
+  std::vector<double> ret(n_shape_dofs);
+  for(unsigned int i = 0; i < n_shape_dofs; i++) {
+    const ComplexNumber integral = dealii::Utilities::MPI::sum(local_integrals[i], MPI_COMM_WORLD);
+    ret[i] = (conjugate(signal) / std::abs(signal) * integral).real() / adjoint_mode_norm;
   }
   print_info("NonLocalProblem::compute_shape_gradient", "End");
   return ret;

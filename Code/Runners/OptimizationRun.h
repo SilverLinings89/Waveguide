@@ -27,6 +27,15 @@ class OptimizationRun: public Simulation {
   std::function< double(const dealii::Vector<double> &x, dealii::Vector<double> &g)> function_pointer;
   const unsigned int n_free_dofs;
   static double loss_functional_evaluation;
+
+  // State of the stopping criteria. They are only active while the optimization itself runs.
+  static bool stopping_criteria_active;
+  static double initial_gradient_norm;
+  static double best_loss;
+  static std::vector<double> best_shape_dofs;
+  static unsigned int evaluations_without_improvement;
+  static std::vector<double> loss_history;
+  static std::vector<double> gradient_norm_history;
   
  
  public:
@@ -80,4 +89,10 @@ class OptimizationRun: public Simulation {
    * @param in_shape_dofs 
    */
   static void set_shape_dofs(const dealii::Vector<double> in_shape_dofs);
+
+  /**
+   * @brief Compares the shape gradient computed by perform_step with central finite differences of the loss
+   * functional and writes the result to the console and to the file gradient_check.txt in the output folder.
+   */
+  void run_gradient_check(const dealii::Vector<double> & shape_dofs);
 };

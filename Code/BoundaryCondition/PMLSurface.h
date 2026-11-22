@@ -93,6 +93,20 @@ class PMLSurface : public BoundaryCondition {
     void fill_matrix(dealii::PETScWrappers::MPI::SparseMatrix* matrix, NumericVectorDistributed* rhs, Constraints *constraints) override;
 
     /**
+     * @brief Contribution of this PML domain to the shape gradient.
+     * The material tensors of the PML contain the space transformation (see fill_matrix), so the system matrix of
+     * the PML cells depends on the shape parameters as well. For every free shape parameter p_j this function
+     * returns the integral of (d(mu^-1)/dp_j curl u) . curl lambda - omega^2 (d(eps)/dp_j u) . lambda over the cells
+     * of this domain. The derivative of the tensors is computed by central differences of the Jacobian of the
+     * transformation.
+     *
+     * @param in_solution Solution of the forward problem, indexed by the local dof numbers of this domain.
+     * @param in_adjoint Adjoint state, indexed in the same way.
+     * @return std::vector<ComplexNumber> One value per free shape parameter.
+     */
+    std::vector<ComplexNumber> compute_shape_gradient_integrals(const dealii::Vector<ComplexNumber> & in_solution, const dealii::Vector<ComplexNumber> & in_adjoint);
+
+    /**
      * @brief Sets the locations of actually coupling dofs to non-zero in a sparsity pattern so we know to reserve memory for it.
      * 
      * The function also uses a provided constraints object to make this operation more efficient. If, for example, a dof is set to zero, we don't need to store values in the system matrix row and column relating to it.
