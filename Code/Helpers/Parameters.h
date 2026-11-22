@@ -43,9 +43,9 @@ struct Parameters {
 
     bool Output_transformed_solution = false;
 
-    double Width_of_waveguide = 1.8; // x-direction
+    double Width_of_waveguide = 2.0; // x-direction
 
-    double Height_of_waveguide = 2.0; // y-direction
+    double Height_of_waveguide = 1.8; // y-direction
 
     double Horizontal_displacement_of_waveguide = 0; // x-direction
 
@@ -65,7 +65,19 @@ struct Parameters {
 
     bool Perform_Optimization = false;
 
+    // Instead of optimizing, compare the adjoint based shape gradient with finite differences of the loss functional.
+    bool Perform_gradient_check = false;
+
+    double gradient_check_step_width = 0.01;
+
     unsigned int optimization_n_shape_steps = 15;
+
+    // Stopping criteria of the optimization (see OptimizationRun::perform_step).
+    unsigned int optimization_max_evaluations = 40;
+
+    double optimization_gradient_tolerance = 1e-2;
+
+    double optimization_loss_tolerance = 1e-5;
 
     double optimization_residual_tolerance = 1.e-10;
 
@@ -183,6 +195,9 @@ struct Parameters {
     double global_z_shift = 0;
 
     bool solve_directly = false;
+
+    // Block low rank compression of the factorizations of the subdomain solvers (MUMPS). 0 switches it off.
+    double local_solver_compression_tolerance = 0.0;
 
     SteppingMethod optimization_stepping_method = SteppingMethod::BFGS;
 

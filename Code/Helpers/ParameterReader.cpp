@@ -14,6 +14,7 @@ void ParameterReader::declare_parameters() {
         run_prm.declare_entry("use relative convergence criterion", "true", Patterns::Bool(), "If this is set to false, lower level sweeping will ignore higher level current residual.");
         run_prm.declare_entry("relative convergence criterion", "1e-2", Patterns::Double(), "The factor by which a lower level convergence criterion is computed.");
         run_prm.declare_entry("solve directly", "false", Patterns::Bool(), "If this is set to true, GMRES will be replaced by a direct solver.");
+        run_prm.declare_entry("local solver compression tolerance", "0", Patterns::Double(0), "Tolerance of the block low rank (BLR) compression of the subdomain factorizations computed by MUMPS. 0 (default) computes exact factorizations. Values between 1e-8 and 1e-3 reduce the memory and the time of the subdomain solves; the subdomain solvers then are only approximate, which is compensated by the iterative solver of the level above.");
         run_prm.declare_entry("kappa angle" , "1.0", Patterns::Double(), "Phase of the complex value kappa with norm 1 that is used in HSIEs.");
         run_prm.declare_entry("processes in x" , "1", Patterns::Integer(), "Number of processes in x-direction.");
         run_prm.declare_entry("processes in y" , "1", Patterns::Integer(), "Number of processes in y-direction.");
@@ -68,6 +69,12 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("Optimization Algorithm", "BFGS", Patterns::Selection("BFGS|Steepest"), "The algorithm to compute the next parametrization in an optimization run.");
         case_prm.declare_entry("Initialize Shape Dofs Randomly", "false", Patterns::Bool(), "If set to true, the shape dofs are initialized to random values.");
         case_prm.declare_entry("perform optimization", "false", Patterns::Bool(), "If true, the code will perform shape optimization.");
+        case_prm.declare_entry("optimization maximum steps", "15", Patterns::Integer(1), "Maximum number of BFGS steps of an optimization run.");
+        case_prm.declare_entry("optimization maximum evaluations", "40", Patterns::Integer(1), "Maximum number of evaluations of the loss functional (each one requires a forward and an adjoint solve). A BFGS step needs one or more evaluations for its line search.");
+        case_prm.declare_entry("optimization gradient tolerance", "1e-2", Patterns::Double(0), "The optimization stops when the norm of the shape gradient is smaller than this factor times the norm of the gradient at the initial shape.");
+        case_prm.declare_entry("optimization loss tolerance", "1e-5", Patterns::Double(0), "The optimization stops when four consecutive evaluations did not improve the best loss by more than this factor times the absolute value of the loss.");
+        case_prm.declare_entry("perform gradient check", "false", Patterns::Bool(), "Only used if perform optimization is true. Instead of running the optimization, the shape gradient at the initial shape is compared with central finite differences of the loss functional. This requires two additional field solves per shape parameter.");
+        case_prm.declare_entry("gradient check step width", "0.01", Patterns::Double(0), "Step width of the finite differences of the gradient check.");
         case_prm.declare_entry("vertical waveguide displacement", "0", Patterns::Double(), "The delta of the waveguide core at the input and output interfaces.");
         case_prm.declare_entry("constant waveguide height", "true", Patterns::Bool(), "If false, the waveguide shape will be subject to optimization in the y direction.");
         case_prm.declare_entry("constant waveguide width", "true", Patterns::Bool(), "If false, the waveguide shape will be subject to optimization in the x direction.");
@@ -90,6 +97,7 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.use_relative_convergence_criterion = run_prm.get_bool("use relative convergence criterion");
         ret.relative_convergence_criterion = run_prm.get_double("relative convergence criterion");
         ret.solve_directly = run_prm.get_bool("solve directly");
+        ret.local_solver_compression_tolerance = run_prm.get_double("local solver compression tolerance");
         ret.Blocks_in_x_direction = run_prm.get_integer("processes in x");
         ret.Blocks_in_y_direction = run_prm.get_integer("processes in y");
         ret.Blocks_in_z_direction = run_prm.get_integer("processes in z");
@@ -171,6 +179,12 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         }
         ret.randomly_initialize_shape_dofs = case_prm.get_bool("Initialize Shape Dofs Randomly");
         ret.Perform_Optimization = case_prm.get_bool("perform optimization");
+        ret.Perform_gradient_check = case_prm.get_bool("perform gradient check");
+        ret.optimization_n_shape_steps = case_prm.get_integer("optimization maximum steps");
+        ret.optimization_max_evaluations = case_prm.get_integer("optimization maximum evaluations");
+        ret.optimization_gradient_tolerance = case_prm.get_double("optimization gradient tolerance");
+        ret.optimization_loss_tolerance = case_prm.get_double("optimization loss tolerance");
+        ret.gradient_check_step_width = case_prm.get_double("gradient check step width");
         ret.Vertical_displacement_of_waveguide = case_prm.get_double("vertical waveguide displacement");
         ret.keep_waveguide_height_constant = case_prm.get_bool("constant waveguide height");
         ret.keep_waveguide_width_constant = case_prm.get_bool("constant waveguide width");

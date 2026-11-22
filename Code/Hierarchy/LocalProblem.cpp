@@ -40,9 +40,7 @@ template void dealii::VectorTools::project<3,dealii::Vector<ComplexNumber>,3>(co
 
 LocalProblem::LocalProblem() :
   HierarchicalProblem(0, SweepingDirection::Z), 
-  sc(), 
-  solver(sc, MPI_COMM_SELF) {
-    solver.set_symmetric_mode(true);
+  local_ksp(nullptr) {
     print_info("Local Problem", "Done building base problem. Preparing matrix.");
     matrix = new dealii::PETScWrappers::MPI::SparseMatrix();
     for(unsigned int i = 0; i < 6; i++) Geometry.levels[0].is_surface_truncated[i] = true;
@@ -50,6 +48,9 @@ LocalProblem::LocalProblem() :
 }
 
 LocalProblem::~LocalProblem() {
+  if(local_ksp != nullptr) {
+    KSPDestroy(&local_ksp);
+  }
   delete matrix;
 }
 
@@ -92,6 +93,7 @@ void LocalProblem::validate() {
 void LocalProblem::assemble() {
   GlobalTimerManager.switch_context("Assemble", level);
   matrix->operator=(0);
+  has_factorization = false;
   rhs = 0;
   matrix->compress(dealii::VectorOperation::insert);
   rhs.compress(dealii::VectorOperation::insert);
@@ -148,7 +150,68 @@ void LocalProblem::reinit() {
 
 void LocalProblem::solve() {
   rhs.compress(dealii::VectorOperation::insert);
-  solver.solve(*matrix, solution, rhs);
+  if(local_ksp == nullptr) {
+    KSPCreate(PETSC_COMM_SELF, &local_ksp);
+    KSPSetType(local_ksp, KSPPREONLY);
+    PC local_pc;
+    KSPGetPC(local_ksp, &local_pc);
+    // The system matrix is complex symmetric (not hermitian), so an LDL^T factorization can be used.
+    PCSetType(local_pc, PCCHOLESKY);
+    PCFactorSetMatSolverType(local_pc, MATSOLVERMUMPS);
+    KSPSetOptionsPrefix(local_ksp, "local_");
+    KSPSetOperators(local_ksp, *matrix, *matrix);
+    if(GlobalParams.local_solver_compression_tolerance > 0) {
+      // Block low rank compression: the fronts of the multifrontal factorization are stored as low rank blocks
+      // that are accurate up to the given tolerance. ICNTL(35) = 2 uses the compressed factors in the factorization
+      // and in the solve phase, CNTL(7) is the tolerance.
+      PCFactorSetUpMatSolverType(local_pc);
+      Mat factor_matrix;
+      PCFactorGetMatrix(local_pc, &factor_matrix);
+      MatMumpsSetIcntl(factor_matrix, 35, 2);
+      MatMumpsSetCntl(factor_matrix, 7, GlobalParams.local_solver_compression_tolerance);
+    }
+    // Options from the command line take precedence over the settings above.
+    KSPSetFromOptions(local_ksp);
+  }
+  // PETSc keeps the factorization as long as the matrix is unchanged and computes a new one after the matrix has
+  // been assembled again (for example for the next shape in an optimization run).
+  KSPSetOperators(local_ksp, *matrix, *matrix);
+  PC pc_for_statistics;
+  KSPGetPC(local_ksp, &pc_for_statistics);
+  // has_factorization is reset whenever the matrix is assembled again.
+  const bool computes_factorization = !has_factorization;
+  dealii::Timer solve_timer;
+  solve_timer.start();
+  PetscErrorCode ierr = KSPSolve(local_ksp, rhs, solution);
+  solve_timer.stop();
+  if(computes_factorization) {
+    time_of_factorization += solve_timer.wall_time();
+    has_factorization = true;
+    Mat factor_matrix;
+    PetscBool is_mumps = PETSC_FALSE;
+    PCFactorGetMatrix(pc_for_statistics, &factor_matrix);
+    MatSolverType solver_type;
+    MatFactorGetSolverType(factor_matrix, &solver_type);
+    PetscStrcmp(solver_type, MATSOLVERMUMPS, &is_mumps);
+    if(is_mumps) {
+      PetscInt value;
+      // Negative values of these entries are counts in millions.
+      MatMumpsGetInfog(factor_matrix, 29, &value);
+      factor_entries_full_rank = (value < 0) ? -1e6 * (double) value : (double) value;
+      MatMumpsGetInfog(factor_matrix, 35, &value);
+      factor_entries_stored = (value < 0) ? -1e6 * (double) value : (double) value;
+      MatMumpsGetInfog(factor_matrix, 22, &value);
+      factor_memory_mb = (double) value;
+    }
+  } else {
+    time_of_solves += solve_timer.wall_time();
+    n_timed_solves++;
+  }
+  KSPConvergedReason reason;
+  KSPGetConvergedReason(local_ksp, &reason);
+  if(ierr != 0 || reason < 0) {
+    throw std::runtime_error("LocalProblem::solve: The direct solver of the subdomain failed (PETSc converged reason " + std::to_string(reason) + "). The factorization may have run out of memory or the matrix is singular.");
+  }
 }
 
 void LocalProblem::initialize_index_sets() {
@@ -197,7 +260,10 @@ unsigned int LocalProblem::compute_global_solve_counter() {
 
 void LocalProblem::empty_memory() {
   matrix->clear();
-  solver.reset();
+  if(local_ksp != nullptr) {
+    KSPDestroy(&local_ksp);
+    local_ksp = nullptr;
+  }
 }
 
 void LocalProblem::write_multifile_output(const std::string & in_filename, bool) {
@@ -225,7 +291,8 @@ void LocalProblem::write_multifile_output(const std::string & in_filename, bool)
   std::string filename = GlobalOutputManager.get_full_filename("_" + in_filename + ".pvtu");
   std::ofstream outputvtu(filename);
   for(unsigned int i = 0; i < generated_files.size(); i++) {
-    generated_files[i] = "../" + generated_files[i];
+    // The pvtu record is stored in the same folder as the pieces, so only the file name is referenced.
+    generated_files[i] = generated_files[i].substr(generated_files[i].find_last_of('/') + 1);
   }
   Geometry.levels[0].inner_domain->data_out.write_pvtu_record(outputvtu, generated_files);
 }

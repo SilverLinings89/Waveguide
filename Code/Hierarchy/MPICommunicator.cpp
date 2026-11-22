@@ -73,14 +73,15 @@ std::pair<bool, unsigned int> MPICommunicator::get_neighbor_for_interface(
     if (GlobalParams.Index_in_y_direction == 0) {
       ret.first = false;
     } else {
-      ret.second = GlobalParams.MPI_Rank - GlobalParams.Blocks_in_y_direction;
+      // Ranks are numbered x-first: rank = i_x + n_x * (i_y + n_y * i_z).
+      ret.second = GlobalParams.MPI_Rank - GlobalParams.Blocks_in_x_direction;
     }
     break;
   case Direction::PlusY:
     if (GlobalParams.Index_in_y_direction == GlobalParams.Blocks_in_y_direction - 1) {
       ret.first = false;
     } else {
-      ret.second = GlobalParams.MPI_Rank + GlobalParams.Blocks_in_y_direction;
+      ret.second = GlobalParams.MPI_Rank + GlobalParams.Blocks_in_x_direction;
     }
     break;
   case Direction::MinusZ:

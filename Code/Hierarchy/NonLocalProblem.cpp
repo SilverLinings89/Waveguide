@@ -164,7 +164,16 @@ void NonLocalProblem::init_solver_and_preconditioner() {
     KSPSetType(ksp, KSPMINRES);
   }
   if(GlobalParams.solver_type == SolverOptions::GMRES) {
-    KSPSetType(ksp, KSPGMRES);
+    // On level 1 the preconditioner (a sweep with direct solvers) is a fixed linear operator and standard GMRES can
+    // be used. On higher levels the sweep contains iterative solves on the level below. The preconditioner then
+    // changes slightly in every application and GMRES loses the relation between its residual estimate and the true
+    // residual: it reports convergence while the solution is only as accurate as the inner solves. Flexible GMRES
+    // stores the preconditioned vectors and remains exact for such a variable preconditioner.
+    if(level > 1) {
+      KSPSetType(ksp, KSPFGMRES);
+    } else {
+      KSPSetType(ksp, KSPGMRES);
+    }
     KSPGMRESSetRestart(ksp, GlobalParams.GMRES_max_steps);
     KSPSetPCSide(ksp, PCSide::PC_RIGHT);
   }
@@ -299,7 +308,7 @@ void NonLocalProblem::solve() {
   } else {
     // Solve Directly for reference
     SolverControl sc;
-    dealii::PETScWrappers::SparseDirectMUMPS direct_solver(sc, GlobalMPI.communicators_by_level[level]);
+    dealii::PETScWrappers::SparseDirectMUMPS direct_solver(sc);
     direct_solver.solve(*matrix, solution, rhs);
   }
   
@@ -489,12 +498,45 @@ void NonLocalProblem::compute_solver_factorization() {
 std::string NonLocalProblem::output_results() {
   print_info("NonLocalProblem", "Start output results on level" + std::to_string(level));
   print_solve_counter_list();
+  HierarchicalProblem * lowest_level_problem = this;
+  while(lowest_level_problem->level != 0) {
+    lowest_level_problem = lowest_level_problem->child;
+  }
+  const unsigned int n_local_solves = lowest_level_problem->compute_global_solve_counter();
+  // Statistics of the subdomain solvers: sums and maxima over all processes.
+  LocalProblem * local_problem = dynamic_cast<LocalProblem *>(lowest_level_problem);
+  const double local_factorization_time_max = Utilities::MPI::max(local_problem->time_of_factorization, MPI_COMM_WORLD);
+  const double local_solve_time_sum = Utilities::MPI::sum(local_problem->time_of_solves, MPI_COMM_WORLD);
+  const double local_timed_solves = Utilities::MPI::sum((double) local_problem->n_timed_solves, MPI_COMM_WORLD);
+  const double local_factor_entries_full = Utilities::MPI::sum(local_problem->factor_entries_full_rank, MPI_COMM_WORLD);
+  const double local_factor_entries_stored = Utilities::MPI::sum(local_problem->factor_entries_stored, MPI_COMM_WORLD);
+  const double local_factor_memory_max = Utilities::MPI::max(local_problem->factor_memory_mb, MPI_COMM_WORLD);
   update_shared_solution_vector();
   FEErrorStruct errors = compute_global_errors(&shared_solution);
-  print_info("NonLocalProblem::output_results", "Errors: L2 = " + std::to_string(errors.L2) + " and Linfty  = " + std::to_string(errors.Linfty));
+  print_info("NonLocalProblem::output_results", "Errors: L2 = " + std::to_string(errors.L2) + " and Linfty  = " + std::to_string(errors.Linfty), LoggingLevel::PRODUCTION_ONE);
   write_multifile_output("solution", false);
   ComplexNumber signal_strength = compute_signal_strength_of_solution();
-  print_info("NonLocalProblem::output_results", "Signal strength: " + std::to_string(std::abs(signal_strength)));
+  print_info("NonLocalProblem::output_results", "Signal strength: " + std::to_string(std::abs(signal_strength)) + " (complex amplitude: " + std::to_string(signal_strength.real()) + " + " + std::to_string(signal_strength.imag()) + "i)", LoggingLevel::PRODUCTION_ONE);
+  if(GlobalParams.MPI_Rank == 0) {
+    // A machine readable summary of the run. It is used by the integration tests and for post-processing.
+    PetscInt n_iterations = 0;
+    KSPGetIterationNumber(ksp, &n_iterations);
+    std::ofstream results(GlobalOutputManager.get_full_filename("results.txt"));
+    results.precision(12);
+    results << "signal_strength_abs = " << std::abs(signal_strength) << std::endl;
+    results << "signal_strength_real = " << signal_strength.real() << std::endl;
+    results << "signal_strength_imag = " << signal_strength.imag() << std::endl;
+    results << "error_l2 = " << errors.L2 << std::endl;
+    results << "error_linfty = " << errors.Linfty << std::endl;
+    results << "solver_iterations = " << n_iterations << std::endl;
+    results << "n_dofs = " << Geometry.levels[level].n_total_level_dofs << std::endl;
+    results << "n_local_solves = " << n_local_solves << std::endl;
+    results << "local_factorization_time_max = " << local_factorization_time_max << std::endl;
+    results << "local_time_per_solve = " << ((local_timed_solves > 0) ? local_solve_time_sum / local_timed_solves : 0.0) << std::endl;
+    results << "local_factor_entries_full_rank = " << local_factor_entries_full << std::endl;
+    results << "local_factor_entries_stored = " << local_factor_entries_stored << std::endl;
+    results << "local_factor_memory_mb_max = " << local_factor_memory_max << std::endl;
+  }
   if(GlobalParams.Output_transformed_solution) {
     write_multifile_output("transformed_solution", true);
   }
@@ -564,7 +606,8 @@ void NonLocalProblem::write_multifile_output(const std::string & in_filename, bo
     std::string filename = GlobalOutputManager.get_full_filename("_" + in_filename + ".pvtu");
     std::ofstream outputvtu(filename);
     for(unsigned int i = 0; i < flattened_filenames.size(); i++) {
-      flattened_filenames[i] = "../" + flattened_filenames[i];
+      // The pvtu record is stored in the same folder as the pieces, so only the file name is referenced.
+      flattened_filenames[i] = flattened_filenames[i].substr(flattened_filenames[i].find_last_of('/') + 1);
     }
     Geometry.levels[level].inner_domain->data_out.write_pvtu_record(outputvtu, flattened_filenames);
   }
@@ -796,7 +839,9 @@ ComplexNumber NonLocalProblem::compute_signal_strength_of_solution() {
 FEErrorStruct NonLocalProblem::compute_global_errors(dealii::LinearAlgebra::distributed::Vector<ComplexNumber> * in_solution) {
   FEErrorStruct errors = Geometry.levels[level].inner_domain->compute_errors(in_solution);
   FEErrorStruct ret;
-  ret.L2 = Utilities::MPI::sum(errors.L2, GlobalMPI.communicators_by_level[level]);
+  // The L2 norms of the processes have to be combined as the root of the sum of squares. Simply adding them up
+  // makes the result depend on the number of processes.
+  ret.L2 = std::sqrt(Utilities::MPI::sum(errors.L2 * errors.L2, GlobalMPI.communicators_by_level[level]));
   ret.Linfty = Utilities::MPI::max(errors.Linfty, GlobalMPI.communicators_by_level[level]);
   return ret;
 }

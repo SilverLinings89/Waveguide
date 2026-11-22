@@ -12,8 +12,26 @@
 
 class LocalProblem: public HierarchicalProblem {
 public:
-  SolverControl sc;
-  dealii::PETScWrappers::SparseDirectMUMPS solver;
+  /**
+   * The direct solver of the subdomain. It is a PETSc KSP of type "preonly" whose preconditioner is a complete
+   * factorization. The defaults (an LDL^T factorization of the complex symmetric matrix computed by MUMPS) can be
+   * changed at run time with PETSc options that carry the prefix "local_", for example
+   *   -local_pc_type lu -local_pc_factor_mat_solver_type superlu_dist
+   *   -local_mat_mumps_icntl_35 2 -local_mat_mumps_cntl_7 1e-6     (block low rank compression in MUMPS)
+   * This is also the place to plug in a GPU solver (see MODERNIZATION.md).
+   */
+  KSP local_ksp = nullptr;
+
+  /**
+   * Statistics of the direct solver of this subdomain. They are collected in solve() and written to results.txt.
+   */
+  double time_of_factorization = 0;      // wall time of the calls that computed a factorization (includes one solve)
+  double time_of_solves = 0;             // accumulated wall time of all other calls
+  unsigned int n_timed_solves = 0;
+  bool has_factorization = false;
+  double factor_entries_full_rank = 0;   // MUMPS INFOG(29): entries of the factors without compression
+  double factor_entries_stored = 0;      // MUMPS INFOG(35): entries that are actually stored (equal without BLR)
+  double factor_memory_mb = 0;           // MUMPS INFOG(22): memory used during the factorization in megabytes
   
   /**
    * @brief Construct a new LocalProblem object
