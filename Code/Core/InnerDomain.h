@@ -262,6 +262,19 @@ class InnerDomain: public FEDomain {
   double assemble_adjoint_rhs_for_signal_strength(NumericVectorDistributed * in_rhs);
 
   /**
+   * @brief Writes the field on three planes through the domain as plain text, for quick visualization without
+   * ParaView (the web frontend reads these files).
+   * The planes are x = 0, y = 0 (both through the axis of the waveguide) and the plane z = const in the middle
+   * of the global domain. For every cell of this process that is cut by a plane, the field at the cell center is
+   * written: position in mathematical coordinates, position in physical coordinates, real and imaginary parts of
+   * the three components and whether the point is inside the waveguide core. One file per plane and process.
+   *
+   * @param in_solution The solution in the local numbering of this domain.
+   * @param in_name Name of the output, the files are called <in_name>_<plane><process>.txt.
+   */
+  void write_field_slices(const NumericVectorLocal & in_solution, const std::string & in_name);
+
+  /**
    * @brief Computes for every free shape parameter p_j the local part of
    *   lambda^T (dA/dp_j u - db/dp_j),
    * i.e. the integrals of (dT^-1 curl u) . curl lambda - omega^2 eps (dT u) . lambda over the cells of this

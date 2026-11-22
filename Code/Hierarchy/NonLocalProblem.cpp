@@ -515,6 +515,13 @@ std::string NonLocalProblem::output_results() {
   FEErrorStruct errors = compute_global_errors(&shared_solution);
   print_info("NonLocalProblem::output_results", "Errors: L2 = " + std::to_string(errors.L2) + " and Linfty  = " + std::to_string(errors.Linfty), LoggingLevel::PRODUCTION_ONE);
   write_multifile_output("solution", false);
+  {
+    NumericVectorLocal slice_solution(Geometry.levels[level].inner_domain->n_locally_active_dofs);
+    for(unsigned int i = 0; i < Geometry.levels[level].inner_domain->n_locally_active_dofs; i++) {
+      slice_solution[i] = shared_solution[Geometry.levels[level].inner_domain->global_index_mapping[i]];
+    }
+    Geometry.levels[level].inner_domain->write_field_slices(slice_solution, "field_slice");
+  }
   ComplexNumber signal_strength = compute_signal_strength_of_solution();
   print_info("NonLocalProblem::output_results", "Signal strength: " + std::to_string(std::abs(signal_strength)) + " (complex amplitude: " + std::to_string(signal_strength.real()) + " + " + std::to_string(signal_strength.imag()) + "i)", LoggingLevel::PRODUCTION_ONE);
   if(GlobalParams.MPI_Rank == 0) {

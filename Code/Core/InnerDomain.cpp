@@ -768,3 +768,49 @@ std::vector<ComplexNumber> InnerDomain::compute_shape_gradient_integrals(Numeric
   }
   return ret;
 }
+
+void InnerDomain::write_field_slices(const NumericVectorLocal & in_solution, const std::string & in_name) {
+  const double plane_coordinates[3] = {
+    0.5 * (Geometry.global_x_range.first + Geometry.global_x_range.second),
+    0.5 * (Geometry.global_y_range.first + Geometry.global_y_range.second),
+    0.5 * (Geometry.global_z_range.first + Geometry.global_z_range.second)};
+  const std::string plane_names[3] = {"x", "y", "z"};
+  std::ofstream files[3];
+  for(unsigned int plane = 0; plane < 3; plane++) {
+    files[plane].open(GlobalOutputManager.get_numbered_filename(in_name + "_" + plane_names[plane], GlobalParams.MPI_Rank, "txt"));
+    files[plane] << "# x y z x_physical y_physical z_physical re_Ex im_Ex re_Ey im_Ey re_Ez im_Ez in_core" << std::endl;
+  }
+  QMidpoint<3> quadrature_formula;
+  const FEValuesExtractors::Vector fe_field(0);
+  FEValues<3> fe_values(fe, quadrature_formula, update_values | update_quadrature_points);
+  std::vector<DofNumber> local_dof_indices(fe.n_dofs_per_cell());
+  for (DofHandler3D::active_cell_iterator cell = dof_handler.begin_active(); cell != dof_handler.end(); ++cell) {
+    // The cell is cut by a plane if the plane lies between its lower (inclusive) and upper (exclusive) face.
+    bool is_cut[3];
+    bool any = false;
+    for(unsigned int plane = 0; plane < 3; plane++) {
+      const double lower = cell->vertex(0)[plane];
+      const double upper = cell->vertex(7)[plane];
+      is_cut[plane] = (lower <= plane_coordinates[plane] + FLOATING_PRECISION) && (plane_coordinates[plane] + FLOATING_PRECISION < upper);
+      any = any || is_cut[plane];
+    }
+    if(!any) continue;
+    fe_values.reinit(cell);
+    cell->get_dof_indices(local_dof_indices);
+    Tensor<1,3,ComplexNumber> value;
+    for(unsigned int i = 0; i < fe.n_dofs_per_cell(); i++) {
+      value += fe_values[fe_field].value(i, 0) * in_solution[local_dof_indices[i]];
+    }
+    const Position p = fe_values.quadrature_point(0);
+    const Position p_physical = GlobalSpaceTransformation->math_to_phys(p);
+    for(unsigned int plane = 0; plane < 3; plane++) {
+      if(is_cut[plane]) {
+        files[plane] << p[0] << " " << p[1] << " " << p[2] << " " << p_physical[0] << " " << p_physical[1] << " " << p_physical[2];
+        for(unsigned int component = 0; component < 3; component++) {
+          files[plane] << " " << value[component].real() << " " << value[component].imag();
+        }
+        files[plane] << " " << (Geometry.math_coordinate_in_waveguide(p) ? 1 : 0) << std::endl;
+      }
+    }
+  }
+}
