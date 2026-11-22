@@ -37,7 +37,7 @@ using namespace dealii;
  *\author Pascal Kraft
  *\date 23.11.2015
  */
-class ParameterReader : public Subscriptor {
+class ParameterReader {
  public:
   /**
    * Deal Offers the ParameterHandler object wich contains all of the

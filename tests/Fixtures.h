@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Code/BoundaryCondition/LaguerreFunction.h"
-#include "../third_party/googletest/googletest/include/gtest/gtest.h"
+#include <gtest/gtest.h>
 #include "../Code/BoundaryCondition/BoundaryCondition.h"
 #include "../Code/BoundaryCondition/HSIESurface.h"
 #include "../Code/BoundaryCondition/HSIEPolynomial.h"

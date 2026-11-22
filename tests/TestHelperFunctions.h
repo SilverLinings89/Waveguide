@@ -11,27 +11,9 @@
 #include "../Code/GlobalObjects/TimerManager.h"
 #include <fstream>
 
-Parameters GlobalParams;
-GeometryManager Geometry;
-MPICommunicator GlobalMPI;
-ModeManager GlobalModeManager;
-OutputManager GlobalOutputManager;
-TimerManager GlobalTimerManager;
-SpaceTransformation * GlobalSpaceTransformation;
+#include "../Code/GlobalObjects/GlobalObjects.h"
 
-std::string solutionpath = "";
-std::ofstream log_stream;
-std::string constraints_filename = "constraints.log";
-std::string assemble_filename = "assemble.log";
-std::string precondition_filename = "precondition.log";
-std::string solver_filename = "solver.log";
-std::string total_filename = "total.log";
-int StepsR = 10;
-int StepsPhi = 10;
-int alert_counter = 0;
-std::string input_file_name;
-
-static void setup_GlobalParams_for_tests(unsigned int n_cells_x, unsigned int n_cells_y, unsigned int n_cells_z, BoundaryConditionType b_type, double size_x, double size_y, double size_z) {
+inline void setup_GlobalParams_for_tests(unsigned int n_cells_x, unsigned int n_cells_y, unsigned int n_cells_z, BoundaryConditionType b_type, double size_x, double size_y, double size_z) {
   GlobalParams.Blocks_in_x_direction = 1;
   GlobalParams.Blocks_in_y_direction = 1;
   GlobalParams.Blocks_in_z_direction = 1;

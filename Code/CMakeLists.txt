@@ -1,10 +1,7 @@
-INCLUDE_DIRECTORIES(Core, Helpers, MeshGenerators, OptimizationAlgorithm, OptimizationStrategies, SpaceTransformations, HSIEPreconditioner)
-
 ADD_LIBRARY(Code
         Core/Sector.cpp
         Core/FEDomain.cpp
         Core/InnerDomain.cpp
-        Core/Types.h
         Runners/Simulation.cpp
         Runners/ConvergenceRun.cpp
         Runners/ParameterSweep.cpp
@@ -40,7 +37,6 @@ ADD_LIBRARY(Code
         BoundaryCondition/EmptySurface.cpp
         BoundaryCondition/DirichletSurface.cpp
         BoundaryCondition/LaguerreFunction.cpp
-        BoundaryCondition/JacobianForCell.cpp
         Hierarchy/HierarchicalProblem.cpp  
         Hierarchy/NonLocalProblem.cpp  
         Hierarchy/LocalProblem.cpp
@@ -58,4 +54,5 @@ ADD_LIBRARY(Code
         Optimization/ShapeFunction.cpp
         )
 
-DEAL_II_SETUP_TARGET(Code)
+deal_ii_setup_target(Code)
+target_include_directories(Code PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

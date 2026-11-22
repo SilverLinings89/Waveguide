@@ -88,3 +88,5 @@ waveguide_tests
 GPATH
 GRTAGS
 GTAGS
+build/
+build-*/

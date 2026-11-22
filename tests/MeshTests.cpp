@@ -1,7 +1,7 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/tria.h>
 #include "../Code/Helpers/staticfunctions.h"
-#include "../third_party/googletest/googletest/include/gtest/gtest.h"
+#include <gtest/gtest.h>
 
 TEST(MESH_TESTS, SORTING_TESTS) {
     dealii::Triangulation<3> tria;

@@ -326,7 +326,7 @@ void RectangularMode::output_solution(){
   data_out.attach_dof_handler(dof_handler);
   std::vector<dealii::Vector<ComplexNumber>> eigenfunctions_small;
   eigenfunctions_small.resize(n_eigenfunctions);
-  data_out.add_data_vector(epsilon,"Epsilon", dealii::DataOut_DoFData<DoFHandler<3, 3>, 3, 3>::type_cell_data);
+  data_out.add_data_vector(epsilon,"Epsilon", dealii::DataOut<3>::type_cell_data);
   for(unsigned int i = 0; i < n_eigenfunctions; i++){
     eigenfunctions_small[i].reinit(dof_handler.n_dofs());
     for(unsigned int element = 0; element < dof_handler.n_dofs(); element++) {

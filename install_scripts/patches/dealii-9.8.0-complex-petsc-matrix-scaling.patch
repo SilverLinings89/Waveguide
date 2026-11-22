@@ -1,0 +1,13 @@
+--- a/source/lac/matrix_scaling.cc	2026-11-22 04:37:43
++++ b/source/lac/matrix_scaling.cc	2026-11-22 04:37:43
+@@ -1462,7 +1462,9 @@
+                          TrilinosWrappers::MPI::Vector)
+ #endif
+ 
+-#ifdef DEAL_II_WITH_PETSC
++// MatrixScaling is only implemented for real-valued scalars; with a complex
++// PETSc the instantiation below does not compile (deal.II 9.8.0).
++#if defined(DEAL_II_WITH_PETSC) && !defined(PETSC_USE_COMPLEX)
+   InstantiateMatrixScaling(PETScWrappers::MPI::SparseMatrix,
+                            PETScWrappers::MPI::Vector)
+ #endif

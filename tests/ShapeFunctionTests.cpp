@@ -1,4 +1,4 @@
-#include "../third_party/googletest/googletest/include/gtest/gtest.h"
+#include <gtest/gtest.h>
 #include "../Code/Optimization/ShapeFunction.h"
 
 TEST(SHAPE_FUNCTION_OUTPUT, TEMP) {

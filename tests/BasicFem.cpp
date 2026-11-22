@@ -1,4 +1,4 @@
-#include "../third_party/googletest/googletest/include/gtest/gtest.h"
+#include <gtest/gtest.h>
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/dofs/dof_tools.h>
 #include <deal.II/grid/tria.h>
@@ -10,7 +10,7 @@ using namespace dealii;
 
 TEST(BASIC_FEM_TEST, LOWEST_ORDER) {
     FE_NedelecSZ<3> fe(0);
-    Triangulation<3> tria(Triangulation<3>::MeshSmoothing(Triangulation<3>::none));
+    Triangulation<3> tria{Triangulation<3>::MeshSmoothing(Triangulation<3>::none)};
     GridGenerator::hyper_cube(tria);
     DoFHandler<3> dof_handler (tria);
     dof_handler.distribute_dofs(fe);
@@ -22,7 +22,7 @@ TEST(BASIC_FEM_TEST, LOWEST_ORDER) {
 
 TEST(BASIC_FEM_TEST, ORDER_ONE) {
     FE_NedelecSZ<3> fe(1);
-    Triangulation<3> tria(Triangulation<3>::MeshSmoothing(Triangulation<3>::none));
+    Triangulation<3> tria{Triangulation<3>::MeshSmoothing(Triangulation<3>::none)};
     GridGenerator::hyper_cube(tria);
     DoFHandler<3> dof_handler (tria);
     dof_handler.distribute_dofs(fe);
@@ -34,7 +34,7 @@ TEST(BASIC_FEM_TEST, ORDER_ONE) {
 
 TEST(BASIC_FEM_TEST, ORDER_TWO) {
     FE_NedelecSZ<3> fe(2);
-    Triangulation<3> tria(Triangulation<3>::MeshSmoothing(Triangulation<3>::none));
+    Triangulation<3> tria{Triangulation<3>::MeshSmoothing(Triangulation<3>::none)};
     GridGenerator::hyper_cube(tria);
     DoFHandler<3> dof_handler (tria);
     dof_handler.distribute_dofs(fe);
