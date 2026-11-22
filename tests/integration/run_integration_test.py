@@ -211,6 +211,48 @@ def test_shape_gradient(runner):
         check(abs(adjoint / difference - 1) < 0.01, "Shape parameter %d: adjoint gradient %.5f, finite difference %.5f." % (i, adjoint, difference))
 
 
+METALLIC_WAVEGUIDE = """    set source type = 4
+    set Lateral boundary = PEC
+    set geometry size x = 2.0
+    set geometry size y = 1.0
+    set geometry size z = 2.0
+    set epsilon in = 1.0
+    set epsilon out = 1.0
+    set Boundary Method = HSIE
+    set Kappa 0 Imaginary = 0
+"""
+
+
+def test_hsie_single_face(runner):
+    """Hardy space infinite elements on the output face must absorb the TE10 mode of a metallic waveguide (exact
+    solution known): the error has to fall with the mesh width and with the order of the elements. With kappa_0 equal
+    to the wavenumber a low degree of the infinite elements suffices; with a poor kappa_0 the degree has to matter."""
+    def error(order, cells, degree, kappa_0=4.0537):
+        extra = METALLIC_WAVEGUIDE + "    set fem order = %d\n    set HSIE polynomial degree = %d\n    set Kappa 0 Real = %g\n" % (order, degree, kappa_0)
+        return runner.solve(level=0, processes=(1, 1, 1), cells=(cells,) * 3, extra_case=extra)["error_l2_relative"]
+    coarse, fine = error(0, 8, 4), error(0, 16, 4)
+    check(fine < 0.06, "Lowest order elements, 16 cells: relative error %.3f (expected about 0.044)." % fine)
+    check(fine < 0.4 * coarse, "The error does not fall with the mesh width (%.3f -> %.3f)." % (coarse, fine))
+    second_order = error(1, 8, 4)
+    check(second_order < 0.006, "Second order elements, 8 cells: relative error %.4f (expected about 0.0046)." % second_order)
+    check(abs(error(1, 8, 8) - second_order) < 1e-4, "The error depends on the degree of the infinite elements.")
+    low, high = error(0, 16, 0, kappa_0=1.6), error(0, 16, 8, kappa_0=1.6)
+    check(low > fine + 0.005, "Degree 0 with a poor kappa_0 should be visibly less accurate (%.4f against %.4f)." % (low, fine))
+    check(abs(high - fine) < 1e-4, "Degree 8 with a poor kappa_0 should reach the accuracy of the mesh (%.4f against %.4f)." % (high, fine))
+
+
+def test_hsie_matches_pml(runner):
+    """Dielectric waveguide with absorbing boundaries on five faces: infinite elements and PML must give the same
+    error against the exact mode, also for second order elements (where the functions on the side faces differ from
+    those of the surface mesh by more than a sign)."""
+    hsie = "    set Boundary Method = HSIE\n    set HSIE polynomial degree = 4\n    set Kappa 0 Real = 4.0537\n    set Kappa 0 Imaginary = 0\n"
+    for order, cells, tolerance in ((0, (16, 16, 24), 0.02), (1, (8, 8, 12), 0.02)):
+        fem = "    set fem order = %d\n" % order
+        pml = runner.solve(level=0, processes=(1, 1, 1), cells=cells, extra_case=fem)["error_l2_relative"]
+        infinite = runner.solve(level=0, processes=(1, 1, 1), cells=cells, extra_case=fem + hsie)["error_l2_relative"]
+        check(abs(pml - infinite) < tolerance, "Element order %d: error %.4f with PML but %.4f with infinite elements." % (order + 1, pml, infinite))
+
+
 TESTS = {name[5:]: function for name, function in sorted(globals().items()) if name.startswith("test_")}
 
 

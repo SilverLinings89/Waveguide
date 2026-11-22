@@ -47,8 +47,8 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("width of waveguide", "2.0", Patterns::Double(), "Width of the Waveguide core.");
         case_prm.declare_entry("height of waveguide", "1.8", Patterns::Double(), "Height of the Waveguide core.");
         case_prm.declare_entry("Enable Parameter Run", "false", Patterns::Bool(), "For a series of Local solves, this can be set to true");
-        case_prm.declare_entry("Kappa 0 Real", "1", Patterns::Double(), "Real part of kappa_0 for HSIE.");
-        case_prm.declare_entry("Kappa 0 Imaginary", "1", Patterns::Double(), "Imaginary part of kappa_0 for HSIE.");
+        case_prm.declare_entry("Kappa 0 Real", "4.0537", Patterns::Double(), "Real part of kappa_0 for HSIE. The default is the wavenumber 2 pi / 1.55; waves with a wavenumber close to kappa_0 in the direction normal to the boundary are absorbed with the lowest polynomial degree.");
+        case_prm.declare_entry("Kappa 0 Imaginary", "2", Patterns::Double(), "Imaginary part of kappa_0 for HSIE. A positive value improves the approximation of fields that decay away from the boundary, like the field in the cladding of a waveguide.");
         case_prm.declare_entry("PML sigma max", "10.0", Patterns::Double(), "Parameter Sigma Max for all PML layers.");
         case_prm.declare_entry("HSIE polynomial degree" , "4", Patterns::Integer(), "Polynomial degree of the Hardy-space polynomials for HSIE surfaces.");
         case_prm.declare_entry("Min HSIE Order", "1", Patterns::Integer(), "Minimal HSIE Element order for parameter run.");

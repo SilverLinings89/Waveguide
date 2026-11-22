@@ -66,7 +66,8 @@ dealii::Tensor<2,3,double> JacobianForCell::get_J_hat_for_position(const Positio
 JacobianAndTensorData JacobianForCell::get_C_G_and_J(Position2D in_p) {
   JacobianAndTensorData ret;
   ret.J = get_J_hat_for_position(in_p);
-  const double J_norm = ret.J.norm();
+  // The transformation rules of H(curl) need the determinant of the Jacobian (not a matrix norm).
+  const double J_norm = std::abs(determinant(ret.J));
   const Tensor<2,3,double> J_inverse = invert(ret.J);
   ret.G = J_norm * J_inverse * transpose(J_inverse);
   ret.C = (1.0 / J_norm) * transpose(ret.J) * ret.J;

@@ -397,6 +397,15 @@ public:
   bool check_dof_assignment_integrity();
 
   /**
+   * @brief Expresses the tangential traces of the interior shape functions on this surface in the basis of the
+   * Nedelec element of the surface mesh. The result is stored in trace_coefficients.
+   */
+  void compute_trace_coefficients();
+  /// For every surface cell (by id) and every dof of the surface Nedelec element in it: the coefficients of the trace
+  /// of the coupled interior shape function with respect to the shape functions of the surface cell.
+  std::map<std::string, std::map<unsigned int, std::vector<double>>> trace_coefficients;
+
+  /**
    * @brief Part of the function above
    * 
    * @return true fine

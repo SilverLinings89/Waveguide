@@ -46,6 +46,8 @@ if(Python3_FOUND)
     partition_independence
     block_low_rank_compression
     shape_gradient
+    hsie_single_face
+    hsie_matches_pml
   )
   foreach(_test ${_integration_tests})
     add_test(NAME integration_${_test}

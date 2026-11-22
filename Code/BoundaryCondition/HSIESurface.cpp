@@ -1,6 +1,8 @@
 #include "HSIESurface.h"
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria.h>
+#include <deal.II/fe/mapping_q1.h>
+#include <deal.II/fe/fe_values.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/petsc_sparse_matrix.h>
@@ -84,22 +86,19 @@ DofDataVector HSIESurface::get_dof_data_for_base_dof_nedelec(unsigned int in_ind
   DofDataVector ret;
   for (unsigned int index = 0; index < edge_dof_data.size(); index++) {
     if ((edge_dof_data[index].base_dof_index == in_index)
-        && (edge_dof_data[index].type != DofType::RAY
-            && edge_dof_data[index].type != DofType::IFFb)) {
+        && !edge_dof_data[index].nodal_basis) {
       ret.push_back(edge_dof_data[index]);
     }
   }
   for (unsigned int index = 0; index < vertex_dof_data.size(); index++) {
     if ((vertex_dof_data[index].base_dof_index == in_index)
-        && (vertex_dof_data[index].type != DofType::RAY
-            && vertex_dof_data[index].type != DofType::IFFb)) {
+        && !vertex_dof_data[index].nodal_basis) {
       ret.push_back(vertex_dof_data[index]);
     }
   }
   for (unsigned int index = 0; index < face_dof_data.size(); index++) {
     if ((face_dof_data[index].base_dof_index == in_index)
-        && (face_dof_data[index].type != DofType::RAY
-            && face_dof_data[index].type != DofType::IFFb)) {
+        && !face_dof_data[index].nodal_basis) {
       ret.push_back(face_dof_data[index]);
     }
   }
@@ -110,22 +109,19 @@ DofDataVector HSIESurface::get_dof_data_for_base_dof_q(unsigned int in_index) {
   DofDataVector ret;
   for (unsigned int index = 0; index < edge_dof_data.size(); index++) {
     if ((edge_dof_data[index].base_dof_index == in_index)
-        && (edge_dof_data[index].type == DofType::RAY
-            || edge_dof_data[index].type == DofType::IFFb)) {
+        && edge_dof_data[index].nodal_basis) {
       ret.push_back(edge_dof_data[index]);
     }
   }
   for (unsigned int index = 0; index < vertex_dof_data.size(); index++) {
     if ((vertex_dof_data[index].base_dof_index == in_index)
-        && (vertex_dof_data[index].type == DofType::RAY
-            || vertex_dof_data[index].type == DofType::IFFb)) {
+        && vertex_dof_data[index].nodal_basis) {
       ret.push_back(vertex_dof_data[index]);
     }
   }
   for (unsigned int index = 0; index < face_dof_data.size(); index++) {
     if ((face_dof_data[index].base_dof_index == in_index)
-        && (face_dof_data[index].type == DofType::RAY
-            || face_dof_data[index].type == DofType::IFFb)) {
+        && face_dof_data[index].nodal_basis) {
       ret.push_back(face_dof_data[index]);
     }
   }
@@ -145,10 +141,11 @@ auto HSIESurface::build_fad_for_cell(CellIterator2D) -> FaceAngelingData {
 void HSIESurface::fill_matrix(
     dealii::PETScWrappers::MPI::SparseMatrix *matrix, NumericVectorDistributed* rhs, Constraints *constraints) {
     HSIEPolynomial::computeDandI(order + 2, k0);
+    compute_trace_coefficients();
     auto it = dof_h_nedelec.begin();
     auto end = dof_h_nedelec.end();
 
-    QGauss<2> quadrature_formula(2);
+    QGauss<2> quadrature_formula(Inner_Element_Order + 2);
     FEValues<2, 2> fe_q_values(fe_q, quadrature_formula,
                               update_values | update_gradients |
                                   update_JxW_values | update_quadrature_points);
@@ -178,7 +175,7 @@ void HSIESurface::fill_matrix(
       }
       std::vector<unsigned int> local_related_fe_index;
       for (unsigned int i = 0; i < cell_dofs.size(); i++) {
-        if (cell_dofs[i].type == DofType::RAY || cell_dofs[i].type == DofType::IFFb) {
+        if (cell_dofs[i].nodal_basis) {
           for (unsigned int j = 0; j < q_dofs.size(); j++) {
             if (q_dofs[j] == cell_dofs[i].base_dof_index) {
               local_related_fe_index.push_back(j);
@@ -197,31 +194,37 @@ void HSIESurface::fill_matrix(
 
       fe_n_values.reinit(it);
       fe_q_values.reinit(it2);
+      const auto & cell_trace_coefficients = trace_coefficients.at(it->id().to_string());
       quadrature_points = fe_q_values.get_quadrature_points();
       std::vector<double> jxw_values = fe_n_values.get_JxW_values();
-      std::vector<std::vector<HSIEPolynomial>> contribution_value;
-      std::vector<std::vector<HSIEPolynomial>> contribution_curl;
       JacobianAndTensorData C_G_J;
       for (unsigned int q_point = 0; q_point < quadrature_points.size(); q_point++) {
+        // These have to be local to the quadrature point: they are indexed by the dof below.
+        std::vector<std::vector<HSIEPolynomial>> contribution_value;
+        std::vector<std::vector<HSIEPolynomial>> contribution_curl;
         C_G_J = jacobian_for_cell.get_C_G_and_J(quadrature_points[q_point]);
         for (unsigned int i = 0; i < cell_dofs.size(); i++) {
           DofData &u = cell_dofs[i];
-          if (cell_dofs[i].type == DofType::RAY || cell_dofs[i].type == DofType::IFFb) {
+          if (cell_dofs[i].nodal_basis) {
             contribution_curl.push_back(
               build_curl_term_q(u.hsie_order, fe_q_values.shape_grad(local_related_fe_index[i], q_point)));
             contribution_value.push_back(
               build_non_curl_term_q(u.hsie_order, fe_q_values.shape_value(local_related_fe_index[i], q_point)));
           } else {
-            contribution_curl.push_back(
-              build_curl_term_nedelec(u.hsie_order,
-                fe_n_values.shape_grad_component(local_related_fe_index[i], q_point, 0),
-                fe_n_values.shape_grad_component(local_related_fe_index[i], q_point, 1),
-                fe_n_values.shape_value_component(local_related_fe_index[i], q_point, 0),
-                fe_n_values.shape_value_component(local_related_fe_index[i], q_point, 1)));
-            contribution_value.push_back(
-              build_non_curl_term_nedelec(u.hsie_order,
-                fe_n_values.shape_value_component(local_related_fe_index[i], q_point, 0),
-                fe_n_values.shape_value_component(local_related_fe_index[i], q_point, 1)));
+            // The tangential function belonging to this dof is the trace of the interior function, expressed in the
+            // basis of the surface element (see compute_trace_coefficients).
+            const std::vector<double> & coefficients = cell_trace_coefficients.at(u.base_dof_index);
+            Tensor<1, 2> gradient_0, gradient_1;
+            double value_0 = 0, value_1 = 0;
+            for (unsigned int j = 0; j < coefficients.size(); j++) {
+              if (coefficients[j] == 0.0) continue;
+              gradient_0 += coefficients[j] * fe_n_values.shape_grad_component(j, q_point, 0);
+              gradient_1 += coefficients[j] * fe_n_values.shape_grad_component(j, q_point, 1);
+              value_0 += coefficients[j] * fe_n_values.shape_value_component(j, q_point, 0);
+              value_1 += coefficients[j] * fe_n_values.shape_value_component(j, q_point, 1);
+            }
+            contribution_curl.push_back(build_curl_term_nedelec(u.hsie_order, gradient_0, gradient_1, value_0, value_1));
+            contribution_value.push_back(build_non_curl_term_nedelec(u.hsie_order, value_0, value_1));
           }
         }
 
@@ -347,7 +350,8 @@ unsigned int HSIESurface::compute_dofs_per_face(bool only_hsie_dofs) {
       fe_nedelec.dofs_per_cell -
       dealii::GeometryInfo<2>::faces_per_cell * fe_nedelec.dofs_per_face;
 
-  ret = INNER_REAL_NEDELEC_DOFS_PER_FACE * (order + 2) * 3;
+  // surface functions and tangential infinite cell functions (Nedelec), orthogonal infinite cell functions (nodal)
+  ret = (INNER_REAL_NEDELEC_DOFS_PER_FACE + fe_q.n_dofs_per_quad()) * (order + 2);
   if (only_hsie_dofs) {
     ret -= INNER_REAL_NEDELEC_DOFS_PER_FACE;
   }
@@ -498,9 +502,11 @@ void HSIESurface::register_new_surface_dofs(CellIterator2D cell_nedelec, CellIte
     }
   }
 
-  for (unsigned int inner_order = 0; inner_order < surf_dofs.n_elements(); inner_order++) {
+  // SEGMENT functions b: these point in the infinite direction and are built from the cell-interior functions of the
+  // nodal element (not from those of the Nedelec element).
+  for (unsigned int inner_order = 0; inner_order < fe_q.n_dofs_per_quad(); inner_order++) {
     for (int hsie_order = -1; hsie_order <= max_hsie_order; hsie_order++) {
-      register_single_dof(id, hsie_order, inner_order, DofType::SEGMENTb, face_dof_data, surf_dofs.nth_index_in_set(inner_order));
+      register_single_dof(id, hsie_order, inner_order, DofType::SEGMENTb, face_dof_data, cell_q->dof_index(inner_order));
     }
   }
 }
@@ -544,10 +550,8 @@ ComplexNumber HSIESurface::evaluate_a(std::vector<HSIEPolynomial> &u, std::vecto
       }
     }
   }
-  // Note: the identity int_0^infty u v dxi = -2 i kappa_0 sum_k a_k b_k of the Hardy space method contains the
-  // factor -2 i kappa_0, which is missing here. Adding it alone does not make the method work (see
-  // MODERNIZATION.md, section 10): the infinite elements currently reflect instead of absorbing.
-  return result;
+  // int_0^infty u v dxi = -2 i kappa_0 sum_k a_k b_k for the coefficients a, b of the Hardy space representations.
+  return ComplexNumber(0, -2) * k0 * result;
 }
 
 std::vector<HSIEPolynomial> HSIESurface::build_curl_term_nedelec(
@@ -558,22 +562,18 @@ std::vector<HSIEPolynomial> HSIESurface::build_curl_term_nedelec(
     const double fe_shape_value_component_1) {
   std::vector<HSIEPolynomial> ret;
   HSIEPolynomial temp = HSIEPolynomial::PsiJ(dof_hsie_order, k0);
-  temp.multiplyBy(fe_shape_gradient_component_0[1]);
-  temp.applyI();
-  HSIEPolynomial temp2 = HSIEPolynomial::PsiJ(dof_hsie_order, k0);
-  temp2.multiplyBy(-1.0 * fe_shape_gradient_component_1[0]);
-  temp2.applyI();
-  temp.add(temp2);
+  // Component in ray direction: the surface curl of the tangential field, d_0 v_1 - d_1 v_0.
+  temp.multiplyBy(fe_shape_gradient_component_1[0] - fe_shape_gradient_component_0[1]);
   ret.push_back(temp);
 
-  temp = HSIEPolynomial::PsiJ(dof_hsie_order, k0);
+  // Tangential components: the derivative in ray direction. If (1 / i kappa_0) T_-(u_0, U) represents a function,
+  // T_+(u_0, U) represents its derivative, i.e. Psi_j has to be replaced by Phi_j.
+  temp = HSIEPolynomial::PhiJ(dof_hsie_order, k0);
   temp.multiplyBy(-1.0 * fe_shape_value_component_1);
-  temp.applyDerivative();
   ret.push_back(temp);
 
-  temp = HSIEPolynomial::PsiJ(dof_hsie_order, k0);
+  temp = HSIEPolynomial::PhiJ(dof_hsie_order, k0);
   temp.multiplyBy(fe_shape_value_component_0);
-  temp.applyDerivative();
   ret.push_back(temp);
 
   transform_coordinates_in_place(&ret);
@@ -613,7 +613,6 @@ std::vector<HSIEPolynomial> HSIESurface::build_non_curl_term_q(
   std::vector<HSIEPolynomial> ret;
   HSIEPolynomial temp = HSIEPolynomial::PhiJ(dof_hsie_order, k0);
   temp.multiplyBy(fe_shape_value);
-  temp = temp.applyD();
   ret.push_back(temp);
   ret.push_back(HSIEPolynomial::ZeroPolynomial());
   ret.push_back(HSIEPolynomial::ZeroPolynomial());
@@ -726,8 +725,7 @@ bool HSIESurface::check_dof_assignment_integrity() {
     bool found = false;
     for (unsigned int i = 0; i < cell_dofs.size(); i++) {
       found = false;
-      if (cell_dofs[i].type == DofType::RAY ||
-          cell_dofs[i].type == DofType::IFFb) {
+      if (cell_dofs[i].nodal_basis) {
         for (unsigned int j = 0; j < q_dofs.size(); j++) {
           if (q_dofs[j] == cell_dofs[i].base_dof_index) {
             local_related_fe_index.push_back(j);
@@ -969,6 +967,12 @@ DofCount HSIESurface::compute_n_locally_active_dofs() {
 }
 
 void HSIESurface::finish_dof_index_initialization() {
+  // Two surfaces with infinite elements that meet in an edge of the domain: the region beyond the edge (and beyond
+  // the corners) is not covered by infinite elements, since the rays are parallel to the axes. The unknowns on the
+  // infinite faces over the common edge are identified with those of the other surface. This has no justification
+  // from the method (see the dissertation, section "Sweeping Preconditioners with HSIE"), but it is harmless if the
+  // field is small at the edges, as for a waveguide, and it worked better there than leaving these faces free
+  // (MODERNIZATION.md, section 10.1). Fields that radiate through the edges are not absorbed correctly.
   for(BoundaryId surf:adjacent_boundaries) {
     if(!are_edge_dofs_owned[surf] && Geometry.levels[level].surface_type[surf] != SurfaceType::NEIGHBOR_SURFACE) {
       DofIndexVector dofs_in_global_numbering = Geometry.levels[level].surfaces[surf]->get_global_dof_indices_by_boundary_id(b_id);
@@ -1033,4 +1037,101 @@ dealii::IndexSet HSIESurface::compute_non_owned_dofs() {
     }
   }
   return non_owned_dofs;
+}
+void HSIESurface::compute_trace_coefficients() {
+  // The unknowns of the edge and surface functions are shared with the interior. The functions of the two-dimensional
+  // Nedelec element on the surface mesh are, however, not identical to the tangential traces of the interior
+  // functions they are paired with: depending on the numbering of the vertices, the orientation of the surface and
+  // the type of the function they differ by a sign, a factor or (higher order face functions) a linear combination.
+  // This function expresses, cell by cell, the trace of every interior function in the basis of the surface element.
+  // The infinite elements are then built from these traces, which makes the field tangentially continuous.
+  trace_coefficients.clear();
+  InnerDomain * inner = Geometry.levels[level].inner_domain;
+  std::vector<InterfaceDofData> inner_dofs = inner->get_surface_dof_vector_for_boundary_id(b_id);
+  std::vector<InterfaceDofData> own_dofs = get_dof_association();
+  std::map<unsigned int, unsigned int> own_to_inner;
+  for(unsigned int i = 0; i < own_dofs.size(); i++) own_to_inner[own_dofs[i].index] = inner_dofs[i].index;
+  std::vector<std::pair<Position, DoFHandler<3>::active_cell_iterator>> faces;
+  for(auto cell : inner->dof_handler.active_cell_iterators()) {
+    if(!cell->at_boundary(b_id)) continue;
+    for(unsigned int face = 0; face < 6; face++) {
+      if(cell->face(face)->at_boundary() && cell->face(face)->boundary_id() == b_id) faces.emplace_back(cell->face(face)->center(), cell);
+    }
+  }
+  QGauss<2> quadrature(Inner_Element_Order + 2);
+  FEValues<2, 2> fe_n_values(fe_nedelec, quadrature, update_values | update_quadrature_points);
+  dealii::MappingQ1<3> mapping;
+  const Position origin = undo_transform_for_shape_function({0, 0});
+  const unsigned int normal_component = b_id / 2;
+  const unsigned int n = fe_nedelec.dofs_per_cell;
+  auto it2 = dof_h_q.begin();
+  for(auto it = dof_h_nedelec.begin(); it != dof_h_nedelec.end(); ++it, ++it2) {
+    const Position center = undo_transform(it->center());
+    DoFHandler<3>::active_cell_iterator cell;
+    bool cell_found = false;
+    for(auto & candidate : faces) {
+      if((candidate.first - center).norm() < 1e-8) {
+        cell = candidate.second;
+        cell_found = true;
+        break;
+      }
+    }
+    AssertThrow(cell_found, dealii::ExcMessage("HSIE: no cell of the interior mesh belongs to a cell of the surface mesh."));
+    fe_n_values.reinit(it);
+    std::vector<Point<3>> unit_points;
+    for(auto p : fe_n_values.get_quadrature_points()) unit_points.push_back(mapping.transform_real_to_unit_cell(cell, undo_transform(p)));
+    Quadrature<3> quadrature_3d(unit_points);
+    FEValues<3> fe_values(inner->fe, quadrature_3d, update_values);
+    fe_values.reinit(cell);
+    std::vector<dealii::types::global_dof_index> inner_cell_dofs(inner->fe.dofs_per_cell);
+    cell->get_dof_indices(inner_cell_dofs);
+    std::vector<unsigned int> n_dofs(n);
+    it->get_dof_indices(n_dofs);
+    // Values of the surface functions as vectors in 3D and their Gram matrix.
+    std::vector<std::vector<Position>> surface_values(n, std::vector<Position>(unit_points.size()));
+    dealii::FullMatrix<double> gram(n, n);
+    for(unsigned int j = 0; j < n; j++) {
+      for(unsigned int q = 0; q < unit_points.size(); q++) {
+        Position value = undo_transform_for_shape_function({fe_n_values.shape_value_component(j, q, 0), fe_n_values.shape_value_component(j, q, 1)});
+        surface_values[j][q] = Position(value[0] - origin[0], value[1] - origin[1], value[2] - origin[2]);
+      }
+    }
+    for(unsigned int j = 0; j < n; j++) {
+      for(unsigned int l = 0; l < n; l++) {
+        for(unsigned int q = 0; q < unit_points.size(); q++) {
+          gram(j, l) += surface_values[j][q] * surface_values[l][q];
+        }
+      }
+    }
+    gram.gauss_jordan();
+    const std::string cell_id = it->id().to_string();
+    DofDataVector cell_dofs = get_dof_data_for_cell(it, it2);
+    for(auto & dof : cell_dofs) {
+      if(dof.type != DofType::EDGE && dof.type != DofType::SURFACE) continue;
+      unsigned int index_3d = 0;
+      while(index_3d < inner_cell_dofs.size() && inner_cell_dofs[index_3d] != own_to_inner[dof.global_index]) index_3d++;
+      AssertThrow(index_3d < inner_cell_dofs.size(), dealii::ExcMessage("HSIE: a surface dof is coupled to an interior dof of another cell."));
+      dealii::Vector<double> rhs(n), coefficients(n);
+      double norm = 0;
+      std::vector<Position> trace(unit_points.size());
+      for(unsigned int q = 0; q < unit_points.size(); q++) {
+        for(unsigned int c = 0; c < 3; c++) {
+          trace[q][c] = (c == normal_component) ? 0.0 : fe_values.shape_value_component(index_3d, q, c);
+        }
+        norm += trace[q] * trace[q];
+        for(unsigned int j = 0; j < n; j++) rhs[j] += surface_values[j][q] * trace[q];
+      }
+      gram.vmult(coefficients, rhs);
+      double residual = 0;
+      for(unsigned int q = 0; q < unit_points.size(); q++) {
+        Position difference = trace[q];
+        for(unsigned int j = 0; j < n; j++) difference -= coefficients[j] * surface_values[j][q];
+        residual += difference * difference;
+      }
+      AssertThrow(residual < 1e-12 * norm, dealii::ExcMessage("HSIE: the trace of an interior function is not in the space of the surface element."));
+      std::vector<double> stored(n);
+      for(unsigned int j = 0; j < n; j++) stored[j] = (std::abs(coefficients[j]) < 1e-10) ? 0.0 : coefficients[j];
+      trace_coefficients[cell_id][dof.base_dof_index] = stored;
+    }
+  }
 }
