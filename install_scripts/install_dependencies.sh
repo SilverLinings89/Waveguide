@@ -37,10 +37,26 @@ PREFIX="$(cd "$PREFIX" && pwd)"
 # A prefix that was built in the self-contained mode stays in this mode (its mpicc may be in PATH by now).
 if [ -d "$PREFIX/install/symengine" ] || [ -x "$PREFIX/install/petsc/bin/mpicc" ]; then SELF_CONTAINED=1; fi
 
+# In the self-contained mode everything has to use the OpenBLAS that PETSc was built with. If deal.II recorded an
+# OpenBLAS of the system in its CMake files (an older one with the same library name lacks routines that PETSc
+# uses, e.g. zgemmt_), programs do not link. This replaces such entries; it does nothing if there are none.
+use_openblas_of_petsc() {
+  [ "$SELF_CONTAINED" = 1 ] || return 0
+  local own
+  own=$(ls "$PREFIX"/install/petsc/lib/libopenblas.so "$PREFIX"/install/petsc/lib/libopenblas.dylib 2> /dev/null | head -1)
+  [ -n "$own" ] || return 0
+  for file in "$PREFIX"/install/dealii/lib/cmake/deal.II/*.cmake; do
+    [ -f "$file" ] || continue
+    sed -i.bak -E "s#(^|[;\" ])/(usr|lib|lib64)[^;\" ]*/lib(openblas|blas|lapack)[^;\" /]*\.so[^;\" ]*#\1$own#g" "$file"
+    rm -f "$file.bak"
+  done
+}
+
 # Nothing to do if everything is installed already (FORCE=1 builds deal.II again).
 if [ "$FORCE" != 1 ] && [ -f "$PREFIX/install/petsc/lib/petsc/conf/petscvariables" ] \
    && [ -f "$PREFIX/install/dealii/lib/cmake/deal.II/deal.IIConfig.cmake" ] \
    && [ -f "$PREFIX/install/dealii/include/deal.II/optimization/solver_bfgs.h" ]; then
+  use_openblas_of_petsc
   echo "PETSc and deal.II are already installed in $PREFIX/install."
   exit 0
 fi
@@ -139,23 +155,10 @@ if [ -z "$SYMENGINE_ARGS" ] && command -v brew > /dev/null 2>&1; then
   SYMENGINE_ARGS="-DSYMENGINE_DIR=$(brew --prefix symengine)"
 fi
 
-# In the self-contained mode deal.II has to use the OpenBLAS that PETSc was built with. If it picks a BLAS of the
-# system instead (often an older OpenBLAS with the same library name), linking fails with undefined references
-# such as zgemmt_ from libpetsc.
+# In the self-contained mode deal.II has to find the OpenBLAS of PETSc, not a BLAS of the system.
 LAPACK_ARGS=""
 if [ "$SELF_CONTAINED" = 1 ]; then
-  for library in "$PREFIX"/install/petsc/lib/libopenblas.so "$PREFIX"/install/petsc/lib/libopenblas.dylib \
-                 "$PREFIX"/install/petsc/lib/libopenblas.a; do
-    if [ -f "$library" ]; then
-      case "$library" in
-        *.a) LAPACK_ARGS="-DLAPACK_FOUND=TRUE -DLAPACK_LIBRARIES=$library;gfortran;pthread" ;;
-        *)   LAPACK_ARGS="-DLAPACK_FOUND=TRUE -DLAPACK_LIBRARIES=$library" ;;
-      esac
-      break
-    fi
-  done
-  [ -n "$LAPACK_ARGS" ] || { echo "No libopenblas in $PREFIX/install/petsc/lib."; exit 1; }
-  echo "deal.II uses the BLAS and LAPACK of PETSc: $LAPACK_ARGS"
+  LAPACK_ARGS="-DBLA_VENDOR=OpenBLAS -DBLAS_DIR=$PREFIX/install/petsc -DLAPACK_DIR=$PREFIX/install/petsc"
 fi
 
 cd "$PREFIX/build/dealii"
@@ -189,6 +192,8 @@ if [ "$SELF_CONTAINED" != 1 ] && command -v brew > /dev/null 2>&1; then
   sed -i.bak -E "s#$(brew --prefix)/Cellar/llvm/[^/;\"]+#$(brew --prefix)/opt/llvm#g" \
     "$PREFIX/install/dealii/lib/cmake/deal.II/deal.IITargets.cmake"
 fi
+
+use_openblas_of_petsc
 
 echo
 echo "Done. Configure the solver with:"
