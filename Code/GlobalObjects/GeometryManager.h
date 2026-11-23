@@ -195,7 +195,9 @@ class GeometryManager {
 
   /**
    * @brief Checks if the coordinate is in the waveguide core or not.
-   * 
+   * The shape of the core depends on GlobalParams.cross_section: a rectangle, a circle, or, for a cross-section
+   * from a mode file, the region where the permittivity is in the upper half of its range.
+   *
    * @return true Location in mathematical coordinates corresponds with the interior of the waveguide.
    * @return false it does not.
    */
@@ -209,8 +211,10 @@ class GeometryManager {
   dealii::Tensor<2,3> get_epsilon_tensor(const Position &);
 
   /**
-   * @brief Computes scalar \f$\epsilon_r\f$ for the given location.
-   * 
+   * @brief Computes scalar \f$\epsilon_r\f$ for the given location in mathematical coordinates.
+   * For the rectangular and the circular cross-section this is the permittivity of the core or of the cladding.
+   * For a cross-section from a mode file it is the permittivity stored in the file (ExactSolution::permittivity_at()).
+   *
    * @return double \f$\epsilon_r\f$ of material at given location.
    */
   double get_epsilon_for_point(const Position &);

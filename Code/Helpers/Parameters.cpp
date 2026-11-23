@@ -40,6 +40,25 @@ auto Parameters::complete_data() -> void {
       source_field = new PointSourceFieldCosCos();
       if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using Cos-Cos-type point source.", LoggingLevel::PRODUCTION_ONE);
   }
+  if(Point_Source_Type == 0 || Point_Source_Type == 3) {
+      // The mode profile. A file written by the mode solver also contains the propagation constant of the mode,
+      // which replaces the value of "epsilon effective", and the wavelength it was computed for.
+      ExactSolution::load_data(ExactSolution::resolve_path(mode_file));
+      if(ExactSolution::file_beta > 0) {
+        if(ExactSolution::file_wavelength > 0 && std::abs(ExactSolution::file_wavelength - Lambda) > 1e-9 * Lambda) {
+          throw std::runtime_error("Parameters::complete_data: The mode file '" + mode_file + "' was computed for the wavelength " + std::to_string(ExactSolution::file_wavelength) + ", the run uses " + std::to_string(Lambda) + ".");
+        }
+        const double n_eff = ExactSolution::file_beta * Lambda / (2.0 * Pi);
+        Epsilon_R_effective = n_eff * n_eff;
+      }
+      if(ExactSolution::ranges[0].first > -Geometry_Size_X / 2.0 + 1e-9 || ExactSolution::ranges[0].second < Geometry_Size_X / 2.0 - 1e-9 ||
+         ExactSolution::ranges[1].first > -Geometry_Size_Y / 2.0 + 1e-9 || ExactSolution::ranges[1].second < Geometry_Size_Y / 2.0 - 1e-9) {
+        throw std::runtime_error("Parameters::complete_data: The grid of the mode file '" + mode_file + "' does not cover the cross section of the computational domain.");
+      }
+  }
+  if(cross_section == CrossSectionType::ModeFile && !ExactSolution::has_permittivity) {
+    throw std::runtime_error("Parameters::complete_data: 'waveguide cross section = mode file' needs a mode file with a permittivity column (written by the Python package modesolver). '" + mode_file + "' has none or was not loaded (source type 0 or 3).");
+  }
   if(Point_Source_Type == 0) {
       source_field = new ExactSolution();
       if(MPI_Rank == 0) print_info("Parameters::complete_data", "Using mode for rectangular waveguide.", LoggingLevel::PRODUCTION_ONE);

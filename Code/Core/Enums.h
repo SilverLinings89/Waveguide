@@ -161,3 +161,14 @@ enum SteppingMethod {
 enum TransformationType {
   WavegeuideTransformationType, AngleWaveguideTransformationType, BendTransformationType, PredefinedShapeTransformationType
 };
+
+/**
+ * @brief The cross-section of the waveguide, i.e. the distribution of the permittivity over x and y (entry "waveguide cross section").
+ *
+ * Rectangular: core of Width_of_waveguide times Height_of_waveguide. Circular: core with the diameter Width_of_waveguide.
+ * ModeFile: the permittivity stored in the mode file (written by the Python package modesolver), which allows any
+ * cross-section. The core is centered at x = y = 0 in all cases.
+ */
+enum class CrossSectionType {
+  Rectangular, Circular, ModeFile
+};

@@ -61,18 +61,51 @@ class ExactSolution: public dealii::Function<3, ComplexNumber> {
   static std::array<std::pair<double, double>, 2> ranges;
   /** @brief Number of intervals of the uniform data grid in the x-direction (index 0) and the y-direction (index 1). */
   static std::array<unsigned int, 2> n_intervals;
+  /** @brief Relative permittivity of the cross-section on the data grid, index [i_x][i_y]. Empty if the file has no such column. */
+  static dealii::Table<2,double> data_table_epsilon;
+  /** @brief True if the loaded file contains the permittivity of the cross-section (sixth column). */
+  static bool has_permittivity;
+  /** @brief Propagation constant from the header of the loaded file ("# beta = ..."), 0 if the file has no header. */
+  static double file_beta;
+  /** @brief Vacuum wavelength from the header of the loaded file ("# wavelength = ..."), 0 if the file has no header. */
+  static double file_wavelength;
+  /** @brief Description of the structure from the header of the loaded file ("# structure = ..."), empty without header. */
+  static std::string file_structure;
+  /** @brief Name of the mode from the header of the loaded file ("# mode = ..."), empty without header. */
+  static std::string file_mode;
+  /** @brief Smallest and largest value of the permittivity column. */
+  static std::pair<double, double> permittivity_range;
   /** @brief Creates the interpolants from the static tables. load_data() has to be called before the first object is created. */
   ExactSolution();
 
   /**
    * @brief Reads the mode profile from a text file into the static tables.
    * Every line contains x, y and the three real values of the profile (E_x, E_y, longitudinal component), separated by
-   * single spaces. The points form a uniform grid and are ordered such that x runs fastest. All values are divided by
+   * single spaces, and optionally the relative permittivity at the point as a sixth value. Lines that start with '#'
+   * are a header with entries "# key = value" (beta, wavelength, structure, mode), see modesolver/modefile.py. The points form a uniform grid and are ordered such that x runs fastest. All values are divided by
    * the largest Euclidean norm of the three values of a point. Throws std::runtime_error if the file cannot be opened.
    *
    * @param fname path of the file (Modes/output_mode.dat in the repository).
    */
   static void load_data(std::string fname);
+
+  /**
+   * @brief Finds a mode file: an absolute path or a path that exists relative to the working directory is returned
+   * unchanged, every other path is taken relative to the root of the repository.
+   * @param fname the value of the case parameter "mode file".
+   * @return std::string the path to open.
+   */
+  static std::string resolve_path(const std::string & fname);
+
+  /**
+   * @brief The permittivity of the cross-section stored in the mode file, taken from the nearest grid point.
+   * Outside of the grid the value of the nearest point of its boundary is returned, which continues the
+   * cross-section into the absorbing layers.
+   * @param x x-coordinate in micrometers.
+   * @param y y-coordinate in micrometers.
+   * @return double relative permittivity; has_permittivity has to be true.
+   */
+  static double permittivity_at(double x, double y);
 
   /**
    * @brief One component of the mode E(x, y, z) = profile(x, y) exp(i beta (z - z_min)), where z_min is the lower end

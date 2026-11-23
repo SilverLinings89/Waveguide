@@ -141,7 +141,7 @@ These were found but not fixed. They are ordered by importance.
 
 ## 4. Tests
 
-Implemented (`ctest`, 17 targets, about 7 minutes in a release build):
+Implemented (`ctest`, 20 targets with the mode solver tests of section 18, about 8 minutes in a release build):
 
 - 39 unit tests. New are the tests in `tests/ModeAndGeometryTests.cpp`; each pins one of the errors above: the mode
   is divergence free in the core, it fulfills the Helmholtz equation for the configured β and ε, the core size of the
@@ -1080,3 +1080,60 @@ tapered input), less memory per unknown outside of MUMPS.
 
 For the full mesh a rented server is the practical way: about 540 GB with factors in memory (a 768 GB instance)
 or 400 GB with compression (512 GB), one to two hours with 13 GMRES steps.
+
+## 18. Mode solver and other cross-sections
+
+The solver could use one mode: the file `Modes/output_mode.dat`, computed with an external program for the
+rectangular core of the dissertation, with the propagation constant given separately as `epsilon effective`. The
+class `RectangularMode` (an eigenvalue problem in deal.II) was never finished, and `ModeManager` (Bessel profiles)
+is not connected to the solver and has a profile that is not differentiable at the core boundary (section 16).
+
+### 18.1 What was added
+
+- **`modesolver/` (Python, numpy and scipy):** analytical modes of step-index fibres (the exact vector solution
+  with TE, TM, HE and EH modes), of slab waveguides and of hollow metallic waveguides with rectangular and circular
+  cross-section; Marcatili's approximation for rectangular cores; and a full-vector finite difference solver for
+  any permittivity over the cross-section, with predefined rectangular, circular and elliptical cores, coupled
+  cores, slot, strip and rib waveguides. Command line: `python3 -m modesolver`.
+- **Mode files with a header:** the propagation constant, the wavelength, the structure and the permittivity on
+  the grid are stored with the field. The old format is still read.
+- **Solver:** case entries `mode file` and `waveguide cross section` (`rectangular`, `circular`, `mode file`). The
+  propagation constant of the file replaces `epsilon effective`; a file for another wavelength or one that does
+  not cover the domain is refused. The material of the inner domain, the PML and the infinite elements comes from
+  one function, `GeometryManager::get_epsilon_for_point`.
+- **Why Python and not C++:** deal.II is built without SLEPc and ARPACK here, so an eigenvalue solver in the C++
+  code would need a new dependency; the mode is computed once before a run; and the examples, the frontend and the
+  integration tests are in Python already.
+
+### 18.2 Verification
+
+| Check | Result |
+| --- | --- |
+| Analytical fields (fibre, slab, metallic) in Maxwell's equations, by finite differences of the field | divergence and Helmholtz residuals at the truncation error (1e-6); interface and wall conditions to 1e-6 |
+| Finite differences against the exact fibre modes, grid 0.05 um | effective index of HE11 within 3e-5, TE01 and TM01 within 3e-4, field overlap 0.99995 |
+| Finite differences against the exact TE10 mode of a metallic waveguide | error 1e-5 at 0.025 um, second order |
+| Rectangular core against the mode file of the dissertation | effective index 1.46953 against 1.46930, field overlap 0.9993, same sign of the longitudinal component |
+| Marcatili against finite differences, rectangular core | effective index within 1e-3 |
+| Straight waveguide in the 3D solver, Dirichlet input, 16 x 16 x 40 cells | HE11 and TE01 of a circular core, the even supermode of two cores: signal within 3 % of 1; the same modes in the rectangular core: 3 to 20 % lower |
+| Rectangular core, permittivity from the mode file against the built-in cross-section | identical signal |
+| Computed rectangular mode against the mode file of the dissertation as input | 0.9978 against 0.9954 (Dirichlet), 0.9111 against 0.9094 (taper), 20 x 20 x 20 cells |
+
+Tests: `modesolver/test_modesolver.py` (30 tests), `tests/ModeFileTests.cpp` (14 tests), and the integration tests
+`mode_solver_circular_waveguide` and `mode_solver_file_cross_section`.
+
+### 18.3 Limits
+
+- The mesh of the 3D solver is Cartesian, so a curved core boundary is a staircase there. On the tested meshes
+  the transmitted signal of the circular core is as good as that of the rectangular one.
+- The permittivity is piecewise constant, real and isotropic. Losses, anisotropic materials and graded profiles
+  are not supported by the mode solver; bent waveguides (leaky modes) neither.
+- The finite difference window has conducting walls. Modes close to cut-off need a large window.
+- Strip and rib waveguides on a substrate: the modes are computed, and the solver continues the layers into its
+  absorbing layers, but no 3D run with such a structure was made. Their high index contrast also needs a much
+  finer 3D mesh than the examples use.
+- The slab modes and the modes of metallic waveguides are available in Python and as mode files, but the 3D
+  solver has no test that uses them as input (it has its own TE10 source, source type 4).
+- Degenerate modes (circular or square cores): the numerical solver returns an arbitrary combination of the two
+  polarizations; the analytical fibre solution returns the x- and the y-polarized mode.
+- The frontend does not offer the new entries yet.
+- `RectangularMode` and `ModeManager` are still in the code and unused; they can be removed.

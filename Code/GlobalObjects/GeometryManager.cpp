@@ -10,6 +10,7 @@
 #include "../BoundaryCondition/PMLSurface.h"
 #include "../BoundaryCondition/NeighborSurface.h"
 #include "../Helpers/staticfunctions.h"
+#include "../Solutions/ExactSolution.h"
 
 unsigned int count_occurences_of_max_uint(std::vector<unsigned int> vector) {
   unsigned int ret = 0;
@@ -181,6 +182,13 @@ dealii::Tensor<2,3> GeometryManager::get_epsilon_tensor(const Position & in_p) {
 }
 
 double GeometryManager::get_epsilon_for_point(const Position & in_p) {
+  if(GlobalParams.cross_section == CrossSectionType::ModeFile) {
+    // Any cross-section: the permittivity that the mode was computed for. Points in the absorbing layers in x and
+    // y get the value of the nearest point of the domain, which continues layered structures into the layers.
+    const double x = std::min(std::max(in_p[0], global_x_range.first), global_x_range.second);
+    const double y = std::min(std::max(in_p[1], global_y_range.first), global_y_range.second);
+    return ExactSolution::permittivity_at(x, y);
+  }
   if(math_coordinate_in_waveguide(in_p)) {
     return GlobalParams.Epsilon_R_in_waveguide;
   } else {
@@ -189,7 +197,7 @@ double GeometryManager::get_epsilon_for_point(const Position & in_p) {
 }
 
 double GeometryManager::eps_kappa_2(Position in_p) {
-  return (math_coordinate_in_waveguide(in_p)? GlobalParams.Epsilon_R_in_waveguide : GlobalParams.Epsilon_R_outside_waveguide) * GlobalParams.Omega * GlobalParams.Omega;
+  return get_epsilon_for_point(in_p) * GlobalParams.Omega * GlobalParams.Omega;
 }
 
 double GeometryManager::kappa_2() {
@@ -372,6 +380,16 @@ std::pair<bool, unsigned int> GeometryManager::get_level_neighbor_for_interface(
 }
 
 bool GeometryManager::math_coordinate_in_waveguide(Position in_position) const {
+  if(GlobalParams.cross_section == CrossSectionType::Circular) {
+    const double radius = GlobalParams.Width_of_waveguide / 2.0;
+    return in_position[0] * in_position[0] + in_position[1] * in_position[1] <= radius * radius;
+  }
+  if(GlobalParams.cross_section == CrossSectionType::ModeFile) {
+    // The core is where the permittivity is in the upper half of the range of the file.
+    const double x = std::min(std::max(in_position[0], global_x_range.first), global_x_range.second);
+    const double y = std::min(std::max(in_position[1], global_y_range.first), global_y_range.second);
+    return ExactSolution::permittivity_at(x, y) > 0.5 * (ExactSolution::permittivity_range.first + ExactSolution::permittivity_range.second);
+  }
   bool in_x = std::abs(in_position[0]) <= (GlobalParams.Width_of_waveguide  / 2.0);
   bool in_y = std::abs(in_position[1]) <= (GlobalParams.Height_of_waveguide / 2.0);
   return in_x && in_y;

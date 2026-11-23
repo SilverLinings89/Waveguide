@@ -179,17 +179,13 @@ struct CellwiseAssemblyDataNP {
   const unsigned int n_q_points;
   /** @brief Contributions of the current cell to the system matrix. */
   FullMatrix<ComplexNumber> cell_matrix;
-  /** @brief Relative permittivity inside the waveguide core. */
-  const double eps_in;
-  /** @brief Relative permittivity outside the waveguide core. */
-  const double eps_out;
   /** @brief Set to 1. Not used. */
   const double mu_zero;
   /** @brief Contributions of the current cell to the right-hand side. */
   Vector<ComplexNumber> cell_rhs;
   /** @brief Tensor of the space transformation at the current quadrature point. */
   MaterialTensor transformation;
-  /** @brief Permittivity tensor at the current quadrature point: transformation times eps_in or eps_out. */
+  /** @brief Permittivity tensor at the current quadrature point: transformation times the permittivity of the cross-section. */
   MaterialTensor epsilon;
   /** @brief Inverse of transformation. It is the tensor in the curl-curl term, i.e. the inverse permeability tensor. */
   MaterialTensor mu;
@@ -222,8 +218,6 @@ struct CellwiseAssemblyDataNP {
   dofs_per_cell(fe->dofs_per_cell),
   n_q_points(quadrature_formula.size()),
   cell_matrix(dofs_per_cell,dofs_per_cell),
-  eps_in(GlobalParams.Epsilon_R_in_waveguide),
-  eps_out(GlobalParams.Epsilon_R_outside_waveguide),
   mu_zero(1.0),
   cell_rhs(dofs_per_cell),
   local_dof_indices(dofs_per_cell),
@@ -266,11 +260,7 @@ struct CellwiseAssemblyDataNP {
     transformation = GlobalSpaceTransformation->get_Space_Transformation_Tensor(quadrature_points[q_index]);
     mu = invert(transformation);
     const double kappa_2 = Geometry.kappa_2();
-    if (Geometry.math_coordinate_in_waveguide(quadrature_points[q_index])) {
-      epsilon = transformation * eps_in;
-    } else {
-      epsilon = transformation * eps_out;
-    }
+    epsilon = transformation * Geometry.get_epsilon_for_point(quadrature_points[q_index]);
     bool compute_rhs = false;
     if(es_for_j != nullptr && quadrature_points[q_index][2] < GlobalParams.tapering_max_z && quadrature_points[q_index][2] >= GlobalParams.tapering_min_z ) {
       compute_rhs = true;
@@ -419,12 +409,7 @@ std::string InnerDomain::output_results(std::string in_filename, NumericVectorLo
     } else {
       transformation = GlobalSpaceTransformation->get_Space_Transformation_Tensor(p);
     }
-    MaterialTensor epsilon;
-    if (Geometry.math_coordinate_in_waveguide(p)) {
-      epsilon = transformation * GlobalParams.Epsilon_R_in_waveguide;
-    } else {
-      epsilon = transformation * GlobalParams.Epsilon_R_outside_waveguide;
-    }
+    MaterialTensor epsilon = transformation * Geometry.get_epsilon_for_point(p);
     eps_abs[counter] = epsilon.norm();
     counter++;
   }
@@ -780,7 +765,7 @@ std::vector<ComplexNumber> InnerDomain::compute_shape_gradient_integrals(Numeric
         lambda += value * in_adjoint[local_dof_indices[i]];
         curl_lambda += curl * in_adjoint[local_dof_indices[i]];
       }
-      const double eps = Geometry.math_coordinate_in_waveguide(p) ? GlobalParams.Epsilon_R_in_waveguide : GlobalParams.Epsilon_R_outside_waveguide;
+      const double eps = Geometry.get_epsilon_for_point(p);
       const bool in_taper = has_taper && p[2] < GlobalParams.tapering_max_z && p[2] >= GlobalParams.tapering_min_z;
       Tensor<1,3,ComplexNumber> mode_value, mode_curl;
       double d_psi_dz = 0;

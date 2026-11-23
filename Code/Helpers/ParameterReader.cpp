@@ -44,7 +44,9 @@ void ParameterReader::declare_parameters() {
         case_prm.declare_entry("mu out", "1.0", Patterns::Double(), "Mu r outside the material.");
         case_prm.declare_entry("fem order" , "0", Patterns::Integer(), "Degree of nedelec elements in the interior.");
         case_prm.declare_entry("signal amplitude", "1.0", Patterns::Double(), "Amplitude of the input signal or PointSourceField");
-        case_prm.declare_entry("width of waveguide", "2.0", Patterns::Double(), "Width of the Waveguide core.");
+        case_prm.declare_entry("width of waveguide", "2.0", Patterns::Double(), "Width of the Waveguide core. For a circular cross section this is the diameter.");
+        case_prm.declare_entry("mode file", "Modes/output_mode.dat", Patterns::Anything(), "File with the profile of the mode that is used as input signal (source type 0 and 3). A relative path is searched in the working directory and then in the repository. Files written by the Python package modesolver contain the propagation constant, which then replaces 'epsilon effective', and the permittivity of the cross section.");
+        case_prm.declare_entry("waveguide cross section", "rectangular", Patterns::Selection("rectangular|circular|mode file"), "Distribution of the permittivity over x and y. rectangular: core of 'width of waveguide' times 'height of waveguide'. circular: core with the diameter 'width of waveguide'. mode file: the permittivity stored in the mode file, for any cross section.");
         case_prm.declare_entry("height of waveguide", "1.8", Patterns::Double(), "Height of the Waveguide core.");
         case_prm.declare_entry("Enable Parameter Run", "false", Patterns::Bool(), "For a series of Local solves, this can be set to true");
         case_prm.declare_entry("Kappa 0 Real", "4.0537", Patterns::Double(), "Real part of kappa_0 for HSIE. The default is the wavenumber 2 pi / 1.55; waves with a wavenumber close to kappa_0 in the direction normal to the boundary are absorbed with the lowest polynomial degree.");
@@ -136,6 +138,9 @@ Parameters ParameterReader::read_parameters(const std::string run_file, const st
         ret.Nedelec_element_order = case_prm.get_integer("fem order");
         ret.Width_of_waveguide = case_prm.get_double("width of waveguide");
         ret.Height_of_waveguide = case_prm.get_double("height of waveguide");
+        ret.mode_file = case_prm.get("mode file");
+        const std::string cross_section = case_prm.get("waveguide cross section");
+        ret.cross_section = (cross_section == "circular") ? CrossSectionType::Circular : ((cross_section == "mode file") ? CrossSectionType::ModeFile : CrossSectionType::Rectangular);
         ret.Enable_Parameter_Run = case_prm.get_bool("Enable Parameter Run");
         ret.Min_HSIE_Order = case_prm.get_integer("Min HSIE Order");
         ret.Max_HSIE_Order = case_prm.get_integer("Max HSIE Order");

@@ -131,6 +131,46 @@ python3 examples/sweeping_scaling.py            # reduced variant for a workstat
 python3 examples/sweeping_scaling.py --help     # description of the experiment and of --scale paper
 ```
 
+## Mode solver
+
+`modesolver/` is a Python package (numpy, scipy) that computes the modes of a waveguide cross-section and writes
+them as input for the solver. Run it in the root of the repository:
+
+```
+python3 -m modesolver rectangular --output Modes/rectangular.dat
+python3 -m modesolver circular --diameter 2 --output Modes/circular.dat --plot circular.png
+python3 -m modesolver rib --width 0.5 --height 0.22 --slab-height 0.09 --window 4 3 --step 0.02
+python3 -m modesolver --help
+```
+
+It prints the modes it found (effective index, propagation constant, polarization) and writes the selected one.
+
+| Structure | Method | Remarks |
+| --- | --- | --- |
+| `circular` (step-index fibre) | analytical, exact: TE, TM and the hybrid modes HE and EH | `--method fd` computes it numerically |
+| `slab` (layer between two half spaces) | analytical, exact: TE and TM | infinite in x, so not an input for the 3D solver |
+| `metallic-rectangular`, `metallic-circular` (hollow, conducting walls) | analytical, exact: TE and TM | |
+| `rectangular` | finite differences; `--method marcatili` gives Marcatili's approximation | there is no exact solution |
+| `elliptical`, `coupled` (two cores), `slot`, `strip` and `rib` (on a substrate) | finite differences | |
+| any other permittivity | finite differences: `modesolver.solve_fd` with a `Structure` built from rectangles and ellipses, or any object with `epsilon(x, y)` | from Python |
+
+The numerical method is a full-vector finite difference scheme on a staggered grid (`modesolver/fd.py`). Its
+effective index agrees with the analytical solutions to about 1e-5 at a grid spacing of 0.025 um and with the mode
+file of the dissertation to 2e-4 (`examples/mode_solver.py`, `modesolver/test_modesolver.py`).
+
+To use a mode in the solver, set in the case file:
+
+| Entry | Meaning |
+| --- | --- |
+| `mode file` | the file written with `--output` (default `Modes/output_mode.dat`, the mode of the dissertation). Its propagation constant replaces `epsilon effective` |
+| `waveguide cross section` | `rectangular` (default; `width of waveguide`, `height of waveguide`), `circular` (diameter = `width of waveguide`) or `mode file`: the permittivity stored in the mode file, for any cross-section |
+
+The mode file has to cover the computational domain (`--window`, default 10 x 9 um) and to be computed for the
+wavelength of the run; the solver stops otherwise. `epsilon in` and `epsilon out` are not used for
+`waveguide cross section = mode file`. Curved boundaries are resolved by the mesh of the solver as steps. Structures
+whose layers reach the boundary (strip, rib) are continued into the absorbing layers; this has been tested for
+structures with a homogeneous cladding only.
+
 ## Web frontend
 
 ```bash
@@ -150,7 +190,7 @@ Python standard library and listens on this machine only (use `--host` to change
 | --- | --- | --- |
 | deal.II | 9.8.0 | MPI, PETSc, `DEAL_II_WITH_COMPLEX_VALUES=ON` (off by default since 9.7), SymEngine |
 | PETSc | 3.26.1 | `--with-scalar-type=complex`, MUMPS (`--download-mumps --download-scalapack`) |
-| MPI, CMake >= 3.16, a C++17 compiler, Python 3 (integration tests), GoogleTest (downloaded automatically) | | |
+| MPI, CMake >= 3.16, a C++17 compiler, Python 3 (integration tests; with numpy and scipy for the mode solver), GoogleTest (downloaded automatically) | | |
 
 deal.II 9.8.0 needs two workarounds that `install_dependencies.sh` applies (see `MODERNIZATION.md`): a patch to make it
 compile with a complex PETSc and two headers that are not installed. The modification of
@@ -164,6 +204,9 @@ compile with a complex PETSc and two headers that are not installed. The modific
   domain and the local problem with MUMPS. Every `.cpp` file in `tests/` is picked up automatically. 50 further
   tests are disabled (`DISABLED_`): each states the correct behaviour of code that is known to be wrong
   (`MODERNIZATION.md`, section 16); run them with `--gtest_also_run_disabled_tests`.
+- `modesolver/test_modesolver.py`: the mode solver against Maxwell's equations, analytical solutions and the mode
+  file of the dissertation (30 tests). Skipped if the Python of the tests has no numpy and scipy; choose another one
+  with `-DWAVEGUIDE_TEST_PYTHON=<path>`.
 - `tests/integration/run_integration_test.py`: runs the solver with 2 to 8 MPI processes on small problems and
   checks `results.txt`: lossless transmission through a straight waveguide for both coupling methods, improvement
   under mesh refinement, reproducibility, agreement of level 1, 2 and 3 sweeping with a direct solve of the global

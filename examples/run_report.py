@@ -85,7 +85,8 @@ def figure_field(plt, run_directory, data, figures):
     real_part = field[:, component].real[grid]
     magnitude = np.sqrt(np.sum(np.abs(field) ** 2, axis=1))[grid]
     limit = np.max(np.abs(real_part)) or 1.0
-    half_height = 0.5 * data.get("core_height", 0.0)
+    # The outline of the core is known for the rectangular and the circular cross-section only.
+    half_height = 0.5 * data.get("core_height", 0.0) if data.get("cross_section", 0.0) != 2.0 else 0.0
     z = rows[:, 2][grid]
     displacement = (rows[:, 4] - rows[:, 1])[grid][:, 0]
     figure, axes = plt.subplots(2, 2, figsize=(12.5, 6.4), sharex=True, sharey=True, constrained_layout=True)
@@ -98,7 +99,7 @@ def figure_field(plt, run_directory, data, figures):
                 (magnitude, "Blues", (0, np.max(magnitude) or 1.0), "|E|")]):
             axis = axes[row][column]
             mesh = axis.pcolormesh(zc, yc, values, cmap=colormap, vmin=limits[0], vmax=limits[1], shading="flat", rasterized=True)
-            if data.get("source_type") in (0.0, 3.0):
+            if data.get("source_type") in (0.0, 3.0) and half_height > 0:
                 for sign in (-1, 1):
                     axis.plot(z[:, 0], sign * half_height + shift, color="0.15", linewidth=0.9, linestyle="--",
                               label="core boundary" if sign == -1 else None)
@@ -133,7 +134,7 @@ def figure_other_planes(plt, run_directory, data, figures):
     limit = np.max(np.abs(values)) or 1.0
     zc, xc = corner_grid(top[:, 2][top_grid], top[:, 0][top_grid])
     mesh = axis.pcolormesh(zc, xc, values, cmap="RdBu_r", vmin=-limit, vmax=limit, rasterized=True)
-    if data.get("source_type") in (0.0, 3.0):
+    if data.get("source_type") in (0.0, 3.0) and data.get("cross_section", 0.0) != 2.0:
         for sign in (-1, 1):
             axis.axhline(sign * 0.5 * data.get("core_width", 0.0), color="0.15", linewidth=0.9, linestyle="--")
     axis.set_title("Re(%s), plane y = middle (top view, computational coordinates)" % COMPONENTS[component], fontsize=10)
@@ -148,10 +149,14 @@ def figure_other_planes(plt, run_directory, data, figures):
         mesh = cross_axis.pcolormesh(xc, yc, magnitude[cross_grid], cmap="Blues", vmin=0, rasterized=True)
     else:
         mesh = cross_axis.tripcolor(cross[:, 3], cross[:, 4], magnitude, cmap="Blues", vmin=0, rasterized=True)
-    if data.get("source_type") in (0.0, 3.0):
+    if data.get("source_type") in (0.0, 3.0) and data.get("cross_section", 0.0) != 2.0:
         shift = float(np.mean(cross[:, 4] - cross[:, 1]))
         w, h = 0.5 * data.get("core_width", 0.0), 0.5 * data.get("core_height", 0.0)
-        cross_axis.plot([-w, w, w, -w, -w], [shift - h, shift - h, shift + h, shift + h, shift - h], color="0.15", linewidth=0.9, linestyle="--")
+        if data.get("cross_section", 0.0) == 1.0:
+            angle = np.linspace(0, 2 * np.pi, 181)
+            cross_axis.plot(w * np.cos(angle), shift + w * np.sin(angle), color="0.15", linewidth=0.9, linestyle="--")
+        else:
+            cross_axis.plot([-w, w, w, -w, -w], [shift - h, shift - h, shift + h, shift + h, shift - h], color="0.15", linewidth=0.9, linestyle="--")
     cross_axis.set_title("|E|, cross-section z = %.3g (physical)" % float(np.mean(cross[:, 2])), fontsize=10)
     cross_axis.set_xlabel(r"x [$\mu$m]")
     cross_axis.set_ylabel(r"y [$\mu$m]")

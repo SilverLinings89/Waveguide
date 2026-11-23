@@ -235,6 +235,70 @@ def test_optimization_recovers_straight_waveguide(runner):
     check(r["signal_strength_abs"] < straight["signal_strength_abs"] + 1e-6, "The optimized shape is better than the straight waveguide.")
 
 
+def mode_solver(runner):
+    """The Python package modesolver and a folder for mode files. The test is skipped if numpy or scipy is missing."""
+    try:
+        import numpy  # noqa: F401
+        import scipy  # noqa: F401
+    except ImportError:
+        print("SKIPPED: numpy and scipy are needed for the mode solver.")
+        sys.exit(77)
+    sys.path.insert(0, REPOSITORY)
+    import modesolver
+    return modesolver, runner.directory
+
+
+def test_mode_solver_circular_waveguide(runner):
+    """Modes computed analytically for a circular core (step-index fibre) are used as input of a straight waveguide
+    with a circular cross-section: the fundamental mode HE11 and the higher mode TE01 have to pass without loss,
+    and the propagation constant has to come from the mode file."""
+    modesolver, folder = mode_solver(runner)
+    modes = {mode.label: mode for mode in modesolver.fibre_modes(3.0)}
+    for label, wrong_label in (("HE11 (x)", "TE01"), ("TE01", "HE11 (x)")):
+        path = os.path.join(folder, label.split()[0] + ".dat")
+        modesolver.write_mode_file(modes[label], path, (-3, 3), (-3, 3), 0.05)
+        case = "    set mode file = %s\n    set waveguide cross section = circular\n    set width of waveguide = 3.0\n" % path
+        r = runner.solve(coupling="Dirichlet", cells=(16, 16, 20), extra_case=case)
+        check(0.97 < r["signal_strength_abs"] < 1.03, "%s: signal strength %.4f is not close to 1." % (label, r["signal_strength_abs"]))
+        # "epsilon effective" of the wrong mode: the file has to overrule it.
+        wrong = "    set epsilon effective = %.8f\n" % modes[wrong_label].epsilon_effective
+        check_same_solution(r, runner.solve(coupling="Dirichlet", cells=(16, 16, 20), extra_case=case + wrong), 1e-12,
+                            "%s with and without a wrong 'epsilon effective'" % label)
+    # The cross-section matters: TE01 of the fibre is not a mode of the rectangular core.
+    rectangular = runner.solve(coupling="Dirichlet", cells=(16, 16, 20), extra_case="    set mode file = %s\n" % path)
+    check(rectangular["signal_strength_abs"] < r["signal_strength_abs"] - 0.03,
+          "TE01 of the fibre passed the rectangular core as well as the circular one (%.4f, %.4f)." % (rectangular["signal_strength_abs"], r["signal_strength_abs"]))
+
+
+def test_mode_solver_file_cross_section(runner):
+    """A mode computed numerically for a structure that the solver does not know (two coupled cores) is used
+    together with the permittivity stored in the mode file. It has to pass without loss; in the default
+    rectangular core it must not. For the rectangular core the permittivity from the file has to give the same
+    result as the built-in cross-section."""
+    modesolver, folder = mode_solver(runner)
+    structure = modesolver.coupled(1.0, 1.0, 0.5)
+    mode = modesolver.solve_fd(structure, 1.55, (-3, 3), (-2.5, 2.5), step=0.05, n_modes=1)[0]
+    path = os.path.join(folder, "coupled.dat")
+    modesolver.write_mode_file(mode, path, (-3, 3), (-2.5, 2.5), 0.05)
+    case = "    set mode file = %s\n" % path
+    from_file = runner.solve(coupling="Dirichlet", cells=(16, 16, 20), extra_case=case + "    set waveguide cross section = mode file\n")
+    check(0.97 < from_file["signal_strength_abs"] < 1.03, "Coupled cores: signal strength %.4f is not close to 1." % from_file["signal_strength_abs"])
+    rectangular = runner.solve(coupling="Dirichlet", cells=(16, 16, 20), extra_case=case)
+    check(rectangular["signal_strength_abs"] < 0.9, "The supermode of two cores passed a single rectangular core (%.4f)." % rectangular["signal_strength_abs"])
+
+    mode = modesolver.solve_fd(modesolver.rectangular(), 1.55, (-3, 3), (-2.5, 2.5), step=0.05, n_modes=1)[0]
+    path = os.path.join(folder, "rectangular.dat")
+    modesolver.write_mode_file(mode, path, (-3, 3), (-2.5, 2.5), 0.05)
+    case = "    set mode file = %s\n" % path
+    built_in = runner.solve(coupling="Taper", cells=(16, 16, 20), extra_case=case)
+    from_file = runner.solve(coupling="Taper", cells=(16, 16, 20), extra_case=case + "    set waveguide cross section = mode file\n")
+    check_same_solution(built_in, from_file, 1e-10, "rectangular core: built-in cross-section against the permittivity of the mode file")
+    # The computed mode has to do as well as the mode file of the dissertation.
+    shipped = runner.solve(coupling="Taper", cells=(16, 16, 20))
+    check(abs(1 - built_in["signal_strength_abs"]) < abs(1 - shipped["signal_strength_abs"]) + 0.01,
+          "The computed mode (%.4f) transmits worse than the mode file of the dissertation (%.4f)." % (built_in["signal_strength_abs"], shipped["signal_strength_abs"]))
+
+
 def test_run_report(runner):
     """The run report (text and JSON) has to exist and to be consistent with results.txt and the field outputs."""
     import glob

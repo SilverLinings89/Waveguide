@@ -17,6 +17,13 @@ dealii::Table<2,double> ExactSolution::data_table_y;
 dealii::Table<2,double> ExactSolution::data_table_z;
 std::array<std::pair<double, double>, 2> ExactSolution::ranges;
 std::array<unsigned int, 2> ExactSolution::n_intervals;
+dealii::Table<2,double> ExactSolution::data_table_epsilon;
+bool ExactSolution::has_permittivity = false;
+double ExactSolution::file_beta = 0;
+double ExactSolution::file_wavelength = 0;
+std::string ExactSolution::file_structure;
+std::string ExactSolution::file_mode;
+std::pair<double, double> ExactSolution::permittivity_range;
 const ComplexNumber imaginary_unit(0,1);
 
 // The mode profiles are stored as three real numbers (E_x, E_y, E_z) per point. They were computed for the
@@ -122,8 +129,36 @@ void ExactSolution::load_data(std::string fname) {
   double ly = -1000;
   double norm = -1;
   std::vector<std::string> entries;
+  file_beta = 0;
+  file_wavelength = 0;
+  file_structure = "";
+  file_mode = "";
+  has_permittivity = false;
+  // Removes spaces, tabs and line ends at both ends.
+  auto trim = [](const std::string & text) {
+    const size_t first = text.find_first_not_of(" \t\r\n");
+    if(first == std::string::npos) return std::string();
+    return text.substr(first, text.find_last_not_of(" \t\r\n") - first + 1);
+  };
+  // A line of the header: "# key = value". Other lines that start with '#' are comments.
+  auto is_header_or_empty = [&](const std::string & in_line, bool store) {
+    const std::string text = trim(in_line);
+    if(text.size() > 0 && text[0] != '#') return false;
+    const size_t separator = text.find('=');
+    if(store && separator != std::string::npos) {
+      const std::string key = trim(text.substr(1, separator - 1));
+      const std::string value = trim(text.substr(separator + 1));
+      if(key == "beta") file_beta = std::stod(value);
+      if(key == "wavelength") file_wavelength = std::stod(value);
+      if(key == "structure") file_structure = value;
+      if(key == "mode") file_mode = value;
+    }
+    return true;
+  };
   while (std::getline(input, line)) {
+    if(is_header_or_empty(line, true)) continue;
     entries = split(line, " ");
+    if(entries.size() > 5) has_permittivity = true;
     double x = stod(entries[0]);
     double y = stod(entries[1]);
     if(x > lx + FLOATING_PRECISION) {
@@ -151,15 +186,23 @@ void ExactSolution::load_data(std::string fname) {
   data_table_x.reinit(x_vals.size(), y_vals.size());
   data_table_y.reinit(x_vals.size(), y_vals.size());
   data_table_z.reinit(x_vals.size(), y_vals.size());
+  data_table_epsilon.reinit(has_permittivity ? x_vals.size() : 0, has_permittivity ? y_vals.size() : 0);
+  permittivity_range = std::pair<double, double>(1e300, -1e300);
   input.close();
   input.open(fname);
   unsigned int i = 0;
   unsigned int j = 0;
   while (std::getline(input, line)) {
+    if(is_header_or_empty(line, false)) continue;
     entries = split(line, " ");
     data_table_x[i][j] = stod(entries[2]) / norm;
     data_table_y[i][j] = stod(entries[3]) / norm;
     data_table_z[i][j] = stod(entries[4]) / norm;
+    if(has_permittivity) {
+      data_table_epsilon[i][j] = stod(entries[5]);
+      permittivity_range.first = std::min(permittivity_range.first, data_table_epsilon[i][j]);
+      permittivity_range.second = std::max(permittivity_range.second, data_table_epsilon[i][j]);
+    }
     i++;
     if(i == x_vals.size()) {
       i = 0;
@@ -167,6 +210,23 @@ void ExactSolution::load_data(std::string fname) {
     }
   }
   
+}
+
+std::string ExactSolution::resolve_path(const std::string & fname) {
+  if(fname.size() > 0 && fname[0] == '/') return fname;
+  std::ifstream in_working_directory(fname);
+  if(in_working_directory.is_open()) return fname;
+  return repository_path(fname);
+}
+
+double ExactSolution::permittivity_at(double x, double y) {
+  const double hx = (ranges[0].second - ranges[0].first) / n_intervals[0];
+  const double hy = (ranges[1].second - ranges[1].first) / n_intervals[1];
+  const long i = std::lround((x - ranges[0].first) / hx);
+  const long j = std::lround((y - ranges[1].first) / hy);
+  const unsigned int index_x = (unsigned int) std::min(std::max(i, 0L), (long) n_intervals[0]);
+  const unsigned int index_y = (unsigned int) std::min(std::max(j, 0L), (long) n_intervals[1]);
+  return data_table_epsilon[index_x][index_y];
 }
 
 J_derivative_terms ExactSolution::get_derivative_terms(const Position2D & in_p) const {

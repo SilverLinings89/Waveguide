@@ -1060,8 +1060,18 @@ void NonLocalProblem::fill_run_report(ComplexNumber signal_strength, FEErrorStru
   report.entry("Computational domain y", RunReport::number(Geometry.global_y_range.first) + " to " + RunReport::number(Geometry.global_y_range.second) + " um");
   report.entry("Computational domain z", RunReport::number(Geometry.global_z_range.first) + " to " + RunReport::number(Geometry.global_z_range.second) + " um (direction of propagation)");
   if(GlobalParams.Point_Source_Type == 3 || GlobalParams.Point_Source_Type == 0) {
-    report.entry("Waveguide core", RunReport::number(GlobalParams.Width_of_waveguide) + " um wide (x), " + RunReport::number(GlobalParams.Height_of_waveguide) + " um high (y)");
-    report.entry("Relative permittivity", RunReport::number(GlobalParams.Epsilon_R_in_waveguide) + " in the core, " + RunReport::number(GlobalParams.Epsilon_R_outside_waveguide) + " in the cladding");
+    if(GlobalParams.cross_section == CrossSectionType::ModeFile) {
+      report.entry("Cross-section", "from the mode file" + (ExactSolution::file_structure.size() > 0 ? ": " + ExactSolution::file_structure : std::string("")));
+      report.entry("Relative permittivity", RunReport::number(ExactSolution::permittivity_range.first) + " to " + RunReport::number(ExactSolution::permittivity_range.second));
+    } else {
+      if(GlobalParams.cross_section == CrossSectionType::Circular) {
+        report.entry("Waveguide core", "circular, diameter " + RunReport::number(GlobalParams.Width_of_waveguide) + " um");
+      } else {
+        report.entry("Waveguide core", RunReport::number(GlobalParams.Width_of_waveguide) + " um wide (x), " + RunReport::number(GlobalParams.Height_of_waveguide) + " um high (y)");
+      }
+      report.entry("Relative permittivity", RunReport::number(GlobalParams.Epsilon_R_in_waveguide) + " in the core, " + RunReport::number(GlobalParams.Epsilon_R_outside_waveguide) + " in the cladding");
+    }
+    report.entry("Mode", GlobalParams.mode_file + (ExactSolution::file_mode.size() > 0 ? " (" + ExactSolution::file_mode + ")" : std::string("")) + ", effective index " + RunReport::number(std::sqrt(GlobalParams.Epsilon_R_effective), 8));
   } else {
     report.entry("Relative permittivity", RunReport::number(GlobalParams.Epsilon_R_outside_waveguide));
   }
@@ -1152,7 +1162,11 @@ void NonLocalProblem::fill_run_report(ComplexNumber signal_strength, FEErrorStru
   report.data("z_min", Geometry.global_z_range.first);
   report.data("z_max", Geometry.global_z_range.second);
   report.data("core_width", GlobalParams.Width_of_waveguide);
-  report.data("core_height", GlobalParams.Height_of_waveguide);
+  // For a circular core the height is the diameter. cross_section: 0 rectangular, 1 circular, 2 from the mode file.
+  report.data("core_height", GlobalParams.cross_section == CrossSectionType::Circular ? GlobalParams.Width_of_waveguide : GlobalParams.Height_of_waveguide);
+  report.data("cross_section", (double) static_cast<int>(GlobalParams.cross_section));
+  report.data("mode_file", GlobalParams.mode_file);
+  report.data("epsilon_effective", GlobalParams.Epsilon_R_effective);
   report.data("signal_strength_abs", std::abs(signal_strength));
   report.data("tapered_input", GlobalParams.use_tapered_input_signal ? 1.0 : 0.0);
   report.data("tapering_min_z", GlobalParams.tapering_min_z);

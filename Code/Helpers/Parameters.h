@@ -95,6 +95,16 @@ struct Parameters {
      */
     double Epsilon_R_effective = 2.1588449;
 
+    /**
+     * @brief The file with the profile of the mode that is used as input signal and as reference solution (entry
+     * "mode file"). A relative path is searched in the working directory first and then in the repository. If the
+     * header of the file contains the propagation constant, complete_data() sets Epsilon_R_effective from it.
+     */
+    std::string mode_file = "Modes/output_mode.dat";
+
+    /** @brief The distribution of the permittivity over the cross-section (entry "waveguide cross section"). */
+    CrossSectionType cross_section = CrossSectionType::Rectangular;
+
     /** @brief Relative permeability of the core (entry "mu in"). Read from the case file but not used: the code assumes mu_r = 1. */
     double Mu_R_in_waveguide = 1.0;
 
