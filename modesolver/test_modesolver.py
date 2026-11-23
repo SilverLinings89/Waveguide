@@ -130,7 +130,9 @@ class FibreTests(unittest.TestCase):
             self.assertAlmostEqual(EPS_CORE * inside[0], EPS_CLADDING * outside[0], places=6, msg=mode.label)
 
     def test_polarizations_are_orthogonal(self):
-        grid = np.linspace(-4, 4, 161)
+        # 160 points: no grid point lies on the core boundary, where the normal component jumps and rounding
+        # would decide on which side a point is counted (this differs between processors).
+        grid = np.linspace(-4, 4, 160)
         self.assertLess(overlap(self.modes[0], self.modes[1], grid, grid), 1e-9)
         self.assertGreater(self.modes[0].polarization_fraction_x(grid, grid), 0.99)
         self.assertLess(self.modes[1].polarization_fraction_x(grid, grid), 0.01)
