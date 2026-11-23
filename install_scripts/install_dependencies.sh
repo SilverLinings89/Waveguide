@@ -125,7 +125,28 @@ if [ -z "$SYMENGINE_ARGS" ] && command -v brew > /dev/null 2>&1; then
   SYMENGINE_ARGS="-DSYMENGINE_DIR=$(brew --prefix symengine)"
 fi
 
+# In the self-contained mode deal.II has to use the OpenBLAS that PETSc was built with. If it picks a BLAS of the
+# system instead (often an older OpenBLAS with the same library name), linking fails with undefined references
+# such as zgemmt_ from libpetsc.
+LAPACK_ARGS=""
+if [ "$SELF_CONTAINED" = 1 ]; then
+  for library in "$PREFIX"/install/petsc/lib/libopenblas.so "$PREFIX"/install/petsc/lib/libopenblas.dylib \
+                 "$PREFIX"/install/petsc/lib/libopenblas.a; do
+    if [ -f "$library" ]; then
+      case "$library" in
+        *.a) LAPACK_ARGS="-DLAPACK_FOUND=TRUE -DLAPACK_LIBRARIES=$library;gfortran;pthread" ;;
+        *)   LAPACK_ARGS="-DLAPACK_FOUND=TRUE -DLAPACK_LIBRARIES=$library" ;;
+      esac
+      break
+    fi
+  done
+  [ -n "$LAPACK_ARGS" ] || { echo "No libopenblas in $PREFIX/install/petsc/lib."; exit 1; }
+  echo "deal.II uses the BLAS and LAPACK of PETSc: $LAPACK_ARGS"
+fi
+
 cd "$PREFIX/build/dealii"
+# A cache of an earlier, failed configuration would keep the libraries that were found then.
+rm -rf CMakeCache.txt CMakeFiles
 cmake -G "$GENERATOR" "$PREFIX/src/dealii-$DEALII_VERSION" \
   -DCMAKE_INSTALL_PREFIX="$PREFIX/install/dealii" \
   -DCMAKE_BUILD_TYPE=DebugRelease \
@@ -134,6 +155,7 @@ cmake -G "$GENERATOR" "$PREFIX/src/dealii-$DEALII_VERSION" \
   -DDEAL_II_WITH_PETSC=ON -DPETSC_DIR="$PREFIX/install/petsc" -DPETSC_ARCH="" \
   -DDEAL_II_WITH_COMPLEX_VALUES=ON \
   -DDEAL_II_WITH_SYMENGINE=ON $SYMENGINE_ARGS \
+  $LAPACK_ARGS \
   -DDEAL_II_WITH_TRILINOS=OFF -DDEAL_II_WITH_P4EST=OFF -DDEAL_II_WITH_HDF5=OFF \
   -DDEAL_II_COMPONENT_EXAMPLES=OFF
 cmake --build . -j $JOBS
