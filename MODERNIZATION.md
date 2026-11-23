@@ -1186,5 +1186,14 @@ All methods predict far less loss than was measured for the highest humps (bonds
 measured, -0.3 to -4.6 dB simulated). The file does not say whether the measurement contains losses that no
 simulation models (coupling, surface roughness, material absorption).
 
-Not done: a run of all 17 cases on a mesh that is converged. Case 3 at 16 x 16 x 780 gives -8.6 dB (measured
--3.5 dB, CST_FULL -9.1 dB); section 17 shows that the signal still changes strongly between 16 and 24 cells.
+Not done: a run of all 17 cases on a mesh that is converged. Case 3 (bond 40, measured -3.5 dB, CST_FULL
+-9.1 dB) with the corrected shape, 780 cells in z:
+
+| Cells in x and y | Signal | Transmission |
+| --- | --- | --- |
+| 16 x 16 | 0.372 | -8.6 dB |
+| 24 x 24 | 0.589 | -4.6 dB |
+
+The result changes by 4 dB between these two meshes, so neither is converged; finer meshes do not fit on the
+laptop (section 17). A comparison with the measurement needs at least 32 x 32 cells and a check with 1560 cells
+in z.
