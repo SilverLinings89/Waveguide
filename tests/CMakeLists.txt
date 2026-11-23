@@ -9,16 +9,9 @@ if(NOT GTest_FOUND)
   FetchContent_MakeAvailable(googletest)
 endif()
 
-add_executable(waveguide_tests
-  main.cpp
-  BoundaryMethodTests.cpp
-  ExactSolutionTests.cpp
-  HardyPolynomialTests.cpp
-  MeshTests.cpp
-  ShapeFunctionTests.cpp
-  BasicFem.cpp
-  ModeAndGeometryTests.cpp
-)
+# All .cpp files of this folder belong to the unit tests; a new test file is picked up automatically.
+file(GLOB WAVEGUIDE_TEST_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+add_executable(waveguide_tests ${WAVEGUIDE_TEST_SOURCES})
 deal_ii_setup_target(waveguide_tests)
 target_link_libraries(waveguide_tests Code GTest::gtest)
 
