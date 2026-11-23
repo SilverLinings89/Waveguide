@@ -576,7 +576,6 @@ TEST_F(PredefinedShapeTests, NodeValuesAndEndConditionsAreReproduced) {
     set_sine_shape(41, node_distance, 0.5);
     PredefinedShapeTransformation transformation;
     transformation.estimate_and_initialize();
-    ASSERT_EQ(transformation.case_sectors.size(), 40u);
     for (unsigned int i = 0; i < 41; i++) {
       ASSERT_NEAR(transformation.get_m(GlobalParams.sd.z[i]), GlobalParams.sd.m[i], 1e-12);
       ASSERT_NEAR(transformation.get_v(GlobalParams.sd.z[i]), GlobalParams.sd.v[i], 1e-12);
@@ -620,10 +619,8 @@ TEST_F(PredefinedShapeTests, JacobianMatchesFiniteDifferencesAtNodesForUnitNodeD
   ASSERT_GT(largest_slope, 0.05);
 }
 
-// The local coordinate of a sector runs from 0 to 1, but the slopes v are used as derivatives with respect to it
-// without the factor (length of the sector): the derivative of the displacement at a node is v / (length of the
-// sector), here 2 v (Sector::get_m(), Sector.cpp:223).
-TEST_F(PredefinedShapeTests, DISABLED_JacobianMatchesFiniteDifferencesAtNodesForOtherNodeDistances) {
+// The slopes v are derivatives with respect to z, whatever the distance of the nodes is.
+TEST_F(PredefinedShapeTests, JacobianMatchesFiniteDifferencesAtNodesForOtherNodeDistances) {
   set_sine_shape(41, 0.5, 0.5);
   PredefinedShapeTransformation transformation;
   transformation.estimate_and_initialize();
@@ -633,10 +630,8 @@ TEST_F(PredefinedShapeTests, DISABLED_JacobianMatchesFiniteDifferencesAtNodesFor
   }
 }
 
-// Between the nodes the Jacobian interpolates the slopes v with a cubic polynomial of its own (Sector::get_v(), Sector.cpp:236)
-// instead of the derivative of the polynomial of the displacement. Here the two differ by up to 1.3 percent of the
-// largest slope.
-TEST_F(PredefinedShapeTests, DISABLED_JacobianMatchesFiniteDifferencesBetweenNodes) {
+// Between the nodes the Jacobian contains the derivative of the polynomial of the displacement.
+TEST_F(PredefinedShapeTests, JacobianMatchesFiniteDifferencesBetweenNodes) {
   set_sine_shape(41, 1.0, 1.0);
   PredefinedShapeTransformation transformation;
   transformation.estimate_and_initialize();
@@ -689,7 +684,6 @@ TEST_F(PredefinedShapeTests, SelectableShapesAreLoadedIntoTransformation) {
     ASSERT_EQ(GlobalParams.sd.v, expected.v);
     PredefinedShapeTransformation transformation;
     transformation.estimate_and_initialize();
-    ASSERT_EQ(transformation.case_sectors.size(), (std::size_t) expected.Sectors - 1);
     // At the input interface and in the PML in front of it the waveguide is straight.
     for (const double z : {-0.4, 0.0}) {
       ASSERT_NEAR(transformation.get_m(z), 0.0, 1e-12) << "shape " << shape;
@@ -701,11 +695,8 @@ TEST_F(PredefinedShapeTests, SelectableShapesAreLoadedIntoTransformation) {
   }
 }
 
-// For z >= (end of the domain) the sector with the index Number_of_sectors - 1 is evaluated
-// (SpaceTransformation.cpp:20), but Parameters::complete_data() does not set Number_of_sectors for a predefined
-// shape. With its default value the displacement and the slope of the second node are used at the output interface
-// and in the PML behind it.
-TEST_F(PredefinedShapeTests, DISABLED_SelectableShapesAreStraightAtOutputInterface) {
+// At the output interface and in the PML behind it the waveguide is straight and on the axis again.
+TEST_F(PredefinedShapeTests, SelectableShapesAreStraightAtOutputInterface) {
   for (unsigned int shape = 0; shape < 36; shape++) {
     load_predefined_shape(shape);
     PredefinedShapeTransformation transformation;
@@ -719,20 +710,59 @@ TEST_F(PredefinedShapeTests, DISABLED_SelectableShapesAreStraightAtOutputInterfa
   }
 }
 
-// The nodes of the file are not equidistant. The transformation assumes sectors of the length z[1] - z[0]
-// (Parameters.cpp:65, SpaceTransformation.cpp:17), so the displacement is evaluated at shifted positions: for
-// this shape (hump of 5.5 micrometers) it is off by up to 0.44 micrometers at the nodes.
-TEST_F(PredefinedShapeTests, DISABLED_NodeValuesOfRepositoryShapeAreReproduced) {
-  load_predefined_shape(3);
-  PredefinedShapeTransformation transformation;
-  transformation.estimate_and_initialize();
-  for (int i = 0; i < GlobalParams.sd.Sectors; i++) {
-    ASSERT_NEAR(transformation.get_m(GlobalParams.sd.z[i]), GlobalParams.sd.m[i], 1e-3) << "node " << i << " at z = " << GlobalParams.sd.z[i];
+// The nodes of the file are not equidistant. The transformation reproduces the displacement and the slope of
+// every node of every shape, and the largest displacement is the height of the hump of the data.
+TEST_F(PredefinedShapeTests, NodeValuesOfRepositoryShapesAreReproduced) {
+  for (unsigned int shape = 0; shape < 36; shape++) {
+    load_predefined_shape(shape);
+    PredefinedShapeTransformation transformation;
+    transformation.estimate_and_initialize();
+    double largest_node_value = 0;
+    for (int i = 0; i < GlobalParams.sd.Sectors; i++) {
+      ASSERT_NEAR(transformation.get_m(GlobalParams.sd.z[i]), GlobalParams.sd.m[i], 1e-12) << "shape " << shape << ", node " << i;
+      ASSERT_NEAR(transformation.get_v(GlobalParams.sd.z[i]), GlobalParams.sd.v[i], 1e-12) << "shape " << shape << ", node " << i;
+      largest_node_value = std::max(largest_node_value, GlobalParams.sd.m[i]);
+    }
+    double largest_displacement = 0;
+    for (double z = 0; z <= 100.0; z += 0.01) {
+      largest_displacement = std::max(largest_displacement, transformation.get_m(z));
+    }
+    ASSERT_NEAR(largest_displacement, largest_node_value, 0.01) << "shape " << shape;
   }
 }
 
-// In the shapes 26, 28, 29, 31, 33, 34 and 35 of Modes/test.csv some nodes are not in ascending order of z.
-TEST_F(PredefinedShapeTests, DISABLED_NodesOfRepositoryShapesAreAscending) {
+// Nodes with different distances: the interpolation is continuously differentiable, reproduces the nodes and its
+// slope is the derivative of the displacement.
+TEST_F(PredefinedShapeTests, ShapeDescriptionInterpolatesNonEquidistantNodes) {
+  ShapeDescription sd;
+  // The cubic polynomial z^3 - 2 z on nodes with the distances 0.5, 2 and 0.25 is reproduced exactly.
+  sd.SetByString("4,10,10.5,12.5,12.75,0,-0.875,10.625,15.296875,-2,-1.25,16.75,20.6875");
+  ASSERT_EQ(sd.Sectors, 4);
+  ASSERT_EQ(sd.z, (std::vector<double>{0, 0.5, 2.5, 2.75}));
+  for (double z = 0; z <= 2.75; z += 0.05) {
+    ASSERT_NEAR(sd.displacement(z), z * z * z - 2 * z, 1e-12) << "z = " << z;
+    ASSERT_NEAR(sd.slope(z), 3 * z * z - 2, 1e-12) << "z = " << z;
+  }
+  // Outside of the nodes the shape continues straight with the displacement of the end nodes.
+  ASSERT_EQ(sd.displacement(-1.0), 0.0);
+  ASSERT_EQ(sd.slope(-1.0), 0.0);
+  ASSERT_EQ(sd.displacement(5.0), 15.296875);
+  ASSERT_EQ(sd.slope(5.0), 0.0);
+}
+
+// A node that is out of order in the line is sorted in; a node at the position of its predecessor is dropped.
+TEST_F(PredefinedShapeTests, ShapeDescriptionSortsNodes) {
+  ShapeDescription sd;
+  sd.SetByString("5,0,1,3,2,3,0,10,30,20,31,0,1,3,2,3.5");
+  ASSERT_EQ(sd.Sectors, 4);
+  ASSERT_EQ(sd.z, (std::vector<double>{0, 1, 2, 3}));
+  ASSERT_EQ(sd.m, (std::vector<double>{0, 10, 20, 30}));
+  ASSERT_EQ(sd.v, (std::vector<double>{0, 1, 2, 3}));
+}
+
+// In the shapes 26, 28, 29, 31, 33, 34 and 35 of Modes/test.csv one node is not in ascending order of z in the
+// file. ShapeDescription::SetByString() sorts the nodes.
+TEST_F(PredefinedShapeTests, NodesOfRepositoryShapesAreAscending) {
   const std::vector<std::string> lines = lines_of_shape_file();
   for (unsigned int shape = 0; shape < lines.size(); shape++) {
     ShapeDescription sd;

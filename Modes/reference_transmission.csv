@@ -1,0 +1,23 @@
+# Transmission of the photonic wire bonds of the project partners, copied from Modes/Results.ods (columns A to H).
+# bond: number of the bond (Modes/PWB_Bond_Trajectories/reference_bond_nr_<bond>_*). case: 'Predefined case number' of the solver (bond - 37).
+# measured_db, fma_db, to_db, cst_full_db: transmission in dB as stored in the file (columns 'measured', 'FMA', 'TO', 'CST_FULL').
+# hsp_value: column 'HSP', the result of this solver at the time (2022); the file converts it with 10 log10(value).
+# Empty fields: no value in the file.
+bond,case,measured_db,fma_db,to_db,cst_full_db,hsp_value
+40,3,-3.4994,,,-9.09,0.408544
+42,5,-3.8693,,-3.0823,-5.6,0.556258
+44,7,-3.7085,,-2.3014,-3.59,0.651481
+46,9,-1.9937,-2.6035,-1.9542,-2.63,0.707779
+48,11,-2.0485,-1.3628,-2.1796,-2.22,0.708674
+50,13,-2.8577,-0.5927,-3.0337,-2.16,0.720929
+52,15,-4.3936,-0.272,-3.6285,-2.35,0.723468
+54,17,-5.0801,-0.2039,-3.4,-2.24,0.723116
+56,19,-3.0746,-0.2066,-2.3604,-1.49,0.770075
+58,21,-2.1445,-0.2254,-1.3311,-0.72,0.81817
+60,23,-1.7057,-0.2169,-0.9754,-0.33,0.864965
+62,25,-1.9735,-0.1745,-0.549,-0.27,0.865467
+64,27,-3.3927,-0.1952,-0.2901,-0.38,0.848434
+66,29,-5.2866,-0.2916,-0.4588,-0.74,0.848017
+68,31,-10.1235,-0.5679,-1.1666,-1.56,0.80129
+70,33,-10.0883,-1.1104,-2.0099,-2.77,0.745504
+72,35,-12.2942,,-4.0205,-4.62,0.688963

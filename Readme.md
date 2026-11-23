@@ -198,10 +198,10 @@ compile with a complex PETSc and two headers that are not installed. The modific
 
 ## Tests
 
-- `tests/*.cpp` (GoogleTest, executable `build/tests/waveguide_tests`, about 10 s, one process): 371 unit tests for all
+- `tests/*.cpp` (GoogleTest, executable `build/tests/waveguide_tests`, about 10 s, one process): 392 unit tests for all
   parts of the code that work in one process: helpers and parameters, run report, shape function, space
   transformations, exact solutions, geometry and process layout, mesh generator, PML, infinite elements, inner
-  domain and the local problem with MUMPS. Every `.cpp` file in `tests/` is picked up automatically. 50 further
+  domain and the local problem with MUMPS. Every `.cpp` file in `tests/` is picked up automatically. 45 further
   tests are disabled (`DISABLED_`): each states the correct behaviour of code that is known to be wrong
   (`MODERNIZATION.md`, section 16); run them with `--gtest_also_run_disabled_tests`.
 - `modesolver/test_modesolver.py`: the mode solver against Maxwell's equations, analytical solutions and the mode
@@ -276,7 +276,12 @@ For boundary id:
 
 ## Predefined waveguide shapes
 
-This code comes with some example cases called the waveguide hump examples. These examples are available as hdf5 and obj files in the folder Modes -> PWB_Bond_Trajectories. The first three cases are numbered 0,1 and 2 and then continue on at 40, 41, ... , 72. In total there are 3 + 33 cases, so 36. To run these, a parameter in the case file can be used. Be careful, however, because these numbers start at 0 and count to 35. The table below lists how these numbers correlate: 
+This code comes with some example cases called the waveguide hump examples. These examples are available as hdf5 and obj files in the folder Modes -> PWB_Bond_Trajectories. The first three cases are numbered 0,1 and 2 and then continue on at 40, 41, ... , 72. In total there are 3 + 33 cases, so 36. To run these, a parameter in the case file can be used. Be careful, however, because these numbers start at 0 and count to 35. The table below lists how these numbers correlate (bond = case + 37 from case 3 on).
+
+The shapes are stored in `Modes/test.csv`, one line per case: the number of nodes, then for every node the position along the waveguide, the vertical displacement of the axis and its slope. The nodes are not equidistant; the solver interpolates them with cubic polynomials (`ShapeDescription`).
+
+Measured transmission exists for the bonds 40, 42, ..., 72 (cases 3, 5, ..., 35): `Modes/reference_transmission.csv`, copied from `Modes/Results.ods`, together with the results of other methods. `examples/hump_comparison.py` runs these cases and writes a table and a figure that compare the solver with the measurement and the other methods; `python3 examples/hump_comparison.py --compare-run <run folder> --case <n>` compares one existing run. `results.txt` contains the amplitude of the mode at the output (`signal_strength_abs`) and the transmitted power derived from it (`transmission_power` = amplitude squared, `transmission_db` = 20 log10 of the amplitude).
+
 | PWB Bond index | Predefined case number | Approximate signal loss in % | Approximate signal loss in db |
 | --- | --- | --- | --- |
 | 0 | 0 |  |  |

@@ -12,7 +12,11 @@
 
 /**
  * \class PredefinedShapeTransformation
- * \brief This class is used to describe the hump examples. 
+ * \brief This class is used to describe the hump examples.
+ *
+ * The waveguide axis is displaced vertically by m(z), where m interpolates the nodes of a ShapeDescription
+ * (one line of Modes/test.csv, a photonic wire bond of the project partners). The physical coordinates are
+ * (x, y + m(z), z).
  */
 
 class PredefinedShapeTransformation : public SpaceTransformation {
@@ -35,28 +39,21 @@ class PredefinedShapeTransformation : public SpaceTransformation {
   Tensor<2,3,double> get_J_inverse(Position &) override;
 
   /**
-   * This member contains all the Sectors who, as a sum, form the complete
-   * Waveguide. These Sectors are a partition of the simulated domain.
-   */
-  std::vector<Sector<2>> case_sectors;
-
-  /**
-   * At the beginning (before the first solution of a system) only the boundary
-   * conditions for the shape of the waveguide are known. Therefore the values
-   * for the degrees of freedom need to be estimated. This function sets all
-   * variables to appropiate values and estimates an appropriate shape based on
-   * averages and a polynomial interpolation of the boundary conditions on the
-   * shape.
+   * The shape is given completely by the nodes of Parameters::sd, so there is nothing to estimate. The function
+   * only writes the nodes to the log.
    */
   void estimate_and_initialize();
 
   /**
-   * Returns the shift for a system-coordinate;
+   * Returns the vertical displacement of the waveguide axis for a system-coordinate: the piecewise cubic
+   * interpolation of the nodes of Parameters::sd (ShapeDescription::displacement()). The first node is located at
+   * the lower end of the global z-range. The nodes do not have to be equidistant.
    */
   double get_m(double in_z) const;
 
   /**
-   * Returns the tilt for a system-coordinate;
+   * Returns the slope of the waveguide axis for a system-coordinate: the derivative of get_m() with respect to z
+   * (ShapeDescription::slope()).
    */
   double get_v(double in_z) const;
 

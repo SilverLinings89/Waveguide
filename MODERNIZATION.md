@@ -1002,10 +1002,10 @@ the `DISABLED_` prefix.
 
 | Where | Defect | Affects |
 | --- | --- | --- |
-| `Parameters.cpp:65`, `SpaceTransformation.cpp:17` | The nodes of the predefined shapes in `Modes/test.csv` are not equidistant in z (203 to 265 nodes, distances 0.02 to 1.2 um), but the code assumes the distance of the first two nodes for all sectors. Only the first 199 nodes are used and they are placed at the wrong z. The simulated shape differs from the data by 0.4 um (shapes 3 to 8), 1 to 2 um (most others) and up to 11 um (shape 2), and does not return to zero at the output (0.04 to 8.8 um offset with a nonzero slope). | every run with `Use predefined shape`, including the runs of the dissertation |
-| `Modes/test.csv` | Shapes 26, 28, 29, 31, 33, 34, 35 have nodes that are not ascending in z | these shapes |
-| `SpaceTransformation.cpp:20`, `Parameters.cpp:54` | `Number_of_sectors` is not set for a predefined shape; at and behind the output the second node is used | output face and the PML behind it |
-| `Sector.cpp:223,236` | The Jacobian of a predefined shape is consistent with the displacement only at the nodes and only for node distance 1 | predefined shapes |
+| `Parameters.cpp:65`, `SpaceTransformation.cpp:17` | **Fixed (section 19).** The nodes of the predefined shapes in `Modes/test.csv` are not equidistant in z (203 to 265 nodes, distances 0.02 to 1.2 um), but the code assumes the distance of the first two nodes for all sectors. Only the first 199 nodes are used and they are placed at the wrong z. The simulated shape differs from the data by 0.4 um (shapes 3 to 8), 1 to 2 um (most others) and up to 11 um (shape 2), and does not return to zero at the output (0.04 to 8.8 um offset with a nonzero slope). | every run with `Use predefined shape`, including the runs of the dissertation |
+| `Modes/test.csv` | **Fixed (section 19): the nodes are sorted when a shape is read.** Shapes 26, 28, 29, 31, 33, 34, 35 have one node that is not ascending in z | these shapes |
+| `SpaceTransformation.cpp:20`, `Parameters.cpp:54` | **Fixed for predefined shapes (section 19).** `Number_of_sectors` is not set for a predefined shape; at and behind the output the second node is used | output face and the PML behind it |
+| `Sector.cpp:223,236` | **Fixed (section 19): predefined shapes no longer use `Sector`.** The Jacobian of a predefined shape is consistent with the displacement only at the nodes and only for node distance 1 | predefined shapes |
 | `InnerDomain.cpp:388`, `PMLSurface.cpp:525` | `distribute_local_to_global(..., true)` puts `|a_ii|` on the diagonal and `a_ii g` on the right hand side. Where `a_ii` is negative or complex the prescribed value is not `g`: for `fem order >= 1` a third of the unknowns on the input face get `-g`, for lowest order the same happens for cells wider than 0.39 wavelengths, and in PML cells the value is rotated in phase. Measured: relative L2 error 0.0785 instead of 0.0636 (order 1, h = 0.3), 0.65 instead of 0.33 (order 2, h = 0.6). | `Input Signal Method = Dirichlet` with order 1 or 2 or coarse meshes; not the tapered input |
 | `ShapeFunction.cpp:32` | The middle of the shape is `z_max / 2` instead of the middle of the range | optimization with `global z shift` not 0 |
 | `SpaceTransformation.cpp:17` | The start of the domain is added to z instead of subtracted | any shape with `global z shift` not 0 |
@@ -1137,3 +1137,54 @@ Tests: `modesolver/test_modesolver.py` (30 tests), `tests/ModeFileTests.cpp` (14
   polarizations; the analytical fibre solution returns the x- and the y-polarized mode.
 - The frontend does not offer the new entries yet.
 - `RectangularMode` and `ModeManager` are still in the code and unused; they can be removed.
+
+## 19. Predefined shapes: corrected lookup, transmitted power, reference data
+
+### 19.1 Shape lookup
+
+`ShapeDescription` now interpolates the nodes itself (`displacement()`, `slope()`): a cubic polynomial between two
+neighboring nodes with their values and slopes, for any node distances, constant outside of the nodes. The slope
+is the derivative of the displacement everywhere, so the Jacobian is consistent with the shape.
+`SetByString()` sorts the nodes by z. `PredefinedShapeTransformation` evaluates these two functions and no longer
+uses `Sector` or `Sector_thickness`. This removes the first four rows of the table in 16.2. Five tests that were
+disabled for these defects are enabled, and three were added (all nodes of all 36 shapes are reproduced, a cubic
+on non-equidistant nodes is reproduced exactly, sorting). The unit tests are now 392 passing and 45 disabled.
+
+Every result that was computed with a predefined shape before this change, including those of the dissertation
+and of section 17, belongs to a distorted shape. Shape 3 on the mesh of section 17 (16 x 16 x 780): signal 0.372
+instead of 0.364, 13 GMRES steps as before.
+
+### 19.2 Amplitude and power
+
+The signal strength is `<E, mode> / <mode, mode>` on the output face (`NonLocalProblem::compute_signal_strength_of_solution`),
+the amplitude of the mode in the field for an input of amplitude 1. The power in the mode is its square.
+`results.txt` and the report now also contain `transmission_power` = |s|^2 and `transmission_db` = 20 log10 |s|.
+Only the electric field enters the overlap, so this is the power in the mode as far as the rest of the field is
+orthogonal to the mode in this product.
+
+### 19.3 Reference data
+
+`Modes/Results.ods` contains the measured transmission of the bonds 40, 42, ..., 72 (cases 3, 5, ..., 35) in dB
+and the columns FMA, TO, CST_FULL and HSP. The file does not explain the columns. HSP is a value between 0.41 and
+0.87 that the file converts with 10 log10; it is taken to be the result of this solver in 2022. If it was the
+signal strength (an amplitude), 20 log10 is the correct conversion; with it the values follow the column CST_FULL
+much more closely for the low humps (bond 40: -7.8 dB against -9.1 dB, instead of -3.9 dB). This is an inference,
+not a record. The values are copied to `Modes/reference_transmission.csv`.
+
+`examples/hump_comparison.py` runs the measured cases and writes the overview. Deviations of the stored methods
+from the measurement over the 17 bonds (dB, positive = less loss than measured):
+
+| Method | Cases | Mean | Mean absolute | Largest |
+| --- | --- | --- | --- | --- |
+| FMA | 13 | +3.55 | 3.64 | 9.56 |
+| TO | 16 | +2.58 | 2.62 | 8.96 |
+| CST_FULL | 17 | +2.05 | 3.00 | 8.56 |
+| HSP 2022, 10 log10 | 17 | +3.14 | 3.19 | 10.68 |
+| HSP 2022, 20 log10 | 17 | +1.73 | 2.61 | 9.06 |
+
+All methods predict far less loss than was measured for the highest humps (bonds 66 to 72: -5 to -12 dB
+measured, -0.3 to -4.6 dB simulated). The file does not say whether the measurement contains losses that no
+simulation models (coupling, surface roughness, material absorption).
+
+Not done: a run of all 17 cases on a mesh that is converged. Case 3 at 16 x 16 x 780 gives -8.6 dB (measured
+-3.5 dB, CST_FULL -9.1 dB); section 17 shows that the signal still changes strongly between 16 and 24 cells.

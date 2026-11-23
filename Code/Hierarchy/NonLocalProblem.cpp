@@ -539,6 +539,9 @@ std::string NonLocalProblem::output_results() {
     results << "signal_strength_abs = " << std::abs(signal_strength) << std::endl;
     results << "signal_strength_real = " << signal_strength.real() << std::endl;
     results << "signal_strength_imag = " << signal_strength.imag() << std::endl;
+    // The signal strength is the amplitude of the mode in the field at the output, so the power in the mode is its square.
+    results << "transmission_power = " << std::norm(signal_strength) << std::endl;
+    results << "transmission_db = " << 20.0 * std::log10(std::max(std::abs(signal_strength), 1e-30)) << std::endl;
     results << "error_l2 = " << errors.L2 << std::endl;
     results << "error_linfty = " << errors.Linfty << std::endl;
     results << "solver_iterations = " << n_iterations << std::endl;
@@ -1143,6 +1146,7 @@ void NonLocalProblem::fill_run_report(ComplexNumber signal_strength, FEErrorStru
 
   report.section("Result");
   report.entry("Signal transmission |s|", RunReport::number(std::abs(signal_strength), 8));
+  report.entry("Transmitted power |s|^2", RunReport::number(std::norm(signal_strength), 8) + " (" + RunReport::number(20.0 * std::log10(std::max(std::abs(signal_strength), 1e-30)), 4) + " dB)");
   report.entry("Complex amplitude s", RunReport::number(signal_strength.real(), 8) + (signal_strength.imag() < 0 ? " - " : " + ") + RunReport::number(std::abs(signal_strength.imag()), 8) + "i");
   report.entry("Relative L2 difference to the mode of the straight waveguide", RunReport::number(errors.L2, 6));
   report.entry("Largest pointwise difference", RunReport::number(errors.Linfty, 6));
@@ -1172,6 +1176,8 @@ void NonLocalProblem::fill_run_report(ComplexNumber signal_strength, FEErrorStru
   report.data("mode_file", GlobalParams.mode_file);
   report.data("epsilon_effective", GlobalParams.Epsilon_R_effective);
   report.data("signal_strength_abs", std::abs(signal_strength));
+  report.data("transmission_power", std::norm(signal_strength));
+  report.data("transmission_db", 20.0 * std::log10(std::max(std::abs(signal_strength), 1e-30)));
   report.data("tapered_input", GlobalParams.use_tapered_input_signal ? 1.0 : 0.0);
   report.data("tapering_min_z", GlobalParams.tapering_min_z);
   report.data("tapering_max_z", GlobalParams.tapering_max_z);
