@@ -37,6 +37,20 @@ PREFIX="$(cd "$PREFIX" && pwd)"
 # A prefix that was built in the self-contained mode stays in this mode (its mpicc may be in PATH by now).
 if [ -d "$PREFIX/install/symengine" ] || [ -x "$PREFIX/install/petsc/bin/mpicc" ]; then SELF_CONTAINED=1; fi
 
+# Nothing to do if everything is installed already (FORCE=1 builds deal.II again).
+if [ "$FORCE" != 1 ] && [ -f "$PREFIX/install/petsc/lib/petsc/conf/petscvariables" ] \
+   && [ -f "$PREFIX/install/dealii/lib/cmake/deal.II/deal.IIConfig.cmake" ] \
+   && [ -f "$PREFIX/install/dealii/include/deal.II/optimization/solver_bfgs.h" ]; then
+  echo "PETSc and deal.II are already installed in $PREFIX/install."
+  exit 0
+fi
+# Some systems only have GNU make under the name gmake.
+if ! command -v make > /dev/null 2>&1 && command -v gmake > /dev/null 2>&1; then
+  mkdir -p "$PREFIX/bin"
+  ln -sf "$(command -v gmake)" "$PREFIX/bin/make"
+  export PATH="$PREFIX/bin:$PATH"
+fi
+
 if [ "$SELF_CONTAINED" = 1 ]; then
   REQUIRED_TOOLS="cmake make gcc g++ gfortran curl python3"
   PETSC_COMPILERS="--with-cc=gcc --with-cxx=g++ --with-fc=gfortran --download-mpich --download-openblas"
