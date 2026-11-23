@@ -6,6 +6,9 @@
 
 TEST(ExactSolutionRampedTests, RampingTestsC0) {
     GlobalParams.Signal_tapering_type = SignalTaperingType::C0;
+    // The ramp goes from z = 0 to z = 1; set here so that the test does not depend on the tests before it.
+    GlobalParams.tapering_min_z = 0.0;
+    GlobalParams.tapering_max_z = 1.0;
     ExactSolution::load_data(repository_path("Modes/output_mode.dat"));
     ExactSolutionRamped sol = {};
     Position p = {0,0,0};
@@ -18,6 +21,9 @@ TEST(ExactSolutionRampedTests, RampingTestsC0) {
 
 TEST(ExactSolutionRampedTests, RampingTestsC1) {
     GlobalParams.Signal_tapering_type = SignalTaperingType::C1;
+    // The ramp goes from z = 0 to z = 1; set here so that the test does not depend on the tests before it.
+    GlobalParams.tapering_min_z = 0.0;
+    GlobalParams.tapering_max_z = 1.0;
     ExactSolution::load_data(repository_path("Modes/output_mode.dat"));
     ExactSolutionRamped sol = {};
     Position p = {0,0,0};

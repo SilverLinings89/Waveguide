@@ -974,3 +974,109 @@ these numbers by measurements.
 - **Accuracy is not part of this estimate.** The mesh of the dissertation has 8 cells per wavelength across the
   waveguide with lowest order elements; the straight waveguide loses 3 % on comparable meshes (section 13). A
   service that sells results needs second order elements or a finer mesh, which changes memory and time.
+
+## 16. Unit tests for the whole code, and the defects they found
+
+### 16.1 Coverage
+
+The unit test binary had 39 tests. It now has 421: 371 pass and 50 are disabled because the code does not do
+what the test expects (16.2). All files in `tests/*.cpp` are collected automatically. The binary runs in about
+10 s in one process, in any order (`--gtest_shuffle`), and writes only to temporary folders.
+
+| Part of the code | Test files | Tests | Disabled |
+| --- | --- | --- | --- |
+| Helpers, parameters, run report, output generators, shape function, timer and output manager | `StaticFunctionTests`, `ParameterTests`, `RunReportTests`, `ShapeFunctionPropertyTests`, `OutputGeneratorTests`, `TimerAndOutputManagerTests` | 161 | 13 |
+| Transformations, exact solutions, geometry and process layout, mesh generator, mode manager | `SpaceTransformationTests`, `ExactSolutionPropertyTests`, `GeometryManagerTests`, `MeshGeneratorTests`, `ModeManagerTests` | 103 | 25 |
+| PML, HSIE, simple surfaces, inner domain, local problem (MUMPS, one process) | `PMLSurfaceTests`, `HSIESurfaceTests`, `HSIEPolynomialPropertyTests`, `SimpleSurfaceTests`, `BoundaryHelperTests`, `FEDomainTests`, `InnerDomainTests`, `LocalProblemTests` | 118 | 12 |
+
+The tests check properties that are known independently of the code: analytical values, agreement of derivatives
+with finite differences, inverse maps, counts of unknowns from the element definition, symmetry of the matrix,
+the TE10 mode of a metallic waveguide. `NonLocalProblem`, the communication between processes and the
+optimization run need several processes and stay with the integration tests. `tests/Helpers{A,B,C}.h` contain
+fixtures that set and restore the global objects.
+
+A disabled test states the correct behaviour. Run them with `--gtest_also_run_disabled_tests`; after a fix, remove
+the `DISABLED_` prefix.
+
+### 16.2 Defects that can change results
+
+| Where | Defect | Affects |
+| --- | --- | --- |
+| `Parameters.cpp:65`, `SpaceTransformation.cpp:17` | The nodes of the predefined shapes in `Modes/test.csv` are not equidistant in z (203 to 265 nodes, distances 0.02 to 1.2 um), but the code assumes the distance of the first two nodes for all sectors. Only the first 199 nodes are used and they are placed at the wrong z. The simulated shape differs from the data by 0.4 um (shapes 3 to 8), 1 to 2 um (most others) and up to 11 um (shape 2), and does not return to zero at the output (0.04 to 8.8 um offset with a nonzero slope). | every run with `Use predefined shape`, including the runs of the dissertation |
+| `Modes/test.csv` | Shapes 26, 28, 29, 31, 33, 34, 35 have nodes that are not ascending in z | these shapes |
+| `SpaceTransformation.cpp:20`, `Parameters.cpp:54` | `Number_of_sectors` is not set for a predefined shape; at and behind the output the second node is used | output face and the PML behind it |
+| `Sector.cpp:223,236` | The Jacobian of a predefined shape is consistent with the displacement only at the nodes and only for node distance 1 | predefined shapes |
+| `InnerDomain.cpp:388`, `PMLSurface.cpp:525` | `distribute_local_to_global(..., true)` puts `|a_ii|` on the diagonal and `a_ii g` on the right hand side. Where `a_ii` is negative or complex the prescribed value is not `g`: for `fem order >= 1` a third of the unknowns on the input face get `-g`, for lowest order the same happens for cells wider than 0.39 wavelengths, and in PML cells the value is rotated in phase. Measured: relative L2 error 0.0785 instead of 0.0636 (order 1, h = 0.3), 0.65 instead of 0.33 (order 2, h = 0.6). | `Input Signal Method = Dirichlet` with order 1 or 2 or coarse meshes; not the tapered input |
+| `ShapeFunction.cpp:32` | The middle of the shape is `z_max / 2` instead of the middle of the range | optimization with `global z shift` not 0 |
+| `SpaceTransformation.cpp:17` | The start of the domain is added to z instead of subtracted | any shape with `global z shift` not 0 |
+| `WaveguideTransformation.cpp:229,249` | Constant height with variable width divides by an uninitialized height function and addresses the wrong free unknowns | that combination |
+| `ParameterReader.cpp` | Eight defaults of the reader differ from the defaults of the struct (GMRES steps 30/100, relative criterion true/false, logging level, HSIE order 21/10 and degree 4/5, input signal, PML sigma max 10/5, sectors 5/1) | code that fills `Parameters` without the reader (tests) |
+| `ShapeDescription.cpp:14` | `SetStraight` reads the global parameters instead of the object that is being completed | the first object completed at program start |
+| `InnerDomain.cpp:478` | Output on the physical mesh deletes `GlobalParams.source_field` and leaves the mesh displaced | `output transformed solution = true` |
+| `RunReport.cpp:157` | Control characters other than line feed and tab are written raw into the JSON file | invalid JSON for such texts |
+
+Not on the main path (dead or unused code, confirmed by tests): `get_level_neighbor_for_interface` wrong for
+different block counts in x and y (the solver uses the correct global version), `PMLTransformedExactSolution`
+(fraction on lower sides, `curl`, `value` against `vector_value`, `val` writes into an empty vector),
+`AngledExactSolution::curl`, the C0 ramp, the refinement loop of `SquareMeshGenerator`,
+`Triangulation_Shit_To_Local_Geometry` (traps in the release build), `hmax_for_cell_center`, `get_orientation`,
+both `vector_curl` of `PointSourceField` and the Hertz dipole near the origin, `check_validity`,
+`get_Tensor_for_step`, `BendTransformation` (a stub), `RectangularMode`, the Bessel mode profile of `ModeManager`,
+`surface_extremal_coordinate` of the Dirichlet and empty surfaces, `Sector::boundary`, `JacobianForCell` for
+angled rays, `constrain_identical_dof_sets`, `boundary_surface_norm`, `FEDomain::is_ownership_ready`.
+
+Two entries of section 14.1 are not defects: `Transform_4_to_5` and `Transform_5_to_4` are inverse maps that keep
+lengths, and the flag of `InnerDomain::output_results` is consistent (transformed material on the computational
+mesh, plain material on the physical mesh).
+
+## 17. The predefined shapes on a laptop and two desktops
+
+Hardware: this MacBook (Apple M5 Max, 18 cores, 36 GB) and two Windows desktops with at most 64 GB each.
+
+### 17.1 Measurements
+
+Factors on disk (MUMPS out-of-core, `PETSC_OPTIONS="-local_mat_mumps_icntl_22 1"`, `MUMPS_OOC_TMPDIR=<folder>`,
+no code change), two slabs of the real cross-section, 20 cells thick:
+
+| | Factors in memory | Factors on disk |
+| --- | --- | --- |
+| Largest resident memory of a process | 8.2 GB | 3.9 GB |
+| Time per subdomain solve | 0.80 s | 1.10 s |
+| Factorization | 31 s | 28 s |
+
+The resident memory is 1.4 times the memory MUMPS reports (5.8 GB); section 15.4 used 1.15 and is too low. With
+factors in memory the full mesh needs about 540 GB instead of 460 GB.
+
+Predefined shape 3, full length of 100 um, one level, 39 slabs, factors on disk, on the MacBook:
+
+| Cells (interior) | Cells per wavelength x, y, z | Unknowns | GMRES steps | Wall time | Memory (sum, peak) | Signal |
+| --- | --- | --- | --- | --- | --- | --- |
+| 16 x 16 x 780 | 2.7, 3, 7.9 | 2.2 million | 13 | 220 s | 17 GB | 0.364 |
+| 24 x 24 x 780 | 4, 4.5, 7.9 | 3.6 million | 13 | 432 s | 24 GB | 0.591 |
+
+The number of GMRES steps (13) does not depend on the resolution; this was the main unknown of section 15.4. The
+signal is not converged at these resolutions, and the shape that is simulated is not the shape of the data
+(16.2).
+
+### 17.2 What fits where
+
+| Mesh | Memory, factors on disk | Memory, factors in memory | Fits on |
+| --- | --- | --- | --- |
+| 24 x 24 x 780 | 24 GB (measured) | about 45 GB | MacBook (disk), desktop |
+| 32 x 32 x 780 | about 40 GB | about 75 GB | desktop with 64 GB (disk) |
+| 32 x 32 x 1560 | about 80 GB | about 150 GB | none |
+| 48 x 48 x 1560 (dissertation) | about 300 GB during the factorization, 160 to 200 GB afterwards | about 540 GB | none |
+
+The rows without "measured" are scaled with the number of unknowns of the cross-section including the PML. The
+full mesh does not fit on any of the three machines, alone or together, in either mode: mesh, matrix and vectors
+alone take about 2.6 kB per unknown (84 GB). The three machines cannot share one run either (different
+architectures and operating systems; the desktops would need WSL2 and an MPI setup between them, which gives
+128 GB, still too little).
+
+What would lower the requirement, none of it done: factorize the slabs one after the other instead of all at
+once (peak with factors on disk then 160 to 200 GB), fewer PML layers (7 layers make the cross-section 62 x 62
+instead of 48 x 48), second order elements on a coarser mesh (needs the fix of the Dirichlet values or the
+tapered input), less memory per unknown outside of MUMPS.
+
+For the full mesh a rented server is the practical way: about 540 GB with factors in memory (a 768 GB instance)
+or 400 GB with compression (512 GB), one to two hours with 13 GMRES steps.

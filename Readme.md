@@ -158,9 +158,12 @@ compile with a complex PETSc and two headers that are not installed. The modific
 
 ## Tests
 
-- `tests/*.cpp` (GoogleTest, executable `build/tests/waveguide_tests`): unit tests for Hardy space polynomials,
-  Laguerre functions, mesh sorting, shape functions, the import of the mode profile, the signal taper, the space
-  transformation and the process layout.
+- `tests/*.cpp` (GoogleTest, executable `build/tests/waveguide_tests`, about 10 s, one process): 371 unit tests for all
+  parts of the code that work in one process: helpers and parameters, run report, shape function, space
+  transformations, exact solutions, geometry and process layout, mesh generator, PML, infinite elements, inner
+  domain and the local problem with MUMPS. Every `.cpp` file in `tests/` is picked up automatically. 50 further
+  tests are disabled (`DISABLED_`): each states the correct behaviour of code that is known to be wrong
+  (`MODERNIZATION.md`, section 16); run them with `--gtest_also_run_disabled_tests`.
 - `tests/integration/run_integration_test.py`: runs the solver with 2 to 8 MPI processes on small problems and
   checks `results.txt`: lossless transmission through a straight waveguide for both coupling methods, improvement
   under mesh refinement, reproducibility, agreement of level 1, 2 and 3 sweeping with a direct solve of the global
