@@ -11,6 +11,7 @@
  * 
  */
 
+#include <string>
 #include <deal.II/base/parameter_handler.h>
 #include "../Core/InnerDomain.h"
 

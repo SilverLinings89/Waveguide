@@ -11,6 +11,8 @@
  * 
  */
 
+#include <utility>
+#include <vector>
 #include <deal.II/base/tensor.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/differentiation/sd/symengine_number_types.h>

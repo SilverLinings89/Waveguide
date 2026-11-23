@@ -1,4 +1,5 @@
 
+#include <vector>
 #include <iostream>
 #include <cmath>
 #include "./ShapeFunction.h"

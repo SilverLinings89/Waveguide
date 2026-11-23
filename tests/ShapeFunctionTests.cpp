@@ -1,3 +1,4 @@
+#include <vector>
 #include <gtest/gtest.h>
 #include "../Code/Optimization/ShapeFunction.h"
 

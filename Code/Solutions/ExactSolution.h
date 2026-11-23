@@ -1,5 +1,8 @@
 #pragma once
 
+#include <array>
+#include <stdexcept>
+#include <utility>
 #include <deal.II/base/function.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>

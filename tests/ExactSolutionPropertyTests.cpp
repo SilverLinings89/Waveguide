@@ -1,5 +1,6 @@
 // Properties of the analytical fields: the mode of the straight waveguide (ExactSolution), its complex conjugate,
 // the tapered mode, the mode in the PML and the mode of the tilted waveguide.
+#include <utility>
 #include <gtest/gtest.h>
 #include <cmath>
 #include <complex>

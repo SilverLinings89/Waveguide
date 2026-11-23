@@ -1,5 +1,8 @@
 // Tests for the run report: formatting of numbers, the structure of sections, entries, tables and notes, and the two
 // output files. The JSON file is parsed with a strict parser and compared with what was put into the report.
+#include <stdexcept>
+#include <string>
+#include <vector>
 #include <gtest/gtest.h>
 #include <cmath>
 #include <filesystem>

@@ -2,6 +2,8 @@
 // respect to the middle of the interval. On the first half its derivative is continuous and piecewise linear on n
 // sectors of equal length; the nodal values of the derivative are the dofs. The values at the lower end and in the
 // middle and the derivatives there are prescribed.
+#include <string>
+#include <vector>
 #include <gtest/gtest.h>
 #include <cmath>
 #include <random>

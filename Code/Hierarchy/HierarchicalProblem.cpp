@@ -1,3 +1,5 @@
+#include <iostream>
+#include <vector>
 #include "HierarchicalProblem.h"
 #include <string>
 #include <boost/archive/text_oarchive.hpp>

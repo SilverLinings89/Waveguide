@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <utility>
 #include <deal.II/base/mpi.h>
 #include <mpi.h>
 #include "MPICommunicator.h"

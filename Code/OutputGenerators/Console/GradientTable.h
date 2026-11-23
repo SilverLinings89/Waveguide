@@ -5,6 +5,7 @@
  * @author Pascal Kraft
  * @brief Contains the class GradientTable, which prints one step of a shape optimization as a table. Legacy code.
  */
+#include <string>
 #include <deal.II/lac/vector.h>
 
 /**

@@ -1,5 +1,6 @@
 // Tests for the surfaces without unknowns of their own (Dirichlet, empty and neighbor surfaces) and for the functions
 // of the base class BoundaryCondition.
+#include <vector>
 #include <gtest/gtest.h>
 #include <cmath>
 #include <set>

@@ -1,5 +1,8 @@
 // Tests for the Hardy space infinite elements on a surface: the number and the kinds of unknowns, their association
 // with the unknowns of the inner domain and of neighboring surfaces, and the terms of the bilinear form.
+#include <algorithm>
+#include <utility>
+#include <vector>
 #include <gtest/gtest.h>
 #include <cmath>
 #include <map>

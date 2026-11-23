@@ -5,6 +5,8 @@
  *      Author: kraft
  */
 
+#include <cmath>
+#include <utility>
 #include "../Core/Types.h"
 #include "JacobianForCell.h"
 #include <deal.II/base/point.h>

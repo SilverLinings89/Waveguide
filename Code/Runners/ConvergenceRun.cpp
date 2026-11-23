@@ -5,6 +5,8 @@
  *      Author: kraft
  */
 
+#include <cmath>
+#include <vector>
 #include <mpi.h>
 #include <sys/stat.h>
 #include <unistd.h>

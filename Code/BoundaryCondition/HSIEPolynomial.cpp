@@ -1,3 +1,4 @@
+#include <vector>
 #include "./HSIEPolynomial.h"
 #include "../Helpers/staticfunctions.h"
 #include "DofData.h"

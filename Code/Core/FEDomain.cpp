@@ -1,3 +1,6 @@
+#include <cmath>
+#include <iostream>
+#include <vector>
 #include "FEDomain.h"
 #include "../Helpers/staticfunctions.h"
 

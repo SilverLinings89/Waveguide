@@ -1,5 +1,6 @@
 // Tests for the import of the waveguide mode, the signal tapering and the shape description. Each of these tests
 // documents a defect that existed in the code at some point (see MODERNIZATION.md).
+#include <utility>
 #include <gtest/gtest.h>
 #include <cmath>
 #include <complex>

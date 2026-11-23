@@ -11,6 +11,7 @@
  * 
  */
 
+#include <string>
 #include "../Core/Types.h"
 #include <sys/stat.h>
 #include <iostream>

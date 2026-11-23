@@ -1,3 +1,4 @@
+#include <string>
 #include "./OutputManager.h"
 #include "../GlobalObjects/GlobalObjects.h"
 #include "../Helpers/staticfunctions.h"

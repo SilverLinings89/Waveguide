@@ -1,5 +1,6 @@
 // Tests for SquareMeshGenerator: boundary ids of the six sides of a block and the refinement towards the mesh
 // sizes 0.05 (inside of the core) and 0.1 (outside).
+#include <utility>
 #include <gtest/gtest.h>
 #include <array>
 #include <cmath>

@@ -9,6 +9,8 @@
 #ifndef CODE_HELPERS_MODEMANAGER_CPP_
 #define CODE_HELPERS_MODEMANAGER_CPP_
 
+#include <cmath>
+#include <string>
 #include <math.h>
 #include <stdio.h>
 #include <iostream>

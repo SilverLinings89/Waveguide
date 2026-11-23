@@ -1,3 +1,9 @@
+#include <cmath>
+#include <cstdlib>
+#include <fstream>
+#include <map>
+#include <utility>
+#include <vector>
 #include "staticfunctions.h"
 #include <deal.II/base/geometry_info.h>
 #include <deal.II/base/point.h>

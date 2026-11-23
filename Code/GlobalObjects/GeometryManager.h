@@ -11,6 +11,8 @@
  * 
  */
 
+#include <array>
+#include <vector>
 #include <deal.II/base/index_set.h>
 #include "../Core/Types.h"
 #include "../BoundaryCondition/BoundaryCondition.h"

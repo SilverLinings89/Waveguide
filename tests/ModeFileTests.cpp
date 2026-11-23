@@ -1,5 +1,7 @@
 // Tests for mode files written by the Python package modesolver (header, permittivity column) and for the choice
 // of the cross-section of the waveguide (rectangular, circular, from the mode file).
+#include <utility>
+#include <vector>
 #include <gtest/gtest.h>
 #include <cmath>
 #include <sstream>

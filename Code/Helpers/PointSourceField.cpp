@@ -5,6 +5,7 @@
  *      Author: kraft
  */
 
+#include <cmath>
 #include "PointSourceField.h"
 #include "../Helpers/staticfunctions.h"
 

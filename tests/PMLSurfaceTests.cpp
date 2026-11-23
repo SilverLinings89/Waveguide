@@ -1,5 +1,10 @@
 // Tests for the PML domains: the meshes of the six layers, their unknowns and the coupling of these unknowns to the
 // inner domain and to the neighboring layers, the material tensor and the constraints on the outer boundary.
+#include <algorithm>
+#include <array>
+#include <string>
+#include <utility>
+#include <vector>
 #include <gtest/gtest.h>
 #include <cmath>
 #include <set>

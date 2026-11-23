@@ -11,6 +11,8 @@
  * 
  */
 
+#include <string>
+#include <vector>
 #include <sys/stat.h>
 #include <cmath>
 #include <ctime>

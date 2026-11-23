@@ -11,6 +11,10 @@
  * 
  */
 
+#include <array>
+#include <string>
+#include <utility>
+#include <vector>
 #include "../Core/Types.h"
 #include "./BoundaryCondition.h"
 #include <deal.II/fe/fe_nedelec_sz.h>

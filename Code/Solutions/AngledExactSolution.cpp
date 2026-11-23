@@ -1,3 +1,4 @@
+#include <cmath>
 #include "./AngledExactSolution.h"
 #include "../Core/Types.h"
 #include <deal.II/base/point.h>

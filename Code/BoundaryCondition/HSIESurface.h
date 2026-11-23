@@ -11,6 +11,10 @@
  * 
  */
 
+#include <array>
+#include <map>
+#include <string>
+#include <vector>
 #include "../Core/Types.h"
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/dofs/dof_handler.h>

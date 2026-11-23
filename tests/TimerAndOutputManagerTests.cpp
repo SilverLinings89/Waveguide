@@ -1,5 +1,8 @@
 // Tests for TimerManager and OutputManager. Both are tested with local objects, not with the global instances. All
 // files are written to temporary directories.
+#include <algorithm>
+#include <string>
+#include <vector>
 #include <gtest/gtest.h>
 #include <filesystem>
 #include <regex>

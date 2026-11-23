@@ -1,3 +1,5 @@
+#include <iostream>
+#include <vector>
 #include "./NeighborSurface.h"
 #include <deal.II/base/geometry_info.h>
 #include <deal.II/grid/grid_generator.h>

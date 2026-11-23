@@ -5,6 +5,8 @@
  * @author Pascal Kraft
  * @brief Contains the class ConvergenceOutputGenerator, which plots the errors of a convergence study.
  */
+#include <string>
+#include <vector>
 #include "../../Core/Types.h"
 
 /**

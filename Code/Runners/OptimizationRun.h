@@ -9,6 +9,7 @@
  * @copyright Copyright (c) 2022
  * 
  */
+#include <vector>
 #include "../GlobalObjects/GeometryManager.h"
 #include "../Helpers/Parameters.h"
 #include "../Hierarchy/NonLocalProblem.h"

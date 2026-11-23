@@ -1,3 +1,4 @@
+#include <vector>
 #include "./DirichletSurface.h"
 #include <deal.II/base/geometry_info.h>
 #include <deal.II/grid/grid_generator.h>

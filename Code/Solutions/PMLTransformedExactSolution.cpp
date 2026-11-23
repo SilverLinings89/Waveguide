@@ -1,3 +1,5 @@
+#include <array>
+#include <cmath>
 #include "./PMLTransformedExactSolution.h"
 
 PMLTransformedExactSolution::PMLTransformedExactSolution(BoundaryId in_main_id, double in_additional_coordinate): Function<3, ComplexNumber>(3) {

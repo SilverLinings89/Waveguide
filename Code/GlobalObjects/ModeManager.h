@@ -11,6 +11,7 @@
  * 
  */
 
+#include <vector>
 #include <deal.II/base/point.h>
 
 /**

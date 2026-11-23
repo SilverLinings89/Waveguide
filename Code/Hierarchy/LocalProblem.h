@@ -5,6 +5,7 @@
  * @author Pascal Kraft
  * @brief Contains the class LocalProblem, the lowest level of the sweeping hierarchy.
  */
+#include <string>
 #include <deal.II/lac/petsc_sparse_matrix.h>
 #include "HierarchicalProblem.h"
 #include "../Core/InnerDomain.h"

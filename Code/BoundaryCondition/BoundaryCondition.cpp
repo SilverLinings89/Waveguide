@@ -1,3 +1,6 @@
+#include <cmath>
+#include <iostream>
+#include <vector>
 #include "./BoundaryCondition.h"
 #include "../GlobalObjects/GlobalObjects.h"
 #include "../Helpers/staticfunctions.h"

@@ -9,6 +9,9 @@
  * @copyright Copyright (c) 2022
  * 
  */
+#include <array>
+#include <memory>
+#include <vector>
 #include <deal.II/base/function.h>
 #include <deal.II/base/index_set.h>
 #include <deal.II/base/logstream.h>

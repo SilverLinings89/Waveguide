@@ -1,3 +1,10 @@
+#include <cmath>
+#include <iostream>
+#include <memory>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 #include <deal.II/base/mpi.h>
 #include <deal.II/grid/tria.h>
 #include "GlobalObjects.h"

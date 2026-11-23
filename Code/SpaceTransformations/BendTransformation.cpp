@@ -1,3 +1,4 @@
+#include <iostream>
 #include "BendTransformation.h"
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>

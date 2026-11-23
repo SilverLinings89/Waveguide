@@ -5,6 +5,8 @@
  * @author Pascal Kraft
  * @brief Contains the class ResidualOutputGenerator, which stores and plots the residuals of the iterative solver.
  */
+#include <string>
+#include <vector>
 #include "../../Core/Types.h"
 
 /**

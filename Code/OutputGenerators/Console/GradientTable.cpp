@@ -5,6 +5,8 @@
  *      Author: ae14
  */
 
+#include <iostream>
+#include <string>
 #include "GradientTable.h"
 #include <stdio.h>
 #include <sys/ioctl.h>

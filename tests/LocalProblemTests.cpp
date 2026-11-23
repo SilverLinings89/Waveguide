@@ -1,5 +1,8 @@
 // Tests for the problem of one process (LocalProblem) and for the functions of its base class HierarchicalProblem:
 // constraints, assembly, the direct solver and the solution of a waveguide with a known mode.
+#include <stdexcept>
+#include <string>
+#include <vector>
 #include <gtest/gtest.h>
 #include <cmath>
 #include <filesystem>

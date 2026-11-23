@@ -1,5 +1,9 @@
 // Tests for the parameter handling (Parameters, ParameterReader, ParameterOverride, GetParameters) and for the small
 // data classes PointVal, ShapeDescription and the analytical fields in PointSourceField.
+#include <array>
+#include <sstream>
+#include <string>
+#include <vector>
 #include <gtest/gtest.h>
 #include <cmath>
 #include <complex>

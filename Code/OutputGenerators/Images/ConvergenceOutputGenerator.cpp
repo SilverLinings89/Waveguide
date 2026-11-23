@@ -1,3 +1,6 @@
+#include <fstream>
+#include <iostream>
+#include <string>
 #include "ConvergenceOutputGenerator.h" 
 #include "../../GlobalObjects/GlobalObjects.h"
 #include "../../Helpers/staticfunctions.h"

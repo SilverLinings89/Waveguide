@@ -1,5 +1,8 @@
 // Tests for the generators of the gnuplot scripts for residual histories and convergence studies. The scripts are
 // read back and compared with the values that were handed to the generators. gnuplot itself is not started.
+#include <algorithm>
+#include <string>
+#include <vector>
 #include <gtest/gtest.h>
 #include <cmath>
 #include <filesystem>

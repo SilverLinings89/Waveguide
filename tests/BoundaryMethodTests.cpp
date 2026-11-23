@@ -1,3 +1,7 @@
+#include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
 #include "../Code/BoundaryCondition/LaguerreFunction.h"
 #include <gtest/gtest.h>
 #include "../Code/BoundaryCondition/HSIESurface.h"

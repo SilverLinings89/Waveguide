@@ -9,6 +9,9 @@
  * @copyright Copyright (c) 2022
  * 
  */
+#include <array>
+#include <string>
+#include <vector>
 #include "../Core/Types.h"
 #include "../Helpers/Parameters.h"
 #include "DofIndexData.h"

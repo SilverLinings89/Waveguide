@@ -1,3 +1,4 @@
+#include <iostream>
 #include <gtest/gtest.h>
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/dofs/dof_tools.h>

@@ -1,3 +1,7 @@
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <utility>
 #include "NonLocalProblem.h"
 #include "../GlobalObjects/GeometryManager.h"
 #include "../Helpers/staticfunctions.h"

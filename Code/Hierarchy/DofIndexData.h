@@ -5,6 +5,7 @@
  * @author Pascal Kraft
  * @brief Contains the class DofIndexData. Legacy code that is not used by the solver.
  */
+#include <vector>
 #include <deal.II/base/index_set.h>
 #include "LevelDofIndexData.h"
 

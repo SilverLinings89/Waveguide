@@ -1,3 +1,7 @@
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
 #include "ResidualOutputGenerator.h" 
 #include "../../GlobalObjects/GlobalObjects.h"
 #include "../../Helpers/staticfunctions.h"

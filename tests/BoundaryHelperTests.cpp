@@ -1,5 +1,7 @@
 // Tests for the small helper classes of the boundary conditions: JacobianForCell, PMLMeshTransformation,
 // LaguerreFunction and DofData.
+#include <string>
+#include <utility>
 #include <gtest/gtest.h>
 #include <cmath>
 #include "../Code/BoundaryCondition/DofData.h"

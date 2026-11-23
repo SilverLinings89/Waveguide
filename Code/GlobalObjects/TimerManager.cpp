@@ -1,3 +1,4 @@
+#include <string>
 #include "TimerManager.h"
 #include <deal.II/base/timer.h>
 #include "GlobalObjects.h"

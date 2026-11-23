@@ -1,3 +1,6 @@
+#include <string>
+#include <utility>
+#include <vector>
 #include "ParameterOverride.h"
 #include "staticfunctions.h"
 

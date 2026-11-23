@@ -10,6 +10,9 @@
  * @copyright Copyright (c) 2022
  * 
  */
+#include <fstream>
+#include <string>
+#include <vector>
 #include <deal.II/base/timer.h>
 #include <array>
 

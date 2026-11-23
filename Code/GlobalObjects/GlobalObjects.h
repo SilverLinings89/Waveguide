@@ -11,6 +11,7 @@
  * 
  */
 
+#include <string>
 #include "../Helpers/Parameters.h"
 #include "GeometryManager.h"
 #include "../Hierarchy/MPICommunicator.h"

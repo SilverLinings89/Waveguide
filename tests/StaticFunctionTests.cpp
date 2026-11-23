@@ -1,4 +1,9 @@
 // Tests for the free functions in Code/Helpers/staticfunctions.{h,cpp}.
+#include <array>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 #include <gtest/gtest.h>
 #include <algorithm>
 #include <cmath>

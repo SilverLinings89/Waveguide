@@ -11,6 +11,9 @@
  * 
  */
 
+#include <array>
+#include <string>
+#include <vector>
 #include "../Core/Types.h"
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <mpi.h>

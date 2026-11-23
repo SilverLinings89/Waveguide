@@ -11,6 +11,7 @@
  * 
  */
 
+#include <array>
 #include <utility>
 #include "../Core/Types.h"
 

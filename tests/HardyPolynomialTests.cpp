@@ -1,3 +1,5 @@
+#include <cmath>
+#include <vector>
 #include "../Code/Core/Types.h"
 #include "../Code/BoundaryCondition/HSIEPolynomial.h"
 #include <gtest/gtest.h>

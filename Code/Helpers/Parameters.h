@@ -11,6 +11,8 @@
  * 
  */
 
+#include <stdexcept>
+#include <vector>
 #include <mpi.h>
 #include <string>
 #include "ShapeDescription.h"

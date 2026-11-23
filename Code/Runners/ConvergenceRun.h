@@ -5,6 +5,7 @@
  * @author Pascal Kraft
  * @brief Contains the runner for convergence studies.
  */
+#include <vector>
 #include "../GlobalObjects/GeometryManager.h"
 #include "../Helpers/Parameters.h"
 #include "../Hierarchy/NonLocalProblem.h"

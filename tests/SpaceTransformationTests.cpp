@@ -2,6 +2,7 @@
 // system (shaped waveguide). The properties tested here do not depend on the shape: the two maps are inverse to each
 // other, the Jacobian is the derivative of phys_to_math, and the material tensor J J^T / det(J) is symmetric with
 // determinant 1 / det(J).
+#include <utility>
 #include <gtest/gtest.h>
 #include <cmath>
 #include <filesystem>

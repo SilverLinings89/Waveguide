@@ -1,3 +1,9 @@
+#include <array>
+#include <cmath>
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+#include <utility>
 #include "ExactSolution.h"
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fstream>
 #include "../../Core/Types.h"
 #include <string>
 #include <iostream>

@@ -11,6 +11,7 @@
  * 
  */
 
+#include <vector>
 #include <deal.II/lac/full_matrix.h>
 #include "DofData.h"
 #include "../Core/Types.h"

@@ -11,6 +11,11 @@
  * 
  */
 
+#include <array>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 #include <deal.II/base/index_set.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>

@@ -11,6 +11,8 @@
  * 
  */
 
+#include <array>
+#include <string>
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <vector>

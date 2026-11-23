@@ -1,3 +1,5 @@
+#include <stdexcept>
+#include <vector>
 #include "../Core/Types.h"
 #include "LocalProblem.h"
 #include "../BoundaryCondition/HSIESurface.h"

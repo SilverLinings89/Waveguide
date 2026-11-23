@@ -11,6 +11,7 @@
  * 
  */
 
+#include <vector>
 #include <deal.II/base/index_set.h>
 #include <climits>
 #include "../Core/Types.h"

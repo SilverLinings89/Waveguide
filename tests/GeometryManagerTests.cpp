@@ -1,5 +1,6 @@
 // Tests for the decomposition of the domain into one block per process (GeometryManager, MPICommunicator,
 // DofIndexData). The process layout is set in the parameters, so all ranks can be checked in a single process.
+#include <utility>
 #include <gtest/gtest.h>
 #include <array>
 #include <cmath>

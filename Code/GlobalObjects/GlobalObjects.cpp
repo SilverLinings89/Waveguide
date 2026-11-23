@@ -1,3 +1,5 @@
+#include <iostream>
+#include <string>
 #include "../Helpers/Parameters.h"
 #include "GeometryManager.h"
 #include "../SpaceTransformations/WaveguideTransformation.h"

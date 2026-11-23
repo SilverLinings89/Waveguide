@@ -1,3 +1,5 @@
+#include <fstream>
+#include <string>
 #include <cmath>
 #include <stdexcept>
 #include <iostream>

@@ -1,3 +1,6 @@
+#include <cmath>
+#include <fstream>
+#include <string>
 #include "SquareMeshGenerator.h"
 #include <deal.II/base/multithread_info.h>
 #include <array>

@@ -1,3 +1,11 @@
+#include <algorithm>
+#include <cmath>
+#include <fstream>
+#include <iostream>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 #include "RectangularMode.h"
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include "../Helpers/staticfunctions.h"

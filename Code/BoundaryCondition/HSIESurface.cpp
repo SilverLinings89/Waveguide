@@ -1,3 +1,11 @@
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <iostream>
+#include <map>
+#include <set>
+#include <string>
+#include <utility>
 #include "HSIESurface.h"
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria.h>

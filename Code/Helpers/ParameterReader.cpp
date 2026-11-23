@@ -1,3 +1,6 @@
+#include <fstream>
+#include <string>
+#include <vector>
 #include "ParameterReader.h"
 #include <deal.II/base/patterns.h>
 

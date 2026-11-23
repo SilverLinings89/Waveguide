@@ -10,6 +10,8 @@
  * @copyright Copyright (c) 2022
  * 
  */
+#include <string>
+#include <utility>
 #include <array>
 #include <vector>
 #include <complex>

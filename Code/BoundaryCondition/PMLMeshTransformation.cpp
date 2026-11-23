@@ -1,3 +1,5 @@
+#include <array>
+#include <cmath>
 #include <utility>
 #include "./PMLMeshTransformation.h"
 #include "../Core/Types.h"

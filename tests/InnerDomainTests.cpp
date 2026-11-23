@@ -1,5 +1,9 @@
 // Tests for the inner domain: mesh, number and location of the unknowns, the assembled matrix and the evaluation of
 // a field (signal along z, values at points, errors).
+#include <algorithm>
+#include <array>
+#include <string>
+#include <vector>
 #include <gtest/gtest.h>
 #include <cmath>
 #include <filesystem>
