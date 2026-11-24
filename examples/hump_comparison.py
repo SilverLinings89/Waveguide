@@ -80,8 +80,10 @@ def transmission_db(result):
     return 20 * math.log10(max(result["signal_strength_abs"], 1e-30))
 
 
-def run_case(arguments, case, label, cells_xy, cells_z, slabs):
-    """Runs one case unless its result exists. Returns the entries of results.txt or None if the run failed."""
+def run_case(arguments, case, label, cells_xy, cells_z, slabs, run=True):
+    """Runs one case unless its result exists. Returns the entries of results.txt or None if the run failed.
+
+    With run=False the case is not run: the result is read if it exists, otherwise None is returned."""
     run_directory = os.path.join(arguments.output, "runs", label, "out", "run0")
     results_file = os.path.join(run_directory, "results.txt")
     if os.path.exists(results_file) and not arguments.rerun:
@@ -90,6 +92,8 @@ def run_case(arguments, case, label, cells_xy, cells_z, slabs):
         wall_time_file = os.path.join(arguments.output, "runs", label, "wall_time.txt")
         result["wall_time"] = float(open(wall_time_file).read()) if os.path.exists(wall_time_file) else math.nan
         return result
+    if not run:
+        return None
     try:
         result = common.run_solver(arguments, label, case_parameters(case, arguments.pml_layers),
                                    run_parameters(cells_xy, cells_z, slabs), report=True)
@@ -180,6 +184,7 @@ def main():
     parser.add_argument("--pml-layers", type=int, default=7, help="cell layers of the PML (default 7)")
     parser.add_argument("--factors-on-disk", action="store_true", help="MUMPS writes the factors to disk (default for --scale laptop)")
     parser.add_argument("--scratch", default=None, help="folder for the factors on disk (default: a temporary folder)")
+    parser.add_argument("--collect", action="store_true", help="run nothing: build the overview from the results that exist (after one job per case)")
     parser.add_argument("--rerun", action="store_true", help="run cases again that already have a result")
     parser.add_argument("--compare-run", default=None, help="only compare this existing run folder (needs --case)")
     parser.add_argument("--case", type=int, default=None, help="case number of the run given with --compare-run")
@@ -194,7 +199,7 @@ def main():
     cells_xy = arguments.cells_xy or cells_xy
     cells_z = arguments.cells_z_per_slab or cells_z
     slabs = arguments.slabs or slabs
-    cases = arguments.cases or sorted(reference)
+    cases = [] if arguments.collect else (arguments.cases or sorted(reference))
     resolution_text = "This solver: %d x %d x %d cells, %d PML layers." % (cells_xy, cells_xy, cells_z * slabs, arguments.pml_layers)
     data_file = os.path.join(output, "hump_comparison.dat")
 
@@ -205,15 +210,18 @@ def main():
         table = []
         scratch = None
         try:
-            for case in cases:
+            # Cases that are not requested are read if they have a result, so that the overview is complete when
+            # the cases are run by separate jobs.
+            for case in sorted(set(reference) | set(cases)):
                 label = "case%02d_n%d_z%d" % (case, cells_xy, cells_z * slabs)
-                if factors_on_disk:
+                requested = case in cases
+                if factors_on_disk and requested:
                     # One folder per case, removed after the case: factor files that a run leaves behind would
                     # otherwise fill the disk for the following cases.
                     scratch = tempfile.mkdtemp(prefix="mumps_", dir=arguments.scratch)
                     os.environ["MUMPS_OOC_TMPDIR"] = scratch
                     print("  scratch %s: %.0f GB free" % (scratch, shutil.disk_usage(scratch).free / 1e9), flush=True)
-                result = run_case(arguments, case, label, cells_xy, cells_z, slabs)
+                result = run_case(arguments, case, label, cells_xy, cells_z, slabs, run=requested)
                 if scratch is not None:
                     shutil.rmtree(scratch, ignore_errors=True)
                     scratch = None
