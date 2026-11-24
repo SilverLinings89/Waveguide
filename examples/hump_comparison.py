@@ -199,16 +199,24 @@ def main():
     data_file = os.path.join(output, "hump_comparison.dat")
 
     if not arguments.plot_only:
-        scratch = None
-        if arguments.factors_on_disk or arguments.scale == "laptop":
-            scratch = tempfile.mkdtemp(prefix="mumps_", dir=arguments.scratch)
-            os.environ["MUMPS_OOC_TMPDIR"] = scratch
+        factors_on_disk = arguments.factors_on_disk or arguments.scale == "laptop"
+        if factors_on_disk:
             os.environ["PETSC_OPTIONS"] = (os.environ.get("PETSC_OPTIONS", "") + " -local_mat_mumps_icntl_22 1").strip()
         table = []
+        scratch = None
         try:
             for case in cases:
                 label = "case%02d_n%d_z%d" % (case, cells_xy, cells_z * slabs)
+                if factors_on_disk:
+                    # One folder per case, removed after the case: factor files that a run leaves behind would
+                    # otherwise fill the disk for the following cases.
+                    scratch = tempfile.mkdtemp(prefix="mumps_", dir=arguments.scratch)
+                    os.environ["MUMPS_OOC_TMPDIR"] = scratch
+                    print("  scratch %s: %.0f GB free" % (scratch, shutil.disk_usage(scratch).free / 1e9), flush=True)
                 result = run_case(arguments, case, label, cells_xy, cells_z, slabs)
+                if scratch is not None:
+                    shutil.rmtree(scratch, ignore_errors=True)
+                    scratch = None
                 if result is None:
                     continue
                 table.append([case, result["signal_strength_abs"], transmission_db(result), result["solver_iterations"],

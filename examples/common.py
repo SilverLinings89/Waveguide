@@ -87,15 +87,16 @@ def run_solver(arguments, label, case, run, report=False):
     environment = dict(os.environ, WAVEGUIDE_ROOT=REPOSITORY, WAVEGUIDE_OUTPUT_DIR=os.path.join(work, "out"))
     print("  running %-28s (%d processes) ..." % (label, n_processes), end="", flush=True)
     start = time.time()
-    completed = subprocess.run(command, env=environment, cwd=work, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                               universal_newlines=True, errors="replace")
-    wall_time = time.time() - start
+    # The output goes to the file while the solver runs, so that a run that hangs or is killed leaves its output.
     with open(os.path.join(work, "stdout.txt"), "w") as f:
-        f.write(completed.stdout)
+        completed = subprocess.run(command, env=environment, cwd=work, stdout=f, stderr=subprocess.STDOUT)
+    wall_time = time.time() - start
+    with open(os.path.join(work, "stdout.txt"), errors="replace") as f:
+        stdout = f.read()
     if completed.returncode != 0:
         print(" failed")
         sys.exit("The solver exited with code %d. See %s" % (completed.returncode, os.path.join(work, "stdout.txt")))
-    results = {"wall_time": wall_time, "run_directory": os.path.join(work, "out", "run0"), "stdout": completed.stdout}
+    results = {"wall_time": wall_time, "run_directory": os.path.join(work, "out", "run0"), "stdout": stdout}
     results_file = os.path.join(results["run_directory"], "results.txt")
     if os.path.exists(results_file):
         results.update(read_key_value_file(results_file))
